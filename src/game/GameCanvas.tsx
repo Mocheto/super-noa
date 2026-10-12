@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { PixelIcon } from "./PixelIcon";
 import { getStickerSprite } from "./stickers";
 import type { Level, GameSnapshot, LevelItem, Power, Rect } from "./types";
-import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, rectanglesOverlap, SPRING_SPEED } from "./gameplay";
+import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, rectanglesOverlap, SPRING_SPEED, swimmingVelocity, waterAt } from "./gameplay";
 
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 540;
@@ -17,6 +17,7 @@ type GameCanvasProps = {
   onComplete: () => void;
   onBossEncounter: () => void;
   onSecretExit: () => void;
+  onWaterExit: () => void;
   onSnapshot: (snapshot: GameSnapshot) => void;
   playSound: (kind: SoundKind) => void;
 };
@@ -53,14 +54,14 @@ type Projectile = { x: number; y: number; vx: number; vy: number; life: number }
 type LiveCannon = NonNullable<Level["cannons"]>[number] & { cooldown: number };
 type Cannonball = { x: number; y: number; vx: number; active: boolean };
 type PixelBurst = { x: number; y: number; life: number; color: string; kind: "stars" | "puff" };
-type RasterAssets = { enemies: HTMLImageElement; castleEnemies: HTMLImageElement; boar: HTMLImageElement; bird: HTMLImageElement; collectibles: HTMLImageElement; cave: HTMLImageElement; castle: HTMLImageElement; secret: HTMLImageElement; cannon: HTMLImageElement; cannonball: HTMLImageElement; checkpoint: HTMLImageElement; goalFlag: HTMLImageElement; goalRescue: HTMLImageElement; bossGate: HTMLImageElement; spring: HTMLImageElement; platformTiles: HTMLImageElement; tiles: Record<Level["world"], HTMLImageElement>; stickerSheets: Record<Level["world"], HTMLImageElement> };
+type RasterAssets = { waterBackground: HTMLImageElement; waterTerrain: HTMLImageElement; waterEnemies: HTMLImageElement; swim: HTMLImageElement; waterCat: HTMLImageElement; enemies: HTMLImageElement; castleEnemies: HTMLImageElement; boar: HTMLImageElement; bird: HTMLImageElement; collectibles: HTMLImageElement; cave: HTMLImageElement; castle: HTMLImageElement; secret: HTMLImageElement; cannon: HTMLImageElement; cannonball: HTMLImageElement; checkpoint: HTMLImageElement; goalFlag: HTMLImageElement; goalRescue: HTMLImageElement; bossGate: HTMLImageElement; spring: HTMLImageElement; platformTiles: HTMLImageElement; tiles: Record<Level["world"], HTMLImageElement>; stickerSheets: Record<Level["world"], HTMLImageElement> };
 
 const intersects = rectanglesOverlap;
 
 const positiveModulo = (value: number, divisor: number) => ((value % divisor) + divisor) % divisor;
 
 const enemyY = (enemy: LiveEnemy) =>
-  enemy.y + (enemy.kind === "bird" || enemy.kind === "parrot" || enemy.kind === "bat" || enemy.kind === "ghost" ? Math.sin(enemy.phase) * 20 : enemy.kind === "cloud" ? Math.sin(enemy.phase) * 7 : 0);
+  enemy.y + (enemy.kind === "bird" || enemy.kind === "parrot" || enemy.kind === "bat" || enemy.kind === "ghost" || enemy.kind === "fish" ? Math.sin(enemy.phase) * 20 : enemy.kind === "cloud" ? Math.sin(enemy.phase) * 7 : 0);
 
 const enemyAtlasCell = {
   slime: [0, 0], beetle: [1, 0], cloud: [2, 0], wolf: [3, 0],
@@ -281,6 +282,23 @@ function drawCaveBackground(context: CanvasRenderingContext2D, cameraX: number, 
 }
 
 function drawBackground(context: CanvasRenderingContext2D, level: Level, cameraX: number, frame: number, raster: RasterAssets) {
+  if (level.theme === "water-lagoon") {
+    context.fillStyle = "#157b9d";
+    context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    if (raster.waterBackground.complete && raster.waterBackground.naturalWidth) {
+      // La orilla de la ilustración queda exactamente en la superficie jugable (y=120).
+      const offset = positiveModulo(cameraX * 0.13, VIEW_WIDTH);
+      const sourceWidth = raster.waterBackground.naturalWidth;
+      const sourceHeight = raster.waterBackground.naturalHeight;
+      for (const x of [-offset, VIEW_WIDTH - offset]) {
+        context.drawImage(raster.waterBackground, 0, 0, sourceWidth, 215, x, 0, VIEW_WIDTH, 120);
+        context.drawImage(raster.waterBackground, 0, 215, sourceWidth, sourceHeight - 215, x, 120, VIEW_WIDTH, VIEW_HEIGHT - 120);
+      }
+    }
+    context.fillStyle = "rgba(5,45,84,.18)";
+    context.fillRect(0, 120, VIEW_WIDTH, VIEW_HEIGHT - 120);
+    return;
+  }
   if (level.theme === "haunted-castle") {
     context.fillStyle = "#160f2e";
     context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
@@ -507,6 +525,19 @@ function drawPlatform(context: CanvasRenderingContext2D, platform: Level["platfo
   const forest = world >= 2 && world <= 4;
   const worldTiles = worldPlatformCells(world);
   if (x + platform.width < 0 || x > VIEW_WIDTH) return;
+  if (platform.kind === "sea-ground" || platform.kind === "sea-ledge" || platform.kind === "sea-wall") {
+    const wall = platform.kind === "sea-wall";
+    context.fillStyle = wall ? "#186b7c" : "#c9b786";
+    context.fillRect(x, platform.y, platform.width, platform.height);
+    const image = raster.waterTerrain;
+    if (image.complete && image.naturalWidth) {
+      const source = wall ? [870, 10, 650, 475] : platform.kind === "sea-ground" ? [25, 260, 820, 220] : [15, 720, 825, 265];
+      for (let tileX = Math.max(x, -100); tileX < Math.min(VIEW_WIDTH, x + platform.width); tileX += 100) {
+        context.drawImage(image, source[0], source[1], source[2], source[3], tileX, platform.y, Math.min(100, x + platform.width - tileX), platform.height);
+      }
+    }
+    return;
+  }
   if (platform.kind === "castle-ground" || platform.kind === "castle-ledge" || platform.kind === "castle-wall") {
     const ground = platform.kind === "castle-ground";
     const wall = platform.kind === "castle-wall";
@@ -852,6 +883,16 @@ function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, cameraX:
   if (!enemy.active) return;
   const x = Math.round(enemy.x - cameraX);
   const y = Math.round(enemyY(enemy));
+  if (enemy.kind === "fish" || enemy.kind === "urchin") {
+    context.save();
+    if (enemy.vx < 0) {
+      context.translate(x + enemy.width, 0);
+      context.scale(-1, 1);
+    } else context.translate(x, 0);
+    drawAtlasCell(context, raster.waterEnemies, 2, 1, enemy.kind === "fish" ? 0 : 1, 0, -8, y - 8, enemy.width + 16, enemy.height + 12);
+    context.restore();
+    return;
+  }
   if (enemy.kind === "skeleton" || enemy.kind === "zombie" || enemy.kind === "ghost") {
     const column = enemy.kind === "skeleton" ? 0 : enemy.kind === "zombie" ? 1 : 2;
     const width = enemy.kind === "ghost" ? 60 : 54;
@@ -1397,18 +1438,18 @@ function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
   context.textAlign = "start";
 }
 
-export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onSnapshot, playSound }: GameCanvasProps) {
+export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, playSound }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const inputRef = useRef<InputState>({ left: false, right: false, jump: false, shoot: false, jumpQueued: false, shootQueued: false });
   const heldKeysRef = useRef(new Set<string>());
   const touchPointersRef = useRef<Partial<Record<TouchKey, number>>>({});
   const runningRef = useRef(running);
-  const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onSnapshot, playSound });
+  const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, playSound });
 
   useEffect(() => {
-    callbacksRef.current = { onLoseLife, onComplete, onBossEncounter, onSecretExit, onSnapshot, playSound };
-  }, [onLoseLife, onComplete, onBossEncounter, onSecretExit, onSnapshot, playSound]);
+    callbacksRef.current = { onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, playSound };
+  }, [onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, playSound]);
 
   useEffect(() => {
     runningRef.current = running;
@@ -1493,6 +1534,11 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const goldJumpSprite = new Image();
     goldJumpSprite.src = "./assets/sprites/noa-jump-gold-armor-v1.png";
     const raster: RasterAssets = {
+      waterBackground: createRasterImage("./assets/worlds/world-8.png"),
+      waterTerrain: createRasterImage("./assets/atlases/water-terrain-v1.png"),
+      waterEnemies: createRasterImage("./assets/atlases/water-enemies-v1.png"),
+      swim: createRasterImage("./assets/sprites/noa-swim-v1.png"),
+      waterCat: createRasterImage("./assets/sprites/world-cat-8-v1.png"),
       enemies: createRasterImage("./assets/atlases/enemies-v1.png"),
       castleEnemies: createRasterImage("./assets/atlases/castle-enemies-v1.png"),
       boar: createRasterImage("./assets/sprites/enemy-boar-v2.png"),
@@ -1517,6 +1563,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         5: createRasterImage("./assets/atlases/world-5-tiles-v1.png"),
         6: createRasterImage("./assets/atlases/castle-v1.png"),
         7: createRasterImage("./assets/atlases/secret-sky-v1.png"),
+        8: createRasterImage("./assets/atlases/water-terrain-v1.png"),
       },
       stickerSheets: {
         1: createRasterImage("./assets/stickers/world-1-v1.png"),
@@ -1526,6 +1573,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         5: createRasterImage("./assets/stickers/world-5-v1.png"),
         6: createRasterImage("./assets/stickers/world-6-v1.png"),
         7: createRasterImage("./assets/stickers/world-7-v1.png"),
+        8: createRasterImage("./assets/stickers/world-8-v1.png"),
       },
     };
     const player = createInitialPlayer(level);
@@ -1539,7 +1587,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const bursts: PixelBurst[] = [];
     const cannons: LiveCannon[] = (level.cannons ?? []).map((item, index) => ({ ...item, cooldown: 0.8 + index * 0.22 }));
     const cannonballs: Cannonball[] = [];
-    const goalSurfaceY = level.platforms.find((platform) => level.goalX >= platform.x && level.goalX <= platform.x + platform.width)?.y ?? 456;
+    const goalPlatforms = level.platforms.filter((platform) => level.goalX >= platform.x && level.goalX <= platform.x + platform.width);
+    const goalSurfaceY = level.world === 8 ? Math.min(...goalPlatforms.map((platform) => platform.y)) : goalPlatforms[0]?.y ?? 456;
     let cameraX = 0;
     let apples = 0;
     let checkpointIndex = -1;
@@ -1608,10 +1657,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       const right = input.right || Boolean(pad && pad.axes[0] > 0.25);
       const jump = input.jump || Boolean(pad?.buttons[0]?.pressed);
       const shoot = input.shoot || Boolean(pad?.buttons[2]?.pressed || pad?.buttons[1]?.pressed);
+      const swimming = waterAt(player, level.waterZones);
+      const newStroke = input.jumpQueued || (jump && !previousJump);
 
       if (left === right) player.vx *= Math.pow(0.0008, delta);
       else {
-        player.vx = (left ? -1 : 1) * MOVE_SPEED;
+        player.vx = (left ? -1 : 1) * (swimming ? 175 : MOVE_SPEED);
         player.facing = left ? -1 : 1;
       }
 
@@ -1620,7 +1671,13 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       previousJump = jump;
       player.jumpBuffer = Math.max(0, player.jumpBuffer - delta);
       player.coyote = player.grounded ? 0.12 : Math.max(0, player.coyote - delta);
-      if (player.jumpBuffer > 0 && player.coyote > 0 && player.jumpsUsed === 0) {
+      if (swimming) {
+        player.vy = swimmingVelocity(player.vy, jump || newStroke, delta);
+        if (newStroke) player.vy = -190;
+        player.jumpsUsed = 0;
+        player.springLaunch = false;
+        player.jumpBuffer = 0;
+      } else if (player.jumpBuffer > 0 && player.coyote > 0 && player.jumpsUsed === 0) {
         player.vy = -JUMP_SPEED;
         player.grounded = false;
         player.coyote = 0;
@@ -1634,7 +1691,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         player.doubleJumpFx = 0.38;
         callbacksRef.current.playSound("jump");
       }
-      if (!jump && player.vy < -220 && !player.springLaunch) player.vy += GRAVITY * 1.4 * delta;
+      if (!swimming && !jump && player.vy < -220 && !player.springLaunch) player.vy += GRAVITY * 1.4 * delta;
 
       shootCooldown = Math.max(0, shootCooldown - delta);
       if ((input.shootQueued || (shoot && !previousShoot)) && player.power === "cat" && shootCooldown === 0) {
@@ -1656,7 +1713,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       player.x += player.vx * delta;
       player.x = Math.max(0, Math.min(level.width - player.width, player.x));
       for (const platform of level.platforms) {
-        if (platform.kind !== "cave-wall" && platform.kind !== "castle-wall") continue;
+        if (platform.kind !== "cave-wall" && platform.kind !== "castle-wall" && platform.kind !== "sea-wall") continue;
         const vertical = player.y + player.height > platform.y && player.y < platform.y + platform.height;
         if (!vertical) continue;
         if (player.vx > 0 && previousX + player.width <= platform.x && player.x + player.width > platform.x) {
@@ -1670,8 +1727,13 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       const previousY = player.y;
       const previousBottom = previousY + player.height;
       const wasGrounded = player.grounded;
-      player.vy += GRAVITY * delta;
+      if (!swimming) player.vy += GRAVITY * delta;
       player.y += player.vy * delta;
+      // Al soltar el botón se hunde; una brazada nueva en la superficie permite salir del agua.
+      if (swimming && player.y + player.height * 0.6 < swimming.y + 1 && !newStroke) {
+        player.y = swimming.y + 1 - player.height * 0.6;
+        player.vy = 0;
+      }
       player.grounded = false;
 
       for (const platform of level.platforms) {
@@ -1697,7 +1759,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
             player.jumpsUsed = 0;
             player.springLaunch = false;
           }
-        } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall") && horizontal && player.vy < 0) {
+        } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall" || platform.kind === "sea-wall") && horizontal && player.vy < 0) {
           const platformBottom = platform.y + platform.height;
           if (previousY >= platformBottom - 10 && player.y <= platformBottom) {
             player.y = platformBottom;
@@ -1730,6 +1792,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       }
 
       const secretVine = level.rewardBlocks.find((block) => block.reward === "secret-vine");
+      if (level.waterEntrance && intersects(player, level.waterEntrance) && !completed) {
+        completed = true;
+        callbacksRef.current.onSnapshot({ apples, stickers: [...collectedStickers], power: player.power, checkpoint: checkpointIndex + 1, paused: false });
+        callbacksRef.current.playSound("checkpoint");
+        completeTimer = window.setTimeout(() => callbacksRef.current.onWaterExit(), 450);
+      }
       if (secretVine && vineStartedFrame >= 0) {
         const growth = Math.min(1, (frame - vineStartedFrame) / 70);
         const vineHeight = Math.max(1, Math.round((secretVine.y + 80) * growth));
@@ -1803,7 +1871,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           height: enemy.height,
         };
         if (!intersects(player, hitbox)) return;
-        if (player.vy > 60 && previousBottom <= hitbox.y + 15) {
+        if (enemy.kind !== "urchin" && enemy.kind !== "fish" && player.vy > 60 && previousBottom <= hitbox.y + 15) {
           enemy.active = false;
           player.vy = -390;
           player.jumpsUsed = 1;
@@ -1854,6 +1922,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         ball.life -= delta;
         enemies.forEach((enemy) => {
           if (!enemy.active) return;
+          if (enemy.kind === "urchin") return;
           const enemyHitbox = { ...enemy, y: enemyY(enemy) };
           if (intersects({ x: ball.x - 10, y: ball.y - 10, width: 20, height: 20 }, enemyHitbox)) {
             enemy.active = false;
@@ -1924,6 +1993,19 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const drawPlayer = () => {
       const x = Math.round(player.x - cameraX);
       const protectedByApple = player.power === "apple";
+      if (waterAt(player, level.waterZones) && !player.grounded && raster.swim.complete && raster.swim.naturalWidth) {
+        const row = player.power === "cat" ? 2 : protectedByApple ? 1 : 0;
+        const column = Math.floor(frame / 14) % 2;
+        const cellWidth = raster.swim.naturalWidth / 2;
+        const cellHeight = raster.swim.naturalHeight / 3;
+        context.save();
+        context.globalAlpha = player.invincible > 0 && Math.floor(player.invincible * 12) % 2 === 0 ? 0.45 : 1;
+        context.translate(x + player.width / 2, player.y + player.height / 2);
+        context.scale(player.facing, 1);
+        context.drawImage(raster.swim, column * cellWidth, row * cellHeight, cellWidth, cellHeight, -53, -47, 106, 94);
+        context.restore();
+        return;
+      }
       const runningFrame = Math.floor(frame / 12) % 4;
       let row = 0;
       let column = 0;
@@ -2031,7 +2113,23 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       });
       if (level.id === "2-1") drawCaveEntrance(context, level.goalX - 125, cameraX, raster.cave);
       if (level.id === "2-2") drawCaveEntrance(context, -18, cameraX, raster.cave);
-      level.checkpoints.forEach((checkpoint, index) => drawCheckpoint(context, checkpoint, cameraX, index <= checkpointIndex, raster.checkpoint));
+      if (level.waterEntrance) {
+        const entrance = level.waterEntrance;
+        context.fillStyle = "#168cae";
+        context.fillRect(entrance.x - cameraX, entrance.y - 12, entrance.width, entrance.height);
+        context.fillStyle = "#adf9f5";
+        for (let wave = 0; wave < entrance.width; wave += 24) context.fillRect(entrance.x - cameraX + wave, entrance.y - 12 + Math.sin(frame / 14 + wave) * 3, 16, 4);
+        context.font = "bold 13px monospace";
+        context.textAlign = "center";
+        context.fillText("↓ ¡AGUA! ↓", entrance.x - cameraX + entrance.width / 2, entrance.y - 28);
+        context.textAlign = "start";
+      }
+      level.checkpoints.forEach((checkpoint, index) => {
+        context.save();
+        if (level.world === 8) context.translate(0, 34);
+        drawCheckpoint(context, checkpoint, cameraX, index <= checkpointIndex, raster.checkpoint);
+        context.restore();
+      });
       level.rewardBlocks.forEach((block) => {
         const x = Math.round(block.x - cameraX);
         if (block.reward === "secret-vine") {
@@ -2106,11 +2204,41 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
         context.restore();
       });
-      if (level.boss) drawBossGate(context, level.goalX, cameraX, goalSurfaceY, raster.bossGate);
+      if (level.world === 8 && level.boss) {
+        const image = raster.waterTerrain;
+        if (image.complete && image.naturalWidth) context.drawImage(image, 845, 500, 680, 500, level.goalX - cameraX - 10, goalSurfaceY - 200, 185, 200);
+      } else if (level.world === 8) {
+        if (raster.goalFlag.complete && raster.goalFlag.naturalWidth) context.drawImage(raster.goalFlag, level.goalX - cameraX, goalSurfaceY - 200, 130, 200);
+        if (raster.waterCat.complete && raster.waterCat.naturalWidth) context.drawImage(raster.waterCat, level.goalX - cameraX + 30, goalSurfaceY - 85, 85, 85);
+      } else if (level.boss) drawBossGate(context, level.goalX, cameraX, goalSurfaceY, raster.bossGate);
       else if (level.id !== "2-1") drawGoalCat(context, level.goalX, cameraX, false, raster.collectibles, goalCelebrationFrame < 0 ? 0 : Math.min(1, (frame - goalCelebrationFrame) / 22), goalSurfaceY, raster.goalFlag, raster.goalRescue);
       drawPlayer();
+      for (const zone of level.waterZones ?? []) {
+        const left = Math.max(0, zone.x - cameraX);
+        const right = Math.min(VIEW_WIDTH, zone.x + zone.width - cameraX);
+        context.fillStyle = "rgba(70,213,240,.08)";
+        context.fillRect(left, zone.y, right - left, zone.height);
+        context.fillStyle = "#a2f6ef";
+        for (let wave = left; wave < right; wave += 30) context.fillRect(wave, zone.y + Math.sin(frame / 16 + wave / 30) * 2, 19, 3);
+        context.strokeStyle = "rgba(196,250,255,.5)";
+        for (let bubble = 0; bubble < 14; bubble += 1) {
+          const bubbleX = positiveModulo(bubble * 89 - cameraX * 0.4, VIEW_WIDTH);
+          const bubbleY = zone.y + positiveModulo(bubble * 67 - frame * 0.35, 360);
+          context.strokeRect(bubbleX, bubbleY, 4, 4);
+        }
+      }
       drawAmbientForeground(context, level, cameraX, frame);
       if (level.id === "1-1" && player.x >= 130 && player.x < 1120) drawDoubleJumpTip(context);
+      if (level.world === 8 && player.x < 650) {
+        context.fillStyle = "#fff8e9";
+        context.fillRect(205, 18, 550, 56);
+        context.fillStyle = "#352044";
+        context.textAlign = "center";
+        context.font = "bold 14px monospace";
+        context.fillText("SALTAR: NADA ARRIBA · SUELTA: BAJA", 480, 42);
+        context.fillText("Puedes caminar por la arena. ¡Evita los erizos!", 480, 62);
+        context.textAlign = "start";
+      }
 
       if (!runningRef.current) {
         context.fillStyle = "rgba(34, 24, 57, 0.42)";

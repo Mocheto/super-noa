@@ -164,7 +164,7 @@ export function BossBattle({ bossId, apples, protectedByApple, onSpendApple, onR
             <p className="eyebrow">{friendlyReplay ? "Duelo amistoso" : "Monstruo final"} · Ronda {roundNumber}</p>
             <h2 id="boss-title">{friendlyReplay ? `Juega con ${boss.name}` : `Duelo contra ${boss.name}`}</h2>
             <p>{boss.intro}</p>
-            {!friendlyReplay && <p className="boss-challenge">★ Reto de amistad: {boss.challenge.label}</p>}
+            <p className="boss-challenge">★ Reto de amistad: {boss.challenge.label}</p>
           </div>
           <div className="duel-status-panel">
             <div className="duel-score" aria-label={`Marcador: Noa ${battle.noaScore}, ${boss.name} ${battle.bossScore}`}>

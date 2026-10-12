@@ -70,7 +70,47 @@ export const themeNames: Record<Theme, string> = {
   "sky-storm": "La tormenta del Capitán Celeste",
   "haunted-castle": "El castillo de los sustos divertidos",
   "secret-sky": "El reino secreto de las nubes",
+  "water-lagoon": "La laguna de los corales",
 };
+
+// Identificadores estables: A es el desvío acuático entre los mundos 2 y 3.
+const seaFloor = (width: number): Platform => ({ x: 0, y: 490, width, height: 90, kind: "sea-ground" });
+const reef = (x: number, y: number, width: number, height: number): Platform => ({ x, y, width, height, kind: "sea-wall" });
+const seaLedge = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 24, kind: "sea-ledge" });
+const water = (width: number) => [{ x: 0, y: 120, width, height: 430 }];
+
+export const waterLevels: Level[] = [
+  {
+    id: "A-1", world: 8, screen: 1, title: "La laguna de Perla",
+    subtitle: "Toca SALTAR para nadar hacia arriba. Suelta para bajar despacito.",
+    theme: "water-lagoon", width: 3300, start: { x: 80, y: 70 }, goalX: 3080,
+    waterZones: water(3300),
+    platforms: [seaFloor(3300), seaLedge(0, 110, 280), seaLedge(630, 285, 230), seaLedge(1180, 165, 220), reef(1550, 365, 150, 125), seaLedge(2040, 255, 230), seaLedge(2600, 165, 200), seaLedge(2990, 250, 310)],
+    enemies: [enemy("a1-f1", "fish", 920, 240, 880, 1120, 44), enemy("a1-f2", "fish", 1770, 220, 1710, 1970, 50), enemy("a1-f3", "fish", 2420, 350, 2300, 2540, 46), enemy("a1-u1", "urchin", 1080, 454, 1080, 1080, 0), enemy("a1-u2", "urchin", 2230, 454, 2230, 2230, 0)],
+    items: [apple("a1-apple1", 400, 175), apple("a1-apple2", 720, 235), apple("a1-apple3", 1460, 430), apple("a1-apple4", 2150, 205), sticker("sticker-a-1", 2670, 290)],
+    rewardBlocks: [reward("a1-cat", 510, 320), reward("a1-armor", 1900, 360, "apple")], checkpoints: [400, 1450, 2400],
+  },
+  {
+    id: "A-2", world: 8, screen: 2, title: "El jardín de los erizos",
+    subtitle: "Nada entre los corales o camina por la arena. ¡Cuidado con los erizos!",
+    theme: "water-lagoon", width: 4200, start: { x: 80, y: 70 }, goalX: 3980,
+    waterZones: water(4200),
+    platforms: [seaFloor(4200), seaLedge(0, 110, 260), reef(750, 330, 160, 160), reef(1250, 120, 180, 170), seaLedge(1660, 240, 260), reef(2220, 330, 170, 160), reef(2740, 120, 180, 170), seaLedge(3200, 245, 230), seaLedge(3880, 250, 320)],
+    enemies: [enemy("a2-f1", "fish", 460, 230, 340, 630, 54), enemy("a2-f2", "fish", 1520, 360, 1450, 1940, 60), enemy("a2-f3", "fish", 2510, 220, 2410, 2680, 57), enemy("a2-f4", "fish", 3470, 330, 3440, 3780, 60), enemy("a2-u1", "urchin", 1030, 454, 1030, 1030, 0), enemy("a2-u2", "urchin", 1990, 454, 1990, 1990, 0), enemy("a2-u3", "urchin", 3080, 454, 3080, 3080, 0)],
+    items: [apple("a2-apple1", 810, 275), apple("a2-apple2", 1560, 420), apple("a2-apple3", 2310, 275), apple("a2-apple4", 3370, 190), sticker("sticker-a-2", 2820, 370)],
+    rewardBlocks: [reward("a2-cat", 530, 325), reward("a2-armor", 2540, 365, "apple")], checkpoints: [520, 1630, 2580, 3540],
+  },
+  {
+    id: "A-3", world: 8, screen: 3, title: "El palacio de Don Aleta",
+    subtitle: "Cruza las grutas del arrecife y conoce al guardián del mar.",
+    theme: "water-lagoon", width: 5100, start: { x: 80, y: 70 }, goalX: 4880,
+    waterZones: water(5100),
+    platforms: [seaFloor(5100), seaLedge(0, 110, 260), reef(700, 310, 180, 180), reef(1130, 90, 180, 200), seaLedge(1550, 285, 220), reef(2090, 320, 180, 170), reef(2590, 100, 180, 200), seaLedge(3120, 250, 250), reef(3640, 310, 180, 180), reef(4100, 105, 170, 190), seaLedge(4770, 250, 330)],
+    enemies: [enemy("a3-f1", "fish", 460, 240, 320, 610, 62), enemy("a3-f2", "fish", 1430, 365, 1350, 1900, 65), enemy("a3-f3", "fish", 2400, 200, 2300, 2510, 68), enemy("a3-f4", "fish", 2900, 370, 2820, 3080, 65), enemy("a3-f5", "fish", 4390, 330, 4320, 4670, 72), enemy("a3-u1", "urchin", 990, 454, 990, 990, 0), enemy("a3-u2", "urchin", 1950, 454, 1950, 1950, 0), enemy("a3-u3", "urchin", 3470, 454, 3470, 3470, 0), enemy("a3-u4", "urchin", 4540, 454, 4540, 4540, 0)],
+    items: [apple("a3-apple1", 790, 255), apple("a3-apple2", 1670, 230), apple("a3-apple3", 2180, 265), apple("a3-apple4", 3230, 195), apple("a3-apple5", 4630, 180), sticker("sticker-a-3", 4160, 375)],
+    rewardBlocks: [reward("a3-cat", 500, 330), reward("a3-armor", 2990, 350, "apple")], checkpoints: [510, 1600, 2870, 3920, 4630], boss: "shark-captain",
+  },
+];
 
 const castleFloor1: Array<[number, number]> = [[0, 760], [900, 950], [1990, 900], [3030, 970]];
 const castleFloor2: Array<[number, number]> = [[0, 650], [800, 1000], [1940, 900], [2980, 1000], [4120, 1080]];
@@ -273,6 +313,7 @@ export const levels: Level[] = [
     width: 6800,
     start: { x: 80, y: 380 },
     goalX: 6630,
+    waterEntrance: { x: 720, y: 470, width: 160, height: 110 },
     platforms: [
       ...caveGround([[0, 720], [880, 760], [1810, 760], [2740, 780], [3700, 760], [4630, 760], [5560, 1240]]),
       caveWall(0, 0, 720, 145),
@@ -313,6 +354,7 @@ export const levels: Level[] = [
     checkpoints: [900, 1830, 2760, 4650, 5580],
     boss: "mist-countess",
   },
+  ...waterLevels,
   {
     id: "3-1",
     world: 3,

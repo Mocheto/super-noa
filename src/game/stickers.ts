@@ -4,7 +4,7 @@ export type StickerDefinition = {
   id: string;
   name: string;
   icon: PixelIconKind;
-  world: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
   hint: string;
 };
 
@@ -15,6 +15,9 @@ export const stickerCatalog: StickerDefinition[] = [
   { id: "sticker-2-1", name: "Huella brillante", icon: "paw", world: 2, hint: "Confía en una plataforma de niebla." },
   { id: "sticker-2-2", name: "Luna violeta", icon: "moon", world: 2, hint: "Mira por encima del sendero nocturno." },
   { id: "sticker-2-3", name: "Bigotes mágicos", icon: "cat", world: 2, hint: "La niebla esconde un camino elevado." },
+  { id: "sticker-a-1", name: "Concha de Perla", icon: "gem", world: 8, hint: "Sumérgete bajo la última isla de la laguna." },
+  { id: "sticker-a-2", name: "Pez aventurero", icon: "sparkle", world: 8, hint: "Busca por debajo de la segunda pared del arrecife." },
+  { id: "sticker-a-3", name: "Corona de las mareas", icon: "crown", world: 8, hint: "Nada bajo el último arco antes del palacio." },
   { id: "sticker-3-1", name: "Pino valiente", icon: "pine", world: 3, hint: "Salta por encima de las huellas." },
   { id: "sticker-3-2", name: "Lobo amigo", icon: "wolf", world: 3, hint: "Escucha el aullido y busca arriba." },
   { id: "sticker-3-3", name: "Corona del bosque", icon: "crown", world: 3, hint: "Está en la ruta más alta de la guarida." },

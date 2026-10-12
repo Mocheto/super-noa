@@ -11,20 +11,25 @@ import type { GameSnapshot } from "./game/types";
 const STORAGE_KEY = "super-noa-progress-v1";
 
 type LevelStats = Record<string, { completed: boolean; bestApples: number; flawless?: boolean }>;
-type Progress = { unlocked: number; levelStats: LevelStats; stickers: string[]; secretUnlocked: boolean; bossChallenges: Record<string, boolean> };
+type Progress = { unlocked: number; levelStats: LevelStats; stickers: string[]; secretUnlocked: boolean; waterUnlocked: boolean; bossChallenges: Record<string, boolean> };
 type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition";
 type CollectionTab = "stickers" | "bosses" | "memories";
 type TouchControlsMode = "auto" | "always";
 
-const emptyProgress: Progress = { unlocked: 0, levelStats: {}, stickers: [], secretUnlocked: false, bossChallenges: {} };
+const emptyProgress: Progress = { unlocked: 0, levelStats: {}, stickers: [], secretUnlocked: false, waterUnlocked: false, bossChallenges: {} };
 const emptySnapshot: GameSnapshot = { apples: 0, stickers: [], power: "normal", checkpoint: 0, paused: false };
 const MAX_LIVES = 3;
 const secretLevelIndex = levels.findIndex((level) => level.world === 7);
-const campaignLevelCount = secretLevelIndex === -1 ? levels.length : secretLevelIndex;
+// Los índices del guardado siguen refiriéndose a la campaña original de 18 pantallas.
+const campaignLevels = levels.filter((level) => level.world !== 7 && level.world !== 8);
+const campaignLevelCount = campaignLevels.length;
+const waterLevelIndex = levels.findIndex((level) => level.id === "A-1");
+const forestLevelIndex = campaignLevels.findIndex((level) => level.id === "3-1");
 const bossLevels = levels.flatMap((level, index) => level.boss ? [{ level, index, boss: bossCatalog[level.boss] }] : []);
 const worldCatalog = [
   { id: 1, name: "El Prado de las Manzanas", description: "Sol, ramas anchas y manzanas crujientes.", cat: "Miel", catAsset: "./assets/sprites/world-cat-1-v1.png" },
   { id: 2, name: "El Bosque de los Gatitos", description: "Luciérnagas, cristales, murciélagos y una cueva de lava.", cat: "Bruma", catAsset: "./assets/sprites/world-cat-2-v1.png" },
+  { id: 8, name: "La Laguna de los Corales", description: "Un desvío bajo la cueva: peces traviesos, erizos y el palacio de Don Aleta.", cat: "Perla", catAsset: "./assets/sprites/world-cat-8-v1.png" },
   { id: 3, name: "El Bosque de los Lobos", description: "Pinos, luna llena y lobos enfadados.", cat: "Pino", catAsset: "./assets/sprites/world-cat-3-v1.png" },
   { id: 4, name: "El Bosque de los Jabalíes", description: "Bellotas, copas altas y jabalíes salvajes.", cat: "Bellota", catAsset: "./assets/sprites/world-cat-4-v1.png" },
   { id: 5, name: "La Flota de las Nubes", description: "Barcos voladores, piratas, loros y cañones.", cat: "Nube", catAsset: "./assets/sprites/world-cat-5-v1.png" },
@@ -44,14 +49,16 @@ function readProgress(): Progress {
     let unlocked = hasNewLevelStats
       ? Math.min(campaignLevelCount - 1, savedUnlocked)
       : legacyIndexMap[Math.min(legacyIndexMap.length - 1, savedUnlocked)];
-    levels.forEach((level, index) => {
-      if (level.world !== 7 && levelStats[level.id]?.completed) unlocked = Math.max(unlocked, Math.min(campaignLevelCount - 1, index + 1));
+    campaignLevels.forEach((level, index) => {
+      if (levelStats[level.id]?.completed) unlocked = Math.max(unlocked, Math.min(campaignLevelCount - 1, index + 1));
     });
+    if (levelStats["A-3"]?.completed) unlocked = Math.max(unlocked, forestLevelIndex);
     return {
       unlocked,
       levelStats,
       stickers: Array.isArray(saved.stickers) ? saved.stickers.filter((id): id is string => typeof id === "string") : [],
       secretUnlocked: saved.secretUnlocked === true || Boolean(levelStats["S-1"]),
+      waterUnlocked: saved.waterUnlocked === true || ["A-1", "A-2", "A-3"].some((id) => Boolean(levelStats[id])),
       bossChallenges: saved.bossChallenges && typeof saved.bossChallenges === "object"
         ? Object.fromEntries(Object.entries(saved.bossChallenges).filter(([, completed]) => completed === true))
         : {},
@@ -73,7 +80,8 @@ function createAudioContext() {
 }
 
 function readSavedPercentage(key: string, fallback: number) {
-  const value = Number(localStorage.getItem(key));
+  const saved = localStorage.getItem(key);
+  const value = saved === null ? fallback : Number(saved);
   return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : fallback;
 }
 
@@ -126,6 +134,7 @@ export default function App() {
       5: "./assets/music/manzanos.mp3",
       6: "./assets/music/castillo.wav",
       7: "./assets/music/gatitos.mp3",
+      8: "./assets/music/laguna.wav",
     } as const;
     const audio = new Audio(tracks[activeLevel.world]);
     audio.loop = true;
@@ -145,7 +154,7 @@ export default function App() {
   }, [screen]);
 
   const playSound = useCallback((kind: SoundKind) => {
-    if (muted) return;
+    if (muted || effectsVolume === 0) return;
     const audioContext = audioContextRef.current ?? createAudioContext();
     if (!audioContext) return;
     audioContextRef.current = audioContext;
@@ -175,9 +184,9 @@ export default function App() {
     () => Object.values(progress.levelStats).reduce((total, stat) => total + (Number(stat.bestApples) || 0), 0),
     [progress.levelStats],
   );
-  const albumStickers = progress.secretUnlocked ? stickerCatalog : stickerCatalog.filter((sticker) => sticker.world !== 7);
+  const albumStickers = stickerCatalog.filter((sticker) => (sticker.world !== 7 || progress.secretUnlocked) && (sticker.world !== 8 || progress.waterUnlocked));
   const knownBosses = bossLevels.filter(({ level }) => progress.levelStats[level.id]?.completed).length;
-  const completedLevels = Object.values(progress.levelStats).filter((stats) => stats.completed).length;
+  const completedLevels = campaignLevels.filter((level) => progress.levelStats[level.id]?.completed).length;
   const worldProgress = useMemo(() => Object.fromEntries(worldCatalog.map((world) => {
     const worldLevels = levels.filter((level) => level.world === world.id);
     const complete = worldLevels.filter((level) => progress.levelStats[level.id]?.completed).length;
@@ -194,6 +203,13 @@ export default function App() {
     setShowAlbum(true);
   };
 
+  const isLevelUnlocked = (index: number) => {
+    const level = levels[index];
+    if (level.world === 7) return progress.secretUnlocked;
+    if (level.world === 8) return progress.waterUnlocked && (level.screen === 1 || Boolean(progress.levelStats[`A-${level.screen - 1}`]?.completed));
+    return campaignLevels.findIndex((entry) => entry.id === level.id) <= progress.unlocked;
+  };
+
   const replayBoss = (index: number) => {
     const level = levels[index];
     if (!level.boss || !progress.levelStats[level.id]?.completed) return;
@@ -208,14 +224,15 @@ export default function App() {
     setScreen("boss");
   };
 
-  const finishBossReplay = () => {
+  const finishBossReplay = (challengeCompleted = false) => {
+    if (challengeCompleted && activeLevel.boss) setProgress((current) => ({ ...current, bossChallenges: { ...current.bossChallenges, [activeLevel.boss!]: true } }));
     setBossReplay(false);
     openCollection("bosses");
     setScreen(bossReplayReturn);
   };
 
   const beginLevel = (index: number) => {
-    if (index === secretLevelIndex ? !progress.secretUnlocked : index > progress.unlocked) return;
+    if (!isLevelUnlocked(index)) return;
     setActiveIndex(index);
     setLevelRun((current) => current + 1);
     setLives(MAX_LIVES);
@@ -249,7 +266,9 @@ export default function App() {
       const previous = current.levelStats[activeLevel.id];
       return {
         ...current,
-        unlocked: activeLevel.world === 7 ? current.unlocked : Math.max(current.unlocked, Math.min(campaignLevelCount - 1, activeIndex + 1)),
+        unlocked: activeLevel.id === "A-3" ? Math.max(current.unlocked, forestLevelIndex)
+          : activeLevel.world === 7 || activeLevel.world === 8 ? current.unlocked
+            : Math.max(current.unlocked, Math.min(campaignLevelCount - 1, campaignLevels.findIndex((level) => level.id === activeLevel.id) + 1)),
         levelStats: {
           ...current.levelStats,
           [activeLevel.id]: { completed: true, bestApples: Math.max(previous?.bestApples ?? 0, snapshot.apples), flawless: previous?.flawless || lives === MAX_LIVES },
@@ -258,7 +277,17 @@ export default function App() {
       };
     });
     setScreen(activeLevel.id === "6-3" ? "finished" : "complete");
-  }, [activeIndex, activeLevel.boss, activeLevel.id, activeLevel.world, lives, snapshot.apples]);
+  }, [activeLevel.boss, activeLevel.id, activeLevel.world, lives, snapshot.apples]);
+
+  const handleWaterExit = useCallback(() => {
+    setProgress((current) => ({ ...current, waterUnlocked: true }));
+    setActiveIndex(waterLevelIndex);
+    setLevelRun((current) => current + 1);
+    setLives(MAX_LIVES);
+    setSnapshot(emptySnapshot);
+    setPaused(false);
+    setScreen("game");
+  }, []);
 
   const handleBossEncounter = useCallback(() => {
     setPaused(false);
@@ -299,7 +328,9 @@ export default function App() {
   }, []);
 
   const nextLevel = () => {
-    setActiveIndex(Math.min(levels.length - 1, activeIndex + 1));
+    const nextIndex = activeLevel.id === "2-3" || activeLevel.id === "A-3"
+      ? levels.findIndex((level) => level.id === "3-1") : Math.min(levels.length - 1, activeIndex + 1);
+    setActiveIndex(nextIndex);
     setLevelRun((current) => current + 1);
     setLives(MAX_LIVES);
     setSnapshot(emptySnapshot);
@@ -364,7 +395,7 @@ export default function App() {
               <article className={`world-card world-${world.id}`} key={world.id}>
                 <img className="world-art" src={`./assets/worlds/world-${world.id}.png`} alt="" aria-hidden="true" />
                 <div className="world-heading">
-                  <span className="world-number">{world.id === 7 ? "Mundo secreto" : `Mundo ${world.id}`}</span>
+                  <span className="world-number">{world.id === 7 ? "Mundo secreto" : world.id === 8 ? "Mundo del agua" : `Mundo ${world.id}`}</span>
                   <h3>{world.name}</h3>
                   <p>{world.description}</p>
                 </div>
@@ -376,13 +407,13 @@ export default function App() {
                 <div className="level-row">
                   {levels.map((level, index) => {
                     if (level.world !== world.id) return null;
-                    const unlocked = level.world === 7 ? progress.secretUnlocked : index <= progress.unlocked;
+                    const unlocked = isLevelUnlocked(index);
                     const stats = progress.levelStats[level.id];
                     return (
                       <button className={`level-card ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked} onClick={() => beginLevel(index)} key={level.id}>
                         <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}</span>
                         <strong>{level.title}</strong>
-                        <small>{stats?.completed ? <><span>✓ Completada · <GameAssetIcon kind="apple" /> {stats.bestApples}</span><span className="level-medals" aria-label={`${1 + Number(progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? "")) + Number(Boolean(stats.flawless))} de 3 medallas`}>{[true, progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? ""), Boolean(stats.flawless)].map((earned, medal) => <i className={earned ? "is-earned" : ""} key={medal}>★</i>)}</span></> : unlocked ? "Lista para jugar" : "Completa la anterior"}</small>
+                        <small>{stats?.completed ? <><span>✓ Completada · <GameAssetIcon kind="apple" /> {stats.bestApples}</span><span className="level-medals" aria-label={`${1 + Number(progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? "")) + Number(Boolean(stats.flawless))} de 3 medallas`}>{[true, progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? ""), Boolean(stats.flawless)].map((earned, medal) => <i className={earned ? "is-earned" : ""} key={medal}>★</i>)}</span></> : unlocked ? "Lista para jugar" : level.world === 8 && !progress.waterUnlocked ? "Busca la poza azul en 2-3" : "Completa la anterior"}</small>
                       </button>
                     );
                   })}
@@ -420,7 +451,7 @@ export default function App() {
               {screen === "game" && <button type="button" onClick={() => setPaused((value) => !value)} aria-label="Pausa">Ⅱ</button>}
             </div>
           </header>}
-          {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onSnapshot={handleSnapshot} playSound={playSound} />}
+          {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} playSound={playSound} />}
           {!bossReplay && <div className="level-caption"><span>{themeNames[activeLevel.theme]}</span><span>Bandera {snapshot.checkpoint}/{activeLevel.checkpoints.length}</span></div>}
 
           {screen === "boss" && activeLevel.boss && (
@@ -448,12 +479,12 @@ export default function App() {
 
           {screen === "complete" && (
             <div className="modal-backdrop celebration"><div className="game-modal">
-              <div className="big-icon">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt="Trofeo dorado con una huella de gato" /> : <img className="completion-cat" src="./assets/sprites/completion-cat-v1.png" alt="Gatito feliz rescatado" />}</div><p className="eyebrow">{activeLevel.boss ? "¡Duelo ganado!" : "¡Gatito encontrado!"}</p>
+              <div className="big-icon">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt="Trofeo dorado con una huella de gato" /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.png"} alt="Gatito feliz rescatado" />}</div><p className="eyebrow">{activeLevel.boss ? "¡Duelo ganado!" : "¡Gatito encontrado!"}</p>
               <h2>Pantalla {activeLevel.id} completada</h2>
               <p>Noa ha recogido {snapshot.apples} {snapshot.apples === 1 ? "manzana" : "manzanas"}. {activeLevel.world === 7 ? "La Reina Arcoíris guarda para siempre las insignias encontradas." : activeLevel.boss ? "El monstruo guardián ha dejado libre el camino." : "La siguiente aventura ya está abierta."}</p>
               <div className="completion-medals" aria-label="Medallas de esta pantalla"><span className="is-earned">★ Pantalla</span><span className={snapshot.stickers.length > 0 || progress.stickers.includes(activeLevel.items.find((item) => item.kind === "sticker")?.id ?? "") ? "is-earned" : ""}>★ Pegatina</span><span className={lives === MAX_LIVES ? "is-earned" : ""}>★ Sin perder vida</span></div>
               {snapshot.stickers.length > 0 && <p className="sticker-found"><PixelIcon kind="sparkle" /> {snapshot.stickers.length === 1 ? "Insignia guardada" : `${snapshot.stickers.length} insignias guardadas`} en el álbum.</p>}
-              {activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}>Siguiente pantalla ▶</button>}
+              {activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}>{activeLevel.id === "A-3" ? "Seguir al bosque ▶" : "Siguiente pantalla ▶"}</button>}
               {activeLevel.world === 7 && <button className="pixel-button primary" type="button" onClick={() => setScreen("map")}>Volver al mapa secreto</button>}
               {activeLevel.world !== 7 && <button className="pixel-button" type="button" onClick={() => setScreen("map")}>Volver al mapa</button>}
             </div></div>
@@ -471,7 +502,7 @@ export default function App() {
           {screen === "finished" && (
             <div className="modal-backdrop celebration"><div className="game-modal finale">
               <div className="cat-party" aria-hidden="true"><PixelIcon kind="cat" /><GameAssetIcon kind="apple" /><PixelIcon kind="cat" /><PixelIcon kind="yarn" /><PixelIcon kind="cat" /></div><p className="eyebrow">Aventura completada</p>
-              <h2>¡Bravo, Super Noa!</h2><p>Los seis guardianes son ahora amigos de Noa. Los gatitos y la tripulación celebran una fiesta en el castillo. Fin… por ahora.</p>
+              <h2>¡Bravo, Super Noa!</h2><p>Los guardianes son ahora amigos de Noa. Los gatitos y la tripulación celebran una fiesta en el castillo. Fin… por ahora.</p>
               <button className="pixel-button primary" type="button" onClick={() => setScreen("map")}>Ver el mapa</button>
               <button className="pixel-button" type="button" onClick={() => setScreen("home")}>Ir al inicio</button>
             </div></div>
@@ -517,7 +548,7 @@ export default function App() {
             <div><span className="help-rps"><PixelIcon kind="rock" /><PixelIcon kind="paper" /><PixelIcon kind="scissors" /></span><strong>Duelo final</strong><small>Gana dos rondas de piedra, papel o tijera.</small></div>
             <div><span><PixelIcon kind="sparkle" /></span><strong>Mira arriba</strong><small>Las pegatinas se esconden en caminos altos.</small></div>
           </div>
-          <p className="help-note">Con teclado: A/D o flechas para caminar, espacio para saltar y X/K para lanzar lana. También puedes usar un mando.</p>
+          <p className="help-note">Con teclado: A/D o flechas para caminar, espacio para saltar y X/K para lanzar lana. También puedes usar un mando. En el agua, SALTAR da una brazada hacia arriba; al soltarlo, Noa baja despacito y puede caminar por la arena. ¡Los erizos pinchan!</p>
           <button className="pixel-button primary" type="button" onClick={() => { setShowHelp(false); setScreen("map"); }}>¡Lista para jugar!</button>
         </div></div>
       )}
@@ -528,8 +559,8 @@ export default function App() {
           <p className="eyebrow">Hecho con cariño</p><h2>Créditos</h2>
           <p><strong>Super Noa</strong> es un juego original inspirado en los plataformas familiares de 8 bits.</p>
           <p>Personaje creado para este proyecto a partir de referencias privadas. Las fotografías originales no forman parte de la web.</p>
-          <p>Música de los primeros cinco mundos: <a href="https://opengameart.org/content/platformer-chiptunes" target="_blank" rel="noreferrer">Platformer Chiptunes</a>, de Guy G. Gamerson, publicada bajo licencia CC0. La música del castillo es una composición original sintetizada para Super Noa.</p>
-          <p>Los seis monstruos finales y las miniaturas pixel art de los mundos son diseños originales generados para este proyecto. Efectos de sonido generados en el navegador; escenarios jugables, interfaz y código creados para Super Noa.</p>
+          <p>Música de los primeros cinco mundos: <a href="https://opengameart.org/content/platformer-chiptunes" target="_blank" rel="noreferrer">Platformer Chiptunes</a>, de Guy G. Gamerson, publicada bajo licencia CC0. La música del castillo y de la laguna son composiciones originales sintetizadas para Super Noa.</p>
+          <p>Los guardianes finales y las miniaturas pixel art de los mundos son diseños originales generados para este proyecto. Efectos de sonido generados en el navegador; escenarios jugables, interfaz y código creados para Super Noa.</p>
           <button className="pixel-button primary" type="button" onClick={() => setShowCredits(false)}>Cerrar</button>
         </div></div>
       )}
@@ -567,7 +598,7 @@ export default function App() {
                 const challengeDone = Boolean(progress.bossChallenges[level.boss ?? ""]);
                 return (
                   <article className={`boss-friend-card ${known ? "is-friend" : "is-mystery"} ${challengeDone ? "has-challenge-frame" : ""}`} key={level.id}>
-                    <span className="boss-friend-world">{level.world === 7 ? (progress.secretUnlocked ? "Mundo secreto" : "Mundo misterioso") : `Mundo ${level.world}`}</span>
+                    <span className="boss-friend-world">{level.world === 7 ? (progress.secretUnlocked ? "Mundo secreto" : "Mundo misterioso") : level.world === 8 ? "Mundo del agua" : `Mundo ${level.world}`}</span>
                     <div className="boss-friend-portrait" aria-hidden="true">
                       {known ? <img src={`${boss.assetPrefix}-0.png`} alt="" /> : <span className="boss-mystery-shape">?</span>}
                     </div>
@@ -587,7 +618,7 @@ export default function App() {
                   <article className={`memory-card world-${world.id} ${memory.remembered ? "is-remembered" : "is-locked"}`} key={world.id}>
                     <img className="memory-world-art" src={`./assets/worlds/world-${world.id}.png`} alt="" aria-hidden="true" />
                     <div className="memory-content">
-                      <span>{world.id === 7 ? "Mundo secreto" : `Mundo ${world.id}`}</span>
+                      <span>{world.id === 7 ? "Mundo secreto" : world.id === 8 ? "Mundo del agua" : `Mundo ${world.id}`}</span>
                       {memory.remembered ? <><img className="memory-cat" src={world.catAsset} alt={`${world.cat}, el gatito amigo de ${world.name}`} /><strong>{world.cat}</strong><small>{world.name}</small><em>★ {memory.complete + memory.stickers + memory.flawless} medallas de aventura</em></> : <><b className="memory-lock">?</b><strong>Postal por descubrir</strong><small>{memory.complete}/{memory.total} pantallas completadas</small></>}
                     </div>
                   </article>

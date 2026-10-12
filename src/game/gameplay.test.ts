@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring } from "./gameplay.ts";
+import { boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, swimmingVelocity, waterAt } from "./gameplay.ts";
 
 test("el banderín tiene una zona elevada y alcanzable al saltar", () => {
   const flag = goalFlagHitbox(900, 456);
@@ -23,4 +23,22 @@ test("el muelle solo impulsa al aterrizar sobre él, no al caminar de largo", ()
   assert.equal(landsOnSpring(true, 456, 457, 398, 20), false);
   assert.equal(landsOnSpring(false, 394, 401, 398, 250), true);
   assert.equal(landsOnSpring(false, 394, 401, 398, -250), false);
+});
+
+test("el agua solo afecta a Noa dentro de la poza y permite caminar por el fondo", () => {
+  const zone = { x: 100, y: 120, width: 700, height: 430 };
+  assert.equal(waterAt({ x: 130, y: 50, width: 42, height: 58 }, [zone]), undefined);
+  assert.equal(waterAt({ x: 10, y: 200, width: 42, height: 58 }, [zone]), undefined);
+  assert.equal(waterAt({ x: 130, y: 100, width: 42, height: 58 }, [zone]), zone);
+  assert.equal(waterAt({ x: 130, y: 432, width: 42, height: 58 }, [zone]), zone);
+});
+
+test("las brazadas suben y soltar el botón hunde con velocidad limitada", () => {
+  let velocity = 95;
+  for (let tick = 0; tick < 60; tick += 1) velocity = swimmingVelocity(velocity, true, 1 / 60);
+  assert.equal(velocity, -190);
+  for (let tick = 0; tick < 180; tick += 1) velocity = swimmingVelocity(velocity, false, 1 / 60);
+  assert.equal(velocity, 95);
+  assert.ok(swimmingVelocity(0, true, 1 / 60) < 0);
+  assert.ok(swimmingVelocity(0, false, 1 / 60) > 0);
 });

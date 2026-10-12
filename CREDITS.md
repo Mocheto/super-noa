@@ -11,6 +11,8 @@ Las pistas `manzanos.mp3`, `gatitos.mp3` y `lobos.mp3` proceden del paquete [Pla
 
 La pista `castillo.wav` del sexto mundo es una composición original sintetizada para Super Noa mediante `scripts/build-castle-music.mjs`; no emplea muestras ni melodías de terceros.
 
+La pista `laguna.wav` del mundo acuático es una composición original sintetizada para Super Noa mediante `scripts/build-water-music.mjs`; no emplea muestras ni melodías de terceros.
+
 La atribución no es obligatoria bajo CC0, pero se conserva por cortesía y trazabilidad.
 
 ## Recursos originales del proyecto
@@ -21,3 +23,4 @@ La atribución no es obligatoria bajo CC0, pero se conserva por cortesía y traz
 - Insignias troqueladas de los siete mundos, postales y gatitos de recuerdo, y coraza dorada de Noa: recursos pixel art originales generados para este proyecto. La coraza dorada se utiliza cuando Noa está protegida.
 - Monstruos finales: Rey Zarzal, Condesa Niebla, Gran Lobo, Gran Jabalí, Capitán Celeste, Conde Vampiro y Reina Arcoíris son diseños pixelados originales generados para Super Noa. No copian personajes de Nintendo, Sega ni de otros juegos.
 - Efectos de sonido: sintetizados en tiempo real mediante Web Audio API.
+- Mundo acuático: fondos, terreno, peces, erizos, gatita Perla, pegatinas, gestos de nado de Noa y Don Aleta son recursos originales creados para Super Noa.

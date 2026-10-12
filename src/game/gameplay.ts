@@ -4,6 +4,14 @@ export const GRAVITY = 1650;
 export const JUMP_SPEED = 625;
 export const SPRING_SPEED = 1080;
 
+/** El centro del cuerpo activa el agua, evitando oscilaciones en la orilla. */
+export const waterAt = (player: Rect, zones: Rect[] = []) => zones.find((zone) =>
+  player.x + player.width / 2 >= zone.x && player.x + player.width / 2 < zone.x + zone.width &&
+  player.y + player.height * 0.6 >= zone.y && player.y < zone.y + zone.height);
+
+export const swimmingVelocity = (velocity: number, swimmingUp: boolean, delta: number) =>
+  swimmingUp ? Math.max(-190, velocity - 920 * delta) : Math.min(95, velocity + 290 * delta);
+
 export const landsOnSpring = (wasGrounded: boolean, previousBottom: number, currentBottom: number, springY: number, verticalSpeed: number) =>
   !wasGrounded && verticalSpeed >= 0 && previousBottom <= springY + 10 && currentBottom >= springY;
 

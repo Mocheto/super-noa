@@ -8,10 +8,33 @@ import { bossCatalog } from "./bosses.ts";
 
 const castle = levels.filter((level) => level.world === 6);
 
-test("los siete jefes del álbum tienen retrato y duelo", () => {
+test("el mundo del agua se abre desde una caída segura y conserva los mundos antiguos", () => {
+  const aquatic = levels.filter((level) => level.world === 8);
+  assert.deepEqual(aquatic.map((level) => level.id), ["A-1", "A-2", "A-3"]);
+  assert.equal(levels[levels.findIndex((level) => level.id === "2-3") + 1].id, "A-1");
+  assert.equal(levels[levels.findIndex((level) => level.id === "A-3") + 1].id, "3-1");
+  assert.equal(aquatic[2].boss, "shark-captain");
+  assert.equal(levels.filter((level) => level.world !== 7 && level.world !== 8).length, 18);
+  const cave = levels.find((level) => level.id === "2-3")!;
+  const entrance = cave.waterEntrance!;
+  assert.ok(entrance);
+  assert.ok(!cave.platforms.some((platform) => platform.y >= 456 && platform.x < entrance.x + entrance.width && platform.x + platform.width > entrance.x));
+  for (const level of aquatic) {
+    assert.ok(level.waterZones?.length);
+    assert.ok(level.enemies.some((enemy) => enemy.kind === "fish"));
+    assert.ok(level.enemies.some((enemy) => enemy.kind === "urchin"));
+    assert.ok(level.items.some((item) => item.id === `sticker-a-${level.screen}`));
+    for (const checkpoint of level.checkpoints) {
+      assert.ok(level.platforms.some((platform) => platform.kind === "sea-ground" && platform.x <= checkpoint + 22 && platform.x + platform.width >= checkpoint + 64));
+      assert.ok(!level.enemies.some((enemy) => enemy.kind === "urchin" && Math.abs(enemy.x - (checkpoint + 22)) < 80));
+    }
+  }
+});
+
+test("los ocho jefes del álbum tienen retrato y duelo", () => {
   const bosses = levels.filter((level) => level.boss);
-  assert.equal(bosses.length, 7);
-  assert.equal(new Set(bosses.map((level) => level.boss)).size, 7);
+  assert.equal(bosses.length, 8);
+  assert.equal(new Set(bosses.map((level) => level.boss)).size, 8);
   for (const level of bosses) {
     assert.ok(level.boss);
     const boss = bossCatalog[level.boss];
@@ -121,7 +144,7 @@ test("el reino secreto conserva sus identificadores y está después de la campa
 
 test("todas las insignias del juego tienen un sprite transparente y su celda correcta", () => {
   const ids = levels.flatMap((level) => level.items.filter((item) => item.kind === "sticker").map((item) => item.id));
-  assert.equal(ids.length, 21);
+  assert.equal(ids.length, 24);
   assert.deepEqual(new Set(ids), new Set(stickerCatalog.map((entry) => entry.id)));
   for (const sticker of stickerCatalog) {
     const sprite = getStickerSprite(sticker.id);

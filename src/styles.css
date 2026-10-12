@@ -242,6 +242,8 @@ h1 span {
 .world-6 .world-number { background: #d4abea; }
 .world-7 { background: linear-gradient(145deg, #4e70b8, #8f62b7); }
 .world-7 .world-number { background: #f7b8ef; }
+.world-8 { background: #176a80; }
+.world-8 .world-number { background: #8eece6; }
 .world-number { display: inline-block; color: var(--ink); background: var(--gold); padding: 7px 11px; border: 3px solid var(--ink); font-weight: 900; }
 .world-heading h3 { margin: 17px 0 7px; font-size: clamp(1.5rem, 3vw, 2.35rem); line-height: 1; color: #fff; text-shadow: 3px 3px 0 rgba(30,16,39,.45); }
 .world-heading p { margin: 0; font-family: system-ui, sans-serif; color: rgba(255,255,255,.9); }
@@ -439,6 +441,7 @@ h1 span {
 .boss-battle > * { position: relative; z-index: 1; }
 .boss-theme-bramble-king::before { background-image: linear-gradient(90deg, transparent 0 8%, #69924d 8% 12%, transparent 12% 23%, #4f783f 23% 29%, transparent 29% 76%, #69924d 76% 81%, transparent 81%); }
 .boss-theme-mist-countess::before { background-image: linear-gradient(180deg, transparent 10%, #cfbce5 10% 22%, transparent 22% 36%, #b89bd6 36% 48%, transparent 48%); }
+.boss-theme-shark-captain::before { background-image: repeating-linear-gradient(175deg, transparent 0 32px, #46c9ca 34px 45px, transparent 47px 85px); }
 .boss-theme-great-wolf::before { background-image: repeating-linear-gradient(75deg, transparent 0 70px, #33495a 72px 92px, transparent 94px 150px); }
 .boss-theme-great-boar::before { background-image: repeating-linear-gradient(105deg, transparent 0 64px, #557348 66px 88px, transparent 90px 142px); }
 .boss-theme-sky-captain::before { background-image: linear-gradient(180deg, transparent 0 58%, #77bed4 58% 64%, transparent 64%), repeating-linear-gradient(90deg, transparent 0 72px, #6f4735 74px 118px, transparent 120px 185px); }

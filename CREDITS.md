@@ -24,3 +24,4 @@ La atribución no es obligatoria bajo CC0, pero se conserva por cortesía y traz
 - Monstruos finales: Rey Zarzal, Condesa Niebla, Gran Lobo, Gran Jabalí, Capitán Celeste, Conde Vampiro y Reina Arcoíris son diseños pixelados originales generados para Super Noa. No copian personajes de Nintendo, Sega ni de otros juegos.
 - Efectos de sonido: sintetizados en tiempo real mediante Web Audio API.
 - Mundo acuático: fondos, terreno, peces, erizos, gatita Perla, pegatinas, gestos de nado de Noa y Don Aleta son recursos originales creados para Super Noa.
+- Las nuevas ilustraciones panorámicas del mapa para los mundos 1–5 son versiones originales de las escenas de Super Noa; sus descripciones de generación están en `MAP_ART.md`.

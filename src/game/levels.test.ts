@@ -119,6 +119,25 @@ test("el bloque de gato tras el segundo checkpoint del conde exige usar la repis
   ));
 });
 
+test("las cajas del castillo se golpean desde apoyos seguros, sin quedar pegadas a las repisas", () => {
+  const maxJumpRise = JUMP_SPEED ** 2 / (2 * GRAVITY);
+  for (const level of castle) {
+    for (const block of level.rewardBlocks) {
+      const support = level.platforms
+        .filter((platform) => platform.x <= block.x && platform.x + platform.width >= block.x + 48 && platform.y > block.y + 48)
+        .sort((a, b) => a.y - b.y)[0];
+      assert.ok(support, `${level.id}: la caja ${block.id} no tiene apoyo debajo`);
+      const distanceToHit = support.y - 58 - (block.y + 48);
+      assert.ok(distanceToHit >= 14 && distanceToHit < maxJumpRise,
+        `${level.id}: la caja ${block.id} está demasiado cerca o lejos del apoyo (${distanceToHit}px)`);
+      if (block.id !== "c3r2") {
+        assert.ok(!level.spikePits?.some((pit) => pit.x < block.x + 48 && pit.x + pit.width > block.x),
+          `${level.id}: la caja ${block.id} queda sobre los pinchos`);
+      }
+    }
+  }
+});
+
 test("cada hueco del castillo contiene pinchos y los puntos seguros tienen suelo", () => {
   for (const level of castle) {
     const floors = level.platforms.filter((platform) => platform.kind === "castle-ground").sort((a, b) => a.x - b.x);

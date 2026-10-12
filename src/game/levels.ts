@@ -712,7 +712,7 @@ export const levels: Level[] = [
     spikePits: spikePits(castleFloor2),
     enemies: [enemy("zo2", "zombie", 350, 406, 230, 580, 32), enemy("gh3", "ghost", 980, 205, 830, 1220, 57), enemy("sk3", "skeleton", 1660, 420, 1500, 1770, 38), enemy("gh4", "ghost", 2480, 190, 2220, 2780, 60), enemy("zo3", "zombie", 3190, 406, 3080, 3500, 35), enemy("gh5", "ghost", 4010, 205, 3780, 4270, 62), enemy("sk4", "skeleton", 4640, 420, 4450, 4890, 40)],
     items: [apple("c2a1", 350, 285), apple("c2a2", 1320, 220), apple("c2a3", 2360, 200), apple("c2a4", 3570, 195), apple("c2a5", 4490, 215), sticker("sticker-6-2", 3560, 205)],
-    rewardBlocks: [reward("c2r1", 900, 285), reward("c2r2", 2860, 290, "apple"), reward("c2r3", 4210, 295)], checkpoints: [840, 2030, 3120, 4190],
+    rewardBlocks: [reward("c2r1", 900, 210), reward("c2r2", 2740, 210, "apple"), reward("c2r3", 4210, 295)], checkpoints: [840, 2030, 3120, 4190],
   },
   {
     id: "6-3", world: 6, screen: 3,
@@ -731,7 +731,7 @@ export const levels: Level[] = [
     spikePits: spikePits(castleFloor3),
     enemies: [enemy("sk5", "skeleton", 390, 420, 230, 680, 40), enemy("gh6", "ghost", 1100, 215, 930, 1340, 62), enemy("zo4", "zombie", 2240, 406, 2060, 2670, 36), enemy("gh7", "ghost", 2860, 195, 2590, 3050, 65), enemy("sk6", "skeleton", 3330, 420, 3170, 3660, 43), enemy("gh8", "ghost", 4260, 205, 4030, 4500, 68), enemy("zo5", "zombie", 4770, 406, 4580, 5030, 39), enemy("gh9", "ghost", 5450, 185, 5250, 5700, 70), enemy("sk7", "skeleton", 5940, 420, 5770, 6200, 46)],
     items: [apple("c3a1", 420, 285), apple("c3a2", 1450, 220), apple("c3a3", 2580, 205), apple("c3a4", 3650, 190), apple("c3a5", 4800, 195), apple("c3a6", 5960, 195), sticker("sticker-6-3", 4780, 185)],
-    rewardBlocks: [reward("c3r1", 1050, 280), reward("c3r2", 2980, 210, "apple"), reward("c3r3", 5290, 280)], checkpoints: [940, 2010, 3120, 4210, 5350, 5890], boss: "vampire-count",
+    rewardBlocks: [reward("c3r1", 1050, 210), reward("c3r2", 2980, 210, "apple"), reward("c3r3", 5280, 200)], checkpoints: [940, 2010, 3120, 4210, 5350, 5890], boss: "vampire-count",
   },
   {
     id: "S-1",

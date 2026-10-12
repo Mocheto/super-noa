@@ -9,6 +9,8 @@ import { getStickerSprite, stickerCatalog } from "./game/stickers";
 import type { GameSnapshot } from "./game/types";
 
 const STORAGE_KEY = "super-noa-progress-v1";
+const MUSIC_VOLUME_KEY = "super-noa-music-volume";
+const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
 
 type LevelStats = Record<string, { completed: boolean; bestApples: number; flawless?: boolean }>;
 type Progress = { unlocked: number; levelStats: LevelStats; stickers: string[]; secretUnlocked: boolean; waterUnlocked: boolean; bossChallenges: Record<string, boolean> };
@@ -81,9 +83,14 @@ function createAudioContext() {
 
 function readSavedPercentage(key: string, fallback: number) {
   const saved = localStorage.getItem(key);
+  // Las versiones anteriores guardaban un 0 automático al abrir la página.
+  // Un 0 elegido por la persona usuaria lleva una marca explícita desde ahora.
+  if (saved === "0" && localStorage.getItem(`${key}-configured`) !== "true") return fallback;
   const value = saved === null ? fallback : Number(saved);
   return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : fallback;
 }
+
+const worldArtwork = (world: number) => `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`;
 
 export default function App() {
   const [progress, setProgress] = useState<Progress>(readProgress);
@@ -98,8 +105,8 @@ export default function App() {
   const [showAlbum, setShowAlbum] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [collectionTab, setCollectionTab] = useState<CollectionTab>("stickers");
-  const [musicVolume, setMusicVolume] = useState(() => readSavedPercentage("super-noa-music-volume", 60));
-  const [effectsVolume, setEffectsVolume] = useState(() => readSavedPercentage("super-noa-effects-volume", 70));
+  const [musicVolume, setMusicVolume] = useState(() => readSavedPercentage(MUSIC_VOLUME_KEY, 100));
+  const [effectsVolume, setEffectsVolume] = useState(() => readSavedPercentage(EFFECTS_VOLUME_KEY, 100));
   const [reduceMotion, setReduceMotion] = useState(() => localStorage.getItem("super-noa-reduce-motion") === "true");
   const [touchControls, setTouchControls] = useState<TouchControlsMode>(() => localStorage.getItem("super-noa-touch-controls") === "always" ? "always" : "auto");
   const [bossReplay, setBossReplay] = useState(false);
@@ -119,8 +126,8 @@ export default function App() {
   }, [muted]);
 
   useEffect(() => {
-    localStorage.setItem("super-noa-music-volume", String(musicVolume));
-    localStorage.setItem("super-noa-effects-volume", String(effectsVolume));
+    localStorage.setItem(MUSIC_VOLUME_KEY, String(musicVolume));
+    localStorage.setItem(EFFECTS_VOLUME_KEY, String(effectsVolume));
     localStorage.setItem("super-noa-reduce-motion", String(reduceMotion));
     localStorage.setItem("super-noa-touch-controls", touchControls);
   }, [effectsVolume, musicVolume, reduceMotion, touchControls]);
@@ -393,7 +400,7 @@ export default function App() {
           <div className="world-list">
             {worldCatalog.filter((world) => world.id !== 7 || progress.secretUnlocked).map((world) => (
               <article className={`world-card world-${world.id}`} key={world.id}>
-                <img className="world-art" src={`./assets/worlds/world-${world.id}.png`} alt="" aria-hidden="true" />
+                <img className="world-art" src={worldArtwork(world.id)} alt="" aria-hidden="true" />
                 <div className="world-heading">
                   <span className="world-number">{world.id === 7 ? "Mundo secreto" : world.id === 8 ? "Mundo del agua" : `Mundo ${world.id}`}</span>
                   <h3>{world.name}</h3>
@@ -517,9 +524,9 @@ export default function App() {
           <p>Estos ajustes se guardan en este dispositivo.</p>
           <div className="settings-group">
             <label htmlFor="music-volume">Música <output>{Math.round(musicVolume)}%</output></label>
-            <input id="music-volume" type="range" min="0" max="100" value={musicVolume} onChange={(event) => setMusicVolume(Number(event.target.value))} />
+            <input id="music-volume" type="range" min="0" max="100" value={musicVolume} onChange={(event) => { localStorage.setItem(`${MUSIC_VOLUME_KEY}-configured`, "true"); setMusicVolume(Number(event.target.value)); }} />
             <label htmlFor="effects-volume">Efectos <output>{Math.round(effectsVolume)}%</output></label>
-            <input id="effects-volume" type="range" min="0" max="100" value={effectsVolume} onChange={(event) => setEffectsVolume(Number(event.target.value))} />
+            <input id="effects-volume" type="range" min="0" max="100" value={effectsVolume} onChange={(event) => { localStorage.setItem(`${EFFECTS_VOLUME_KEY}-configured`, "true"); setEffectsVolume(Number(event.target.value)); }} />
           </div>
           <div className="settings-toggle"><input id="reduce-motion" type="checkbox" checked={reduceMotion} onChange={(event) => setReduceMotion(event.target.checked)} /><label htmlFor="reduce-motion"><strong>Movimiento tranquilo</strong><small>Reduce destellos y animaciones rápidas.</small></label></div>
           <fieldset className="settings-controls"><legend>Controles táctiles</legend>
@@ -616,7 +623,7 @@ export default function App() {
                 const memory = worldProgress[world.id];
                 return (
                   <article className={`memory-card world-${world.id} ${memory.remembered ? "is-remembered" : "is-locked"}`} key={world.id}>
-                    <img className="memory-world-art" src={`./assets/worlds/world-${world.id}.png`} alt="" aria-hidden="true" />
+                    <img className="memory-world-art" src={worldArtwork(world.id)} alt="" aria-hidden="true" />
                     <div className="memory-content">
                       <span>{world.id === 7 ? "Mundo secreto" : world.id === 8 ? "Mundo del agua" : `Mundo ${world.id}`}</span>
                       {memory.remembered ? <><img className="memory-cat" src={world.catAsset} alt={`${world.cat}, el gatito amigo de ${world.name}`} /><strong>{world.cat}</strong><small>{world.name}</small><em>★ {memory.complete + memory.stickers + memory.flawless} medallas de aventura</em></> : <><b className="memory-lock">?</b><strong>Postal por descubrir</strong><small>{memory.complete}/{memory.total} pantallas completadas</small></>}

@@ -39,4 +39,4 @@ Los cañones, sus bolas, los puntos de control y los banderines usan sprites pro
 
 ## Licencias
 
-El personaje, los seis monstruos finales, los escenarios, el código y los efectos sintetizados se crearon para este proyecto. La música de los primeros cinco mundos procede de “Platformer Chiptunes”, de Guy G. Gamerson, publicada bajo CC0; la del castillo es original. Consulta [CREDITS.md](CREDITS.md).
+El personaje, los siete monstruos finales, los gatitos de recuerdo, los escenarios, el código y los efectos sintetizados se crearon para este proyecto. La música de los primeros cinco mundos procede de “Platformer Chiptunes”, de Guy G. Gamerson, publicada bajo CC0; la del castillo es original. Consulta [CREDITS.md](CREDITS.md).

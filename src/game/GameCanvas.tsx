@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { PixelIcon } from "./PixelIcon";
 import { getStickerSprite } from "./stickers";
 import type { Level, GameSnapshot, LevelItem, Power, Rect } from "./types";
-import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, rectanglesOverlap, SPRING_SPEED, swimmingVelocity, waterAt } from "./gameplay";
+import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay";
 
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 540;
@@ -1607,6 +1607,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     let shootCooldown = 0;
     let completed = false;
     let frame = 0;
+    let walkCycleTime = 0;
     let lastTime = performance.now();
     let lastSnapshot = 0;
     let animationId = 0;
@@ -1930,11 +1931,20 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         ball.y += ball.vy * delta;
         ball.vy += 120 * delta;
         ball.life -= delta;
+        const ballHitbox = { x: ball.x - 10, y: ball.y - 10, width: 20, height: 20 };
+        // El ovillo se dibuja a 34 × 34: su borde visible, no solo el centro,
+        // debe detenerse al tocar la roca del arrecife.
+        const visibleBall = { x: ball.x - 17, y: ball.y - 17, width: 34, height: 34 };
+        if (level.world === 8 && projectileHitsWaterWall(visibleBall, level.platforms)) {
+          ball.life = 0;
+          bursts.push({ x: ball.x, y: ball.y, life: 0.3, color: "#d8f5fb", kind: "puff" });
+          callbacksRef.current.playSound("block");
+          return;
+        }
         enemies.forEach((enemy) => {
           if (!enemy.active) return;
-          if (enemy.kind === "urchin") return;
           const enemyHitbox = { ...enemy, y: enemyY(enemy) };
-          if (intersects({ x: ball.x - 10, y: ball.y - 10, width: 20, height: 20 }, enemyHitbox)) {
+          if (intersects(ballHitbox, enemyHitbox)) {
             enemy.active = false;
             ball.life = 0;
             bursts.push({ x: enemy.x + enemy.width / 2, y: enemyHitbox.y + 10, life: 0.5, color: "#dca0f1", kind: "stars" });
@@ -1943,7 +1953,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         });
         cannonballs.forEach((cannonball) => {
           if (!cannonball.active) return;
-          if (intersects({ x: ball.x - 10, y: ball.y - 10, width: 20, height: 20 }, { x: cannonball.x, y: cannonball.y, width: 24, height: 24 })) {
+          if (intersects(ballHitbox, { x: cannonball.x, y: cannonball.y, width: 24, height: 24 })) {
             cannonball.active = false;
             ball.life = 0;
             bursts.push({ x: cannonball.x + 12, y: cannonball.y + 12, life: 0.45, color: "#eef1ff", kind: "puff" });
@@ -1992,6 +2002,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       player.invincible = Math.max(0, player.invincible - delta);
       player.doubleJumpFx = Math.max(0, player.doubleJumpFx - delta);
       player.shootFx = Math.max(0, player.shootFx - delta);
+      walkCycleTime = player.grounded && Math.abs(player.vx) > 25 ? walkCycleTime + delta : 0;
       cameraX += (Math.max(0, Math.min(level.width - VIEW_WIDTH, player.x - 330)) - cameraX) * Math.min(1, delta * 5);
 
       if (now - lastSnapshot > 130) {
@@ -2016,7 +2027,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         context.restore();
         return;
       }
-      const runningFrame = Math.floor(frame / 12) % 4;
+      // Cuatro pasos por ciclo, a ritmo fijo también en pantallas de alta frecuencia.
+      const runningFrame = walkAnimationFrame(walkCycleTime);
       let row = 0;
       let column = 0;
       if (player.power === "cat") {

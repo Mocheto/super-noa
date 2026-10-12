@@ -4,6 +4,8 @@ export const GRAVITY = 1650;
 export const JUMP_SPEED = 625;
 export const SPRING_SPEED = 1080;
 
+export const walkAnimationFrame = (elapsedSeconds: number) => Math.floor(elapsedSeconds / 0.095) % 4;
+
 /** En el arrecife, las algas sobresalen por encima de la roca que se puede pisar. */
 export const platformSurfaceY = (platform: Platform) => platform.kind === "sea-wall"
   ? platform.y + Math.round(platform.height * 0.3)
@@ -30,6 +32,13 @@ export const goalFlagHitbox = (goalX: number, surfaceY: number): Rect => ({
 
 export const rectanglesOverlap = (first: Rect, second: Rect) =>
   first.x < second.x + second.width && first.x + first.width > second.x && first.y < second.y + second.height && first.y + first.height > second.y;
+
+/** La lana choca con la roca del arrecife, no con las algas decorativas. */
+export const projectileHitsWaterWall = (projectile: Rect, platforms: Platform[]) => platforms.some((platform) => {
+  if (platform.kind !== "sea-wall") return false;
+  const surfaceY = platformSurfaceY(platform);
+  return rectanglesOverlap(projectile, { x: platform.x, y: surfaceY, width: platform.width, height: platform.y + platform.height - surfaceY });
+});
 
 export const hasReachedGoalFlag = (player: Rect, goalX: number, surfaceY: number) =>
   rectanglesOverlap(player, goalFlagHitbox(goalX, surfaceY));

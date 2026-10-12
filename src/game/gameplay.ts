@@ -1,8 +1,13 @@
-import type { Rect } from "./types";
+import type { Platform, Rect } from "./types";
 
 export const GRAVITY = 1650;
 export const JUMP_SPEED = 625;
 export const SPRING_SPEED = 1080;
+
+/** En el arrecife, las algas sobresalen por encima de la roca que se puede pisar. */
+export const platformSurfaceY = (platform: Platform) => platform.kind === "sea-wall"
+  ? platform.y + Math.round(platform.height * 0.3)
+  : platform.y;
 
 /** El centro del cuerpo activa el agua, evitando oscilaciones en la orilla. */
 export const waterAt = (player: Rect, zones: Rect[] = []) => zones.find((zone) =>

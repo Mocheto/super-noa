@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, swimmingVelocity, waterAt } from "./gameplay.ts";
+import { boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, platformSurfaceY, swimmingVelocity, waterAt } from "./gameplay.ts";
 
 test("el banderín tiene una zona elevada y alcanzable al saltar", () => {
   const flag = goalFlagHitbox(900, 456);
@@ -31,6 +31,13 @@ test("el agua solo afecta a Noa dentro de la poza y permite caminar por el fondo
   assert.equal(waterAt({ x: 10, y: 200, width: 42, height: 58 }, [zone]), undefined);
   assert.equal(waterAt({ x: 130, y: 100, width: 42, height: 58 }, [zone]), zone);
   assert.equal(waterAt({ x: 130, y: 432, width: 42, height: 58 }, [zone]), zone);
+});
+
+test("Noa pisa la roca del arrecife por debajo de las algas decorativas", () => {
+  assert.equal(platformSurfaceY({ x: 0, y: 365, width: 150, height: 125, kind: "sea-wall" }), 403);
+  assert.equal(platformSurfaceY({ x: 0, y: 120, width: 180, height: 170, kind: "sea-wall" }), 171);
+  assert.equal(platformSurfaceY({ x: 0, y: 490, width: 500, height: 90, kind: "sea-ground" }), 490);
+  assert.equal(platformSurfaceY({ x: 0, y: 285, width: 230, height: 24, kind: "sea-ledge" }), 285);
 });
 
 test("las brazadas suben y soltar el botón hunde con velocidad limitada", () => {

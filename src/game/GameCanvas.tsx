@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { PixelIcon } from "./PixelIcon";
 import { getStickerSprite } from "./stickers";
 import type { Level, GameSnapshot, LevelItem, Power, Rect } from "./types";
-import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, rectanglesOverlap, SPRING_SPEED, swimmingVelocity, waterAt } from "./gameplay";
+import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, rectanglesOverlap, SPRING_SPEED, swimmingVelocity, waterAt } from "./gameplay";
 
 const VIEW_WIDTH = 960;
 const VIEW_HEIGHT = 540;
@@ -1723,7 +1723,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       player.x = Math.max(0, Math.min(level.width - player.width, player.x));
       for (const platform of level.platforms) {
         if (platform.kind !== "cave-wall" && platform.kind !== "castle-wall" && platform.kind !== "sea-wall") continue;
-        const vertical = player.y + player.height > platform.y && player.y < platform.y + platform.height;
+        const vertical = player.y + player.height > platformSurfaceY(platform) && player.y < platform.y + platform.height;
         if (!vertical) continue;
         if (player.vx > 0 && previousX + player.width <= platform.x && player.x + player.width > platform.x) {
           player.x = platform.x - player.width;
@@ -1747,12 +1747,13 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
       for (const platform of level.platforms) {
         const horizontal = player.x + player.width > platform.x && player.x < platform.x + platform.width;
+        const surfaceY = platformSurfaceY(platform);
         // El muelle solo responde al aterrizaje de un salto: al caminar se puede pasar de largo.
         const landed = platform.kind === "spring"
-          ? landsOnSpring(wasGrounded, previousBottom, player.y + player.height, platform.y, player.vy)
-          : player.vy >= 0 && previousBottom <= platform.y + 10 && player.y + player.height >= platform.y;
+          ? landsOnSpring(wasGrounded, previousBottom, player.y + player.height, surfaceY, player.vy)
+          : player.vy >= 0 && previousBottom <= surfaceY + 10 && player.y + player.height >= surfaceY;
         if (horizontal && landed) {
-          player.y = platform.y - player.height;
+          player.y = surfaceY - player.height;
           if (platform.kind === "spring") {
             player.vy = -SPRING_SPEED;
             player.grounded = false;

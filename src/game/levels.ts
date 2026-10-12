@@ -73,7 +73,7 @@ export const themeNames: Record<Theme, string> = {
   "water-lagoon": "La laguna de los corales",
 };
 
-// Identificadores estables: A es el desvío acuático entre los mundos 2 y 3.
+// Identificadores estables: A es el desvío acuático entre los mundos 3 y 4.
 const seaFloor = (width: number): Platform => ({ x: 0, y: 490, width, height: 90, kind: "sea-ground" });
 const reef = (x: number, y: number, width: number, height: number): Platform => ({ x, y, width, height, kind: "sea-wall" });
 const seaLedge = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 24, kind: "sea-ledge" });
@@ -313,7 +313,6 @@ export const levels: Level[] = [
     width: 6800,
     start: { x: 80, y: 380 },
     goalX: 6630,
-    waterEntrance: { x: 720, y: 470, width: 160, height: 110 },
     platforms: [
       ...caveGround([[0, 720], [880, 760], [1810, 760], [2740, 780], [3700, 760], [4630, 760], [5560, 1240]]),
       caveWall(0, 0, 720, 145),
@@ -354,7 +353,6 @@ export const levels: Level[] = [
     checkpoints: [900, 1830, 2760, 4650, 5580],
     boss: "mist-countess",
   },
-  ...waterLevels,
   {
     id: "3-1",
     world: 3,
@@ -458,7 +456,9 @@ export const levels: Level[] = [
     rewardBlocks: [reward("r1", 880), reward("r2", 4550, 325, "apple")],
     checkpoints: [1460, 3100, 4840, 5740, 6500],
     boss: "great-wolf",
+    waterEntrance: { x: 4655, y: 470, width: 145, height: 110 },
   },
+  ...waterLevels,
   {
     id: "4-1",
     world: 4,

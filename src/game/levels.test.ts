@@ -8,17 +8,20 @@ import { bossCatalog } from "./bosses.ts";
 
 const castle = levels.filter((level) => level.world === 6);
 
-test("el mundo del agua se abre desde una caída segura y conserva los mundos antiguos", () => {
+test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {
   const aquatic = levels.filter((level) => level.world === 8);
   assert.deepEqual(aquatic.map((level) => level.id), ["A-1", "A-2", "A-3"]);
-  assert.equal(levels[levels.findIndex((level) => level.id === "2-3") + 1].id, "A-1");
-  assert.equal(levels[levels.findIndex((level) => level.id === "A-3") + 1].id, "3-1");
+  assert.equal(levels[levels.findIndex((level) => level.id === "3-3") + 1].id, "A-1");
+  assert.equal(levels[levels.findIndex((level) => level.id === "A-3") + 1].id, "4-1");
   assert.equal(aquatic[2].boss, "shark-captain");
   assert.equal(levels.filter((level) => level.world !== 7 && level.world !== 8).length, 18);
-  const cave = levels.find((level) => level.id === "2-3")!;
-  const entrance = cave.waterEntrance!;
+  assert.equal(levels.find((level) => level.id === "2-3")?.waterEntrance, undefined);
+  const forest = levels.find((level) => level.id === "3-3")!;
+  const entrance = forest.waterEntrance!;
   assert.ok(entrance);
-  assert.ok(!cave.platforms.some((platform) => platform.y >= 456 && platform.x < entrance.x + entrance.width && platform.x + platform.width > entrance.x));
+  assert.ok(!forest.platforms.some((platform) => platform.y >= 456 && platform.x < entrance.x + entrance.width && platform.x + platform.width > entrance.x));
+  assert.ok(forest.platforms.some((platform) => platform.y === 456 && platform.x + platform.width === entrance.x));
+  assert.ok(forest.platforms.some((platform) => platform.y === 456 && platform.x === entrance.x + entrance.width));
   for (const level of aquatic) {
     assert.ok(level.waterZones?.length);
     assert.ok(level.enemies.some((enemy) => enemy.kind === "fish"));

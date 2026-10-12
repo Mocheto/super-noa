@@ -26,13 +26,13 @@ const secretLevelIndex = levels.findIndex((level) => level.world === 7);
 const campaignLevels = levels.filter((level) => level.world !== 7 && level.world !== 8);
 const campaignLevelCount = campaignLevels.length;
 const waterLevelIndex = levels.findIndex((level) => level.id === "A-1");
-const forestLevelIndex = campaignLevels.findIndex((level) => level.id === "3-1");
+const boarLevelIndex = campaignLevels.findIndex((level) => level.id === "4-1");
 const bossLevels = levels.flatMap((level, index) => level.boss ? [{ level, index, boss: bossCatalog[level.boss] }] : []);
 const worldCatalog = [
   { id: 1, name: "El Prado de las Manzanas", description: "Sol, ramas anchas y manzanas crujientes.", cat: "Miel", catAsset: "./assets/sprites/world-cat-1-v1.png" },
   { id: 2, name: "El Bosque de los Gatitos", description: "Luciérnagas, cristales, murciélagos y una cueva de lava.", cat: "Bruma", catAsset: "./assets/sprites/world-cat-2-v1.png" },
-  { id: 8, name: "La Laguna de los Corales", description: "Un desvío bajo la cueva: peces traviesos, erizos y el palacio de Don Aleta.", cat: "Perla", catAsset: "./assets/sprites/world-cat-8-v1.png" },
   { id: 3, name: "El Bosque de los Lobos", description: "Pinos, luna llena y lobos enfadados.", cat: "Pino", catAsset: "./assets/sprites/world-cat-3-v1.png" },
+  { id: 8, name: "La Laguna de los Corales", description: "Una poza entre los bosques: peces traviesos, erizos y el palacio de Don Aleta.", cat: "Perla", catAsset: "./assets/sprites/world-cat-8-v1.png" },
   { id: 4, name: "El Bosque de los Jabalíes", description: "Bellotas, copas altas y jabalíes salvajes.", cat: "Bellota", catAsset: "./assets/sprites/world-cat-4-v1.png" },
   { id: 5, name: "La Flota de las Nubes", description: "Barcos voladores, piratas, loros y cañones.", cat: "Nube", catAsset: "./assets/sprites/world-cat-5-v1.png" },
   { id: 6, name: "El Castillo Encantado", description: "Un laberinto de piedra, trampas con pinchos y fantasmas traviesos.", cat: "Luna", catAsset: "./assets/sprites/world-cat-6-v1.png" },
@@ -54,7 +54,7 @@ function readProgress(): Progress {
     campaignLevels.forEach((level, index) => {
       if (levelStats[level.id]?.completed) unlocked = Math.max(unlocked, Math.min(campaignLevelCount - 1, index + 1));
     });
-    if (levelStats["A-3"]?.completed) unlocked = Math.max(unlocked, forestLevelIndex);
+    if (levelStats["A-3"]?.completed) unlocked = Math.max(unlocked, boarLevelIndex);
     return {
       unlocked,
       levelStats,
@@ -273,7 +273,7 @@ export default function App() {
       const previous = current.levelStats[activeLevel.id];
       return {
         ...current,
-        unlocked: activeLevel.id === "A-3" ? Math.max(current.unlocked, forestLevelIndex)
+        unlocked: activeLevel.id === "A-3" ? Math.max(current.unlocked, boarLevelIndex)
           : activeLevel.world === 7 || activeLevel.world === 8 ? current.unlocked
             : Math.max(current.unlocked, Math.min(campaignLevelCount - 1, campaignLevels.findIndex((level) => level.id === activeLevel.id) + 1)),
         levelStats: {
@@ -335,8 +335,8 @@ export default function App() {
   }, []);
 
   const nextLevel = () => {
-    const nextIndex = activeLevel.id === "2-3" || activeLevel.id === "A-3"
-      ? levels.findIndex((level) => level.id === "3-1") : Math.min(levels.length - 1, activeIndex + 1);
+    const nextIndex = activeLevel.id === "3-3" || activeLevel.id === "A-3"
+      ? levels.findIndex((level) => level.id === "4-1") : Math.min(levels.length - 1, activeIndex + 1);
     setActiveIndex(nextIndex);
     setLevelRun((current) => current + 1);
     setLives(MAX_LIVES);
@@ -420,7 +420,7 @@ export default function App() {
                       <button className={`level-card ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked} onClick={() => beginLevel(index)} key={level.id}>
                         <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}</span>
                         <strong>{level.title}</strong>
-                        <small>{stats?.completed ? <><span>✓ Completada · <GameAssetIcon kind="apple" /> {stats.bestApples}</span><span className="level-medals" aria-label={`${1 + Number(progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? "")) + Number(Boolean(stats.flawless))} de 3 medallas`}>{[true, progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? ""), Boolean(stats.flawless)].map((earned, medal) => <i className={earned ? "is-earned" : ""} key={medal}>★</i>)}</span></> : unlocked ? "Lista para jugar" : level.world === 8 && !progress.waterUnlocked ? "Busca la poza azul en 2-3" : "Completa la anterior"}</small>
+                        <small>{stats?.completed ? <><span>✓ Completada · <GameAssetIcon kind="apple" /> {stats.bestApples}</span><span className="level-medals" aria-label={`${1 + Number(progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? "")) + Number(Boolean(stats.flawless))} de 3 medallas`}>{[true, progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? ""), Boolean(stats.flawless)].map((earned, medal) => <i className={earned ? "is-earned" : ""} key={medal}>★</i>)}</span></> : unlocked ? "Lista para jugar" : level.world === 8 && !progress.waterUnlocked ? "Busca la poza azul en 3-3" : "Completa la anterior"}</small>
                       </button>
                     );
                   })}
@@ -491,7 +491,7 @@ export default function App() {
               <p>Noa ha recogido {snapshot.apples} {snapshot.apples === 1 ? "manzana" : "manzanas"}. {activeLevel.world === 7 ? "La Reina Arcoíris guarda para siempre las insignias encontradas." : activeLevel.boss ? "El monstruo guardián ha dejado libre el camino." : "La siguiente aventura ya está abierta."}</p>
               <div className="completion-medals" aria-label="Medallas de esta pantalla"><span className="is-earned">★ Pantalla</span><span className={snapshot.stickers.length > 0 || progress.stickers.includes(activeLevel.items.find((item) => item.kind === "sticker")?.id ?? "") ? "is-earned" : ""}>★ Pegatina</span><span className={lives === MAX_LIVES ? "is-earned" : ""}>★ Sin perder vida</span></div>
               {snapshot.stickers.length > 0 && <p className="sticker-found"><PixelIcon kind="sparkle" /> {snapshot.stickers.length === 1 ? "Insignia guardada" : `${snapshot.stickers.length} insignias guardadas`} en el álbum.</p>}
-              {activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}>{activeLevel.id === "A-3" ? "Seguir al bosque ▶" : "Siguiente pantalla ▶"}</button>}
+              {activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}>{activeLevel.id === "A-3" ? "Seguir con los jabalíes ▶" : "Siguiente pantalla ▶"}</button>}
               {activeLevel.world === 7 && <button className="pixel-button primary" type="button" onClick={() => setScreen("map")}>Volver al mapa secreto</button>}
               {activeLevel.world !== 7 && <button className="pixel-button" type="button" onClick={() => setScreen("map")}>Volver al mapa</button>}
             </div></div>

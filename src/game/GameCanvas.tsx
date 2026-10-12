@@ -54,7 +54,7 @@ type Projectile = { x: number; y: number; vx: number; vy: number; life: number }
 type LiveCannon = NonNullable<Level["cannons"]>[number] & { cooldown: number };
 type Cannonball = { x: number; y: number; vx: number; active: boolean };
 type PixelBurst = { x: number; y: number; life: number; color: string; kind: "stars" | "puff" };
-type RasterAssets = { waterBackground: HTMLImageElement; waterTerrain: HTMLImageElement; waterEnemies: HTMLImageElement; swim: HTMLImageElement; waterCat: HTMLImageElement; enemies: HTMLImageElement; castleEnemies: HTMLImageElement; boar: HTMLImageElement; bird: HTMLImageElement; collectibles: HTMLImageElement; cave: HTMLImageElement; castle: HTMLImageElement; secret: HTMLImageElement; cannon: HTMLImageElement; cannonball: HTMLImageElement; checkpoint: HTMLImageElement; goalFlag: HTMLImageElement; goalRescue: HTMLImageElement; bossGate: HTMLImageElement; spring: HTMLImageElement; platformTiles: HTMLImageElement; tiles: Record<Level["world"], HTMLImageElement>; stickerSheets: Record<Level["world"], HTMLImageElement> };
+type RasterAssets = { waterBackground: HTMLImageElement; waterTerrain: HTMLImageElement; seaWall: HTMLImageElement; waterEnemies: HTMLImageElement; swim: HTMLImageElement; waterCat: HTMLImageElement; enemies: HTMLImageElement; castleEnemies: HTMLImageElement; boar: HTMLImageElement; bird: HTMLImageElement; collectibles: HTMLImageElement; cave: HTMLImageElement; castle: HTMLImageElement; secret: HTMLImageElement; cannon: HTMLImageElement; cannonball: HTMLImageElement; checkpoint: HTMLImageElement; goalFlag: HTMLImageElement; goalRescue: HTMLImageElement; bossGate: HTMLImageElement; spring: HTMLImageElement; platformTiles: HTMLImageElement; tiles: Record<Level["world"], HTMLImageElement>; stickerSheets: Record<Level["world"], HTMLImageElement> };
 
 const intersects = rectanglesOverlap;
 
@@ -526,12 +526,20 @@ function drawPlatform(context: CanvasRenderingContext2D, platform: Level["platfo
   const worldTiles = worldPlatformCells(world);
   if (x + platform.width < 0 || x > VIEW_WIDTH) return;
   if (platform.kind === "sea-ground" || platform.kind === "sea-ledge" || platform.kind === "sea-wall") {
-    const wall = platform.kind === "sea-wall";
-    context.fillStyle = wall ? "#186b7c" : "#c9b786";
+    if (platform.kind === "sea-wall") {
+      if (raster.seaWall.complete && raster.seaWall.naturalWidth) {
+        context.drawImage(raster.seaWall, x, platform.y, platform.width, platform.height);
+      } else {
+        context.fillStyle = "#168da6";
+        context.fillRect(x, platform.y, platform.width, platform.height);
+      }
+      return;
+    }
+    context.fillStyle = "#c9b786";
     context.fillRect(x, platform.y, platform.width, platform.height);
     const image = raster.waterTerrain;
     if (image.complete && image.naturalWidth) {
-      const source = wall ? [870, 10, 650, 475] : platform.kind === "sea-ground" ? [25, 260, 820, 220] : [15, 720, 825, 265];
+      const source = platform.kind === "sea-ground" ? [25, 260, 820, 220] : [15, 720, 825, 265];
       for (let tileX = Math.max(x, -100); tileX < Math.min(VIEW_WIDTH, x + platform.width); tileX += 100) {
         context.drawImage(image, source[0], source[1], source[2], source[3], tileX, platform.y, Math.min(100, x + platform.width - tileX), platform.height);
       }
@@ -1536,6 +1544,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const raster: RasterAssets = {
       waterBackground: createRasterImage("./assets/worlds/world-8.png"),
       waterTerrain: createRasterImage("./assets/atlases/water-terrain-v1.png"),
+      seaWall: createRasterImage("./assets/sprites/sea-reef-wall-v2.png"),
       waterEnemies: createRasterImage("./assets/atlases/water-enemies-v1.png"),
       swim: createRasterImage("./assets/sprites/noa-swim-v1.png"),
       waterCat: createRasterImage("./assets/sprites/world-cat-8-v1.png"),
@@ -2115,13 +2124,23 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       if (level.id === "2-2") drawCaveEntrance(context, -18, cameraX, raster.cave);
       if (level.waterEntrance) {
         const entrance = level.waterEntrance;
-        context.fillStyle = "#168cae";
-        context.fillRect(entrance.x - cameraX, entrance.y - 12, entrance.width, entrance.height);
-        context.fillStyle = "#adf9f5";
-        for (let wave = 0; wave < entrance.width; wave += 24) context.fillRect(entrance.x - cameraX + wave, entrance.y - 12 + Math.sin(frame / 14 + wave) * 3, 16, 4);
+        const pondX = entrance.x - cameraX;
+        const pondY = entrance.y - 12;
+        context.save();
+        context.globalAlpha = 0.84;
+        const pondColor = context.createLinearGradient(0, pondY, 0, pondY + entrance.height);
+        pondColor.addColorStop(0, "#72e8e2");
+        pondColor.addColorStop(0.35, "#209fbd");
+        pondColor.addColorStop(1, "#194f8f");
+        context.fillStyle = pondColor;
+        context.fillRect(pondX, pondY, entrance.width, entrance.height);
+        context.restore();
+        context.fillStyle = "#ddffef";
+        for (let wave = 0; wave < entrance.width; wave += 24) context.fillRect(pondX + wave, pondY + Math.sin(frame / 14 + wave) * 3, 16, 4);
+        context.fillStyle = "#e7fff8";
         context.font = "bold 13px monospace";
         context.textAlign = "center";
-        context.fillText("↓ ¡AGUA! ↓", entrance.x - cameraX + entrance.width / 2, entrance.y - 28);
+        context.fillText("↓ ¡AGUA! ↓", pondX + entrance.width / 2, entrance.y - 28);
         context.textAlign = "start";
       }
       level.checkpoints.forEach((checkpoint, index) => {

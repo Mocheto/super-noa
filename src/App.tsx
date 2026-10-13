@@ -512,7 +512,13 @@ export default function App() {
 
           {screen === "finished" && (
             <div className="modal-backdrop celebration"><div className="game-modal finale">
-              <div className="cat-party" aria-hidden="true"><PixelIcon kind="cat" /><GameAssetIcon kind="apple" /><PixelIcon kind="cat" /><PixelIcon kind="yarn" /><PixelIcon kind="cat" /></div><p className="eyebrow">Aventura completada</p>
+              <div className="cat-party" aria-hidden="true">
+                <img src="./assets/sprites/world-cat-1-v1.png" alt="" />
+                <GameAssetIcon kind="apple" />
+                <img src="./assets/sprites/world-cat-2-v1.png" alt="" />
+                <img className="party-yarn" src="./assets/sprites/yarn-ball-v1.png" alt="" />
+                <img src="./assets/sprites/world-cat-6-v1.png" alt="" />
+              </div><p className="eyebrow">Aventura completada</p>
               <h2>¡Bravo, Super Noa!</h2><p>Los guardianes son ahora amigos de Noa. Los gatitos y la tripulación celebran una fiesta en el castillo. Fin… por ahora.</p>
               <button className="pixel-button primary" type="button" onClick={() => setScreen("map")}>Ver el mapa</button>
               <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("home")}>Ir al inicio</button>

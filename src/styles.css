@@ -371,9 +371,10 @@ h1 span {
 .completion-cat, .completion-trophy { display: block; height: auto; image-rendering: pixelated; filter: drop-shadow(6px 7px 0 rgba(69, 38, 78, .2)); }
 .completion-cat { width: clamp(104px, 24vw, 148px); }
 .completion-trophy { width: clamp(120px, 28vw, 168px); }
-.cat-party { display: flex; justify-content: center; gap: 13px; margin-bottom: 20px; }
-.cat-party .pixel-icon { --icon-size: clamp(1.7rem, 7vw, 3rem); }
-.cat-party .game-asset-icon { --icon-size: clamp(1.7rem, 7vw, 3rem); }
+.cat-party { display: flex; align-items: center; justify-content: center; gap: clamp(6px, 2vw, 13px); margin-bottom: 20px; }
+.cat-party > img { display: block; width: clamp(42px, 11vw, 72px); height: clamp(42px, 11vw, 72px); object-fit: contain; image-rendering: pixelated; }
+.cat-party > .party-yarn { width: clamp(32px, 8vw, 48px); height: clamp(32px, 8vw, 48px); }
+.cat-party .game-asset-icon { --icon-size: clamp(2rem, 8vw, 3rem); }
 .celebration::before { content: ""; position: fixed; inset: 0; pointer-events: none; background-image: radial-gradient(#ffd55f 3px, transparent 4px), radial-gradient(#d989ee 3px, transparent 4px), radial-gradient(#ee596c 3px, transparent 4px); background-size: 90px 90px, 110px 110px, 130px 130px; background-position: 0 0, 24px 31px, 53px 17px; animation: confetti 7s linear infinite; }
 @keyframes confetti { to { background-position-y: 630px, 770px, 910px; } }
 .modal-close { position: absolute; top: 12px; right: 12px; width: 42px; height: 42px; border: 3px solid var(--ink); color: var(--ink); background: #eeddf5; font-size: 1.6rem; cursor: pointer; }

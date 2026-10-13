@@ -33,17 +33,17 @@ La comprobación `npm test` ejecuta lint, pruebas de lógica y compilación. Las
 - Rutas especiales: ramas elásticas en el mundo 1, plataformas de niebla en el mundo 2, aullidos de aviso en el mundo 3, copas altas en el mundo 4, barcos voladores con cañones en el mundo 5 y pasillos con trampas de pinchos en el mundo 6. En el mundo de los jabalíes hay un bloque secreto elevado que crea una enredadera hacia el Reino Secreto de las Nubes: golpéalo desde abajo y toca la enredadera para elegir ese camino.
 - Álbum: hay una pegatina opcional por pantalla de campaña, tres en la laguna y tres en el reino secreto.
 - En móvil o tableta aparecen controles táctiles grandes, etiquetados con `IZQ.`, `DER.`, `LANA` y `SALTAR`. Mantén una dirección con un dedo y toca `SALTAR` con otro para hacer el doble salto.
-- También se admite un mando mediante Gamepad API. En los duelos, elige piedra, papel o tijera con la cruceta o la palanca izquierda y confirma con `A`. `A` también avanza de ronda, reintenta o continúa. Puedes reanudar una pausa con `A`.
+- También se admite un mando mediante Gamepad API. Usa la cruceta o palanca izquierda para caminar y recorrer los menús, `A` para saltar o confirmar, `X`/`B` para lanzar lana, `B` para volver en menús y duelos, y `Start` para pausar o reanudar. En los duelos, la cruceta o palanca elige el gesto y `A` confirma, avanza de ronda, reintenta o continúa.
 
-El progreso y las pegatinas se guardan únicamente en el navegador con la clave `super-noa-progress-v1`. El formato actual es la versión 2 y conserva la lectura de guardados anteriores. Las 24 insignias tienen sprites troquelados propios agrupados por mundo en `public/assets/stickers/`; el mismo dibujo aparece en la pantalla y en el álbum. El estado «Protegida» se reconoce por una burbuja psíquica dibujada alrededor de Noa en todas sus poses. La coraza alternativa queda guardada en `public/assets/alternatives/noa-armor-v1.png`, pero no está activa.
+El progreso y las pegatinas se guardan únicamente en el navegador con la clave `super-noa-progress-v1`. El formato actual es la versión 2 y conserva la lectura de guardados anteriores. Si el navegador bloquea el almacenamiento, el juego sigue funcionando y muestra un aviso de que el progreso podría perderse. Las 24 insignias tienen sprites troquelados propios agrupados por mundo en `public/assets/stickers/`; el mismo dibujo aparece en la pantalla y en el álbum. El estado «Protegida» se reconoce por una burbuja psíquica dibujada alrededor de Noa en todas sus poses. La coraza alternativa queda guardada en `public/assets/alternatives/noa-armor-v1.png`, pero no está activa.
 
 Los cañones, sus bolas, los puntos de control y los banderines usan sprites propios en `public/assets/sprites/`.
 
 ## Organización del código
 
-- `src/App.tsx` coordina pantallas, HUD, música y pausa automática; `src/game/progress.ts` lee, valida y guarda el progreso.
+- `src/App.tsx` coordina pantallas, HUD, música y pausa automática; `src/game/progress.ts` lee, valida y guarda el progreso y `storage.ts` protege todo acceso al almacenamiento local.
 - `src/game/GameCanvas.tsx` coordina la partida. `rendering.ts` dibuja los mundos, `assets.ts` carga y reutiliza los recursos de cada mundo, `input.ts` gestiona teclado y tacto, y `gameLoop.ts` ejecuta la física en pasos constantes de 60 Hz.
-- `src/game/levels.ts` mantiene los niveles declarativos. `BossBattle.tsx` dirige los duelos y `duelGamepad.ts` interpreta la cruceta, la palanca y el botón de confirmación.
+- `src/game/levels.ts` mantiene los niveles y sus rutas especiales de forma declarativa; `routes.ts` resuelve el avance de campaña. `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts` interpretan el mando durante la partida, los menús y los duelos.
 
 ## Licencias
 

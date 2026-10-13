@@ -3,6 +3,7 @@ import type { SoundKind } from "./GameCanvas";
 import { GameAssetIcon } from "./GameAssetIcon";
 import { bossCatalog, type BossChallengeId } from "./bosses";
 import { justPressed, readDuelPad, type DuelPadButtons } from "./duelGamepad";
+import { firstConnectedGamepad } from "./gamepad";
 import type { BossId } from "./types";
 
 type Choice = "rock" | "paper" | "scissors";
@@ -94,6 +95,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
   const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);
   const [gamepadConnected, setGamepadConnected] = useState(false);
   const previousPadRef = useRef<DuelPadButtons | null>(null);
+  const previousBackRef = useRef(false);
 
   useEffect(() => {
     if (paused || battle.status !== "countdown") return;
@@ -157,18 +159,22 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
   useEffect(() => {
     let animationId = 0;
     const poll = () => {
-      const pad = navigator.getGamepads?.().find((candidate) => candidate?.connected);
+      const pad = firstConnectedGamepad();
       if (!pad) {
         if (previousPadRef.current) setGamepadConnected(false);
         previousPadRef.current = null;
+        previousBackRef.current = false;
         animationId = requestAnimationFrame(poll);
         return;
       }
       if (!previousPadRef.current) setGamepadConnected(true);
       const pressed = readDuelPad(pad);
       const previous = previousPadRef.current;
+      const back = Boolean(pad.buttons[1]?.pressed);
       previousPadRef.current = pressed;
-      if (previous && !paused) {
+      if (previous && !paused && back && !previousBackRef.current && battle.status !== "won") onAbandon();
+      previousBackRef.current = back;
+      if (previous && !paused && !back) {
         if (battle.status === "choosing") {
           let nextIndex = selectedChoiceIndex;
           if (justPressed(pressed, previous, 3) || justPressed(pressed, previous, 1)) nextIndex = (nextIndex + choices.length - 1) % choices.length;
@@ -267,7 +273,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
                 <span><RpsIcon choice={choice.id} /></span><strong>{choice.label}</strong>
               </button>
             ))}
-            {gamepadConnected && <p className="duel-pad-tip">Con mando: elige con la cruceta y pulsa A.</p>}
+            {gamepadConnected && <p className="duel-pad-tip">Con mando: elige con la cruceta, pulsa A para confirmar o B para volver al mapa.</p>}
           </div>
         )}
         {battle.status === "revealed" && <button className="pixel-button primary duel-next" type="button" onClick={nextRound}>Siguiente ronda ▶</button>}

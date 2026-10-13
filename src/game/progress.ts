@@ -1,10 +1,10 @@
 import { levels } from "./levels.ts";
+import { campaignLevels, campaignUnlockIndex } from "./routes.ts";
+import { readStorage, writeStorage } from "./storage.ts";
 
 export const STORAGE_KEY = "super-noa-progress-v1";
 const SAVE_VERSION = 2;
-const campaignLevels = levels.filter((level) => level.world !== 7 && level.world !== 8);
 const campaignLevelCount = campaignLevels.length;
-const boarLevelIndex = campaignLevels.findIndex((level) => level.id === "4-1");
 const knownLevelIds = new Set(levels.map((level) => level.id));
 
 export type LevelStats = Record<string, { completed: boolean; bestApples: number; flawless?: boolean }>;
@@ -35,10 +35,11 @@ export function parseProgress(raw: string | null): Progress {
     let unlocked = saved.version === SAVE_VERSION || hasNewLevelStats
       ? Math.min(campaignLevelCount - 1, rawUnlocked)
       : legacyIndexMap[Math.min(legacyIndexMap.length - 1, rawUnlocked)];
-    campaignLevels.forEach((level, index) => {
-      if (levelStats[level.id]?.completed) unlocked = Math.max(unlocked, Math.min(campaignLevelCount - 1, index + 1));
-    });
-    if (levelStats["A-3"]?.completed) unlocked = Math.max(unlocked, boarLevelIndex);
+    for (const level of levels) {
+      if (!levelStats[level.id]?.completed) continue;
+      const next = campaignUnlockIndex(level);
+      if (next >= 0) unlocked = Math.max(unlocked, next);
+    }
     return {
       unlocked,
       levelStats,
@@ -57,11 +58,9 @@ export function parseProgress(raw: string | null): Progress {
 export const serializeProgress = (progress: Progress) => JSON.stringify({ version: SAVE_VERSION, ...progress });
 
 export function readProgress(): Progress {
-  try { return parseProgress(localStorage.getItem(STORAGE_KEY)); }
-  catch { return emptyProgress; }
+  return parseProgress(readStorage(STORAGE_KEY));
 }
 
 export function saveProgress(progress: Progress): boolean {
-  try { localStorage.setItem(STORAGE_KEY, serializeProgress(progress)); return true; }
-  catch { return false; }
+  return writeStorage(STORAGE_KEY, serializeProgress(progress));
 }

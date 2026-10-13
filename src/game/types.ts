@@ -63,6 +63,14 @@ export type Level = {
   cannons?: Cannon[];
   checkpoints: number[];
   boss?: BossId;
+  route?: {
+    next?: string;
+    required?: string;
+    waterExit?: string;
+    secretExit?: string;
+    finale?: boolean;
+    nextLabel?: string;
+  };
 };
 
 export type Power = "normal" | "apple" | "cat";

@@ -8,6 +8,7 @@ import {
   drawSecretVine, drawSticker, drawTinySparkle,
 } from "./rendering";
 import { useGameInput } from "./input";
+import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createGameLoop, type GameLoop } from "./gameLoop";
 import { getStickerSprite } from "./stickers";
 import type { Level, GameSnapshot } from "./types";
@@ -190,12 +191,11 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     const update = (delta: number, now: number) => {
       const input = inputRef.current;
-      const gamepads = navigator.getGamepads?.() ?? [];
-      const pad = gamepads[0];
-      const left = input.left || Boolean(pad && pad.axes[0] < -0.25);
-      const right = input.right || Boolean(pad && pad.axes[0] > 0.25);
-      const jump = input.jump || Boolean(pad?.buttons[0]?.pressed);
-      const shoot = input.shoot || Boolean(pad?.buttons[2]?.pressed || pad?.buttons[1]?.pressed);
+      const pad = readGameplayPad(firstConnectedGamepad());
+      const left = input.left || pad.left;
+      const right = input.right || pad.right;
+      const jump = input.jump || pad.jump;
+      const shoot = input.shoot || pad.shoot;
       const swimming = waterAt(player, level.waterZones);
       const newStroke = input.jumpQueued || (jump && !previousJump);
 

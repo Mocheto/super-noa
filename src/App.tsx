@@ -5,8 +5,12 @@ import { GameAssetIcon } from "./game/GameAssetIcon";
 import { PixelIcon } from "./game/PixelIcon";
 import { GameCanvas, type SoundKind } from "./game/GameCanvas";
 import { levels, themeNames } from "./game/levels";
+import { campaignLevels, campaignUnlockIndex, levelIndex, nextLevelIndex } from "./game/routes";
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
+import { firstConnectedGamepad } from "./game/gamepad";
+import { menuDirection, readMenuPad } from "./game/menuGamepad";
 import { emptyProgress, readProgress, saveProgress, type Progress } from "./game/progress";
+import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
 import type { GameSnapshot } from "./game/types";
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
@@ -18,12 +22,8 @@ type TouchControlsMode = "auto" | "always";
 
 const emptySnapshot: GameSnapshot = { apples: 0, stickers: [], power: "normal", checkpoint: 0, paused: false };
 const MAX_LIVES = 3;
-const secretLevelIndex = levels.findIndex((level) => level.world === 7);
 // Los índices del guardado siguen refiriéndose a la campaña original de 18 pantallas.
-const campaignLevels = levels.filter((level) => level.world !== 7 && level.world !== 8);
 const campaignLevelCount = campaignLevels.length;
-const waterLevelIndex = levels.findIndex((level) => level.id === "A-1");
-const boarLevelIndex = campaignLevels.findIndex((level) => level.id === "4-1");
 const bossLevels = levels.flatMap((level, index) => level.boss ? [{ level, index, boss: bossCatalog[level.boss] }] : []);
 const worldCatalog = [
   { id: 1, name: "El Prado de las Manzanas", description: "Sol, ramas anchas y manzanas crujientes.", cat: "Miel", catAsset: "./assets/sprites/world-cat-1-v1.png" },
@@ -47,15 +47,6 @@ function createAudioContext() {
   return AudioContextClass ? new AudioContextClass() : null;
 }
 
-function readSavedPercentage(key: string, fallback: number) {
-  const saved = localStorage.getItem(key);
-  // Las versiones anteriores guardaban un 0 automático al abrir la página.
-  // Un 0 elegido por la persona usuaria lleva una marca explícita desde ahora.
-  if (saved === "0" && localStorage.getItem(`${key}-configured`) !== "true") return fallback;
-  const value = saved === null ? fallback : Number(saved);
-  return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : fallback;
-}
-
 const worldArtwork = (world: number) => `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`;
 
 export default function App() {
@@ -65,7 +56,8 @@ export default function App() {
   const [levelRun, setLevelRun] = useState(0);
   const [lives, setLives] = useState(MAX_LIVES);
   const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(() => localStorage.getItem("super-noa-muted") === "true");
+  const [muted, setMuted] = useState(() => readStorage("super-noa-muted") === "true");
+  const [saveError, setSaveError] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
   const [showAlbum, setShowAlbum] = useState(false);
@@ -73,8 +65,8 @@ export default function App() {
   const [collectionTab, setCollectionTab] = useState<CollectionTab>("stickers");
   const [musicVolume, setMusicVolume] = useState(() => readSavedPercentage(MUSIC_VOLUME_KEY, 100));
   const [effectsVolume, setEffectsVolume] = useState(() => readSavedPercentage(EFFECTS_VOLUME_KEY, 100));
-  const [reduceMotion, setReduceMotion] = useState(() => localStorage.getItem("super-noa-reduce-motion") === "true");
-  const [touchControls, setTouchControls] = useState<TouchControlsMode>(() => localStorage.getItem("super-noa-touch-controls") === "always" ? "always" : "auto");
+  const [reduceMotion, setReduceMotion] = useState(() => readStorage("super-noa-reduce-motion") === "true");
+  const [touchControls, setTouchControls] = useState<TouchControlsMode>(() => readStorage("super-noa-touch-controls") === "always" ? "always" : "auto");
   const [bossReplay, setBossReplay] = useState(false);
   const [bossReplayReturn, setBossReplayReturn] = useState<"home" | "map">("map");
   const [snapshot, setSnapshot] = useState<GameSnapshot>(emptySnapshot);
@@ -84,18 +76,20 @@ export default function App() {
   const activeLevel = levels[activeIndex];
 
   useEffect(() => {
-    saveProgress(progress);
+    const saved = saveProgress(progress);
+    const timeout = window.setTimeout(() => setSaveError(!saved), 0);
+    return () => window.clearTimeout(timeout);
   }, [progress]);
 
   useEffect(() => {
-    localStorage.setItem("super-noa-muted", String(muted));
+    writeStorage("super-noa-muted", String(muted));
   }, [muted]);
 
   useEffect(() => {
-    localStorage.setItem(MUSIC_VOLUME_KEY, String(musicVolume));
-    localStorage.setItem(EFFECTS_VOLUME_KEY, String(effectsVolume));
-    localStorage.setItem("super-noa-reduce-motion", String(reduceMotion));
-    localStorage.setItem("super-noa-touch-controls", touchControls);
+    writeStorage(MUSIC_VOLUME_KEY, String(musicVolume));
+    writeStorage(EFFECTS_VOLUME_KEY, String(effectsVolume));
+    writeStorage("super-noa-reduce-motion", String(reduceMotion));
+    writeStorage("super-noa-touch-controls", touchControls);
   }, [effectsVolume, musicVolume, reduceMotion, touchControls]);
 
   useEffect(() => {
@@ -141,18 +135,71 @@ export default function App() {
   }, [screen]);
 
   useEffect(() => {
-    if (!paused || (screen !== "game" && screen !== "boss")) return;
+    if (screen !== "game" && screen !== "boss") return;
     let animationId = 0;
-    let previousA: boolean | null = null;
+    let previous = readMenuPad(firstConnectedGamepad())[6];
     const poll = () => {
-      const pressed = Boolean(navigator.getGamepads?.().find((pad) => pad?.connected)?.buttons[0]?.pressed);
-      if (previousA === false && pressed) setPaused(false);
-      previousA = pressed;
+      const start = readMenuPad(firstConnectedGamepad())[6];
+      if (start && !previous) setPaused((value) => !value);
+      previous = start;
       animationId = requestAnimationFrame(poll);
     };
     animationId = requestAnimationFrame(poll);
     return () => cancelAnimationFrame(animationId);
-  }, [paused, screen]);
+  }, [screen]);
+
+  useEffect(() => {
+    if ((screen === "game" || screen === "boss") && !paused && !showSettings && !showHelp && !showCredits && !showAlbum) return;
+    let animationId = 0;
+    let previous = readMenuPad(firstConnectedGamepad());
+    let previousPadIndex = firstConnectedGamepad()?.index ?? -1;
+    const poll = () => {
+      const pad = firstConnectedGamepad();
+      const current = readMenuPad(pad);
+      if (pad?.index !== previousPadIndex) {
+        previous = current;
+        previousPadIndex = pad?.index ?? -1;
+      } else if (pad) {
+        const overlays = document.querySelectorAll<HTMLElement>(".modal-backdrop");
+        const container = overlays.item(overlays.length - 1) ?? document.querySelector<HTMLElement>(screen === "home" ? ".home-screen" : ".map-screen");
+        if (container) {
+          const focusables = Array.from(container.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), a[href]"));
+          const focused = document.activeElement instanceof HTMLElement && container.contains(document.activeElement) ? document.activeElement : null;
+          const selected = focused ?? container.querySelector<HTMLElement>("[data-gamepad-default]") ?? focusables[0];
+          const focusFromPad = (element: HTMLElement) => {
+            container.querySelectorAll(".gamepad-focus").forEach((item) => item.classList.remove("gamepad-focus"));
+            element.classList.add("gamepad-focus");
+            element.focus();
+          };
+          const direction = menuDirection(current, previous);
+          const horizontal = (current[3] && !previous[3]) || (current[4] && !previous[4]);
+          if (direction && selected instanceof HTMLInputElement && selected.type === "range" && horizontal) {
+            const value = Math.max(0, Math.min(100, Number(selected.value) + direction * 5));
+            if (selected.id === "music-volume") {
+              writeStorage(`${MUSIC_VOLUME_KEY}-configured`, "true");
+              setMusicVolume(value);
+            } else if (selected.id === "effects-volume") {
+              writeStorage(`${EFFECTS_VOLUME_KEY}-configured`, "true");
+              setEffectsVolume(value);
+            }
+          } else if (direction && selected) {
+            const index = focusables.indexOf(selected);
+            const next = focusables[(index + direction + focusables.length) % focusables.length];
+            if (next) focusFromPad(next);
+          }
+          if (current[0] && !previous[0] && selected && !(selected instanceof HTMLInputElement && selected.type === "range")) {
+            focusFromPad(selected);
+            selected.click();
+          }
+          if (current[5] && !previous[5]) container.querySelector<HTMLElement>("[data-gamepad-back]")?.click();
+        }
+      }
+      previous = current;
+      animationId = requestAnimationFrame(poll);
+    };
+    animationId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(animationId);
+  }, [screen, paused, showSettings, showHelp, showCredits, showAlbum]);
 
   const playSound = useCallback((kind: SoundKind) => {
     if (muted || effectsVolume === 0) return;
@@ -207,7 +254,7 @@ export default function App() {
   const isLevelUnlocked = (index: number) => {
     const level = levels[index];
     if (level.world === 7) return progress.secretUnlocked;
-    if (level.world === 8) return progress.waterUnlocked && (level.screen === 1 || Boolean(progress.levelStats[`A-${level.screen - 1}`]?.completed));
+    if (level.world === 8) return progress.waterUnlocked && (!level.route?.required || Boolean(progress.levelStats[level.route.required]?.completed));
     return campaignLevels.findIndex((entry) => entry.id === level.id) <= progress.unlocked;
   };
 
@@ -267,9 +314,7 @@ export default function App() {
       const previous = current.levelStats[activeLevel.id];
       return {
         ...current,
-        unlocked: activeLevel.id === "A-3" ? Math.max(current.unlocked, boarLevelIndex)
-          : activeLevel.world === 7 || activeLevel.world === 8 ? current.unlocked
-            : Math.max(current.unlocked, Math.min(campaignLevelCount - 1, campaignLevels.findIndex((level) => level.id === activeLevel.id) + 1)),
+        unlocked: Math.max(current.unlocked, campaignUnlockIndex(activeLevel)),
         levelStats: {
           ...current.levelStats,
           [activeLevel.id]: { completed: true, bestApples: Math.max(previous?.bestApples ?? 0, snapshot.apples), flawless: previous?.flawless || lives === MAX_LIVES },
@@ -277,18 +322,20 @@ export default function App() {
         bossChallenges: activeLevel.boss && challengeCompleted ? { ...current.bossChallenges, [activeLevel.boss]: true } : current.bossChallenges,
       };
     });
-    setScreen(activeLevel.id === "6-3" ? "finished" : "complete");
-  }, [activeLevel.boss, activeLevel.id, activeLevel.world, lives, snapshot.apples]);
+    setScreen(activeLevel.route?.finale ? "finished" : "complete");
+  }, [activeLevel, lives, snapshot.apples]);
 
   const handleWaterExit = useCallback(() => {
+    const target = levelIndex(activeLevel.route?.waterExit ?? "");
+    if (target < 0) return;
     setProgress((current) => ({ ...current, waterUnlocked: true }));
-    setActiveIndex(waterLevelIndex);
+    setActiveIndex(target);
     setLevelRun((current) => current + 1);
     setLives(MAX_LIVES);
     setSnapshot(emptySnapshot);
     setPaused(false);
     setScreen("game");
-  }, []);
+  }, [activeLevel]);
 
   const handleBossEncounter = useCallback(() => {
     setPaused(false);
@@ -297,17 +344,19 @@ export default function App() {
   }, []);
 
   const handleSecretExit = useCallback(() => {
+    const target = levelIndex(activeLevel.route?.secretExit ?? "");
+    if (target < 0) return;
     setProgress((current) => ({ ...current, secretUnlocked: true }));
     setPaused(false);
     setScreen("secret-transition");
     window.setTimeout(() => {
-      setActiveIndex(secretLevelIndex);
+      setActiveIndex(target);
       setLevelRun((current) => current + 1);
       setLives(MAX_LIVES);
       setSnapshot(emptySnapshot);
       setScreen("game");
     }, 1800);
-  }, []);
+  }, [activeLevel]);
 
   const spendBossApple = useCallback(() => {
     setSnapshot((current) => {
@@ -329,8 +378,8 @@ export default function App() {
   }, []);
 
   const nextLevel = () => {
-    const nextIndex = activeLevel.id === "3-3" || activeLevel.id === "A-3"
-      ? levels.findIndex((level) => level.id === "4-1") : Math.min(levels.length - 1, activeIndex + 1);
+    const nextIndex = nextLevelIndex(activeLevel);
+    if (nextIndex < 0) { setScreen("map"); return; }
     setActiveIndex(nextIndex);
     setLevelRun((current) => current + 1);
     setLives(MAX_LIVES);
@@ -353,6 +402,7 @@ export default function App() {
 
   return (
     <main className={`app-shell ${reduceMotion ? "reduce-motion" : ""} ${touchControls === "always" ? "touch-controls-always" : ""}`}>
+      {saveError && <p className="save-warning" role="alert">No se pudo guardar la partida en este dispositivo. Puedes seguir jugando, pero el progreso podría perderse al cerrar.</p>}
       {screen === "home" && (
         <section className="home-screen" aria-labelledby="game-title">
           <div className="home-copy">
@@ -361,10 +411,10 @@ export default function App() {
             <p className="home-lead">Corre, salta y explora mundos de manzanos, barcos voladores y castillos encantados. ¡Los gatitos te esperan!</p>
             <p className="home-invite"><PixelIcon kind="heart" /> Una gran aventura para pequeñas heroínas</p>
             <div className="home-actions">
-              <button className="pixel-button primary home-play" type="button" onClick={() => setScreen("map")}>▶ ¡Jugar ahora!</button>
+              <button className="pixel-button primary home-play" type="button" data-gamepad-default onClick={() => setScreen("map")}>▶ ¡Jugar ahora!</button>
               <button className="pixel-button" type="button" onClick={() => setShowHelp(true)}>¿Cómo se juega?</button>
             </div>
-            {progress.unlocked > 0 && <p className="save-note">Partida guardada · {completedLevels}/{campaignLevelCount}{progress.secretUnlocked ? " + secreto" : ""}</p>}
+            {progress.unlocked > 0 && !saveError && <p className="save-note">Partida guardada · {completedLevels}/{campaignLevelCount}{progress.secretUnlocked ? " + secreto" : ""}</p>}
           </div>
           <div className="hero-scene" aria-hidden="true">
             <img className="hero-backdrop" src="./assets/home-adventure-v3.png" alt="" />
@@ -388,7 +438,7 @@ export default function App() {
               <button className="album-button" type="button" onClick={() => openCollection("stickers")} aria-label="Abrir álbum de pegatinas"><PixelIcon kind="sparkle" /> {progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length}/{albumStickers.length}</button>
               <button className="album-button" type="button" onClick={() => openCollection("bosses")} aria-label="Abrir jefes amigos">★ {knownBosses}/{bossLevels.length}</button>
               <button className="icon-button" type="button" onClick={() => setShowSettings(true)} aria-label="Abrir ajustes">⚙</button>
-              <button className="icon-button" type="button" onClick={() => setScreen("home")} aria-label="Volver al inicio">⌂</button>
+              <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label="Volver al inicio">⌂</button>
             </div>
           </header>
           <div className="world-list">
@@ -411,7 +461,7 @@ export default function App() {
                     const unlocked = isLevelUnlocked(index);
                     const stats = progress.levelStats[level.id];
                     return (
-                      <button className={`level-card ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked} onClick={() => beginLevel(index)} key={level.id}>
+                      <button className={`level-card ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked} data-gamepad-default={level.id === campaignLevels[progress.unlocked]?.id || undefined} onClick={() => beginLevel(index)} key={level.id}>
                         <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}</span>
                         <strong>{level.title}</strong>
                         <small>{stats?.completed ? <><span>✓ Completada · <GameAssetIcon kind="apple" /> {stats.bestApples}</span><span className="level-medals" aria-label={`${1 + Number(progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? "")) + Number(Boolean(stats.flawless))} de 3 medallas`}>{[true, progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? ""), Boolean(stats.flawless)].map((earned, medal) => <i className={earned ? "is-earned" : ""} key={medal}>★</i>)}</span></> : unlocked ? "Lista para jugar" : level.world === 8 && !progress.waterUnlocked ? "Busca la poza azul en 3-3" : "Completa la anterior"}</small>
@@ -474,8 +524,8 @@ export default function App() {
           {paused && (screen === "game" || screen === "boss") && (
             <div className="modal-backdrop"><div className="game-modal compact">
               <p className="eyebrow">Descanso</p><h2>Juego en pausa</h2>
-              <button className="pixel-button primary" type="button" onClick={() => setPaused(false)}>Seguir jugando</button>
-              <button className="pixel-button" type="button" onClick={() => { setPaused(false); setScreen("map"); }}>Volver al mapa</button>
+              <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => setPaused(false)}>Seguir jugando</button>
+              <button className="pixel-button" type="button" data-gamepad-back onClick={() => { setPaused(false); setScreen("map"); }}>Volver al mapa</button>
             </div></div>
           )}
 
@@ -486,9 +536,9 @@ export default function App() {
               <p>Noa ha recogido {snapshot.apples} {snapshot.apples === 1 ? "manzana" : "manzanas"}. {activeLevel.world === 7 ? "La Reina Arcoíris guarda para siempre las insignias encontradas." : activeLevel.boss ? "El monstruo guardián ha dejado libre el camino." : "La siguiente aventura ya está abierta."}</p>
               <div className="completion-medals" aria-label="Medallas de esta pantalla"><span className="is-earned">★ Pantalla</span><span className={snapshot.stickers.length > 0 || progress.stickers.includes(activeLevel.items.find((item) => item.kind === "sticker")?.id ?? "") ? "is-earned" : ""}>★ Pegatina</span><span className={lives === MAX_LIVES ? "is-earned" : ""}>★ Sin perder vida</span></div>
               {snapshot.stickers.length > 0 && <p className="sticker-found"><PixelIcon kind="sparkle" /> {snapshot.stickers.length === 1 ? "Insignia guardada" : `${snapshot.stickers.length} insignias guardadas`} en el álbum.</p>}
-              {activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}>{activeLevel.id === "A-3" ? "Seguir con los jabalíes ▶" : "Siguiente pantalla ▶"}</button>}
-              {activeLevel.world === 7 && <button className="pixel-button primary" type="button" onClick={() => setScreen("map")}>Volver al mapa secreto</button>}
-              {activeLevel.world !== 7 && <button className="pixel-button" type="button" onClick={() => setScreen("map")}>Volver al mapa</button>}
+              {activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}>{activeLevel.route?.nextLabel ?? "Siguiente pantalla ▶"}</button>}
+              {activeLevel.world === 7 && <button className="pixel-button primary" type="button" data-gamepad-back onClick={() => setScreen("map")}>Volver al mapa secreto</button>}
+              {activeLevel.world !== 7 && <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("map")}>Volver al mapa</button>}
             </div></div>
           )}
 
@@ -497,7 +547,7 @@ export default function App() {
               <div className="big-icon"><GameAssetIcon kind="apple" /></div><p className="eyebrow">Casi, casi…</p><h2>¡Otra oportunidad!</h2>
               <p>Las tres vidas vuelven a estar listas. El camino ya te lo sabes.</p>
               <button className="pixel-button primary" type="button" onClick={() => beginLevel(activeIndex)}>Reintentar</button>
-              <button className="pixel-button" type="button" onClick={() => setScreen("map")}>Volver al mapa</button>
+              <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("map")}>Volver al mapa</button>
             </div></div>
           )}
 
@@ -506,7 +556,7 @@ export default function App() {
               <div className="cat-party" aria-hidden="true"><PixelIcon kind="cat" /><GameAssetIcon kind="apple" /><PixelIcon kind="cat" /><PixelIcon kind="yarn" /><PixelIcon kind="cat" /></div><p className="eyebrow">Aventura completada</p>
               <h2>¡Bravo, Super Noa!</h2><p>Los guardianes son ahora amigos de Noa. Los gatitos y la tripulación celebran una fiesta en el castillo. Fin… por ahora.</p>
               <button className="pixel-button primary" type="button" onClick={() => setScreen("map")}>Ver el mapa</button>
-              <button className="pixel-button" type="button" onClick={() => setScreen("home")}>Ir al inicio</button>
+              <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("home")}>Ir al inicio</button>
             </div></div>
           )}
         </section>
@@ -514,28 +564,28 @@ export default function App() {
 
       {showSettings && (
         <div className="modal-backdrop"><div className="game-modal settings-modal">
-          <button className="modal-close" type="button" onClick={() => setShowSettings(false)} aria-label="Cerrar">×</button>
+          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowSettings(false)} aria-label="Cerrar">×</button>
           <p className="eyebrow">A tu manera</p><h2>Ajustes de juego</h2>
           <p>Estos ajustes se guardan en este dispositivo.</p>
           <div className="settings-group">
             <label htmlFor="music-volume">Música <output>{Math.round(musicVolume)}%</output></label>
-            <input id="music-volume" type="range" min="0" max="100" value={musicVolume} onChange={(event) => { localStorage.setItem(`${MUSIC_VOLUME_KEY}-configured`, "true"); setMusicVolume(Number(event.target.value)); }} />
+            <input id="music-volume" type="range" min="0" max="100" value={musicVolume} onChange={(event) => { writeStorage(`${MUSIC_VOLUME_KEY}-configured`, "true"); setMusicVolume(Number(event.target.value)); }} />
             <label htmlFor="effects-volume">Efectos <output>{Math.round(effectsVolume)}%</output></label>
-            <input id="effects-volume" type="range" min="0" max="100" value={effectsVolume} onChange={(event) => { localStorage.setItem(`${EFFECTS_VOLUME_KEY}-configured`, "true"); setEffectsVolume(Number(event.target.value)); }} />
+            <input id="effects-volume" type="range" min="0" max="100" value={effectsVolume} onChange={(event) => { writeStorage(`${EFFECTS_VOLUME_KEY}-configured`, "true"); setEffectsVolume(Number(event.target.value)); }} />
           </div>
           <div className="settings-toggle"><input id="reduce-motion" type="checkbox" checked={reduceMotion} onChange={(event) => setReduceMotion(event.target.checked)} /><label htmlFor="reduce-motion"><strong>Movimiento tranquilo</strong><small>Reduce destellos y animaciones rápidas.</small></label></div>
           <fieldset className="settings-controls"><legend>Controles táctiles</legend>
             <label><input type="radio" name="touch-controls" checked={touchControls === "auto"} onChange={() => setTouchControls("auto")} /> Automáticos en móvil</label>
             <label><input type="radio" name="touch-controls" checked={touchControls === "always"} onChange={() => setTouchControls("always")} /> Siempre visibles</label>
           </fieldset>
-          <p className="settings-help"><strong>Teclado:</strong> flechas o A/D para caminar, espacio para saltar y X/K para lanzar lana. También puedes usar un mando.</p>
+          <p className="settings-help"><strong>Teclado:</strong> flechas o A/D para caminar, espacio para saltar y X/K para lanzar lana. <strong>Mando:</strong> cruceta o palanca para moverte y elegir opciones, A para saltar o confirmar, B para volver y Start para pausar.</p>
           <button className="pixel-button primary" type="button" onClick={() => setShowSettings(false)}>Listo</button>
         </div></div>
       )}
 
       {showHelp && (
         <div className="modal-backdrop"><div className="game-modal help-modal">
-          <button className="modal-close" type="button" onClick={() => setShowHelp(false)} aria-label="Cerrar">×</button>
+          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowHelp(false)} aria-label="Cerrar">×</button>
           <p className="eyebrow">Ayuda a Noa</p><h2>¿Cómo se juega?</h2>
           <p className="help-intro">¡Camina, salta y busca caminos secretos!</p>
           <div className="help-first-steps">
@@ -550,14 +600,14 @@ export default function App() {
             <div><span className="help-rps"><PixelIcon kind="rock" /><PixelIcon kind="paper" /><PixelIcon kind="scissors" /></span><strong>Duelo final</strong><small>Gana dos rondas de piedra, papel o tijera.</small></div>
             <div><span><PixelIcon kind="sparkle" /></span><strong>Mira arriba</strong><small>Las pegatinas se esconden en caminos altos.</small></div>
           </div>
-          <p className="help-note">Con teclado: A/D o flechas para caminar, espacio para saltar y X/K para lanzar lana. Con mando, usa la cruceta y A en los duelos. En el agua, SALTAR da una brazada hacia arriba; al soltarlo, Noa baja despacito y puede caminar por la arena. ¡Los erizos pinchan!</p>
+          <p className="help-note">Con teclado: A/D o flechas para caminar, espacio para saltar y X/K para lanzar lana. Con mando, usa la cruceta o palanca, A para saltar o elegir y B para volver. En el agua, SALTAR da una brazada hacia arriba; al soltarlo, Noa baja despacito y puede caminar por la arena. ¡Los erizos pinchan!</p>
           <button className="pixel-button primary" type="button" onClick={() => { setShowHelp(false); setScreen("map"); }}>¡Lista para jugar!</button>
         </div></div>
       )}
 
       {showCredits && (
         <div className="modal-backdrop"><div className="game-modal credits-modal">
-          <button className="modal-close" type="button" onClick={() => setShowCredits(false)} aria-label="Cerrar">×</button>
+          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowCredits(false)} aria-label="Cerrar">×</button>
           <p className="eyebrow">Hecho con cariño</p><h2>Créditos</h2>
           <p><strong>Super Noa</strong> es un juego original inspirado en los plataformas familiares de 8 bits.</p>
           <p>Personaje creado para este proyecto a partir de referencias privadas. Las fotografías originales no forman parte de la web.</p>
@@ -569,7 +619,7 @@ export default function App() {
 
       {showAlbum && (
         <div className="modal-backdrop"><div className="game-modal album-modal">
-          <button className="modal-close" type="button" onClick={() => setShowAlbum(false)} aria-label="Cerrar">×</button>
+          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowAlbum(false)} aria-label="Cerrar">×</button>
           <p className="eyebrow">Colección de Noa</p><h2>{collectionTab === "stickers" ? "Álbum de pegatinas" : collectionTab === "bosses" ? "Jefes amigos" : "Postales de viaje"}</h2>
           <div className="collection-tabs" aria-label="Ver colección">
             <button className={collectionTab === "stickers" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "stickers"} onClick={() => setCollectionTab("stickers")}>Pegatinas</button>

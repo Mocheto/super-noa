@@ -6,19 +6,16 @@ import { PixelIcon } from "./game/PixelIcon";
 import { GameCanvas, type SoundKind } from "./game/GameCanvas";
 import { levels, themeNames } from "./game/levels";
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
+import { emptyProgress, readProgress, saveProgress, type Progress } from "./game/progress";
 import type { GameSnapshot } from "./game/types";
 
-const STORAGE_KEY = "super-noa-progress-v1";
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
 const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
 
-type LevelStats = Record<string, { completed: boolean; bestApples: number; flawless?: boolean }>;
-type Progress = { unlocked: number; levelStats: LevelStats; stickers: string[]; secretUnlocked: boolean; waterUnlocked: boolean; bossChallenges: Record<string, boolean> };
 type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition";
 type CollectionTab = "stickers" | "bosses" | "memories";
 type TouchControlsMode = "auto" | "always";
 
-const emptyProgress: Progress = { unlocked: 0, levelStats: {}, stickers: [], secretUnlocked: false, waterUnlocked: false, bossChallenges: {} };
 const emptySnapshot: GameSnapshot = { apples: 0, stickers: [], power: "normal", checkpoint: 0, paused: false };
 const MAX_LIVES = 3;
 const secretLevelIndex = levels.findIndex((level) => level.world === 7);
@@ -38,37 +35,6 @@ const worldCatalog = [
   { id: 6, name: "El Castillo Encantado", description: "Un laberinto de piedra, trampas con pinchos y fantasmas traviesos.", cat: "Luna", catAsset: "./assets/sprites/world-cat-6-v1.png" },
   { id: 7, name: "El Reino Secreto", description: "Nubes mágicas, pájaros y unicornios en lo más alto del cielo.", cat: "Iris", catAsset: "./assets/sprites/world-cat-7-v1.png" },
 ] as const;
-
-function readProgress(): Progress {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return emptyProgress;
-    const saved = JSON.parse(raw) as Partial<Progress>;
-    const levelStats = saved.levelStats && typeof saved.levelStats === "object" ? saved.levelStats : {};
-    const savedUnlocked = Math.max(0, Number(saved.unlocked) || 0);
-    const hasNewLevelStats = ["1-3", "2-3", "3-3"].some((id) => Object.hasOwn(levelStats, id));
-    const legacyIndexMap = [0, 1, 3, 4, 6, 7];
-    let unlocked = hasNewLevelStats
-      ? Math.min(campaignLevelCount - 1, savedUnlocked)
-      : legacyIndexMap[Math.min(legacyIndexMap.length - 1, savedUnlocked)];
-    campaignLevels.forEach((level, index) => {
-      if (levelStats[level.id]?.completed) unlocked = Math.max(unlocked, Math.min(campaignLevelCount - 1, index + 1));
-    });
-    if (levelStats["A-3"]?.completed) unlocked = Math.max(unlocked, boarLevelIndex);
-    return {
-      unlocked,
-      levelStats,
-      stickers: Array.isArray(saved.stickers) ? saved.stickers.filter((id): id is string => typeof id === "string") : [],
-      secretUnlocked: saved.secretUnlocked === true || Boolean(levelStats["S-1"]),
-      waterUnlocked: saved.waterUnlocked === true || ["A-1", "A-2", "A-3"].some((id) => Boolean(levelStats[id])),
-      bossChallenges: saved.bossChallenges && typeof saved.bossChallenges === "object"
-        ? Object.fromEntries(Object.entries(saved.bossChallenges).filter(([, completed]) => completed === true))
-        : {},
-    };
-  } catch {
-    return emptyProgress;
-  }
-}
 
 declare global {
   interface Window {
@@ -118,7 +84,7 @@ export default function App() {
   const activeLevel = levels[activeIndex];
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    saveProgress(progress);
   }, [progress]);
 
   useEffect(() => {
@@ -154,11 +120,39 @@ export default function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code === "Escape" && screen === "game") setPaused((value) => !value);
+      if (event.code === "Escape" && !event.repeat && (screen === "game" || screen === "boss")) setPaused((value) => !value);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [screen]);
+
+  useEffect(() => {
+    if (screen !== "game" && screen !== "boss") return;
+    const pauseWhenHidden = () => {
+      if (document.visibilityState === "hidden") setPaused(true);
+    };
+    const pauseWhenBlurred = () => setPaused(true);
+    document.addEventListener("visibilitychange", pauseWhenHidden);
+    window.addEventListener("blur", pauseWhenBlurred);
+    return () => {
+      document.removeEventListener("visibilitychange", pauseWhenHidden);
+      window.removeEventListener("blur", pauseWhenBlurred);
+    };
+  }, [screen]);
+
+  useEffect(() => {
+    if (!paused || (screen !== "game" && screen !== "boss")) return;
+    let animationId = 0;
+    let previousA: boolean | null = null;
+    const poll = () => {
+      const pressed = Boolean(navigator.getGamepads?.().find((pad) => pad?.connected)?.buttons[0]?.pressed);
+      if (previousA === false && pressed) setPaused(false);
+      previousA = pressed;
+      animationId = requestAnimationFrame(poll);
+    };
+    animationId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(animationId);
+  }, [paused, screen]);
 
   const playSound = useCallback((kind: SoundKind) => {
     if (muted || effectsVolume === 0) return;
@@ -455,7 +449,7 @@ export default function App() {
             <div className="hud-actions">
               <button type="button" onClick={() => setMuted((value) => !value)} aria-label={muted ? "Activar sonido" : "Silenciar"}><PixelIcon kind={muted ? "mute" : "sound"} /></button>
               <button type="button" onClick={toggleFullscreen} aria-label="Pantalla completa">⛶</button>
-              {screen === "game" && <button type="button" onClick={() => setPaused((value) => !value)} aria-label="Pausa">Ⅱ</button>}
+              {(screen === "game" || screen === "boss") && <button type="button" onClick={() => setPaused((value) => !value)} aria-label="Pausa">Ⅱ</button>}
             </div>
           </header>}
           {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} playSound={playSound} />}
@@ -465,6 +459,7 @@ export default function App() {
             <BossBattle
               key={`boss-${activeLevel.id}-${levelRun}`}
               bossId={activeLevel.boss}
+              paused={paused}
               apples={bossReplay ? 0 : snapshot.apples}
               protectedByApple={!bossReplay && snapshot.power === "apple"}
               onSpendApple={spendBossApple}
@@ -476,7 +471,7 @@ export default function App() {
             />
           )}
 
-          {paused && screen === "game" && (
+          {paused && (screen === "game" || screen === "boss") && (
             <div className="modal-backdrop"><div className="game-modal compact">
               <p className="eyebrow">Descanso</p><h2>Juego en pausa</h2>
               <button className="pixel-button primary" type="button" onClick={() => setPaused(false)}>Seguir jugando</button>
@@ -555,7 +550,7 @@ export default function App() {
             <div><span className="help-rps"><PixelIcon kind="rock" /><PixelIcon kind="paper" /><PixelIcon kind="scissors" /></span><strong>Duelo final</strong><small>Gana dos rondas de piedra, papel o tijera.</small></div>
             <div><span><PixelIcon kind="sparkle" /></span><strong>Mira arriba</strong><small>Las pegatinas se esconden en caminos altos.</small></div>
           </div>
-          <p className="help-note">Con teclado: A/D o flechas para caminar, espacio para saltar y X/K para lanzar lana. También puedes usar un mando. En el agua, SALTAR da una brazada hacia arriba; al soltarlo, Noa baja despacito y puede caminar por la arena. ¡Los erizos pinchan!</p>
+          <p className="help-note">Con teclado: A/D o flechas para caminar, espacio para saltar y X/K para lanzar lana. Con mando, usa la cruceta y A en los duelos. En el agua, SALTAR da una brazada hacia arriba; al soltarlo, Noa baja despacito y puede caminar por la arena. ¡Los erizos pinchan!</p>
           <button className="pixel-button primary" type="button" onClick={() => { setShowHelp(false); setScreen("map"); }}>¡Lista para jugar!</button>
         </div></div>
       )}

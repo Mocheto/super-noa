@@ -1,7 +1,8 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { SoundKind } from "./GameCanvas";
 import { GameAssetIcon } from "./GameAssetIcon";
 import { bossCatalog, type BossChallengeId } from "./bosses";
+import { justPressed, readDuelPad, type DuelPadButtons } from "./duelGamepad";
 import type { BossId } from "./types";
 
 type Choice = "rock" | "paper" | "scissors";
@@ -21,6 +22,7 @@ type RoundRecord = { noaChoice: Choice; bossChoice: Choice; winner: RoundWinner 
 
 type BossBattleProps = {
   bossId: BossId;
+  paused: boolean;
   apples: number;
   protectedByApple: boolean;
   onSpendApple: () => void;
@@ -83,15 +85,18 @@ function NoaDuelSprite({ frame, protectedByApple }: { frame: number | null; prot
   );
 }
 
-export function BossBattle({ bossId, apples, protectedByApple, onSpendApple, onRestartLevel, onAbandon, onWin, playSound, friendlyReplay = false }: BossBattleProps) {
+export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendApple, onRestartLevel, onAbandon, onWin, playSound, friendlyReplay = false }: BossBattleProps) {
   const boss = bossCatalog[bossId];
   const [battle, setBattle] = useState<BattleState>({ noaScore: 0, bossScore: 0, status: "choosing" });
   const [countdown, setCountdown] = useState(3);
   const [history, setHistory] = useState<RoundRecord[]>([]);
   const [usedApple, setUsedApple] = useState(false);
+  const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);
+  const [gamepadConnected, setGamepadConnected] = useState(false);
+  const previousPadRef = useRef<DuelPadButtons | null>(null);
 
   useEffect(() => {
-    if (battle.status !== "countdown") return;
+    if (paused || battle.status !== "countdown") return;
     if (countdown > 0) playSound("countdown");
     const timeout = window.setTimeout(() => {
       if (countdown > 0) {
@@ -107,7 +112,7 @@ export function BossBattle({ bossId, apples, protectedByApple, onSpendApple, onR
       playSound(battle.roundWinner === "noa" ? "checkpoint" : battle.roundWinner === "boss" ? "hurt" : "block");
     }, countdown > 0 ? 360 : 220);
     return () => window.clearTimeout(timeout);
-  }, [battle, countdown, playSound]);
+  }, [battle, countdown, paused, playSound]);
 
   const choose = (noaChoice: Choice) => {
     if (battle.status !== "choosing") return;
@@ -148,6 +153,42 @@ export function BossBattle({ bossId, apples, protectedByApple, onSpendApple, onR
     return history.some((round) => round.winner === "tie");
   };
   const wonChallenge = battle.status === "won" && challengeCompleted(boss.challenge.id);
+
+  useEffect(() => {
+    let animationId = 0;
+    const poll = () => {
+      const pad = navigator.getGamepads?.().find((candidate) => candidate?.connected);
+      if (!pad) {
+        if (previousPadRef.current) setGamepadConnected(false);
+        previousPadRef.current = null;
+        animationId = requestAnimationFrame(poll);
+        return;
+      }
+      if (!previousPadRef.current) setGamepadConnected(true);
+      const pressed = readDuelPad(pad);
+      const previous = previousPadRef.current;
+      previousPadRef.current = pressed;
+      if (previous && !paused) {
+        if (battle.status === "choosing") {
+          let nextIndex = selectedChoiceIndex;
+          if (justPressed(pressed, previous, 3) || justPressed(pressed, previous, 1)) nextIndex = (nextIndex + choices.length - 1) % choices.length;
+          if (justPressed(pressed, previous, 4) || justPressed(pressed, previous, 2)) nextIndex = (nextIndex + 1) % choices.length;
+          if (nextIndex !== selectedChoiceIndex) setSelectedChoiceIndex(nextIndex);
+          if (justPressed(pressed, previous, 0)) choose(choices[nextIndex].id);
+        } else if (justPressed(pressed, previous, 0)) {
+          if (battle.status === "revealed") nextRound();
+          else if (battle.status === "lost") {
+            if (friendlyReplay) retryFriendly();
+            else if (apples > 0) retryWithApple();
+            else onRestartLevel();
+          } else if (battle.status === "won") { playSound("goal"); onWin(wonChallenge); }
+        }
+      }
+      animationId = requestAnimationFrame(poll);
+    };
+    animationId = requestAnimationFrame(poll);
+    return () => cancelAnimationFrame(animationId);
+  });
 
   return (
     <div className="modal-backdrop boss-backdrop">
@@ -222,10 +263,11 @@ export function BossBattle({ bossId, apples, protectedByApple, onSpendApple, onR
         {battle.status === "choosing" && (
           <div className="duel-choices" aria-label="Elige piedra, papel o tijera">
             {choices.map((choice, index) => (
-              <button type="button" onClick={() => choose(choice.id)} style={{ "--choice-delay": `${index * 75}ms` } as CSSProperties} key={choice.id}>
+              <button type="button" className={gamepadConnected && selectedChoiceIndex === index ? "is-pad-selected" : ""} onClick={() => choose(choice.id)} style={{ "--choice-delay": `${index * 75}ms` } as CSSProperties} key={choice.id}>
                 <span><RpsIcon choice={choice.id} /></span><strong>{choice.label}</strong>
               </button>
             ))}
+            {gamepadConnected && <p className="duel-pad-tip">Con mando: elige con la cruceta y pulsa A.</p>}
           </div>
         )}
         {battle.status === "revealed" && <button className="pixel-button primary duel-next" type="button" onClick={nextRound}>Siguiente ronda ▶</button>}

@@ -3,6 +3,7 @@ import { BossBattle } from "./game/BossBattle";
 import { bossCatalog } from "./game/bosses";
 import { GameAssetIcon } from "./game/GameAssetIcon";
 import { PixelIcon } from "./game/PixelIcon";
+import { WorldMap } from "./game/WorldMap";
 import { GameCanvas, type SoundKind } from "./game/GameCanvas";
 import { levels, themeNames } from "./game/levels";
 import { campaignLevels, campaignUnlockIndex, levelIndex, nextLevelIndex } from "./game/routes";
@@ -11,6 +12,7 @@ import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";
 import { emptyProgress, readProgress, saveProgress, type Progress } from "./game/progress";
 import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
+import { worldArtwork, worldCatalog } from "./game/worldMapData";
 import type { GameSnapshot } from "./game/types";
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
@@ -25,17 +27,6 @@ const MAX_LIVES = 3;
 // Los índices del guardado siguen refiriéndose a la campaña original de 18 pantallas.
 const campaignLevelCount = campaignLevels.length;
 const bossLevels = levels.flatMap((level, index) => level.boss ? [{ level, index, boss: bossCatalog[level.boss] }] : []);
-const worldCatalog = [
-  { id: 1, name: "El Prado de las Manzanas", description: "Sol, ramas anchas y manzanas crujientes.", cat: "Miel", catAsset: "./assets/sprites/world-cat-1-v1.png" },
-  { id: 2, name: "El Bosque de los Gatitos", description: "Luciérnagas, cristales, murciélagos y una cueva de lava.", cat: "Bruma", catAsset: "./assets/sprites/world-cat-2-v1.png" },
-  { id: 3, name: "El Bosque de los Lobos", description: "Pinos, luna llena y lobos enfadados.", cat: "Pino", catAsset: "./assets/sprites/world-cat-3-v1.png" },
-  { id: 8, name: "La Laguna de los Corales", description: "Una poza entre los bosques: peces traviesos, erizos y el palacio de Don Aleta.", cat: "Perla", catAsset: "./assets/sprites/world-cat-8-v1.png" },
-  { id: 4, name: "El Bosque de los Jabalíes", description: "Bellotas, copas altas y jabalíes salvajes.", cat: "Bellota", catAsset: "./assets/sprites/world-cat-4-v1.png" },
-  { id: 5, name: "La Flota de las Nubes", description: "Barcos voladores, piratas, loros y cañones.", cat: "Nube", catAsset: "./assets/sprites/world-cat-5-v1.png" },
-  { id: 6, name: "El Castillo Encantado", description: "Un laberinto de piedra, trampas con pinchos y fantasmas traviesos.", cat: "Luna", catAsset: "./assets/sprites/world-cat-6-v1.png" },
-  { id: 7, name: "El Reino Secreto", description: "Nubes mágicas, pájaros y unicornios en lo más alto del cielo.", cat: "Iris", catAsset: "./assets/sprites/world-cat-7-v1.png" },
-] as const;
-
 declare global {
   interface Window {
     webkitAudioContext?: typeof AudioContext;
@@ -46,8 +37,6 @@ function createAudioContext() {
   const AudioContextClass = window.AudioContext ?? window.webkitAudioContext;
   return AudioContextClass ? new AudioContextClass() : null;
 }
-
-const worldArtwork = (world: number) => `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`;
 
 export default function App() {
   const [progress, setProgress] = useState<Progress>(readProgress);
@@ -441,37 +430,7 @@ export default function App() {
               <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label="Volver al inicio">⌂</button>
             </div>
           </header>
-          <div className="world-list">
-            {worldCatalog.filter((world) => world.id !== 7 || progress.secretUnlocked).map((world) => (
-              <article className={`world-card world-${world.id}`} key={world.id}>
-                <img className="world-art" src={worldArtwork(world.id)} alt="" aria-hidden="true" />
-                <div className="world-heading">
-                  <span className="world-number">{world.id === 7 ? "Mundo secreto" : world.id === 8 ? "Mundo del agua" : `Mundo ${world.id}`}</span>
-                  <h3>{world.name}</h3>
-                  <p>{world.description}</p>
-                </div>
-                <div className="world-summary" aria-label={`Progreso de ${world.name}`}>
-                  <div className="world-summary-top"><strong>{worldProgress[world.id].complete}/{worldProgress[world.id].total} pantallas</strong><span>{worldProgress[world.id].remembered ? "✉ Postal lista" : "✉ Busca su recuerdo"}</span></div>
-                  <div className="world-progress-bar" aria-hidden="true"><span style={{ width: `${worldProgress[world.id].complete / worldProgress[world.id].total * 100}%` }} /></div>
-                  <small><PixelIcon kind="sparkle" /> {worldProgress[world.id].stickers}/{worldProgress[world.id].stickerTotal} · ★ {worldProgress[world.id].flawless}/{worldProgress[world.id].total} sin perder vidas{worldProgress[world.id].bossFriend ? " · Amigo" : ""}</small>
-                </div>
-                <div className="level-row">
-                  {levels.map((level, index) => {
-                    if (level.world !== world.id) return null;
-                    const unlocked = isLevelUnlocked(index);
-                    const stats = progress.levelStats[level.id];
-                    return (
-                      <button className={`level-card ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked} data-gamepad-default={level.id === campaignLevels[progress.unlocked]?.id || undefined} onClick={() => beginLevel(index)} key={level.id}>
-                        <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}</span>
-                        <strong>{level.title}</strong>
-                        <small>{stats?.completed ? <><span>✓ Completada · <GameAssetIcon kind="apple" /> {stats.bestApples}</span><span className="level-medals" aria-label={`${1 + Number(progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? "")) + Number(Boolean(stats.flawless))} de 3 medallas`}>{[true, progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? ""), Boolean(stats.flawless)].map((earned, medal) => <i className={earned ? "is-earned" : ""} key={medal}>★</i>)}</span></> : unlocked ? "Lista para jugar" : level.world === 8 && !progress.waterUnlocked ? "Busca la poza azul en 3-3" : "Completa la anterior"}</small>
-                      </button>
-                    );
-                  })}
-                </div>
-              </article>
-            ))}
-          </div>
+          <WorldMap progress={progress} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} />
           <button className="text-button reset-button" type="button" onClick={resetProgress}>Borrar progreso</button>
         </section>
       )}

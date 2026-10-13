@@ -4,6 +4,8 @@ Juego infantil de plataformas en 2D creado para navegador. Incluye seis mundos d
 
 Al terminar una pantalla normal, Noa toca un banderín elevado —también puede hacerlo al saltar—, se coloca junto al gatito y aparece una breve celebración antes de continuar.
 
+El mapa de la aventura es un paisaje ilustrado continuo: los caminos dorados muestran los mundos abiertos y la laguna y el reino de las nubes aparecen como desvíos. Toca un lugar para abrir su resumen, consultar medallas y pegatinas, y elegir una pantalla. En móvil, desliza el mapa horizontalmente.
+
 ## Desarrollo
 
 ```bash
@@ -20,7 +22,7 @@ npm run preview:pages
 
 La compilación estática se genera en `dist-pages/`. El workflow `.github/workflows/super-noa-pages.yml` la publica en GitHub Pages después de cada push a `main`.
 
-La comprobación `npm test` ejecuta lint, pruebas de lógica y compilación. Las pruebas cubren reglas de movimiento, estructura de niveles, rutas de recursos, guardados antiguos, bucle de juego y entrada del mando en los duelos.
+La comprobación `npm test` ejecuta lint, pruebas de lógica y compilación. Las pruebas cubren reglas de movimiento, estructura de niveles y del mapa, rutas de recursos, guardados antiguos, bucle de juego y entrada del mando.
 
 ## Controles
 
@@ -43,7 +45,7 @@ Los cañones, sus bolas, los puntos de control y los banderines usan sprites pro
 
 - `src/App.tsx` coordina pantallas, HUD, música y pausa automática; `src/game/progress.ts` lee, valida y guarda el progreso y `storage.ts` protege todo acceso al almacenamiento local.
 - `src/game/GameCanvas.tsx` coordina la partida. `rendering.ts` dibuja los mundos, `assets.ts` carga y reutiliza los recursos de cada mundo, `input.ts` gestiona teclado y tacto, y `gameLoop.ts` ejecuta la física en pasos constantes de 60 Hz.
-- `src/game/levels.ts` mantiene los niveles y sus rutas especiales de forma declarativa; `routes.ts` resuelve el avance de campaña. `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts` interpretan el mando durante la partida, los menús y los duelos.
+- `src/game/levels.ts` mantiene los niveles y sus rutas especiales de forma declarativa; `routes.ts` resuelve el avance de campaña. `WorldMap.tsx` dibuja la interfaz interactiva sobre la ilustración original `public/assets/worlds/noa-adventure-map-v1.png`; `worldMapData.ts` define lugares y caminos. `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts` interpretan el mando durante la partida, los menús y los duelos.
 
 ## Licencias
 

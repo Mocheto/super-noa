@@ -37,11 +37,11 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
     if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
   }, []);
 
-  const openWorld = (world: (typeof worldCatalog)[number], opener: HTMLButtonElement) => {
+  const openWorld = (world: (typeof worldCatalog)[number], opener: HTMLButtonElement, animate = true) => {
     if (moving) return;
     openerRef.current = opener;
     const journey = findMapJourney(noaWorld, world.id, progress);
-    if (!journey?.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!journey?.length || !animate || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       if (journey) {
         setNoaPosition({ x: world.x, y: world.y });
         setNoaWorld(world.id);
@@ -109,7 +109,8 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
 
   return (
     <>
-      <p className="map-intro">Elige un lugar del paisaje para ver sus pantallas. Noa puede recorrer los caminos que ya conoce.</p>
+      <p className="map-intro">Elige un mundo para ver sus pantallas. Noa puede visitar los lugares que ya conoce.</p>
+      <div className="map-layout">
       <div className="map-scroll" role="region" aria-label="Mapa ilustrado de los mundos de Noa">
         <div className="map-board">
           <img className="map-landscape" src="./assets/worlds/noa-adventure-map-v1.png" alt="" aria-hidden="true" />
@@ -144,7 +145,26 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
           <div className="map-compass" aria-hidden="true">✦ N</div>
         </div>
       </div>
-      <p className="map-pan-tip">En pantallas pequeñas, desliza el mapa para explorar.</p>
+      <div className="map-cards" aria-label="Mundos de Noa">
+        {worldCatalog.map((world) => {
+          const available = worldAvailable(world.id, progress);
+          const summary = summaries[world.id];
+          return <button className={`map-card ${available ? "is-open" : "is-locked"} ${world.id === noaWorld ? "is-current" : ""}`} type="button"
+            aria-label={`Ver ${world.name}: ${available ? `${summary.complete} de ${summary.total} pantallas completadas` : "todavía cerrado"}`}
+            data-gamepad-default={world.id === noaWorld || undefined}
+            onClick={(event) => openWorld(world, event.currentTarget, false)} key={world.id}>
+            <span className="map-card-art"><img src={worldArtwork(world.id)} alt="" loading="lazy" /></span>
+            <span className="map-card-body">
+              <span className="map-card-label">{world.id === 7 ? "Mundo secreto" : world.id === 8 ? "Mundo del agua" : `Mundo ${world.id}`}</span>
+              <strong>{world.name}</strong>
+              <small>{world.description}</small>
+              <span className="map-card-status">{available ? `${summary.complete}/${summary.total} pantallas completadas` : "Todavía cerrado"}</span>
+            </span>
+            {world.id === noaWorld && <span className="map-card-here">Noa está aquí</span>}
+          </button>;
+        })}
+      </div>
+      </div>
       <p className="map-location" aria-live="polite">{moving ? "Noa va de camino…" : <>Noa está en <strong>{noaLocation.name}</strong> · {summaries[noaWorld].complete}/{summaries[noaWorld].total} pantallas completadas</>}</p>
 
       {selected && (

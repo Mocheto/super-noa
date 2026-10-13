@@ -152,9 +152,10 @@ export default function App() {
         const overlays = document.querySelectorAll<HTMLElement>(".modal-backdrop");
         const container = overlays.item(overlays.length - 1) ?? document.querySelector<HTMLElement>(screen === "home" ? ".home-screen" : ".map-screen");
         if (container) {
-          const focusables = Array.from(container.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), a[href]"));
+          const focusables = Array.from(container.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), a[href]"))
+            .filter((element) => element.getClientRects().length > 0);
           const focused = document.activeElement instanceof HTMLElement && container.contains(document.activeElement) ? document.activeElement : null;
-          const selected = focused ?? container.querySelector<HTMLElement>("[data-gamepad-default]") ?? focusables[0];
+          const selected = focused && focusables.includes(focused) ? focused : focusables.find((element) => element.hasAttribute("data-gamepad-default")) ?? focusables[0];
           const focusFromPad = (element: HTMLElement) => {
             container.querySelectorAll(".gamepad-focus").forEach((item) => item.classList.remove("gamepad-focus"));
             element.classList.add("gamepad-focus");

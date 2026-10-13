@@ -3,7 +3,7 @@ import { existsSync } from "node:fs";
 import test from "node:test";
 import { levels } from "./levels.ts";
 import { emptyProgress } from "./progress.ts";
-import { mapRoutes, mapRouteState, worldAvailable, worldCatalog } from "./worldMapData.ts";
+import { findMapJourney, mapRoutes, mapRouteState, worldAvailable, worldCatalog } from "./worldMapData.ts";
 
 test("el mapa representa los ocho mundos y todos sus caminos tienen destinos", () => {
   assert.equal(worldCatalog.length, 8);
@@ -40,4 +40,16 @@ test("los caminos se iluminan con el progreso sin adelantar la salida de la lagu
   const lagoonFinished = { ...inLagoon, levelStats: { "A-3": { completed: true, bestApples: 0 } } };
   assert.equal(mapRouteState(lagoonExit, lagoonFinished), "open");
   assert.equal(mapRouteState(secret, { ...lagoonFinished, secretUnlocked: true }), "open");
+});
+
+test("Noa recorre solo caminos abiertos y puede volver por ellos", () => {
+  assert.deepEqual(findMapJourney(1, 1, emptyProgress), []);
+  assert.equal(findMapJourney(1, 2, emptyProgress), null);
+  const inCastle = { ...emptyProgress, unlocked: 17, waterUnlocked: true, secretUnlocked: true };
+  const backwards = findMapJourney(6, 1, inCastle);
+  assert.deepEqual(backwards?.map(({ route, reverse }) => [route.from, route.to, reverse]), [
+    [5, 6, true], [4, 5, true], [3, 4, true], [2, 3, true], [1, 2, true],
+  ]);
+  assert.deepEqual(findMapJourney(6, 8, inCastle)?.map(({ route, reverse }) => reverse ? route.from : route.to), [5, 4, 3, 8]);
+  assert.equal(findMapJourney(1, 7, { ...emptyProgress, unlocked: 17 }), null);
 });

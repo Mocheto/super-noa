@@ -4,7 +4,7 @@ import { PixelIcon } from "./PixelIcon";
 import { levels } from "./levels";
 import { campaignLevels } from "./routes";
 import type { Progress } from "./progress";
-import { mapRoutes, mapRouteState, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
+import { findMapJourney, mapRoutes, mapRouteState, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
 
 export type WorldSummary = {
   complete: number; total: number; stickers: number; stickerTotal: number;
@@ -23,7 +23,62 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
   const openerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const currentWorld = campaignLevels[progress.unlocked]?.world ?? 1;
+  const [noaWorld, setNoaWorld] = useState<WorldId>(currentWorld);
+  const [noaPosition, setNoaPosition] = useState(() => {
+    const world = worldCatalog.find((entry) => entry.id === currentWorld)!;
+    return { x: world.x, y: world.y };
+  });
+  const [moving, setMoving] = useState(false);
+  const animationRef = useRef<number | null>(null);
   const selected = worldCatalog.find((world) => world.id === selectedWorld);
+  const noaLocation = worldCatalog.find((world) => world.id === noaWorld)!;
+
+  useEffect(() => () => {
+    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+  }, []);
+
+  const openWorld = (world: (typeof worldCatalog)[number], opener: HTMLButtonElement) => {
+    if (moving) return;
+    openerRef.current = opener;
+    const journey = findMapJourney(noaWorld, world.id, progress);
+    if (!journey?.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (journey) {
+        setNoaPosition({ x: world.x, y: world.y });
+        setNoaWorld(world.id);
+      }
+      setSelectedWorld(world.id);
+      return;
+    }
+    const legs = journey.map(({ route, reverse }) => {
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      path.setAttribute("d", route.path);
+      return { path, length: path.getTotalLength(), reverse };
+    });
+    const totalLength = legs.reduce((sum, leg) => sum + leg.length, 0);
+    const duration = Math.min(2800, Math.max(650, totalLength * 3.5));
+    let started: number | null = null;
+    setMoving(true);
+    const tick = (time: number) => {
+      started ??= time;
+      let distance = Math.min(1, (time - started) / duration) * totalLength;
+      for (const leg of legs) {
+        if (distance > leg.length) { distance -= leg.length; continue; }
+        const point = leg.path.getPointAtLength(leg.reverse ? leg.length - distance : distance);
+        setNoaPosition({ x: point.x / 10, y: point.y / 5.6 });
+        break;
+      }
+      if (time - started < duration) {
+        animationRef.current = requestAnimationFrame(tick);
+      } else {
+        animationRef.current = null;
+        setNoaPosition({ x: world.x, y: world.y });
+        setNoaWorld(world.id);
+        setMoving(false);
+        setSelectedWorld(world.id);
+      }
+    };
+    animationRef.current = requestAnimationFrame(tick);
+  };
 
   const closeWorld = useCallback(() => {
     setSelectedWorld(null);
@@ -54,7 +109,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
 
   return (
     <>
-      <p className="map-intro">Elige un lugar del paisaje para ver sus pantallas. El camino dorado muestra hasta dónde ha llegado Noa.</p>
+      <p className="map-intro">Elige un lugar del paisaje para ver sus pantallas. Noa puede recorrer los caminos que ya conoce.</p>
       <div className="map-scroll" role="region" aria-label="Mapa ilustrado de los mundos de Noa">
         <div className="map-board">
           <img className="map-landscape" src="./assets/worlds/noa-adventure-map-v1.png" alt="" aria-hidden="true" />
@@ -67,6 +122,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
               </g>;
             })}
           </svg>
+          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: "url('./assets/sprites/noa-sprite-sheet.png')" }} role="img" aria-label={`Noa está en ${noaLocation.name}`} />
           {worldCatalog.map((world) => {
             const available = worldAvailable(world.id, progress);
             const summary = summaries[world.id];
@@ -75,8 +131,9 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
               style={{ left: `${world.x}%`, top: `${world.y}%` }}
               type="button"
               aria-label={`Ver ${world.name}: ${available ? `${summary.complete} de ${summary.total} pantallas completadas` : "todavía cerrado"}`}
-              data-gamepad-default={world.id === currentWorld || undefined}
-              onClick={(event) => { openerRef.current = event.currentTarget; setSelectedWorld(world.id); }}
+              data-gamepad-default={world.id === noaWorld || undefined}
+              onClick={(event) => openWorld(world, event.currentTarget)}
+              disabled={moving}
               key={world.id}
             >
               <span className="map-node-badge" aria-hidden="true">{available ? world.id === 7 ? "✦" : world.id === 8 ? "≈" : world.id : <PixelIcon kind="lock" />}</span>
@@ -88,6 +145,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
         </div>
       </div>
       <p className="map-pan-tip">En pantallas pequeñas, desliza el mapa para explorar.</p>
+      <p className="map-location" aria-live="polite">{moving ? "Noa va de camino…" : <>Noa está en <strong>{noaLocation.name}</strong> · {summaries[noaWorld].complete}/{summaries[noaWorld].total} pantallas completadas</>}</p>
 
       {selected && (
         <div className="modal-backdrop map-detail-backdrop">

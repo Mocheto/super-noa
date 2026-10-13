@@ -47,3 +47,26 @@ export function mapRouteState(route: MapRoute, progress: Progress): "hidden" | "
   if (worldAvailable(route.to, progress)) return "open";
   return worldAvailable(route.from, progress) ? "available" : "hidden";
 }
+
+export type MapJourneyStep = { route: MapRoute; reverse: boolean };
+
+export function findMapJourney(from: WorldId, to: WorldId, progress: Progress): MapJourneyStep[] | null {
+  if (from === to) return [];
+  if (!worldAvailable(from, progress) || !worldAvailable(to, progress)) return null;
+  const queue: Array<{ world: WorldId; steps: MapJourneyStep[] }> = [{ world: from, steps: [] }];
+  const visited = new Set<WorldId>([from]);
+  for (const entry of queue) {
+    for (const route of mapRoutes) {
+      if (mapRouteState(route, progress) !== "open") continue;
+      const reverse = route.to === entry.world;
+      if (!reverse && route.from !== entry.world) continue;
+      const next = reverse ? route.from : route.to;
+      if (visited.has(next)) continue;
+      const steps = [...entry.steps, { route, reverse }];
+      if (next === to) return steps;
+      visited.add(next);
+      queue.push({ world: next, steps });
+    }
+  }
+  return null;
+}

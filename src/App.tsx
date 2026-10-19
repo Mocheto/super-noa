@@ -13,6 +13,7 @@ import { menuDirection, readMenuPad } from "./game/menuGamepad";
 import { emptyProgress, readProgress, saveProgress, type Progress } from "./game/progress";
 import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
 import { worldArtwork, worldCatalog } from "./game/worldMapData";
+import { loadRanking, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
 import type { GameSnapshot } from "./game/types";
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
@@ -51,6 +52,11 @@ export default function App() {
   const [showCredits, setShowCredits] = useState(false);
   const [showAlbum, setShowAlbum] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showRanking, setShowRanking] = useState(false);
+  const [rankingDevice, setRankingDevice] = useState<RankingDevice | null>(readRankingDevice);
+  const [rankingAlias, setRankingAlias] = useState("");
+  const [rankingPlayers, setRankingPlayers] = useState<RankingPlayer[]>([]);
+  const [rankingMessage, setRankingMessage] = useState("");
   const [collectionTab, setCollectionTab] = useState<CollectionTab>("stickers");
   const [musicVolume, setMusicVolume] = useState(() => readSavedPercentage(MUSIC_VOLUME_KEY, 100));
   const [effectsVolume, setEffectsVolume] = useState(() => readSavedPercentage(EFFECTS_VOLUME_KEY, 100));
@@ -69,6 +75,11 @@ export default function App() {
     const timeout = window.setTimeout(() => setSaveError(!saved), 0);
     return () => window.clearTimeout(timeout);
   }, [progress]);
+
+  useEffect(() => {
+    if (!rankingDevice) return;
+    void syncRanking(rankingDevice, progress).catch(() => undefined);
+  }, [progress, rankingDevice]);
 
   useEffect(() => {
     writeStorage("super-noa-muted", String(muted));
@@ -239,6 +250,22 @@ export default function App() {
   const openCollection = (tab: CollectionTab) => {
     setCollectionTab(tab);
     setShowAlbum(true);
+  };
+
+  const openRanking = () => {
+    setShowRanking(true);
+    setRankingMessage("");
+    void loadRanking().then(setRankingPlayers).catch(() => setRankingMessage("El tablón está descansando. Prueba en un ratito."));
+  };
+
+  const joinRanking = async () => {
+    try {
+      const device = await registerRankingDevice(rankingAlias);
+      setRankingDevice(device);
+      await syncRanking(device, progress);
+      setRankingMessage(`¡Hola, ${device.alias}! Ya estás en el tablón.`);
+      setRankingPlayers(await loadRanking());
+    } catch (error) { setRankingMessage(error instanceof Error ? error.message : "No pude guardar ese alias."); }
   };
 
   const isLevelUnlocked = (index: number) => {
@@ -413,6 +440,7 @@ export default function App() {
             <button type="button" onClick={() => setMuted((value) => !value)}><PixelIcon kind={muted ? "mute" : "sound"} /> {muted ? "Activar sonido" : "Sonido"}</button>
             <button type="button" onClick={() => openCollection("stickers")}>Álbum {progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length}/{albumStickers.length}</button>
             <button type="button" onClick={() => openCollection("bosses")}>Jefes amigos {knownBosses}/{bossLevels.length}</button>
+            <button type="button" onClick={openRanking}>🌍 Tablón mundial</button>
             <button type="button" onClick={() => setShowSettings(true)}>⚙ Ajustes</button>
             <button type="button" onClick={() => setShowCredits(true)}>Créditos</button>
           </nav>
@@ -427,6 +455,7 @@ export default function App() {
               <span className="apple-total"><GameAssetIcon kind="apple" /> {totalApples}</span>
               <button className="album-button" type="button" onClick={() => openCollection("stickers")} aria-label="Abrir álbum de pegatinas"><PixelIcon kind="sparkle" /> {progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length}/{albumStickers.length}</button>
               <button className="album-button" type="button" onClick={() => openCollection("bosses")} aria-label="Abrir jefes amigos">★ {knownBosses}/{bossLevels.length}</button>
+              <button className="album-button" type="button" onClick={openRanking}>🌍 Tablón</button>
               <button className="icon-button" type="button" onClick={() => setShowSettings(true)} aria-label="Abrir ajustes">⚙</button>
               <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label="Volver al inicio">⌂</button>
             </div>
@@ -646,6 +675,17 @@ export default function App() {
             <p className="album-progress">✉ {Object.values(worldProgress).filter((world) => world.remembered).length} de {worldCatalog.length} postales guardadas</p>
           </>}
           <button className="pixel-button primary" type="button" onClick={() => setShowAlbum(false)}>Seguir explorando</button>
+        </div></div>
+      )}
+      {showRanking && (
+        <div className="modal-backdrop"><div className="game-modal ranking-modal">
+          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowRanking(false)} aria-label="Cerrar">×</button>
+          <p className="eyebrow">Aventureras y aventureros</p><h2>Tablón mundial</h2>
+          {!rankingDevice ? <div className="ranking-join"><label htmlFor="ranking-alias">Tu alias de aventura</label><input id="ranking-alias" value={rankingAlias} onChange={(event) => setRankingAlias(event.target.value)} maxLength={16} placeholder="Por ejemplo, Moche" /><button className="pixel-button primary" type="button" onClick={() => void joinRanking()}>¡Salir al tablón!</button><small>Solo compartimos tu alias y tus logros. No pongas tu nombre real.</small></div> : <p className="ranking-welcome">¡Hola, {rankingDevice.alias}! Tus logros se guardan solos.</p>}
+          {rankingMessage && <p className="ranking-message" role="status">{rankingMessage}</p>}
+          <ol className="ranking-list">{rankingPlayers.map((player, index) => <li key={`${player.alias}-${index}`}><b>{index + 1}. {player.alias}</b><span>Mundo {player.world || 1} · {player.completedLevels}/18 pantallas · {player.stickers} pegatinas</span></li>)}</ol>
+          {rankingPlayers.length === 0 && !rankingMessage && <p className="ranking-empty">Aún no hay nadie. ¡Puedes ser la primera aventurera!</p>}
+          <button className="pixel-button" type="button" onClick={() => void loadRanking().then(setRankingPlayers).catch(() => setRankingMessage("No pude actualizar el tablón."))}>Actualizar tablón</button>
         </div></div>
       )}
     </main>

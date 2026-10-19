@@ -443,6 +443,15 @@ h1 span {
 .completion-medals .is-earned { border-color: #9e6c21; color: #654116; background: #ffe69b; }
 .sticker-found { border: 3px solid #7d4f8e; padding: 10px; background: #f0ddf7; font-weight: 800; }
 .album-modal { width: min(820px, 100%); }
+.ranking-modal { width: min(620px, 100%); }
+.ranking-join { display: grid; gap: 10px; margin: 18px 0; }
+.ranking-join input { min-height: 46px; border: 3px solid #553264; padding: 8px 10px; font: inherit; font-weight: 800; }
+.ranking-join small, .ranking-welcome, .ranking-empty { font-family: system-ui, sans-serif; }
+.ranking-message { border: 3px solid #b56b86; padding: 9px; background: #fff0e0; font-family: system-ui, sans-serif; font-weight: 800; }
+.ranking-list { display: grid; gap: 8px; max-height: 300px; margin: 16px 0; padding-left: 34px; overflow-y: auto; }
+.ranking-list li { border: 3px solid #553264; padding: 9px 11px; background: #f0e2f5; }
+.ranking-list b, .ranking-list span { display: block; }
+.ranking-list span { margin-top: 3px; color: #6d5a72; font-family: system-ui, sans-serif; font-size: .82rem; }
 .collection-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin: 22px 0 16px; border-bottom: 5px solid #553264; }
 .collection-tabs button { min-height: 48px; border: 3px solid #553264; border-bottom: 0; padding: 9px 12px; color: #543963; background: #e8d9ed; font-weight: 900; cursor: pointer; }
 .collection-tabs button.is-active { color: #fff8e9; background: #633977; }

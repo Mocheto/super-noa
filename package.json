@@ -11,10 +11,11 @@
     "build:pages": "vite build --config vite.github.config.ts",
     "preview:pages": "vite preview --config vite.github.config.ts --outDir dist-pages",
     "test": "npm run lint && npm run test:logic && npm run build:pages",
-    "test:logic": "node --experimental-strip-types --test src/game/*.test.ts",
+    "test:logic": "node --experimental-strip-types --test src/game/*.test.ts server/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist-pages"
   },
   "dependencies": {
+    "pg": "^8.23.1",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },

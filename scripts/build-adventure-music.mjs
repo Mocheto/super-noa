@@ -9,7 +9,9 @@ const sampleRate = 32000;
 const channels = 2;
 const outputDirectory = new URL("../public/assets/music/", import.meta.url);
 const checkOnly = process.argv.includes("--check");
-assert(process.argv.slice(2).every((arg) => arg === "--check"), "Uso: node scripts/build-adventure-music.mjs [--check]");
+const only = process.argv.slice(2).find((arg) => arg.startsWith("--only="))?.slice(7);
+assert(process.argv.slice(2).every((arg) => arg === "--check" || arg === `--only=${only}`),
+  "Uso: node scripts/build-adventure-music.mjs [--check] [--only=nombre]");
 
 const songs = [
   {
@@ -114,7 +116,42 @@ const songs = [
       "C#5:1 E5:1 A4:1 R:1",
     ],
   },
+  {
+    file: "bosque-manzanos",
+    title: "Brisa entre manzanos",
+    bpm: 84,
+    meter: 4,
+    key: "Do mayor",
+    style: "Bosque acogedor; flauta senoidal en registro medio, arpa amortiguada y pad cálido sin percusión",
+    lead: "forest-flute",
+    roots: [48, 43, 53, 48, 53, 48, 43, 43, 53, 48, 43, 48, 53, 48, 43, 43],
+    chords: [
+      [55, 60, 64, 67], [55, 59, 62, 67], [57, 60, 65, 69], [55, 60, 64, 67],
+      [57, 60, 65, 69], [55, 60, 64, 67], [55, 59, 62, 67], [55, 59, 62, 67],
+      [57, 60, 65, 69], [55, 60, 64, 67], [55, 59, 62, 67], [55, 60, 64, 67],
+      [57, 60, 65, 69], [55, 60, 64, 67], [55, 59, 62, 67], [55, 59, 62, 67],
+    ],
+    melody: [
+      "E4:1.5 G4:.5 E4:1 R:1",
+      "D4:2 G4:1 R:1",
+      "F4:1 A4:1 G4:.5 F4:.5 R:1",
+      "E4:2 C4:1 R:1",
+      "A4:1.5 G4:.5 F4:1 R:1",
+      "G4:1 E4:1 D4:.5 C4:.5 R:1",
+      "D4:1 G4:2 R:1",
+      "B3:1 D4:1 G4:1 R:1",
+      "F4:2 A4:.5 G4:.5 R:1",
+      "E4:1 G4:.5 E4:.5 C4:1 R:1",
+      "D4:1 B3:1 D4:.5 G4:.5 R:1",
+      "E4:2 G4:1 R:1",
+      "A4:1 F4:1 E4:.5 F4:.5 R:1",
+      "G4:1.5 E4:.5 C4:1 R:1",
+      "D4:1 G4:1 B3:1 R:1",
+      "D4:1 B3:1 G3:1 R:1",
+    ],
+  },
 ];
+assert(!only || songs.some((song) => song.file === only), `Pista desconocida: ${only}`);
 
 function run(tool, args, input) {
   const result = spawnSync(tool, args, { input, maxBuffer: 128 * 1024 * 1024 });
@@ -135,6 +172,12 @@ const sine = (phase) => Math.sin(2 * Math.PI * phase);
 function voice(kind, frequency, time) {
   const phase = frequency * time;
   switch (kind) {
+    case "forest-flute":
+      return .97 * sine(phase) + .03 * sine(phase * 2);
+    case "forest-harp":
+      return .97 * sine(phase) - .03 * sine(phase * 3) * Math.exp(-time * 6);
+    case "forest-pad":
+      return .99 * sine(phase) + .01 * sine(phase * 2);
     case "reed":
       return .76 * sine(phase) + .17 * sine(phase * 2) + .07 * sine(phase * 3);
     case "wood":
@@ -155,14 +198,17 @@ function voice(kind, frequency, time) {
 }
 
 function render(song) {
+  const forest = song.file === "bosque-manzanos";
   const beat = 60 / song.bpm;
   const sampleCount = Math.round(32 * song.meter * beat * sampleRate);
   const audio = new Float32Array(sampleCount * channels);
 
   function note(start, length, pitch, gain, kind, pan = 0, echo = false) {
     const seconds = length * beat;
-    const attack = kind === "pad" ? .16 : kind === "bell" ? .016 : .012;
-    const release = Math.min(seconds * .45, kind === "pad" ? .3 : .09);
+    const attack = kind === "forest-pad" ? .28 : kind === "forest-flute" ? .085
+      : kind === "forest-harp" ? .035 : kind === "pad" ? .16 : kind === "bell" ? .016 : .012;
+    const release = Math.min(seconds * .45,
+      kind === "forest-pad" ? .4 : forest ? .18 : kind === "pad" ? .3 : .09);
     const frequency = 440 * 2 ** ((pitch - 69) / 12);
     const first = Math.round(start * beat * sampleRate);
     const count = Math.round(seconds * sampleRate);
@@ -174,7 +220,8 @@ function render(song) {
       const fadeOut = Math.min(1, (count - 1 - i) / sampleRate / release);
       const envelope = Math.sin(fadeIn * Math.PI / 2) ** 2
         * Math.sin(fadeOut * Math.PI / 2) ** 2
-        * (kind === "pad" ? 1 : Math.exp(-time / (kind === "bell" ? .55 : .34)));
+        * (kind === "pad" || kind === "forest-pad" ? 1
+          : Math.exp(-time / (kind === "forest-flute" ? 1.8 : kind === "forest-harp" ? .5 : kind === "bell" ? .55 : .34)));
       const value = voice(kind, frequency, time) * envelope;
       const index = ((first + i) % sampleCount) * channels;
       audio[index] += value * left;
@@ -198,9 +245,12 @@ function render(song) {
       const length = Number(duration);
       assert(length > 0);
       if (pitch !== "R") {
-        note(start + cursor, length * .91 + .12, midi(pitch), .19, song.lead, -.16, true);
+        note(start + cursor, length * (forest ? .97 : .91) + (forest ? .25 : .12),
+          midi(pitch), forest ? .15 : .19, song.lead, -.16, true);
         if (bar >= 16 && cursor === 0 && bar % 2 === 0) {
-          note(start + cursor + .5, .8, chord[2] + 12, .04, "bell", .55, true);
+          note(start + cursor + (forest ? 2.5 : .5), forest ? 1 : .8,
+            chord[2] + (forest ? 0 : 12), forest ? .025 : .04,
+            forest ? "forest-harp" : "bell", .55, true);
         }
       }
       cursor += length;
@@ -208,11 +258,17 @@ function render(song) {
     assert.equal(cursor, song.meter, `${song.file}, compás ${bar + 1}`);
 
     chord.forEach((pitch, index) => {
-      note(start, song.meter + .18, pitch - 12, song.file === "hielo" ? .033 : .018,
-        "pad", (index - 1.5) * .25);
+      note(start, song.meter + (forest ? .6 : .18), pitch - 12,
+        song.file === "hielo" ? .033 : .018,
+        forest ? "forest-pad" : "pad", (index - 1.5) * .25);
     });
 
-    if (song.file === "volcan") {
+    if (forest) {
+      note(start + .15, 2.5, root - 12, .055, "forest-flute");
+      for (const [offset, tone] of [[.5, 0], [1.75, 2], [3, 1]]) {
+        note(start + offset, 1.25, chord[tone], .038, "forest-harp", offset < 2 ? -.35 : .35, true);
+      }
+    } else if (song.file === "volcan") {
       for (const offset of [0, 1.5, 2, 3.5]) {
         note(start + offset, .45, root - (offset === 2 ? 5 : 0), .13, "bass", 0);
       }
@@ -257,7 +313,7 @@ function render(song) {
   audio.forEach((value, index) => { peak = Math.max(peak, Math.abs(value - means[index % channels])); });
   const pcm = Buffer.alloc(audio.length * 4);
   audio.forEach((value, index) => {
-    pcm.writeFloatLE((value - means[index % channels]) * .68 / peak, index * 4);
+    pcm.writeFloatLE((value - means[index % channels]) * (forest ? .46 : .68) / peak, index * 4);
   });
   return { pcm, sampleCount };
 }
@@ -278,7 +334,8 @@ function validate(song, expectedSamples) {
   const frames = decoded.length / (4 * channels);
   assert.equal(frames, expectedSamples, `${song.file}: retardo/relleno MP3 no compensado`);
   const duration = frames / sampleRate;
-  assert(duration >= 45 && duration <= 90);
+  const forest = song.file === "bosque-manzanos";
+  assert(duration >= (forest ? 60 : 45) && duration <= (forest ? 100 : 90));
   let peak = 0;
   let square = 0;
   let maxStep = 0;
@@ -328,6 +385,10 @@ function validate(song, expectedSamples) {
   assert.equal(clipped, 0, `${song.file}: clipping`);
   assert(db(peak) <= -2, `${song.file}: margen insuficiente`);
   assert(rmsDb >= -23 && rmsDb <= -12, `${song.file}: nivel medio inadecuado`);
+  if (forest) {
+    assert(db(peak) >= -7.5 && db(peak) <= -5.5, `${song.file}: pico del bosque fuera de objetivo`);
+    assert(rmsDb >= -22 && rmsDb <= -18, `${song.file}: RMS del bosque fuera de objetivo`);
+  }
   assert(seamStep < .025 && seamStep <= maxStep, `${song.file}: discontinuidad de bucle`);
   assert(seamSlopeChange < .025, `${song.file}: cambio de pendiente en bucle`);
   assert(seamEnergy.every((energy) => db(Math.sqrt(energy / seamWindow / channels)) > -60),
@@ -336,10 +397,77 @@ function validate(song, expectedSamples) {
   console.log(`${song.file}.mp3 | ${duration.toFixed(3)} s | ${(size / 1024).toFixed(1)} KiB`
     + ` | pico ${db(peak).toFixed(2)} dBFS | RMS ${rmsDb.toFixed(2)} dBFS | clipping ${clipped}`
     + ` | unión Δ ${seamStep.toFixed(5)}, pendiente ${seamSlopeChange.toFixed(5)}, energía ${seamBalanceDb.toFixed(2)} dB`);
+  if (forest) validateBrightness(path);
+}
+
+function highBandRatio(path) {
+  const pcm = run("ffmpeg", [
+    "-v", "error", "-i", path, "-ar", String(sampleRate), "-ac", "1", "-f", "f32le", "pipe:1",
+  ]);
+  // Espectro de Welch: ventanas Hann de 4096 muestras, solape del 50 %.
+  // La razón de potencias no depende del volumen ni de la duración del tema.
+  const size = 4096;
+  const real = new Float64Array(size);
+  const imaginary = new Float64Array(size);
+  const window = Float64Array.from({ length: size }, (_, i) => .5 - .5 * Math.cos(2 * Math.PI * i / (size - 1)));
+  let total = 0;
+  let high = 0;
+  for (let first = 0; first + size <= pcm.length / 4; first += size / 2) {
+    for (let i = 0; i < size; i += 1) {
+      real[i] = pcm.readFloatLE((first + i) * 4) * window[i];
+      imaginary[i] = 0;
+    }
+    for (let i = 1, j = 0; i < size; i += 1) {
+      let bit = size >> 1;
+      while (j & bit) { j ^= bit; bit >>= 1; }
+      j ^= bit;
+      if (i < j) [real[i], real[j]] = [real[j], real[i]];
+    }
+    for (let length = 2; length <= size; length *= 2) {
+      const angle = -2 * Math.PI / length;
+      const stepReal = Math.cos(angle);
+      const stepImaginary = Math.sin(angle);
+      for (let start = 0; start < size; start += length) {
+        let twiddleReal = 1;
+        let twiddleImaginary = 0;
+        for (let j = 0; j < length / 2; j += 1) {
+          const a = start + j;
+          const b = a + length / 2;
+          const r = real[b] * twiddleReal - imaginary[b] * twiddleImaginary;
+          const im = real[b] * twiddleImaginary + imaginary[b] * twiddleReal;
+          real[b] = real[a] - r;
+          imaginary[b] = imaginary[a] - im;
+          real[a] += r;
+          imaginary[a] += im;
+          const nextReal = twiddleReal * stepReal - twiddleImaginary * stepImaginary;
+          twiddleImaginary = twiddleReal * stepImaginary + twiddleImaginary * stepReal;
+          twiddleReal = nextReal;
+        }
+      }
+    }
+    for (let bin = 0; bin <= size / 2; bin += 1) {
+      const power = (real[bin] ** 2 + imaginary[bin] ** 2) * (bin === 0 || bin === size / 2 ? 1 : 2);
+      total += power;
+      if (bin * sampleRate / size > 4000) high += power;
+    }
+  }
+  assert(total > 0, `${path}: no hay energía para analizar`);
+  return high / total;
+}
+
+function validateBrightness(path) {
+  const oldPath = fileURLToPath(new URL("manzanos.mp3", outputDirectory));
+  const current = highBandRatio(path);
+  const previous = highBandRatio(oldPath);
+  assert(current < .001, "Bosque: demasiada energía por encima de 4 kHz");
+  assert(current < previous * .1, "Bosque: el brillo no se ha reducido al menos diez veces");
+  console.log(`Brillo >4 kHz / total (mono, 32 kHz, FFT Hann): bosque ${(current * 100).toExponential(3)} %`
+    + ` | manzanos anterior ${(previous * 100).toFixed(4)} %`
+    + ` | reducción ${(10 * Math.log10(previous / current)).toFixed(2)} dB de proporción espectral`);
 }
 
 mkdirSync(outputDirectory, { recursive: true });
-for (const song of songs) {
+for (const song of songs.filter((song) => !only || song.file === only)) {
   const expectedSamples = Math.round(32 * song.meter * 60 / song.bpm * sampleRate);
   const destination = fileURLToPath(new URL(`${song.file}.mp3`, outputDirectory));
   if (!checkOnly) {
@@ -348,6 +476,7 @@ for (const song of songs) {
     run("ffmpeg", [
       "-v", "error", "-y", "-f", "f32le", "-ar", String(sampleRate), "-ac", String(channels),
       "-i", "pipe:0", "-map_metadata", "-1", "-c:a", "libmp3lame", "-b:a", "80k",
+      ...(song.file === "bosque-manzanos" ? ["-cutoff", "3200"] : []),
       "-ar", String(sampleRate), "-write_xing", "1", "-id3v2_version", "3",
       "-metadata", `title=${song.title}`, "-metadata", "artist=Super Noa",
       "-metadata", "album=Aventuras originales de Super Noa",

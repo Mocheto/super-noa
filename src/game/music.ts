@@ -1,7 +1,7 @@
 import type { Level } from "./types";
 
 export const musicTracks: Record<Level["world"], string> = {
-  1: "./assets/music/manzanos.mp3",
+  1: "./assets/music/bosque-manzanos.mp3",
   2: "./assets/music/gatitos.mp3",
   3: "./assets/music/lobos.mp3",
   4: "./assets/music/lobos.mp3",

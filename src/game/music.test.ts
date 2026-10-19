@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { createMusicPlayer, musicTracks } from "./music.ts";
+import { existsSync } from "node:fs";
+
+test("el bosque usa una melodía calmada propia sin cambiar la música pirata", () => {
+  assert.equal(musicTracks[1], "./assets/music/bosque-manzanos.mp3");
+  assert.equal(musicTracks[5], "./assets/music/manzanos.mp3");
+  assert.notEqual(musicTracks[1], musicTracks[5]);
+  assert.ok(existsSync(new URL("../../public/assets/music/bosque-manzanos.mp3", import.meta.url)));
+});
 
 test("pausar, silenciar y ajustar volumen conservan el reproductor y su tiempo", async () => {
   const audios: Array<{ source: string; loop: boolean; volume: number; paused: boolean; currentTime: number; play: () => Promise<void>; pause: () => void }> = [];

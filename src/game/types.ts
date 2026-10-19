@@ -52,6 +52,22 @@ export type WaterJumper = {
   jumpHeight: number;
 };
 
+export type LavaJet = {
+  id: string;
+  x: number;
+  baseY: number;
+  width: number;
+  height: number;
+  interval: number;
+  delay: number;
+};
+
+export type WindZone = Rect & {
+  id: string;
+  direction: -1 | 1;
+  strength: number;
+};
+
 export type BossId = "bramble-king" | "mist-countess" | "great-wolf" | "great-boar" | "sky-captain" | "vampire-count" | "rainbow-queen" | "shark-captain" | "triceratops-queen" | "ruby-dragon" | "queen-bee" | "polar-bear";
 
 export type Level = {
@@ -74,6 +90,8 @@ export type Level = {
   rewardBlocks: RewardBlock[];
   cannons?: Cannon[];
   waterJumpers?: WaterJumper[];
+  lavaJets?: LavaJet[];
+  windZones?: WindZone[];
   checkpoints: number[];
   boss?: BossId;
   route?: {

@@ -35,6 +35,9 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     assert.equal(getLevelAssets(levels.find((level) => level.id === "10-1")!).worldCharacters.src, "./assets/atlases/volcano-characters-v1.png");
     assert.equal(getLevelAssets(levels.find((level) => level.id === "11-1")!).worldCharacters.src, "./assets/atlases/giant-valley-characters-v1.png");
     assert.equal(getLevelAssets(levels.find((level) => level.id === "12-1")!).worldCharacters.src, "./assets/atlases/ice-mountain-characters-v1.png");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "10-1")!).worldTerrain.src, "./assets/atlases/volcano-terrain-v1.png");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "11-1")!).worldTerrain.src, "./assets/atlases/giant-valley-terrain-v1.png");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "12-1")!).worldTerrain.src, "./assets/atlases/ice-mountain-terrain-v1.png");
     for (const level of levels) getLevelAssets(level);
     for (const src of requested) {
       assert.ok(src.startsWith("./assets/"), `Ruta no relativa: ${src}`);

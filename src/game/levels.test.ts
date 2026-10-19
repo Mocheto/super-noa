@@ -151,14 +151,31 @@ test("los tres nuevos mundos forman una aventura completa con mecánicas propias
     assert.deepEqual(world.map((level) => level.id), [...expected.ids]);
     assert.equal(world[2].boss, expected.boss);
     for (const level of world) {
+      assert.ok(level.width >= 5600, `${level.id} debe ser más largo que los mundos iniciales`);
       assert.equal(level.items.find((item) => item.kind === "sticker")?.id, `sticker-${level.id}`);
       assert.ok(level.platforms.some((platform) => platform.kind === expected.platform));
       assert.ok(level.deadlyWater?.length);
     }
     for (const kind of expected.enemies) assert.ok(world.some((level) => level.enemies.some((enemy) => enemy.kind === kind)));
   }
-  assert.ok(levels.find((level) => level.id === "11-2")?.platforms.some((platform) => platform.kind === "dew"));
+  for (const level of levels.filter((entry) => entry.world === 10)) assert.ok(level.lavaJets?.length, `${level.id} necesita chorros de lava`);
+  for (const level of levels.filter((entry) => entry.world === 11)) assert.ok(level.platforms.some((platform) => platform.kind === "dew"), `${level.id} necesita gotas de rocío`);
+  for (const level of levels.filter((entry) => entry.world === 12)) assert.ok(level.windZones?.length, `${level.id} necesita ráfagas de viento`);
   assert.equal(levels.find((level) => level.id === "12-3")?.route?.finale, true);
+});
+
+test("las cajas de los mundos nuevos flotan sobre apoyos alcanzables", () => {
+  const maxJumpRise = JUMP_SPEED ** 2 / (2 * GRAVITY);
+  for (const level of levels.filter((entry) => entry.world >= 10)) {
+    for (const block of level.rewardBlocks) {
+      const support = level.platforms
+        .filter((platform) => platform.kind !== "dew" && platform.x <= block.x && platform.x + platform.width >= block.x + 48 && platform.y > block.y + 48)
+        .sort((a, b) => a.y - b.y)[0];
+      assert.ok(support, `${level.id}: la caja ${block.id} no tiene apoyo debajo`);
+      const distanceToHit = support.y - 58 - (block.y + 48);
+      assert.ok(distanceToHit >= 35 && distanceToHit < maxJumpRise, `${level.id}: la caja ${block.id} debe flotar con espacio visible (${distanceToHit}px)`);
+    }
+  }
 });
 
 test("las cajas jurásicas sobre repisas tienen espacio para golpearlas desde abajo", () => {

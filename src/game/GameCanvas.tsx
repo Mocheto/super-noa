@@ -5,7 +5,7 @@ import {
   drawAmbientForeground, drawApple, drawBackground, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawCheckpoint,
   drawDeadlyWater, drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock,
-  drawSecretVine, drawSticker, drawTinySparkle, drawWaterJumper,
+  drawLavaJet, drawSecretVine, drawSticker, drawTinySparkle, drawWaterJumper, drawWindZone,
 } from "./rendering";
 import { useGameInput } from "./input";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
@@ -14,7 +14,7 @@ import { getStickerSprite } from "./stickers";
 import type { Level, GameSnapshot } from "./types";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
-  enemyY, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
+  enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
 import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay";
@@ -140,6 +140,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     let shootCooldown = 0;
     let completed = false;
     let frame = 0;
+    let levelAge = 0;
     let walkCycleTime = 0;
     let lastSnapshot = 0;
     let completeTimer = 0;
@@ -191,6 +192,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     };
 
     const update = (delta: number, now: number) => {
+      levelAge += delta;
       const input = inputRef.current;
       const pad = readGameplayPad(firstConnectedGamepad());
       const left = input.left || pad.left;
@@ -210,6 +212,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         player.vx = standingOnIce ? player.vx + Math.max(-520 * delta, Math.min(520 * delta, targetVelocity - player.vx)) : targetVelocity;
         player.facing = left ? -1 : 1;
       }
+      const activeWind = level.windZones?.find((zone) => intersects(player, zone));
+      if (activeWind && !swimming) player.vx = Math.max(-360, Math.min(360, player.vx + activeWind.direction * activeWind.strength * delta));
 
       if (input.jumpQueued || (jump && !previousJump)) player.jumpBuffer = 0.13;
       input.jumpQueued = false;
@@ -357,6 +361,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         callbacksRef.current.playSound("hurt");
         respawn();
         return;
+      }
+      if (level.lavaJets?.some((jet) => {
+        const state = lavaJetState(jet, levelAge);
+        return state.extension > .12 && intersects(player, state.rect);
+      })) {
+        hurt();
       }
       if (player.y > VIEW_HEIGHT + 120) {
         callbacksRef.current.playSound("hurt");
@@ -665,7 +675,15 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     const render = () => {
       drawBackground(context, level, cameraX, frame, raster);
+      level.windZones?.forEach((zone) => drawWindZone(context, zone, cameraX, levelAge));
+      if (level.screen === 1 && cameraX < 520 && level.world >= 10) {
+        const hint = level.world === 10 ? "¡MIRA EL RITMO DE LA LAVA!" : level.world === 11 ? "¡CAE SOBRE EL ROCÍO PARA REBOTAR!" : "¡EL HIELO RESBALA Y EL VIENTO EMPUJA!";
+        context.save(); context.fillStyle = "rgba(42,24,55,.88)"; context.fillRect(205 - cameraX * .22, 82, 550, 42);
+        context.strokeStyle = "#fff0b0"; context.lineWidth = 3; context.strokeRect(205 - cameraX * .22, 82, 550, 42);
+        context.fillStyle = "#fff7dd"; context.font = "bold 17px monospace"; context.textAlign = "center"; context.fillText(hint, 480 - cameraX * .22, 109); context.restore();
+      }
       level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster, level.theme));
+      level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge));
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
       level.spikePits?.forEach((pit) => {
         const x = pit.x - cameraX;

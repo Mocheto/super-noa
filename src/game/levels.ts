@@ -66,6 +66,8 @@ const cannon = (id: string, x: number, y: number, direction: Cannon["direction"]
 const jumpingFish = (id: string, x: number, interval: number, delay: number, jumpHeight = 345) => ({
   id, x, surfaceY: 448, width: 56, height: 52, interval, delay, jumpHeight,
 });
+const lavaJet = (id: string, x: number, interval: number, delay: number, height = 285) => ({ id, x, baseY: 456, width: 54, height, interval, delay });
+const iceWind = (id: string, x: number, width: number, direction: -1 | 1, strength = 310) => ({ id, x, y: 70, width, height: 386, direction, strength });
 
 export const themeNames: Record<Theme, string> = {
   "orchard-day": "Mañana entre manzanos",
@@ -134,15 +136,15 @@ const castleFloor3: Array<[number, number]> = [[0, 760], [900, 920], [1960, 950]
 const dinoFloor1: Array<[number, number]> = [[0, 920], [1040, 1080], [2250, 1050], [3440, 1160]];
 const dinoFloor2: Array<[number, number]> = [[0, 760], [900, 960], [2000, 900], [3040, 1010], [4200, 1100]];
 const dinoFloor3: Array<[number, number]> = [[0, 820], [960, 900], [2010, 940], [3090, 900], [4140, 930], [5200, 1300]];
-const world10Floor1: Array<[number, number]> = [[0, 900], [1040, 1000], [2180, 980], [3300, 1300]];
-const world10Floor2: Array<[number, number]> = [[0, 760], [900, 960], [2000, 930], [3070, 980], [4200, 1100]];
-const world10Floor3: Array<[number, number]> = [[0, 820], [960, 900], [2020, 900], [3080, 910], [4140, 920], [5220, 1280]];
-const world11Floor1: Array<[number, number]> = [[0, 930], [1060, 1030], [2220, 1010], [3360, 1240]];
-const world11Floor2: Array<[number, number]> = [[0, 780], [920, 930], [1990, 950], [3080, 960], [4180, 1120]];
-const world11Floor3: Array<[number, number]> = [[0, 840], [980, 880], [2010, 930], [3090, 900], [4140, 940], [5220, 1280]];
-const world12Floor1: Array<[number, number]> = [[0, 920], [1060, 1040], [2240, 990], [3370, 1230]];
-const world12Floor2: Array<[number, number]> = [[0, 760], [900, 960], [2010, 900], [3050, 1010], [4200, 1100]];
-const world12Floor3: Array<[number, number]> = [[0, 820], [960, 900], [2010, 940], [3090, 900], [4140, 930], [5200, 1300]];
+const world10Floor1: Array<[number, number]> = [[0, 900], [1040, 1000], [2180, 980], [3300, 1300], [4750, 850]];
+const world10Floor2: Array<[number, number]> = [[0, 760], [900, 960], [2000, 930], [3070, 980], [4200, 1100], [5460, 1040]];
+const world10Floor3: Array<[number, number]> = [[0, 820], [960, 900], [2020, 900], [3080, 910], [4140, 920], [5220, 1280], [6660, 1140]];
+const world11Floor1: Array<[number, number]> = [[0, 930], [1060, 1030], [2220, 1010], [3360, 1240], [4750, 850]];
+const world11Floor2: Array<[number, number]> = [[0, 780], [920, 930], [1990, 950], [3080, 960], [4180, 1120], [5460, 1040]];
+const world11Floor3: Array<[number, number]> = [[0, 840], [980, 880], [2010, 930], [3090, 900], [4140, 940], [5220, 1280], [6660, 1140]];
+const world12Floor1: Array<[number, number]> = [[0, 920], [1060, 1040], [2240, 990], [3370, 1230], [4750, 850]];
+const world12Floor2: Array<[number, number]> = [[0, 760], [900, 960], [2010, 900], [3050, 1010], [4200, 1100], [5460, 1040]];
+const world12Floor3: Array<[number, number]> = [[0, 820], [960, 900], [2010, 940], [3090, 900], [4140, 930], [5200, 1300], [6660, 1140]];
 
 export const levels: Level[] = [
   {
@@ -820,144 +822,151 @@ export const levels: Level[] = [
   },
   {
     id: "10-1", world: 10, screen: 1,
-    title: "Las laderas humeantes", subtitle: "Avanza entre rocas calientes y dragones pequeños. ¡La lava quema!",
-    theme: "dragon-volcano", width: 4600, start: { x: 80, y: 380 }, goalX: 4420,
+    title: "Las laderas humeantes", subtitle: "Observa el ritmo de los chorros de lava y salta cuando bajen.",
+    theme: "dragon-volcano", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     platforms: [
       ...themedGround(world10Floor1, "volcano-ground"),
       themedLedge(300, 340, 190, "volcano-ledge"), themedLedge(620, 265, 180, "volcano-ledge"), themedLedge(1080, 330, 190, "volcano-ledge"),
       themedLedge(1460, 245, 180, "volcano-ledge"), themedLedge(1830, 335, 190, "volcano-ledge"), themedLedge(2250, 290, 190, "volcano-ledge"),
       themedLedge(2670, 220, 180, "volcano-ledge"), themedLedge(3160, 340, 190, "volcano-ledge"), themedLedge(3540, 265, 180, "volcano-ledge"),
-      themedLedge(3990, 330, 190, "volcano-ledge"), themedWall(1680, 350, 70, 106, "volcano-wall"),
+      themedLedge(3990, 330, 190, "volcano-ledge"), themedLedge(4810, 310, 190, "volcano-ledge"), themedLedge(5160, 225, 180, "volcano-ledge"), themedWall(1680, 350, 70, 106, "volcano-wall"),
     ],
     deadlyWater: deadlyWaterPits(world10Floor1),
-    enemies: [enemy("v1-d1", "baby-dragon", 450, 410, 320, 760, 40), enemy("v1-s1", "fire-salamander", 1200, 416, 1090, 1510, 44), enemy("v1-d2", "baby-dragon", 2380, 410, 2250, 2860, 46), enemy("v1-s2", "fire-salamander", 3600, 416, 3450, 4050, 48)],
-    items: [apple("v1a1", 350, 290), apple("v1a2", 680, 215), sticker("sticker-10-1", 1510, 195), apple("v1a3", 2320, 240), apple("v1a4", 2740, 170), apple("v1a5", 4060, 280)],
-    rewardBlocks: [reward("v1r1", 1120, 205), reward("v1r2", 3250, 285, "apple")], checkpoints: [1060, 2200, 3380],
+    lavaJets: [lavaJet("v1-j1", 943, 2.5, 0), lavaJet("v1-j2", 2083, 2.8, .8, 320), lavaJet("v1-j3", 3203, 2.35, 1.4), lavaJet("v1-j4", 4648, 2.65, .45, 335)],
+    enemies: [enemy("v1-d1", "baby-dragon", 450, 410, 320, 760, 44), enemy("v1-s1", "fire-salamander", 1200, 416, 1090, 1510, 48), enemy("v1-d2", "baby-dragon", 2380, 410, 2250, 2860, 50), enemy("v1-s2", "fire-salamander", 3600, 416, 3450, 4050, 52), enemy("v1-d3", "baby-dragon", 5050, 410, 4820, 5350, 56)],
+    items: [apple("v1a1", 350, 290), apple("v1a2", 680, 215), sticker("sticker-10-1", 1510, 195), apple("v1a3", 2320, 240), apple("v1a4", 2740, 170), apple("v1a5", 4060, 280), apple("v1a6", 5220, 175)],
+    rewardBlocks: [reward("v1r1", 1120, 179), reward("v1r2", 3250, 189, "apple")], checkpoints: [1060, 2200, 3380, 4780],
   },
   {
     id: "10-2", world: 10, screen: 2,
     title: "La cueva de los cristales", subtitle: "Busca el camino entre cristales rojos y charcos de lava brillante.",
-    theme: "dragon-volcano", width: 5300, start: { x: 80, y: 380 }, goalX: 5120,
+    theme: "dragon-volcano", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [
       ...themedGround(world10Floor2, "volcano-ground"),
       themedLedge(280, 340, 180, "volcano-ledge"), themedLedge(570, 260, 180, "volcano-ledge"), themedLedge(950, 330, 190, "volcano-ledge"),
       themedLedge(1320, 225, 180, "volcano-ledge"), themedLedge(1680, 320, 180, "volcano-ledge"), themedLedge(2070, 275, 190, "volcano-ledge"),
       themedLedge(2450, 190, 180, "volcano-ledge"), themedLedge(2810, 325, 180, "volcano-ledge"), themedLedge(3150, 250, 190, "volcano-ledge"),
       themedLedge(3520, 180, 180, "volcano-ledge"), themedLedge(3900, 320, 180, "volcano-ledge"), themedLedge(4290, 240, 190, "volcano-ledge"), themedLedge(4760, 325, 190, "volcano-ledge"),
-      themedWall(1510, 330, 76, 126, "volcano-wall"), themedWall(3660, 315, 80, 141, "volcano-wall"),
+      themedLedge(5520, 300, 185, "volcano-ledge"), themedLedge(5880, 205, 180, "volcano-ledge"), themedLedge(6210, 320, 190, "volcano-ledge"), themedWall(1510, 330, 76, 126, "volcano-wall"), themedWall(3660, 315, 80, 141, "volcano-wall"),
     ],
     deadlyWater: deadlyWaterPits(world10Floor2),
-    enemies: [enemy("v2-s1", "fire-salamander", 520, 416, 330, 720, 46), enemy("v2-d1", "baby-dragon", 1110, 410, 990, 1460, 45), enemy("v2-s2", "fire-salamander", 2240, 416, 2080, 2740, 50), enemy("v2-d2", "baby-dragon", 3270, 410, 3140, 3550, 50), enemy("v2-s3", "fire-salamander", 4530, 416, 4360, 4870, 54)],
-    items: [apple("v2a1", 330, 290), apple("v2a2", 630, 210), apple("v2a3", 1390, 175), apple("v2a4", 2510, 140), sticker("sticker-10-2", 3580, 130), apple("v2a5", 4350, 190), apple("v2a6", 4820, 275)],
-    rewardBlocks: [reward("v2r1", 1040, 205), reward("v2r2", 3160, 140, "apple"), reward("v2r3", 4620, 295)], checkpoints: [930, 2030, 3090, 4230],
+    lavaJets: [lavaJet("v2-j1", 803, 2.4, .2), lavaJet("v2-j2", 1903, 2.75, 1), lavaJet("v2-j3", 2973, 2.25, 1.55, 330), lavaJet("v2-j4", 4098, 2.6, .65), lavaJet("v2-j5", 5353, 2.35, 1.8, 350)],
+    enemies: [enemy("v2-s1", "fire-salamander", 520, 416, 330, 720, 50), enemy("v2-d1", "baby-dragon", 1110, 410, 990, 1460, 49), enemy("v2-s2", "fire-salamander", 2240, 416, 2080, 2740, 54), enemy("v2-d2", "baby-dragon", 3270, 410, 3140, 3550, 54), enemy("v2-s3", "fire-salamander", 4530, 416, 4360, 4870, 58), enemy("v2-d3", "baby-dragon", 5750, 410, 5520, 6160, 60)],
+    items: [apple("v2a1", 330, 290), apple("v2a2", 630, 210), apple("v2a3", 1390, 175), apple("v2a4", 2510, 140), sticker("sticker-10-2", 3580, 130), apple("v2a5", 4350, 190), apple("v2a6", 4820, 275), apple("v2a7", 5940, 155)],
+    rewardBlocks: [reward("v2r1", 1040, 179), reward("v2r2", 3160, 99, "apple"), reward("v2r3", 4620, 305)], checkpoints: [930, 2030, 3090, 4230, 5500],
   },
   {
     id: "10-3", world: 10, screen: 3,
     route: { next: "11-1", nextLabel: "Bajar al valle de los gigantes ▶" },
     title: "El corazón del volcán", subtitle: "Llega hasta Dragona Rubí y demuéstrale lo valiente que eres.",
-    theme: "dragon-volcano", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    theme: "dragon-volcano", width: 7800, start: { x: 80, y: 380 }, goalX: 7620,
     platforms: [
       ...themedGround(world10Floor3, "volcano-ground"),
       themedLedge(300, 335, 190, "volcano-ledge"), themedLedge(650, 250, 180, "volcano-ledge"), themedLedge(1010, 330, 190, "volcano-ledge"), themedLedge(1370, 225, 180, "volcano-ledge"),
       themedLedge(1760, 325, 180, "volcano-ledge"), themedLedge(2100, 250, 190, "volcano-ledge"), themedLedge(2470, 175, 180, "volcano-ledge"), themedLedge(2840, 320, 180, "volcano-ledge"),
       themedLedge(3180, 240, 190, "volcano-ledge"), themedLedge(3550, 165, 180, "volcano-ledge"), themedLedge(3940, 315, 180, "volcano-ledge"), themedLedge(4270, 225, 190, "volcano-ledge"),
       themedLedge(4660, 160, 180, "volcano-ledge"), themedLedge(5080, 310, 190, "volcano-ledge"), themedLedge(5460, 220, 180, "volcano-ledge"), themedLedge(5900, 310, 200, "volcano-ledge"),
-      themedWall(1560, 338, 76, 118, "volcano-wall"), themedWall(3710, 320, 78, 136, "volcano-wall"), themedWall(5700, 330, 74, 126, "volcano-wall"),
+      themedLedge(6710, 300, 190, "volcano-ledge"), themedLedge(7070, 205, 180, "volcano-ledge"), themedLedge(7450, 305, 200, "volcano-ledge"), themedWall(1560, 338, 76, 118, "volcano-wall"), themedWall(3710, 320, 78, 136, "volcano-wall"), themedWall(5700, 330, 74, 126, "volcano-wall"),
     ],
     deadlyWater: deadlyWaterPits(world10Floor3),
-    enemies: [enemy("v3-d1", "baby-dragon", 440, 410, 310, 720, 48), enemy("v3-s1", "fire-salamander", 1130, 416, 990, 1450, 52), enemy("v3-d2", "baby-dragon", 2250, 410, 2100, 2720, 52), enemy("v3-s2", "fire-salamander", 3300, 416, 3160, 3650, 56), enemy("v3-d3", "baby-dragon", 4340, 410, 4200, 4630, 58), enemy("v3-s3", "fire-salamander", 5450, 416, 5310, 5810, 60)],
-    items: [apple("v3a1", 360, 285), apple("v3a2", 700, 200), apple("v3a3", 1430, 175), apple("v3a4", 2520, 125), apple("v3a5", 3610, 115), sticker("sticker-10-3", 4710, 110), apple("v3a6", 5510, 170), apple("v3a7", 6000, 260)],
-    rewardBlocks: [reward("v3r1", 1080, 205), reward("v3r2", 3220, 125, "apple"), reward("v3r3", 5160, 185)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890], boss: "ruby-dragon",
+    lavaJets: [lavaJet("v3-j1", 863, 2.3, .1), lavaJet("v3-j2", 1913, 2.6, .8, 320), lavaJet("v3-j3", 2973, 2.2, 1.4, 340), lavaJet("v3-j4", 4038, 2.5, .45), lavaJet("v3-j5", 5113, 2.15, 1.75, 355), lavaJet("v3-j6", 6553, 2.45, 1.05, 340)],
+    enemies: [enemy("v3-d1", "baby-dragon", 440, 410, 310, 720, 52), enemy("v3-s1", "fire-salamander", 1130, 416, 990, 1450, 56), enemy("v3-d2", "baby-dragon", 2250, 410, 2100, 2720, 56), enemy("v3-s2", "fire-salamander", 3300, 416, 3160, 3650, 60), enemy("v3-d3", "baby-dragon", 4340, 410, 4200, 4630, 62), enemy("v3-s3", "fire-salamander", 5450, 416, 5310, 5810, 64), enemy("v3-d4", "baby-dragon", 7000, 410, 6740, 7440, 68)],
+    items: [apple("v3a1", 360, 285), apple("v3a2", 700, 200), apple("v3a3", 1430, 175), apple("v3a4", 2520, 125), apple("v3a5", 3610, 115), sticker("sticker-10-3", 4710, 110), apple("v3a6", 5510, 170), apple("v3a7", 6000, 260), apple("v3a8", 7130, 155)],
+    rewardBlocks: [reward("v3r1", 1080, 179), reward("v3r2", 3220, 89, "apple"), reward("v3r3", 5160, 159)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890, 6690], boss: "ruby-dragon",
   },
   {
     id: "11-1", world: 11, screen: 1,
-    title: "El sendero de las flores gigantes", subtitle: "Corre entre hojas enormes y saluda a las hormigas trabajadoras.",
-    theme: "giant-valley", width: 4600, start: { x: 80, y: 380 }, goalX: 4420,
+    title: "El sendero de las flores gigantes", subtitle: "Rebota en las gotas de rocío para cruzar el jardín gigante.",
+    theme: "giant-valley", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     platforms: [
       ...themedGround(world11Floor1, "garden-ground"), themedLedge(310, 340, 190, "garden-ledge"), themedLedge(650, 265, 180, "garden-ledge"), themedLedge(1090, 330, 190, "garden-ledge"),
       themedLedge(1470, 245, 180, "garden-ledge"), themedLedge(1850, 340, 190, "garden-ledge"), themedLedge(2290, 285, 190, "garden-ledge"), themedLedge(2720, 210, 180, "garden-ledge"),
       themedLedge(3190, 335, 190, "garden-ledge"), themedLedge(3560, 260, 180, "garden-ledge"), themedLedge(4020, 330, 190, "garden-ledge"),
+      dew(940, 382), dew(2100, 382), dew(3225, 382), dew(4610, 382), themedLedge(4810, 305, 190, "garden-ledge"), themedLedge(5180, 215, 180, "garden-ledge"),
     ],
     deadlyWater: deadlyWaterPits(world11Floor1),
-    enemies: [enemy("g1-a1", "ant", 450, 420, 320, 770, 42), enemy("g1-s1", "snail", 1220, 420, 1100, 1510, 27), enemy("g1-b1", "bee", 2420, 190, 2240, 2820, 64), enemy("g1-a2", "ant", 3620, 420, 3460, 4070, 48)],
-    items: [apple("g1a1", 360, 290), apple("g1a2", 710, 215), sticker("sticker-11-1", 1520, 195), apple("g1a3", 2360, 235), apple("g1a4", 2790, 160), apple("g1a5", 4090, 280)],
-    rewardBlocks: [reward("g1r1", 1140, 205), reward("g1r2", 3280, 280, "apple")], checkpoints: [1080, 2240, 3400],
+    enemies: [enemy("g1-a1", "ant", 450, 420, 320, 770, 46), enemy("g1-s1", "snail", 1220, 420, 1100, 1510, 30), enemy("g1-b1", "bee", 2420, 190, 2240, 2820, 70), enemy("g1-a2", "ant", 3620, 420, 3460, 4070, 52), enemy("g1-b2", "bee", 5050, 175, 4820, 5360, 76)],
+    items: [apple("g1a1", 360, 290), apple("g1a2", 710, 215), sticker("sticker-11-1", 1520, 195), apple("g1a3", 2360, 235), apple("g1a4", 2790, 160), apple("g1a5", 4090, 280), apple("g1a6", 5240, 165)],
+    rewardBlocks: [reward("g1r1", 1140, 179), reward("g1r2", 3280, 184, "apple")], checkpoints: [1080, 2240, 3400, 4780],
   },
   {
     id: "11-2", world: 11, screen: 2,
     title: "El jardín de las gotas", subtitle: "Rebota en las gotas de rocío para alcanzar las hojas más altas.",
-    theme: "giant-valley", width: 5300, start: { x: 80, y: 380 }, goalX: 5120,
+    theme: "giant-valley", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [
       ...themedGround(world11Floor2, "garden-ground"), themedLedge(280, 340, 180, "garden-ledge"), dew(590, 330), themedLedge(920, 245, 190, "garden-ledge"), themedLedge(1320, 175, 180, "garden-ledge"),
       themedLedge(1680, 320, 180, "garden-ledge"), dew(1900, 380), themedLedge(2170, 245, 190, "garden-ledge"), themedLedge(2530, 165, 180, "garden-ledge"), themedLedge(2860, 325, 180, "garden-ledge"),
       dew(3020, 380), themedLedge(3260, 235, 190, "garden-ledge"), themedLedge(3630, 155, 180, "garden-ledge"), themedLedge(3980, 315, 180, "garden-ledge"), dew(4160, 380),
-      themedLedge(4410, 225, 190, "garden-ledge"), themedLedge(4780, 320, 190, "garden-ledge"),
+      themedLedge(4410, 225, 190, "garden-ledge"), themedLedge(4780, 320, 190, "garden-ledge"), dew(5325, 380), themedLedge(5520, 290, 185, "garden-ledge"), dew(5770, 365), themedLedge(5960, 185, 180, "garden-ledge"), themedLedge(6260, 315, 190, "garden-ledge"),
     ],
     deadlyWater: deadlyWaterPits(world11Floor2),
-    enemies: [enemy("g2-b1", "bee", 680, 190, 520, 980, 68), enemy("g2-a1", "ant", 1110, 420, 1010, 1500, 46), enemy("g2-s1", "snail", 2240, 420, 2100, 2760, 30), enemy("g2-b2", "bee", 3540, 145, 3330, 3890, 74), enemy("g2-a2", "ant", 4550, 420, 4370, 4880, 52)],
-    items: [apple("g2a1", 330, 290), apple("g2a2", 960, 195), apple("g2a3", 1390, 125), apple("g2a4", 2590, 115), sticker("sticker-11-2", 3690, 105), apple("g2a5", 4470, 175), apple("g2a6", 4840, 270)],
-    rewardBlocks: [reward("g2r1", 1060, 205), reward("g2r2", 3200, 130, "apple"), reward("g2r3", 4640, 290)], checkpoints: [930, 2020, 3100, 4230],
+    enemies: [enemy("g2-b1", "bee", 680, 190, 520, 980, 74), enemy("g2-a1", "ant", 1110, 420, 1010, 1500, 50), enemy("g2-s1", "snail", 2240, 420, 2100, 2760, 34), enemy("g2-b2", "bee", 3540, 145, 3330, 3890, 80), enemy("g2-a2", "ant", 4550, 420, 4370, 4880, 56), enemy("g2-b3", "bee", 5850, 155, 5530, 6220, 86)],
+    items: [apple("g2a1", 330, 290), apple("g2a2", 960, 195), apple("g2a3", 1390, 125), apple("g2a4", 2590, 115), sticker("sticker-11-2", 3690, 105), apple("g2a5", 4470, 175), apple("g2a6", 4840, 270), apple("g2a7", 6020, 135)],
+    rewardBlocks: [reward("g2r1", 1060, 94), reward("g2r2", 3200, 305, "apple"), reward("g2r3", 4640, 305)], checkpoints: [930, 2020, 3100, 4230, 5500],
   },
   {
     id: "11-3", world: 11, screen: 3,
     route: { next: "12-1", nextLabel: "Subir a la montaña de hielo ▶" },
     title: "La colmena de Melisa", subtitle: "Cruza el valle y juega con la Reina Melisa, guardiana de las flores.",
-    theme: "giant-valley", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    theme: "giant-valley", width: 7800, start: { x: 80, y: 380 }, goalX: 7620,
     platforms: [
       ...themedGround(world11Floor3, "garden-ground"), themedLedge(300, 335, 190, "garden-ledge"), dew(650, 365), themedLedge(1010, 285, 190, "garden-ledge"), themedLedge(1370, 205, 180, "garden-ledge"),
       themedLedge(1760, 325, 180, "garden-ledge"), dew(1920, 380), themedLedge(2110, 240, 190, "garden-ledge"), themedLedge(2480, 155, 180, "garden-ledge"), themedLedge(2840, 315, 180, "garden-ledge"),
       dew(3010, 380), themedLedge(3190, 225, 190, "garden-ledge"), themedLedge(3560, 145, 180, "garden-ledge"), themedLedge(3940, 310, 180, "garden-ledge"), dew(4100, 380),
-      themedLedge(4290, 210, 190, "garden-ledge"), themedLedge(4670, 145, 180, "garden-ledge"), themedLedge(5080, 305, 190, "garden-ledge"), dew(5260, 380), themedLedge(5480, 205, 180, "garden-ledge"), themedLedge(5900, 305, 200, "garden-ledge"),
+      themedLedge(4290, 210, 190, "garden-ledge"), themedLedge(4670, 145, 180, "garden-ledge"), themedLedge(5080, 305, 190, "garden-ledge"), dew(5260, 380), themedLedge(5480, 205, 180, "garden-ledge"), themedLedge(5900, 305, 200, "garden-ledge"), dew(6515, 380), themedLedge(6710, 285, 190, "garden-ledge"), dew(6960, 365), themedLedge(7150, 175, 180, "garden-ledge"), themedLedge(7490, 300, 200, "garden-ledge"),
     ],
     deadlyWater: deadlyWaterPits(world11Floor3),
-    enemies: [enemy("g3-a1", "ant", 450, 420, 320, 730, 50), enemy("g3-b1", "bee", 1150, 175, 980, 1450, 76), enemy("g3-s1", "snail", 2250, 420, 2100, 2730, 34), enemy("g3-b2", "bee", 3310, 135, 3160, 3650, 82), enemy("g3-a2", "ant", 4350, 420, 4200, 4640, 56), enemy("g3-b3", "bee", 5480, 145, 5300, 5820, 88)],
-    items: [apple("g3a1", 360, 285), apple("g3a2", 1050, 235), apple("g3a3", 1430, 155), apple("g3a4", 2530, 105), apple("g3a5", 3620, 95), sticker("sticker-11-3", 4730, 95), apple("g3a6", 5530, 155), apple("g3a7", 6000, 255)],
-    rewardBlocks: [reward("g3r1", 1080, 205), reward("g3r2", 3220, 120, "apple"), reward("g3r3", 5160, 180)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890], boss: "queen-bee",
+    enemies: [enemy("g3-a1", "ant", 450, 420, 320, 730, 54), enemy("g3-b1", "bee", 1150, 175, 980, 1450, 82), enemy("g3-s1", "snail", 2250, 420, 2100, 2730, 38), enemy("g3-b2", "bee", 3310, 135, 3160, 3650, 88), enemy("g3-a2", "ant", 4350, 420, 4200, 4640, 60), enemy("g3-b3", "bee", 5480, 145, 5300, 5820, 94), enemy("g3-a3", "ant", 7040, 420, 6730, 7460, 66)],
+    items: [apple("g3a1", 360, 285), apple("g3a2", 1050, 235), apple("g3a3", 1430, 155), apple("g3a4", 2530, 105), apple("g3a5", 3620, 95), sticker("sticker-11-3", 4730, 95), apple("g3a6", 5530, 155), apple("g3a7", 6000, 255), apple("g3a8", 7220, 125)],
+    rewardBlocks: [reward("g3r1", 1080, 134), reward("g3r2", 3220, 74, "apple"), reward("g3r3", 5160, 154)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890, 6690], boss: "queen-bee",
   },
   {
     id: "12-1", world: 12, screen: 1,
-    title: "La senda de la nieve", subtitle: "Camina con cuidado: el hielo resbala y los pingüinos son muy rápidos.",
-    theme: "ice-mountain", width: 4600, start: { x: 80, y: 380 }, goalX: 4420,
+    title: "La senda de la nieve", subtitle: "El hielo resbala y las ráfagas empujan: avanza mirando el viento.",
+    theme: "ice-mountain", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     platforms: [
       ...themedGround(world12Floor1, "ice-ground"), themedLedge(310, 340, 190, "ice-ledge"), themedLedge(650, 265, 180, "ice-ledge"), themedLedge(1090, 330, 190, "ice-ledge"), themedLedge(1470, 245, 180, "ice-ledge"),
       themedLedge(1850, 340, 190, "ice-ledge"), themedLedge(2290, 285, 190, "ice-ledge"), themedLedge(2720, 210, 180, "ice-ledge"), themedLedge(3190, 335, 190, "ice-ledge"), themedLedge(3560, 260, 180, "ice-ledge"),
-      themedLedge(4020, 330, 190, "ice-ledge"), themedWall(1680, 350, 70, 106, "ice-wall"),
+      themedLedge(4020, 330, 190, "ice-ledge"), themedLedge(4810, 305, 190, "ice-ledge"), themedLedge(5180, 215, 180, "ice-ledge"), themedWall(1680, 350, 70, 106, "ice-wall"),
     ],
     deadlyWater: deadlyWaterPits(world12Floor1),
-    enemies: [enemy("i1-p1", "penguin", 450, 416, 320, 770, 50), enemy("i1-f1", "snow-fox", 1220, 410, 1100, 1510, 48), enemy("i1-o1", "snowy-owl", 2420, 180, 2240, 2820, 68), enemy("i1-p2", "penguin", 3620, 416, 3460, 4070, 56)],
-    items: [apple("i1a1", 360, 290), apple("i1a2", 710, 215), sticker("sticker-12-1", 1520, 195), apple("i1a3", 2360, 235), apple("i1a4", 2790, 160), apple("i1a5", 4090, 280)],
-    rewardBlocks: [reward("i1r1", 1140, 205), reward("i1r2", 3280, 280, "apple")], checkpoints: [1080, 2240, 3400],
+    windZones: [iceWind("i1-w1", 720, 980, 1, 260), iceWind("i1-w2", 2400, 1050, -1, 285), iceWind("i1-w3", 4400, 950, 1, 310)],
+    enemies: [enemy("i1-p1", "penguin", 450, 416, 320, 770, 54), enemy("i1-f1", "snow-fox", 1220, 410, 1100, 1510, 52), enemy("i1-o1", "snowy-owl", 2420, 180, 2240, 2820, 74), enemy("i1-p2", "penguin", 3620, 416, 3460, 4070, 60), enemy("i1-f2", "snow-fox", 5050, 410, 4820, 5360, 58)],
+    items: [apple("i1a1", 360, 290), apple("i1a2", 710, 215), sticker("sticker-12-1", 1520, 195), apple("i1a3", 2360, 235), apple("i1a4", 2790, 160), apple("i1a5", 4090, 280), apple("i1a6", 5240, 165)],
+    rewardBlocks: [reward("i1r1", 1140, 179), reward("i1r2", 3280, 184, "apple")], checkpoints: [1080, 2240, 3400, 4780],
   },
   {
     id: "12-2", world: 12, screen: 2,
-    title: "Las cuevas de hielo", subtitle: "Deslízate por las cuevas azules sin caer al agua helada.",
-    theme: "ice-mountain", width: 5300, start: { x: 80, y: 380 }, goalX: 5120,
+    title: "Las cuevas de hielo", subtitle: "Deslízate y usa las ráfagas para cruzar las cuevas azules.",
+    theme: "ice-mountain", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [
       ...themedGround(world12Floor2, "ice-ground"), themedLedge(280, 340, 180, "ice-ledge"), themedLedge(570, 260, 180, "ice-ledge"), themedLedge(950, 330, 190, "ice-ledge"), themedLedge(1320, 225, 180, "ice-ledge"),
       themedLedge(1680, 320, 180, "ice-ledge"), themedLedge(2070, 275, 190, "ice-ledge"), themedLedge(2450, 190, 180, "ice-ledge"), themedLedge(2810, 325, 180, "ice-ledge"), themedLedge(3150, 250, 190, "ice-ledge"),
       themedLedge(3520, 180, 180, "ice-ledge"), themedLedge(3900, 320, 180, "ice-ledge"), themedLedge(4290, 240, 190, "ice-ledge"), themedLedge(4760, 325, 190, "ice-ledge"),
-      themedWall(1510, 330, 76, 126, "ice-wall"), themedWall(3660, 315, 80, 141, "ice-wall"),
+      themedLedge(5520, 290, 185, "ice-ledge"), themedLedge(5880, 195, 180, "ice-ledge"), themedLedge(6210, 315, 190, "ice-ledge"), themedWall(1510, 330, 76, 126, "ice-wall"), themedWall(3660, 315, 80, 141, "ice-wall"),
     ],
     deadlyWater: deadlyWaterPits(world12Floor2),
-    enemies: [enemy("i2-o1", "snowy-owl", 680, 180, 520, 980, 74), enemy("i2-f1", "snow-fox", 1110, 410, 1010, 1500, 52), enemy("i2-p1", "penguin", 2240, 416, 2100, 2760, 58), enemy("i2-o2", "snowy-owl", 3540, 135, 3330, 3890, 80), enemy("i2-f2", "snow-fox", 4550, 410, 4370, 4880, 56)],
-    items: [apple("i2a1", 330, 290), apple("i2a2", 630, 210), apple("i2a3", 1390, 175), apple("i2a4", 2510, 140), sticker("sticker-12-2", 3580, 130), apple("i2a5", 4350, 190), apple("i2a6", 4820, 275)],
-    rewardBlocks: [reward("i2r1", 1040, 205), reward("i2r2", 3160, 140, "apple"), reward("i2r3", 4620, 295)], checkpoints: [930, 2030, 3090, 4230],
+    windZones: [iceWind("i2-w1", 520, 1200, 1, 300), iceWind("i2-w2", 2050, 1200, -1, 330), iceWind("i2-w3", 3600, 1200, 1, 350), iceWind("i2-w4", 5300, 900, -1, 360)],
+    enemies: [enemy("i2-o1", "snowy-owl", 680, 180, 520, 980, 80), enemy("i2-f1", "snow-fox", 1110, 410, 1010, 1500, 56), enemy("i2-p1", "penguin", 2240, 416, 2100, 2760, 62), enemy("i2-o2", "snowy-owl", 3540, 135, 3330, 3890, 86), enemy("i2-f2", "snow-fox", 4550, 410, 4370, 4880, 60), enemy("i2-o3", "snowy-owl", 5800, 145, 5520, 6200, 92)],
+    items: [apple("i2a1", 330, 290), apple("i2a2", 630, 210), apple("i2a3", 1390, 175), apple("i2a4", 2510, 140), sticker("sticker-12-2", 3580, 130), apple("i2a5", 4350, 190), apple("i2a6", 4820, 275), apple("i2a7", 5960, 145)],
+    rewardBlocks: [reward("i2r1", 1040, 179), reward("i2r2", 3160, 99, "apple"), reward("i2r3", 4620, 305)], checkpoints: [930, 2030, 3090, 4230, 5500],
   },
   {
     id: "12-3", world: 12, screen: 3,
     route: { finale: true },
-    title: "La cima de la aurora", subtitle: "Alcanza la luz del cielo y juega con la gran Osa Boreal.",
-    theme: "ice-mountain", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    title: "La cima de la aurora", subtitle: "Domina el hielo y el viento para llegar hasta la gran Osa Boreal.",
+    theme: "ice-mountain", width: 7800, start: { x: 80, y: 380 }, goalX: 7620,
     platforms: [
       ...themedGround(world12Floor3, "ice-ground"), themedLedge(300, 335, 190, "ice-ledge"), themedLedge(650, 250, 180, "ice-ledge"), themedLedge(1010, 330, 190, "ice-ledge"), themedLedge(1370, 225, 180, "ice-ledge"),
       themedLedge(1760, 325, 180, "ice-ledge"), themedLedge(2100, 250, 190, "ice-ledge"), themedLedge(2470, 175, 180, "ice-ledge"), themedLedge(2840, 320, 180, "ice-ledge"), themedLedge(3180, 240, 190, "ice-ledge"),
       themedLedge(3550, 165, 180, "ice-ledge"), themedLedge(3940, 315, 180, "ice-ledge"), themedLedge(4270, 225, 190, "ice-ledge"), themedLedge(4660, 160, 180, "ice-ledge"), themedLedge(5080, 310, 190, "ice-ledge"),
-      themedLedge(5460, 220, 180, "ice-ledge"), themedLedge(5900, 310, 200, "ice-ledge"), themedWall(1560, 338, 76, 118, "ice-wall"), themedWall(3710, 320, 78, 136, "ice-wall"), themedWall(5700, 330, 74, 126, "ice-wall"),
+      themedLedge(5460, 220, 180, "ice-ledge"), themedLedge(5900, 310, 200, "ice-ledge"), themedLedge(6710, 285, 190, "ice-ledge"), themedLedge(7070, 190, 180, "ice-ledge"), themedLedge(7450, 300, 200, "ice-ledge"), themedWall(1560, 338, 76, 118, "ice-wall"), themedWall(3710, 320, 78, 136, "ice-wall"), themedWall(5700, 330, 74, 126, "ice-wall"),
     ],
     deadlyWater: deadlyWaterPits(world12Floor3),
-    enemies: [enemy("i3-p1", "penguin", 440, 416, 310, 720, 58), enemy("i3-o1", "snowy-owl", 1130, 165, 990, 1450, 80), enemy("i3-f1", "snow-fox", 2250, 410, 2100, 2720, 58), enemy("i3-o2", "snowy-owl", 3300, 125, 3160, 3650, 86), enemy("i3-p2", "penguin", 4340, 416, 4200, 4630, 64), enemy("i3-o3", "snowy-owl", 5450, 135, 5310, 5810, 92)],
-    items: [apple("i3a1", 360, 285), apple("i3a2", 700, 200), apple("i3a3", 1430, 175), apple("i3a4", 2520, 125), apple("i3a5", 3610, 115), sticker("sticker-12-3", 4710, 110), apple("i3a6", 5510, 170), apple("i3a7", 6000, 260)],
-    rewardBlocks: [reward("i3r1", 1080, 205), reward("i3r2", 3220, 125, "apple"), reward("i3r3", 5160, 185)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890], boss: "polar-bear",
+    windZones: [iceWind("i3-w1", 650, 1150, 1, 330), iceWind("i3-w2", 2050, 1200, -1, 360), iceWind("i3-w3", 3500, 1250, 1, 380), iceWind("i3-w4", 5050, 1200, -1, 400), iceWind("i3-w5", 6500, 1100, 1, 420)],
+    enemies: [enemy("i3-p1", "penguin", 440, 416, 310, 720, 62), enemy("i3-o1", "snowy-owl", 1130, 165, 990, 1450, 86), enemy("i3-f1", "snow-fox", 2250, 410, 2100, 2720, 62), enemy("i3-o2", "snowy-owl", 3300, 125, 3160, 3650, 92), enemy("i3-p2", "penguin", 4340, 416, 4200, 4630, 68), enemy("i3-o3", "snowy-owl", 5450, 135, 5310, 5810, 98), enemy("i3-f2", "snow-fox", 7020, 410, 6740, 7440, 72)],
+    items: [apple("i3a1", 360, 285), apple("i3a2", 700, 200), apple("i3a3", 1430, 175), apple("i3a4", 2520, 125), apple("i3a5", 3610, 115), sticker("sticker-12-3", 4710, 110), apple("i3a6", 5510, 170), apple("i3a7", 6000, 260), apple("i3a8", 7140, 140)],
+    rewardBlocks: [reward("i3r1", 1080, 179), reward("i3r2", 3220, 89, "apple"), reward("i3r3", 5160, 159)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890, 6690], boss: "polar-bear",
   },
   {
     id: "S-1",

@@ -1,7 +1,7 @@
 import type { Level } from "./types";
 import type { RasterAssets } from "./assets";
 import type { LiveEnemy, LiveCannon, Cannonball, LiveWaterJumper } from "./gameState";
-import { enemyY, positiveModulo, waterJumperState } from "./gameState";
+import { enemyY, lavaJetState, positiveModulo, waterJumperState } from "./gameState";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 
 const enemyAtlasCell = {
@@ -52,6 +52,29 @@ const drawDinosaurTerrainSprite = (context: CanvasRenderingContext2D, image: HTM
     ledge: [18, 704, 690, 530],
   }[part];
   context.drawImage(image, source[0], source[1], source[2], source[3], x, y, width, height);
+};
+
+const newWorldTerrainSources = {
+  10: { ground: [70, 100, 610, 520], ledge: [815, 95, 720, 435], wall: [1730, 100, 275, 520] },
+  11: { ground: [55, 75, 780, 550], ledge: [895, 75, 660, 520], wall: [1640, 70, 350, 555] },
+  12: { ground: [45, 115, 745, 525], ledge: [855, 110, 685, 445], wall: [1610, 5, 390, 650] },
+} as const;
+
+const drawNewWorldTerrain = (context: CanvasRenderingContext2D, image: HTMLImageElement, world: 10 | 11 | 12, part: "ground" | "ledge" | "wall", x: number, y: number, width: number, height: number) => {
+  if (!image.complete || !image.naturalWidth) return false;
+  const source = newWorldTerrainSources[world][part];
+  if (part === "ledge") {
+    context.drawImage(image, ...source, x - 4, y - 3, width + 8, Math.max(70, height + 55));
+    return true;
+  }
+  if (part === "wall") {
+    context.drawImage(image, ...source, x, y, width, height);
+    return true;
+  }
+  for (let tileX = x; tileX < x + width; tileX += 150) {
+    context.drawImage(image, ...source, tileX, y, Math.min(153, x + width - tileX), height);
+  }
+  return true;
 };
 
 const drawCollectibleSprite = (context: CanvasRenderingContext2D, image: HTMLImageElement, column: number, row: number, x: number, y: number, width: number, height: number) =>
@@ -556,6 +579,7 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   if (x + platform.width < 0 || x > VIEW_WIDTH) return;
   if (platform.kind === "volcano-ground" || platform.kind === "volcano-ledge" || platform.kind === "volcano-wall") {
     const wall = platform.kind === "volcano-wall";
+    if (drawNewWorldTerrain(context, raster.worldTerrain, 10, wall ? "wall" : platform.kind === "volcano-ground" ? "ground" : "ledge", x, platform.y, platform.width, platform.height)) return;
     context.fillStyle = wall ? "#532847" : "#43213d"; context.fillRect(x, platform.y, platform.width, platform.height);
     context.fillStyle = "#ed5c3f"; context.fillRect(x, platform.y, platform.width, wall ? 6 : 9);
     context.fillStyle = "#ffb347"; for (let px = x + 18; px < x + platform.width; px += 52) context.fillRect(px, platform.y + 12, 12, 5);
@@ -563,6 +587,7 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
     return;
   }
   if (platform.kind === "garden-ground" || platform.kind === "garden-ledge") {
+    if (drawNewWorldTerrain(context, raster.worldTerrain, 11, platform.kind === "garden-ground" ? "ground" : "ledge", x, platform.y, platform.width, platform.height)) return;
     context.fillStyle = "#75492f"; context.fillRect(x, platform.y, platform.width, platform.height);
     context.fillStyle = "#5acb55"; context.fillRect(x, platform.y, platform.width, 11);
     context.fillStyle = "#a7e45e"; for (let px = x + 4; px < x + platform.width; px += 18) context.fillRect(px, platform.y - 5 - ((px / 18) % 2) * 3, 7, 8);
@@ -577,6 +602,7 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   }
   if (platform.kind === "ice-ground" || platform.kind === "ice-ledge" || platform.kind === "ice-wall") {
     const wall = platform.kind === "ice-wall";
+    if (drawNewWorldTerrain(context, raster.worldTerrain, 12, wall ? "wall" : platform.kind === "ice-ground" ? "ground" : "ledge", x, platform.y, platform.width, platform.height)) return;
     context.fillStyle = wall ? "#78b8d5" : "#a8e6f2"; context.fillRect(x, platform.y, platform.width, platform.height);
     context.fillStyle = "#f5fdff"; context.fillRect(x, platform.y, platform.width, wall ? 7 : 11);
     context.strokeStyle = "rgba(66,139,184,.6)"; context.lineWidth = 3;
@@ -1342,6 +1368,37 @@ export function drawWaterJumper(context: CanvasRenderingContext2D, jumper: LiveW
   } else {
     context.fillStyle = "#1eb7bc";
     context.fillRect(-jumper.width / 2, -jumper.height / 2, jumper.width, jumper.height);
+  }
+  context.restore();
+}
+
+export function drawLavaJet(context: CanvasRenderingContext2D, jet: NonNullable<Level["lavaJets"]>[number], cameraX: number, elapsed: number) {
+  const { extension, rect } = lavaJetState(jet, elapsed);
+  if (extension <= 0 || rect.x + rect.width < cameraX || rect.x > cameraX + VIEW_WIDTH) return;
+  const x = Math.round(rect.x - cameraX);
+  const gradient = context.createLinearGradient(x, rect.y, x + rect.width, rect.y);
+  gradient.addColorStop(0, "#ff6a32"); gradient.addColorStop(.5, "#ffe064"); gradient.addColorStop(1, "#e93636");
+  context.fillStyle = gradient;
+  context.beginPath();
+  context.moveTo(x, jet.baseY);
+  context.lineTo(x + rect.width * .16, rect.y + 14);
+  context.quadraticCurveTo(x + rect.width / 2, rect.y - 14, x + rect.width * .84, rect.y + 14);
+  context.lineTo(x + rect.width, jet.baseY);
+  context.closePath(); context.fill();
+  context.fillStyle = "rgba(255,246,151,.85)";
+  context.fillRect(x + rect.width * .38, rect.y + 10, Math.max(4, rect.width * .2), Math.max(0, rect.height - 20));
+}
+
+export function drawWindZone(context: CanvasRenderingContext2D, zone: NonNullable<Level["windZones"]>[number], cameraX: number, elapsed: number) {
+  const left = zone.x - cameraX;
+  if (left + zone.width < 0 || left > VIEW_WIDTH) return;
+  context.save(); context.globalAlpha = .58; context.strokeStyle = "#effcff"; context.lineWidth = 4;
+  for (let index = 0; index < 5; index += 1) {
+    const travel = positiveModulo(elapsed * (70 + index * 8) + index * 83, zone.width);
+    const x = zone.direction === 1 ? left + travel : left + zone.width - travel;
+    const y = zone.y + 35 + index * Math.max(28, zone.height / 6);
+    context.beginPath(); context.moveTo(x, y); context.quadraticCurveTo(x + zone.direction * 28, y - 12, x + zone.direction * 60, y); context.stroke();
+    context.beginPath(); context.moveTo(x + zone.direction * 45, y - 8); context.lineTo(x + zone.direction * 62, y); context.lineTo(x + zone.direction * 45, y + 8); context.stroke();
   }
   context.restore();
 }

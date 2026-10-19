@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { waterJumperState, type LiveWaterJumper } from "./gameState.ts";
+import { lavaJetState, waterJumperState, type LiveWaterJumper } from "./gameState.ts";
 import { boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, resolveHorizontalWallCollision, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay.ts";
 
 test("el banderín tiene una zona elevada y alcanzable al saltar", () => {
@@ -81,4 +81,13 @@ test("el pez jurásico salta y vuelve al agua cada dos o tres segundos", () => {
   assert.equal(hidden.active, false);
   assert.equal(nextJump.active, true);
   assert.equal(nextJump.y, start.y);
+});
+
+test("los chorros de lava suben, esperan y vuelven a bajar con ritmo", () => {
+  const jet = { id: "jet", x: 100, baseY: 456, width: 54, height: 300, interval: 2.5, delay: 0 };
+  assert.equal(lavaJetState(jet, 0).extension, 0);
+  assert.equal(lavaJetState(jet, .75).extension, 1);
+  assert.equal(lavaJetState(jet, 1.7).extension, 0);
+  assert.equal(lavaJetState(jet, 2.5).extension, 0);
+  assert.equal(lavaJetState(jet, .75).rect.y, 156);
 });

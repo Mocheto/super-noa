@@ -1,4 +1,4 @@
-import type { Level, LevelItem, Power, Rect, WaterJumper } from "./types";
+import type { LavaJet, Level, LevelItem, Power, Rect, WaterJumper } from "./types";
 
 export type Player = Rect & {
   vx: number; vy: number; grounded: boolean; facing: 1 | -1; power: Power;
@@ -29,5 +29,14 @@ export const waterJumperState = (jumper: LiveWaterJumper) => {
     y: active
       ? jumper.surfaceY - jumper.height - Math.sin(progress * Math.PI) * jumper.jumpHeight
       : jumper.surfaceY + 18,
+  };
+};
+
+export const lavaJetState = (jet: LavaJet, elapsed: number) => {
+  const progress = positiveModulo(elapsed - jet.delay, jet.interval) / jet.interval;
+  const extension = progress < .18 ? progress / .18 : progress < .5 ? 1 : progress < .68 ? 1 - (progress - .5) / .18 : 0;
+  return {
+    extension,
+    rect: { x: jet.x, y: jet.baseY - jet.height * extension, width: jet.width, height: jet.height * extension },
   };
 };

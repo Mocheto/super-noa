@@ -4,6 +4,7 @@ import type { LiveEnemy, LiveCannon, Cannonball, LiveWaterJumper } from "./gameS
 import { enemyY, lavaJetState, positiveModulo, waterJumperState } from "./gameState";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import { bloomBridgeState, type WolfSleepPhase } from "./worldMechanics";
+import { drawMechanicSprite, drawMechanicStrip } from "./mechanicSprites.ts";
 
 const enemyAtlasCell = {
   slime: [0, 0], beetle: [1, 0], cloud: [2, 0], wolf: [3, 0],
@@ -714,6 +715,7 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   }
   if (platform.kind === "ship") {
     const shipBob = Math.round(Math.sin(frame * 0.075 + platform.x * 0.015) * 4);
+    if (drawMechanicSprite(context, raster.flyingShip, "flyingShip", Math.floor(frame / 12), x, platform.y - 144 + shipBob, platform.width, 224)) return;
     context.save();
     context.translate(0, shipBob);
     const mastX = x + Math.round(platform.width * 0.58);
@@ -770,6 +772,7 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
     return;
   }
   if (platform.kind === "air-plank") {
+    if (drawMechanicStrip(context, raster.airPlank, "airPlank", 0, x, platform.y, platform.width, platform.height + 14, 96)) return;
     context.fillStyle = "#513143";
     context.fillRect(x, platform.y, platform.width, platform.height);
     context.fillStyle = "#d79855";
@@ -798,6 +801,10 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
     const distance = Math.abs(playerX - (platform.x + platform.width / 2));
     context.save();
     context.globalAlpha = distance < 330 ? 0.96 : 0.34;
+    if (drawMechanicStrip(context, raster.mistPlatform, "mistPlatform", 0, x, platform.y, platform.width, platform.height + 7, 96)) {
+      context.restore();
+      return;
+    }
     context.fillStyle = "#ede4ff";
     context.fillRect(x, platform.y + 7, platform.width, 15);
     context.fillRect(x + 18, platform.y, Math.max(35, platform.width * 0.35), 18);
@@ -1020,25 +1027,28 @@ function drawEnemyFallback(context: CanvasRenderingContext2D, enemy: LiveEnemy, 
   context.restore();
 }
 
-function drawSleepingWolf(context: CanvasRenderingContext2D, enemy: LiveEnemy, x: number, y: number, phase: WolfSleepPhase) {
+function drawSleepingWolf(context: CanvasRenderingContext2D, enemy: LiveEnemy, x: number, y: number, phase: WolfSleepPhase, sprite: HTMLImageElement, elapsed: number) {
   const warning = phase === "warning";
   const { width, height } = enemy;
   context.save();
   context.translate(x + (enemy.vx < 0 ? width : 0), y);
   if (enemy.vx < 0) context.scale(-1, 1);
-  context.fillStyle = "#302c47";
-  context.fillRect(0, height * .5, width, height * .45);
-  context.fillRect(width * .52, height * .3, width * .42, height * .6);
-  context.fillRect(width * .55, height * .17, width * .13, height * .2);
-  context.fillRect(width * .81, height * .17, width * .13, height * .2);
-  context.fillStyle = warning ? "#9a8eaa" : "#77748e";
-  context.fillRect(4, height * .54, width - 8, height * .3);
-  context.fillRect(width * .56, height * .37, width * .36, height * .42);
-  context.fillStyle = "#e2d1db";
-  context.fillRect(width * .7, height * .67, width * .28, height * .16);
-  context.fillStyle = "#302c47";
-  context.fillRect(width * .65, height * .52, 6, warning ? 6 : 2);
-  context.fillRect(width * .84, height * .52, 6, warning ? 6 : 2);
+  const spriteDrawn = drawMechanicSprite(context, sprite, "sleepingWolf", warning ? 2 : Math.floor(elapsed * 1.5) % 2, (width - 74) / 2, height - 56, 74, 56);
+  if (!spriteDrawn) {
+    context.fillStyle = "#302c47";
+    context.fillRect(0, height * .5, width, height * .45);
+    context.fillRect(width * .52, height * .3, width * .42, height * .6);
+    context.fillRect(width * .55, height * .17, width * .13, height * .2);
+    context.fillRect(width * .81, height * .17, width * .13, height * .2);
+    context.fillStyle = warning ? "#9a8eaa" : "#77748e";
+    context.fillRect(4, height * .54, width - 8, height * .3);
+    context.fillRect(width * .56, height * .37, width * .36, height * .42);
+    context.fillStyle = "#e2d1db";
+    context.fillRect(width * .7, height * .67, width * .28, height * .16);
+    context.fillStyle = "#302c47";
+    context.fillRect(width * .65, height * .52, 6, warning ? 6 : 2);
+    context.fillRect(width * .84, height * .52, 6, warning ? 6 : 2);
+  }
   context.restore();
   context.save();
   context.textAlign = "center";
@@ -1059,13 +1069,13 @@ function drawSleepingWolf(context: CanvasRenderingContext2D, enemy: LiveEnemy, x
   context.restore();
 }
 
-export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, cameraX: number, nearby: boolean, raster: RasterAssets, sleepPhase: WolfSleepPhase = "awake") {
+export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, cameraX: number, nearby: boolean, raster: RasterAssets, sleepPhase: WolfSleepPhase = "awake", elapsed = 0) {
   if (!enemy.active) return;
   const x = Math.round(enemy.x - cameraX);
   if (x + enemy.width < -80 || x > VIEW_WIDTH + 80) return;
   const y = Math.round(enemyY(enemy));
   if (enemy.kind === "wolf" && sleepPhase !== "awake") {
-    drawSleepingWolf(context, enemy, x, y, sleepPhase);
+    drawSleepingWolf(context, enemy, x, y, sleepPhase, raster.sleepingWolf, elapsed);
     return;
   }
   const specializedImage = enemy.kind === "fish" || enemy.kind === "urchin" ? raster.waterEnemies
@@ -1432,10 +1442,18 @@ export function drawDeadlyWater(context: CanvasRenderingContext2D, zone: NonNull
   context.rect(x, surfaceY, zone.width, zone.height - 8);
   context.clip();
   if (theme === "dragon-volcano") {
+    if (drawMechanicStrip(context, raster.lavaSurface, "lavaSurface", Math.floor(frame / 14), x, surfaceY, zone.width, zone.height - 8, 128)) {
+      context.restore();
+      return;
+    }
     context.fillStyle = "#c52f38"; context.fillRect(x, surfaceY, zone.width, zone.height - 8);
     context.fillStyle = "#ff9a3d";
     for (let tileX = x - 12; tileX < x + zone.width; tileX += 34) { const wave = Math.sin(frame / 10 + tileX / 24) * 4; context.beginPath(); context.arc(tileX, zone.y + 9 + wave, 21, Math.PI, 0); context.fill(); }
     context.fillStyle = "#ffd45c"; context.fillRect(x, zone.y + 9, zone.width, 5); context.restore(); return;
+  }
+  if ((theme === "giant-valley" || theme === "ice-mountain") && drawMechanicStrip(context, raster.waterSurface, "waterSurface", (theme === "ice-mountain" ? 2 : 0) + Math.floor(frame / 14) % 2, x, surfaceY, zone.width, zone.height - 8, 128)) {
+    context.restore();
+    return;
   }
   context.fillStyle = theme === "ice-mountain" ? "#318cc4" : theme === "giant-valley" ? "#55b8c4" : "#087b91";
   context.fillRect(x, surfaceY, zone.width, zone.height - 8);
@@ -1463,10 +1481,11 @@ export function drawWaterJumper(context: CanvasRenderingContext2D, jumper: LiveW
   context.restore();
 }
 
-export function drawLavaJet(context: CanvasRenderingContext2D, jet: NonNullable<Level["lavaJets"]>[number], cameraX: number, elapsed: number) {
+export function drawLavaJet(context: CanvasRenderingContext2D, jet: NonNullable<Level["lavaJets"]>[number], cameraX: number, elapsed: number, raster: RasterAssets) {
   const { extension, rect } = lavaJetState(jet, elapsed);
   if (extension <= 0 || rect.x + rect.width < cameraX || rect.x > cameraX + VIEW_WIDTH) return;
   const x = Math.round(rect.x - cameraX);
+  if (drawMechanicSprite(context, raster.lavaJet, "lavaJet", Math.floor(elapsed * 6), x, rect.y, rect.width, rect.height)) return;
   const gradient = context.createLinearGradient(x, rect.y, x + rect.width, rect.y);
   gradient.addColorStop(0, "#ff6a32"); gradient.addColorStop(.5, "#ffe064"); gradient.addColorStop(1, "#e93636");
   context.fillStyle = gradient;
@@ -1480,7 +1499,7 @@ export function drawLavaJet(context: CanvasRenderingContext2D, jet: NonNullable<
   context.fillRect(x + rect.width * .38, rect.y + 10, Math.max(4, rect.width * .2), Math.max(0, rect.height - 20));
 }
 
-export function drawWindZone(context: CanvasRenderingContext2D, zone: NonNullable<Level["windZones"]>[number], cameraX: number, elapsed: number) {
+export function drawWindZone(context: CanvasRenderingContext2D, zone: NonNullable<Level["windZones"]>[number], cameraX: number, elapsed: number, raster: RasterAssets) {
   const left = zone.x - cameraX;
   if (left + zone.width < 0 || left > VIEW_WIDTH) return;
   context.save(); context.globalAlpha = .58; context.strokeStyle = "#effcff"; context.lineWidth = 4;
@@ -1488,13 +1507,19 @@ export function drawWindZone(context: CanvasRenderingContext2D, zone: NonNullabl
     const travel = positiveModulo(elapsed * (70 + index * 8) + index * 83, zone.width);
     const x = zone.direction === 1 ? left + travel : left + zone.width - travel;
     const y = zone.y + 35 + index * Math.max(28, zone.height / 6);
+    context.save();
+    context.translate(x, y);
+    if (zone.direction === -1) context.scale(-1, 1);
+    const drawn = drawMechanicSprite(context, raster.windGust, "windGust", Math.floor(elapsed * 2), 0, -16, 64, 42);
+    context.restore();
+    if (drawn) continue;
     context.beginPath(); context.moveTo(x, y); context.quadraticCurveTo(x + zone.direction * 28, y - 12, x + zone.direction * 60, y); context.stroke();
     context.beginPath(); context.moveTo(x + zone.direction * 45, y - 8); context.lineTo(x + zone.direction * 62, y); context.lineTo(x + zone.direction * 45, y + 8); context.stroke();
   }
   context.restore();
 }
 
-export function drawBloomBridge(context: CanvasRenderingContext2D, bridge: BloomBridge, cameraX: number, elapsed: number) {
+export function drawBloomBridge(context: CanvasRenderingContext2D, bridge: BloomBridge, cameraX: number, elapsed: number, raster: RasterAssets) {
   const x = Math.round(bridge.x - cameraX);
   if (x + bridge.width < -30 || x > VIEW_WIDTH + 30) return;
   const state = bloomBridgeState(bridge, elapsed);
@@ -1506,29 +1531,38 @@ export function drawBloomBridge(context: CanvasRenderingContext2D, bridge: Bloom
   const closing = warning ? Math.max(0, Math.min(1, (bridge.openDuration + bridge.warningDuration - cycleAge) / Math.max(.001, bridge.warningDuration))) : 0;
   const spread = state === "closed" ? 2 + opening * 7 : 9;
   context.save();
-  context.fillStyle = "#41834e";
-  for (const edge of [x, x + bridge.width]) {
-    context.fillRect(edge - 3, bridge.y + 8, 6, 27);
-    context.fillStyle = warning ? "#ffce66" : state === "closed" && opening === 0 ? "#b278a5" : "#f1a2cf";
-    for (let petal = 0; petal < 5; petal += 1) {
-      const angle = petal * Math.PI * 2 / 5;
-      context.beginPath();
-      context.ellipse(edge + Math.cos(angle) * spread, bridge.y + Math.sin(angle) * spread, 4 + spread * .45, 3 + spread * .3, angle, 0, Math.PI * 2);
-      context.fill();
-    }
-    context.fillStyle = "#ffdf73";
-    context.fillRect(edge - 4, bridge.y - 4, 8, 8);
+  const flowerFrame = warning ? 3 : state === "open" ? 2 : opening > 0 ? 1 : 0;
+  const flowersDrawn = [x, x + bridge.width].map((edge) =>
+    drawMechanicSprite(context, raster.bloomFlower, "bloomFlower", flowerFrame, edge - 24, bridge.y - 29, 48, 64),
+  ).every(Boolean);
+  if (!flowersDrawn) {
     context.fillStyle = "#41834e";
+    for (const edge of [x, x + bridge.width]) {
+      context.fillRect(edge - 3, bridge.y + 8, 6, 27);
+      context.fillStyle = warning ? "#ffce66" : state === "closed" && opening === 0 ? "#b278a5" : "#f1a2cf";
+      for (let petal = 0; petal < 5; petal += 1) {
+        const angle = petal * Math.PI * 2 / 5;
+        context.beginPath();
+        context.ellipse(edge + Math.cos(angle) * spread, bridge.y + Math.sin(angle) * spread, 4 + spread * .45, 3 + spread * .3, angle, 0, Math.PI * 2);
+        context.fill();
+      }
+      context.fillStyle = "#ffdf73";
+      context.fillRect(edge - 4, bridge.y - 4, 8, 8);
+      context.fillStyle = "#41834e";
+    }
   }
   if (state !== "closed") {
-    context.fillStyle = warning ? "#ffce66" : "#ee9bc8";
-    for (let offset = 0; offset < bridge.width; offset += 22) {
-      context.beginPath();
-      context.ellipse(x + offset + 11, bridge.y + bridge.height / 2, Math.min(14, (bridge.width - offset) / 2), Math.max(5, bridge.height / 2), 0, 0, Math.PI * 2);
-      context.fill();
+    const bridgeDrawn = drawMechanicStrip(context, raster.bloomBridge, "bloomBridge", warning ? 1 : 0, x, bridge.y, bridge.width, bridge.height, 32);
+    if (!bridgeDrawn) {
+      context.fillStyle = warning ? "#ffce66" : "#ee9bc8";
+      for (let offset = 0; offset < bridge.width; offset += 22) {
+        context.beginPath();
+        context.ellipse(x + offset + 11, bridge.y + bridge.height / 2, Math.min(14, (bridge.width - offset) / 2), Math.max(5, bridge.height / 2), 0, 0, Math.PI * 2);
+        context.fill();
+      }
+      context.fillStyle = warning ? "#ffe69c" : "#fff1e5";
+      context.fillRect(x, bridge.y, bridge.width, 4);
     }
-    context.fillStyle = warning ? "#ffe69c" : "#fff1e5";
-    context.fillRect(x, bridge.y, bridge.width, 4);
   }
   const label = warning ? "¡SE CIERRA!" : state === "open" ? "¡PASA!" : opening > 0 ? "¡SE ABRE!" : "ESPERA LA FLOR";
   const center = x + bridge.width / 2;
@@ -1547,7 +1581,7 @@ export function drawBloomBridge(context: CanvasRenderingContext2D, bridge: Bloom
   context.restore();
 }
 
-export function drawUpdraft(context: CanvasRenderingContext2D, zone: Updraft, cameraX: number, elapsed: number) {
+export function drawUpdraft(context: CanvasRenderingContext2D, zone: Updraft, cameraX: number, elapsed: number, raster: RasterAssets) {
   const x = zone.x - cameraX;
   if (x + zone.width < 0 || x > VIEW_WIDTH) return;
   context.save();
@@ -1563,6 +1597,7 @@ export function drawUpdraft(context: CanvasRenderingContext2D, zone: Updraft, ca
     const center = x + (column + .5) * zone.width / columns;
     for (let index = 0; index < 3; index += 1) {
       const y = zone.y + positiveModulo(index * zone.height / 3 - elapsed * 65 + column * 23, zone.height);
+      if (drawMechanicSprite(context, raster.updraft, "updraft", Math.floor(elapsed * 2), center - 20, y, 40, 60)) continue;
       context.beginPath();
       context.moveTo(center - 10, y + 10);
       context.lineTo(center, y);
@@ -1579,6 +1614,31 @@ export function drawUpdraft(context: CanvasRenderingContext2D, zone: Updraft, ca
   context.font = "bold 12px monospace";
   context.textAlign = "center";
   context.fillText("¡AIRE ARRIBA!", x + zone.width / 2, zone.y + 17);
+  context.restore();
+}
+
+export function drawWaterEntrance(context: CanvasRenderingContext2D, entrance: NonNullable<Level["waterEntrance"]>, cameraX: number, frame: number, raster: RasterAssets) {
+  const x = entrance.x - cameraX;
+  if (x + entrance.width < 0 || x > VIEW_WIDTH) return;
+  const y = entrance.y - 12;
+  if (!drawMechanicSprite(context, raster.waterEntrance, "waterEntrance", Math.floor(frame / 18), x, y, entrance.width, entrance.height)) {
+    context.save();
+    context.globalAlpha = 0.84;
+    const pondColor = context.createLinearGradient(0, y, 0, y + entrance.height);
+    pondColor.addColorStop(0, "#72e8e2");
+    pondColor.addColorStop(0.35, "#209fbd");
+    pondColor.addColorStop(1, "#194f8f");
+    context.fillStyle = pondColor;
+    context.fillRect(x, y, entrance.width, entrance.height);
+    context.restore();
+    context.fillStyle = "#ddffef";
+    for (let wave = 0; wave < entrance.width; wave += 24) context.fillRect(x + wave, y + Math.sin(frame / 14 + wave) * 3, 16, 4);
+  }
+  context.save();
+  context.fillStyle = "#e7fff8";
+  context.font = "bold 13px monospace";
+  context.textAlign = "center";
+  context.fillText("↓ ¡AGUA! ↓", x + entrance.width / 2, entrance.y - 28);
   context.restore();
 }
 

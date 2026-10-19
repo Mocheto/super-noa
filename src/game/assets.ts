@@ -1,4 +1,5 @@
 import type { Level } from "./types";
+import { mechanicSpriteSheets, type MechanicSprite } from "./mechanicSprites.ts";
 
 export type RasterAssets = {
   waterBackground: HTMLImageElement; waterTerrain: HTMLImageElement; seaWall: HTMLImageElement;
@@ -15,7 +16,7 @@ export type RasterAssets = {
   goalRescue: HTMLImageElement; bossGate: HTMLImageElement; spring: HTMLImageElement;
   platformTiles: HTMLImageElement; tiles: Record<Level["world"], HTMLImageElement>;
   stickerSheets: Record<Level["world"], HTMLImageElement>;
-};
+} & Record<MechanicSprite, HTMLImageElement>;
 
 const cache = new Map<string, HTMLImageElement>();
 let unloaded: HTMLImageElement | undefined;
@@ -63,6 +64,18 @@ export function getLevelAssets(level: Level): RasterAssets {
     Object.defineProperty(stickerSheets, id, { enumerable: true, get: () => when(id === world, `./assets/stickers/world-${id}-v1.png`) });
   }
   return {
+    get sleepingWolf() { return when(level.enemies.some((enemy) => enemy.kind === "wolf" && Boolean(enemy.sleepCycle)), mechanicSpriteSheets.sleepingWolf.source); },
+    get bloomFlower() { return when(Boolean(level.bloomBridges?.length), mechanicSpriteSheets.bloomFlower.source); },
+    get bloomBridge() { return when(Boolean(level.bloomBridges?.length), mechanicSpriteSheets.bloomBridge.source); },
+    get updraft() { return when(Boolean(level.updrafts?.length), mechanicSpriteSheets.updraft.source); },
+    get windGust() { return when(Boolean(level.windZones?.length), mechanicSpriteSheets.windGust.source); },
+    get lavaJet() { return when(Boolean(level.lavaJets?.length), mechanicSpriteSheets.lavaJet.source); },
+    get lavaSurface() { return when(level.theme === "dragon-volcano" && Boolean(level.deadlyWater?.length), mechanicSpriteSheets.lavaSurface.source); },
+    get waterSurface() { return when((level.theme === "giant-valley" || level.theme === "ice-mountain") && Boolean(level.deadlyWater?.length), mechanicSpriteSheets.waterSurface.source); },
+    get waterEntrance() { return when(Boolean(level.waterEntrance), mechanicSpriteSheets.waterEntrance.source); },
+    get flyingShip() { return when(level.platforms.some((platform) => platform.kind === "ship"), mechanicSpriteSheets.flyingShip.source); },
+    get airPlank() { return when(level.platforms.some((platform) => platform.kind === "air-plank"), mechanicSpriteSheets.airPlank.source); },
+    get mistPlatform() { return when(level.platforms.some((platform) => platform.kind === "mist"), mechanicSpriteSheets.mistPlatform.source); },
     get waterBackground() { return when(world === 8, "./assets/worlds/world-8.png"); },
     get waterTerrain() { return when(world === 8, "./assets/atlases/water-terrain-v1.png"); },
     get seaWall() { return when(world === 8, "./assets/sprites/sea-reef-wall-v2.png"); },

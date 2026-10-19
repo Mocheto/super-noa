@@ -48,6 +48,8 @@ test("el lobo duerme, avisa sin daño y despierta siguiendo su ciclo declarativo
 
 test("las señales de despertar, pétalos y corriente se dibujan también sin leer textos", () => {
   const { drawEnemy, drawBloomBridge, drawUpdraft } = engineModules()("./rendering") as typeof import("./rendering");
+  const pendingImage = { complete: false, naturalWidth: 0 } as HTMLImageElement;
+  const raster = { sleepingWolf: pendingImage, bloomFlower: pendingImage, bloomBridge: pendingImage, updraft: pendingImage } as RasterAssets;
   const rectangles: { color: unknown; width: number; height: number }[] = [];
   const lines: unknown[][] = [];
   const circles: unknown[][] = [];
@@ -60,25 +62,25 @@ test("las señales de despertar, pétalos y corriente se dibujan también sin le
     },
     set: (target, key: string, value) => { target[key] = value; return true; },
   }) as unknown as CanvasRenderingContext2D;
-  drawEnemy(context, { ...wolf, vx: 40, active: true, phase: 0 } as LiveEnemy, 0, true, {} as RasterAssets, "warning");
+  drawEnemy(context, { ...wolf, vx: 40, active: true, phase: 0 } as LiveEnemy, 0, true, raster, "warning");
   assert.ok(rectangles.some((rect) => rect.width === 4 && rect.height === 11), "trazo del signo de admiración");
   assert.ok(rectangles.some((rect) => rect.width === 4 && rect.height === 4), "punto del signo de admiración");
   rectangles.length = 0;
-  drawBloomBridge(context, flower, 0, 0);
+  drawBloomBridge(context, flower, 0, 0, raster);
   assert.ok(rectangles.some((rect) => rect.width === flower.width && rect.height === 4));
   rectangles.length = 0;
-  drawBloomBridge(context, flower, 0, 1.1);
+  drawBloomBridge(context, flower, 0, 1.1, raster);
   assert.ok(rectangles.some((rect) => rect.width === flower.width && rect.height === 4), "el aviso no oculta el soporte");
   const stripeColor = rectangles.find((rect) => rect.width === flower.width && rect.height === 4)!.color;
   const initialBar = rectangles.find((rect) => rect.color === "#ffce66" && rect.height === 6)!.width;
   rectangles.length = 0;
-  drawBloomBridge(context, flower, 0, 1.8);
+  drawBloomBridge(context, flower, 0, 1.8, raster);
   assert.equal(rectangles.find((rect) => rect.width === flower.width && rect.height === 4)!.color, stripeColor, "el aviso no parpadea");
   assert.ok(rectangles.find((rect) => rect.color === "#ffce66" && rect.height === 6)!.width < initialBar, "la barra se vacía suavemente");
   rectangles.length = 0;
-  drawBloomBridge(context, flower, 0, 2.1);
+  drawBloomBridge(context, flower, 0, 2.1, raster);
   assert.ok(!rectangles.some((rect) => rect.width === flower.width && rect.height === 4), "cerrado no parece un suelo");
-  drawUpdraft(context, current, 0, .5);
+  drawUpdraft(context, current, 0, .5, raster);
   assert.ok(lines.length > 0, "flechas ascendentes");
   assert.ok(circles.length > 0, "burbujas de aire");
 });

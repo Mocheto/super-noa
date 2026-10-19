@@ -5,7 +5,7 @@ import {
   drawAmbientForeground, drawApple, drawBackground, drawBloomBridge, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawCheckpoint,
   drawDeadlyWater, drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock,
-  drawLavaJet, drawSecretVine, drawSticker, drawTinySparkle, drawUpdraft, drawWaterJumper, drawWindZone,
+  drawLavaJet, drawSecretVine, drawSticker, drawTinySparkle, drawUpdraft, drawWaterEntrance, drawWaterJumper, drawWindZone,
 } from "./rendering";
 import { useGameInput } from "./input";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
@@ -684,8 +684,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     const render = () => {
       drawBackground(context, level, cameraX, frame, raster);
-      level.windZones?.forEach((zone) => drawWindZone(context, zone, cameraX, levelAge));
-      if (level.world === 7) level.updrafts?.forEach((zone) => drawUpdraft(context, zone, cameraX, levelAge));
+      level.windZones?.forEach((zone) => drawWindZone(context, zone, cameraX, levelAge, raster));
+      if (level.world === 7) level.updrafts?.forEach((zone) => drawUpdraft(context, zone, cameraX, levelAge, raster));
       if (level.screen === 1 && cameraX < 520 && level.world >= 10 && !(level.world === 11 && level.bloomBridges?.length)) {
         const hint = level.world === 10 ? "¡MIRA EL RITMO DE LA LAVA!" : level.world === 11 ? "¡CAE SOBRE EL ROCÍO PARA REBOTAR!" : "¡EL HIELO RESBALA Y EL VIENTO EMPUJA!";
         context.save(); context.fillStyle = "rgba(42,24,55,.88)"; context.fillRect(205 - cameraX * .22, 82, 550, 42);
@@ -706,9 +706,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         context.restore();
       }
       level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster, level.theme));
-      level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge));
+      level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge, raster));
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
-      if (level.world === 11) level.bloomBridges?.forEach((bridge) => drawBloomBridge(context, bridge, cameraX, levelAge));
+      if (level.world === 11) level.bloomBridges?.forEach((bridge) => drawBloomBridge(context, bridge, cameraX, levelAge, raster));
       level.spikePits?.forEach((pit) => {
         const x = pit.x - cameraX;
         context.fillStyle = "#09091b";
@@ -719,27 +719,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       });
       if (level.id === "2-1") drawCaveEntrance(context, level.goalX - 125, cameraX, raster.cave);
       if (level.id === "2-2") drawCaveEntrance(context, -18, cameraX, raster.cave);
-      if (level.waterEntrance) {
-        const entrance = level.waterEntrance;
-        const pondX = entrance.x - cameraX;
-        const pondY = entrance.y - 12;
-        context.save();
-        context.globalAlpha = 0.84;
-        const pondColor = context.createLinearGradient(0, pondY, 0, pondY + entrance.height);
-        pondColor.addColorStop(0, "#72e8e2");
-        pondColor.addColorStop(0.35, "#209fbd");
-        pondColor.addColorStop(1, "#194f8f");
-        context.fillStyle = pondColor;
-        context.fillRect(pondX, pondY, entrance.width, entrance.height);
-        context.restore();
-        context.fillStyle = "#ddffef";
-        for (let wave = 0; wave < entrance.width; wave += 24) context.fillRect(pondX + wave, pondY + Math.sin(frame / 14 + wave) * 3, 16, 4);
-        context.fillStyle = "#e7fff8";
-        context.font = "bold 13px monospace";
-        context.textAlign = "center";
-        context.fillText("↓ ¡AGUA! ↓", pondX + entrance.width / 2, entrance.y - 28);
-        context.textAlign = "start";
-      }
+      if (level.waterEntrance) drawWaterEntrance(context, level.waterEntrance, cameraX, frame, raster);
       level.checkpoints.forEach((checkpoint, index) => {
         if (checkpoint - cameraX < -90 || checkpoint - cameraX > VIEW_WIDTH + 30) return;
         context.save();
@@ -787,7 +767,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           drawSticker(context, x, y + bob, Math.floor(frame / 12) % 2, raster.collectibles, sticker ? raster.stickerSheets[level.world] : undefined, sticker?.column);
         }
       });
-      enemies.forEach((enemy) => drawEnemy(context, enemy, cameraX, (enemy.kind === "wolf" || enemy.kind === "boar") && Math.abs(player.x - enemy.x) < 360, raster, level.world === 3 ? wolfSleepState(enemy, levelAge) : "awake"));
+      enemies.forEach((enemy) => drawEnemy(context, enemy, cameraX, (enemy.kind === "wolf" || enemy.kind === "boar") && Math.abs(player.x - enemy.x) < 360, raster, level.world === 3 ? wolfSleepState(enemy, levelAge) : "awake", levelAge));
       waterJumpers.forEach((jumper) => drawWaterJumper(context, jumper, cameraX, raster.jumpingFish));
       cannonballs.forEach((ball) => drawCannonball(context, ball, cameraX, raster.cannonball));
       projectiles.forEach((ball) => {

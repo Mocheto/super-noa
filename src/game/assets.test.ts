@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { getImage, getLevelAssets, optimizedAssetSource } from "./assets.ts";
 import { levels } from "./levels.ts";
+import { mechanicSpriteSheets, type MechanicSprite } from "./mechanicSprites.ts";
 
 test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
   const originalImage = globalThis.Image;
@@ -17,6 +18,10 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     const orchard = levels.find((level) => level.id === "1-1")!;
     const first = getLevelAssets(orchard);
     assert.equal(requested.length, 0, "crear el catálogo no inicia descargas");
+    for (const key of Object.keys(mechanicSpriteSheets) as MechanicSprite[]) {
+      assert.equal(first[key].src, "", `el bosque inicial no carga ${key}`);
+    }
+    assert.equal(requested.length, 0);
     void first.tiles[1];
     void first.stickerSheets[1];
     const count = requested.length;
@@ -42,6 +47,16 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     const giants = getLevelAssets(levels.find((level) => level.id === "11-1")!);
     assert.equal(giants.worldTerrain.src, "./assets/atlases/giant-valley-terrain-v1.png");
     assert.equal(giants.dewTrampoline.src, "./assets/sprites/dew-trampoline-v1.png");
+    const mechanicLevels: Record<MechanicSprite, string> = {
+      sleepingWolf: "3-1", bloomFlower: "11-1", bloomBridge: "11-1", updraft: "S-1", windGust: "12-1",
+      lavaJet: "10-1", lavaSurface: "10-1", waterSurface: "11-1", waterEntrance: "3-3", flyingShip: "5-1", airPlank: "5-1", mistPlatform: "2-1",
+    };
+    for (const name of Object.keys(mechanicLevels) as MechanicSprite[]) {
+      const level = levels.find((entry) => entry.id === mechanicLevels[name])!;
+      const assets = getLevelAssets(level);
+      assert.equal(assets[name].src, mechanicSpriteSheets[name].source);
+      assert.equal(assets[name], getLevelAssets(level)[name], "los fotogramas comparten la imagen en caché");
+    }
     assert.equal(getLevelAssets(levels.find((level) => level.id === "12-1")!).worldTerrain.src, "./assets/atlases/ice-mountain-terrain-v1.png");
     for (const level of levels) {
       const assets = getLevelAssets(level);

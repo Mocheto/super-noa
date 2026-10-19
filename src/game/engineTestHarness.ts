@@ -14,7 +14,7 @@ export function engineModules(overrides: Record<string, unknown> = {}, globals: 
     if (cache.has(name)) return cache.get(name)!.exports;
     const module = { exports: {} };
     cache.set(name, module);
-    const file = name.slice(2) + (name === "./GameCanvas" ? ".tsx" : ".ts");
+    const file = name.slice(2) + (/\.(ts|tsx)$/.test(name) ? "" : name === "./GameCanvas" ? ".tsx" : ".ts");
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
     const code = ts.transpileModule(source, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },

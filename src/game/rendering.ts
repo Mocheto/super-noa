@@ -62,17 +62,17 @@ const newWorldTerrainSources = {
 
 const drawNewWorldTerrain = (context: CanvasRenderingContext2D, image: HTMLImageElement, world: 10 | 11 | 12, part: "ground" | "ledge" | "wall", x: number, y: number, width: number, height: number) => {
   if (!image.complete || !image.naturalWidth) return false;
-  const source = newWorldTerrainSources[world][part];
+  const [sx, sy, sw, sh] = newWorldTerrainSources[world][part];
   if (part === "ledge") {
-    context.drawImage(image, ...source, x - 4, y - 3, width + 8, Math.max(70, height + 55));
+    context.drawImage(image, sx, sy, sw, sh, x - 4, y - 3, width + 8, Math.max(70, height + 55));
     return true;
   }
   if (part === "wall") {
-    context.drawImage(image, ...source, x, y, width, height);
+    context.drawImage(image, sx, sy, sw, sh, x, y, width, height);
     return true;
   }
   for (let tileX = x; tileX < x + width; tileX += 150) {
-    context.drawImage(image, ...source, tileX, y, Math.min(153, x + width - tileX), height);
+    context.drawImage(image, sx, sy, sw, sh, tileX, y, Math.min(153, x + width - tileX), height);
   }
   return true;
 };
@@ -988,11 +988,52 @@ function drawEnemyWarning(context: CanvasRenderingContext2D, x: number, y: numbe
   context.textAlign = "start";
 }
 
+function drawEnemyFallback(context: CanvasRenderingContext2D, enemy: LiveEnemy, x: number, y: number) {
+  const { width, height, kind } = enemy;
+  const flying = kind === "pterodactyl" || kind === "bee" || kind === "snowy-owl";
+  const aquatic = kind === "fish" || kind === "urchin";
+  context.save();
+  context.translate(x + (enemy.vx < 0 ? width : 0), y);
+  if (enemy.vx < 0) context.scale(-1, 1);
+  context.fillStyle = "#352841";
+  context.fillRect(0, height * .18, width, height * .72);
+  context.fillStyle = aquatic ? "#52c7d4" : kind === "snow-fox" || kind === "penguin" || kind === "snowy-owl" ? "#e5f4ff" : kind === "sky-unicorn" ? "#dbaff0" : "#9ec66b";
+  context.fillRect(3, height * .18 + 3, width - 6, height * .72 - 6);
+  if (flying || aquatic) {
+    context.fillRect(-5, height * .35, width * .35, height * .25);
+    context.fillRect(width * .4, 0, width * .35, height * .4);
+  } else {
+    context.fillRect(4, height * .8, width * .22, height * .2);
+    context.fillRect(width * .65, height * .8, width * .22, height * .2);
+  }
+  if (kind === "urchin") {
+    for (let spike = 0; spike < 4; spike += 1) context.fillRect(width * spike / 4, 0, 5, height * .3);
+  }
+  if (kind === "sky-unicorn") {
+    context.fillStyle = "#ffe477";
+    context.fillRect(width * .72, 0, 5, height * .25);
+  }
+  context.fillStyle = "#352841";
+  context.fillRect(width * .68, height * .3, 4, 5);
+  context.fillRect(width * .73, height * .62, width * .18, 3);
+  context.restore();
+}
+
 export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, cameraX: number, nearby: boolean, raster: RasterAssets) {
   if (!enemy.active) return;
   const x = Math.round(enemy.x - cameraX);
+  if (x + enemy.width < -80 || x > VIEW_WIDTH + 80) return;
   const y = Math.round(enemyY(enemy));
-  if (["baby-dragon", "fire-salamander", "ant", "snail", "bee", "penguin", "snow-fox", "snowy-owl"].includes(enemy.kind)) {
+  const specializedImage = enemy.kind === "fish" || enemy.kind === "urchin" ? raster.waterEnemies
+    : enemy.kind === "baby-t-rex" || enemy.kind === "pterodactyl" ? raster.dinosaurEnemies
+    : enemy.kind === "sky-unicorn" ? raster.secret
+    : enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl" ? raster.worldCharacters
+    : undefined;
+  if (specializedImage && (!specializedImage.complete || !specializedImage.naturalWidth)) {
+    drawEnemyFallback(context, enemy, x, y);
+    return;
+  }
+  if (enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl") {
     const columns: Partial<Record<LiveEnemy["kind"], number>> = { "baby-dragon": 0, "fire-salamander": 1, ant: 0, snail: 1, bee: 2, penguin: 0, "snow-fox": 1, "snowy-owl": 2 };
     const flying = enemy.kind === "bee" || enemy.kind === "snowy-owl";
     const giant = enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee";

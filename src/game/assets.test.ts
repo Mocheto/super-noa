@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
-import { getLevelAssets } from "./assets.ts";
+import { getImage, getLevelAssets, optimizedAssetSource } from "./assets.ts";
 import { levels } from "./levels.ts";
 
 test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
@@ -16,11 +16,14 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
   try {
     const orchard = levels.find((level) => level.id === "1-1")!;
     const first = getLevelAssets(orchard);
+    assert.equal(requested.length, 0, "crear el catálogo no inicia descargas");
+    void first.tiles[1];
+    void first.stickerSheets[1];
     const count = requested.length;
     const second = getLevelAssets(orchard);
     assert.equal(requested.length, count);
     assert.equal(first.tiles[1], second.tiles[1]);
-    assert.ok(requested.includes("./assets/stickers/world-1-v1.png"));
+    assert.ok(requested.includes("./assets/stickers/world-1-v1.webp"));
     assert.ok(!requested.includes("./assets/stickers/world-8-v1.png"));
     assert.ok(!requested.includes("./assets/worlds/world-8.png"));
     const birds = getLevelAssets(levels.find((level) => level.id === "4-2")!);
@@ -40,11 +43,46 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     assert.equal(giants.worldTerrain.src, "./assets/atlases/giant-valley-terrain-v1.png");
     assert.equal(giants.dewTrampoline.src, "./assets/sprites/dew-trampoline-v1.png");
     assert.equal(getLevelAssets(levels.find((level) => level.id === "12-1")!).worldTerrain.src, "./assets/atlases/ice-mountain-terrain-v1.png");
-    for (const level of levels) getLevelAssets(level);
+    for (const level of levels) {
+      const assets = getLevelAssets(level);
+      for (const key of Object.keys(assets) as (keyof typeof assets)[]) {
+        if (key === "tiles" || key === "stickerSheets") void assets[key][level.world];
+        else void assets[key];
+      }
+    }
     for (const src of requested) {
       assert.ok(src.startsWith("./assets/"), `Ruta no relativa: ${src}`);
       assert.ok(existsSync(new URL(`../../public/${src.slice(2)}`, import.meta.url)), `Falta el recurso ${src}`);
     }
+  } finally {
+    globalThis.Image = originalImage;
+  }
+});
+
+test("la interfaz y el motor comparten una fuente optimizada y la misma imagen", () => {
+  for (const original of [
+    "./assets/home-adventure-v3.png", "./assets/worlds/noa-adventure-map-v1.png",
+    "./assets/sprites/noa-sprite-sheet.png", "./assets/atlases/collectibles-v1.png",
+  ]) {
+    const source = optimizedAssetSource(original);
+    assert.equal(source, original.replace(/\.png$/, ".webp"));
+    assert.equal(optimizedAssetSource(source), source);
+    const png = readFileSync(new URL(`../../public/${original.slice(2)}`, import.meta.url));
+    const webp = readFileSync(new URL(`../../public/${source.slice(2)}`, import.meta.url));
+    assert.equal(webp.toString("ascii", 0, 4), "RIFF");
+    assert.equal(webp.toString("ascii", 8, 12), "WEBP");
+    assert.ok(webp.length < png.length);
+  }
+  assert.equal(optimizedAssetSource("./assets/worlds/world-8.png"), "./assets/worlds/world-8.png");
+  const originalImage = globalThis.Image;
+  const requested: string[] = [];
+  globalThis.Image = class {
+    set src(value: string) { requested.push(value); }
+  } as unknown as typeof Image;
+  try {
+    const source = "./assets/home-adventure-v3.png";
+    assert.equal(getImage(source), getImage(optimizedAssetSource(source)));
+    assert.deepEqual(requested, ["./assets/home-adventure-v3.webp"]);
   } finally {
     globalThis.Image = originalImage;
   }

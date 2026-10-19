@@ -32,7 +32,7 @@ jobs:
         run: npm ci
       - name: Comprobar código
         run: npm run lint
-      - name: Generar sitio estático
+      - name: Comprobar tipos y generar sitio estático
         run: npm run build:pages
       - name: Preparar GitHub Pages
         uses: actions/configure-pages@v6

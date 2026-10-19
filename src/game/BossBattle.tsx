@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { SoundKind } from "./GameCanvas";
 import { GameAssetIcon } from "./GameAssetIcon";
+import { Dialog } from "./Dialog";
+import { optimizedAssetSource } from "./assets";
 import { bossCatalog, type BossChallengeId } from "./bosses";
 import { justPressed, readDuelPad, type DuelPadButtons } from "./duelGamepad";
 import { firstConnectedGamepad } from "./gamepad";
@@ -79,10 +81,11 @@ function BossSprite({ assetPrefix, assetAtlas, frame, name }: { assetPrefix: str
 function NoaDuelSprite({ frame, protectedByApple }: { frame: number | null; protectedByApple: boolean }) {
   const gesture = frame === 0 ? "piedra" : frame === 1 ? "papel" : frame === 2 ? "tijera" : frame === 3 ? "victoria" : "preparada";
   const armorSuffix = protectedByApple ? "-gold-armor-v1" : "";
+  const idleSource = optimizedAssetSource(`./assets/sprites/noa-sprite-sheet${armorSuffix}.png`);
   return (
     <div className="duel-noa-sprite" role="img" aria-label={`Noa hace el gesto de ${gesture}`}>
       {frame === null
-        ? <div className="duel-noa-idle" style={{ backgroundImage: `url("./assets/sprites/noa-sprite-sheet${armorSuffix}.png")` }} />
+        ? <div className="duel-noa-idle" style={{ backgroundImage: `url("${idleSource}")` }} />
         : <img src={`./assets/sprites/noa-rps-${frame}${armorSuffix}.png`} alt="" />}
     </div>
   );
@@ -96,11 +99,13 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
   const [usedApple, setUsedApple] = useState(false);
   const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);
   const [gamepadConnected, setGamepadConnected] = useState(false);
+  const [showAbandon, setShowAbandon] = useState(false);
+  const battlePaused = paused || showAbandon;
   const previousPadRef = useRef<DuelPadButtons | null>(null);
   const previousBackRef = useRef(false);
 
   useEffect(() => {
-    if (paused || battle.status !== "countdown") return;
+    if (battlePaused || battle.status !== "countdown") return;
     if (countdown > 0) playSound("countdown");
     const timeout = window.setTimeout(() => {
       if (countdown > 0) {
@@ -116,7 +121,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
       playSound(battle.roundWinner === "noa" ? "checkpoint" : battle.roundWinner === "boss" ? "hurt" : "block");
     }, countdown > 0 ? 360 : 220);
     return () => window.clearTimeout(timeout);
-  }, [battle, countdown, paused, playSound]);
+  }, [battle, countdown, battlePaused, playSound]);
 
   const choose = (noaChoice: Choice) => {
     if (battle.status !== "choosing") return;
@@ -140,7 +145,8 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
     setBattle({ noaScore: 0, bossScore: 0, status: "choosing" });
   };
   const abandonBattle = () => {
-    if (friendlyReplay || window.confirm("¿Quieres rendirte y volver al mapa? Podrás intentar este duelo otra vez cuando quieras.")) onAbandon();
+    if (friendlyReplay) onAbandon();
+    else setShowAbandon(true);
   };
   const choicesRevealed = battle.status !== "choosing" && battle.status !== "countdown";
   const visibleWinner = choicesRevealed ? battle.roundWinner : undefined;
@@ -174,9 +180,9 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
       const previous = previousPadRef.current;
       const back = Boolean(pad.buttons[1]?.pressed);
       previousPadRef.current = pressed;
-      if (previous && !paused && back && !previousBackRef.current && battle.status !== "won") onAbandon();
+      if (previous && !battlePaused && back && !previousBackRef.current && battle.status !== "won") abandonBattle();
       previousBackRef.current = back;
-      if (previous && !paused && !back) {
+      if (previous && !battlePaused && !back) {
         if (battle.status === "choosing") {
           let nextIndex = selectedChoiceIndex;
           if (justPressed(pressed, previous, 3) || justPressed(pressed, previous, 1)) nextIndex = (nextIndex + choices.length - 1) % choices.length;
@@ -199,8 +205,8 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
   });
 
   return (
-    <div className="modal-backdrop boss-backdrop">
-      <section className={`boss-battle boss-theme-${bossId} battle-${battle.status} result-flash-${visibleWinner ?? "none"}`} aria-labelledby="boss-title">
+    <>
+      <Dialog labelledBy="boss-title" backdropClassName="boss-backdrop" className={`boss-battle boss-theme-${bossId} battle-${battle.status} result-flash-${visibleWinner ?? "none"}`}>
         {(visibleWinner === "noa" || battle.status === "won") && (
           <div className="duel-confetti" aria-hidden="true">
             {Array.from({ length: 14 }, (_, index) => (
@@ -286,7 +292,16 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
         {battle.status !== "won" && <button className="text-button duel-abandon" type="button" onClick={abandonBattle}>{friendlyReplay ? "Volver a mis amigos" : "🏳 Rendirse y volver al mapa"}</button>}
 
         <p className="duel-rules"><span><RpsIcon choice="rock" small /> gana a <RpsIcon choice="scissors" small /></span><span><RpsIcon choice="scissors" small /> gana a <RpsIcon choice="paper" small /></span><span><RpsIcon choice="paper" small /> gana a <RpsIcon choice="rock" small /></span></p>
-      </section>
-    </div>
+      </Dialog>
+      {showAbandon && (
+        <Dialog labelledBy="abandon-title" className="game-modal compact" onClose={() => setShowAbandon(false)} gamepad>
+          <p className="eyebrow">Un momento</p>
+          <h2 id="abandon-title">¿Volvemos al mapa?</h2>
+          <p>Este duelo empezará de nuevo cuando vuelvas. Tus pegatinas encontradas siguen guardadas.</p>
+          <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowAbandon(false)}>Seguir con el duelo</button>
+          <button className="pixel-button" type="button" onClick={onAbandon}>Sí, volver al mapa</button>
+        </Dialog>
+      )}
+    </>
   );
 }

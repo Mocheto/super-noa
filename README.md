@@ -6,6 +6,8 @@ Al terminar una pantalla normal, Noa toca un banderín elevado —también puede
 
 El mapa de la aventura es un paisaje ilustrado continuo: los caminos dorados muestran los mundos abiertos y la laguna y el reino de las nubes aparecen como desvíos. Toca un lugar para abrir su resumen, consultar medallas y pegatinas, y elegir una pantalla. En móvil, desliza el mapa horizontalmente.
 
+Cada pantalla abierta muestra sus objetivos pendientes: llegar a la meta, encontrar cada pegatina, completarla sin perder vidas y, cuando hay un guardián, conseguir su reto de amistad. «Mostrar pista» ofrece una ayuda para el siguiente objetivo pendiente; las pantallas cerradas no revelan sus pistas. El álbum también indica dónde falta cada pegatina.
+
 ## Desarrollo
 
 ```bash
@@ -22,7 +24,7 @@ npm run preview:pages
 
 La compilación estática se genera en `dist-pages/`. El workflow `.github/workflows/super-noa-pages.yml` la publica en GitHub Pages después de cada push a `main`.
 
-La comprobación `npm test` ejecuta lint, pruebas de lógica y compilación. Las pruebas cubren reglas de movimiento, estructura de niveles y del mapa, rutas de recursos, guardados antiguos, bucle de juego y entrada del mando.
+La comprobación `npm test` ejecuta lint, pruebas de lógica y compilación con comprobación estricta de TypeScript. También puedes ejecutar `npm run typecheck` por separado. Las pruebas cubren reglas de movimiento, estructura de niveles y del mapa, checkpoints seguros, objetivos, recursos pendientes, recogidas al terminar, transiciones pausables, guardados antiguos, entrada del mando y recuperación del ranking.
 
 ## Controles
 
@@ -31,13 +33,27 @@ La comprobación `npm test` ejecuta lint, pruebas de lógica y compilación. Las
 - Cajas con huella: se abren saltando y golpeándolas desde abajo.
 - Bola de lana: `X` o `K`, después de recoger el potenciador de gato de una caja.
 - Pausa: `Esc` o el botón del HUD. El juego se pausa automáticamente al ocultar la pestaña, bloquear el dispositivo o perder el foco; al volver, pulsa «Seguir jugando».
+- Los cuadros de ajustes, ayuda y colección mantienen el foco dentro, se cierran con `Esc` y devuelven el foco al botón que los abrió. Rendirse en un duelo pide confirmación tanto con mando como con los botones de pantalla.
 - Monstruos finales: gana dos rondas de piedra, papel o tijera. Cada derrota puede repetirse gastando una manzana; sin manzanas se reinicia la pantalla, pero no se pierde una vida. También puedes rendirte y volver al mapa.
 - Rutas especiales: ramas elásticas en el mundo 1, plataformas de niebla en el mundo 2, aullidos de aviso en el mundo 3, copas altas en el mundo 4, barcos voladores con cañones en el mundo 5 y pasillos con trampas de pinchos en el mundo 6. En el mundo de los jabalíes hay un bloque secreto elevado que crea una enredadera hacia el Reino Secreto de las Nubes: golpéalo desde abajo y toca la enredadera para elegir ese camino.
 - Álbum: hay una pegatina opcional por pantalla de campaña, tres en la laguna y tres en el reino secreto.
 - En móvil o tableta aparecen controles táctiles grandes, etiquetados con `IZQ.`, `DER.`, `LANA` y `SALTAR`. Mantén una dirección con un dedo y toca `SALTAR` con otro para hacer el doble salto.
 - También se admite un mando mediante Gamepad API. Usa la cruceta o palanca izquierda para caminar y recorrer los menús, `A` para saltar o confirmar, `X`/`B` para lanzar lana, `B` para volver en menús y duelos, y `Start` para pausar o reanudar. En los duelos, la cruceta o palanca elige el gesto y `A` confirma, avanza de ronda, reintenta o continúa.
 
-El progreso y las pegatinas se guardan únicamente en el navegador con la clave `super-noa-progress-v1`. El formato actual es la versión 2 y conserva la lectura de guardados anteriores. Si el navegador bloquea el almacenamiento, el juego sigue funcionando y muestra un aviso de que el progreso podría perderse. Las 24 insignias tienen sprites troquelados propios agrupados por mundo en `public/assets/stickers/`; el mismo dibujo aparece en la pantalla y en el álbum. El estado «Protegida» se reconoce por una burbuja psíquica dibujada alrededor de Noa en todas sus poses. La coraza alternativa queda guardada en `public/assets/alternatives/noa-armor-v1.png`, pero no está activa.
+El progreso y las pegatinas se guardan únicamente en el navegador con la clave `super-noa-progress-v1`. El formato actual es la versión 2 y conserva la lectura de guardados anteriores. Si el navegador bloquea el almacenamiento, el juego sigue funcionando y muestra un aviso de que el progreso podría perderse. Las 36 insignias tienen sprites troquelados propios agrupados por mundo en `public/assets/stickers/`; el mismo dibujo aparece en la pantalla y en el álbum. El estado «Protegida» se reconoce por una burbuja psíquica dibujada alrededor de Noa en todas sus poses. La coraza alternativa queda guardada en `public/assets/alternatives/noa-armor-v1.png`, pero no está activa.
+
+El tablón ordena por pantallas de campaña completadas, no por los identificadores del agua o del reino secreto. La tarjeta del alias se guarda antes de registrarla para poder reintentar una respuesta perdida sin reservar otro alias. Si el navegador no puede guardarla, no se inicia el registro. Los fallos de envío se muestran como pendientes y se reintentan al recuperar la conexión; nunca impiden leer el tablón ni seguir jugando.
+
+El contenedor del tablón debe ejecutar `node server/ranking-supervisor.mjs`. El supervisor comprueba `main` cada cinco minutos (`RANKING_UPDATE_INTERVAL_MS`), valida una versión antes de activarla y conserva la anterior si falla. Los cambios del propio supervisor requieren actualizar su archivo y reiniciar su proceso Node; no se recrea el contenedor ni se modifican los volúmenes o PostgreSQL.
+
+Los gráficos de partida se cargan por mundo y los poderes se solicitan cuando hacen falta. Los recursos iniciales optimizados conservan los píxeles y la transparencia con WebP sin pérdida; los PNG originales siguen disponibles. Mientras llega un atlas de enemigos, su silueta permanece visible.
+
+El volcán, el valle de flores gigantes y la montaña de hielo tienen composiciones originales propias. La música conserva su posición al pausar, silenciar o ajustar el volumen. Para regenerar los tres temas se necesita FFmpeg:
+
+```bash
+node scripts/build-adventure-music.mjs
+node scripts/build-adventure-music.mjs --check
+```
 
 Los cañones, sus bolas, los puntos de control y los banderines usan sprites propios en `public/assets/sprites/`.
 

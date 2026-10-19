@@ -349,8 +349,9 @@ h1 span {
 .hud-actions button { width: 42px; height: 42px; font-size: 1rem; }
 
 .game-frame { position: relative; width: min(1200px, calc(100vw - 32px)); }
-.game-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 4px solid #120b1d; border-top: 0; background: #5c4980; overflow: hidden; touch-action: none; }
-.game-stage canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.game-stage { position: relative; width: 100%; border: 4px solid #120b1d; border-top: 0; background: #5c4980; overflow: hidden; touch-action: none; }
+.game-stage canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; image-rendering: pixelated; }
+.game-stage canvas:focus-visible { outline: 3px solid var(--gold); outline-offset: -3px; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 .level-caption { width: min(1200px, calc(100vw - 32px)); display: flex; justify-content: space-between; padding: 9px 14px; border: 4px solid #120b1d; border-top: 0; color: #d8c9e1; background: #2c1d3b; font-size: .72rem; }
 
@@ -384,6 +385,22 @@ h1 span {
 .touch-yarn .pixel-icon { --icon-size: 1.65rem; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 20px; background: rgba(25, 13, 38, .78); backdrop-filter: blur(5px); }
+dialog.modal-backdrop { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; border: 0; color: inherit; }
+dialog.modal-backdrop:not([open]) { display: none; }
+dialog.modal-backdrop::backdrop { background: transparent; }
+.audio-warning { margin: 0; padding: 8px 16px; color: #fff0ba; background: #352044; font-family: system-ui, sans-serif; font-size: .8rem; text-align: center; }
+.level-objectives { display: grid; gap: 6px; padding: 0; list-style: none; font-family: system-ui, sans-serif; }
+.level-objectives li { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
+.level-entry { display: grid; gap: 7px; min-width: 0; }
+.level-entry .level-card { width: 100%; }
+.level-entry .level-objectives { padding: 10px 12px; border: 2px solid #79558a; color: #51325f; background: #fff8e9; font-size: .8rem; }
+.level-objectives ul { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; list-style: none; }
+.level-objectives .is-complete { color: #367447; }
+.level-objectives-status { margin: 0; font-weight: 800; }
+.level-hint-toggle { min-height: 40px; justify-self: start; border: 2px solid #79558a; padding: 6px 10px; color: #51325f; background: #f0e2f5; font: inherit; cursor: pointer; }
+.level-objective-hint, .album-sticker-hint { margin: 0; color: #725f76; font-family: system-ui, sans-serif; font-size: .8rem; }
+.album-modal .level-hint-toggle { justify-self: center; font-family: system-ui, sans-serif; font-size: .74rem; }
+.album-modal .album-sticker-hint { font-size: .76rem; }
 .duel-choices button.is-pad-selected { outline: 4px solid #ffe36f; outline-offset: 4px; }
 .duel-pad-tip { grid-column: 1 / -1; width: 100%; margin: 6px 0 0; text-align: center; font-size: .85rem; }
 .game-modal { position: relative; width: min(580px, 100%); max-height: calc(100vh - 40px); overflow: auto; border: 6px solid #2d183a; padding: clamp(25px, 5vw, 48px); color: var(--ink); background: #fff8e9; box-shadow: 13px 13px 0 rgba(16,8,25,.65); text-align: center; }
@@ -455,6 +472,10 @@ h1 span {
 .ranking-join small, .ranking-welcome, .ranking-empty { font-family: system-ui, sans-serif; }
 .ranking-welcome { margin: 16px auto 12px; color: #654f6b; font-weight: 750; }
 .ranking-message { border: 3px solid #b56b86; padding: 9px; background: #fff0e0; font-family: system-ui, sans-serif; font-weight: 800; }
+.ranking-sync-warning { margin: 0; padding: 10px 16px; color: #fff0ba; background: #352044; font-family: system-ui, sans-serif; font-size: .8rem; text-align: center; }
+.ranking-sync-warning button { min-height: 40px; margin-left: 8px; border: 2px solid #ffd45f; padding: 5px 10px; color: #352044; background: #ffd45f; cursor: pointer; }
+.ranking-sync-status { color: #654f6b; font-family: system-ui, sans-serif; font-size: .85rem; }
+.ranking-join button:disabled { opacity: .7; cursor: wait; }
 .ranking-list { display: grid; gap: 10px; max-height: min(360px, 45vh); margin: 16px 0; padding: 4px 5px 6px 0; overflow-y: auto; list-style: none; scrollbar-color: #8b5b9b #ead9ef; }
 .ranking-list li { position: relative; display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 12px; min-height: 72px; border: 3px solid #654073; padding: 9px 14px 9px 9px; background: #f0e2f5; box-shadow: 4px 4px 0 #cab0d3; text-align: left; }
 .ranking-position { display: grid; place-items: center; width: 42px; height: 42px; border: 3px solid #50305f; border-radius: 50%; color: #fff8e9; background: #79518a; font-size: 1rem; font-weight: 950; }
@@ -664,7 +685,6 @@ h1 span {
   .game-hud { grid-template-columns: 1fr auto; min-height: 64px; }
   .hud-stats { grid-row: 2; grid-column: 1 / -1; justify-content: center; }
   .hud-actions { grid-column: 2; grid-row: 1; }
-  .game-stage { aspect-ratio: 16 / 10; }
 }
 
 @media (max-width: 620px) {
@@ -696,7 +716,7 @@ h1 span {
   .hud-stats { gap: 7px; font-size: .78rem; }
   .power-chip { font-size: .6rem; }
   .hud-actions button { width: 38px; height: 38px; }
-  .game-stage { border-inline: 0; aspect-ratio: 4 / 3; }
+  .game-stage { border-inline: 0; }
   .level-caption { border-inline: 0; }
   .touch-controls { display: flex; padding-inline: max(10px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-right)); }
   .touch-group { gap: 6px; padding: 6px; }
@@ -774,7 +794,7 @@ h1 span {
   .hud-level strong { font-size: .7rem; }
   .hud-stats { font-size: .7rem; }
   .game-hud, .game-frame { width: min(calc(100vw - 8px), calc(177.78dvh - 100px)); }
-  .game-stage { width: 100%; aspect-ratio: 16 / 9; }
+  .game-stage { width: 100%; }
   .level-caption { display: none; }
   .touch-controls { position: absolute; inset: auto 0 max(7px, env(safe-area-inset-bottom)); padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right)); border: 0; background: transparent; }
   .touch-group { border-width: 2px; padding: 4px; }

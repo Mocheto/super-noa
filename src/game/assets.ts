@@ -20,12 +20,28 @@ export type RasterAssets = {
 const cache = new Map<string, HTMLImageElement>();
 let unloaded: HTMLImageElement | undefined;
 
+// Lossless gameplay variants; original PNG URLs remain available to other screens.
+const optimizedImages = new Set([
+  "home-adventure-v3", "worlds/noa-adventure-map-v1",
+  "atlases/collectibles-v1", "atlases/enemies-v1", "atlases/platform-tiles-v1", "atlases/world-1-tiles-v1",
+  "sprites/checkpoint-v1", "sprites/goal-flag-v1", "sprites/goal-rescue-v1",
+  "sprites/noa-sprite-sheet", "sprites/noa-sprite-sheet-gold-armor-v1",
+  "sprites/noa-jump-v2", "sprites/noa-jump-gold-armor-v1",
+  "sprites/noa-cat-jump-v2", "sprites/noa-cat-yarn-v2", "sprites/noa-cat-throw-v1",
+  "sprites/noa-cat-run-v2", "sprites/yarn-ball-v1", "stickers/world-1-v1",
+].map((name) => `./assets/${name}.png`));
+
+export function optimizedAssetSource(src: string): string {
+  return optimizedImages.has(src) ? src.replace(/\.png$/, ".webp") : src;
+}
+
 export function getImage(src: string): HTMLImageElement {
-  let image = cache.get(src);
+  const source = optimizedAssetSource(src);
+  let image = cache.get(source);
   if (!image) {
     image = new Image();
-    image.src = src;
-    cache.set(src, image);
+    image.src = source;
+    cache.set(source, image);
   }
   return image;
 }
@@ -43,38 +59,38 @@ export function getLevelAssets(level: Level): RasterAssets {
   const tiles = {} as RasterAssets["tiles"];
   const stickerSheets = {} as RasterAssets["stickerSheets"];
   for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const) {
-    tiles[id] = when(id === world, `./assets/atlases/${tileImages[id]}`);
-    stickerSheets[id] = when(id === world, `./assets/stickers/world-${id}-v1.png`);
+    Object.defineProperty(tiles, id, { enumerable: true, get: () => when(id === world, `./assets/atlases/${tileImages[id]}`) });
+    Object.defineProperty(stickerSheets, id, { enumerable: true, get: () => when(id === world, `./assets/stickers/world-${id}-v1.png`) });
   }
   return {
-    waterBackground: when(world === 8, "./assets/worlds/world-8.png"),
-    waterTerrain: when(world === 8, "./assets/atlases/water-terrain-v1.png"),
-    seaWall: when(world === 8, "./assets/sprites/sea-reef-wall-v2.png"),
-    waterEnemies: when(world === 8, "./assets/atlases/water-enemies-v1.png"),
-    swim: when(world === 8, "./assets/sprites/noa-swim-v1.png"),
-    waterCat: when(world === 8, "./assets/sprites/world-cat-8-v1.png"),
-    enemies: getImage("./assets/atlases/enemies-v1.png"),
-    castleEnemies: when(world === 6, "./assets/atlases/castle-enemies-v1.png"),
-    dinosaurEnemies: when(world === 9, "./assets/atlases/dinosaur-enemies-v1.png"),
-    dinosaurTerrain: when(world === 9, "./assets/atlases/dinosaur-island-v1.png"),
-    worldCharacters: when(world >= 10, `./assets/atlases/${world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-characters-v1.png`),
-    worldTerrain: when(world >= 10, `./assets/atlases/${world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-terrain-v1.png`),
-    dewTrampoline: when(world === 11, "./assets/sprites/dew-trampoline-v1.png"),
-    jumpingFish: when(Boolean(level.waterJumpers?.length), "./assets/sprites/enemy-jumping-fish-v1.png"),
-    boar: when(world === 4, "./assets/sprites/enemy-boar-v2.png"),
-    bird: when(level.enemies.some((enemy) => enemy.kind === "bird"), "./assets/sprites/enemy-bird-v2.png"),
-    collectibles: getImage("./assets/atlases/collectibles-v1.png"),
-    cave: when(level.theme === "crystal-cave" || level.id === "2-1", "./assets/atlases/cave-v1.png"),
-    castle: when(world === 6, "./assets/atlases/castle-v1.png"),
-    secret: when(world === 7 || level.rewardBlocks.some((block) => block.reward === "secret-vine"), "./assets/atlases/secret-sky-v1.png"),
-    cannon: when(Boolean(level.cannons?.length), "./assets/sprites/cannon-v1.png"),
-    cannonball: when(Boolean(level.cannons?.length), "./assets/sprites/cannonball-v1.png"),
-    checkpoint: getImage("./assets/sprites/checkpoint-v1.png"),
-    goalFlag: getImage("./assets/sprites/goal-flag-v1.png"),
-    goalRescue: getImage("./assets/sprites/goal-rescue-v1.png"),
-    bossGate: when(Boolean(level.boss), "./assets/sprites/boss-gate-v1.png"),
-    spring: when(level.platforms.some((platform) => platform.kind === "spring"), "./assets/sprites/spring-large-v1.png"),
-    platformTiles: getImage("./assets/atlases/platform-tiles-v1.png"),
+    get waterBackground() { return when(world === 8, "./assets/worlds/world-8.png"); },
+    get waterTerrain() { return when(world === 8, "./assets/atlases/water-terrain-v1.png"); },
+    get seaWall() { return when(world === 8, "./assets/sprites/sea-reef-wall-v2.png"); },
+    get waterEnemies() { return when(world === 8, "./assets/atlases/water-enemies-v1.png"); },
+    get swim() { return when(world === 8, "./assets/sprites/noa-swim-v1.png"); },
+    get waterCat() { return when(world === 8, "./assets/sprites/world-cat-8-v1.png"); },
+    get enemies() { return getImage("./assets/atlases/enemies-v1.png"); },
+    get castleEnemies() { return when(world === 6, "./assets/atlases/castle-enemies-v1.png"); },
+    get dinosaurEnemies() { return when(world === 9, "./assets/atlases/dinosaur-enemies-v1.png"); },
+    get dinosaurTerrain() { return when(world === 9, "./assets/atlases/dinosaur-island-v1.png"); },
+    get worldCharacters() { return when(world >= 10, `./assets/atlases/${world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-characters-v1.png`); },
+    get worldTerrain() { return when(world >= 10, `./assets/atlases/${world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-terrain-v1.png`); },
+    get dewTrampoline() { return when(world === 11, "./assets/sprites/dew-trampoline-v1.png"); },
+    get jumpingFish() { return when(Boolean(level.waterJumpers?.length), "./assets/sprites/enemy-jumping-fish-v1.png"); },
+    get boar() { return when(world === 4, "./assets/sprites/enemy-boar-v2.png"); },
+    get bird() { return when(level.enemies.some((enemy) => enemy.kind === "bird"), "./assets/sprites/enemy-bird-v2.png"); },
+    get collectibles() { return getImage("./assets/atlases/collectibles-v1.png"); },
+    get cave() { return when(level.theme === "crystal-cave" || level.id === "2-1", "./assets/atlases/cave-v1.png"); },
+    get castle() { return when(world === 6, "./assets/atlases/castle-v1.png"); },
+    get secret() { return when(world === 7 || level.rewardBlocks.some((block) => block.reward === "secret-vine"), "./assets/atlases/secret-sky-v1.png"); },
+    get cannon() { return when(Boolean(level.cannons?.length), "./assets/sprites/cannon-v1.png"); },
+    get cannonball() { return when(Boolean(level.cannons?.length), "./assets/sprites/cannonball-v1.png"); },
+    get checkpoint() { return getImage("./assets/sprites/checkpoint-v1.png"); },
+    get goalFlag() { return getImage("./assets/sprites/goal-flag-v1.png"); },
+    get goalRescue() { return getImage("./assets/sprites/goal-rescue-v1.png"); },
+    get bossGate() { return when(Boolean(level.boss), "./assets/sprites/boss-gate-v1.png"); },
+    get spring() { return when(level.platforms.some((platform) => platform.kind === "spring"), "./assets/sprites/spring-large-v1.png"); },
+    get platformTiles() { return getImage("./assets/atlases/platform-tiles-v1.png"); },
     tiles,
     stickerSheets,
   };

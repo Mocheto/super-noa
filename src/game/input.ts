@@ -13,6 +13,7 @@ export function useGameInput(running: boolean) {
   const touchPointersRef = useRef<Partial<Record<TouchKey, number>>>({});
 
   useEffect(() => {
+    if (!running) return;
     const input = inputRef.current;
     const heldKeys = heldKeysRef.current;
     const syncDirections = () => {
@@ -20,6 +21,8 @@ export function useGameInput(running: boolean) {
       input.right = heldKeys.has("ArrowRight") || heldKeys.has("KeyD") || touchPointersRef.current.right !== undefined;
     };
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing || event.composedPath().some((target) =>
+        target instanceof Element && target.closest("button, input, textarea, select, a[href], dialog, [role='dialog'], [role='alertdialog'], [role='button'], [role='link'], [contenteditable]:not([contenteditable='false'])"))) return;
       if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space"].includes(event.code)) event.preventDefault();
       heldKeys.add(event.code);
       syncDirections();
@@ -54,7 +57,7 @@ export function useGameInput(running: boolean) {
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", clear);
     };
-  }, []);
+  }, [running]);
 
   useEffect(() => {
     if (running) return;

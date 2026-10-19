@@ -10,6 +10,7 @@ import {
 import { useGameInput } from "./input";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createGameLoop, type GameLoop } from "./gameLoop";
+import { createLevelTransition } from "./levelTransition";
 import { getStickerSprite } from "./stickers";
 import type { Level, GameSnapshot } from "./types";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
@@ -27,8 +28,8 @@ type GameCanvasProps = {
   level: Level;
   running: boolean;
   onLoseLife: () => void;
-  onComplete: () => void;
-  onBossEncounter: () => void;
+  onComplete: (finalSnapshot: GameSnapshot) => void;
+  onBossEncounter: (finalSnapshot: GameSnapshot) => void;
   onSecretExit: () => void;
   onWaterExit: () => void;
   onSnapshot: (snapshot: GameSnapshot) => void;
@@ -94,6 +95,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
   useEffect(() => {
     runningRef.current = running;
     gameLoopRef.current?.setRunning(running);
+    if (running) canvasRef.current?.focus({ preventScroll: true });
   }, [running]);
 
   useEffect(() => {
@@ -103,19 +105,6 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     if (!context) return;
     context.imageSmoothingEnabled = false;
 
-    const sprite = getImage("./assets/sprites/noa-sprite-sheet.png");
-    const goldSprite = getImage("./assets/sprites/noa-sprite-sheet-gold-armor-v1.png");
-    const catJumpSprite = getImage("./assets/sprites/noa-cat-jump-v2.png");
-    const goldCatJumpSprite = getImage("./assets/sprites/noa-cat-jump-gold-armor-v1.png");
-    const catYarnSprite = getImage("./assets/sprites/noa-cat-yarn-v2.png");
-    const goldCatYarnSprite = getImage("./assets/sprites/noa-cat-yarn-gold-armor-v1.png");
-    const catThrowSprite = getImage("./assets/sprites/noa-cat-throw-v1.png");
-    const goldCatThrowSprite = getImage("./assets/sprites/noa-cat-throw-gold-armor-v1.png");
-    const yarnBallSprite = getImage("./assets/sprites/yarn-ball-v1.png");
-    const catRunSprite = getImage("./assets/sprites/noa-cat-run-v2.png");
-    const goldCatRunSprite = getImage("./assets/sprites/noa-cat-run-gold-armor-v1.png");
-    const jumpSprite = getImage("./assets/sprites/noa-jump-v2.png");
-    const goldJumpSprite = getImage("./assets/sprites/noa-jump-gold-armor-v1.png");
     const raster = getLevelAssets(level);
     const player = createInitialPlayer(level);
     let enemies: LiveEnemy[] = level.enemies.map((item, index) => ({ ...item, vx: item.speed, active: true, phase: index }));
@@ -143,19 +132,27 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     let levelAge = 0;
     let walkCycleTime = 0;
     let lastSnapshot = 0;
-    let completeTimer = 0;
     let vineStartedFrame = -1;
     let goalCelebrationFrame = -1;
     let lastSpringX = -1;
     let lastSpringFrame = -100;
+    const transition = createLevelTransition((snapshot) => callbacksRef.current.onSnapshot(snapshot));
+    const currentSnapshot = (): GameSnapshot => ({
+      apples, stickers: [...collectedStickers], power: player.power,
+      checkpoint: checkpointIndex + 1, paused: !runningRef.current,
+    });
+    const finishLevel = (delay: number, complete: (snapshot: GameSnapshot) => void) => {
+      if (completed) return;
+      transition.begin(currentSnapshot(), delay, complete);
+      completed = true;
+    };
 
     const enterSecretVine = () => {
       if (completed) return;
-      completed = true;
       player.vx = 0;
       player.vy = 0;
       callbacksRef.current.playSound("checkpoint");
-      completeTimer = window.setTimeout(() => callbacksRef.current.onSecretExit(), 700);
+      finishLevel(0.7, () => callbacksRef.current.onSecretExit());
     };
 
     const respawn = () => {
@@ -332,23 +329,6 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
               items.push({ id: `${block.id}-reward`, kind: block.reward, x: block.x + 4, y: block.y - 42, age: 0, rise: 0, fromBlock: true });
             }
           }
-        }
-      }
-
-      const secretVine = level.rewardBlocks.find((block) => block.reward === "secret-vine");
-      if (level.waterEntrance && intersects(player, level.waterEntrance) && !completed) {
-        completed = true;
-        callbacksRef.current.onSnapshot({ apples, stickers: [...collectedStickers], power: player.power, checkpoint: checkpointIndex + 1, paused: false });
-        callbacksRef.current.playSound("checkpoint");
-        completeTimer = window.setTimeout(() => callbacksRef.current.onWaterExit(), 450);
-      }
-      if (secretVine && vineStartedFrame >= 0) {
-        const growth = Math.min(1, (frame - vineStartedFrame) / 70);
-        const vineHeight = Math.max(1, Math.round((secretVine.y + 80) * growth));
-        const vineHitbox = { x: secretVine.x - 28, y: secretVine.y - vineHeight, width: 104, height: vineHeight + 120 };
-        if (growth >= 0.65 && intersects(player, vineHitbox)) {
-          if (statusRef.current) statusRef.current.textContent = "Noa trepa por la enredadera al Reino Secreto de las Nubes.";
-          enterSecretVine();
         }
       }
 
@@ -532,8 +512,24 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
       });
 
+      const secretVine = level.rewardBlocks.find((block) => block.reward === "secret-vine");
+      if (level.waterEntrance && intersects(player, level.waterEntrance)) {
+        callbacksRef.current.playSound("checkpoint");
+        finishLevel(0.45, () => callbacksRef.current.onWaterExit());
+        return;
+      }
+      if (secretVine && vineStartedFrame >= 0) {
+        const growth = Math.min(1, (frame - vineStartedFrame) / 70);
+        const vineHeight = Math.max(1, Math.round((secretVine.y + 80) * growth));
+        const vineHitbox = { x: secretVine.x - 28, y: secretVine.y - vineHeight, width: 104, height: vineHeight + 120 };
+        if (growth >= 0.65 && intersects(player, vineHitbox)) {
+          if (statusRef.current) statusRef.current.textContent = "Noa trepa por la enredadera al Reino Secreto de las Nubes.";
+          enterSecretVine();
+          return;
+        }
+      }
+
       if (!completed && hasReachedGoalFlag(player, level.goalX, goalSurfaceY)) {
-        completed = true;
         goalCelebrationFrame = frame;
         player.x = level.goalX - 48;
         player.y = goalSurfaceY - player.height;
@@ -544,9 +540,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         player.facing = 1;
         callbacksRef.current.playSound("goal");
         if (statusRef.current) statusRef.current.textContent = "¡Banderín tocado! Pantalla superada.";
-        completeTimer = window.setTimeout(
-          () => level.boss ? callbacksRef.current.onBossEncounter() : callbacksRef.current.onComplete(),
-          level.boss ? 850 : 1450,
+        finishLevel(
+          level.boss ? 0.85 : 1.45,
+          (snapshot) => level.boss ? callbacksRef.current.onBossEncounter(snapshot) : callbacksRef.current.onComplete(snapshot),
         );
       }
 
@@ -556,8 +552,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       walkCycleTime = player.grounded && Math.abs(player.vx) > 25 ? walkCycleTime + delta : 0;
       cameraX += (Math.max(0, Math.min(level.width - VIEW_WIDTH, player.x - 330)) - cameraX) * Math.min(1, delta * 5);
 
-      if (now - lastSnapshot > 130) {
-        callbacksRef.current.onSnapshot({ apples, stickers: [...collectedStickers], power: player.power, checkpoint: checkpointIndex + 1, paused: !runningRef.current });
+      if (!completed && now - lastSnapshot > 130) {
+        callbacksRef.current.onSnapshot(currentSnapshot());
         lastSnapshot = now;
       }
     };
@@ -599,12 +595,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       const usesCatRunSprite = player.power === "cat" && player.grounded && Math.abs(player.vx) > 25;
       const usesCleanCatJump = player.power === "cat" && !player.grounded;
       const usesCleanJump = player.power !== "cat" && !player.grounded;
-      const activeSprite = usesCatThrowSprite ? (protectedByApple ? goldCatThrowSprite : catThrowSprite)
-        : usesCatYarnSprite ? (protectedByApple ? goldCatYarnSprite : catYarnSprite)
-        : usesCatRunSprite ? (protectedByApple ? goldCatRunSprite : catRunSprite)
-        : usesCleanCatJump ? (protectedByApple ? goldCatJumpSprite : catJumpSprite)
-        : usesCleanJump ? (protectedByApple ? goldJumpSprite : jumpSprite)
-        : protectedByApple ? goldSprite : sprite;
+      const activeSprite = getImage(usesCatThrowSprite ? "./assets/sprites/noa-cat-throw-v1.png"
+        : usesCatYarnSprite ? "./assets/sprites/noa-cat-yarn-v2.png"
+        : usesCatRunSprite ? "./assets/sprites/noa-cat-run-v2.png"
+        : usesCleanCatJump ? "./assets/sprites/noa-cat-jump-v2.png"
+        : usesCleanJump ? (protectedByApple ? "./assets/sprites/noa-jump-gold-armor-v1.png" : "./assets/sprites/noa-jump-v2.png")
+        : protectedByApple ? "./assets/sprites/noa-sprite-sheet-gold-armor-v1.png" : "./assets/sprites/noa-sprite-sheet.png");
       if (activeSprite.complete && activeSprite.naturalWidth) {
         const cellWidth = activeSprite.naturalWidth / 4;
         context.save();
@@ -717,6 +713,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         context.textAlign = "start";
       }
       level.checkpoints.forEach((checkpoint, index) => {
+        if (checkpoint - cameraX < -90 || checkpoint - cameraX > VIEW_WIDTH + 30) return;
         context.save();
         if (level.world === 8) context.translate(0, 34);
         drawCheckpoint(context, checkpoint, cameraX, index <= checkpointIndex, raster.checkpoint);
@@ -752,6 +749,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       items.forEach((item) => {
         if (collected.has(item.id)) return;
         const x = Math.round(item.x - cameraX);
+        if (x < -60 || x > VIEW_WIDTH + 20) return;
         const y = item.y + (1 - item.rise) * 48;
         const bob = Math.round(Math.sin(frame * 0.08 + item.x) * 4);
         if (item.kind === "apple") drawApple(context, x + 4, y + bob, raster.collectibles);
@@ -767,6 +765,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       projectiles.forEach((ball) => {
         const x = Math.round(ball.x - cameraX);
         const y = Math.round(ball.y);
+        const yarnBallSprite = getImage("./assets/sprites/yarn-ball-v1.png");
         if (yarnBallSprite.complete && yarnBallSprite.naturalWidth) {
           // El ovillo es un recurso independiente para conservar su silueta redonda.
           const pulse = frame % 8 < 4 ? 0 : 1;
@@ -797,14 +796,16 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
         context.restore();
       });
-      if (level.world === 8 && level.boss) {
-        const image = raster.waterTerrain;
-        if (image.complete && image.naturalWidth) context.drawImage(image, 845, 500, 680, 500, level.goalX - cameraX - 10, goalSurfaceY - 200, 185, 200);
-      } else if (level.world === 8) {
-        if (raster.goalFlag.complete && raster.goalFlag.naturalWidth) context.drawImage(raster.goalFlag, level.goalX - cameraX, goalSurfaceY - 200, 130, 200);
-        if (raster.waterCat.complete && raster.waterCat.naturalWidth) context.drawImage(raster.waterCat, level.goalX - cameraX + 30, goalSurfaceY - 85, 85, 85);
-      } else if (level.boss) drawBossGate(context, level.goalX, cameraX, goalSurfaceY, raster.bossGate);
-      else if (level.id !== "2-1") drawGoalCat(context, level.goalX, cameraX, false, raster.collectibles, goalCelebrationFrame < 0 ? 0 : Math.min(1, (frame - goalCelebrationFrame) / 22), goalSurfaceY, raster.goalFlag, raster.goalRescue);
+      if (level.goalX - cameraX > -280 && level.goalX - cameraX < VIEW_WIDTH + 100) {
+        if (level.world === 8 && level.boss) {
+          const image = raster.waterTerrain;
+          if (image.complete && image.naturalWidth) context.drawImage(image, 845, 500, 680, 500, level.goalX - cameraX - 10, goalSurfaceY - 200, 185, 200);
+        } else if (level.world === 8) {
+          if (raster.goalFlag.complete && raster.goalFlag.naturalWidth) context.drawImage(raster.goalFlag, level.goalX - cameraX, goalSurfaceY - 200, 130, 200);
+          if (raster.waterCat.complete && raster.waterCat.naturalWidth) context.drawImage(raster.waterCat, level.goalX - cameraX + 30, goalSurfaceY - 85, 85, 85);
+        } else if (level.boss) drawBossGate(context, level.goalX, cameraX, goalSurfaceY, raster.bossGate);
+        else if (level.id !== "2-1") drawGoalCat(context, level.goalX, cameraX, false, raster.collectibles, goalCelebrationFrame < 0 ? 0 : Math.min(1, (frame - goalCelebrationFrame) / 22), goalSurfaceY, raster.goalFlag, raster.goalRescue);
+      }
       drawPlayer();
       for (const zone of level.waterZones ?? []) {
         const left = Math.max(0, zone.x - cameraX);
@@ -841,21 +842,23 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     enemies = enemies.map((enemy) => ({ ...enemy }));
     const gameLoop = createGameLoop((delta, now) => {
-      if (!completed) update(delta, now);
+      if (!runningRef.current) return;
+      if (completed) transition.advance(delta, runningRef.current);
+      else update(delta, now);
     }, render, () => { frame += 1; });
     gameLoopRef.current = gameLoop;
     gameLoop.setRunning(runningRef.current);
     return () => {
       gameLoop.stop();
       gameLoopRef.current = null;
-      window.clearTimeout(completeTimer);
+      transition.cancel();
     };
   }, [level, inputRef]);
 
   return (
     <div className="game-frame">
       <div className="game-stage">
-        <canvas ref={canvasRef} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={`Pantalla ${level.id}: ${level.title}`} />
+        <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={`Pantalla ${level.id}: ${level.title}`} />
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />
       </div>
       <div className="touch-controls" aria-label="Controles táctiles">

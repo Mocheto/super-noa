@@ -697,7 +697,7 @@ export const levels: Level[] = [
     subtitle: "Cruza la gran flota, salta los cañonazos y reta al capitán pirata.",
     theme: "sky-storm",
     width: 8000,
-    start: { x: 80, y: 350 },
+    start: { x: 80, y: 330 },
     goalX: 7820,
     platforms: [
       ship(0, 440, 410), airPlank(480, 340, 120), ship(680, 390, 350), airPlank(1110, 275, 130),

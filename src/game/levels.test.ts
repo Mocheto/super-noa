@@ -8,6 +8,36 @@ import { bossCatalog } from "./bosses.ts";
 
 const castle = levels.filter((level) => level.world === 6);
 
+test("todos los checkpoints reaparecen sobre una superficie que permite aterrizar", () => {
+  const playerWidth = 42;
+  const playerHeight = 58;
+  let checkpointCount = 0;
+  for (const level of levels) {
+    for (const checkpoint of level.checkpoints) {
+      checkpointCount += 1;
+      const x = checkpoint + 22;
+      let y = level.start.y;
+      let velocity = 0;
+      let landing: (typeof level.platforms)[number] | undefined;
+      for (let tick = 0; tick < 180 && y <= 660 && !landing; tick += 1) {
+        const previousBottom = y + playerHeight;
+        velocity += GRAVITY / 60;
+        y += velocity / 60;
+        landing = level.platforms.find((platform) =>
+          velocity >= 0 && x + playerWidth > platform.x && x < platform.x + platform.width &&
+          previousBottom <= platform.y + 10 && y + playerHeight >= platform.y);
+      }
+      assert.ok(landing, `${level.id}: checkpoint ${checkpoint} reaparece por debajo del suelo`);
+      assert.ok(landing.y < 660, `${level.id}: checkpoint ${checkpoint} cae fuera de la pantalla`);
+      assert.ok(![...(level.spikePits ?? []), ...(level.deadlyWater ?? [])].some((hazard) =>
+        x + playerWidth > hazard.x && x < hazard.x + hazard.width &&
+        landing.y > hazard.y && landing.y - playerHeight < hazard.y + hazard.height),
+      `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
+    }
+  }
+  assert.equal(checkpointCount, 156);
+});
+
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {
   const aquatic = levels.filter((level) => level.world === 8);
   assert.deepEqual(aquatic.map((level) => level.id), ["A-1", "A-2", "A-3"]);

@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GameAssetIcon } from "./GameAssetIcon";
 import { PixelIcon } from "./PixelIcon";
+import { optimizedAssetSource } from "./assets";
 import { levels } from "./levels";
+import { getLevelObjectives } from "./levelObjectives";
 import { campaignLevels } from "./routes";
 import type { Progress } from "./progress";
 import { findMapJourney, mapRoutes, mapRouteState, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
@@ -16,10 +18,12 @@ type WorldMapProps = {
   summaries: Record<number, WorldSummary>;
   isLevelUnlocked: (index: number) => boolean;
   onBeginLevel: (index: number) => void;
+  reduceMotion: boolean;
 };
 
-export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }: WorldMapProps) {
+export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, reduceMotion }: WorldMapProps) {
   const [selectedWorld, setSelectedWorld] = useState<WorldId | null>(null);
+  const [visibleHints, setVisibleHints] = useState<Record<string, boolean>>({});
   const openerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const currentWorld = campaignLevels[progress.unlocked]?.world ?? 1;
@@ -30,18 +34,35 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
   });
   const [moving, setMoving] = useState(false);
   const animationRef = useRef<number | null>(null);
+  const finishAnimationRef = useRef<(() => void) | null>(null);
+  const systemReduceMotionRef = useRef(false);
   const selected = worldCatalog.find((world) => world.id === selectedWorld);
   const noaLocation = worldCatalog.find((world) => world.id === noaWorld)!;
 
-  useEffect(() => () => {
-    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    systemReduceMotionRef.current = preference.matches;
+    const onChange = () => {
+      systemReduceMotionRef.current = preference.matches;
+      if (preference.matches) finishAnimationRef.current?.();
+    };
+    preference.addEventListener("change", onChange);
+    return () => {
+      preference.removeEventListener("change", onChange);
+      if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+      finishAnimationRef.current = null;
+    };
   }, []);
+
+  useEffect(() => {
+    if (reduceMotion) finishAnimationRef.current?.();
+  }, [reduceMotion]);
 
   const openWorld = (world: (typeof worldCatalog)[number], opener: HTMLButtonElement, animate = true) => {
     if (moving) return;
     openerRef.current = opener;
     const journey = findMapJourney(noaWorld, world.id, progress);
-    if (!journey?.length || !animate || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (!journey?.length || !animate || reduceMotion || systemReduceMotionRef.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       if (journey) {
         setNoaPosition({ x: world.x, y: world.y });
         setNoaWorld(world.id);
@@ -57,6 +78,16 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
     const totalLength = legs.reduce((sum, leg) => sum + leg.length, 0);
     const duration = Math.min(2800, Math.max(650, totalLength * 3.5));
     let started: number | null = null;
+    const finish = () => {
+      if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+      finishAnimationRef.current = null;
+      setNoaPosition({ x: world.x, y: world.y });
+      setNoaWorld(world.id);
+      setMoving(false);
+      setSelectedWorld(world.id);
+    };
+    finishAnimationRef.current = finish;
     setMoving(true);
     const tick = (time: number) => {
       started ??= time;
@@ -70,11 +101,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
       if (time - started < duration) {
         animationRef.current = requestAnimationFrame(tick);
       } else {
-        animationRef.current = null;
-        setNoaPosition({ x: world.x, y: world.y });
-        setNoaWorld(world.id);
-        setMoving(false);
-        setSelectedWorld(world.id);
+        finish();
       }
     };
     animationRef.current = requestAnimationFrame(tick);
@@ -113,7 +140,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
       <div className="map-layout">
       <div className="map-scroll" role="region" aria-label="Mapa ilustrado de los mundos de Noa">
         <div className="map-board">
-          <img className="map-landscape" src="./assets/worlds/noa-adventure-map-v1.png" alt="" aria-hidden="true" />
+          <img className="map-landscape" src={optimizedAssetSource("./assets/worlds/noa-adventure-map-v1.png")} alt="" aria-hidden="true" />
           <svg className="map-paths" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
             {mapRoutes.map((route) => {
               const state = mapRouteState(route, progress);
@@ -123,7 +150,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
               </g>;
             })}
           </svg>
-          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: "url('./assets/sprites/noa-sprite-sheet.png')" }} role="img" aria-label={`Noa está en ${noaLocation.name}`} />
+          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: `url('${optimizedAssetSource("./assets/sprites/noa-sprite-sheet.png")}')` }} role="img" aria-label={`Noa está en ${noaLocation.name}`} />
           {worldCatalog.map((world) => {
             const available = worldAvailable(world.id, progress);
             const summary = summaries[world.id];
@@ -184,18 +211,41 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel }:
               <div className="world-progress-bar" aria-hidden="true"><span style={{ width: `${summaries[selected.id].complete / summaries[selected.id].total * 100}%` }} /></div>
               <small><PixelIcon kind="sparkle" /> {summaries[selected.id].stickers}/{summaries[selected.id].stickerTotal} · ★ {summaries[selected.id].flawless}/{summaries[selected.id].total} sin perder vidas{summaries[selected.id].bossFriend ? " · Amigo" : ""}</small>
             </div>
-            {!worldAvailable(selected.id, progress) && <p className="map-world-hint">{selected.id === 7 ? "Busca una enredadera secreta entre los jabalíes." : selected.id === 8 ? "Busca la poza azul en el bosque de los lobos." : "Completa las pantallas anteriores para llegar hasta aquí."}</p>}
+            {!worldAvailable(selected.id, progress) && <p className="map-world-hint">{selected.id === 7 ? "Sigue explorando. ¡Hay sorpresas por descubrir!" : selected.id === 8 ? "Busca la poza azul en el bosque de los lobos." : "Completa las pantallas anteriores para llegar hasta aquí."}</p>}
             <div className="level-row">
               {worldLevels.map(({ level, index }) => {
                 const unlocked = isLevelUnlocked(index);
                 const stats = progress.levelStats[level.id];
-                const stickerEarned = progress.stickers.includes(level.items.find((item) => item.kind === "sticker")?.id ?? "");
-                return <button className={`level-card ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked}
-                  data-gamepad-default={index === suggestedLevel || undefined} onClick={() => onBeginLevel(index)} key={level.id}>
+                const objectives = getLevelObjectives(level, progress);
+                const stickerObjectives = objectives.objectives.filter((objective) => objective.kind === "sticker");
+                const stickerEarned = stickerObjectives.length > 0 && stickerObjectives.every((objective) => objective.completed);
+                const nextHint = objectives.objectives.find((objective) => objective.kind === "sticker" && !objective.completed)
+                  ?? objectives.objectives.find((objective) => !objective.completed);
+                const hintVisible = visibleHints[level.id] === true;
+                return <div className="level-entry" key={level.id}>
+                <button className={`level-card ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked}
+                  data-gamepad-default={index === suggestedLevel || undefined} onClick={() => onBeginLevel(index)}>
                   <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}</span>
-                  <strong>{level.title}</strong>
+                  <strong>{!unlocked && level.world === 7 ? "Una sorpresa te espera" : level.title}</strong>
                   <small>{stats?.completed ? <><span>✓ Completada · <GameAssetIcon kind="apple" /> {stats.bestApples}</span><span className="level-medals" aria-label={`${1 + Number(stickerEarned) + Number(Boolean(stats.flawless))} de 3 medallas`}>{[true, stickerEarned, Boolean(stats.flawless)].map((earned, medal) => <i className={earned ? "is-earned" : ""} key={medal}>★</i>)}</span></> : unlocked ? "Lista para jugar" : level.world === 8 && !progress.waterUnlocked ? "Busca la poza azul en 3-3" : "Completa la anterior"}</small>
-                </button>;
+                </button>
+                {unlocked && objectives.available && <div className="level-objectives">
+                  <p className="level-objectives-status">{objectives.pendingCount === 1 ? "Falta 1" : objectives.pendingCount ? `Faltan ${objectives.pendingCount}` : "¡Todo conseguido!"}</p>
+                  <ul aria-label={`Objetivos de ${level.title}`}>
+                    {objectives.objectives.map((objective) => <li className={objective.completed ? "is-complete" : "is-pending"} key={objective.id}
+                      aria-label={`${objective.label}: ${objective.completed ? "conseguido" : "pendiente"}`}>
+                      <span aria-hidden="true">{objective.completed ? "✓" : "○"}</span> {objective.label}
+                    </li>)}
+                  </ul>
+                  {nextHint && <>
+                    <button className="level-hint-toggle" type="button" aria-expanded={hintVisible} aria-controls={`level-hint-${level.id}`}
+                      onClick={() => setVisibleHints((current) => ({ ...current, [level.id]: !current[level.id] }))}>
+                      {hintVisible ? "Ocultar pista" : "Mostrar pista"}
+                    </button>
+                    <p className="level-objective-hint" id={`level-hint-${level.id}`} hidden={!hintVisible} aria-live="polite">{nextHint.hint}</p>
+                  </>}
+                </div>}
+                </div>;
               })}
             </div>
           </div>

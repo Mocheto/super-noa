@@ -104,7 +104,7 @@ let shuttingDown = false;
 function startServer(release) {
   const launched = spawn(process.execPath, [join(release.directory, "ranking-server.mjs")], {
     cwd: release.directory,
-    env: process.env,
+    env: { ...process.env, RANKING_RELEASE_SHA: release.sha },
     stdio: "inherit",
   });
   child = launched;

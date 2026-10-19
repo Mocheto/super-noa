@@ -10,6 +10,9 @@ import {
 const port = Number.parseInt(process.env.PORT ?? "8088", 10);
 const databaseUrl = process.env.DATABASE_URL;
 const tokenPepper = process.env.RANKING_TOKEN_PEPPER;
+const release = /^[a-f\d]{40}$/.test(process.env.RANKING_RELEASE_SHA ?? "")
+  ? process.env.RANKING_RELEASE_SHA.slice(0, 12)
+  : "manual";
 const allowedOrigins = new Set((process.env.RANKING_ALLOWED_ORIGINS ?? "https://mocheto.github.io")
   .split(",")
   .map((origin) => origin.trim())
@@ -152,7 +155,7 @@ const server = createServer(async (request, response) => {
 
   try {
     const url = new URL(request.url ?? "/", "http://localhost");
-    if (request.method === "GET" && url.pathname === "/health") return sendJson(response, 200, { status: "bien" }, origin);
+    if (request.method === "GET" && url.pathname === "/health") return sendJson(response, 200, { status: "bien", release }, origin);
     if (request.method === "GET" && url.pathname === "/v1/leaderboard") return await handleLeaderboard(response, origin, url);
     if (request.method === "POST" && url.pathname === "/v1/devices") return await handleRegister(request, response, origin);
     if (request.method === "POST" && url.pathname === "/v1/progress") return await handleUpdate(request, response, origin);

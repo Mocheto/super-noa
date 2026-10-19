@@ -25,7 +25,7 @@ type TouchControlsMode = "auto" | "always";
 
 const emptySnapshot: GameSnapshot = { apples: 0, stickers: [], power: "normal", checkpoint: 0, paused: false };
 const MAX_LIVES = 3;
-// Los índices del guardado conservan las 18 pantallas originales y continúan con la isla jurásica.
+// Los índices del guardado conservan las 18 pantallas originales y continúan con las nuevas aventuras.
 const campaignLevelCount = campaignLevels.length;
 const bossLevels = levels.flatMap((level, index) => level.boss ? [{ level, index, boss: bossCatalog[level.boss] }] : []);
 declare global {
@@ -104,6 +104,9 @@ export default function App() {
       7: "./assets/music/gatitos.mp3",
       8: "./assets/music/laguna.wav",
       9: "./assets/music/jurasico.wav",
+      10: "./assets/music/castillo.wav",
+      11: "./assets/music/manzanos.mp3",
+      12: "./assets/music/laguna.wav",
     } as const;
     const audio = new Audio(tracks[activeLevel.world]);
     audio.loop = true;
@@ -441,8 +444,9 @@ export default function App() {
           <div className="home-copy">
             <p className="eyebrow home-eyebrow"><PixelIcon kind="sparkle" /> Una aventura pixel art</p>
             <h1 id="game-title"><span>SUPER</span> NOA</h1>
-            <p className="home-lead">Corre, salta y explora mundos de manzanos, barcos voladores y castillos encantados. ¡Los gatitos te esperan!</p>
+            <p className="home-lead">Corre, salta y explora castillos, volcanes de dragones, flores gigantes y montañas de hielo. ¡Los gatitos te esperan!</p>
             <p className="home-invite"><PixelIcon kind="heart" /> Una gran aventura para pequeñas heroínas</p>
+            <p className="coming-adventures"><strong>Próximas aventuras:</strong> El desierto de los deseos · La fábrica de juguetes · El bosque de los sueños</p>
             <div className="home-actions">
               <button className="pixel-button primary home-play" type="button" data-gamepad-default onClick={() => setScreen("map")}>▶ ¡Jugar ahora!</button>
               <button className="pixel-button" type="button" onClick={() => setShowHelp(true)}>¿Cómo se juega?</button>

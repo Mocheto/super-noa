@@ -27,6 +27,15 @@ test("un guardado que terminó el castillo abre la isla sin cambiar de versión"
   assert.equal(parsed.unlocked, 18);
 });
 
+test("un guardado que terminó la isla abre el volcán automáticamente", () => {
+  const parsed = parseProgress(JSON.stringify({
+    version: 2,
+    unlocked: 20,
+    levelStats: { "9-3": { completed: true, bestApples: 4 } },
+  }));
+  assert.equal(parsed.unlocked, 21);
+});
+
 test("los datos ausentes o dañados vuelven a valores seguros", () => {
   assert.deepEqual(parseProgress("{"), emptyProgress);
   assert.deepEqual(parseProgress("null"), emptyProgress);

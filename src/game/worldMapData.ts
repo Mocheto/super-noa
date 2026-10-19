@@ -17,6 +17,9 @@ export const worldCatalog: Array<{
   { id: 5, name: "La Flota de las Nubes", shortName: "Barcos", description: "Barcos voladores, piratas, loros y cañones.", cat: "Nube", catAsset: "./assets/sprites/world-cat-5-v1.png", x: 86, y: 53 },
   { id: 6, name: "El Castillo Encantado", shortName: "Castillo", description: "Un laberinto de piedra, trampas con pinchos y fantasmas traviesos.", cat: "Luna", catAsset: "./assets/sprites/world-cat-6-v1.png", x: 81, y: 79 },
   { id: 9, name: "La Isla de los Dinosaurios", shortName: "Dinosaurios", description: "Selva tropical, agua peligrosa, pequeños t-rex y terodáctilos juguetones.", cat: "Ámbar", catAsset: "./assets/sprites/world-cat-9-v1.png", x: 63, y: 89 },
+  { id: 10, name: "El Volcán de los Dragones", shortName: "Dragones", description: "Lava brillante, cristales rojos y pequeños dragones valientes.", cat: "Chispa", catAsset: "./assets/sprites/world-cat-10-v1.png", x: 43, y: 89 },
+  { id: 11, name: "El Valle de los Gigantes", shortName: "Gigantes", description: "Flores enormes, gotas de rocío y bichitos amistosos.", cat: "Botón", catAsset: "./assets/sprites/world-cat-11-v1.png", x: 24, y: 78 },
+  { id: 12, name: "La Montaña de Hielo", shortName: "Hielo", description: "Nieve suave, cuevas azules y caminos muy resbaladizos.", cat: "Copito", catAsset: "./assets/sprites/world-cat-12-v1.png", x: 10, y: 91 },
   { id: 7, name: "El Reino Secreto", shortName: "Nubes", description: "Nubes mágicas, pájaros y unicornios en lo más alto del cielo.", cat: "Iris", catAsset: "./assets/sprites/world-cat-7-v1.png", x: 88, y: 12 },
 ];
 
@@ -30,6 +33,9 @@ export const mapRoutes: MapRoute[] = [
   { from: 4, to: 5, path: "M 730 190 C 808 202 885 244 860 297" },
   { from: 5, to: 6, path: "M 860 297 C 819 347 794 377 810 442" },
   { from: 6, to: 9, path: "M 810 442 C 768 493 704 508 630 498" },
+  { from: 9, to: 10, path: "M 630 498 C 560 516 495 515 430 498" },
+  { from: 10, to: 11, path: "M 430 498 C 365 475 305 448 240 437" },
+  { from: 11, to: 12, path: "M 240 437 C 180 456 126 489 100 510" },
   { from: 3, to: 8, path: "M 510 134 C 564 227 434 282 510 392", branch: "water" },
   { from: 8, to: 4, path: "M 510 392 C 594 340 642 251 730 190", branch: "water", requiresCompletion: "A-3" },
   { from: 4, to: 7, path: "M 730 190 C 807 162 788 70 880 67", branch: "secret" },

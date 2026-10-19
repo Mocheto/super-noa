@@ -11,7 +11,7 @@ export const platformSurfaceY = (platform: Platform) => platform.kind === "sea-w
   ? platform.y + Math.round(platform.height * 0.3)
   : platform.y;
 
-const solidWallKinds = new Set<Platform["kind"]>(["cave-wall", "castle-wall", "sea-wall", "dino-wall"]);
+const solidWallKinds = new Set<Platform["kind"]>(["cave-wall", "castle-wall", "sea-wall", "dino-wall", "volcano-wall", "ice-wall"]);
 
 /** Impide atravesar una pared incluso si el personaje ya ha quedado ligeramente dentro. */
 export const resolveHorizontalWallCollision = (

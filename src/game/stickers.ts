@@ -4,7 +4,7 @@ export type StickerDefinition = {
   id: string;
   name: string;
   icon: PixelIconKind;
-  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
   hint: string;
 };
 
@@ -33,6 +33,15 @@ export const stickerCatalog: StickerDefinition[] = [
   { id: "sticker-9-1", name: "Huella fósil", icon: "paw", world: 9, hint: "Busca sobre el primer risco de la isla." },
   { id: "sticker-9-2", name: "Ala tropical", icon: "parrot", world: 9, hint: "Sigue a los terodáctilos por las repisas altas." },
   { id: "sticker-9-3", name: "Corona de Tricera", icon: "crown", world: 9, hint: "Está cerca del nido de la guardiana." },
+  { id: "sticker-10-1", name: "Cristal de rubí", icon: "gem", world: 10, hint: "Brilla sobre una roca de la primera ladera." },
+  { id: "sticker-10-2", name: "Ala de dragón", icon: "sparkle", world: 10, hint: "Busca en lo alto de la cueva de cristales." },
+  { id: "sticker-10-3", name: "Corona de Rubí", icon: "crown", world: 10, hint: "Está cerca del corazón del volcán." },
+  { id: "sticker-11-1", name: "Gota gigante", icon: "gem", world: 11, hint: "Mira entre las primeras flores enormes." },
+  { id: "sticker-11-2", name: "Mariquita feliz", icon: "sparkle", world: 11, hint: "Rebota en el rocío para llegar muy alto." },
+  { id: "sticker-11-3", name: "Corona de Melisa", icon: "crown", world: 11, hint: "Está antes de la gran colmena." },
+  { id: "sticker-12-1", name: "Copo brillante", icon: "sparkle", world: 12, hint: "Busca sobre el primer bloque de hielo." },
+  { id: "sticker-12-2", name: "Bufanda pingüina", icon: "paw", world: 12, hint: "Deslízate por la cueva hasta encontrarla." },
+  { id: "sticker-12-3", name: "Corona de aurora", icon: "crown", world: 12, hint: "Brilla cerca de la cima nevada." },
   { id: "sticker-s-1", name: "Pluma celeste", icon: "sparkle", world: 7, hint: "Vuela por la primera nube alta." },
   { id: "sticker-s-2", name: "Herradura arcoíris", icon: "crown", world: 7, hint: "Busca entre los unicornios de las nubes." },
   { id: "sticker-s-3", name: "Estrella secreta", icon: "gem", world: 7, hint: "Está muy cerca del palacio del cielo." },

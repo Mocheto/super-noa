@@ -14,7 +14,7 @@ test("el mundo del agua se abre entre los dos bosques desde una poza segura", ()
   assert.equal(levels[levels.findIndex((level) => level.id === "3-3") + 1].id, "A-1");
   assert.equal(levels[levels.findIndex((level) => level.id === "A-3") + 1].id, "4-1");
   assert.equal(aquatic[2].boss, "shark-captain");
-  assert.equal(levels.filter((level) => level.world !== 7 && level.world !== 8).length, 21);
+  assert.equal(levels.filter((level) => level.world !== 7 && level.world !== 8).length, 30);
   assert.equal(levels.find((level) => level.id === "2-3")?.waterEntrance, undefined);
   const forest = levels.find((level) => level.id === "3-3")!;
   const entrance = forest.waterEntrance!;
@@ -34,15 +34,15 @@ test("el mundo del agua se abre entre los dos bosques desde una poza segura", ()
   }
 });
 
-test("los nueve jefes del álbum tienen retrato y duelo", () => {
+test("los doce jefes del álbum tienen retrato y duelo", () => {
   const bosses = levels.filter((level) => level.boss);
-  assert.equal(bosses.length, 9);
-  assert.equal(new Set(bosses.map((level) => level.boss)).size, 9);
+  assert.equal(bosses.length, 12);
+  assert.equal(new Set(bosses.map((level) => level.boss)).size, 12);
   for (const level of bosses) {
     assert.ok(level.boss);
     const boss = bossCatalog[level.boss];
     assert.ok(boss?.name);
-    const portrait = readFileSync(new URL(`../../public/${boss.assetPrefix.slice(2)}-0.png`, import.meta.url));
+    const portrait = readFileSync(new URL(`../../public/${boss.assetAtlas?.slice(2) ?? `${boss.assetPrefix.slice(2)}-0.png`}`, import.meta.url));
     assert.equal(portrait.toString("ascii", 1, 4), "PNG", `Falta el retrato de ${boss.name}`);
   }
 });
@@ -116,7 +116,7 @@ test("la isla jurásica continúa tras el castillo y todos sus huecos son agua m
   const island = levels.filter((level) => level.world === 9);
   assert.deepEqual(island.map((level) => level.id), ["9-1", "9-2", "9-3"]);
   assert.equal(levels.find((level) => level.id === "6-3")?.route?.next, "9-1");
-  assert.equal(island[2].route?.finale, true);
+  assert.equal(island[2].route?.next, "10-1");
   assert.equal(island[2].boss, "triceratops-queen");
   for (const level of island) {
     assert.ok(level.enemies.some((enemy) => enemy.kind === "baby-t-rex"));
@@ -138,6 +138,27 @@ test("la isla jurásica continúa tras el castillo y todos sus huecos son agua m
       }
     }
   }
+});
+
+test("los tres nuevos mundos forman una aventura completa con mecánicas propias", () => {
+  const expectations = [
+    { world: 10, ids: ["10-1", "10-2", "10-3"], boss: "ruby-dragon", enemies: ["baby-dragon", "fire-salamander"], platform: "volcano-ground" },
+    { world: 11, ids: ["11-1", "11-2", "11-3"], boss: "queen-bee", enemies: ["ant", "snail", "bee"], platform: "garden-ground" },
+    { world: 12, ids: ["12-1", "12-2", "12-3"], boss: "polar-bear", enemies: ["penguin", "snow-fox", "snowy-owl"], platform: "ice-ground" },
+  ] as const;
+  for (const expected of expectations) {
+    const world = levels.filter((level) => level.world === expected.world);
+    assert.deepEqual(world.map((level) => level.id), [...expected.ids]);
+    assert.equal(world[2].boss, expected.boss);
+    for (const level of world) {
+      assert.equal(level.items.find((item) => item.kind === "sticker")?.id, `sticker-${level.id}`);
+      assert.ok(level.platforms.some((platform) => platform.kind === expected.platform));
+      assert.ok(level.deadlyWater?.length);
+    }
+    for (const kind of expected.enemies) assert.ok(world.some((level) => level.enemies.some((enemy) => enemy.kind === kind)));
+  }
+  assert.ok(levels.find((level) => level.id === "11-2")?.platforms.some((platform) => platform.kind === "dew"));
+  assert.equal(levels.find((level) => level.id === "12-3")?.route?.finale, true);
 });
 
 test("las cajas jurásicas sobre repisas tienen espacio para golpearlas desde abajo", () => {
@@ -209,7 +230,7 @@ test("el reino secreto conserva sus identificadores y está después de la campa
 
 test("todas las insignias del juego tienen un sprite transparente y su celda correcta", () => {
   const ids = levels.flatMap((level) => level.items.filter((item) => item.kind === "sticker").map((item) => item.id));
-  assert.equal(ids.length, 27);
+  assert.equal(ids.length, 36);
   assert.deepEqual(new Set(ids), new Set(stickerCatalog.map((entry) => entry.id)));
   for (const sticker of stickerCatalog) {
     const sprite = getStickerSprite(sticker.id);

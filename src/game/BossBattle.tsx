@@ -64,12 +64,14 @@ function getRuleText(noa: Choice, boss: Choice) {
   return "Las tijeras cortan el papel.";
 }
 
-function BossSprite({ assetPrefix, frame, name }: { assetPrefix: string; frame: number; name: string }) {
+function BossSprite({ assetPrefix, assetAtlas, frame, name }: { assetPrefix: string; assetAtlas?: string; frame: number; name: string }) {
   const gesture = frame === 1 ? "piedra" : frame === 2 ? "papel" : frame === 3 ? "tijera" : frame === 4 ? "derrota" : "reto";
   const isWideSprite = assetPrefix.includes("reina-arcoiris");
   return (
-    <div className={`boss-sprite-window ${isWideSprite ? "is-wide-sprite" : ""}`} role="img" aria-label={`${name} hace el gesto de ${gesture}`}>
-      <img className="boss-sprite-frame" src={`${assetPrefix}-${frame}.png`} alt="" />
+    <div className={`boss-sprite-window ${isWideSprite ? "is-wide-sprite" : ""} ${assetAtlas ? "is-atlas-sprite" : ""}`} role="img" aria-label={`${name} hace el gesto de ${gesture}`}>
+      {assetAtlas
+        ? <span className="boss-sprite-frame boss-atlas-frame" style={{ backgroundImage: `url("${assetAtlas}")`, backgroundPosition: `${frame * 25}% 100%` }} />
+        : <img className="boss-sprite-frame" src={`${assetPrefix}-${frame}.png`} alt="" />}
     </div>
   );
 }
@@ -245,7 +247,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
           </div>
           <div className="duel-versus" aria-hidden="true">VS</div>
           <div className={`duel-fighter ${visibleWinner === "boss" ? "round-winner" : visibleWinner === "noa" ? "round-loser" : ""}`}>
-            <BossSprite assetPrefix={boss.assetPrefix} frame={bossFrame} name={boss.name} />
+            <BossSprite assetPrefix={boss.assetPrefix} assetAtlas={boss.assetAtlas} frame={bossFrame} name={boss.name} />
             <strong>{boss.name}</strong>
             <div className={`gesture-card ${battle.status === "countdown" ? "is-hidden" : ""}`}>
               <span>{choicesRevealed && battle.bossChoice ? <RpsIcon choice={battle.bossChoice} /> : "?"}</span>

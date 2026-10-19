@@ -200,9 +200,14 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       const swimming = waterAt(player, level.waterZones);
       const newStroke = input.jumpQueued || (jump && !previousJump);
 
-      if (left === right) player.vx *= Math.pow(0.0008, delta);
+      const standingOnIce = player.grounded && level.platforms.some((platform) =>
+        (platform.kind === "ice-ground" || platform.kind === "ice-ledge" || platform.kind === "ice-wall") &&
+        player.x + player.width > platform.x && player.x < platform.x + platform.width &&
+        Math.abs(player.y + player.height - platformSurfaceY(platform)) < 6);
+      if (left === right) player.vx *= Math.pow(standingOnIce ? 0.32 : 0.0008, delta);
       else {
-        player.vx = (left ? -1 : 1) * (swimming ? 175 : MOVE_SPEED);
+        const targetVelocity = (left ? -1 : 1) * (swimming ? 175 : MOVE_SPEED);
+        player.vx = standingOnIce ? player.vx + Math.max(-520 * delta, Math.min(520 * delta, targetVelocity - player.vx)) : targetVelocity;
         player.facing = left ? -1 : 1;
       }
 
@@ -274,12 +279,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         const horizontal = player.x + player.width > platform.x && player.x < platform.x + platform.width;
         const surfaceY = platformSurfaceY(platform);
         // El muelle solo responde al aterrizaje de un salto: al caminar se puede pasar de largo.
-        const landed = platform.kind === "spring"
+        const landed = platform.kind === "spring" || platform.kind === "dew"
           ? landsOnSpring(wasGrounded, previousBottom, player.y + player.height, surfaceY, player.vy)
           : player.vy >= 0 && previousBottom <= surfaceY + 10 && player.y + player.height >= surfaceY;
         if (horizontal && landed) {
           player.y = surfaceY - player.height;
-          if (platform.kind === "spring") {
+          if (platform.kind === "spring" || platform.kind === "dew") {
             player.vy = -SPRING_SPEED;
             player.grounded = false;
             player.jumpsUsed = 2;
@@ -294,7 +299,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
             player.jumpsUsed = 0;
             player.springLaunch = false;
           }
-        } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall" || platform.kind === "sea-wall" || platform.kind === "dino-wall") && horizontal && player.vy < 0) {
+        } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall" || platform.kind === "sea-wall" || platform.kind === "dino-wall" || platform.kind === "volcano-wall" || platform.kind === "ice-wall") && horizontal && player.vy < 0) {
           const platformBottom = platform.y + platform.height;
           if (previousY >= platformBottom - 10 && player.y <= platformBottom) {
             player.y = platformBottom;
@@ -660,7 +665,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     const render = () => {
       drawBackground(context, level, cameraX, frame, raster);
-      level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster));
+      level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster, level.theme));
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
       level.spikePits?.forEach((pit) => {
         const x = pit.x - cameraX;

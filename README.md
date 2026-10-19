@@ -1,6 +1,6 @@
 # Super Noa
 
-Juego infantil de plataformas en 2D creado para navegador. Incluye seis mundos de campaña con tres pantallas cada uno, un desvío acuático de tres pantallas y un reino secreto desbloqueable en las nubes. Hay doble salto, tres vidas, rutas elevadas, 24 insignias coleccionables, puntos de control, cajas de recompensa, precipicios y ocho duelos contra guardianes. El quinto mundo transcurre sobre barcos voladores; el sexto es un castillo laberíntico con esqueletos, zombis, fantasmas, fosos de pinchos y un conde vampiro.
+Juego infantil de plataformas en 2D creado para navegador. Incluye diez mundos de campaña con tres pantallas cada uno, un desvío acuático de tres pantallas y un reino secreto desbloqueable en las nubes. Hay doble salto, tres vidas, rutas elevadas, 36 insignias coleccionables, puntos de control, cajas de recompensa, precipicios y doce duelos contra guardianes. La aventura continúa tras el castillo por una isla jurásica, un volcán de dragones, un valle de flores gigantes y una montaña de hielo.
 
 Al terminar una pantalla normal, Noa toca un banderín elevado —también puede hacerlo al saltar—, se coloca junto al gatito y aparece una breve celebración antes de continuar.
 
@@ -49,4 +49,4 @@ Los cañones, sus bolas, los puntos de control y los banderines usan sprites pro
 
 ## Licencias
 
-El personaje, los ocho monstruos finales, los gatitos de recuerdo, los escenarios, el código y los efectos sintetizados se crearon para este proyecto. La música de los primeros cinco mundos procede de “Platformer Chiptunes”, de Guy G. Gamerson, publicada bajo CC0; las pistas del castillo y la laguna son originales. Consulta [CREDITS.md](CREDITS.md).
+El personaje, los doce monstruos finales, los gatitos de recuerdo, los escenarios, el código y los efectos sintetizados se crearon para este proyecto. La música reutilizada de los primeros mundos procede de “Platformer Chiptunes”, de Guy G. Gamerson, publicada bajo CC0; las pistas originales conservan su atribución. Consulta [CREDITS.md](CREDITS.md).

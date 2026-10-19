@@ -5,6 +5,7 @@ export type RasterAssets = {
   waterEnemies: HTMLImageElement; swim: HTMLImageElement; waterCat: HTMLImageElement;
   enemies: HTMLImageElement; castleEnemies: HTMLImageElement; boar: HTMLImageElement;
   dinosaurEnemies: HTMLImageElement; dinosaurTerrain: HTMLImageElement;
+  worldCharacters: HTMLImageElement;
   jumpingFish: HTMLImageElement;
   bird: HTMLImageElement; collectibles: HTMLImageElement; cave: HTMLImageElement;
   castle: HTMLImageElement; secret: HTMLImageElement; cannon: HTMLImageElement;
@@ -35,10 +36,11 @@ export function getLevelAssets(level: Level): RasterAssets {
     1: "world-1-tiles-v1.png", 2: "world-2-tiles-v1.png", 3: "world-3-tiles-v1.png",
     4: "world-4-tiles-v1.png", 5: "world-5-tiles-v1.png", 6: "castle-v1.png",
     7: "secret-sky-v1.png", 8: "water-terrain-v1.png", 9: "dinosaur-island-v1.png",
+    10: "platform-tiles-v1.png", 11: "platform-tiles-v1.png", 12: "platform-tiles-v1.png",
   } as const;
   const tiles = {} as RasterAssets["tiles"];
   const stickerSheets = {} as RasterAssets["stickerSheets"];
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9] as const) {
+  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const) {
     tiles[id] = when(id === world, `./assets/atlases/${tileImages[id]}`);
     stickerSheets[id] = when(id === world, `./assets/stickers/world-${id}-v1.png`);
   }
@@ -53,6 +55,7 @@ export function getLevelAssets(level: Level): RasterAssets {
     castleEnemies: when(world === 6, "./assets/atlases/castle-enemies-v1.png"),
     dinosaurEnemies: when(world === 9, "./assets/atlases/dinosaur-enemies-v1.png"),
     dinosaurTerrain: when(world === 9, "./assets/atlases/dinosaur-island-v1.png"),
+    worldCharacters: when(world >= 10, `./assets/atlases/${world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-characters-v1.png`),
     jumpingFish: when(Boolean(level.waterJumpers?.length), "./assets/sprites/enemy-jumping-fish-v1.png"),
     boar: when(world === 4, "./assets/sprites/enemy-boar-v2.png"),
     bird: when(level.enemies.some((enemy) => enemy.kind === "bird"), "./assets/sprites/enemy-bird-v2.png"),

@@ -315,6 +315,49 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
     context.fillRect(0, 448, VIEW_WIDTH, VIEW_HEIGHT - 448);
     return;
   }
+  if (level.theme === "dragon-volcano") {
+    const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+    gradient.addColorStop(0, "#301b55"); gradient.addColorStop(.55, "#a13b55"); gradient.addColorStop(1, "#f08a3c");
+    context.fillStyle = gradient; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    context.fillStyle = "#f8c45c"; context.beginPath(); context.arc(780, 84, 42, 0, Math.PI * 2); context.fill();
+    for (let index = -1; index < 7; index += 1) {
+      const x = index * 210 - positiveModulo(cameraX * .12, 210);
+      context.fillStyle = index % 2 ? "#4b2747" : "#5d2e4d";
+      context.beginPath(); context.moveTo(x, 430); context.lineTo(x + 105, 185 + positiveModulo(index * 33, 90)); context.lineTo(x + 220, 430); context.fill();
+      context.fillStyle = "#ff7143"; context.beginPath(); context.moveTo(x + 86, 240); context.lineTo(x + 105, 185 + positiveModulo(index * 33, 90)); context.lineTo(x + 127, 248); context.fill();
+    }
+    for (let index = 0; index < 16; index += 1) drawTinySparkle(context, positiveModulo(index * 151 - cameraX * .2, VIEW_WIDTH), 70 + positiveModulo(index * 79 + frame, 330), index % 2 ? "#ffb04a" : "#ff6c62", 2);
+    context.fillStyle = "#481d35"; context.fillRect(0, 448, VIEW_WIDTH, 92);
+    return;
+  }
+  if (level.theme === "giant-valley") {
+    const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+    gradient.addColorStop(0, "#7ed7f0"); gradient.addColorStop(.62, "#d6f3bd"); gradient.addColorStop(1, "#73c875");
+    context.fillStyle = gradient; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    for (let index = -1; index < 8; index += 1) {
+      const x = index * 155 - positiveModulo(cameraX * .18, 155);
+      const height = 170 + positiveModulo(index * 47, 145);
+      context.fillStyle = index % 2 ? "#338b52" : "#45a760"; context.fillRect(x + 70, 455 - height, 18, height);
+      context.fillStyle = index % 3 === 0 ? "#f68bb7" : index % 3 === 1 ? "#f4cf5d" : "#9d7be5";
+      context.beginPath();
+      for (let petal = 0; petal < 6; petal += 1) { const angle = petal * Math.PI / 3; context.moveTo(x + 79, 455 - height); context.arc(x + 79 + Math.cos(angle) * 34, 455 - height + Math.sin(angle) * 34, 28, 0, Math.PI * 2); }
+      context.fill(); context.fillStyle = "#7b4b35"; context.beginPath(); context.arc(x + 79, 455 - height, 20, 0, Math.PI * 2); context.fill();
+    }
+    context.fillStyle = "#2b834b"; context.fillRect(0, 448, VIEW_WIDTH, 92);
+    return;
+  }
+  if (level.theme === "ice-mountain") {
+    const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+    gradient.addColorStop(0, "#455ca4"); gradient.addColorStop(.48, "#9bd8ee"); gradient.addColorStop(1, "#e9fbff");
+    context.fillStyle = gradient; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    context.globalAlpha = .5;
+    ["#8df4d4", "#b084e9", "#71d9f1"].forEach((color, index) => { context.strokeStyle = color; context.lineWidth = 22; context.beginPath(); context.moveTo(-40, 75 + index * 28); context.bezierCurveTo(220, 10 + index * 25, 560, 155 + index * 12, 1000, 38 + index * 36); context.stroke(); });
+    context.globalAlpha = 1;
+    for (let index = -1; index < 7; index += 1) { const x = index * 210 - positiveModulo(cameraX * .12, 210); context.fillStyle = index % 2 ? "#6383aa" : "#789abd"; context.beginPath(); context.moveTo(x, 440); context.lineTo(x + 105, 170 + positiveModulo(index * 31, 90)); context.lineTo(x + 220, 440); context.fill(); context.fillStyle = "#f5fdff"; context.beginPath(); context.moveTo(x + 72, 255); context.lineTo(x + 105, 170 + positiveModulo(index * 31, 90)); context.lineTo(x + 143, 268); context.fill(); }
+    for (let index = 0; index < 34; index += 1) { context.fillStyle = "rgba(255,255,255,.8)"; context.fillRect(positiveModulo(index * 97 - cameraX * .13, VIEW_WIDTH), positiveModulo(index * 61 + frame * .35, 440), index % 3 ? 3 : 5, index % 3 ? 3 : 5); }
+    context.fillStyle = "#dff8ff"; context.fillRect(0, 448, VIEW_WIDTH, 92);
+    return;
+  }
   if (level.theme === "crystal-cave") {
     drawCaveBackground(context, cameraX, frame, raster.cave);
     return;
@@ -511,6 +554,35 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   const forest = world >= 2 && world <= 4;
   const worldTiles = worldPlatformCells(world);
   if (x + platform.width < 0 || x > VIEW_WIDTH) return;
+  if (platform.kind === "volcano-ground" || platform.kind === "volcano-ledge" || platform.kind === "volcano-wall") {
+    const wall = platform.kind === "volcano-wall";
+    context.fillStyle = wall ? "#532847" : "#43213d"; context.fillRect(x, platform.y, platform.width, platform.height);
+    context.fillStyle = "#ed5c3f"; context.fillRect(x, platform.y, platform.width, wall ? 6 : 9);
+    context.fillStyle = "#ffb347"; for (let px = x + 18; px < x + platform.width; px += 52) context.fillRect(px, platform.y + 12, 12, 5);
+    if (!wall) { context.fillStyle = "#6d3650"; for (let py = platform.y + 26; py < platform.y + platform.height; py += 28) context.fillRect(x + ((py / 7) % 45), py, Math.max(12, platform.width - 30), 4); }
+    return;
+  }
+  if (platform.kind === "garden-ground" || platform.kind === "garden-ledge") {
+    context.fillStyle = "#75492f"; context.fillRect(x, platform.y, platform.width, platform.height);
+    context.fillStyle = "#5acb55"; context.fillRect(x, platform.y, platform.width, 11);
+    context.fillStyle = "#a7e45e"; for (let px = x + 4; px < x + platform.width; px += 18) context.fillRect(px, platform.y - 5 - ((px / 18) % 2) * 3, 7, 8);
+    context.fillStyle = "#a16940"; for (let px = x + 18; px < x + platform.width; px += 43) context.fillRect(px, platform.y + 27, 13, 9);
+    return;
+  }
+  if (platform.kind === "dew") {
+    const pulse = Math.sin(frame * .12 + platform.x * .02) * 3;
+    context.fillStyle = "rgba(181,248,255,.55)"; context.beginPath(); context.ellipse(x + platform.width / 2, platform.y + 17 + pulse, platform.width / 2, 20, 0, 0, Math.PI * 2); context.fill();
+    context.strokeStyle = "#eaffff"; context.lineWidth = 4; context.stroke(); context.fillStyle = "rgba(255,255,255,.8)"; context.fillRect(x + platform.width * .25, platform.y + 8 + pulse, 18, 6);
+    return;
+  }
+  if (platform.kind === "ice-ground" || platform.kind === "ice-ledge" || platform.kind === "ice-wall") {
+    const wall = platform.kind === "ice-wall";
+    context.fillStyle = wall ? "#78b8d5" : "#a8e6f2"; context.fillRect(x, platform.y, platform.width, platform.height);
+    context.fillStyle = "#f5fdff"; context.fillRect(x, platform.y, platform.width, wall ? 7 : 11);
+    context.strokeStyle = "rgba(66,139,184,.6)"; context.lineWidth = 3;
+    for (let px = x + 20; px < x + platform.width; px += 45) { context.beginPath(); context.moveTo(px, platform.y + 18); context.lineTo(px + 14, platform.y + 35); context.lineTo(px + 4, platform.y + 52); context.stroke(); }
+    return;
+  }
   if (platform.kind === "dino-ground" || platform.kind === "dino-ledge" || platform.kind === "dino-wall") {
     const ground = platform.kind === "dino-ground";
     const wall = platform.kind === "dino-wall";
@@ -889,6 +961,18 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
   if (!enemy.active) return;
   const x = Math.round(enemy.x - cameraX);
   const y = Math.round(enemyY(enemy));
+  if (["baby-dragon", "fire-salamander", "ant", "snail", "bee", "penguin", "snow-fox", "snowy-owl"].includes(enemy.kind)) {
+    const columns: Partial<Record<LiveEnemy["kind"], number>> = { "baby-dragon": 0, "fire-salamander": 1, ant: 0, snail: 1, bee: 2, penguin: 0, "snow-fox": 1, "snowy-owl": 2 };
+    const flying = enemy.kind === "bee" || enemy.kind === "snowy-owl";
+    const width = enemy.kind === "snail" ? 62 : flying ? 64 : 58;
+    const height = enemy.kind === "snail" ? 48 : flying ? 56 : 60;
+    const drawX = x + (enemy.width - width) / 2;
+    const drawY = y + enemy.height - height + (flying ? Math.sin(enemy.phase * 4) * 3 : 0);
+    context.save();
+    if (enemy.vx < 0) { context.translate(drawX + width, 0); context.scale(-1, 1); drawAtlasCell(context, raster.worldCharacters, 5, 2, columns[enemy.kind] ?? 0, 0, 0, drawY, width, height); }
+    else drawAtlasCell(context, raster.worldCharacters, 5, 2, columns[enemy.kind] ?? 0, 0, drawX, drawY, width, height);
+    context.restore(); return;
+  }
   if (enemy.kind === "fish" || enemy.kind === "urchin") {
     context.save();
     if (enemy.vx < 0) {
@@ -1222,7 +1306,7 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
   }
 }
 
-export function drawDeadlyWater(context: CanvasRenderingContext2D, zone: NonNullable<Level["deadlyWater"]>[number], cameraX: number, frame: number, raster: RasterAssets) {
+export function drawDeadlyWater(context: CanvasRenderingContext2D, zone: NonNullable<Level["deadlyWater"]>[number], cameraX: number, frame: number, raster: RasterAssets, theme: Level["theme"]) {
   const x = Math.round(zone.x - cameraX);
   if (x + zone.width < 0 || x > VIEW_WIDTH) return;
   const surfaceY = zone.y + 8;
@@ -1230,7 +1314,13 @@ export function drawDeadlyWater(context: CanvasRenderingContext2D, zone: NonNull
   context.beginPath();
   context.rect(x, surfaceY, zone.width, zone.height - 8);
   context.clip();
-  context.fillStyle = "#087b91";
+  if (theme === "dragon-volcano") {
+    context.fillStyle = "#c52f38"; context.fillRect(x, surfaceY, zone.width, zone.height - 8);
+    context.fillStyle = "#ff9a3d";
+    for (let tileX = x - 12; tileX < x + zone.width; tileX += 34) { const wave = Math.sin(frame / 10 + tileX / 24) * 4; context.beginPath(); context.arc(tileX, zone.y + 9 + wave, 21, Math.PI, 0); context.fill(); }
+    context.fillStyle = "#ffd45c"; context.fillRect(x, zone.y + 9, zone.width, 5); context.restore(); return;
+  }
+  context.fillStyle = theme === "ice-mountain" ? "#318cc4" : theme === "giant-valley" ? "#55b8c4" : "#087b91";
   context.fillRect(x, surfaceY, zone.width, zone.height - 8);
   for (let tileX = x; tileX < x + zone.width; tileX += 105) {
     drawAtlasCell(context, raster.dinosaurTerrain, 2, 2, 1, 1, tileX, zone.y - 13 + Math.sin(frame / 13 + tileX / 40) * 2, Math.min(110, x + zone.width - tileX), 112);

@@ -12,10 +12,10 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 - `src/game/assets.ts`: carga diferida por mundo y reutilización de imágenes.
 - `src/game/input.ts`: teclado y controles táctiles; `src/game/gameLoop.ts`: física en pasos fijos y pausa del renderizado.
 - `src/game/gameState.ts`, `src/game/gameplay.ts` y `src/game/constants.ts`: tipos de estado, reglas de movimiento y dimensiones del Canvas.
-- `src/game/levels.ts`: definición declarativa de las veintiuna pantallas de campaña, las tres acuáticas y la pantalla secreta de las nubes, sus rutas especiales, cajas de recompensa, cañones, trampas y encuentros finales; `src/game/routes.ts`: avance y desbloqueo a partir de esos datos.
+- `src/game/levels.ts`: definición declarativa de las treinta pantallas de campaña, las tres acuáticas y la pantalla secreta de las nubes, sus rutas especiales, cajas de recompensa, cañones, trampas y encuentros finales; `src/game/routes.ts`: avance y desbloqueo a partir de esos datos.
 - `src/game/WorldMap.tsx` y `src/game/worldMapData.ts`: mapa ilustrado, marcadores, caminos según el progreso y cuadros de resumen; `public/assets/worlds/noa-adventure-map-v1.png`: fondo original sin interfaz incrustada.
-- `src/game/BossBattle.tsx`: nueve duelos de piedra, papel o tijera contra los monstruos finales; `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts`: entrada de mando en partida, menús y duelos.
-- `src/game/stickers.ts`: catálogo estable de 27 insignias coleccionables: veintiuna de campaña, tres acuáticas y tres secretas.
+- `src/game/BossBattle.tsx`: doce duelos de piedra, papel o tijera contra los monstruos finales; `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts`: entrada de mando en partida, menús y duelos.
+- `src/game/stickers.ts`: catálogo estable de 36 insignias coleccionables: treinta de campaña, tres acuáticas y tres secretas.
 - `server/ranking-server.mjs`: API y migraciones del tablón mundial; `server/ranking-supervisor.mjs`: descarga y activa automáticamente el backend del último commit de `main`, con recuperación de la versión anterior si falla.
 - `src/game/types.ts`: tipos del motor y extensión futura.
 - `src/styles.css`: interfaz adaptable, mapa desplazable en móvil y controles táctiles.
@@ -32,6 +32,7 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 - Conserva caminos y marcadores del mapa como elementos interactivos superpuestos; no los incrustes en la ilustración de fondo.
 - No edites manualmente `dist-pages/`; es un artefacto generado.
 - Conserva la atribución musical y la licencia de `CREDITS.md`.
+- Para añadir un mundo, incorpora sus tres niveles declarativos y su ruta en `levels.ts`, amplía los tipos de mundo/tema/plataformas/enemigos, añade marcador y camino en `worldMapData.ts`, registra música y carga diferida de recursos, crea tres insignias y un guardián final, y actualiza los límites del ranking. Los atlas propios de enemigos y jefe pueden compartir una cuadrícula de cinco columnas por dos filas: enemigos arriba y las cinco poses del jefe abajo.
 - Publica cada cambio validado: tras ejecutar las comprobaciones, crea un commit, súbelo a `main` y confirma que el despliegue de GitHub Pages termina correctamente, salvo que la persona usuaria indique expresamente que no se publique.
 - El contenedor del ranking debe arrancar `ranking-supervisor.mjs`, no directamente `ranking-server.mjs`. El supervisor consulta `main` cada cinco minutos (`RANKING_UPDATE_INTERVAL_MS` permite cambiarlo), descarga los archivos usando un SHA inmutable, valida su sintaxis y reinicia únicamente el proceso Node. No recrea el contenedor ni modifica el volumen o PostgreSQL.
 
@@ -46,7 +47,7 @@ npm run build:pages
 
 Ejecuta también `npm run test:logic` cuando cambien reglas, niveles, recursos, entrada, bucle o progreso.
 
-Antes de publicar comprueba las veintiuna pantallas de campaña, las tres acuáticas y el reino secreto de las nubes, doble salto, natación, muelles, niebla, avisos de lobos y jabalíes, ruta secreta por las copas, barcos voladores, piratas, loros, cañones, pasillos y pinchos del castillo, la isla tropical, t-rex pequeños, terodáctilos y agua mortal, pájaros, unicornios, pegatinas y álbum, los nueve duelos, rendirse y volver al mapa, el reintento gastando una manzana y el reinicio sin manzanas, cajas golpeadas desde abajo, pérdida de vidas y reaparición con tres vidas, checkpoints, manzana, gato, lana, rescate final del gatito, progreso, sonido, teclado, controles táctiles, mando en los duelos y pausa automática al ocultar la pestaña o perder el foco.
+Antes de publicar comprueba las treinta pantallas de campaña, las tres acuáticas y el reino secreto de las nubes, doble salto, natación, muelles, niebla, avisos de lobos y jabalíes, ruta secreta por las copas, barcos voladores, piratas, loros, cañones, pasillos y pinchos del castillo, la isla tropical, t-rex pequeños, terodáctilos y agua mortal, el volcán y su lava, el rebote en gotas del valle, el deslizamiento en la montaña de hielo, pájaros, unicornios, pegatinas y álbum, los doce duelos, rendirse y volver al mapa, el reintento gastando una manzana y el reinicio sin manzanas, cajas golpeadas desde abajo, pérdida de vidas y reaparición con tres vidas, checkpoints, manzana, gato, lana, rescate final del gatito, progreso, sonido, teclado, controles táctiles, mando en los duelos y pausa automática al ocultar la pestaña o perder el foco.
 
 ## Cómo añadir un mundo
 

@@ -57,6 +57,7 @@ export default function App() {
   const [rankingAlias, setRankingAlias] = useState("");
   const [rankingPlayers, setRankingPlayers] = useState<RankingPlayer[]>([]);
   const [rankingMessage, setRankingMessage] = useState("");
+  const [rankingLoading, setRankingLoading] = useState(false);
   const [collectionTab, setCollectionTab] = useState<CollectionTab>("stickers");
   const [musicVolume, setMusicVolume] = useState(() => readSavedPercentage(MUSIC_VOLUME_KEY, 100));
   const [effectsVolume, setEffectsVolume] = useState(() => readSavedPercentage(EFFECTS_VOLUME_KEY, 100));
@@ -255,6 +256,7 @@ export default function App() {
 
   const refreshRanking = async () => {
     setRankingMessage("");
+    setRankingLoading(true);
     try {
       if (rankingDevice) await syncRanking(rankingDevice, progress);
       setRankingPlayers(await loadRanking());
@@ -262,6 +264,8 @@ export default function App() {
       setRankingMessage(error instanceof TypeError || (error instanceof DOMException && error.name === "TimeoutError")
         ? rankingConnectionMessage
         : error instanceof Error ? error.message : "No pude actualizar el tablón.");
+    } finally {
+      setRankingLoading(false);
     }
   };
 
@@ -692,12 +696,25 @@ export default function App() {
       {showRanking && (
         <div className="modal-backdrop"><div className="game-modal ranking-modal">
           <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowRanking(false)} aria-label="Cerrar">×</button>
-          <p className="eyebrow">Aventureras y aventureros</p><h2>Tablón mundial</h2>
+          <div className="ranking-heading">
+            <span className="ranking-trophy" aria-hidden="true">★</span>
+            <div><p className="eyebrow">Aventureras y aventureros</p><h2>Tablón mundial</h2></div>
+          </div>
           {!rankingDevice ? <div className="ranking-join"><label htmlFor="ranking-alias">Tu alias de aventura</label><input id="ranking-alias" value={rankingAlias} onChange={(event) => setRankingAlias(event.target.value)} maxLength={16} placeholder="Por ejemplo, Moche" /><button className="pixel-button primary" type="button" onClick={() => void joinRanking()}>¡Salir al tablón!</button><small>Solo compartimos tu alias y tus logros. No pongas tu nombre real.</small></div> : <p className="ranking-welcome">¡Hola, {rankingDevice.alias}! Tus logros se guardan solos.</p>}
           {rankingMessage && <p className="ranking-message" role="status">{rankingMessage}</p>}
-          <ol className="ranking-list">{rankingPlayers.map((player, index) => <li key={`${player.alias}-${index}`}><b>{index + 1}. {player.alias}</b><span>Mundo {player.world || 1} · {player.completedLevels}/{campaignLevelCount} pantallas · {player.stickers} pegatinas</span></li>)}</ol>
+          <ol className="ranking-list">{rankingPlayers.map((player, index) => {
+            const position = index + 1;
+            const isCurrentPlayer = rankingDevice?.alias.toLocaleLowerCase("es") === player.alias.toLocaleLowerCase("es");
+            return <li className={`${position <= 3 ? `ranking-podium ranking-place-${position}` : ""} ${isCurrentPlayer ? "is-current-player" : ""}`} key={`${player.alias}-${index}`}>
+              <span className="ranking-position" aria-label={`Puesto ${position}`}>{position}</span>
+              <div className="ranking-player">
+                <div className="ranking-player-name"><strong>{player.alias}</strong>{isCurrentPlayer && <em>Tú</em>}</div>
+                <div className="ranking-stats"><span>🌍 Mundo {player.world || 1}</span><span>🚩 {player.completedLevels}/{campaignLevelCount} pantallas</span><span>★ {player.stickers} pegatinas</span></div>
+              </div>
+            </li>;
+          })}</ol>
           {rankingPlayers.length === 0 && !rankingMessage && <p className="ranking-empty">Aún no hay nadie. ¡Puedes ser la primera aventurera!</p>}
-          <button className="pixel-button" type="button" onClick={() => void refreshRanking()}>Actualizar tablón</button>
+          <div className="ranking-footer"><button className="pixel-button ranking-refresh" type="button" disabled={rankingLoading} onClick={() => void refreshRanking()}><span aria-hidden="true">↻</span> {rankingLoading ? "Actualizando…" : "Actualizar tablón"}</button></div>
         </div></div>
       )}
     </main>

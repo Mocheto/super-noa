@@ -5,7 +5,7 @@ import { levels } from "./levels";
 
 const RANKING_URL = "https://rankings.moche-home.es";
 const DEVICE_KEY = "super-noa-ranking-device-v1";
-export const rankingConnectionMessage = "Los rankins no conectan debido ha bloques por la liga.es";
+export const rankingConnectionMessage = "Los rankings no conectan debido ha bloqueos por la liga.es";
 
 export type RankingDevice = { id: string; token: string; alias: string };
 export type RankingPlayer = { alias: string; world: number; completedLevels: number; stickers: number; bossChallenges: number };

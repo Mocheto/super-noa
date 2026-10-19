@@ -667,7 +667,10 @@ export default function App() {
                   <article className={`boss-friend-card ${known ? "is-friend" : "is-mystery"} ${challengeDone ? "has-challenge-frame" : ""}`} key={level.id}>
                     <span className="boss-friend-world">{level.world === 7 ? (progress.secretUnlocked ? "Mundo secreto" : "Mundo misterioso") : level.world === 8 ? "Mundo del agua" : `Mundo ${level.world}`}</span>
                     <div className="boss-friend-portrait" aria-hidden="true">
-                      {known ? <img src={`${boss.assetPrefix}-0.png`} alt="" /> : <span className="boss-mystery-shape">?</span>}
+                      {known ? boss.assetAtlas
+                        ? <span className="boss-friend-atlas" style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />
+                        : <img src={`${boss.assetPrefix}-0.png`} alt="" />
+                        : <span className="boss-mystery-shape">?</span>}
                     </div>
                     <strong>{known ? boss.name : "Amigo por descubrir"}</strong>
                     {known ? <>{challengeDone && <small className="challenge-frame-label">★ Marco especial conseguido</small>}<button type="button" onClick={() => replayBoss(index)}>Jugar otra vez</button></> : <small>Gana su duelo para conocerlo.</small>}

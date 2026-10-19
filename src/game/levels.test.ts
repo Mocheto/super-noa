@@ -164,6 +164,22 @@ test("los tres nuevos mundos forman una aventura completa con mecánicas propias
   assert.equal(levels.find((level) => level.id === "12-3")?.route?.finale, true);
 });
 
+test("el valle usa monstruos gigantes y trampolines sin tapar los precipicios", () => {
+  for (const level of levels.filter((entry) => entry.world === 11)) {
+    const pits = level.deadlyWater ?? [];
+    for (const enemy of level.enemies) {
+      assert.ok(enemy.width >= 76 && enemy.height >= 64, `${level.id}: ${enemy.id} debe ser más grande que Noa`);
+    }
+    for (const platform of level.platforms.filter((entry) => entry.kind === "dew" || entry.kind === "garden-ledge")) {
+      assert.ok(!pits.some((pit) => platform.x < pit.x + pit.width && platform.x + platform.width > pit.x), `${level.id}: ${platform.kind} en ${platform.x} no debe cubrir un precipicio`);
+      if (platform.kind === "dew") {
+        assert.equal(platform.y + platform.height, 456, `${level.id}: el trampolín debe descansar sobre el suelo`);
+        assert.ok(level.platforms.some((ground) => ground.kind === "garden-ground" && ground.x <= platform.x && ground.x + ground.width >= platform.x + platform.width), `${level.id}: el trampolín debe estar completamente sobre terreno seguro`);
+      }
+    }
+  }
+});
+
 test("las cajas de los mundos nuevos flotan sobre apoyos alcanzables", () => {
   const maxJumpRise = JUMP_SPEED ** 2 / (2 * GRAVITY);
   for (const level of levels.filter((entry) => entry.world >= 10)) {

@@ -27,7 +27,7 @@ const dinoWall = (x: number, y: number, width: number, height: number): Platform
 const themedGround = (segments: Array<[number, number]>, kind: "volcano-ground" | "garden-ground" | "ice-ground"): Platform[] => segments.map(([x, width]) => ({ x, y: 456, width, height: 120, kind }));
 const themedLedge = (x: number, y: number, width: number, kind: "volcano-ledge" | "garden-ledge" | "ice-ledge"): Platform => ({ x, y, width, height: 24, kind });
 const themedWall = (x: number, y: number, width: number, height: number, kind: "volcano-wall" | "ice-wall"): Platform => ({ x, y, width, height, kind });
-const dew = (x: number, y: number, width = 110): Platform => ({ x, y, width, height: 38, kind: "dew" });
+const dew = (x: number, width = 110): Platform => ({ x, y: 418, width, height: 38, kind: "dew" });
 const deadlyWaterPits = (segments: Array<[number, number]>) => segments.slice(0, -1).map(([x, width], index) => ({ x: x + width, y: 448, width: segments[index + 1][0] - x - width, height: 128 }));
 
 const ship = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 26, kind: "ship" });
@@ -53,6 +53,26 @@ const enemy = (
   maxX,
   speed,
 });
+
+const giantEnemy = (
+  id: string,
+  kind: "ant" | "snail" | "bee",
+  x: number,
+  y: number,
+  minX: number,
+  maxX: number,
+  speed: number,
+): Enemy => {
+  const base = enemy(id, kind, x, y, minX, maxX, speed);
+  const size = kind === "snail" ? { width: 82, height: 64 } : kind === "bee" ? { width: 78, height: 72 } : { width: 76, height: 74 };
+  return {
+    ...base,
+    x: base.x - (size.width - base.width) / 2,
+    y: base.y + base.height - size.height,
+    width: size.width,
+    height: size.height,
+  };
+};
 
 const apple = (id: string, x: number, y: number): LevelItem => ({ id, kind: "apple", x, y });
 const sticker = (id: string, x: number, y: number): LevelItem => ({ id, kind: "sticker", x, y });
@@ -881,26 +901,26 @@ export const levels: Level[] = [
     platforms: [
       ...themedGround(world11Floor1, "garden-ground"), themedLedge(310, 340, 190, "garden-ledge"), themedLedge(650, 265, 180, "garden-ledge"), themedLedge(1090, 330, 190, "garden-ledge"),
       themedLedge(1470, 245, 180, "garden-ledge"), themedLedge(1850, 340, 190, "garden-ledge"), themedLedge(2290, 285, 190, "garden-ledge"), themedLedge(2720, 210, 180, "garden-ledge"),
-      themedLedge(3190, 335, 190, "garden-ledge"), themedLedge(3560, 260, 180, "garden-ledge"), themedLedge(4020, 330, 190, "garden-ledge"),
-      dew(940, 382), dew(2100, 382), dew(3225, 382), dew(4610, 382), themedLedge(4810, 305, 190, "garden-ledge"), themedLedge(5180, 215, 180, "garden-ledge"),
+      themedLedge(3000, 335, 190, "garden-ledge"), themedLedge(3560, 260, 180, "garden-ledge"), themedLedge(4020, 330, 190, "garden-ledge"),
+      dew(250), dew(1070), dew(3370), dew(4780), themedLedge(4810, 305, 190, "garden-ledge"), themedLedge(5180, 215, 180, "garden-ledge"),
     ],
     deadlyWater: deadlyWaterPits(world11Floor1),
-    enemies: [enemy("g1-a1", "ant", 450, 420, 320, 770, 46), enemy("g1-s1", "snail", 1220, 420, 1100, 1510, 30), enemy("g1-b1", "bee", 2420, 190, 2240, 2820, 70), enemy("g1-a2", "ant", 3620, 420, 3460, 4070, 52), enemy("g1-b2", "bee", 5050, 175, 4820, 5360, 76)],
+    enemies: [giantEnemy("g1-a1", "ant", 450, 420, 320, 770, 46), giantEnemy("g1-s1", "snail", 1220, 420, 1100, 1510, 30), giantEnemy("g1-b1", "bee", 2420, 190, 2240, 2820, 70), giantEnemy("g1-a2", "ant", 3620, 420, 3460, 4070, 52), giantEnemy("g1-b2", "bee", 5050, 175, 4820, 5360, 76)],
     items: [apple("g1a1", 360, 290), apple("g1a2", 710, 215), sticker("sticker-11-1", 1520, 195), apple("g1a3", 2360, 235), apple("g1a4", 2790, 160), apple("g1a5", 4090, 280), apple("g1a6", 5240, 165)],
-    rewardBlocks: [reward("g1r1", 1140, 179), reward("g1r2", 3280, 184, "apple")], checkpoints: [1080, 2240, 3400, 4780],
+    rewardBlocks: [reward("g1r1", 1140, 179), reward("g1r2", 3060, 184, "apple")], checkpoints: [1080, 2240, 3400, 4780],
   },
   {
     id: "11-2", world: 11, screen: 2,
     title: "El jardín de las gotas", subtitle: "Rebota en las gotas de rocío para alcanzar las hojas más altas.",
     theme: "giant-valley", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [
-      ...themedGround(world11Floor2, "garden-ground"), themedLedge(280, 340, 180, "garden-ledge"), dew(590, 330), themedLedge(920, 245, 190, "garden-ledge"), themedLedge(1320, 175, 180, "garden-ledge"),
-      themedLedge(1680, 320, 180, "garden-ledge"), dew(1900, 380), themedLedge(2170, 245, 190, "garden-ledge"), themedLedge(2530, 165, 180, "garden-ledge"), themedLedge(2860, 325, 180, "garden-ledge"),
-      dew(3020, 380), themedLedge(3260, 235, 190, "garden-ledge"), themedLedge(3630, 155, 180, "garden-ledge"), themedLedge(3980, 315, 180, "garden-ledge"), dew(4160, 380),
-      themedLedge(4410, 225, 190, "garden-ledge"), themedLedge(4780, 320, 190, "garden-ledge"), dew(5325, 380), themedLedge(5520, 290, 185, "garden-ledge"), dew(5770, 365), themedLedge(5960, 185, 180, "garden-ledge"), themedLedge(6260, 315, 190, "garden-ledge"),
+      ...themedGround(world11Floor2, "garden-ground"), themedLedge(280, 340, 180, "garden-ledge"), dew(590), themedLedge(920, 245, 190, "garden-ledge"), themedLedge(1320, 175, 180, "garden-ledge"),
+      themedLedge(1660, 320, 180, "garden-ledge"), dew(2000), themedLedge(2170, 245, 190, "garden-ledge"), themedLedge(2530, 165, 180, "garden-ledge"), themedLedge(2750, 325, 180, "garden-ledge"),
+      dew(3090), themedLedge(3260, 235, 190, "garden-ledge"), themedLedge(3630, 155, 180, "garden-ledge"), themedLedge(3840, 315, 180, "garden-ledge"), dew(4190),
+      themedLedge(4410, 225, 190, "garden-ledge"), themedLedge(4780, 320, 190, "garden-ledge"), dew(5150), themedLedge(5520, 290, 185, "garden-ledge"), dew(5770), themedLedge(5960, 185, 180, "garden-ledge"), themedLedge(6260, 315, 190, "garden-ledge"),
     ],
     deadlyWater: deadlyWaterPits(world11Floor2),
-    enemies: [enemy("g2-b1", "bee", 680, 190, 520, 980, 74), enemy("g2-a1", "ant", 1110, 420, 1010, 1500, 50), enemy("g2-s1", "snail", 2240, 420, 2100, 2760, 34), enemy("g2-b2", "bee", 3540, 145, 3330, 3890, 80), enemy("g2-a2", "ant", 4550, 420, 4370, 4880, 56), enemy("g2-b3", "bee", 5850, 155, 5530, 6220, 86)],
+    enemies: [giantEnemy("g2-b1", "bee", 680, 190, 520, 980, 74), giantEnemy("g2-a1", "ant", 1110, 420, 1010, 1500, 50), giantEnemy("g2-s1", "snail", 2240, 420, 2100, 2760, 34), giantEnemy("g2-b2", "bee", 3540, 145, 3330, 3890, 80), giantEnemy("g2-a2", "ant", 4550, 420, 4370, 4880, 56), giantEnemy("g2-b3", "bee", 5850, 155, 5530, 6220, 86)],
     items: [apple("g2a1", 330, 290), apple("g2a2", 960, 195), apple("g2a3", 1390, 125), apple("g2a4", 2590, 115), sticker("sticker-11-2", 3690, 105), apple("g2a5", 4470, 175), apple("g2a6", 4840, 270), apple("g2a7", 6020, 135)],
     rewardBlocks: [reward("g2r1", 1060, 94), reward("g2r2", 3200, 305, "apple"), reward("g2r3", 4640, 305)], checkpoints: [930, 2020, 3100, 4230, 5500],
   },
@@ -910,15 +930,15 @@ export const levels: Level[] = [
     title: "La colmena de Melisa", subtitle: "Cruza el valle y juega con la Reina Melisa, guardiana de las flores.",
     theme: "giant-valley", width: 7800, start: { x: 80, y: 380 }, goalX: 7620,
     platforms: [
-      ...themedGround(world11Floor3, "garden-ground"), themedLedge(300, 335, 190, "garden-ledge"), dew(650, 365), themedLedge(1010, 285, 190, "garden-ledge"), themedLedge(1370, 205, 180, "garden-ledge"),
-      themedLedge(1760, 325, 180, "garden-ledge"), dew(1920, 380), themedLedge(2110, 240, 190, "garden-ledge"), themedLedge(2480, 155, 180, "garden-ledge"), themedLedge(2840, 315, 180, "garden-ledge"),
-      dew(3010, 380), themedLedge(3190, 225, 190, "garden-ledge"), themedLedge(3560, 145, 180, "garden-ledge"), themedLedge(3940, 310, 180, "garden-ledge"), dew(4100, 380),
-      themedLedge(4290, 210, 190, "garden-ledge"), themedLedge(4670, 145, 180, "garden-ledge"), themedLedge(5080, 305, 190, "garden-ledge"), dew(5260, 380), themedLedge(5480, 205, 180, "garden-ledge"), themedLedge(5900, 305, 200, "garden-ledge"), dew(6515, 380), themedLedge(6710, 285, 190, "garden-ledge"), dew(6960, 365), themedLedge(7150, 175, 180, "garden-ledge"), themedLedge(7490, 300, 200, "garden-ledge"),
+      ...themedGround(world11Floor3, "garden-ground"), themedLedge(300, 335, 190, "garden-ledge"), dew(650), themedLedge(1010, 285, 190, "garden-ledge"), themedLedge(1370, 205, 180, "garden-ledge"),
+      themedLedge(1670, 325, 180, "garden-ledge"), dew(2020), themedLedge(2110, 240, 190, "garden-ledge"), themedLedge(2480, 155, 180, "garden-ledge"), themedLedge(2740, 315, 180, "garden-ledge"),
+      dew(3100), themedLedge(3190, 225, 190, "garden-ledge"), themedLedge(3560, 145, 180, "garden-ledge"), themedLedge(3800, 310, 180, "garden-ledge"), dew(4150),
+      themedLedge(4290, 210, 190, "garden-ledge"), themedLedge(4670, 145, 180, "garden-ledge"), themedLedge(4890, 305, 180, "garden-ledge"), dew(5260), themedLedge(5480, 205, 180, "garden-ledge"), themedLedge(5900, 305, 200, "garden-ledge"), dew(6380), themedLedge(6710, 285, 190, "garden-ledge"), dew(6960), themedLedge(7150, 175, 180, "garden-ledge"), themedLedge(7490, 300, 200, "garden-ledge"),
     ],
     deadlyWater: deadlyWaterPits(world11Floor3),
-    enemies: [enemy("g3-a1", "ant", 450, 420, 320, 730, 54), enemy("g3-b1", "bee", 1150, 175, 980, 1450, 82), enemy("g3-s1", "snail", 2250, 420, 2100, 2730, 38), enemy("g3-b2", "bee", 3310, 135, 3160, 3650, 88), enemy("g3-a2", "ant", 4350, 420, 4200, 4640, 60), enemy("g3-b3", "bee", 5480, 145, 5300, 5820, 94), enemy("g3-a3", "ant", 7040, 420, 6730, 7460, 66)],
+    enemies: [giantEnemy("g3-a1", "ant", 450, 420, 320, 730, 54), giantEnemy("g3-b1", "bee", 1150, 175, 980, 1450, 82), giantEnemy("g3-s1", "snail", 2250, 420, 2100, 2730, 38), giantEnemy("g3-b2", "bee", 3310, 135, 3160, 3650, 88), giantEnemy("g3-a2", "ant", 4350, 420, 4200, 4640, 60), giantEnemy("g3-b3", "bee", 5480, 145, 5300, 5820, 94), giantEnemy("g3-a3", "ant", 7040, 420, 6730, 7460, 66)],
     items: [apple("g3a1", 360, 285), apple("g3a2", 1050, 235), apple("g3a3", 1430, 155), apple("g3a4", 2530, 105), apple("g3a5", 3620, 95), sticker("sticker-11-3", 4730, 95), apple("g3a6", 5530, 155), apple("g3a7", 6000, 255), apple("g3a8", 7220, 125)],
-    rewardBlocks: [reward("g3r1", 1080, 134), reward("g3r2", 3220, 74, "apple"), reward("g3r3", 5160, 154)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890, 6690], boss: "queen-bee",
+    rewardBlocks: [reward("g3r1", 1080, 134), reward("g3r2", 3220, 74, "apple"), reward("g3r3", 4950, 154)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890, 6690], boss: "queen-bee",
   },
   {
     id: "12-1", world: 12, screen: 1,

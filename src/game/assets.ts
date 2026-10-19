@@ -7,6 +7,7 @@ export type RasterAssets = {
   dinosaurEnemies: HTMLImageElement; dinosaurTerrain: HTMLImageElement;
   worldCharacters: HTMLImageElement;
   worldTerrain: HTMLImageElement;
+  dewTrampoline: HTMLImageElement;
   jumpingFish: HTMLImageElement;
   bird: HTMLImageElement; collectibles: HTMLImageElement; cave: HTMLImageElement;
   castle: HTMLImageElement; secret: HTMLImageElement; cannon: HTMLImageElement;
@@ -58,6 +59,7 @@ export function getLevelAssets(level: Level): RasterAssets {
     dinosaurTerrain: when(world === 9, "./assets/atlases/dinosaur-island-v1.png"),
     worldCharacters: when(world >= 10, `./assets/atlases/${world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-characters-v1.png`),
     worldTerrain: when(world >= 10, `./assets/atlases/${world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-terrain-v1.png`),
+    dewTrampoline: when(world === 11, "./assets/sprites/dew-trampoline-v1.png"),
     jumpingFish: when(Boolean(level.waterJumpers?.length), "./assets/sprites/enemy-jumping-fish-v1.png"),
     boar: when(world === 4, "./assets/sprites/enemy-boar-v2.png"),
     bird: when(level.enemies.some((enemy) => enemy.kind === "bird"), "./assets/sprites/enemy-bird-v2.png"),

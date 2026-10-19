@@ -595,9 +595,14 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
     return;
   }
   if (platform.kind === "dew") {
-    const pulse = Math.sin(frame * .12 + platform.x * .02) * 3;
-    context.fillStyle = "rgba(181,248,255,.55)"; context.beginPath(); context.ellipse(x + platform.width / 2, platform.y + 17 + pulse, platform.width / 2, 20, 0, 0, Math.PI * 2); context.fill();
-    context.strokeStyle = "#eaffff"; context.lineWidth = 4; context.stroke(); context.fillStyle = "rgba(255,255,255,.8)"; context.fillRect(x + platform.width * .25, platform.y + 8 + pulse, 18, 6);
+    const drawHeight = springCompressed ? 34 : 48;
+    const drawY = platform.y + (48 - drawHeight) * .55;
+    if (raster.dewTrampoline.complete && raster.dewTrampoline.naturalWidth) {
+      context.drawImage(raster.dewTrampoline, 135, 75, 1640, 680, x - 6, drawY, platform.width + 12, drawHeight);
+    } else {
+      context.fillStyle = "rgba(181,248,255,.72)"; context.beginPath(); context.ellipse(x + platform.width / 2, drawY + drawHeight / 2, platform.width / 2, drawHeight / 2, 0, 0, Math.PI * 2); context.fill();
+      context.strokeStyle = "#eaffff"; context.lineWidth = 4; context.stroke();
+    }
     return;
   }
   if (platform.kind === "ice-ground" || platform.kind === "ice-ledge" || platform.kind === "ice-wall") {
@@ -990,8 +995,9 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
   if (["baby-dragon", "fire-salamander", "ant", "snail", "bee", "penguin", "snow-fox", "snowy-owl"].includes(enemy.kind)) {
     const columns: Partial<Record<LiveEnemy["kind"], number>> = { "baby-dragon": 0, "fire-salamander": 1, ant: 0, snail: 1, bee: 2, penguin: 0, "snow-fox": 1, "snowy-owl": 2 };
     const flying = enemy.kind === "bee" || enemy.kind === "snowy-owl";
-    const width = enemy.kind === "snail" ? 62 : flying ? 64 : 58;
-    const height = enemy.kind === "snail" ? 48 : flying ? 56 : 60;
+    const giant = enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee";
+    const width = giant ? enemy.width + 24 : flying ? 64 : 58;
+    const height = giant ? enemy.height + 14 : flying ? 56 : 60;
     const drawX = x + (enemy.width - width) / 2;
     const drawY = y + enemy.height - height + (flying ? Math.sin(enemy.phase * 4) * 3 : 0);
     context.save();

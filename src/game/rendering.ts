@@ -1,8 +1,9 @@
-import type { Level } from "./types";
+import type { BloomBridge, Level, Updraft } from "./types";
 import type { RasterAssets } from "./assets";
 import type { LiveEnemy, LiveCannon, Cannonball, LiveWaterJumper } from "./gameState";
 import { enemyY, lavaJetState, positiveModulo, waterJumperState } from "./gameState";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
+import { bloomBridgeState, type WolfSleepPhase } from "./worldMechanics";
 
 const enemyAtlasCell = {
   slime: [0, 0], beetle: [1, 0], cloud: [2, 0], wolf: [3, 0],
@@ -1019,11 +1020,54 @@ function drawEnemyFallback(context: CanvasRenderingContext2D, enemy: LiveEnemy, 
   context.restore();
 }
 
-export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, cameraX: number, nearby: boolean, raster: RasterAssets) {
+function drawSleepingWolf(context: CanvasRenderingContext2D, enemy: LiveEnemy, x: number, y: number, phase: WolfSleepPhase) {
+  const warning = phase === "warning";
+  const { width, height } = enemy;
+  context.save();
+  context.translate(x + (enemy.vx < 0 ? width : 0), y);
+  if (enemy.vx < 0) context.scale(-1, 1);
+  context.fillStyle = "#302c47";
+  context.fillRect(0, height * .5, width, height * .45);
+  context.fillRect(width * .52, height * .3, width * .42, height * .6);
+  context.fillRect(width * .55, height * .17, width * .13, height * .2);
+  context.fillRect(width * .81, height * .17, width * .13, height * .2);
+  context.fillStyle = warning ? "#9a8eaa" : "#77748e";
+  context.fillRect(4, height * .54, width - 8, height * .3);
+  context.fillRect(width * .56, height * .37, width * .36, height * .42);
+  context.fillStyle = "#e2d1db";
+  context.fillRect(width * .7, height * .67, width * .28, height * .16);
+  context.fillStyle = "#302c47";
+  context.fillRect(width * .65, height * .52, 6, warning ? 6 : 2);
+  context.fillRect(width * .84, height * .52, 6, warning ? 6 : 2);
+  context.restore();
+  context.save();
+  context.textAlign = "center";
+  context.font = "bold 14px monospace";
+  const center = x + width / 2;
+  const labelWidth = warning ? 136 : 54;
+  context.fillStyle = warning ? "#ffe79a" : "#f5ecff";
+  context.fillRect(center - labelWidth / 2, y - 31, labelWidth, 23);
+  context.fillStyle = "#3a2c50";
+  context.fillText(warning ? "¡DESPIERTA!" : "ZZZ", center, y - 14);
+  if (warning) {
+    context.fillStyle = "#ffe79a";
+    context.fillRect(x + width + 6, y + 3, 22, 26);
+    context.fillStyle = "#3a2c50";
+    context.fillRect(x + width + 15, y + 7, 4, 11);
+    context.fillRect(x + width + 15, y + 22, 4, 4);
+  }
+  context.restore();
+}
+
+export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, cameraX: number, nearby: boolean, raster: RasterAssets, sleepPhase: WolfSleepPhase = "awake") {
   if (!enemy.active) return;
   const x = Math.round(enemy.x - cameraX);
   if (x + enemy.width < -80 || x > VIEW_WIDTH + 80) return;
   const y = Math.round(enemyY(enemy));
+  if (enemy.kind === "wolf" && sleepPhase !== "awake") {
+    drawSleepingWolf(context, enemy, x, y, sleepPhase);
+    return;
+  }
   const specializedImage = enemy.kind === "fish" || enemy.kind === "urchin" ? raster.waterEnemies
     : enemy.kind === "baby-t-rex" || enemy.kind === "pterodactyl" ? raster.dinosaurEnemies
     : enemy.kind === "sky-unicorn" ? raster.secret
@@ -1447,6 +1491,94 @@ export function drawWindZone(context: CanvasRenderingContext2D, zone: NonNullabl
     context.beginPath(); context.moveTo(x, y); context.quadraticCurveTo(x + zone.direction * 28, y - 12, x + zone.direction * 60, y); context.stroke();
     context.beginPath(); context.moveTo(x + zone.direction * 45, y - 8); context.lineTo(x + zone.direction * 62, y); context.lineTo(x + zone.direction * 45, y + 8); context.stroke();
   }
+  context.restore();
+}
+
+export function drawBloomBridge(context: CanvasRenderingContext2D, bridge: BloomBridge, cameraX: number, elapsed: number) {
+  const x = Math.round(bridge.x - cameraX);
+  if (x + bridge.width < -30 || x > VIEW_WIDTH + 30) return;
+  const state = bloomBridgeState(bridge, elapsed);
+  const warning = state === "warning";
+  const cycleAge = elapsed < bridge.delay ? 0 : positiveModulo(elapsed - bridge.delay, Math.max(.001, bridge.interval));
+  const untilOpen = elapsed < bridge.delay ? bridge.delay - elapsed : bridge.interval - cycleAge;
+  const openingWindow = Math.min(1.5, elapsed < bridge.delay ? bridge.delay : Math.max(0, bridge.interval - bridge.openDuration - bridge.warningDuration));
+  const opening = state === "closed" && bridge.interval > 0 ? Math.max(0, 1 - untilOpen / Math.max(.001, openingWindow)) : 0;
+  const closing = warning ? Math.max(0, Math.min(1, (bridge.openDuration + bridge.warningDuration - cycleAge) / Math.max(.001, bridge.warningDuration))) : 0;
+  const spread = state === "closed" ? 2 + opening * 7 : 9;
+  context.save();
+  context.fillStyle = "#41834e";
+  for (const edge of [x, x + bridge.width]) {
+    context.fillRect(edge - 3, bridge.y + 8, 6, 27);
+    context.fillStyle = warning ? "#ffce66" : state === "closed" && opening === 0 ? "#b278a5" : "#f1a2cf";
+    for (let petal = 0; petal < 5; petal += 1) {
+      const angle = petal * Math.PI * 2 / 5;
+      context.beginPath();
+      context.ellipse(edge + Math.cos(angle) * spread, bridge.y + Math.sin(angle) * spread, 4 + spread * .45, 3 + spread * .3, angle, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.fillStyle = "#ffdf73";
+    context.fillRect(edge - 4, bridge.y - 4, 8, 8);
+    context.fillStyle = "#41834e";
+  }
+  if (state !== "closed") {
+    context.fillStyle = warning ? "#ffce66" : "#ee9bc8";
+    for (let offset = 0; offset < bridge.width; offset += 22) {
+      context.beginPath();
+      context.ellipse(x + offset + 11, bridge.y + bridge.height / 2, Math.min(14, (bridge.width - offset) / 2), Math.max(5, bridge.height / 2), 0, 0, Math.PI * 2);
+      context.fill();
+    }
+    context.fillStyle = warning ? "#ffe69c" : "#fff1e5";
+    context.fillRect(x, bridge.y, bridge.width, 4);
+  }
+  const label = warning ? "¡SE CIERRA!" : state === "open" ? "¡PASA!" : opening > 0 ? "¡SE ABRE!" : "ESPERA LA FLOR";
+  const center = x + bridge.width / 2;
+  context.fillStyle = warning ? "#fff0a3" : "#fff7e5";
+  context.fillRect(center - 68, bridge.y - 42, 136, 23);
+  context.fillStyle = "#543654";
+  context.font = "bold 13px monospace";
+  context.textAlign = "center";
+  context.fillText(label, center, bridge.y - 26);
+  if (warning || opening > 0) {
+    context.fillStyle = "#5d475d";
+    context.fillRect(center - 50, bridge.y - 15, 100, 6);
+    context.fillStyle = warning ? "#ffce66" : "#f1a2cf";
+    context.fillRect(center - 50, bridge.y - 15, 100 * (warning ? closing : opening), 6);
+  }
+  context.restore();
+}
+
+export function drawUpdraft(context: CanvasRenderingContext2D, zone: Updraft, cameraX: number, elapsed: number) {
+  const x = zone.x - cameraX;
+  if (x + zone.width < 0 || x > VIEW_WIDTH) return;
+  context.save();
+  context.beginPath();
+  context.rect(x, zone.y, zone.width, zone.height);
+  context.clip();
+  context.fillStyle = "rgba(227,250,255,.12)";
+  context.fillRect(x, zone.y, zone.width, zone.height);
+  context.strokeStyle = "rgba(245,255,255,.85)";
+  context.lineWidth = 3;
+  const columns = Math.max(1, Math.ceil(zone.width / 70));
+  for (let column = 0; column < columns; column += 1) {
+    const center = x + (column + .5) * zone.width / columns;
+    for (let index = 0; index < 3; index += 1) {
+      const y = zone.y + positiveModulo(index * zone.height / 3 - elapsed * 65 + column * 23, zone.height);
+      context.beginPath();
+      context.moveTo(center - 10, y + 10);
+      context.lineTo(center, y);
+      context.lineTo(center + 10, y + 10);
+      context.moveTo(center, y);
+      context.bezierCurveTo(center + 18, y + 23, center - 18, y + 31, center, y + 45);
+      context.stroke();
+      context.beginPath();
+      context.arc(center + (column % 2 ? -15 : 15), y + 31, 3 + index % 2, 0, Math.PI * 2);
+      context.stroke();
+    }
+  }
+  context.fillStyle = "#fff8df";
+  context.font = "bold 12px monospace";
+  context.textAlign = "center";
+  context.fillText("¡AIRE ARRIBA!", x + zone.width / 2, zone.y + 17);
   context.restore();
 }
 

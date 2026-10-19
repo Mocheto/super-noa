@@ -582,7 +582,7 @@ export default function App() {
             </div>
           </header>}
           {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} playSound={playSound} />}
-          {!bossReplay && <div className="level-caption"><span>{themeNames[activeLevel.theme]}</span><span>Bandera {snapshot.checkpoint}/{activeLevel.checkpoints.length}</span></div>}
+          {!bossReplay && <div className="level-caption"><span>{themeNames[activeLevel.theme]}</span><span>Bandera {snapshot.checkpoint}/{activeLevel.checkpoints.length}</span><small>{activeLevel.subtitle}</small></div>}
 
           {screen === "boss" && activeLevel.boss && (
             <BossBattle
@@ -696,7 +696,7 @@ export default function App() {
           <p className="eyebrow">Hecho con cariño</p><h2 id="credits-title">Créditos</h2>
           <p><strong>Super Noa</strong> es un juego original inspirado en los plataformas familiares de 8 bits.</p>
           <p>Personaje creado para este proyecto a partir de referencias privadas. Las fotografías originales no forman parte de la web.</p>
-          <p>Música de los primeros cinco mundos: <a href="https://opengameart.org/content/platformer-chiptunes" target="_blank" rel="noreferrer">Platformer Chiptunes</a>, de Guy G. Gamerson, publicada bajo licencia CC0. Las melodías del castillo, la laguna, la isla jurásica, el volcán, el valle de flores y la montaña de hielo son composiciones originales para Super Noa.</p>
+          <p>Música reutilizada: <a href="https://opengameart.org/content/platformer-chiptunes" target="_blank" rel="noreferrer">Platformer Chiptunes</a>, de Guy G. Gamerson, publicada bajo licencia CC0. Las melodías del bosque de manzanos, el castillo, la laguna, la isla jurásica, el volcán, el valle de flores y la montaña de hielo son composiciones originales para Super Noa.</p>
           <p>Los guardianes finales y las miniaturas pixel art de los mundos son diseños originales generados para este proyecto. Efectos de sonido generados en el navegador; escenarios jugables, interfaz y código creados para Super Noa.</p>
           <button className="pixel-button primary" type="button" onClick={() => setShowCredits(false)}>Cerrar</button>
         </Dialog>

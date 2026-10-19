@@ -11,12 +11,20 @@ export type Platform = Rect & {
   kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall";
 };
 
+export type SleepCycle = {
+  interval: number;
+  delay: number;
+  sleepDuration: number;
+  warningDuration: number;
+};
+
 export type Enemy = Rect & {
   id: string;
   kind: "slime" | "beetle" | "cloud" | "wolf" | "boar" | "bird" | "pirate" | "parrot" | "bat" | "sky-unicorn" | "skeleton" | "zombie" | "ghost" | "fish" | "urchin" | "baby-t-rex" | "pterodactyl" | "baby-dragon" | "fire-salamander" | "ant" | "snail" | "bee" | "penguin" | "snow-fox" | "snowy-owl";
   minX: number;
   maxX: number;
   speed: number;
+  sleepCycle?: SleepCycle;
 };
 
 export type LevelItem = {
@@ -68,6 +76,20 @@ export type WindZone = Rect & {
   strength: number;
 };
 
+export type BloomBridge = Rect & {
+  id: string;
+  interval: number;
+  delay: number;
+  openDuration: number;
+  warningDuration: number;
+};
+
+export type Updraft = Rect & {
+  id: string;
+  strength: number;
+  maxRiseSpeed: number;
+};
+
 export type BossId = "bramble-king" | "mist-countess" | "great-wolf" | "great-boar" | "sky-captain" | "vampire-count" | "rainbow-queen" | "shark-captain" | "triceratops-queen" | "ruby-dragon" | "queen-bee" | "polar-bear";
 
 export type Level = {
@@ -92,6 +114,8 @@ export type Level = {
   waterJumpers?: WaterJumper[];
   lavaJets?: LavaJet[];
   windZones?: WindZone[];
+  bloomBridges?: BloomBridge[];
+  updrafts?: Updraft[];
   checkpoints: number[];
   boss?: BossId;
   route?: {

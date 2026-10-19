@@ -2,15 +2,16 @@ import { useEffect, useRef } from "react";
 import { PixelIcon } from "./PixelIcon";
 import { getImage, getLevelAssets } from "./assets";
 import {
-  drawAmbientForeground, drawApple, drawBackground, drawBossGate, drawCannon,
+  drawAmbientForeground, drawApple, drawBackground, drawBloomBridge, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawCheckpoint,
   drawDeadlyWater, drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock,
-  drawLavaJet, drawSecretVine, drawSticker, drawTinySparkle, drawWaterJumper, drawWindZone,
+  drawLavaJet, drawSecretVine, drawSticker, drawTinySparkle, drawUpdraft, drawWaterJumper, drawWindZone,
 } from "./rendering";
 import { useGameInput } from "./input";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createGameLoop, type GameLoop } from "./gameLoop";
 import { createLevelTransition } from "./levelTransition";
+import { getMechanicPlatforms, hasWorldMechanics, mechanicRespawn, updraftVelocity, wolfSleepState } from "./worldMechanics";
 import { getStickerSprite } from "./stickers";
 import type { Level, GameSnapshot } from "./types";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
@@ -156,10 +157,16 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     };
 
     const respawn = () => {
-      player.x = respawnX;
-      player.y = level.start.y;
+      const spawn = mechanicRespawn(level, respawnX, player.width, player.height);
+      player.x = spawn.x;
+      player.y = spawn.y;
       player.vx = 0;
       player.vy = 0;
+      if (hasWorldMechanics(level)) {
+        player.grounded = false;
+        player.coyote = 0;
+        player.jumpBuffer = 0;
+      }
       player.power = "normal";
       player.invincible = 1.4;
       player.jumpsUsed = 0;
@@ -190,6 +197,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     const update = (delta: number, now: number) => {
       levelAge += delta;
+      const platforms = getMechanicPlatforms(level, levelAge);
       const input = inputRef.current;
       const pad = readGameplayPad(firstConnectedGamepad());
       const left = input.left || pad.left;
@@ -197,6 +205,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       const jump = input.jump || pad.jump;
       const shoot = input.shoot || pad.shoot;
       const swimming = waterAt(player, level.waterZones);
+      const inUpdraft = !swimming && level.world === 7 && level.updrafts?.some((zone) => intersects(player, zone));
       const newStroke = input.jumpQueued || (jump && !previousJump);
 
       const standingOnIce = player.grounded && level.platforms.some((platform) =>
@@ -223,7 +232,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         player.jumpsUsed = 0;
         player.springLaunch = false;
         player.jumpBuffer = 0;
-      } else if (player.jumpBuffer > 0 && player.coyote > 0 && player.jumpsUsed === 0) {
+      } else if (player.jumpBuffer > 0 && (player.coyote > 0 || inUpdraft) && player.jumpsUsed === 0) {
         player.vy = -JUMP_SPEED;
         player.grounded = false;
         player.coyote = 0;
@@ -268,6 +277,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       const previousBottom = previousY + player.height;
       const wasGrounded = player.grounded;
       if (!swimming) player.vy += GRAVITY * delta;
+      if (!swimming && level.world === 7 && level.updrafts?.length) {
+        player.vy = updraftVelocity(player.vy, level.updrafts.filter((zone) => intersects(player, zone)), delta);
+      }
       player.y += player.vy * delta;
       // Al soltar el botón se hunde; una brazada nueva en la superficie permite salir del agua.
       if (swimming && player.y + player.height * 0.6 < swimming.y + 1 && !newStroke) {
@@ -276,7 +288,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       }
       player.grounded = false;
 
-      for (const platform of level.platforms) {
+      for (const platform of platforms) {
         const horizontal = player.x + player.width > platform.x && player.x < platform.x + platform.width;
         const surfaceY = platformSurfaceY(platform);
         // El muelle solo responde al aterrizaje de un salto: al caminar se puede pasar de largo.
@@ -384,6 +396,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
       enemies.forEach((enemy) => {
         if (!enemy.active) return;
+        if (level.world === 3 && wolfSleepState(enemy, levelAge) !== "awake") return;
         enemy.phase += delta * 2.4;
         enemy.x += enemy.vx * delta;
         const enemyDistance = Math.abs(player.x - enemy.x);
@@ -672,15 +685,30 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const render = () => {
       drawBackground(context, level, cameraX, frame, raster);
       level.windZones?.forEach((zone) => drawWindZone(context, zone, cameraX, levelAge));
-      if (level.screen === 1 && cameraX < 520 && level.world >= 10) {
+      if (level.world === 7) level.updrafts?.forEach((zone) => drawUpdraft(context, zone, cameraX, levelAge));
+      if (level.screen === 1 && cameraX < 520 && level.world >= 10 && !(level.world === 11 && level.bloomBridges?.length)) {
         const hint = level.world === 10 ? "¡MIRA EL RITMO DE LA LAVA!" : level.world === 11 ? "¡CAE SOBRE EL ROCÍO PARA REBOTAR!" : "¡EL HIELO RESBALA Y EL VIENTO EMPUJA!";
         context.save(); context.fillStyle = "rgba(42,24,55,.88)"; context.fillRect(205 - cameraX * .22, 82, 550, 42);
         context.strokeStyle = "#fff0b0"; context.lineWidth = 3; context.strokeRect(205 - cameraX * .22, 82, 550, 42);
         context.fillStyle = "#fff7dd"; context.font = "bold 17px monospace"; context.textAlign = "center"; context.fillText(hint, 480 - cameraX * .22, 109); context.restore();
       }
+      if (hasWorldMechanics(level) && levelAge < 7 && cameraX < 360 && player.y > 150 && !completed) {
+        const hint = level.world === 3 ? "ZZZ: PASA · ¡OJO AL DESPERTAR!"
+          : level.world === 11 ? "PÉTALOS ROSAS: PASA · AMARILLOS: ¡SE CIERRA!"
+          : "↑ EL AIRE TE AYUDA A SUBIR ↑";
+        context.save();
+        context.fillStyle = "#fff8e7";
+        context.fillRect(150, 18, 660, 33);
+        context.fillStyle = "#493052";
+        context.font = "bold 14px monospace";
+        context.textAlign = "center";
+        context.fillText(hint, VIEW_WIDTH / 2, 40);
+        context.restore();
+      }
       level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster, level.theme));
       level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge));
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
+      if (level.world === 11) level.bloomBridges?.forEach((bridge) => drawBloomBridge(context, bridge, cameraX, levelAge));
       level.spikePits?.forEach((pit) => {
         const x = pit.x - cameraX;
         context.fillStyle = "#09091b";
@@ -759,7 +787,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           drawSticker(context, x, y + bob, Math.floor(frame / 12) % 2, raster.collectibles, sticker ? raster.stickerSheets[level.world] : undefined, sticker?.column);
         }
       });
-      enemies.forEach((enemy) => drawEnemy(context, enemy, cameraX, (enemy.kind === "wolf" || enemy.kind === "boar") && Math.abs(player.x - enemy.x) < 360, raster));
+      enemies.forEach((enemy) => drawEnemy(context, enemy, cameraX, (enemy.kind === "wolf" || enemy.kind === "boar") && Math.abs(player.x - enemy.x) < 360, raster, level.world === 3 ? wolfSleepState(enemy, levelAge) : "awake"));
       waterJumpers.forEach((jumper) => drawWaterJumper(context, jumper, cameraX, raster.jumpingFish));
       cannonballs.forEach((ball) => drawCannonball(context, ball, cameraX, raster.cannonball));
       projectiles.forEach((ball) => {

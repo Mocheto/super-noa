@@ -307,3 +307,168 @@ test("todas las insignias del juego tienen un sprite transparente y su celda cor
     assert.equal(png[25], 6, "El atlas debe conservar la transparencia RGBA");
   }
 });
+
+test("los lobos dormilones se introducen con sueño largo y aviso antes de despertar", () => {
+  const forest = levels.filter((level) => level.world === 3);
+  assert.deepEqual(forest.map((level) => level.enemies.filter((enemy) => enemy.sleepCycle).length), [4, 6, 7]);
+  for (const level of levels) {
+    for (const enemy of level.enemies) {
+      if (level.world !== 3 || enemy.kind !== "wolf") {
+        assert.equal(enemy.sleepCycle, undefined, `${level.id}: solo los lobos de este bosque duermen`);
+        continue;
+      }
+      const cycle = enemy.sleepCycle;
+      assert.ok(cycle, `${level.id}: ${enemy.id} necesita su ciclo de sueño`);
+      assert.ok(Object.values(cycle).every(Number.isFinite));
+      assert.ok(cycle.interval >= 10 && cycle.interval <= 12);
+      assert.ok(cycle.sleepDuration >= 6 && cycle.sleepDuration >= cycle.interval / 2);
+      assert.ok(cycle.warningDuration >= 1.5);
+      assert.ok(cycle.sleepDuration + cycle.warningDuration <= cycle.interval - 2);
+      assert.ok(cycle.delay >= 0 && cycle.delay < cycle.sleepDuration, "El primer estado debe ser dormido");
+      assert.ok(level.platforms.some((platform) =>
+        platform.kind === "ground" && platform.x <= enemy.minX &&
+        platform.x + platform.width >= enemy.maxX + enemy.width));
+    }
+  }
+  const firstWolf = forest[0].enemies[0];
+  assert.equal(firstWolf.sleepCycle?.delay, 0);
+  assert.ok(firstWolf.sleepCycle!.sleepDuration > (firstWolf.x - forest[0].start.x) / 250 + 3,
+    "El primer lobo debe dar tiempo para reconocer los ZZZ y pasar");
+});
+
+test("los puentes de flores son opcionales, avisan con tiempo y no sostienen checkpoints", () => {
+  const valley = levels.filter((level) => level.world === 11);
+  assert.deepEqual(valley.map((level) => level.bloomBridges?.length), [1, 3, 4]);
+  for (const level of levels) {
+    if (level.world !== 11) {
+      assert.equal(level.bloomBridges, undefined);
+      continue;
+    }
+    const bridges = level.bloomBridges ?? [];
+    assert.equal(new Set(bridges.map((bridge) => bridge.id)).size, bridges.length);
+    for (const bridge of bridges) {
+      assert.ok(Object.entries(bridge).filter(([key]) => key !== "id").every(([, value]) => typeof value === "number" && Number.isFinite(value)));
+      assert.ok(bridge.height > 0 && bridge.width > 0);
+      assert.ok(bridge.interval >= 11 && bridge.interval <= 12);
+      assert.ok(bridge.openDuration >= 7 && bridge.openDuration < bridge.interval);
+      assert.ok(bridge.warningDuration >= 1.8 && bridge.warningDuration < bridge.openDuration);
+      assert.ok(bridge.openDuration + bridge.warningDuration <= bridge.interval - 2);
+      assert.ok(bridge.delay >= 0 && bridge.delay < bridge.openDuration);
+      const pit = level.deadlyWater?.find((pit) =>
+        bridge.x <= pit.x && bridge.x + bridge.width >= pit.x + pit.width);
+      assert.ok(pit, `${level.id}: ${bridge.id} debe ayudar sobre un hueco existente`);
+      assert.ok(bridge.y <= pit.y - 14, "Los pies deben quedar fuera del peligro");
+      assert.ok(pit.x - bridge.x <= 20 && bridge.x + bridge.width - pit.x - pit.width <= 20,
+        "La flor no debe sustituir los recorridos permanentes");
+      const floors = level.platforms.filter((platform) => platform.kind === "garden-ground");
+      assert.ok(floors.some((floor) => floor.x + floor.width === pit.x));
+      assert.ok(floors.some((floor) => floor.x === pit.x + pit.width));
+
+      let x = pit.x - 42;
+      let y = 456 - 58;
+      let velocity = -JUMP_SPEED;
+      do {
+        velocity += GRAVITY / 60;
+        x += 250 / 60;
+        y += velocity / 60;
+      } while (y + 58 < 456);
+      assert.ok(x + 42 > pit.x + pit.width, `${level.id}: el hueco debe poder saltarse con la flor cerrada`);
+      assert.ok((pit.width / 2 + 42) / 250 < bridge.warningDuration,
+        "El aviso debe permitir salir hacia una orilla segura");
+      for (const checkpoint of level.checkpoints) {
+        assert.ok(checkpoint + 64 <= bridge.x || checkpoint >= bridge.x + bridge.width,
+          `${level.id}: el checkpoint ${checkpoint} no debe estar sobre pétalos temporales`);
+      }
+      for (const x of [level.start.x, level.goalX]) {
+        assert.ok(x + 42 <= bridge.x || x >= bridge.x + bridge.width);
+      }
+    }
+  }
+});
+
+test("las tres corrientes del reino secreto son ayudas locales con entrada y destino permanentes", () => {
+  const secret = levels.find((level) => level.id === "S-1")!;
+  const columns = secret.updrafts ?? [];
+  assert.equal(columns.length, 3);
+  assert.equal(new Set(columns.map((column) => column.id)).size, 3);
+  assert.ok(columns.reduce((total, column) => total + column.width, 0) < secret.width / 10);
+  for (const level of levels.filter((level) => level.id !== "S-1")) assert.equal(level.updrafts, undefined);
+  for (const column of columns) {
+    assert.ok(Object.entries(column).filter(([key]) => key !== "id").every(([, value]) => typeof value === "number" && Number.isFinite(value)));
+    assert.ok(column.x > secret.start.x + 42 && column.x + column.width < secret.goalX);
+    assert.ok(column.width >= 140 && column.width <= 180);
+    assert.ok(column.y >= 60 && column.height > 0 && column.y + column.height <= 456);
+    assert.ok(column.strength > GRAVITY && column.strength <= GRAVITY + 500);
+    assert.ok(column.maxRiseSpeed >= 100 && column.maxRiseSpeed <= 145);
+    assert.ok(secret.platforms.some((platform) =>
+      platform.y === column.y + column.height && platform.x <= column.x &&
+      platform.x + platform.width >= column.x + 42), `${column.id}: falta una entrada sobre una nube`);
+    assert.ok(secret.platforms.some((platform) =>
+      platform.y > column.y && platform.y < column.y + column.height - 80 &&
+      platform.x < column.x + column.width && platform.x + platform.width > column.x),
+    `${column.id}: falta una nube alta donde salir del aire`);
+    for (const checkpoint of secret.checkpoints) {
+      assert.ok(checkpoint + 64 <= column.x || checkpoint >= column.x + column.width);
+    }
+  }
+  for (let index = 1; index < columns.length; index += 1) {
+    assert.ok(columns[index].x - columns[index - 1].x - columns[index - 1].width >= 1000,
+      "Las corrientes no deben enlazarse para saltarse el reino entero");
+  }
+});
+
+test("cada mundo presente conserva una identidad jugable propia", () => {
+  const worlds = new Set(levels.map((level) => level.world));
+  assert.equal(worlds.size, 12);
+  for (const world of worlds) {
+    const screens = levels.filter((level) => level.world === world);
+    const platforms = screens.flatMap((level) => level.platforms);
+    const enemies = screens.flatMap((level) => level.enemies);
+    switch (world) {
+      case 1:
+        assert.ok(platforms.some((platform) => platform.kind === "spring"));
+        break;
+      case 2:
+        assert.ok(platforms.some((platform) => platform.kind === "cave-wall"));
+        break;
+      case 3:
+        assert.ok(enemies.some((enemy) => enemy.kind === "wolf" && enemy.sleepCycle));
+        assert.deepEqual(screens.filter((level) => level.enemies.some((enemy) => enemy.kind === "wolf" && enemy.sleepCycle)).map((level) => level.id),
+          ["3-1", "3-2", "3-3"]);
+        break;
+      case 4:
+        assert.ok(enemies.some((enemy) => enemy.kind === "boar"));
+        assert.ok(platforms.some((platform) => platform.kind === "canopy"));
+        break;
+      case 5:
+        assert.ok(screens.some((level) => level.cannons?.length));
+        break;
+      case 6:
+        assert.ok(screens.some((level) => level.spikePits?.length));
+        break;
+      case 7:
+        assert.deepEqual(screens.filter((level) => level.updrafts?.length).map((level) => level.id), ["S-1"]);
+        break;
+      case 8:
+        assert.ok(screens.some((level) => level.waterZones?.length));
+        break;
+      case 9:
+        assert.ok(screens.some((level) => level.waterJumpers?.length && level.deadlyWater?.length));
+        break;
+      case 10:
+        assert.ok(screens.some((level) => level.lavaJets?.length));
+        break;
+      case 11:
+        assert.deepEqual(screens.filter((level) => level.bloomBridges?.length).map((level) => level.id),
+          ["11-1", "11-2", "11-3"]);
+        break;
+      case 12:
+        assert.ok(screens.some((level) =>
+          level.platforms.some((platform) => platform.kind === "ice-ground" || platform.kind === "ice-ledge" || platform.kind === "ice-wall") &&
+          level.windZones?.length));
+        break;
+      default:
+        assert.fail(`El mundo ${world} necesita una comprobación de identidad jugable`);
+    }
+  }
+});

@@ -8,6 +8,8 @@ El mapa de la aventura es un paisaje ilustrado continuo: los caminos dorados mue
 
 Cada pantalla abierta muestra sus objetivos pendientes: llegar a la meta, encontrar cada pegatina, completarla sin perder vidas y, cuando hay un guardián, conseguir su reto de amistad. «Mostrar pista» ofrece una ayuda para el siguiente objetivo pendiente; las pantallas cerradas no revelan sus pistas. El álbum también indica dónde falta cada pegatina.
 
+En el bosque de los lobos, las señales `ZZZ` indican que puedes pasar sin recibir daño; antes de despertar, cada lobo avisa y después vuelve a patrullar. El valle tiene puentes de pétalos que se abren y avisan antes de cerrarse: siguen siendo transitables durante el aviso y siempre hay una alternativa mediante los saltos originales. En el reino secreto, las columnas de aire señaladas con flechas elevan suavemente a Noa solo dentro de su zona; no permiten volar libremente. Estos ciclos se detienen con la pausa y las reapariciones usan apoyos permanentes.
+
 ## Desarrollo
 
 ```bash
@@ -48,7 +50,7 @@ El contenedor del tablón debe ejecutar `node server/ranking-supervisor.mjs`. El
 
 Los gráficos de partida se cargan por mundo y los poderes se solicitan cuando hacen falta. Los recursos iniciales optimizados conservan los píxeles y la transparencia con WebP sin pérdida; los PNG originales siguen disponibles. Mientras llega un atlas de enemigos, su silueta permanece visible.
 
-El volcán, el valle de flores gigantes y la montaña de hielo tienen composiciones originales propias. La música conserva su posición al pausar, silenciar o ajustar el volumen. Para regenerar los tres temas se necesita FFmpeg:
+El bosque de manzanos, el volcán, el valle de flores gigantes y la montaña de hielo tienen composiciones originales propias. El bosque usa una melodía cálida y tranquila, independiente de la pista que conservan los piratas. La música conserva su posición al pausar, silenciar o ajustar el volumen. Para regenerar estos temas se necesita FFmpeg:
 
 ```bash
 node scripts/build-adventure-music.mjs

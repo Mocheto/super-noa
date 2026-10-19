@@ -74,6 +74,11 @@ const giantEnemy = (
   };
 };
 
+const sleepyWolf = (
+  id: string, x: number, minX: number, maxX: number, speed: number,
+  sleepCycle: NonNullable<Enemy["sleepCycle"]>,
+): Enemy => ({ ...enemy(id, "wolf", x, 416, minX, maxX, speed), sleepCycle });
+
 const apple = (id: string, x: number, y: number): LevelItem => ({ id, kind: "apple", x, y });
 const sticker = (id: string, x: number, y: number): LevelItem => ({ id, kind: "sticker", x, y });
 const reward = (id: string, x: number, y = 330, kind: RewardBlock["reward"] = "cat"): RewardBlock => ({
@@ -408,7 +413,7 @@ export const levels: Level[] = [
     world: 3,
     screen: 1,
     title: "El pinar de las huellas",
-    subtitle: "Los primeros lobos vigilan el camino entre los pinos.",
+    subtitle: "Los lobos duermen: pasa al ver ZZZ. ¡Avisan antes de despertar!",
     theme: "wolf-pines",
     width: 4500,
     start: { x: 80, y: 380 },
@@ -420,11 +425,11 @@ export const levels: Level[] = [
       ledge(2830, 350, 210, "stone"), ledge(3300, 290, 190), ledge(3810, 350, 200, "stone"),
     ],
     enemies: [
-      enemy("w1", "wolf", 570, 416, 460, 880, 38),
-      enemy("w2", "wolf", 1510, 416, 1350, 1780, 40),
+      sleepyWolf("w1", 570, 460, 880, 38, { interval: 12, delay: 0, sleepDuration: 8, warningDuration: 1.5 }),
+      sleepyWolf("w2", 1510, 1350, 1780, 40, { interval: 12, delay: 1, sleepDuration: 8, warningDuration: 1.5 }),
       enemy("w3", "cloud", 2130, 235, 1970, 2340, 24),
-      enemy("w4", "wolf", 2920, 416, 2760, 3190, 42),
-      enemy("w5", "wolf", 3850, 416, 3690, 4170, 42),
+      sleepyWolf("w4", 2920, 2760, 3190, 42, { interval: 12, delay: 2, sleepDuration: 8, warningDuration: 1.5 }),
+      sleepyWolf("w5", 3850, 3690, 4170, 42, { interval: 12, delay: 0.5, sleepDuration: 8, warningDuration: 1.5 }),
     ],
     items: [
       apple("a1", 1000, 410), apple("a2", 1960, 235), apple("a3", 3315, 240),
@@ -438,7 +443,7 @@ export const levels: Level[] = [
     world: 3,
     screen: 2,
     title: "El corazón del bosque de los lobos",
-    subtitle: "La aventura más larga: lobos, luna y tres precipicios.",
+    subtitle: "Espera los ZZZ o salta por las ramas. Los lobos avisan al despertar.",
     theme: "wolf-moon",
     width: 6200,
     start: { x: 80, y: 380 },
@@ -451,14 +456,14 @@ export const levels: Level[] = [
       ledge(5230, 285, 190), ledge(5660, 350, 210, "stone"),
     ],
     enemies: [
-      enemy("w1", "wolf", 540, 416, 420, 820, 40),
-      enemy("w2", "wolf", 1660, 416, 1490, 1950, 42),
+      sleepyWolf("w1", 540, 420, 820, 40, { interval: 10.5, delay: 0, sleepDuration: 6.5, warningDuration: 1.5 }),
+      sleepyWolf("w2", 1660, 1490, 1950, 42, { interval: 11, delay: 1, sleepDuration: 7, warningDuration: 1.5 }),
       enemy("w3", "cloud", 2290, 230, 2110, 2530, 26),
-      enemy("w4", "wolf", 3160, 416, 2990, 3480, 44),
-      enemy("w5", "wolf", 3820, 416, 3630, 4140, 45),
+      sleepyWolf("w4", 3160, 2990, 3480, 44, { interval: 10.5, delay: 2, sleepDuration: 6.5, warningDuration: 1.5 }),
+      sleepyWolf("w5", 3820, 3630, 4140, 45, { interval: 11, delay: 0.5, sleepDuration: 7, warningDuration: 1.5 }),
       enemy("w6", "cloud", 4800, 230, 4600, 5030, 26),
-      enemy("w7", "wolf", 5250, 416, 5080, 5550, 46),
-      enemy("w8", "wolf", 5740, 416, 5580, 5910, 48),
+      sleepyWolf("w7", 5250, 5080, 5550, 46, { interval: 10.5, delay: 1.5, sleepDuration: 6.5, warningDuration: 1.5 }),
+      sleepyWolf("w8", 5740, 5580, 5910, 48, { interval: 11, delay: 2.5, sleepDuration: 7, warningDuration: 1.5 }),
     ],
     items: [
       apple("a1", 1040, 410), apple("a2", 1720, 290), apple("a3", 3210, 295),
@@ -474,7 +479,7 @@ export const levels: Level[] = [
     world: 3,
     screen: 3,
     title: "La guarida del Gran Lobo",
-    subtitle: "La ruta más larga termina con el gran duelo del bosque.",
+    subtitle: "Pasa junto a los lobos dormidos y salta hasta el Gran Lobo.",
     theme: "wolf-moon",
     width: 7200,
     start: { x: 80, y: 380 },
@@ -488,15 +493,15 @@ export const levels: Level[] = [
       ledge(6510, 285, 190, "stone"),
     ],
     enemies: [
-      enemy("w1", "wolf", 520, 416, 400, 790, 42),
-      enemy("w2", "wolf", 1060, 416, 900, 1240, 44),
-      enemy("w3", "wolf", 1730, 416, 1560, 2010, 44),
+      sleepyWolf("w1", 520, 400, 790, 42, { interval: 10, delay: 0, sleepDuration: 6, warningDuration: 1.5 }),
+      sleepyWolf("w2", 1060, 900, 1240, 44, { interval: 10.5, delay: 1, sleepDuration: 6.5, warningDuration: 1.5 }),
+      sleepyWolf("w3", 1730, 1560, 2010, 44, { interval: 10, delay: 2, sleepDuration: 6, warningDuration: 1.5 }),
       enemy("w4", "cloud", 2450, 225, 2250, 2740, 26),
-      enemy("w5", "wolf", 3420, 416, 3240, 3720, 46),
-      enemy("w6", "wolf", 4200, 416, 3980, 4490, 46),
+      sleepyWolf("w5", 3420, 3240, 3720, 46, { interval: 10.5, delay: 0.5, sleepDuration: 6.5, warningDuration: 1.5 }),
+      sleepyWolf("w6", 4200, 3980, 4490, 46, { interval: 10, delay: 1.5, sleepDuration: 6, warningDuration: 1.5 }),
       enemy("w7", "cloud", 5310, 225, 5090, 5540, 27),
-      enemy("w8", "wolf", 5830, 416, 5650, 6120, 48),
-      enemy("w9", "wolf", 6550, 416, 6350, 6840, 50),
+      sleepyWolf("w8", 5830, 5650, 6120, 48, { interval: 10.5, delay: 2.5, sleepDuration: 6.5, warningDuration: 1.5 }),
+      sleepyWolf("w9", 6550, 6350, 6840, 50, { interval: 10, delay: 0.75, sleepDuration: 6, warningDuration: 1.5 }),
     ],
     items: [
       apple("a1", 250, 410), apple("a2", 810, 240), apple("a3", 1730, 295),
@@ -896,7 +901,7 @@ export const levels: Level[] = [
   },
   {
     id: "11-1", world: 11, screen: 1,
-    title: "El sendero de las flores gigantes", subtitle: "Rebota en las gotas de rocío para cruzar el jardín gigante.",
+    title: "El sendero de las flores gigantes", subtitle: "La flor abierta es un puente. Si avisa, ¡salta! También hay gotas de rocío.",
     theme: "giant-valley", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     platforms: [
       ...themedGround(world11Floor1, "garden-ground"), themedLedge(310, 340, 190, "garden-ledge"), themedLedge(650, 265, 180, "garden-ledge"), themedLedge(1090, 330, 190, "garden-ledge"),
@@ -905,13 +910,16 @@ export const levels: Level[] = [
       dew(250), dew(1070), dew(3370), dew(4780), themedLedge(4810, 305, 190, "garden-ledge"), themedLedge(5180, 215, 180, "garden-ledge"),
     ],
     deadlyWater: deadlyWaterPits(world11Floor1),
+    bloomBridges: [
+      { id: "g1-flower1", x: 912, y: 430, width: 166, height: 18, interval: 12, delay: 0, openDuration: 8, warningDuration: 2 },
+    ],
     enemies: [giantEnemy("g1-a1", "ant", 450, 420, 320, 770, 46), giantEnemy("g1-s1", "snail", 1220, 420, 1100, 1510, 30), giantEnemy("g1-b1", "bee", 2420, 190, 2240, 2820, 70), giantEnemy("g1-a2", "ant", 3620, 420, 3460, 4070, 52), giantEnemy("g1-b2", "bee", 5050, 175, 4820, 5360, 76)],
     items: [apple("g1a1", 360, 290), apple("g1a2", 710, 215), sticker("sticker-11-1", 1520, 195), apple("g1a3", 2360, 235), apple("g1a4", 2790, 160), apple("g1a5", 4090, 280), apple("g1a6", 5240, 165)],
     rewardBlocks: [reward("g1r1", 1140, 179), reward("g1r2", 3060, 184, "apple")], checkpoints: [1080, 2240, 3400, 4780],
   },
   {
     id: "11-2", world: 11, screen: 2,
-    title: "El jardín de las gotas", subtitle: "Rebota en las gotas de rocío para alcanzar las hojas más altas.",
+    title: "El jardín de las gotas", subtitle: "Cruza las flores abiertas o salta los huecos. El rocío te lleva arriba.",
     theme: "giant-valley", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [
       ...themedGround(world11Floor2, "garden-ground"), themedLedge(280, 340, 180, "garden-ledge"), dew(590), themedLedge(920, 245, 190, "garden-ledge"), themedLedge(1320, 175, 180, "garden-ledge"),
@@ -920,6 +928,11 @@ export const levels: Level[] = [
       themedLedge(4410, 225, 190, "garden-ledge"), themedLedge(4780, 320, 190, "garden-ledge"), dew(5150), themedLedge(5520, 290, 185, "garden-ledge"), dew(5770), themedLedge(5960, 185, 180, "garden-ledge"), themedLedge(6260, 315, 190, "garden-ledge"),
     ],
     deadlyWater: deadlyWaterPits(world11Floor2),
+    bloomBridges: [
+      { id: "g2-flower1", x: 762, y: 430, width: 166, height: 18, interval: 11, delay: 0, openDuration: 7, warningDuration: 1.8 },
+      { id: "g2-flower2", x: 2922, y: 430, width: 176, height: 18, interval: 12, delay: 2, openDuration: 8, warningDuration: 2 },
+      { id: "g2-flower3", x: 5282, y: 430, width: 196, height: 18, interval: 11, delay: 1, openDuration: 7, warningDuration: 1.8 },
+    ],
     enemies: [giantEnemy("g2-b1", "bee", 680, 190, 520, 980, 74), giantEnemy("g2-a1", "ant", 1110, 420, 1010, 1500, 50), giantEnemy("g2-s1", "snail", 2240, 420, 2100, 2760, 34), giantEnemy("g2-b2", "bee", 3540, 145, 3330, 3890, 80), giantEnemy("g2-a2", "ant", 4550, 420, 4370, 4880, 56), giantEnemy("g2-b3", "bee", 5850, 155, 5530, 6220, 86)],
     items: [apple("g2a1", 330, 290), apple("g2a2", 960, 195), apple("g2a3", 1390, 125), apple("g2a4", 2590, 115), sticker("sticker-11-2", 3690, 105), apple("g2a5", 4470, 175), apple("g2a6", 4840, 270), apple("g2a7", 6020, 135)],
     rewardBlocks: [reward("g2r1", 1060, 94), reward("g2r2", 3200, 305, "apple"), reward("g2r3", 4640, 305)], checkpoints: [930, 2020, 3100, 4230, 5500],
@@ -927,7 +940,7 @@ export const levels: Level[] = [
   {
     id: "11-3", world: 11, screen: 3,
     route: { next: "12-1", nextLabel: "Subir a la montaña de hielo ▶" },
-    title: "La colmena de Melisa", subtitle: "Cruza el valle y juega con la Reina Melisa, guardiana de las flores.",
+    title: "La colmena de Melisa", subtitle: "Flores y gotas te ayudan. Salta cuando la flor avise y busca a Melisa.",
     theme: "giant-valley", width: 7800, start: { x: 80, y: 380 }, goalX: 7620,
     platforms: [
       ...themedGround(world11Floor3, "garden-ground"), themedLedge(300, 335, 190, "garden-ledge"), dew(650), themedLedge(1010, 285, 190, "garden-ledge"), themedLedge(1370, 205, 180, "garden-ledge"),
@@ -936,6 +949,12 @@ export const levels: Level[] = [
       themedLedge(4290, 210, 190, "garden-ledge"), themedLedge(4670, 145, 180, "garden-ledge"), themedLedge(4890, 305, 180, "garden-ledge"), dew(5260), themedLedge(5480, 205, 180, "garden-ledge"), themedLedge(5900, 305, 200, "garden-ledge"), dew(6380), themedLedge(6710, 285, 190, "garden-ledge"), dew(6960), themedLedge(7150, 175, 180, "garden-ledge"), themedLedge(7490, 300, 200, "garden-ledge"),
     ],
     deadlyWater: deadlyWaterPits(world11Floor3),
+    bloomBridges: [
+      { id: "g3-flower1", x: 822, y: 430, width: 158, height: 18, interval: 11, delay: 0, openDuration: 7, warningDuration: 1.8 },
+      { id: "g3-flower2", x: 1842, y: 430, width: 186, height: 18, interval: 12, delay: 1.5, openDuration: 8, warningDuration: 2 },
+      { id: "g3-flower3", x: 3972, y: 430, width: 186, height: 18, interval: 11, delay: 2.5, openDuration: 7, warningDuration: 1.8 },
+      { id: "g3-flower4", x: 6482, y: 430, width: 196, height: 18, interval: 12, delay: 0.5, openDuration: 8, warningDuration: 2 },
+    ],
     enemies: [giantEnemy("g3-a1", "ant", 450, 420, 320, 730, 54), giantEnemy("g3-b1", "bee", 1150, 175, 980, 1450, 82), giantEnemy("g3-s1", "snail", 2250, 420, 2100, 2730, 38), giantEnemy("g3-b2", "bee", 3310, 135, 3160, 3650, 88), giantEnemy("g3-a2", "ant", 4350, 420, 4200, 4640, 60), giantEnemy("g3-b3", "bee", 5480, 145, 5300, 5820, 94), giantEnemy("g3-a3", "ant", 7040, 420, 6730, 7460, 66)],
     items: [apple("g3a1", 360, 285), apple("g3a2", 1050, 235), apple("g3a3", 1430, 155), apple("g3a4", 2530, 105), apple("g3a5", 3620, 95), sticker("sticker-11-3", 4730, 95), apple("g3a6", 5530, 155), apple("g3a7", 6000, 255), apple("g3a8", 7220, 125)],
     rewardBlocks: [reward("g3r1", 1080, 134), reward("g3r2", 3220, 74, "apple"), reward("g3r3", 4950, 154)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890, 6690], boss: "queen-bee",
@@ -993,7 +1012,7 @@ export const levels: Level[] = [
     world: 7,
     screen: 1,
     title: "El reino secreto de las nubes",
-    subtitle: "Corre por las nubes, reúne tres insignias y conoce a la Reina Arcoíris.",
+    subtitle: "Entra en las columnas de aire: suben suave. Sal a un lado para bajar.",
     theme: "secret-sky",
     width: 5900,
     start: { x: 80, y: 340 },
@@ -1005,6 +1024,11 @@ export const levels: Level[] = [
       cloudFloor(4350, 405, 380), cloudFloor(4840, 315, 330), cloudFloor(5280, 420, 620),
       cloudFloor(330, 310, 170), cloudFloor(840, 235, 165), cloudFloor(1780, 255, 170),
       cloudFloor(3200, 235, 170), cloudFloor(4530, 220, 170), cloudFloor(5140, 180, 170),
+    ],
+    updrafts: [
+      { id: "sky-lift1", x: 835, y: 120, width: 150, height: 270, strength: 1950, maxRiseSpeed: 140 },
+      { id: "sky-lift2", x: 3180, y: 110, width: 170, height: 300, strength: 1950, maxRiseSpeed: 140 },
+      { id: "sky-lift3", x: 5110, y: 90, width: 170, height: 225, strength: 1950, maxRiseSpeed: 140 },
     ],
     enemies: [
       enemy("ave-c1", "bird", 720, 220, 610, 1080, 70),

@@ -102,7 +102,7 @@ export default function App() {
       6: "./assets/music/castillo.wav",
       7: "./assets/music/gatitos.mp3",
       8: "./assets/music/laguna.wav",
-      9: "./assets/music/manzanos.mp3",
+      9: "./assets/music/jurasico.wav",
     } as const;
     const audio = new Audio(tracks[activeLevel.world]);
     audio.loop = true;

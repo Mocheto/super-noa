@@ -40,8 +40,14 @@ export const drawCastleSprite = (context: CanvasRenderingContext2D, image: HTMLI
 
 const drawDinosaurTerrainSprite = (context: CanvasRenderingContext2D, image: HTMLImageElement, part: "ground" | "wall" | "ledge", x: number, y: number, width: number, height: number) => {
   if (!image.complete || !image.naturalWidth) return;
+  if (part === "ground") {
+    // La franja de roca cubre solo desde la superficie física hacia abajo.
+    context.drawImage(image, 18, 350, 690, 298, x, y, width, height);
+    // La vegetación queda sobre fondo transparente y su césped coincide con y.
+    context.drawImage(image, 18, 178, 690, 470, x, y - 48, width, 130);
+    return;
+  }
   const source = {
-    ground: [18, 178, 690, 470],
     wall: [710, 18, 526, 632],
     ledge: [18, 704, 690, 530],
   }[part];
@@ -512,7 +518,7 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
     const tileWidth = wall ? 100 : ground ? 156 : 138;
     for (let tileY = platform.y; tileY < platform.y + (wall ? platform.height : 1); tileY += 96) {
       for (let tileX = x; tileX < x + platform.width; tileX += tileWidth) {
-        drawDinosaurTerrainSprite(context, raster.dinosaurTerrain, part, tileX, tileY - (ground ? 5 : wall ? 0 : 7), Math.min(tileWidth + 3, x + platform.width - tileX), wall ? Math.min(100, platform.y + platform.height - tileY) : ground ? platform.height + 10 : 62);
+        drawDinosaurTerrainSprite(context, raster.dinosaurTerrain, part, tileX, tileY - (ground ? 0 : wall ? 0 : 7), Math.min(tileWidth + 3, x + platform.width - tileX), wall ? Math.min(100, platform.y + platform.height - tileY) : ground ? platform.height : 62);
       }
     }
     return;
@@ -1219,11 +1225,17 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
 export function drawDeadlyWater(context: CanvasRenderingContext2D, zone: NonNullable<Level["deadlyWater"]>[number], cameraX: number, frame: number, raster: RasterAssets) {
   const x = Math.round(zone.x - cameraX);
   if (x + zone.width < 0 || x > VIEW_WIDTH) return;
+  const surfaceY = zone.y + 8;
+  context.save();
+  context.beginPath();
+  context.rect(x, surfaceY, zone.width, zone.height - 8);
+  context.clip();
   context.fillStyle = "#087b91";
-  context.fillRect(x, zone.y, zone.width, zone.height);
+  context.fillRect(x, surfaceY, zone.width, zone.height - 8);
   for (let tileX = x; tileX < x + zone.width; tileX += 105) {
     drawAtlasCell(context, raster.dinosaurTerrain, 2, 2, 1, 1, tileX, zone.y - 13 + Math.sin(frame / 13 + tileX / 40) * 2, Math.min(110, x + zone.width - tileX), 112);
   }
+  context.restore();
 }
 
 export function drawWaterJumper(context: CanvasRenderingContext2D, jumper: LiveWaterJumper, cameraX: number, sprite: HTMLImageElement) {

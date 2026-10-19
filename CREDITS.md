@@ -13,6 +13,8 @@ La pista `castillo.wav` del sexto mundo es una composición original sintetizada
 
 La pista `laguna.wav` del mundo acuático es una composición original sintetizada para Super Noa mediante `scripts/build-water-music.mjs`; no emplea muestras ni melodías de terceros.
 
+La pista `jurasico.wav` de la isla de los dinosaurios es una composición original sintetizada para Super Noa mediante `scripts/build-dinosaur-music.mjs`; no emplea muestras ni melodías de terceros.
+
 La atribución no es obligatoria bajo CC0, pero se conserva por cortesía y trazabilidad.
 
 ## Recursos originales del proyecto

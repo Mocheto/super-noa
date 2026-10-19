@@ -10,10 +10,10 @@ test("normaliza alias infantiles sin permitir texto arbitrario", () => {
 });
 
 test("acepta únicamente totales posibles del progreso", () => {
-  assert.deepEqual(validateProgress({ world: 8, completedLevels: 22, stickers: 24, bossChallenges: 8 }), {
-    world: 8, completedLevels: 22, stickers: 24, bossChallenges: 8,
+  assert.deepEqual(validateProgress({ world: 9, completedLevels: 25, stickers: 27, bossChallenges: 9 }), {
+    world: 9, completedLevels: 25, stickers: 27, bossChallenges: 9,
   });
-  assert.equal(validateProgress({ world: 9, completedLevels: 22, stickers: 24, bossChallenges: 8 }), null);
+  assert.equal(validateProgress({ world: 10, completedLevels: 25, stickers: 27, bossChallenges: 9 }), null);
   assert.equal(validateProgress({ world: 1.5, completedLevels: 2, stickers: 3, bossChallenges: 4 }), null);
 });
 

@@ -5,9 +5,9 @@ import { levels } from "./levels.ts";
 import { emptyProgress } from "./progress.ts";
 import { findMapJourney, mapRoutes, mapRouteState, worldAvailable, worldCatalog } from "./worldMapData.ts";
 
-test("el mapa representa los ocho mundos y todos sus caminos tienen destinos", () => {
-  assert.equal(worldCatalog.length, 8);
-  assert.equal(new Set(worldCatalog.map((world) => world.id)).size, 8);
+test("el mapa representa los nueve mundos y todos sus caminos tienen destinos", () => {
+  assert.equal(worldCatalog.length, 9);
+  assert.equal(new Set(worldCatalog.map((world) => world.id)).size, 9);
   assert.ok(existsSync(new URL("../../public/assets/worlds/noa-adventure-map-v1.png", import.meta.url)));
   for (const world of worldCatalog) {
     assert.ok(levels.some((level) => level.world === world.id));
@@ -52,4 +52,5 @@ test("Noa recorre solo caminos abiertos y puede volver por ellos", () => {
   ]);
   assert.deepEqual(findMapJourney(6, 8, inCastle)?.map(({ route, reverse }) => reverse ? route.from : route.to), [5, 4, 3, 8]);
   assert.equal(findMapJourney(1, 7, { ...emptyProgress, unlocked: 17 }), null);
+  assert.deepEqual(findMapJourney(9, 6, { ...emptyProgress, unlocked: 20 })?.map(({ route, reverse }) => [route.from, route.to, reverse]), [[6, 9, true]]);
 });

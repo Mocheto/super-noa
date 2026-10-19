@@ -264,6 +264,41 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
     context.fillRect(0, 455, VIEW_WIDTH, 85);
     return;
   }
+  if (level.theme === "dinosaur-island") {
+    const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+    gradient.addColorStop(0, "#57c9f4");
+    gradient.addColorStop(0.58, "#bdebd5");
+    gradient.addColorStop(1, "#2c9a91");
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    context.fillStyle = "#eef7cf";
+    context.beginPath();
+    context.arc(785, 78, 45, 0, Math.PI * 2);
+    context.fill();
+    for (let index = -1; index < 7; index += 1) {
+      const x = index * 210 - positiveModulo(cameraX * 0.12, 210);
+      context.fillStyle = index % 2 ? "#538b68" : "#477c62";
+      context.beginPath();
+      context.moveTo(x, 390);
+      context.lineTo(x + 92, 215 + positiveModulo(index * 37, 70));
+      context.lineTo(x + 210, 390);
+      context.closePath();
+      context.fill();
+    }
+    context.fillStyle = "#286c55";
+    for (let index = -1; index < 10; index += 1) {
+      const x = index * 128 - positiveModulo(cameraX * 0.31, 128);
+      const top = 335 - positiveModulo(index * 29, 72);
+      context.fillRect(x + 58, top, 13, 122);
+      context.beginPath();
+      context.arc(x + 64, top + 12, 54, Math.PI, Math.PI * 2);
+      context.fill();
+      context.fillStyle = index % 2 ? "#349163" : "#2d805b";
+    }
+    context.fillStyle = "#157b83";
+    context.fillRect(0, 448, VIEW_WIDTH, VIEW_HEIGHT - 448);
+    return;
+  }
   if (level.theme === "crystal-cave") {
     drawCaveBackground(context, cameraX, frame, raster.cave);
     return;
@@ -460,6 +495,20 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   const forest = world >= 2 && world <= 4;
   const worldTiles = worldPlatformCells(world);
   if (x + platform.width < 0 || x > VIEW_WIDTH) return;
+  if (platform.kind === "dino-ground" || platform.kind === "dino-ledge" || platform.kind === "dino-wall") {
+    const ground = platform.kind === "dino-ground";
+    const wall = platform.kind === "dino-wall";
+    context.fillStyle = wall ? "#563b31" : "#6b4932";
+    context.fillRect(x, platform.y, platform.width, platform.height);
+    const [column, row] = wall ? [1, 0] : ground ? [0, 0] : [0, 1];
+    const tileWidth = wall ? 100 : ground ? 110 : 116;
+    for (let tileY = platform.y; tileY < platform.y + (wall ? platform.height : 1); tileY += 96) {
+      for (let tileX = x; tileX < x + platform.width; tileX += tileWidth) {
+        drawAtlasCell(context, raster.dinosaurTerrain, 2, 2, column, row, tileX, tileY - (ground ? 8 : 5), Math.min(tileWidth + 4, x + platform.width - tileX), wall ? Math.min(100, platform.y + platform.height - tileY) : ground ? 132 : 62);
+      }
+    }
+    return;
+  }
   if (platform.kind === "sea-ground" || platform.kind === "sea-ledge" || platform.kind === "sea-wall") {
     if (platform.kind === "sea-wall") {
       if (raster.seaWall.complete && raster.seaWall.naturalWidth) {
@@ -836,6 +885,23 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
     context.restore();
     return;
   }
+  if (enemy.kind === "baby-t-rex" || enemy.kind === "pterodactyl") {
+    const column = enemy.kind === "baby-t-rex" ? 0 : 1;
+    const width = enemy.kind === "baby-t-rex" ? 66 : 78;
+    const height = enemy.kind === "baby-t-rex" ? 62 : 54;
+    const drawX = x + Math.round((enemy.width - width) / 2);
+    const drawY = y + enemy.height - height;
+    context.save();
+    if (enemy.vx < 0) {
+      context.translate(drawX + width, 0);
+      context.scale(-1, 1);
+      drawAtlasCell(context, raster.dinosaurEnemies, 2, 1, column, 0, 0, drawY, width, height);
+    } else {
+      drawAtlasCell(context, raster.dinosaurEnemies, 2, 1, column, 0, drawX, drawY, width, height);
+    }
+    context.restore();
+    return;
+  }
   if (enemy.kind === "skeleton" || enemy.kind === "zombie" || enemy.kind === "ghost") {
     const column = enemy.kind === "skeleton" ? 0 : enemy.kind === "zombie" ? 1 : 2;
     const width = enemy.kind === "ghost" ? 60 : 54;
@@ -1139,6 +1205,16 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
     context.fillRect(x + 26, y + 22, 7, 6);
     context.fillRect(x, y + 34, 16, 6);
     context.fillRect(x + 42, y + 34, 16, 6);
+  }
+}
+
+export function drawDeadlyWater(context: CanvasRenderingContext2D, zone: NonNullable<Level["deadlyWater"]>[number], cameraX: number, frame: number, raster: RasterAssets) {
+  const x = Math.round(zone.x - cameraX);
+  if (x + zone.width < 0 || x > VIEW_WIDTH) return;
+  context.fillStyle = "#087b91";
+  context.fillRect(x, zone.y, zone.width, zone.height);
+  for (let tileX = x; tileX < x + zone.width; tileX += 105) {
+    drawAtlasCell(context, raster.dinosaurTerrain, 2, 2, 1, 1, tileX, zone.y - 13 + Math.sin(frame / 13 + tileX / 40) * 2, Math.min(110, x + zone.width - tileX), 112);
   }
 }
 

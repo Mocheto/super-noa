@@ -21,6 +21,10 @@ const castleGround = (segments: Array<[number, number]>): Platform[] => segments
 const castleLedge = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 24, kind: "castle-ledge" });
 const castleWall = (x: number, y: number, width: number, height: number): Platform => ({ x, y, width, height, kind: "castle-wall" });
 const spikePits = (segments: Array<[number, number]>) => segments.slice(0, -1).map(([x, width], index) => ({ x: x + width, y: 454, width: segments[index + 1][0] - x - width, height: 90 }));
+const dinoGround = (segments: Array<[number, number]>): Platform[] => segments.map(([x, width]) => ({ x, y: 456, width, height: 120, kind: "dino-ground" }));
+const dinoLedge = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 24, kind: "dino-ledge" });
+const dinoWall = (x: number, y: number, width: number, height: number): Platform => ({ x, y, width, height, kind: "dino-wall" });
+const deadlyWaterPits = (segments: Array<[number, number]>) => segments.slice(0, -1).map(([x, width], index) => ({ x: x + width, y: 448, width: segments[index + 1][0] - x - width, height: 128 }));
 
 const ship = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 26, kind: "ship" });
 const airPlank = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 18, kind: "air-plank" });
@@ -39,8 +43,8 @@ const enemy = (
   kind,
   x,
   y,
-  width: kind === "boar" ? 60 : kind === "wolf" ? 56 : kind === "sky-unicorn" ? 58 : kind === "bird" || kind === "parrot" || kind === "pirate" || kind === "bat" || kind === "ghost" ? 46 : 42,
-  height: kind === "boar" ? 42 : kind === "wolf" ? 40 : kind === "sky-unicorn" ? 42 : kind === "pirate" || kind === "zombie" ? 50 : kind === "bird" || kind === "parrot" || kind === "bat" || kind === "ghost" ? 32 : 36,
+  width: kind === "boar" ? 60 : kind === "wolf" ? 56 : kind === "sky-unicorn" || kind === "baby-t-rex" ? 58 : kind === "pterodactyl" ? 54 : kind === "bird" || kind === "parrot" || kind === "pirate" || kind === "bat" || kind === "ghost" ? 46 : 42,
+  height: kind === "boar" ? 42 : kind === "wolf" ? 40 : kind === "sky-unicorn" ? 42 : kind === "baby-t-rex" ? 46 : kind === "pterodactyl" ? 36 : kind === "pirate" || kind === "zombie" ? 50 : kind === "bird" || kind === "parrot" || kind === "bat" || kind === "ghost" ? 32 : 36,
   minX,
   maxX,
   speed,
@@ -71,6 +75,7 @@ export const themeNames: Record<Theme, string> = {
   "haunted-castle": "El castillo de los sustos divertidos",
   "secret-sky": "El reino secreto de las nubes",
   "water-lagoon": "La laguna de los corales",
+  "dinosaur-island": "La isla tropical de los dinosaurios",
 };
 
 // Identificadores estables: A es el desvío acuático entre los mundos 3 y 4.
@@ -116,6 +121,9 @@ export const waterLevels: Level[] = [
 const castleFloor1: Array<[number, number]> = [[0, 760], [900, 950], [1990, 900], [3030, 970]];
 const castleFloor2: Array<[number, number]> = [[0, 650], [800, 1000], [1940, 900], [2980, 1000], [4120, 1080]];
 const castleFloor3: Array<[number, number]> = [[0, 760], [900, 920], [1960, 950], [3050, 950], [4130, 1000], [5260, 1240]];
+const dinoFloor1: Array<[number, number]> = [[0, 920], [1040, 1080], [2250, 1050], [3440, 1160]];
+const dinoFloor2: Array<[number, number]> = [[0, 760], [900, 960], [2000, 900], [3040, 1010], [4200, 1100]];
+const dinoFloor3: Array<[number, number]> = [[0, 820], [960, 900], [2010, 940], [3090, 900], [4140, 930], [5200, 1300]];
 
 export const levels: Level[] = [
   {
@@ -719,7 +727,7 @@ export const levels: Level[] = [
   },
   {
     id: "6-3", world: 6, screen: 3,
-    route: { finale: true },
+    route: { next: "9-1", nextLabel: "Viajar a la isla de los dinosaurios ▶" },
     title: "El salón del Conde Vampiro", subtitle: "Una última ruta entre fantasmas, pinchos y pasadizos.",
     theme: "haunted-castle", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [
@@ -736,6 +744,58 @@ export const levels: Level[] = [
     enemies: [enemy("sk5", "skeleton", 390, 420, 230, 680, 40), enemy("gh6", "ghost", 1100, 215, 930, 1340, 62), enemy("zo4", "zombie", 2240, 406, 2060, 2670, 36), enemy("gh7", "ghost", 2860, 195, 2590, 3050, 65), enemy("sk6", "skeleton", 3330, 420, 3170, 3660, 43), enemy("gh8", "ghost", 4260, 205, 4030, 4500, 68), enemy("zo5", "zombie", 4770, 406, 4580, 5030, 39), enemy("gh9", "ghost", 5450, 185, 5250, 5700, 70), enemy("sk7", "skeleton", 5940, 420, 5770, 6200, 46)],
     items: [apple("c3a1", 420, 285), apple("c3a2", 1450, 220), apple("c3a3", 2580, 205), apple("c3a4", 3650, 190), apple("c3a5", 4800, 195), apple("c3a6", 5960, 195), sticker("sticker-6-3", 4780, 185)],
     rewardBlocks: [reward("c3r1", 1050, 210), reward("c3r2", 2980, 210, "apple"), reward("c3r3", 5280, 200)], checkpoints: [940, 2010, 3120, 4210, 5350, 5890], boss: "vampire-count",
+  },
+  {
+    id: "9-1", world: 9, screen: 1,
+    title: "La costa de las huellas", subtitle: "Salta sobre el agua y conoce a los pequeños t-rex de la isla.",
+    theme: "dinosaur-island", width: 4600, start: { x: 80, y: 380 }, goalX: 4420,
+    platforms: [
+      ...dinoGround(dinoFloor1),
+      dinoLedge(310, 350, 190), dinoLedge(620, 285, 180), dinoLedge(1080, 340, 190),
+      dinoLedge(1460, 285, 180), dinoLedge(1870, 350, 190), dinoLedge(2300, 315, 190),
+      dinoLedge(2710, 255, 180), dinoLedge(3180, 345, 190), dinoLedge(3540, 285, 180),
+      dinoLedge(4010, 335, 190), dinoWall(1670, 350, 70, 106),
+    ],
+    deadlyWater: deadlyWaterPits(dinoFloor1),
+    enemies: [enemy("d1-t1", "baby-t-rex", 480, 408, 350, 760, 37), enemy("d1-p1", "pterodactyl", 1190, 205, 1070, 1510, 62), enemy("d1-t2", "baby-t-rex", 1770, 408, 1640, 2040, 41), enemy("d1-p2", "pterodactyl", 2670, 175, 2460, 2940, 68), enemy("d1-t3", "baby-t-rex", 3690, 408, 3500, 4010, 44)],
+    items: [apple("d1a1", 360, 300), apple("d1a2", 680, 235), sticker("sticker-9-1", 1515, 235), apple("d1a3", 2370, 265), apple("d1a4", 2760, 205), apple("d1a5", 4080, 285)],
+    rewardBlocks: [reward("d1r1", 1320, 285), reward("d1r2", 3260, 300, "apple")], checkpoints: [1070, 2280, 3470],
+  },
+  {
+    id: "9-2", world: 9, screen: 2,
+    title: "El vuelo de los terodáctilos", subtitle: "Sube por los riscos y cruza cada cala sin tocar el agua.",
+    theme: "dinosaur-island", width: 5300, start: { x: 80, y: 380 }, goalX: 5120,
+    platforms: [
+      ...dinoGround(dinoFloor2),
+      dinoLedge(280, 345, 180), dinoLedge(560, 275, 180), dinoLedge(940, 335, 190),
+      dinoLedge(1290, 245, 180), dinoLedge(1690, 330, 180), dinoLedge(2050, 285, 190),
+      dinoLedge(2430, 205, 180), dinoLedge(2780, 330, 180), dinoLedge(3100, 270, 190),
+      dinoLedge(3510, 195, 180), dinoLedge(3890, 325, 180), dinoLedge(4270, 250, 190),
+      dinoLedge(4740, 330, 190), dinoWall(1510, 330, 76, 126), dinoWall(3650, 315, 80, 141),
+    ],
+    deadlyWater: deadlyWaterPits(dinoFloor2),
+    enemies: [enemy("d2-p1", "pterodactyl", 700, 190, 520, 930, 68), enemy("d2-t1", "baby-t-rex", 1110, 408, 1000, 1460, 43), enemy("d2-p2", "pterodactyl", 2290, 155, 2080, 2630, 74), enemy("d2-t2", "baby-t-rex", 2720, 408, 2530, 2860, 47), enemy("d2-p3", "pterodactyl", 3650, 145, 3400, 3970, 78), enemy("d2-t3", "baby-t-rex", 4550, 408, 4370, 4860, 50)],
+    items: [apple("d2a1", 340, 295), apple("d2a2", 620, 225), apple("d2a3", 1350, 195), apple("d2a4", 2490, 155), sticker("sticker-9-2", 3560, 145), apple("d2a5", 4320, 200), apple("d2a6", 4800, 280)],
+    rewardBlocks: [reward("d2r1", 1030, 280), reward("d2r2", 3150, 215, "apple"), reward("d2r3", 4610, 300)], checkpoints: [930, 2030, 3070, 4230],
+  },
+  {
+    id: "9-3", world: 9, screen: 3,
+    route: { finale: true },
+    title: "El nido de la Reina Tricera", subtitle: "Cruza la gran isla y juega con su guardiana de tres cuernos.",
+    theme: "dinosaur-island", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    platforms: [
+      ...dinoGround(dinoFloor3),
+      dinoLedge(300, 340, 190), dinoLedge(650, 260, 180), dinoLedge(1010, 335, 190),
+      dinoLedge(1370, 245, 180), dinoLedge(1770, 330, 180), dinoLedge(2070, 270, 190),
+      dinoLedge(2460, 190, 180), dinoLedge(2840, 325, 180), dinoLedge(3160, 255, 190),
+      dinoLedge(3550, 180, 180), dinoLedge(3940, 320, 180), dinoLedge(4230, 245, 190),
+      dinoLedge(4660, 175, 180), dinoLedge(5080, 315, 190), dinoLedge(5450, 235, 180), dinoLedge(5900, 315, 200),
+      dinoWall(1560, 338, 76, 118), dinoWall(3710, 320, 78, 136), dinoWall(5700, 330, 74, 126),
+    ],
+    deadlyWater: deadlyWaterPits(dinoFloor3),
+    enemies: [enemy("d3-t1", "baby-t-rex", 450, 408, 320, 720, 46), enemy("d3-p1", "pterodactyl", 1150, 175, 980, 1430, 76), enemy("d3-t2", "baby-t-rex", 1730, 408, 1640, 1840, 50), enemy("d3-p2", "pterodactyl", 2480, 135, 2220, 2780, 82), enemy("d3-t3", "baby-t-rex", 3300, 408, 3180, 3650, 53), enemy("d3-p3", "pterodactyl", 4310, 125, 4070, 4610, 86), enemy("d3-t4", "baby-t-rex", 4870, 408, 4720, 5130, 56), enemy("d3-p4", "pterodactyl", 5520, 155, 5350, 5850, 90)],
+    items: [apple("d3a1", 360, 290), apple("d3a2", 700, 210), apple("d3a3", 1430, 195), apple("d3a4", 2500, 140), apple("d3a5", 3620, 130), sticker("sticker-9-3", 4700, 125), apple("d3a6", 5500, 185), apple("d3a7", 6000, 265)],
+    rewardBlocks: [reward("d3r1", 1080, 280), reward("d3r2", 3220, 215, "apple"), reward("d3r3", 5160, 270)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890], boss: "triceratops-queen",
   },
   {
     id: "S-1",

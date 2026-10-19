@@ -25,7 +25,7 @@ type TouchControlsMode = "auto" | "always";
 
 const emptySnapshot: GameSnapshot = { apples: 0, stickers: [], power: "normal", checkpoint: 0, paused: false };
 const MAX_LIVES = 3;
-// Los índices del guardado siguen refiriéndose a la campaña original de 18 pantallas.
+// Los índices del guardado conservan las 18 pantallas originales y continúan con la isla jurásica.
 const campaignLevelCount = campaignLevels.length;
 const bossLevels = levels.flatMap((level, index) => level.boss ? [{ level, index, boss: bossCatalog[level.boss] }] : []);
 declare global {
@@ -102,6 +102,7 @@ export default function App() {
       6: "./assets/music/castillo.wav",
       7: "./assets/music/gatitos.mp3",
       8: "./assets/music/laguna.wav",
+      9: "./assets/music/manzanos.mp3",
     } as const;
     const audio = new Audio(tracks[activeLevel.world]);
     audio.loop = true;
@@ -683,7 +684,7 @@ export default function App() {
           <p className="eyebrow">Aventureras y aventureros</p><h2>Tablón mundial</h2>
           {!rankingDevice ? <div className="ranking-join"><label htmlFor="ranking-alias">Tu alias de aventura</label><input id="ranking-alias" value={rankingAlias} onChange={(event) => setRankingAlias(event.target.value)} maxLength={16} placeholder="Por ejemplo, Moche" /><button className="pixel-button primary" type="button" onClick={() => void joinRanking()}>¡Salir al tablón!</button><small>Solo compartimos tu alias y tus logros. No pongas tu nombre real.</small></div> : <p className="ranking-welcome">¡Hola, {rankingDevice.alias}! Tus logros se guardan solos.</p>}
           {rankingMessage && <p className="ranking-message" role="status">{rankingMessage}</p>}
-          <ol className="ranking-list">{rankingPlayers.map((player, index) => <li key={`${player.alias}-${index}`}><b>{index + 1}. {player.alias}</b><span>Mundo {player.world || 1} · {player.completedLevels}/18 pantallas · {player.stickers} pegatinas</span></li>)}</ol>
+          <ol className="ranking-list">{rankingPlayers.map((player, index) => <li key={`${player.alias}-${index}`}><b>{index + 1}. {player.alias}</b><span>Mundo {player.world || 1} · {player.completedLevels}/{campaignLevelCount} pantallas · {player.stickers} pegatinas</span></li>)}</ol>
           {rankingPlayers.length === 0 && !rankingMessage && <p className="ranking-empty">Aún no hay nadie. ¡Puedes ser la primera aventurera!</p>}
           <button className="pixel-button" type="button" onClick={() => void loadRanking().then(setRankingPlayers).catch(() => setRankingMessage(rankingConnectionMessage))}>Actualizar tablón</button>
         </div></div>

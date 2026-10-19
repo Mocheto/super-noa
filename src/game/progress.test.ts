@@ -18,6 +18,15 @@ test("el guardado antiguo amplía los índices de campaña sin perder logros", (
   assert.equal(parsed.waterUnlocked, false);
 });
 
+test("un guardado que terminó el castillo abre la isla sin cambiar de versión", () => {
+  const parsed = parseProgress(JSON.stringify({
+    version: 2,
+    unlocked: 17,
+    levelStats: { "6-3": { completed: true, bestApples: 5 } },
+  }));
+  assert.equal(parsed.unlocked, 18);
+});
+
 test("los datos ausentes o dañados vuelven a valores seguros", () => {
   assert.deepEqual(parseProgress("{"), emptyProgress);
   assert.deepEqual(parseProgress("null"), emptyProgress);

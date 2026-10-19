@@ -4,6 +4,7 @@ export type RasterAssets = {
   waterBackground: HTMLImageElement; waterTerrain: HTMLImageElement; seaWall: HTMLImageElement;
   waterEnemies: HTMLImageElement; swim: HTMLImageElement; waterCat: HTMLImageElement;
   enemies: HTMLImageElement; castleEnemies: HTMLImageElement; boar: HTMLImageElement;
+  dinosaurEnemies: HTMLImageElement; dinosaurTerrain: HTMLImageElement;
   bird: HTMLImageElement; collectibles: HTMLImageElement; cave: HTMLImageElement;
   castle: HTMLImageElement; secret: HTMLImageElement; cannon: HTMLImageElement;
   cannonball: HTMLImageElement; checkpoint: HTMLImageElement; goalFlag: HTMLImageElement;
@@ -32,11 +33,11 @@ export function getLevelAssets(level: Level): RasterAssets {
   const tileImages = {
     1: "world-1-tiles-v1.png", 2: "world-2-tiles-v1.png", 3: "world-3-tiles-v1.png",
     4: "world-4-tiles-v1.png", 5: "world-5-tiles-v1.png", 6: "castle-v1.png",
-    7: "secret-sky-v1.png", 8: "water-terrain-v1.png",
+    7: "secret-sky-v1.png", 8: "water-terrain-v1.png", 9: "dinosaur-island-v1.png",
   } as const;
   const tiles = {} as RasterAssets["tiles"];
   const stickerSheets = {} as RasterAssets["stickerSheets"];
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8] as const) {
+  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9] as const) {
     tiles[id] = when(id === world, `./assets/atlases/${tileImages[id]}`);
     stickerSheets[id] = when(id === world, `./assets/stickers/world-${id}-v1.png`);
   }
@@ -49,6 +50,8 @@ export function getLevelAssets(level: Level): RasterAssets {
     waterCat: when(world === 8, "./assets/sprites/world-cat-8-v1.png"),
     enemies: getImage("./assets/atlases/enemies-v1.png"),
     castleEnemies: when(world === 6, "./assets/atlases/castle-enemies-v1.png"),
+    dinosaurEnemies: when(world === 9, "./assets/atlases/dinosaur-enemies-v1.png"),
+    dinosaurTerrain: when(world === 9, "./assets/atlases/dinosaur-island-v1.png"),
     boar: when(world === 4, "./assets/sprites/enemy-boar-v2.png"),
     bird: when(level.enemies.some((enemy) => enemy.kind === "bird"), "./assets/sprites/enemy-bird-v2.png"),
     collectibles: getImage("./assets/atlases/collectibles-v1.png"),

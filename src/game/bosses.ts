@@ -11,4 +11,5 @@ export const bossCatalog: Record<BossId, { name: string; assetPrefix: string; in
   "sky-captain": { name: "Capitán Celeste", assetPrefix: "./assets/sprites/boss-capitan-celeste", intro: "El capitán de la flota te reta por el tesoro de las nubes.", challenge: { id: "finish-scissors", label: "Termina con tijera para conseguir su marco de nubes." } },
   "vampire-count": { name: "Conde Vampiro", assetPrefix: "./assets/sprites/boss-conde-vampiro", intro: "El conde del castillo te reta a un duelo de ingenio.", challenge: { id: "clean-sweep", label: "Gana 2–0 para conseguir su marco lunar." } },
   "rainbow-queen": { name: "Reina Arcoíris", assetPrefix: "./assets/sprites/boss-reina-arcoiris-v2", intro: "La guardiana del cielo quiere comprobar tu magia.", challenge: { id: "finish-paper", label: "Termina con papel para conseguir su marco arcoíris." } },
+  "triceratops-queen": { name: "Reina Tricera", assetPrefix: "./assets/sprites/boss-reina-tricera", intro: "La guardiana de la isla quiere jugar antes de enseñarte su nido de flores.", challenge: { id: "tie-then-win", label: "Haz un empate y gana para conseguir su marco tropical." } },
 };

@@ -17,10 +17,10 @@ function boundedInteger(value, maximum) {
 
 export function validateProgress(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
-  const world = boundedInteger(value.world, 8);
-  const completedLevels = boundedInteger(value.completedLevels, 22);
-  const stickers = boundedInteger(value.stickers, 24);
-  const bossChallenges = boundedInteger(value.bossChallenges, 8);
+  const world = boundedInteger(value.world, 9);
+  const completedLevels = boundedInteger(value.completedLevels, 25);
+  const stickers = boundedInteger(value.stickers, 27);
+  const bossChallenges = boundedInteger(value.bossChallenges, 9);
   if ([world, completedLevels, stickers, bossChallenges].some((item) => item === null)) return null;
   return { world, completedLevels, stickers, bossChallenges };
 }

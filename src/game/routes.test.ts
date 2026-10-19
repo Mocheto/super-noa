@@ -23,6 +23,8 @@ test("la ruta normal evita el agua y la laguna vuelve al bosque de los jabalíes
   assert.equal(levels[nextLevelIndex(levels[levelIndex("A-2")])].id, "A-3");
   assert.equal(levels[levelIndex("3-3")].route?.waterExit, "A-1");
   assert.equal(levels[levelIndex("4-3")].route?.secretExit, "S-1");
-  assert.equal(nextLevelIndex(levels[levelIndex("6-3")]), -1);
-  assert.equal(campaignUnlockIndex(levels[levelIndex("6-3")]), campaignLevels.length - 1);
+  assert.equal(levels[nextLevelIndex(levels[levelIndex("6-3")])].id, "9-1");
+  assert.equal(campaignUnlockIndex(levels[levelIndex("6-3")]), campaignLevels.findIndex((level) => level.id === "9-1"));
+  assert.equal(nextLevelIndex(levels[levelIndex("9-3")]), -1);
+  assert.equal(campaignUnlockIndex(levels[levelIndex("9-3")]), campaignLevels.length - 1);
 });

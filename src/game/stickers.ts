@@ -4,7 +4,7 @@ export type StickerDefinition = {
   id: string;
   name: string;
   icon: PixelIconKind;
-  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   hint: string;
 };
 
@@ -30,6 +30,9 @@ export const stickerCatalog: StickerDefinition[] = [
   { id: "sticker-6-1", name: "Llave de plata", icon: "gem", world: 6, hint: "Busca entre las almenas del primer pasillo." },
   { id: "sticker-6-2", name: "Fantasma amigo", icon: "sparkle", world: 6, hint: "Sigue los destellos por el laberinto." },
   { id: "sticker-6-3", name: "Corona nocturna", icon: "crown", world: 6, hint: "Está cerca de la sala del conde." },
+  { id: "sticker-9-1", name: "Huella fósil", icon: "paw", world: 9, hint: "Busca sobre el primer risco de la isla." },
+  { id: "sticker-9-2", name: "Ala tropical", icon: "parrot", world: 9, hint: "Sigue a los terodáctilos por las repisas altas." },
+  { id: "sticker-9-3", name: "Corona de Tricera", icon: "crown", world: 9, hint: "Está cerca del nido de la guardiana." },
   { id: "sticker-s-1", name: "Pluma celeste", icon: "sparkle", world: 7, hint: "Vuela por la primera nube alta." },
   { id: "sticker-s-2", name: "Herradura arcoíris", icon: "crown", world: 7, hint: "Busca entre los unicornios de las nubes." },
   { id: "sticker-s-3", name: "Estrella secreta", icon: "gem", world: 7, hint: "Está muy cerca del palacio del cielo." },

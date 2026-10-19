@@ -4,7 +4,7 @@ import { getImage, getLevelAssets } from "./assets";
 import {
   drawAmbientForeground, drawApple, drawBackground, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawCheckpoint,
-  drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock,
+  drawDeadlyWater, drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock,
   drawSecretVine, drawSticker, drawTinySparkle,
 } from "./rendering";
 import { useGameInput } from "./input";
@@ -299,7 +299,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
             player.jumpsUsed = 0;
             player.springLaunch = false;
           }
-        } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall" || platform.kind === "sea-wall") && horizontal && player.vy < 0) {
+        } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall" || platform.kind === "sea-wall" || platform.kind === "dino-wall") && horizontal && player.vy < 0) {
           const platformBottom = platform.y + platform.height;
           if (previousY >= platformBottom - 10 && player.y <= platformBottom) {
             player.y = platformBottom;
@@ -349,6 +349,11 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       }
 
       if (level.spikePits?.some((pit) => intersects(player, { x: pit.x + 8, y: pit.y + 16, width: pit.width - 16, height: pit.height }))) {
+        callbacksRef.current.playSound("hurt");
+        respawn();
+        return;
+      }
+      if (level.deadlyWater?.some((zone) => intersects(player, { x: zone.x + 5, y: zone.y + 8, width: zone.width - 10, height: zone.height }))) {
         callbacksRef.current.playSound("hurt");
         respawn();
         return;
@@ -653,6 +658,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     const render = () => {
       drawBackground(context, level, cameraX, frame, raster);
+      level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster));
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
       level.spikePits?.forEach((pit) => {
         const x = pit.x - cameraX;

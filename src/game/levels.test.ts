@@ -14,7 +14,7 @@ test("el mundo del agua se abre entre los dos bosques desde una poza segura", ()
   assert.equal(levels[levels.findIndex((level) => level.id === "3-3") + 1].id, "A-1");
   assert.equal(levels[levels.findIndex((level) => level.id === "A-3") + 1].id, "4-1");
   assert.equal(aquatic[2].boss, "shark-captain");
-  assert.equal(levels.filter((level) => level.world !== 7 && level.world !== 8).length, 18);
+  assert.equal(levels.filter((level) => level.world !== 7 && level.world !== 8).length, 21);
   assert.equal(levels.find((level) => level.id === "2-3")?.waterEntrance, undefined);
   const forest = levels.find((level) => level.id === "3-3")!;
   const entrance = forest.waterEntrance!;
@@ -34,10 +34,10 @@ test("el mundo del agua se abre entre los dos bosques desde una poza segura", ()
   }
 });
 
-test("los ocho jefes del álbum tienen retrato y duelo", () => {
+test("los nueve jefes del álbum tienen retrato y duelo", () => {
   const bosses = levels.filter((level) => level.boss);
-  assert.equal(bosses.length, 8);
-  assert.equal(new Set(bosses.map((level) => level.boss)).size, 8);
+  assert.equal(bosses.length, 9);
+  assert.equal(new Set(bosses.map((level) => level.boss)).size, 9);
   for (const level of bosses) {
     assert.ok(level.boss);
     const boss = bossCatalog[level.boss];
@@ -112,6 +112,26 @@ test("el castillo tiene tres pantallas, un jefe y una pegatina por pantalla", ()
   }
 });
 
+test("la isla jurásica continúa tras el castillo y todos sus huecos son agua mortal", () => {
+  const island = levels.filter((level) => level.world === 9);
+  assert.deepEqual(island.map((level) => level.id), ["9-1", "9-2", "9-3"]);
+  assert.equal(levels.find((level) => level.id === "6-3")?.route?.next, "9-1");
+  assert.equal(island[2].route?.finale, true);
+  assert.equal(island[2].boss, "triceratops-queen");
+  for (const level of island) {
+    assert.ok(level.enemies.some((enemy) => enemy.kind === "baby-t-rex"));
+    assert.ok(level.enemies.some((enemy) => enemy.kind === "pterodactyl"));
+    assert.equal(level.items.find((item) => item.kind === "sticker")?.id, `sticker-${level.id}`);
+    const floors = level.platforms.filter((platform) => platform.kind === "dino-ground").sort((a, b) => a.x - b.x);
+    const gaps = floors.slice(0, -1).map((floor, index) => [floor.x + floor.width, floors[index + 1].x] as const);
+    assert.equal(level.deadlyWater?.length, gaps.length);
+    gaps.forEach(([start, end], index) => {
+      assert.equal(level.deadlyWater?.[index].x, start);
+      assert.equal(level.deadlyWater?.[index].width, end - start);
+    });
+  }
+});
+
 test("el bloque de gato tras el segundo checkpoint del conde exige usar la repisa", () => {
   const level = levels.find((entry) => entry.id === "6-3");
   const block = level?.rewardBlocks.find((reward) => reward.id === "c3r2");
@@ -166,7 +186,7 @@ test("el reino secreto conserva sus identificadores y está después de la campa
 
 test("todas las insignias del juego tienen un sprite transparente y su celda correcta", () => {
   const ids = levels.flatMap((level) => level.items.filter((item) => item.kind === "sticker").map((item) => item.id));
-  assert.equal(ids.length, 24);
+  assert.equal(ids.length, 27);
   assert.deepEqual(new Set(ids), new Set(stickerCatalog.map((entry) => entry.id)));
   for (const sticker of stickerCatalog) {
     const sprite = getStickerSprite(sticker.id);

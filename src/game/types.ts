@@ -41,6 +41,17 @@ export type Cannon = {
   interval: number;
 };
 
+export type WaterJumper = {
+  id: string;
+  x: number;
+  surfaceY: number;
+  width: number;
+  height: number;
+  interval: number;
+  delay: number;
+  jumpHeight: number;
+};
+
 export type BossId = "bramble-king" | "mist-countess" | "great-wolf" | "great-boar" | "sky-captain" | "vampire-count" | "rainbow-queen" | "shark-captain" | "triceratops-queen";
 
 export type Level = {
@@ -62,6 +73,7 @@ export type Level = {
   items: LevelItem[];
   rewardBlocks: RewardBlock[];
   cannons?: Cannon[];
+  waterJumpers?: WaterJumper[];
   checkpoints: number[];
   boss?: BossId;
   route?: {

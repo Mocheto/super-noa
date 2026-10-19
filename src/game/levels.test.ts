@@ -129,6 +129,14 @@ test("la isla jurásica continúa tras el castillo y todos sus huecos son agua m
       assert.equal(level.deadlyWater?.[index].x, start);
       assert.equal(level.deadlyWater?.[index].width, end - start);
     });
+    if (level.screen === 1) assert.equal(level.waterJumpers, undefined);
+    else {
+      assert.equal(level.waterJumpers?.length, gaps.length);
+      for (const fish of level.waterJumpers ?? []) {
+        assert.ok(fish.interval >= 2 && fish.interval <= 3);
+        assert.ok(level.deadlyWater?.some((water) => fish.x >= water.x && fish.x + fish.width <= water.x + water.width), `${fish.id} debe saltar desde el agua`);
+      }
+    }
   }
 });
 

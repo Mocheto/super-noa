@@ -30,6 +30,8 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     const dinosaurs = getLevelAssets(levels.find((level) => level.id === "9-1")!);
     assert.equal(dinosaurs.dinosaurTerrain.src, "./assets/atlases/dinosaur-island-v1.png");
     assert.equal(dinosaurs.dinosaurEnemies.src, "./assets/atlases/dinosaur-enemies-v1.png");
+    const jumpingFish = getLevelAssets(levels.find((level) => level.id === "9-2")!);
+    assert.equal(jumpingFish.jumpingFish.src, "./assets/sprites/enemy-jumping-fish-v1.png");
     for (const level of levels) getLevelAssets(level);
     for (const src of requested) {
       assert.ok(src.startsWith("./assets/"), `Ruta no relativa: ${src}`);

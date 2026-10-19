@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { waterJumperState, type LiveWaterJumper } from "./gameState.ts";
 import { boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay.ts";
 
 test("el banderín tiene una zona elevada y alcanzable al saltar", () => {
@@ -59,4 +60,17 @@ test("las brazadas suben y soltar el botón hunde con velocidad limitada", () =>
   assert.equal(velocity, 95);
   assert.ok(swimmingVelocity(0, true, 1 / 60) < 0);
   assert.ok(swimmingVelocity(0, false, 1 / 60) > 0);
+});
+
+test("el pez jurásico salta y vuelve al agua cada dos o tres segundos", () => {
+  const fish: LiveWaterJumper = { id: "pez", x: 100, surfaceY: 448, width: 56, height: 52, interval: 2.5, delay: 0, jumpHeight: 345, age: 0 };
+  const start = waterJumperState(fish);
+  const apex = waterJumperState({ ...fish, age: 0.725 });
+  const hidden = waterJumperState({ ...fish, age: 1.8 });
+  const nextJump = waterJumperState({ ...fish, age: 2.5 });
+  assert.equal(start.active, true);
+  assert.ok(apex.y < 80, "el pez debe alcanzar la zona alta de la pantalla");
+  assert.equal(hidden.active, false);
+  assert.equal(nextJump.active, true);
+  assert.equal(nextJump.y, start.y);
 });

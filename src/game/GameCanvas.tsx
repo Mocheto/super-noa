@@ -5,7 +5,7 @@ import {
   drawAmbientForeground, drawApple, drawBackground, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawCheckpoint,
   drawDeadlyWater, drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock,
-  drawSecretVine, drawSticker, drawTinySparkle,
+  drawSecretVine, drawSticker, drawTinySparkle, drawWaterJumper,
 } from "./rendering";
 import { useGameInput } from "./input";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
@@ -14,7 +14,7 @@ import { getStickerSprite } from "./stickers";
 import type { Level, GameSnapshot } from "./types";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
-  enemyY, positiveModulo, type Player, type LiveEnemy, type LiveItem,
+  enemyY, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
 import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay";
@@ -128,6 +128,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const bursts: PixelBurst[] = [];
     const cannons: LiveCannon[] = (level.cannons ?? []).map((item, index) => ({ ...item, cooldown: 0.8 + index * 0.22 }));
     const cannonballs: Cannonball[] = [];
+    const waterJumpers: LiveWaterJumper[] = (level.waterJumpers ?? []).map((jumper) => ({ ...jumper, age: 0 }));
     const goalPlatforms = level.platforms.filter((platform) => level.goalX >= platform.x && level.goalX <= platform.x + platform.width);
     const goalSurfaceY = level.world === 8 ? Math.min(...goalPlatforms.map((platform) => platform.y)) : goalPlatforms[0]?.y ?? 456;
     let cameraX = 0;
@@ -252,7 +253,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       player.x += player.vx * delta;
       player.x = Math.max(0, Math.min(level.width - player.width, player.x));
       for (const platform of level.platforms) {
-        if (platform.kind !== "cave-wall" && platform.kind !== "castle-wall" && platform.kind !== "sea-wall") continue;
+        if (platform.kind !== "cave-wall" && platform.kind !== "castle-wall" && platform.kind !== "sea-wall" && platform.kind !== "dino-wall") continue;
         const vertical = player.y + player.height > platformSurfaceY(platform) && player.y < platform.y + platform.height;
         if (!vertical) continue;
         if (player.vx > 0 && previousX + player.width <= platform.x && player.x + player.width > platform.x) {
@@ -425,6 +426,13 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         } else {
           hurt();
         }
+      });
+
+      waterJumpers.forEach((jumper) => {
+        jumper.age += delta;
+        const state = waterJumperState(jumper);
+        if (!state.active || !intersects(player, { x: jumper.x, y: state.y, width: jumper.width, height: jumper.height })) return;
+        hurt();
       });
 
       cannons.forEach((cannon) => {
@@ -737,6 +745,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
       });
       enemies.forEach((enemy) => drawEnemy(context, enemy, cameraX, (enemy.kind === "wolf" || enemy.kind === "boar") && Math.abs(player.x - enemy.x) < 360, raster));
+      waterJumpers.forEach((jumper) => drawWaterJumper(context, jumper, cameraX, raster.jumpingFish));
       cannonballs.forEach((ball) => drawCannonball(context, ball, cameraX, raster.cannonball));
       projectiles.forEach((ball) => {
         const x = Math.round(ball.x - cameraX);

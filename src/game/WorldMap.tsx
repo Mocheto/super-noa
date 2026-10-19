@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { GameAssetIcon } from "./GameAssetIcon";
+import { LevelSelectCard } from "./LevelSelectCard";
 import { PixelIcon } from "./PixelIcon";
 import { optimizedAssetSource } from "./assets";
 import { levels } from "./levels";
-import { getLevelObjectives } from "./levelObjectives";
 import { campaignLevels } from "./routes";
 import type { Progress } from "./progress";
 import { findMapJourney, mapRoutes, mapRouteState, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
@@ -23,7 +22,7 @@ type WorldMapProps = {
 
 export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, reduceMotion }: WorldMapProps) {
   const [selectedWorld, setSelectedWorld] = useState<WorldId | null>(null);
-  const [visibleHints, setVisibleHints] = useState<Record<string, boolean>>({});
+  const [openObjectives, setOpenObjectives] = useState<{ levelId: string; pinned: boolean } | null>(null);
   const openerRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const currentWorld = campaignLevels[progress.unlocked]?.world ?? 1;
@@ -108,6 +107,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
   };
 
   const closeWorld = useCallback(() => {
+    setOpenObjectives(null);
     setSelectedWorld(null);
     requestAnimationFrame(() => openerRef.current?.focus());
   }, []);
@@ -116,8 +116,17 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
     if (selectedWorld === null) return;
     const panel = panelRef.current;
     (panel?.querySelector<HTMLElement>("[data-gamepad-default]") ?? panel?.querySelector<HTMLElement>("[data-gamepad-back]"))?.focus();
+  }, [selectedWorld]);
+
+  useEffect(() => {
+    if (selectedWorld === null) return;
+    const panel = panelRef.current;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { event.preventDefault(); closeWorld(); }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        if (openObjectives) setOpenObjectives(null);
+        else closeWorld();
+      }
       if (event.key !== "Tab" || !panel) return;
       const focusables = Array.from(panel.querySelectorAll<HTMLElement>("button:not(:disabled)"));
       if (focusables.length === 0) return;
@@ -128,7 +137,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [closeWorld, selectedWorld]);
+  }, [closeWorld, openObjectives, selectedWorld]);
 
   const worldLevels = selected ? levels.map((level, index) => ({ level, index })).filter(({ level }) => level.world === selected.id) : [];
   const suggestedLevel = worldLevels.find(({ level, index }) => isLevelUnlocked(index) && !progress.levelStats[level.id]?.completed)?.index
@@ -213,40 +222,13 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
             </div>
             {!worldAvailable(selected.id, progress) && <p className="map-world-hint">{selected.id === 7 ? "Sigue explorando. ¡Hay sorpresas por descubrir!" : selected.id === 8 ? "Busca la poza azul en el bosque de los lobos." : "Completa las pantallas anteriores para llegar hasta aquí."}</p>}
             <div className="level-row">
-              {worldLevels.map(({ level, index }) => {
-                const unlocked = isLevelUnlocked(index);
-                const stats = progress.levelStats[level.id];
-                const objectives = getLevelObjectives(level, progress);
-                const stickerObjectives = objectives.objectives.filter((objective) => objective.kind === "sticker");
-                const stickerEarned = stickerObjectives.length > 0 && stickerObjectives.every((objective) => objective.completed);
-                const nextHint = objectives.objectives.find((objective) => objective.kind === "sticker" && !objective.completed)
-                  ?? objectives.objectives.find((objective) => !objective.completed);
-                const hintVisible = visibleHints[level.id] === true;
-                return <div className="level-entry" key={level.id}>
-                <button className={`level-card ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked}
-                  data-gamepad-default={index === suggestedLevel || undefined} onClick={() => onBeginLevel(index)}>
-                  <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}</span>
-                  <strong>{!unlocked && level.world === 7 ? "Una sorpresa te espera" : level.title}</strong>
-                  <small>{stats?.completed ? <><span>✓ Completada · <GameAssetIcon kind="apple" /> {stats.bestApples}</span><span className="level-medals" aria-label={`${1 + Number(stickerEarned) + Number(Boolean(stats.flawless))} de 3 medallas`}>{[true, stickerEarned, Boolean(stats.flawless)].map((earned, medal) => <i className={earned ? "is-earned" : ""} key={medal}>★</i>)}</span></> : unlocked ? "Lista para jugar" : level.world === 8 && !progress.waterUnlocked ? "Busca la poza azul en 3-3" : "Completa la anterior"}</small>
-                </button>
-                {unlocked && objectives.available && <div className="level-objectives">
-                  <p className="level-objectives-status">{objectives.pendingCount === 1 ? "Falta 1" : objectives.pendingCount ? `Faltan ${objectives.pendingCount}` : "¡Todo conseguido!"}</p>
-                  <ul aria-label={`Objetivos de ${level.title}`}>
-                    {objectives.objectives.map((objective) => <li className={objective.completed ? "is-complete" : "is-pending"} key={objective.id}
-                      aria-label={`${objective.label}: ${objective.completed ? "conseguido" : "pendiente"}`}>
-                      <span aria-hidden="true">{objective.completed ? "✓" : "○"}</span> {objective.label}
-                    </li>)}
-                  </ul>
-                  {nextHint && <>
-                    <button className="level-hint-toggle" type="button" aria-expanded={hintVisible} aria-controls={`level-hint-${level.id}`}
-                      onClick={() => setVisibleHints((current) => ({ ...current, [level.id]: !current[level.id] }))}>
-                      {hintVisible ? "Ocultar pista" : "Mostrar pista"}
-                    </button>
-                    <p className="level-objective-hint" id={`level-hint-${level.id}`} hidden={!hintVisible} aria-live="polite">{nextHint.hint}</p>
-                  </>}
-                </div>}
-                </div>;
-              })}
+              {worldLevels.map(({ level, index }) => <LevelSelectCard key={level.id}
+                level={level} index={index} unlocked={isLevelUnlocked(index)} suggested={index === suggestedLevel}
+                progress={progress} onBeginLevel={onBeginLevel}
+                details={openObjectives?.levelId === level.id ? openObjectives : null}
+                onOpenDetails={(pinned) => setOpenObjectives((current) => !pinned && current?.pinned ? current : { levelId: level.id, pinned })}
+                onCloseDetails={() => setOpenObjectives((current) => current?.levelId === level.id ? null : current)}
+              />)}
             </div>
           </div>
         </div>

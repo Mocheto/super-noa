@@ -253,10 +253,21 @@ export default function App() {
     setShowAlbum(true);
   };
 
+  const refreshRanking = async () => {
+    setRankingMessage("");
+    try {
+      if (rankingDevice) await syncRanking(rankingDevice, progress);
+      setRankingPlayers(await loadRanking());
+    } catch (error) {
+      setRankingMessage(error instanceof TypeError || (error instanceof DOMException && error.name === "TimeoutError")
+        ? rankingConnectionMessage
+        : error instanceof Error ? error.message : "No pude actualizar el tablón.");
+    }
+  };
+
   const openRanking = () => {
     setShowRanking(true);
-    setRankingMessage("");
-    void loadRanking().then(setRankingPlayers).catch(() => setRankingMessage(rankingConnectionMessage));
+    void refreshRanking();
   };
 
   const joinRanking = async () => {
@@ -686,7 +697,7 @@ export default function App() {
           {rankingMessage && <p className="ranking-message" role="status">{rankingMessage}</p>}
           <ol className="ranking-list">{rankingPlayers.map((player, index) => <li key={`${player.alias}-${index}`}><b>{index + 1}. {player.alias}</b><span>Mundo {player.world || 1} · {player.completedLevels}/{campaignLevelCount} pantallas · {player.stickers} pegatinas</span></li>)}</ol>
           {rankingPlayers.length === 0 && !rankingMessage && <p className="ranking-empty">Aún no hay nadie. ¡Puedes ser la primera aventurera!</p>}
-          <button className="pixel-button" type="button" onClick={() => void loadRanking().then(setRankingPlayers).catch(() => setRankingMessage(rankingConnectionMessage))}>Actualizar tablón</button>
+          <button className="pixel-button" type="button" onClick={() => void refreshRanking()}>Actualizar tablón</button>
         </div></div>
       )}
     </main>

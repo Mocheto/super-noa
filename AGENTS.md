@@ -16,6 +16,7 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 - `src/game/WorldMap.tsx` y `src/game/worldMapData.ts`: mapa ilustrado, marcadores, caminos según el progreso y cuadros de resumen; `public/assets/worlds/noa-adventure-map-v1.png`: fondo original sin interfaz incrustada.
 - `src/game/BossBattle.tsx`: nueve duelos de piedra, papel o tijera contra los monstruos finales; `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts`: entrada de mando en partida, menús y duelos.
 - `src/game/stickers.ts`: catálogo estable de 27 insignias coleccionables: veintiuna de campaña, tres acuáticas y tres secretas.
+- `server/ranking-server.mjs`: API y migraciones del tablón mundial; `server/ranking-supervisor.mjs`: descarga y activa automáticamente el backend del último commit de `main`, con recuperación de la versión anterior si falla.
 - `src/game/types.ts`: tipos del motor y extensión futura.
 - `src/styles.css`: interfaz adaptable, mapa desplazable en móvil y controles táctiles.
 - `public/assets/`: hojas de animaciones, sprites raster, atlas y música.
@@ -32,6 +33,7 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 - No edites manualmente `dist-pages/`; es un artefacto generado.
 - Conserva la atribución musical y la licencia de `CREDITS.md`.
 - Publica cada cambio validado: tras ejecutar las comprobaciones, crea un commit, súbelo a `main` y confirma que el despliegue de GitHub Pages termina correctamente, salvo que la persona usuaria indique expresamente que no se publique.
+- El contenedor del ranking debe arrancar `ranking-supervisor.mjs`, no directamente `ranking-server.mjs`. El supervisor consulta `main` cada cinco minutos (`RANKING_UPDATE_INTERVAL_MS` permite cambiarlo), descarga los archivos usando un SHA inmutable, valida su sintaxis y reinicia únicamente el proceso Node. No recrea el contenedor ni modifica el volumen o PostgreSQL.
 
 ## Verificación
 

@@ -5,6 +5,7 @@ import { levels } from "./levels";
 
 const RANKING_URL = "https://rankings.moche-home.es";
 const DEVICE_KEY = "super-noa-ranking-device-v1";
+export const rankingConnectionMessage = "Los rankins no conectan debido ha bloques por la liga.es";
 
 export type RankingDevice = { id: string; token: string; alias: string };
 export type RankingPlayer = { alias: string; world: number; completedLevels: number; stickers: number; bossChallenges: number };
@@ -27,7 +28,7 @@ export function rankingProgress(progress: Progress) {
 }
 
 async function request(path: string, init?: RequestInit) {
-  const response = await fetch(`${RANKING_URL}${path}`, init);
+  const response = await fetch(`${RANKING_URL}${path}`, { ...init, signal: AbortSignal.timeout(7_000) });
   const body: unknown = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(typeof (body as { error?: unknown }).error === "string" ? (body as { error: string }).error : "No pude hablar con el ranking.");
   return body;

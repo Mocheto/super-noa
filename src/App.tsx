@@ -13,7 +13,7 @@ import { menuDirection, readMenuPad } from "./game/menuGamepad";
 import { emptyProgress, readProgress, saveProgress, type Progress } from "./game/progress";
 import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
 import { worldArtwork, worldCatalog } from "./game/worldMapData";
-import { loadRanking, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
+import { loadRanking, rankingConnectionMessage, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
 import type { GameSnapshot } from "./game/types";
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
@@ -255,7 +255,7 @@ export default function App() {
   const openRanking = () => {
     setShowRanking(true);
     setRankingMessage("");
-    void loadRanking().then(setRankingPlayers).catch(() => setRankingMessage("El tablón está descansando. Prueba en un ratito."));
+    void loadRanking().then(setRankingPlayers).catch(() => setRankingMessage(rankingConnectionMessage));
   };
 
   const joinRanking = async () => {
@@ -265,7 +265,7 @@ export default function App() {
       await syncRanking(device, progress);
       setRankingMessage(`¡Hola, ${device.alias}! Ya estás en el tablón.`);
       setRankingPlayers(await loadRanking());
-    } catch (error) { setRankingMessage(error instanceof Error ? error.message : "No pude guardar ese alias."); }
+    } catch (error) { setRankingMessage(error instanceof TypeError || (error instanceof DOMException && error.name === "TimeoutError") ? rankingConnectionMessage : error instanceof Error ? error.message : "No pude guardar ese alias."); }
   };
 
   const isLevelUnlocked = (index: number) => {
@@ -685,7 +685,7 @@ export default function App() {
           {rankingMessage && <p className="ranking-message" role="status">{rankingMessage}</p>}
           <ol className="ranking-list">{rankingPlayers.map((player, index) => <li key={`${player.alias}-${index}`}><b>{index + 1}. {player.alias}</b><span>Mundo {player.world || 1} · {player.completedLevels}/18 pantallas · {player.stickers} pegatinas</span></li>)}</ol>
           {rankingPlayers.length === 0 && !rankingMessage && <p className="ranking-empty">Aún no hay nadie. ¡Puedes ser la primera aventurera!</p>}
-          <button className="pixel-button" type="button" onClick={() => void loadRanking().then(setRankingPlayers).catch(() => setRankingMessage("No pude actualizar el tablón."))}>Actualizar tablón</button>
+          <button className="pixel-button" type="button" onClick={() => void loadRanking().then(setRankingPlayers).catch(() => setRankingMessage(rankingConnectionMessage))}>Actualizar tablón</button>
         </div></div>
       )}
     </main>

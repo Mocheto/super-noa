@@ -31,13 +31,23 @@ async function initializeDatabase() {
       alias VARCHAR(16) NOT NULL,
       alias_key VARCHAR(16) NOT NULL UNIQUE,
       token_hash CHAR(64) NOT NULL,
-      world SMALLINT NOT NULL DEFAULT 0 CHECK (world BETWEEN 0 AND 8),
-      completed_levels SMALLINT NOT NULL DEFAULT 0 CHECK (completed_levels BETWEEN 0 AND 22),
-      stickers SMALLINT NOT NULL DEFAULT 0 CHECK (stickers BETWEEN 0 AND 24),
-      boss_challenges SMALLINT NOT NULL DEFAULT 0 CHECK (boss_challenges BETWEEN 0 AND 8),
+      world SMALLINT NOT NULL DEFAULT 0 CHECK (world BETWEEN 0 AND 9),
+      completed_levels SMALLINT NOT NULL DEFAULT 0 CHECK (completed_levels BETWEEN 0 AND 25),
+      stickers SMALLINT NOT NULL DEFAULT 0 CHECK (stickers BETWEEN 0 AND 27),
+      boss_challenges SMALLINT NOT NULL DEFAULT 0 CHECK (boss_challenges BETWEEN 0 AND 9),
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+    ALTER TABLE super_noa_ranking_profiles
+      DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_world_check,
+      DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_completed_levels_check,
+      DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_stickers_check,
+      DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_boss_challenges_check;
+    ALTER TABLE super_noa_ranking_profiles
+      ADD CONSTRAINT super_noa_ranking_profiles_world_check CHECK (world BETWEEN 0 AND 9),
+      ADD CONSTRAINT super_noa_ranking_profiles_completed_levels_check CHECK (completed_levels BETWEEN 0 AND 25),
+      ADD CONSTRAINT super_noa_ranking_profiles_stickers_check CHECK (stickers BETWEEN 0 AND 27),
+      ADD CONSTRAINT super_noa_ranking_profiles_boss_challenges_check CHECK (boss_challenges BETWEEN 0 AND 9);
   `);
 }
 

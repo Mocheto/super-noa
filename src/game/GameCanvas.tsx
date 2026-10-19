@@ -17,7 +17,7 @@ import {
   enemyY, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
-import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay";
+import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay";
 
 const MOVE_SPEED = 250;
 
@@ -253,16 +253,10 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       player.x += player.vx * delta;
       player.x = Math.max(0, Math.min(level.width - player.width, player.x));
       for (const platform of level.platforms) {
-        if (platform.kind !== "cave-wall" && platform.kind !== "castle-wall" && platform.kind !== "sea-wall" && platform.kind !== "dino-wall") continue;
-        const vertical = player.y + player.height > platformSurfaceY(platform) && player.y < platform.y + platform.height;
-        if (!vertical) continue;
-        if (player.vx > 0 && previousX + player.width <= platform.x && player.x + player.width > platform.x) {
-          player.x = platform.x - player.width;
-          player.vx = 0;
-        } else if (player.vx < 0 && previousX >= platform.x + platform.width && player.x < platform.x + platform.width) {
-          player.x = platform.x + platform.width;
-          player.vx = 0;
-        }
+        const resolvedX = resolveHorizontalWallCollision(previousX, player.x, player.y, player.width, player.height, platform);
+        if (resolvedX === player.x) continue;
+        player.x = resolvedX;
+        player.vx = 0;
       }
       const previousY = player.y;
       const previousBottom = previousY + player.height;

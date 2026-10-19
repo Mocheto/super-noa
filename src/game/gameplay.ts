@@ -11,6 +11,30 @@ export const platformSurfaceY = (platform: Platform) => platform.kind === "sea-w
   ? platform.y + Math.round(platform.height * 0.3)
   : platform.y;
 
+const solidWallKinds = new Set<Platform["kind"]>(["cave-wall", "castle-wall", "sea-wall", "dino-wall"]);
+
+/** Impide atravesar una pared incluso si el personaje ya ha quedado ligeramente dentro. */
+export const resolveHorizontalWallCollision = (
+  previousX: number,
+  nextX: number,
+  playerY: number,
+  playerWidth: number,
+  playerHeight: number,
+  platform: Platform,
+) => {
+  if (!solidWallKinds.has(platform.kind)) return nextX;
+  const surfaceY = platformSurfaceY(platform);
+  // Conserva una franja superior para aterrizar y caminar sobre la pared.
+  const overlapsVertically = playerY + playerHeight > surfaceY + 10 && playerY < platform.y + platform.height;
+  const overlapsHorizontally = nextX + playerWidth > platform.x && nextX < platform.x + platform.width;
+  if (!overlapsVertically || !overlapsHorizontally) return nextX;
+  if (nextX > previousX) return platform.x - playerWidth;
+  if (nextX < previousX) return platform.x + platform.width;
+  const leftCorrection = platform.x - playerWidth;
+  const rightCorrection = platform.x + platform.width;
+  return Math.abs(nextX - leftCorrection) <= Math.abs(nextX - rightCorrection) ? leftCorrection : rightCorrection;
+};
+
 /** El centro del cuerpo activa el agua, evitando oscilaciones en la orilla. */
 export const waterAt = (player: Rect, zones: Rect[] = []) => zones.find((zone) =>
   player.x + player.width / 2 >= zone.x && player.x + player.width / 2 < zone.x + zone.width &&

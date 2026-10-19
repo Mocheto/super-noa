@@ -1,7 +1,7 @@
 import type { Progress } from "./progress";
-import { readStorage, writeStorage } from "./storage";
-import { campaignLevels } from "./routes";
-import { levels } from "./levels";
+import { readStorage, writeStorage } from "./storage.ts";
+import { campaignLevels } from "./routes.ts";
+import { levels } from "./levels.ts";
 
 const RANKING_URL = "https://rankings.moche-home.es";
 const DEVICE_KEY = "super-noa-ranking-device-v1";

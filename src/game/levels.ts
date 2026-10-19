@@ -780,7 +780,7 @@ export const levels: Level[] = [
     waterJumpers: [jumpingFish("d2-f1", 802, 2.35, 0.35), jumpingFish("d2-f2", 1902, 2.8, 1.1), jumpingFish("d2-f3", 2942, 2.55, 0.7), jumpingFish("d2-f4", 4097, 2.7, 1.5)],
     enemies: [enemy("d2-p1", "pterodactyl", 700, 190, 520, 930, 68), enemy("d2-t1", "baby-t-rex", 1110, 408, 1000, 1460, 43), enemy("d2-p2", "pterodactyl", 2290, 155, 2080, 2630, 74), enemy("d2-t2", "baby-t-rex", 2720, 408, 2530, 2860, 47), enemy("d2-p3", "pterodactyl", 3650, 145, 3400, 3970, 78), enemy("d2-t3", "baby-t-rex", 4550, 408, 4370, 4860, 50)],
     items: [apple("d2a1", 340, 295), apple("d2a2", 620, 225), apple("d2a3", 1350, 195), apple("d2a4", 2490, 155), sticker("sticker-9-2", 3560, 145), apple("d2a5", 4320, 200), apple("d2a6", 4800, 280)],
-    rewardBlocks: [reward("d2r1", 1030, 280), reward("d2r2", 3150, 215, "apple"), reward("d2r3", 4610, 300)], checkpoints: [930, 2030, 3070, 4230],
+    rewardBlocks: [reward("d2r1", 1030, 210), reward("d2r2", 3150, 145, "apple"), reward("d2r3", 4610, 300)], checkpoints: [930, 2030, 3070, 4230],
   },
   {
     id: "9-3", world: 9, screen: 3,
@@ -800,7 +800,7 @@ export const levels: Level[] = [
     waterJumpers: [jumpingFish("d3-f1", 862, 2.4, 0.5), jumpingFish("d3-f2", 1902, 2.75, 1.35), jumpingFish("d3-f3", 2972, 2.3, 0.8), jumpingFish("d3-f4", 4022, 2.85, 1.7), jumpingFish("d3-f5", 5107, 2.5, 1.05)],
     enemies: [enemy("d3-t1", "baby-t-rex", 450, 408, 320, 720, 46), enemy("d3-p1", "pterodactyl", 1150, 175, 980, 1430, 76), enemy("d3-t2", "baby-t-rex", 1730, 408, 1640, 1840, 50), enemy("d3-p2", "pterodactyl", 2480, 135, 2220, 2780, 82), enemy("d3-t3", "baby-t-rex", 3300, 408, 3180, 3650, 53), enemy("d3-p3", "pterodactyl", 4310, 125, 4070, 4610, 86), enemy("d3-t4", "baby-t-rex", 4870, 408, 4720, 5130, 56), enemy("d3-p4", "pterodactyl", 5520, 155, 5350, 5850, 90)],
     items: [apple("d3a1", 360, 290), apple("d3a2", 700, 210), apple("d3a3", 1430, 195), apple("d3a4", 2500, 140), apple("d3a5", 3620, 130), sticker("sticker-9-3", 4700, 125), apple("d3a6", 5500, 185), apple("d3a7", 6000, 265)],
-    rewardBlocks: [reward("d3r1", 1080, 280), reward("d3r2", 3220, 215, "apple"), reward("d3r3", 5160, 270)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890], boss: "triceratops-queen",
+    rewardBlocks: [reward("d3r1", 1080, 210), reward("d3r2", 3220, 130, "apple"), reward("d3r3", 5160, 190)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890], boss: "triceratops-queen",
   },
   {
     id: "S-1",

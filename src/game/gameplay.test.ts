@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { waterJumperState, type LiveWaterJumper } from "./gameState.ts";
-import { boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay.ts";
+import { boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, resolveHorizontalWallCollision, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay.ts";
 
 test("el banderín tiene una zona elevada y alcanzable al saltar", () => {
   const flag = goalFlagHitbox(900, 456);
@@ -50,6 +50,14 @@ test("la lana se detiene en la roca del arrecife pero atraviesa las algas", () =
   assert.equal(projectileHitsWaterWall({ x: 1560, y: 380, width: 20, height: 20 }, [wall]), false);
   assert.equal(projectileHitsWaterWall({ x: 1538, y: 430, width: 20, height: 20 }, [wall]), true);
   assert.equal(projectileHitsWaterWall({ x: 1560, y: 430, width: 20, height: 20 }, [{ ...wall, kind: "sea-ledge" }]), false);
+});
+
+test("las paredes jurásicas expulsan a Noa aunque ya haya quedado ligeramente dentro", () => {
+  const wall = { x: 500, y: 330, width: 76, height: 126, kind: "dino-wall" } as const;
+  assert.equal(resolveHorizontalWallCollision(470, 472, 370, 48, 58, wall), 452);
+  assert.equal(resolveHorizontalWallCollision(530, 528, 370, 48, 58, wall), 576);
+  assert.equal(resolveHorizontalWallCollision(510, 510, 370, 48, 58, wall), 452);
+  assert.equal(resolveHorizontalWallCollision(510, 510, 270, 48, 58, wall), 510);
 });
 
 test("las brazadas suben y soltar el botón hunde con velocidad limitada", () => {

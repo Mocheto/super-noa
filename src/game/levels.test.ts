@@ -140,6 +140,21 @@ test("la isla jurásica continúa tras el castillo y todos sus huecos son agua m
   }
 });
 
+test("las cajas jurásicas sobre repisas tienen espacio para golpearlas desde abajo", () => {
+  const maxJumpRise = JUMP_SPEED ** 2 / (2 * GRAVITY);
+  for (const level of levels.filter((entry) => entry.world === 9 && entry.screen >= 2)) {
+    for (const block of level.rewardBlocks) {
+      const support = level.platforms
+        .filter((platform) => platform.x <= block.x && platform.x + platform.width >= block.x + 48 && platform.y > block.y + 48)
+        .sort((a, b) => a.y - b.y)[0];
+      assert.ok(support, `${level.id}: la caja ${block.id} no tiene apoyo debajo`);
+      const distanceToHit = support.y - 58 - (block.y + 48);
+      assert.ok(distanceToHit >= 14 && distanceToHit < maxJumpRise,
+        `${level.id}: la caja ${block.id} está demasiado cerca o lejos del apoyo (${distanceToHit}px)`);
+    }
+  }
+});
+
 test("el bloque de gato tras el segundo checkpoint del conde exige usar la repisa", () => {
   const level = levels.find((entry) => entry.id === "6-3");
   const block = level?.rewardBlocks.find((reward) => reward.id === "c3r2");

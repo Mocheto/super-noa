@@ -1,4 +1,7 @@
 export const mechanicSpriteSheets = {
+  castleHound: { source: "./assets/sprites/castle-hound-v1.png", columns: 4, frameWidth: 128, frameHeight: 112 },
+  castleChainLink: { source: "./assets/sprites/castle-chain-link-v1.png", columns: 1, frameWidth: 32, frameHeight: 20 },
+  castleChainPost: { source: "./assets/sprites/castle-chain-post-v1.png", columns: 1, frameWidth: 64, frameHeight: 80 },
   flyingDragon: { source: "./assets/sprites/enemy-flying-dragon-v1.png", columns: 4, frameWidth: 128, frameHeight: 112 },
   sleepingWolf: { source: "./assets/sprites/mechanic-wolf-v1.png", columns: 3, frameWidth: 128, frameHeight: 96 },
   bloomFlower: { source: "./assets/sprites/bloom-flower-v1.png", columns: 4, frameWidth: 96, frameHeight: 128 },

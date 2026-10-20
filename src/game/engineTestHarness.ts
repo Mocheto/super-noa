@@ -5,6 +5,7 @@ import type { GameSnapshot, Level, Rect } from "./types";
 import type { InputState } from "./input";
 import type { LiveEnemy } from "./gameState";
 import type { WolfSleepPhase } from "./worldMechanics";
+import type { LiveChainGuardian } from "./chainGuardians";
 
 export function engineModules(overrides: Record<string, unknown> = {}, globals: Record<string, unknown> = {}) {
   const context = vm.createContext({ console, ...globals });
@@ -35,6 +36,9 @@ export function mountEngine(level: Level) {
   const focusCalls: FocusOptions[] = [];
   const drawnEnemies: { enemy: LiveEnemy; sleepPhase: WolfSleepPhase }[] = [];
   const drawnText: string[] = [];
+  const drawnGuardians: LiveChainGuardian[] = [];
+  const applePickups: number[] = [];
+  let cameraX = 0;
   let playerRect: Rect | undefined;
   const input: InputState = { left: false, right: false, jump: false, shoot: false, jumpQueued: false, shootQueued: false };
   let nextId = 0;
@@ -89,14 +93,25 @@ export function mountEngine(level: Level) {
   const inputContainer = { current: input };
   const rendering = load("./rendering") as typeof import("./rendering");
   const drawEnemy = rendering.drawEnemy;
+  const drawBackground = rendering.drawBackground;
+  rendering.drawBackground = (...args) => {
+    cameraX = args[2];
+    return drawBackground(...args);
+  };
   rendering.drawEnemy = (...args) => {
     drawnEnemies.push({ enemy: { ...args[1] }, sleepPhase: args[5] ?? "awake" });
     return drawEnemy(...args);
+  };
+  const drawChainGuardian = rendering.drawChainGuardian;
+  rendering.drawChainGuardian = (...args) => {
+    drawnGuardians.push({ ...args[1] });
+    return drawChainGuardian(...args);
   };
   const { GameCanvas } = load("./GameCanvas") as { GameCanvas: (props: unknown) => unknown };
   const props = {
     level, running: true,
     onSnapshot: (snapshot: GameSnapshot) => { snapshots.push(snapshot); events.push("snapshot"); },
+    onAppleCollected: (count: number) => applePickups.push(count),
     onComplete: (snapshot: GameSnapshot) => { completed.push(snapshot); events.push("complete"); },
     onBossEncounter: (snapshot: GameSnapshot) => { bosses.push(snapshot); events.push("boss"); },
     onLoseLife: () => events.push("life"),
@@ -112,11 +127,13 @@ export function mountEngine(level: Level) {
   };
   renderProps();
   return {
-    input, snapshots, completed, bosses, events, requested, pending, focusCalls, drawnEnemies, drawnText,
+    input, snapshots, completed, bosses, events, requested, pending, focusCalls, drawnEnemies, drawnText, drawnGuardians, applePickups,
     get playerRect() { return playerRect; },
+    get worldPlayerRect() { return playerRect && { ...playerRect, x: playerRect.x + cameraX }; },
     tick(time: number) {
       drawnEnemies.length = 0;
       drawnText.length = 0;
+      drawnGuardians.length = 0;
       const next = pending.entries().next().value;
       if (!next) throw new Error("No hay un frame pendiente");
       pending.delete(next[0]);

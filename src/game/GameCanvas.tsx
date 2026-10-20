@@ -3,7 +3,7 @@ import { PixelIcon } from "./PixelIcon";
 import { getImage, getLevelAssets } from "./assets";
 import {
   drawAmbientForeground, drawApple, drawBackground, drawBloomBridge, drawBossGate, drawCannon,
-  drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawCheckpoint,
+  drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawChainGuardian, drawCheckpoint,
   drawDeadlyWater, drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock,
   drawLavaJet, drawSecretVine, drawSticker, drawTinySparkle, drawUpdraft, drawWaterEntrance, drawWaterJumper, drawWindZone,
 } from "./rendering";
@@ -13,6 +13,7 @@ import { createGameLoop, type GameLoop } from "./gameLoop";
 import { createLevelTransition } from "./levelTransition";
 import { getMechanicPlatforms, hasWorldMechanics, mechanicRespawn, updraftVelocity, wolfSleepState } from "./worldMechanics";
 import { getStickerSprite } from "./stickers";
+import { createChainGuardian, guardianHitbox, updateChainGuardian } from "./chainGuardians";
 import type { Level, GameSnapshot } from "./types";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
@@ -34,6 +35,7 @@ type GameCanvasProps = {
   onSecretExit: () => void;
   onWaterExit: () => void;
   onSnapshot: (snapshot: GameSnapshot) => void;
+  onAppleCollected?: (count: number) => void;
   playSound: (kind: SoundKind) => void;
 };
 
@@ -81,17 +83,17 @@ function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
   context.textAlign = "start";
 }
 
-export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, playSound }: GameCanvasProps) {
+export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, playSound }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const { inputRef, handleTouchStart, handleTouchEnd, handleTouchCancel, preventTouchMenu } = useGameInput(running);
   const runningRef = useRef(running);
   const gameLoopRef = useRef<GameLoop | null>(null);
-  const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, playSound });
+  const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, playSound });
 
   useEffect(() => {
-    callbacksRef.current = { onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, playSound };
-  }, [onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, playSound]);
+    callbacksRef.current = { onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, playSound };
+  }, [onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, playSound]);
 
   useEffect(() => {
     runningRef.current = running;
@@ -119,6 +121,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const cannons: LiveCannon[] = (level.cannons ?? []).map((item, index) => ({ ...item, cooldown: 0.8 + index * 0.22 }));
     const cannonballs: Cannonball[] = [];
     const waterJumpers: LiveWaterJumper[] = (level.waterJumpers ?? []).map((jumper) => ({ ...jumper, age: 0 }));
+    const chainGuardians = (level.chainGuardians ?? []).map(createChainGuardian);
     const goalPlatforms = level.platforms.filter((platform) => level.goalX >= platform.x && level.goalX <= platform.x + platform.width);
     const goalSurfaceY = level.world === 8 ? Math.min(...goalPlatforms.map((platform) => platform.y)) : goalPlatforms[0]?.y ?? 456;
     let cameraX = 0;
@@ -380,6 +383,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         collected.add(item.id);
         if (item.kind === "apple") {
           apples += 1;
+          callbacksRef.current.onAppleCollected?.(1);
           if (player.power === "normal") player.power = "apple";
           callbacksRef.current.playSound("apple");
           if (statusRef.current) statusRef.current.textContent = "Manzana conseguida.";
@@ -428,6 +432,16 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         } else {
           hurt();
         }
+      });
+
+      chainGuardians.forEach((guardian) => {
+        const previousPhase = guardian.phase;
+        updateChainGuardian(guardian, delta, player.x + player.width / 2);
+        if (guardian.phase === "warning" && previousPhase !== "warning" && Math.abs(player.x - guardian.x) < 800) {
+          callbacksRef.current.playSound("countdown");
+          if (statusRef.current) statusRef.current.textContent = "¡El perrito avisa! Salta por arriba o espera lejos de su cadena.";
+        }
+        if (intersects(player, guardianHitbox(guardian))) hurt();
       });
 
       waterJumpers.forEach((jumper) => {
@@ -495,6 +509,11 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
             callbacksRef.current.playSound("stomp");
           }
         });
+        if (ball.life > 0 && chainGuardians.some((guardian) => intersects(ballHitbox, guardianHitbox(guardian)))) {
+          ball.life = 0;
+          bursts.push({ x: ball.x, y: ball.y, life: .3, color: "#b5e6e0", kind: "puff" });
+          callbacksRef.current.playSound("block");
+        }
         cannonballs.forEach((cannonball) => {
           if (!cannonball.active) return;
           if (intersects(ballHitbox, { x: cannonball.x, y: cannonball.y, width: 24, height: 24 })) {
@@ -695,6 +714,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       if (hasWorldMechanics(level) && levelAge < 7 && cameraX < 360 && player.y > 150 && !completed) {
         const hint = level.world === 3 ? "ZZZ: PASA · ¡OJO AL DESPERTAR!"
           : level.world === 11 ? "PÉTALOS ROSAS: PASA · AMARILLOS: ¡SE CIERRA!"
+          : level.world === 6 ? "¡EL PERRITO AVISA! PASA POR ARRIBA"
           : "↑ EL AIRE TE AYUDA A SUBIR ↑";
         context.save();
         context.fillStyle = "#fff8e7";
@@ -768,6 +788,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
       });
       enemies.forEach((enemy) => drawEnemy(context, enemy, cameraX, (enemy.kind === "wolf" || enemy.kind === "boar") && Math.abs(player.x - enemy.x) < 360, raster, level.world === 3 ? wolfSleepState(enemy, levelAge) : "awake", levelAge));
+      chainGuardians.forEach((guardian) => drawChainGuardian(context, guardian, cameraX, raster));
       waterJumpers.forEach((jumper) => drawWaterJumper(context, jumper, cameraX, raster.jumpingFish));
       cannonballs.forEach((ball) => drawCannonball(context, ball, cameraX, raster.cannonball));
       projectiles.forEach((ball) => {

@@ -80,3 +80,10 @@ test("todos los objetivos conseguidos dejan cero pendientes sin modificar el pro
   assert.equal(result.pendingCount, 0);
   assert.equal(JSON.stringify(progress), before);
 });
+
+test("la pista del castillo explica la cadena sin confundir al perrito con el duelo final", () => {
+  const result = getLevelObjectives(level("6-1"), { ...emptyProgress, unlocked: 29 });
+  assert.match(result.objectives[0].hint, /cadena tiene un límite/);
+  assert.match(result.objectives[0].hint, /plataformas de arriba/);
+  assert.equal(result.objectives.some((objective) => objective.kind === "boss"), false);
+});

@@ -6,6 +6,83 @@ import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import { bloomBridgeState, type WolfSleepPhase } from "./worldMechanics";
 import { drawMechanicSprite, drawMechanicStrip } from "./mechanicSprites.ts";
 import { worldEnemySpriteSources } from "./worldEnemySprites.ts";
+import { guardianBounds, type LiveChainGuardian } from "./chainGuardians";
+
+export function drawChainGuardian(context: CanvasRenderingContext2D, guardian: LiveChainGuardian, cameraX: number, raster: RasterAssets) {
+  const bounds = guardianBounds(guardian);
+  if (bounds.maxX + guardian.width - cameraX < -80 || bounds.minX - cameraX > VIEW_WIDTH + 80) return;
+  const x = guardian.x - cameraX;
+  const anchorX = guardian.anchorX - cameraX;
+  const anchorY = guardian.groundY - 42;
+  const width = guardian.width + 16;
+  const height = width * 112 / 128;
+  const top = guardian.groundY - height * 109 / 112;
+  const collarX = x - 8 + (guardian.direction === 1 ? 70 : 58) * width / 128;
+  const collarY = top + 46 * height / 112;
+  const length = Math.hypot(collarX - anchorX, collarY - anchorY);
+  const links = Math.max(1, Math.ceil(length / 13));
+  const angle = Math.atan2(collarY - anchorY, collarX - anchorX);
+  context.save();
+  context.strokeStyle = guardian.phase === "warning" ? "#f6ca72" : "rgba(176,153,189,.45)";
+  context.lineWidth = 3;
+  context.beginPath();
+  context.moveTo(bounds.minX - cameraX, guardian.groundY - 2);
+  context.lineTo(bounds.maxX + guardian.width - cameraX, guardian.groundY - 2);
+  context.stroke();
+  for (let index = 0; index <= links; index++) {
+    const t = index / links;
+    context.save();
+    context.translate(anchorX + (collarX - anchorX) * t, anchorY + (collarY - anchorY) * t);
+    context.rotate(angle);
+    if (!drawMechanicSprite(context, raster.castleChainLink, "castleChainLink", 0, -8, -5, 16, 10)) {
+      context.strokeStyle = "#c28a61";
+      context.lineWidth = 3;
+      context.beginPath();
+      context.ellipse(0, 0, 7, 4, 0, 0, Math.PI * 2);
+      context.stroke();
+    }
+    context.restore();
+  }
+  if (!drawMechanicSprite(context, raster.castleChainPost, "castleChainPost", 0, anchorX - 32, guardian.groundY - 80, 64, 80)) {
+    context.fillStyle = "#695577";
+    context.fillRect(anchorX - 16, guardian.groundY - 65, 32, 65);
+    context.fillStyle = "#d49b67";
+    context.fillRect(anchorX - 22, anchorY - 8, 44, 16);
+  }
+  context.save();
+  if (guardian.direction === -1) {
+    context.translate(x + guardian.width + 8, 0);
+    context.scale(-1, 1);
+  }
+  const drawX = guardian.direction === -1 ? 0 : x - 8;
+  const pose = guardian.phase === "warning" ? 1 : guardian.phase === "lunge" ? 2 + Math.floor(guardian.phaseAge * 12) % 2 : guardian.phase === "recovery" ? 3 : 0;
+  if (!drawMechanicSprite(context, raster.castleHound, "castleHound", pose, drawX, top, width, height)) {
+    context.fillStyle = "#352343";
+    context.fillRect(drawX + 7, guardian.y + 12, guardian.width - 6, guardian.height - 19);
+    context.fillRect(drawX + 10, guardian.groundY - 13, 13, 13);
+    context.fillRect(drawX + guardian.width - 15, guardian.groundY - 13, 13, 13);
+    context.fillStyle = guardian.phase === "warning" ? "#f6ca72" : "#7abeb9";
+    context.fillRect(drawX + 10, guardian.y + 16, guardian.width - 12, 24);
+    context.fillStyle = "#c28a61";
+    context.fillRect(drawX + guardian.width - 25, guardian.y + 3, 37, 24);
+    context.fillRect(drawX + guardian.width - 23, guardian.y - 6, 9, 15);
+    context.fillStyle = "#fff1d5";
+    context.fillRect(drawX + guardian.width - 17, guardian.y + 7, 6, 6);
+  }
+  context.restore();
+  if (guardian.phase === "warning") {
+    const centerX = x + guardian.width / 2;
+    const warningY = top - 18;
+    context.fillStyle = "#f6ca72";
+    context.beginPath();
+    context.arc(centerX, warningY, 13, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = "#352343";
+    context.fillRect(centerX - 2, warningY - 8, 4, 10);
+    context.fillRect(centerX - 2, warningY + 5, 4, 4);
+  }
+  context.restore();
+}
 
 const enemyAtlasCell = {
   slime: [0, 0], beetle: [1, 0], cloud: [2, 0], wolf: [3, 0],

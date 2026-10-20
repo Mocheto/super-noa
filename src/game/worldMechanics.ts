@@ -41,7 +41,8 @@ export function updraftVelocity(velocity: number, zones: readonly Updraft[], del
 }
 
 export function hasWorldMechanics(level: Level): boolean {
-  return (level.world === 3 && level.enemies.some((enemy) => enemy.kind === "wolf" && enemy.sleepCycle))
+  return Boolean(level.chainGuardians?.length)
+    || (level.world === 3 && level.enemies.some((enemy) => enemy.kind === "wolf" && enemy.sleepCycle))
     || (level.world === 11 && Boolean(level.bloomBridges?.length))
     || (level.world === 7 && Boolean(level.updrafts?.length));
 }

@@ -1,4 +1,4 @@
-import type { Cannon, Enemy, Level, LevelItem, Platform, RewardBlock, Theme } from "./types";
+import type { Cannon, ChainGuardian, Enemy, Level, LevelItem, Platform, RewardBlock, Theme } from "./types";
 
 const ground = (segments: Array<[number, number]>): Platform[] =>
   segments.map(([x, width]) => ({ x, y: 456, width, height: 120, kind: "ground" }));
@@ -88,6 +88,12 @@ const reward = (id: string, x: number, y = 330, kind: RewardBlock["reward"] = "c
   reward: kind,
 });
 const cannon = (id: string, x: number, y: number, direction: Cannon["direction"], interval = 2.4): Cannon => ({ id, x, y, direction, interval });
+const chainGuardian = (id: string, anchorX: number, screen: 1 | 2 | 3, delay = 0): ChainGuardian => ({
+  id, anchorX, groundY: 456, leashLength: screen === 1 ? 170 : 180, width: 80, height: 56,
+  patrolSpeed: 70 + screen * 8, lungeSpeed: 310 + screen * 30,
+  patrolDuration: 3.2 - screen * .2, warningDuration: 1.25 - screen * .1,
+  lungeDuration: .85, recoveryDuration: 1.4 - screen * .1, delay,
+});
 const jumpingFish = (id: string, x: number, interval: number, delay: number, jumpHeight = 345) => ({
   id, x, surfaceY: 448, width: 56, height: 52, interval, delay, jumpHeight,
 });
@@ -155,7 +161,7 @@ export const waterLevels: Level[] = [
   },
 ];
 
-const castleFloor1: Array<[number, number]> = [[0, 760], [900, 950], [1990, 900], [3030, 970]];
+const castleFloor1: Array<[number, number]> = [[0, 760], [900, 950], [1990, 900], [3030, 1040], [4210, 990]];
 const castleFloor2: Array<[number, number]> = [[0, 650], [800, 1000], [1940, 900], [2980, 1000], [4120, 1080]];
 const castleFloor3: Array<[number, number]> = [[0, 760], [900, 920], [1960, 950], [3050, 950], [4130, 1000], [5260, 1240]];
 const dinoFloor1: Array<[number, number]> = [[0, 920], [1040, 1080], [2250, 1050], [3440, 1160]];
@@ -738,20 +744,23 @@ export const levels: Level[] = [
   },
   {
     id: "6-1", world: 6, screen: 1,
-    title: "Las puertas del castillo", subtitle: "Esqueletos bromistas y primeros agujeros de pinchos.",
-    theme: "haunted-castle", width: 4000, start: { x: 80, y: 380 }, goalX: 3840,
+    title: "Las puertas del castillo", subtitle: "Los perritos de cobre avisan antes de morder. ¡Busca el camino de arriba!",
+    theme: "haunted-castle", width: 5200, start: { x: 80, y: 380 }, goalX: 5020,
     platforms: [
       ...castleGround(castleFloor1),
       castleLedge(310, 350, 190), castleLedge(610, 280, 170), castleLedge(920, 350, 180),
       castleLedge(1370, 300, 180), castleLedge(1730, 345, 180), castleLedge(2050, 330, 180),
-      castleLedge(2520, 290, 170), castleLedge(2850, 350, 180), castleLedge(3320, 300, 190),
+      castleLedge(1200, 285, 180), castleLedge(2520, 290, 170), castleLedge(2850, 350, 180),
+      castleLedge(3150, 350, 145), castleLedge(3320, 300, 190), castleLedge(3600, 285, 190),
+      castleLedge(3870, 350, 170), castleLedge(4350, 350, 180), castleLedge(4680, 280, 190),
       castleWall(1150, 0, 180, 170), castleWall(2350, 0, 210, 180), castleWall(3230, 0, 150, 150),
       castleWall(1520, 400, 34, 56),
     ],
     spikePits: spikePits(castleFloor1),
-    enemies: [enemy("sk1", "skeleton", 420, 420, 300, 610, 34), enemy("gh1", "ghost", 1140, 245, 1000, 1430, 52), enemy("zo1", "zombie", 2240, 406, 2070, 2670, 30), enemy("gh2", "ghost", 2800, 220, 2600, 3020, 55), enemy("sk2", "skeleton", 3460, 420, 3300, 3690, 37)],
-    items: [apple("c1a1", 350, 290), apple("c1a2", 990, 295), apple("c1a3", 1780, 285), apple("c1a4", 2600, 235), apple("c1a5", 3480, 245), sticker("sticker-6-1", 1460, 245)],
-    rewardBlocks: [reward("c1r1", 1100, 295), reward("c1r2", 2740, 310, "apple")], checkpoints: [950, 2100, 3110],
+    chainGuardians: [chainGuardian("c1-hound-1", 1290, 1), chainGuardian("c1-hound-2", 3610, 1, 1.3)],
+    enemies: [enemy("sk1", "skeleton", 420, 420, 300, 610, 34), enemy("gh1", "ghost", 1140, 245, 1000, 1430, 52), enemy("zo1", "zombie", 2240, 406, 2070, 2670, 30), enemy("gh2", "ghost", 2800, 220, 2600, 3020, 55), enemy("gh-c1-tower", "ghost", 4440, 225, 4320, 4600, 54), enemy("sk2", "skeleton", 4850, 420, 4700, 4940, 37)],
+    items: [apple("c1a1", 350, 290), apple("c1a2", 990, 295), apple("c1a3", 1780, 285), apple("c1a4", 2600, 235), apple("c1a5", 3480, 245), apple("c1a6", 4750, 225), apple("c1a7", 4410, 295), sticker("sticker-6-1", 1460, 245)],
+    rewardBlocks: [reward("c1r1", 1100, 295), reward("c1r2", 2740, 310, "apple"), reward("c1r3", 4610, 310)], checkpoints: [950, 2100, 3110, 4260],
   },
   {
     id: "6-2", world: 6, screen: 2,
@@ -763,11 +772,13 @@ export const levels: Level[] = [
       castleLedge(1250, 275, 180), castleLedge(1570, 345, 180), castleLedge(1980, 325, 185),
       castleLedge(2330, 255, 170), castleLedge(2670, 335, 175), castleLedge(3080, 320, 190),
       castleLedge(3520, 250, 190), castleLedge(3930, 325, 180), castleLedge(4390, 275, 190),
+      castleLedge(2190, 345, 150), castleLedge(3300, 315, 160), castleLedge(3480, 345, 190),
       castleWall(1080, 0, 220, 195), castleWall(2150, 0, 185, 175), castleWall(3350, 0, 190, 185), castleWall(4610, 0, 160, 160),
       castleWall(1420, 398, 36, 58), castleWall(3700, 398, 36, 58),
     ],
     spikePits: spikePits(castleFloor2),
-    enemies: [enemy("zo2", "zombie", 350, 406, 230, 580, 32), enemy("gh3", "ghost", 980, 205, 830, 1220, 57), enemy("sk3", "skeleton", 1660, 420, 1500, 1770, 38), enemy("gh4", "ghost", 2480, 190, 2220, 2780, 60), enemy("zo3", "zombie", 3190, 406, 3080, 3500, 35), enemy("gh5", "ghost", 4010, 205, 3780, 4270, 62), enemy("sk4", "skeleton", 4640, 420, 4450, 4890, 40)],
+    chainGuardians: [chainGuardian("c2-hound-1", 2440, 2), chainGuardian("c2-hound-2", 3430, 2, 1.5)],
+    enemies: [enemy("zo2", "zombie", 350, 406, 230, 580, 32), enemy("gh3", "ghost", 980, 205, 830, 1220, 57), enemy("sk3", "skeleton", 1660, 420, 1500, 1770, 38), enemy("gh4", "ghost", 2480, 190, 2220, 2780, 60), enemy("zo3", "zombie", 3190, 406, 3080, 3200, 35), enemy("gh5", "ghost", 4010, 205, 3780, 4270, 62), enemy("sk4", "skeleton", 4640, 420, 4450, 4890, 40)],
     items: [apple("c2a1", 350, 285), apple("c2a2", 1320, 220), apple("c2a3", 2360, 200), apple("c2a4", 3570, 195), apple("c2a5", 4490, 215), sticker("sticker-6-2", 3560, 205)],
     rewardBlocks: [reward("c2r1", 900, 210), reward("c2r2", 2740, 210, "apple"), reward("c2r3", 4210, 295)], checkpoints: [840, 2030, 3120, 4190],
   },
@@ -783,11 +794,13 @@ export const levels: Level[] = [
       castleLedge(2520, 260, 180), castleLedge(2870, 335, 180), castleLedge(3160, 315, 190),
       castleLedge(3610, 245, 185), castleLedge(3980, 330, 180), castleLedge(4300, 315, 190),
       castleLedge(4720, 245, 190), castleLedge(5150, 325, 180), castleLedge(5440, 305, 190), castleLedge(5900, 250, 180),
+      castleLedge(2300, 335, 160), castleLedge(4520, 335, 160),
       castleWall(1120, 0, 190, 180), castleWall(2250, 0, 195, 175), castleWall(3410, 0, 180, 185), castleWall(4550, 0, 200, 170), castleWall(5710, 0, 170, 165),
       castleWall(1570, 396, 34, 60), castleWall(3780, 396, 34, 60), castleWall(5560, 396, 34, 60),
     ],
     spikePits: spikePits(castleFloor3),
-    enemies: [enemy("sk5", "skeleton", 390, 420, 230, 680, 40), enemy("gh6", "ghost", 1100, 215, 930, 1340, 62), enemy("zo4", "zombie", 2240, 406, 2060, 2670, 36), enemy("gh7", "ghost", 2860, 195, 2590, 3050, 65), enemy("sk6", "skeleton", 3330, 420, 3170, 3660, 43), enemy("gh8", "ghost", 4260, 205, 4030, 4500, 68), enemy("zo5", "zombie", 4770, 406, 4580, 5030, 39), enemy("gh9", "ghost", 5450, 185, 5250, 5700, 70), enemy("sk7", "skeleton", 5940, 420, 5770, 6200, 46)],
+    chainGuardians: [chainGuardian("c3-hound-1", 2480, 3), chainGuardian("c3-hound-2", 4860, 3, 1.6)],
+    enemies: [enemy("sk5", "skeleton", 390, 420, 230, 680, 40), enemy("gh6", "ghost", 1100, 215, 930, 1340, 62), enemy("zo4", "zombie", 2140, 406, 2060, 2200, 36), enemy("gh7", "ghost", 2860, 195, 2590, 3050, 65), enemy("sk6", "skeleton", 3330, 420, 3170, 3660, 43), enemy("gh8", "ghost", 4260, 205, 4030, 4500, 68), enemy("zo5", "zombie", 4370, 406, 4320, 4460, 39), enemy("gh9", "ghost", 5450, 185, 5250, 5700, 70), enemy("sk7", "skeleton", 5940, 420, 5770, 6200, 46)],
     items: [apple("c3a1", 420, 285), apple("c3a2", 1450, 220), apple("c3a3", 2580, 205), apple("c3a4", 3650, 190), apple("c3a5", 4800, 195), apple("c3a6", 5960, 195), sticker("sticker-6-3", 4780, 185)],
     rewardBlocks: [reward("c3r1", 1050, 210), reward("c3r2", 2980, 210, "apple"), reward("c3r3", 5280, 200)], checkpoints: [940, 2010, 3120, 4210, 5350, 5890], boss: "vampire-count",
   },

@@ -27,7 +27,8 @@ export function getLevelObjectives(level: Level, progress: Progress): LevelObjec
     : campaignIndex >= 0 && campaignIndex <= progress.unlocked;
   const stats = progress.levelStats[level.id];
   const objectives: LevelObjective[] = available ? [
-    { id: "complete", kind: "complete", label: "Llegar al final", completed: stats?.completed === true, hint: "Sigue el camino hasta la meta." },
+    { id: "complete", kind: "complete", label: "Llegar al final", completed: stats?.completed === true,
+      hint: level.chainGuardians?.length ? "El perrito avisa antes de correr. Su cadena tiene un límite: espera lejos o pasa por las plataformas de arriba." : "Sigue el camino hasta la meta." },
     ...level.items.filter((item) => item.kind === "sticker").map((item, index, items): LevelObjective => {
       const sticker = stickerCatalog.find((entry) => entry.id === item.id);
       return {

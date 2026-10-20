@@ -90,6 +90,22 @@ export type Updraft = Rect & {
   maxRiseSpeed: number;
 };
 
+export type ChainGuardian = {
+  id: string;
+  anchorX: number;
+  groundY: number;
+  leashLength: number;
+  width: number;
+  height: number;
+  patrolSpeed: number;
+  lungeSpeed: number;
+  patrolDuration: number;
+  warningDuration: number;
+  lungeDuration: number;
+  recoveryDuration: number;
+  delay: number;
+};
+
 export type BossId = "bramble-king" | "mist-countess" | "great-wolf" | "great-boar" | "sky-captain" | "vampire-count" | "rainbow-queen" | "shark-captain" | "triceratops-queen" | "ruby-dragon" | "queen-bee" | "polar-bear";
 
 export type Level = {
@@ -116,6 +132,7 @@ export type Level = {
   windZones?: WindZone[];
   bloomBridges?: BloomBridge[];
   updrafts?: Updraft[];
+  chainGuardians?: ChainGuardian[];
   checkpoints: number[];
   boss?: BossId;
   route?: {

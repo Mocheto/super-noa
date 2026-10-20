@@ -5,6 +5,7 @@ import { optimizedAssetSource } from "./assets";
 import { levels } from "./levels";
 import { campaignLevels } from "./routes";
 import type { Progress } from "./progress";
+import { getWorldSecretShopBadge } from "./secretShopProgress";
 import { findMapJourney, mapRoutes, mapRouteState, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
 
 export type WorldSummary = {
@@ -163,11 +164,12 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
           {worldCatalog.map((world) => {
             const available = worldAvailable(world.id, progress);
             const summary = summaries[world.id];
+            const shop = getWorldSecretShopBadge(world.id, progress);
             return <button
               className={`map-node map-node-${world.id} ${available ? "is-open" : "is-locked"} ${summary.remembered ? "is-remembered" : ""}`}
               style={{ left: `${world.x}%`, top: `${world.y}%` }}
               type="button"
-              aria-label={`Ver ${world.name}: ${available ? `${summary.complete} de ${summary.total} pantallas completadas` : "todavía cerrado"}`}
+              aria-label={`Ver ${world.name}: ${available ? `${summary.complete} de ${summary.total} pantallas completadas` : "todavía cerrado"}${shop ? `. ${shop.label}` : ""}`}
               data-gamepad-default={world.id === noaWorld || undefined}
               onClick={(event) => openWorld(world, event.currentTarget)}
               disabled={moving}
@@ -176,6 +178,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
               <span className="map-node-badge" aria-hidden="true">{available ? world.id === 7 ? "✦" : world.id === 8 ? "≈" : world.id : <PixelIcon kind="lock" />}</span>
               <span className="map-node-name">{world.shortName}</span>
               {available && <span className="map-node-count">{summary.complete}/{summary.total}</span>}
+              {shop && <span className={`shop-visit-badge map-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.png')" }} role="img" aria-label={shop.label} title={shop.label} />}
             </button>;
           })}
           <div className="map-compass" aria-hidden="true">✦ N</div>

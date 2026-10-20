@@ -8,6 +8,62 @@ import { bossCatalog } from "./bosses.ts";
 
 const castle = levels.filter((level) => level.world === 6);
 
+test("solo cinco repisas opcionales tienen tiendas con identificadores estables", () => {
+  const shops = levels.filter((level) => level.secretShop);
+  assert.deepEqual(shops.map((level) => [level.id, level.secretShop]), [
+    ["1-2", { id: "shop-1-2", x: 328, y: 290, width: 64, height: 80 }],
+    ["3-2", { id: "shop-3-2", x: 358, y: 280, width: 64, height: 80 }],
+    ["6-2", { id: "shop-6-2", x: 358, y: 265, width: 64, height: 80 }],
+    ["10-2", { id: "shop-10-2", x: 338, y: 260, width: 64, height: 80 }],
+    ["12-2", { id: "shop-12-2", x: 338, y: 260, width: 64, height: 80 }],
+  ]);
+  assert.equal(new Set(shops.map((level) => level.secretShop!.id)).size, 5);
+  const overlap = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
+    a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+  for (const level of shops) {
+    const door = level.secretShop!;
+    const surfaceY = door.y + door.height;
+    const support = level.platforms.find((platform) => platform.y === surfaceY
+      && platform.x <= door.x - 42 && platform.x + platform.width >= door.x + door.width + 42);
+    assert.ok(support, `${level.id}: Noa necesita sitio para entrar y salir`);
+    const floor = level.platforms.find((platform) => platform.y === 456 && platform.x <= support.x
+      && platform.x + platform.width >= support.x + support.width);
+    assert.ok(floor, `${level.id}: la repisa opcional no debe esconder un precipicio debajo`);
+    assert.ok(floor.y - support.y <= JUMP_SPEED ** 2 / (2 * GRAVITY),
+      `${level.id}: la tienda debe verse y alcanzarse con un salto normal`);
+    assert.ok(door.height >= 58 && door.width >= 42);
+    assert.ok(door.x > level.start.x + 150 && door.x + door.width < level.goalX - 900);
+    assert.ok(level.enemies.some((enemy) => enemy.x > door.x + door.width && enemy.x < door.x + 1000),
+      `${level.id}: la tienda debe preceder un reto útil`);
+    assert.ok(level.checkpoints.every((checkpoint) => Math.abs(checkpoint + 43 - (door.x + 32)) > 180));
+    const clearance = { x: door.x - 42, y: door.y - 32, width: door.width + 84, height: door.height + 32 };
+    for (const platform of level.platforms) {
+      assert.ok(!overlap(clearance, platform), `${level.id}: techo o bloque sobre la puerta`);
+    }
+    for (const block of level.rewardBlocks) {
+      assert.ok(!overlap(clearance, { ...block, width: 48, height: 48 }), `${level.id}: caja sobre la puerta`);
+    }
+    const hazards = [
+      ...(level.spikePits ?? []), ...(level.deadlyWater ?? []), ...(level.windZones ?? []),
+      ...(level.lavaJets ?? []).map((jet) => ({ x: jet.x, y: jet.baseY - jet.height, width: jet.width, height: jet.height })),
+      ...(level.chainGuardians ?? []).map((guardian) => ({
+        x: guardian.anchorX - guardian.leashLength - guardian.width / 2,
+        y: guardian.groundY - guardian.height,
+        width: guardian.leashLength * 2 + guardian.width, height: guardian.height,
+      })),
+      ...level.enemies.map((enemy) => ({
+        x: enemy.minX, y: enemy.y, width: enemy.maxX - enemy.minX + enemy.width, height: enemy.height,
+      })),
+    ];
+    for (const hazard of hazards) {
+      const margin = { x: hazard.x - 32, y: hazard.y - 32, width: hazard.width + 64, height: hazard.height + 64 };
+      assert.ok(!overlap(clearance, margin), `${level.id}: peligro demasiado cerca de la tienda`);
+    }
+    assert.equal(level.route?.finale, undefined);
+    assert.equal(level.boss, undefined);
+  }
+});
+
 test("todos los checkpoints reaparecen sobre una superficie que permite aterrizar", () => {
   const playerWidth = 42;
   const playerHeight = 58;

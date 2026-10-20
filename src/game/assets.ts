@@ -64,6 +64,8 @@ export function getLevelAssets(level: Level): RasterAssets {
     Object.defineProperty(stickerSheets, id, { enumerable: true, get: () => when(id === world, `./assets/stickers/world-${id}-v1.png`) });
   }
   return {
+    get secretShopDoor() { return when(Boolean(level.secretShop), mechanicSpriteSheets.secretShopDoor.source); },
+    get starAura() { return when(Boolean(level.secretShop), mechanicSpriteSheets.starAura.source); },
     get castleHound() { return when(Boolean(level.chainGuardians?.length), mechanicSpriteSheets.castleHound.source); },
     get castleChainLink() { return when(Boolean(level.chainGuardians?.length), mechanicSpriteSheets.castleChainLink.source); },
     get castleChainPost() { return when(Boolean(level.chainGuardians?.length), mechanicSpriteSheets.castleChainPost.source); },

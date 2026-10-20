@@ -4,8 +4,27 @@ import { levels } from "./levels.ts";
 import { getLevelObjectives } from "./levelObjectives.ts";
 import { emptyProgress } from "./progress.ts";
 import { stickerCatalog } from "./stickers.ts";
+import { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
 
 const level = (id: string) => levels.find((entry) => entry.id === id)!;
+
+test("visitas y estrellas de las cinco tiendas no añaden medallas ni objetivos al álbum", () => {
+  const progress = { ...emptyProgress, unlocked: 29, secretUnlocked: true, waterUnlocked: true, levelStats: {
+    "A-1": { completed: true, bestApples: 0 }, "A-2": { completed: true, bestApples: 0 },
+  } };
+  const shops = levels.flatMap((entry) => entry.secretShop ? [entry.secretShop.id] : []);
+  const visited = shops.reduce(visitSecretShop, progress);
+  const completed = shops.reduce(completeSecretShop, visited);
+  for (const entry of levels) {
+    const original = getLevelObjectives(entry, progress);
+    assert.deepEqual(getLevelObjectives(entry, visited), original);
+    assert.deepEqual(getLevelObjectives(entry, completed), original);
+  }
+  assert.equal(stickerCatalog.length, 36);
+  assert.equal(levels.reduce((total, entry) => total + entry.items.filter((item) => item.kind === "sticker").length, 0), 36);
+  assert.deepEqual(completed.stickers, []);
+  assert.deepEqual(completed.bossChallenges, {});
+});
 
 test("los objetivos distinguen final, pegatina y partida sin perder vidas", () => {
   const result = getLevelObjectives(level("1-1"), emptyProgress);

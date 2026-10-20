@@ -1,4 +1,4 @@
-import type { BloomBridge, Level, Updraft } from "./types";
+import type { BloomBridge, Level, Rect, SecretShop, Updraft } from "./types";
 import type { RasterAssets } from "./assets";
 import type { LiveEnemy, LiveCannon, Cannonball, LiveWaterJumper } from "./gameState";
 import { enemyY, lavaJetState, positiveModulo, waterJumperState } from "./gameState";
@@ -7,6 +7,50 @@ import { bloomBridgeState, type WolfSleepPhase } from "./worldMechanics";
 import { drawMechanicSprite, drawMechanicStrip } from "./mechanicSprites.ts";
 import { worldEnemySpriteSources } from "./worldEnemySprites.ts";
 import { guardianBounds, type LiveChainGuardian } from "./chainGuardians";
+
+export function drawSecretShopDoor(context: CanvasRenderingContext2D, shop: SecretShop, cameraX: number, used: boolean, nearby: boolean, raster: RasterAssets) {
+  const x = shop.x - cameraX;
+  if (x + shop.width < -20 || x > VIEW_WIDTH + 20) return;
+  if (!drawMechanicSprite(context, raster.secretShopDoor, "secretShopDoor", used ? 2 : nearby ? 1 : 0, x, shop.y, shop.width, shop.height)) {
+    context.fillStyle = "#493058";
+    context.fillRect(x, shop.y, shop.width, shop.height);
+    context.fillStyle = used ? "#927a9d" : "#e4ad76";
+    context.fillRect(x + 7, shop.y + 9, shop.width - 14, shop.height - 9);
+    context.fillStyle = "#fff1ad";
+    context.fillRect(x + shop.width - 18, shop.y + shop.height / 2, 6, 6);
+    drawTinySparkle(context, x + shop.width / 2, shop.y + 24, "#f6d37c");
+  }
+  if (nearby && !used) {
+    context.save();
+    context.fillStyle = "#fff2ae";
+    context.font = "bold 30px monospace";
+    context.textAlign = "center";
+    context.fillText("↑", x + shop.width / 2, shop.y - 12);
+    context.restore();
+  }
+}
+
+export function drawStarAura(context: CanvasRenderingContext2D, player: Rect, cameraX: number, remaining: number, duration: number, elapsed: number, reduceMotion: boolean, raster: RasterAssets) {
+  const x = player.x + player.width / 2 - cameraX;
+  const y = player.y + player.height / 2;
+  if (!drawMechanicSprite(context, raster.starAura, "starAura", reduceMotion ? 0 : Math.floor(elapsed * 2), x - 58, y - 64, 116, 116)) {
+    drawTinySparkle(context, x - 36, y - 21, "#ffe49b");
+    drawTinySparkle(context, x + 39, y + 18, "#cfa0ff");
+    drawTinySparkle(context, x + 16, y - 48, "#ffe49b");
+  }
+  context.save();
+  context.fillStyle = "#493058";
+  context.beginPath();
+  context.arc(VIEW_WIDTH - 48, 48, 29, 0, Math.PI * 2);
+  context.fill();
+  context.strokeStyle = "#ffe49b";
+  context.lineWidth = 5;
+  context.beginPath();
+  context.arc(VIEW_WIDTH - 48, 48, 25, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0, Math.min(1, remaining / duration)));
+  context.stroke();
+  drawTinySparkle(context, VIEW_WIDTH - 48, 48, "#ffe49b");
+  context.restore();
+}
 
 export function drawChainGuardian(context: CanvasRenderingContext2D, guardian: LiveChainGuardian, cameraX: number, raster: RasterAssets) {
   const bounds = guardianBounds(guardian);

@@ -1,10 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { SecretShop } from "./SecretShop";
+import "./secretDoors.css";
 import { PixelIcon } from "./PixelIcon";
 import { getImage, getLevelAssets } from "./assets";
 import {
   drawAmbientForeground, drawApple, drawBackground, drawBloomBridge, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawChainGuardian, drawCheckpoint,
-  drawDeadlyWater, drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock,
+  drawDeadlyWater, drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock, drawSecretShopDoor, drawStarAura,
   drawLavaJet, drawSecretVine, drawSticker, drawTinySparkle, drawUpdraft, drawWaterEntrance, drawWaterJumper, drawWindZone,
 } from "./rendering";
 import { useGameInput } from "./input";
@@ -14,7 +16,8 @@ import { createLevelTransition } from "./levelTransition";
 import { getMechanicPlatforms, hasWorldMechanics, mechanicRespawn, updraftVelocity, wolfSleepState } from "./worldMechanics";
 import { getStickerSprite } from "./stickers";
 import { createChainGuardian, guardianHitbox, updateChainGuardian } from "./chainGuardians";
-import type { Level, GameSnapshot } from "./types";
+import type { Level, GameSnapshot, ShopMatchCount } from "./types";
+import { canEnterSecretShop, secretShopRewardSeconds } from "./secretShopRuntime";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
@@ -36,6 +39,10 @@ type GameCanvasProps = {
   onWaterExit: () => void;
   onSnapshot: (snapshot: GameSnapshot) => void;
   onAppleCollected?: (count: number) => void;
+  onShopVisit?: (id: string) => void;
+  onShopWin?: (id: string) => void;
+  onShopActiveChange?: (active: boolean) => void;
+  reduceMotion?: boolean;
   playSound: (kind: SoundKind) => void;
 };
 
@@ -83,23 +90,32 @@ function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
   context.textAlign = "start";
 }
 
-export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, playSound }: GameCanvasProps) {
+export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, reduceMotion = false, playSound }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
-  const { inputRef, handleTouchStart, handleTouchEnd, handleTouchCancel, preventTouchMenu } = useGameInput(running);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [doorAvailable, setDoorAvailable] = useState(false);
+  const shopOpenRef = useRef(false);
+  const doorAvailableRef = useRef(false);
+  const returnFromShopRef = useRef<(() => void) | null>(null);
+  const shopResultRef = useRef<ShopMatchCount | null>(null);
+  const motionRef = useRef(reduceMotion);
+  const activeRunning = running && !shopOpen;
+  const { inputRef, handleTouchStart, handleTouchEnd, handleTouchCancel, preventTouchMenu } = useGameInput(activeRunning);
   const runningRef = useRef(running);
   const gameLoopRef = useRef<GameLoop | null>(null);
-  const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, playSound });
+  const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, playSound });
 
   useEffect(() => {
-    callbacksRef.current = { onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, playSound };
-  }, [onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, playSound]);
+    callbacksRef.current = { onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, playSound };
+    motionRef.current = reduceMotion;
+  }, [onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, reduceMotion, playSound]);
 
   useEffect(() => {
-    runningRef.current = running;
-    gameLoopRef.current?.setRunning(running);
-    if (running) canvasRef.current?.focus({ preventScroll: true });
-  }, [running]);
+    runningRef.current = activeRunning;
+    gameLoopRef.current?.setRunning(activeRunning);
+    if (activeRunning) canvasRef.current?.focus({ preventScroll: true });
+  }, [activeRunning]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -130,6 +146,10 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     let respawnX = level.start.x;
     let previousJump = false;
     let previousShoot = false;
+    let previousUp = false;
+    let shopUsed = false;
+    let starRemaining = 0;
+    let starDuration = 0;
     let shootCooldown = 0;
     let completed = false;
     let frame = 0;
@@ -144,7 +164,17 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const currentSnapshot = (): GameSnapshot => ({
       apples, stickers: [...collectedStickers], power: player.power,
       checkpoint: checkpointIndex + 1, paused: !runningRef.current,
+      ...(starRemaining > 0 ? { starSeconds: starRemaining } : {}),
     });
+    returnFromShopRef.current = () => {
+      starRemaining = secretShopRewardSeconds(shopResultRef.current ?? 0);
+      starDuration = starRemaining;
+      shopOpenRef.current = false;
+      setShopOpen(false);
+      callbacksRef.current.onShopActiveChange?.(false);
+      callbacksRef.current.onSnapshot(currentSnapshot());
+      if (statusRef.current) statusRef.current.textContent = starRemaining > 0 ? "¡Noa Estelar! Las estrellas te protegen de los enemigos. Sigue saltando los fosos." : "¡Hasta pronto, gatito! La aventura continúa.";
+    };
     const finishLevel = (delay: number, complete: (snapshot: GameSnapshot) => void) => {
       if (completed) return;
       transition.begin(currentSnapshot(), delay, complete);
@@ -171,6 +201,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         player.jumpBuffer = 0;
       }
       player.power = "normal";
+      starRemaining = 0;
       player.invincible = 1.4;
       player.jumpsUsed = 0;
       player.springLaunch = false;
@@ -182,7 +213,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     };
 
     const hurt = () => {
-      if (player.invincible > 0) return;
+      if (player.invincible > 0 || starRemaining > 0) return;
       callbacksRef.current.playSound("hurt");
       bursts.push({ x: player.x + player.width / 2, y: player.y + 22, life: 0.45, color: "#ff8b9d", kind: "stars" });
       if (player.power === "cat") {
@@ -203,6 +234,34 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       const platforms = getMechanicPlatforms(level, levelAge);
       const input = inputRef.current;
       const pad = readGameplayPad(firstConnectedGamepad());
+      const available = canEnterSecretShop(level.secretShop, player, shopUsed);
+      if (available !== doorAvailableRef.current) {
+        doorAvailableRef.current = available;
+        setDoorAvailable(available);
+      }
+      const enter = Boolean(input.enterQueued) || (pad.up && !previousUp);
+      previousUp = pad.up;
+      input.enterQueued = false;
+      if (available && enter && level.secretShop) {
+        shopUsed = true;
+        shopOpenRef.current = true;
+        shopResultRef.current = null;
+        doorAvailableRef.current = false;
+        setDoorAvailable(false);
+        runningRef.current = false;
+        gameLoopRef.current?.setRunning(false);
+        input.jumpQueued = false;
+        input.jump = false;
+        player.vx = 0;
+        player.vy = 0;
+        callbacksRef.current.onShopVisit?.(level.secretShop.id);
+        callbacksRef.current.onShopActiveChange?.(true);
+        setShopOpen(true);
+        return;
+      }
+      const previousStar = starRemaining;
+      starRemaining = Math.max(0, starRemaining - delta);
+      if (previousStar > 0 && starRemaining === 0) callbacksRef.current.onSnapshot(currentSnapshot());
       const left = input.left || pad.left;
       const right = input.right || pad.right;
       const jump = input.jump || pad.jump;
@@ -728,6 +787,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster, level.theme));
       level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge, raster));
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
+      if (level.secretShop) drawSecretShopDoor(context, level.secretShop, cameraX, shopUsed, doorAvailableRef.current, raster);
       if (level.world === 11) level.bloomBridges?.forEach((bridge) => drawBloomBridge(context, bridge, cameraX, levelAge, raster));
       level.spikePits?.forEach((pit) => {
         const x = pit.x - cameraX;
@@ -836,6 +896,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         else if (level.id !== "2-1") drawGoalCat(context, level.goalX, cameraX, false, raster.collectibles, goalCelebrationFrame < 0 ? 0 : Math.min(1, (frame - goalCelebrationFrame) / 22), goalSurfaceY, raster.goalFlag, raster.goalRescue);
       }
       drawPlayer();
+      if (starRemaining > 0) drawStarAura(context, player, cameraX, starRemaining, starDuration, levelAge, motionRef.current, raster);
       for (const zone of level.waterZones ?? []) {
         const left = Math.max(0, zone.x - cameraX);
         const right = Math.min(VIEW_WIDTH, zone.x + zone.width - cameraX);
@@ -871,7 +932,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     enemies = enemies.map((enemy) => ({ ...enemy }));
     const gameLoop = createGameLoop((delta, now) => {
-      if (!runningRef.current) return;
+      if (!runningRef.current || shopOpenRef.current) return;
       if (completed) transition.advance(delta, runningRef.current);
       else update(delta, now);
     }, render, () => { frame += 1; });
@@ -881,6 +942,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       gameLoop.stop();
       gameLoopRef.current = null;
       transition.cancel();
+      returnFromShopRef.current = null;
+      shopOpenRef.current = false;
+      callbacksRef.current.onShopActiveChange?.(false);
     };
   }, [level, inputRef]);
 
@@ -889,7 +953,16 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       <div className="game-stage">
         <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={`Pantalla ${level.id}: ${level.title}`} />
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />
+        {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label="Entrar en la tienda secreta" onClick={() => { inputRef.current.enterQueued = true; }}>↑ Entrar</button>}
       </div>
+      {shopOpen && <SecretShop paused={!running} reduceMotion={reduceMotion} playSound={playSound} onResult={(matches) => {
+        if (shopResultRef.current !== null) return;
+        shopResultRef.current = matches;
+        if (matches === 3 && level.secretShop) callbacksRef.current.onShopWin?.(level.secretShop.id);
+      }} onLeave={() => {
+        if (shopResultRef.current === null) return;
+        returnFromShopRef.current?.();
+      }} />}
       <div className="touch-controls" aria-label="Controles táctiles">
         <div className="touch-group touch-move">
           <button type="button" className="touch-button touch-direction" aria-label="Mover a la izquierda" onPointerDown={(event) => handleTouchStart("left", event)} onPointerUp={(event) => handleTouchEnd("left", event)} onPointerCancel={(event) => handleTouchCancel("left", event)} onLostPointerCapture={(event) => handleTouchCancel("left", event)} onContextMenu={preventTouchMenu}><span>◀</span><small>IZQ.</small></button>

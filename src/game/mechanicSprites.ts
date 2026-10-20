@@ -1,4 +1,6 @@
 export const mechanicSpriteSheets = {
+  secretShopDoor: { source: "./assets/sprites/secret-shop-door-v1.png", columns: 3, frameWidth: 64, frameHeight: 80 },
+  starAura: { source: "./assets/sprites/secret-star-aura-v1.png", columns: 3, frameWidth: 128, frameHeight: 128 },
   castleHound: { source: "./assets/sprites/castle-hound-v1.png", columns: 4, frameWidth: 128, frameHeight: 112 },
   castleChainLink: { source: "./assets/sprites/castle-chain-link-v1.png", columns: 1, frameWidth: 32, frameHeight: 20 },
   castleChainPost: { source: "./assets/sprites/castle-chain-post-v1.png", columns: 1, frameWidth: 64, frameHeight: 80 },

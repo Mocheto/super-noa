@@ -14,7 +14,7 @@ import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";
 import { createMusicPlayer, musicTracks } from "./game/music";
 import { getLevelObjectives } from "./game/levelObjectives";
-import { collectLifetimeApples, lifetimeApples, progressMilestone, readProgress, resetCampaignProgress, saveProgress, type Progress } from "./game/progress";
+import { collectLifetimeApples, completeSecretShop, lifetimeApples, progressMilestone, readProgress, resetCampaignProgress, saveProgress, visitSecretShop, type Progress } from "./game/progress";
 import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
 import { worldArtwork, worldCatalog } from "./game/worldMapData";
 import { checkRankingAvailability, loadRanking, rankingConnectionMessage, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
@@ -88,7 +88,10 @@ export default function App() {
   const [bossReplay, setBossReplay] = useState(false);
   const [bossReplayReturn, setBossReplayReturn] = useState<"home" | "map">("map");
   const [snapshot, setSnapshot] = useState<GameSnapshot>(emptySnapshot);
+  const [shopActive, setShopActive] = useState(false);
+  const starActive = screen === "game" && (snapshot.starSeconds ?? 0) > 0;
   const musicRef = useRef<ReturnType<typeof createMusicPlayer> | null>(null);
+  const starMusicRef = useRef<ReturnType<typeof createMusicPlayer> | null>(null);
   const rankingJoiningRef = useRef(false);
   const rankingAliasRef = useRef<HTMLInputElement | null>(null);
   const enrollmentBusyRef = useRef(false);
@@ -258,7 +261,7 @@ export default function App() {
   }, [effectsVolume, musicVolume, reduceMotion, touchControls]);
 
   useEffect(() => {
-    musicRef.current ??= createMusicPlayer(
+    const createPlayer = () => createMusicPlayer(
       (source) => new Audio(source),
       (error) => {
         console.warn("No se pudo reproducir la música.", error);
@@ -266,14 +269,18 @@ export default function App() {
       },
       () => setAudioMessage(""),
     );
+    musicRef.current ??= createPlayer();
+    starMusicRef.current ??= createPlayer();
+    const playing = (screen === "game" || screen === "boss") && !shopActive && !paused && !muted && musicVolume > 0;
     musicRef.current.update({
       source: musicTracks[activeLevel.world],
       volume: musicVolume,
-      playing: (screen === "game" || screen === "boss") && !paused && !muted && musicVolume > 0,
+      playing: playing && !starActive,
     });
-  }, [activeLevel.world, musicVolume, muted, paused, screen]);
+    starMusicRef.current.update({ source: "./assets/music/noa-estelar.mp3", volume: musicVolume, playing: playing && starActive });
+  }, [activeLevel.world, musicVolume, muted, paused, screen, shopActive, starActive]);
 
-  useEffect(() => () => musicRef.current?.pause(), []);
+  useEffect(() => () => { musicRef.current?.pause(); starMusicRef.current?.pause(); }, []);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -542,6 +549,8 @@ export default function App() {
   const handleAppleCollected = useCallback((count: number) => {
     setProgress((current) => collectLifetimeApples(current, count));
   }, []);
+  const handleShopVisit = useCallback((id: string) => setProgress((current) => visitSecretShop(current, id)), []);
+  const handleShopWin = useCallback((id: string) => setProgress((current) => completeSecretShop(current, id)), []);
 
   const handleComplete = useCallback((challengeCompleted = false, finalSnapshot = snapshot) => {
     setSnapshot(finalSnapshot);
@@ -699,7 +708,7 @@ export default function App() {
               <span aria-label={`${lives} vidas`}><GameAssetIcon kind="heart" /> × {lives}</span>
               <span aria-label={`${snapshot.apples} manzanas`}><GameAssetIcon kind="apple" /> × {snapshot.apples}</span>
               <span aria-label={`${snapshot.stickers.length} pegatinas encontradas`}><PixelIcon kind="sparkle" /> × {snapshot.stickers.length}</span>
-              <span className={`power-chip power-${snapshot.power}`}>{snapshot.power === "cat" ? <><PixelIcon kind="yarn" /> Gato</> : snapshot.power === "apple" ? <><GameAssetIcon kind="apple" /> Protegida</> : "Noa"}</span>
+              <span className={`power-chip power-${snapshot.power} ${starActive ? "star-power-chip" : ""}`}>{starActive ? <>★ Estelar</> : snapshot.power === "cat" ? <><PixelIcon kind="yarn" /> Gato</> : snapshot.power === "apple" ? <><GameAssetIcon kind="apple" /> Protegida</> : "Noa"}</span>
             </div>
             <div className="hud-actions">
               <button type="button" onClick={() => setMuted((value) => !value)} aria-label={muted ? "Activar sonido" : "Silenciar"}><PixelIcon kind={muted ? "mute" : "sound"} /></button>
@@ -707,7 +716,7 @@ export default function App() {
               {(screen === "game" || screen === "boss") && <button type="button" onClick={() => setPaused((value) => !value)} aria-label="Pausa">Ⅱ</button>}
             </div>
           </header>}
-          {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} playSound={playSound} />}
+          {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} reduceMotion={reduceMotion} playSound={playSound} />}
           {!bossReplay && <div className="level-caption"><span>{themeNames[activeLevel.theme]}</span><span>Bandera {snapshot.checkpoint}/{activeLevel.checkpoints.length}</span><small>{activeLevel.subtitle}</small></div>}
 
           {screen === "boss" && activeLevel.boss && (

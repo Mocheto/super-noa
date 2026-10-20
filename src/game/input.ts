@@ -3,6 +3,7 @@ import { useEffect, useRef, type MouseEvent, type PointerEvent } from "react";
 export type InputState = {
   left: boolean; right: boolean; jump: boolean; shoot: boolean;
   jumpQueued: boolean; shootQueued: boolean;
+  enterQueued?: boolean;
 };
 
 type TouchKey = "left" | "right" | "jump" | "shoot";
@@ -24,6 +25,7 @@ export function useGameInput(running: boolean) {
       if (event.defaultPrevented || event.isComposing || event.composedPath().some((target) =>
         target instanceof Element && target.closest("button, input, textarea, select, a[href], dialog, [role='dialog'], [role='alertdialog'], [role='button'], [role='link'], [contenteditable]:not([contenteditable='false'])"))) return;
       if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space"].includes(event.code)) event.preventDefault();
+      if (event.code === "ArrowUp" && !event.repeat && !heldKeys.has(event.code)) input.enterQueued = true;
       heldKeys.add(event.code);
       syncDirections();
       if (["ArrowUp", "KeyW", "Space"].includes(event.code)) {
@@ -46,7 +48,7 @@ export function useGameInput(running: boolean) {
     const clear = () => {
       heldKeys.clear();
       touchPointersRef.current = {};
-      Object.assign(input, { left: false, right: false, jump: false, shoot: false, jumpQueued: false, shootQueued: false });
+      Object.assign(input, { left: false, right: false, jump: false, shoot: false, jumpQueued: false, shootQueued: false, enterQueued: false });
     };
     window.addEventListener("keydown", onKeyDown, { passive: false });
     window.addEventListener("keyup", onKeyUp);
@@ -63,7 +65,7 @@ export function useGameInput(running: boolean) {
     if (running) return;
     heldKeysRef.current.clear();
     touchPointersRef.current = {};
-    Object.assign(inputRef.current, { left: false, right: false, jump: false, shoot: false, jumpQueued: false, shootQueued: false });
+    Object.assign(inputRef.current, { left: false, right: false, jump: false, shoot: false, jumpQueued: false, shootQueued: false, enterQueued: false });
   }, [running]);
 
   const keyboardKeepsPressed = (key: TouchKey) => key === "left"

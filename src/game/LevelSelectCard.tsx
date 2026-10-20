@@ -3,6 +3,7 @@ import { GameAssetIcon } from "./GameAssetIcon";
 import { PixelIcon } from "./PixelIcon";
 import { getLevelObjectives } from "./levelObjectives";
 import type { Progress } from "./progress";
+import { getSecretShopBadge } from "./secretShopProgress";
 import type { Level } from "./types";
 
 type LevelSelectCardProps = {
@@ -23,6 +24,7 @@ export function LevelSelectCard({ level, index, unlocked, suggested, progress, d
   const stats = progress.levelStats[level.id];
   const objectives = getLevelObjectives(level, progress);
   const available = unlocked && objectives.available;
+  const shop = available ? getSecretShopBadge(level, progress) : null;
   const stickers = objectives.objectives.filter((objective) => objective.kind === "sticker");
   const stickerEarned = stickers.length > 0 && stickers.every((objective) => objective.completed);
   const medals = [stats?.completed === true, stickerEarned, Boolean(stats?.completed && stats.flawless)];
@@ -73,7 +75,9 @@ export function LevelSelectCard({ level, index, unlocked, suggested, progress, d
     <div className={`level-card-row ${stats?.completed ? "is-complete" : ""}`}>
       <button className={`level-card ${available ? "has-objectives" : ""} ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked}
         data-gamepad-default={suggested || undefined} onKeyDown={dismissOnEscape} onClick={() => onBeginLevel(index)}>
-        <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}</span>
+        <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}
+          {shop && <span className={`shop-visit-badge level-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.png')" }} role="img" aria-label={shop.label} title={shop.label} />}
+        </span>
         <strong>{!unlocked && level.world === 7 ? "Una sorpresa te espera" : level.title}</strong>
         <small>{stats?.completed ? <span>✓ Completada · <GameAssetIcon kind="apple" /> {stats.bestApples}</span>
           : unlocked ? "Lista para jugar" : level.world === 8 && !progress.waterUnlocked ? "Busca la poza azul en 3-3" : "Completa la anterior"}</small>
@@ -98,6 +102,7 @@ export function LevelSelectCard({ level, index, unlocked, suggested, progress, d
         </li>)}
       </ul>
       {nextHint && <p className="level-objective-hint">{nextHint.hint}</p>}
+      {shop && <p className="level-shop-hint">{shop.label}. Busca una puerta en una repisa segura. Alinea los tres gatitos para conseguir su estrella.</p>}
     </div>}
   </div>;
 }

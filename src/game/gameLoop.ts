@@ -19,11 +19,12 @@ export function createGameLoop(update: (delta: number, now: number) => void, ren
     lastTime = now;
     while (accumulator >= STEP_SECONDS) {
       update(STEP_SECONDS, now);
+      if (!running) return;
       advanceFrame();
       accumulator -= STEP_SECONDS;
     }
     render();
-    animationId = requestAnimationFrame(tick);
+    if (running) animationId = requestAnimationFrame(tick);
   };
 
   return {

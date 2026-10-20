@@ -108,6 +108,9 @@ export type ChainGuardian = {
 
 export type BossId = "bramble-king" | "mist-countess" | "great-wolf" | "great-boar" | "sky-captain" | "vampire-count" | "rainbow-queen" | "shark-captain" | "triceratops-queen" | "ruby-dragon" | "queen-bee" | "polar-bear";
 
+export type ShopMatchCount = 0 | 1 | 2 | 3;
+export type SecretShop = Rect & { id: string };
+
 export type Level = {
   id: string;
   world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
@@ -133,6 +136,7 @@ export type Level = {
   bloomBridges?: BloomBridge[];
   updrafts?: Updraft[];
   chainGuardians?: ChainGuardian[];
+  secretShop?: SecretShop;
   checkpoints: number[];
   boss?: BossId;
   route?: {
@@ -153,4 +157,5 @@ export type GameSnapshot = {
   power: Power;
   checkpoint: number;
   paused: boolean;
+  starSeconds?: number;
 };

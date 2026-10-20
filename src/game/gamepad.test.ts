@@ -10,11 +10,15 @@ test("el movimiento acepta cruceta, palanca y botones de salto y lana", () => {
   keys[14].pressed = true;
   keys[0].pressed = true;
   keys[2].pressed = true;
-  assert.deepEqual(readGameplayPad({ buttons: keys, axes: [0, 0] }), { left: true, right: false, jump: true, shoot: true });
+  assert.deepEqual(readGameplayPad({ buttons: keys, axes: [0, 0] }), { left: true, right: false, jump: true, shoot: true, up: false });
   keys[14].pressed = false;
   keys[15].pressed = true;
-  assert.deepEqual(readGameplayPad({ buttons: keys, axes: [-0.8, 0] }), { left: true, right: true, jump: true, shoot: true });
-  assert.deepEqual(readGameplayPad(null), { left: false, right: false, jump: false, shoot: false });
+  assert.deepEqual(readGameplayPad({ buttons: keys, axes: [-0.8, 0] }), { left: true, right: true, jump: true, shoot: true, up: false });
+  keys[12].pressed = true;
+  assert.equal(readGameplayPad({ buttons: keys, axes: [0, 0] }).up, true);
+  keys[12].pressed = false;
+  assert.equal(readGameplayPad({ buttons: keys, axes: [0, -.8] }).up, true);
+  assert.deepEqual(readGameplayPad(null), { left: false, right: false, jump: false, shoot: false, up: false });
 });
 
 test("la navegación por menús actúa una sola vez por pulsación", () => {

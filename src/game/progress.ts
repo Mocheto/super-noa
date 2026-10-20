@@ -1,6 +1,9 @@
 import { levels } from "./levels.ts";
 import { campaignLevels, campaignUnlockIndex } from "./routes.ts";
 import { readStorage, writeStorage } from "./storage.ts";
+import { normalizeSecretShops, type SecretShopVisits } from "./secretShopProgress.ts";
+
+export { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
 
 export const STORAGE_KEY = "super-noa-progress-v1";
 const SAVE_VERSION = 2;
@@ -8,9 +11,9 @@ const campaignLevelCount = campaignLevels.length;
 const knownLevelIds = new Set(levels.map((level) => level.id));
 
 export type LevelStats = Record<string, { completed: boolean; bestApples: number; flawless?: boolean }>;
-export type Progress = { unlocked: number; levelStats: LevelStats; stickers: string[]; secretUnlocked: boolean; waterUnlocked: boolean; bossChallenges: Record<string, boolean>; totalApples?: number; achievedAt?: string | null };
+export type Progress = { unlocked: number; levelStats: LevelStats; stickers: string[]; secretUnlocked: boolean; waterUnlocked: boolean; bossChallenges: Record<string, boolean>; totalApples?: number; achievedAt?: string | null; secretShops?: SecretShopVisits };
 
-export const emptyProgress: Progress = { unlocked: 0, levelStats: {}, stickers: [], secretUnlocked: false, waterUnlocked: false, bossChallenges: {}, totalApples: 0, achievedAt: null };
+export const emptyProgress: Progress = { unlocked: 0, levelStats: {}, stickers: [], secretUnlocked: false, waterUnlocked: false, bossChallenges: {}, totalApples: 0, achievedAt: null, secretShops: {} };
 
 export function normalizeProgressDate(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -39,7 +42,7 @@ export function lifetimeApples(progress: Progress): number {
 }
 
 export function resetCampaignProgress(current: Progress): Progress {
-  return { ...emptyProgress, levelStats: {}, stickers: [], bossChallenges: {}, totalApples: lifetimeApples(current), achievedAt: normalizeProgressDate(current.achievedAt) };
+  return { ...emptyProgress, levelStats: {}, stickers: [], bossChallenges: {}, secretShops: {}, totalApples: lifetimeApples(current), achievedAt: normalizeProgressDate(current.achievedAt) };
 }
 
 export function progressMilestone(current: Progress, next: Progress, now = new Date().toISOString()): Progress {
@@ -99,13 +102,14 @@ export function parseProgress(raw: string | null): Progress {
         : {},
       totalApples: lifetimeApples({ ...emptyProgress, levelStats, totalApples: saved.totalApples as number | undefined }),
       achievedAt: normalizeProgressDate(saved.achievedAt),
+      secretShops: normalizeSecretShops(saved.secretShops),
     };
   } catch {
     return emptyProgress;
   }
 }
 
-export const serializeProgress = (progress: Progress) => JSON.stringify({ version: SAVE_VERSION, ...progress, totalApples: lifetimeApples(progress), achievedAt: normalizeProgressDate(progress.achievedAt) });
+export const serializeProgress = (progress: Progress) => JSON.stringify({ version: SAVE_VERSION, ...progress, totalApples: lifetimeApples(progress), achievedAt: normalizeProgressDate(progress.achievedAt), secretShops: normalizeSecretShops(progress.secretShops) });
 
 export function readProgress(): Progress {
   return parseProgress(readStorage(STORAGE_KEY));

@@ -16,6 +16,16 @@ En el bosque de los lobos, las señales `ZZZ` indican que puedes pasar sin recib
 
 La primera pantalla del castillo mide 5.200 unidades, un 30 % más que antes, con una cuarta zona de pinchos, más plataformas, manzanas y un cuarto checkpoint. Cada pantalla del mundo tiene dos perritos mecánicos de cobre sujetos a un poste: patrullan, paran y muestran un aviso antes de lanzarse a morder, sin superar el alcance declarado de su cadena. No se derrotan con pisotones ni con lana; hay plataformas para pasar por arriba y checkpoints fuera de su alcance. El ciclo se congela al pausar. Perro, poste y eslabones son sprites originales que se regeneran con `node scripts/build-castle-hound.mjs`; añade `--check` para verificar sus tres PNG.
 
+### Rincones secretos de gatitos
+
+Las pantallas `1-2`, `3-2`, `6-2`, `10-2` y `12-2` esconden una puerta en una plataforma secundaria segura. De pie delante de ella, pulsa arriba en teclado o mando, o toca «↑ Entrar». Fuera de la puerta, arriba conserva su salto habitual de teclado. Dentro, detén las orejas, la cara y las patitas para formar uno de los tres gatitos originales, sin apuestas, coste, límite de tiempo ni pérdida de vidas. Solo hay una partida por recorrido: salir, morir o reaparecer en un checkpoint no recupera la oportunidad; reiniciar la pantalla sí.
+
+Tres partes iguales conceden **Noa Estelar durante 12 segundos** y marcan la tienda como superada; dos iguales conceden **5 segundos**, sin marcarla superada. El resto forma un gatito divertido, sin premio ni castigo. La protección empieza al volver, se congela con la pausa y evita el daño de enemigos y proyectiles, pero no los fosos, el agua mortal ni el suelo de lava. Al terminar conserva el potenciador que Noa ya tenía; perder una vida cancela el escudo.
+
+La aventura exterior queda congelada durante la visita. El mapa y las tarjetas muestran una puerta pendiente, visitada o superada, sin permitir entrar desde el mapa ni cambiar las medallas, pegatinas o el ranking. Estas marcas se guardan localmente y se borran al reiniciar la campaña. Las explicaciones siguen dentro de las ayudas que se abren al interactuar, no desplegadas permanentemente.
+
+`node scripts/build-secret-shop-art.mjs` regenera las cuatro imágenes originales; añade `--check` para verificarlas. `node scripts/build-star-music.mjs` compone el tema original de 12 segundos «Brillo de Noa» con Node.js y FFmpeg; `--check` compara la composición reproducible con el MP3. Suena solo durante el escudo y la música del mundo continúa desde su posición anterior al terminar.
+
 ## Desarrollo
 
 ```bash

@@ -214,6 +214,7 @@ export const levels: Level[] = [
   },
   {
     id: "1-2",
+    secretShop: { id: "shop-1-2", x: 328, y: 290, width: 64, height: 80 },
     world: 1,
     screen: 2,
     title: "La gran fiesta de las copas",
@@ -446,6 +447,7 @@ export const levels: Level[] = [
   },
   {
     id: "3-2",
+    secretShop: { id: "shop-3-2", x: 358, y: 280, width: 64, height: 80 },
     world: 3,
     screen: 2,
     title: "El corazón del bosque de los lobos",
@@ -764,6 +766,7 @@ export const levels: Level[] = [
   },
   {
     id: "6-2", world: 6, screen: 2,
+    secretShop: { id: "shop-6-2", x: 358, y: 265, width: 64, height: 80 },
     title: "El laberinto de las torres", subtitle: "Busca pasillos altos y esquiva los pinchos brillantes.",
     theme: "haunted-castle", width: 5200, start: { x: 80, y: 380 }, goalX: 5020,
     platforms: [
@@ -878,6 +881,7 @@ export const levels: Level[] = [
   },
   {
     id: "10-2", world: 10, screen: 2,
+    secretShop: { id: "shop-10-2", x: 338, y: 260, width: 64, height: 80 },
     title: "La cueva de los cristales", subtitle: "Busca el camino entre cristales rojos y charcos de lava brillante.",
     theme: "dragon-volcano", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [
@@ -992,6 +996,7 @@ export const levels: Level[] = [
   },
   {
     id: "12-2", world: 12, screen: 2,
+    secretShop: { id: "shop-12-2", x: 338, y: 260, width: 64, height: 80 },
     title: "Las cuevas de hielo", subtitle: "Deslízate y usa las ráfagas para cruzar las cuevas azules.",
     theme: "ice-mountain", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [

@@ -9,6 +9,7 @@ import type { LevelSelectCard } from "./LevelSelectCard";
 import { getLevelObjectives } from "./levelObjectives.ts";
 import { levels } from "./levels.ts";
 import { emptyProgress } from "./progress.ts";
+import { completeSecretShop, getSecretShopBadge, visitSecretShop } from "./secretShopProgress.ts";
 
 type Props = Parameters<typeof LevelSelectCard>[0];
 type ElementProps = {
@@ -17,6 +18,8 @@ type ElementProps = {
   hidden?: boolean;
   disabled?: boolean;
   "aria-expanded"?: boolean;
+  "aria-label"?: string;
+  role?: string;
   onClick?: () => void;
   onPointerEnter?: (event: { pointerType: string }) => void;
   onPointerLeave?: () => void;
@@ -49,6 +52,7 @@ function mount(overrides: Partial<Props> = {}) {
     "./GameAssetIcon": { GameAssetIcon: () => null },
     "./PixelIcon": { PixelIcon: () => null },
     "./levelObjectives": { getLevelObjectives },
+    "./secretShopProgress": { getSecretShopBadge },
   };
   const module = { exports: {} };
   const context = vm.createContext({
@@ -175,4 +179,65 @@ test("las pantallas cerradas no tienen estrellas interactivas ni pistas", () => 
   card.root.props.onPointerEnter({ pointerType: "mouse" });
   card.advance(1000);
   assert.deepEqual(card.opened, []);
+});
+
+test("las puertas muestran tres estados accesibles sin añadir botones ni medallas", () => {
+  const progress = { ...emptyProgress, unlocked: 1 };
+  const states = [
+    { progress, state: "available", label: "Tienda secreta: por descubrir" },
+    { progress: visitSecretShop(progress, "shop-1-2"), state: "visited", label: "Tienda secreta: visitada" },
+    { progress: completeSecretShop(progress, "shop-1-2"), state: "completed", label: "Tienda secreta: reto conseguido" },
+  ];
+  for (const state of states) {
+    const card = mount({ level: levels[1], index: 1, progress: state.progress });
+    const badge = card.find("level-shop-badge");
+    assert.equal(badge?.type, "span");
+    assert.equal(badge.props.role, "img");
+    assert.equal(badge.props["aria-label"], state.label);
+    assert.ok(badge.props.className?.split(" ").includes(`is-${state.state}`));
+    assert.equal(badge.props.onClick, undefined);
+    assert.equal(Children.count(card.find("level-medals")?.props.children), 3);
+    assert.equal(card.find("level-objectives-trigger")?.props["aria-expanded"], false);
+    assert.equal(card.find("level-objectives")?.props.hidden, true);
+    card.find("level-card")?.props.onClick?.();
+    assert.deepEqual(card.started, [1]);
+    assert.deepEqual(card.opened, []);
+  }
+});
+
+test("la ayuda de la tienda queda dentro de las pistas ocultas y usa la espera habitual", () => {
+  const props = { level: levels[1], index: 1, progress: { ...emptyProgress, unlocked: 1 } };
+  const card = mount(props);
+  const help = card.find("level-shop-hint");
+  assert.ok(help);
+  assert.equal(card.find("level-objectives")?.props.hidden, true);
+  const containsHelp = (children: ReactNode) => Children.toArray(children).some((child) =>
+    isValidElement<ElementProps>(child) && child.props.className === "level-shop-hint");
+  assert.ok(containsHelp(card.find("level-objectives")?.props.children));
+  assert.equal(containsHelp(card.find("level-card")?.props.children), false);
+  card.root.props.onPointerEnter({ pointerType: "mouse" });
+  card.advance(899);
+  assert.deepEqual(card.opened, []);
+  card.advance(1);
+  assert.deepEqual(card.opened, [false]);
+  const expanded = mount({ ...props, details: { pinned: false } });
+  assert.equal(expanded.find("level-objectives")?.props.hidden, false);
+  assert.ok(expanded.find("level-shop-hint"));
+  assert.ok(expanded.find("level-objectives")?.props.className?.includes("is-preview"));
+});
+
+test("las puertas solo aparecen en sus cinco tarjetas abiertas, nunca en pantallas vecinas", () => {
+  const progress = { ...emptyProgress, unlocked: 29, secretUnlocked: true, waterUnlocked: true };
+  const withDoors = levels.flatMap((level, index) => {
+    const card = mount({ level, index, progress });
+    return card.find("level-shop-badge") ? [level.id] : [];
+  });
+  assert.deepEqual(withDoors, ["1-2", "3-2", "6-2", "10-2", "12-2"]);
+  const closedLevel = mount({ level: levels[1], index: 1, unlocked: false, progress });
+  assert.equal(closedLevel.find("level-shop-badge"), undefined);
+  assert.equal(closedLevel.find("level-shop-hint"), undefined);
+  const level = levels.find((entry) => entry.id === "3-2")!;
+  const closedWorld = mount({ level, progress: completeSecretShop(emptyProgress, "shop-3-2") });
+  assert.equal(closedWorld.find("level-shop-badge"), undefined);
+  assert.equal(closedWorld.find("level-shop-hint"), undefined);
 });

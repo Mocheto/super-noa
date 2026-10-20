@@ -36,3 +36,35 @@ test("la física usa pasos constantes y se detiene durante la pausa", () => {
     globalThis.cancelAnimationFrame = oldCancel;
   }
 });
+
+test("abrir una habitación dentro de update cancela el frame sin duplicar el bucle al volver", () => {
+  const pending = new Map<number, FrameRequestCallback>();
+  let nextId = 0;
+  const oldRequest = globalThis.requestAnimationFrame;
+  const oldCancel = globalThis.cancelAnimationFrame;
+  globalThis.requestAnimationFrame = (callback) => { pending.set(++nextId, callback); return nextId; };
+  globalThis.cancelAnimationFrame = (id) => { pending.delete(id); };
+  let steps = 0;
+  const next = (time: number) => {
+    const [id, callback] = pending.entries().next().value!;
+    pending.delete(id);
+    callback(time);
+  };
+  try {
+    const loop = createGameLoop(() => { steps++; loop.setRunning(false); }, () => undefined, () => undefined);
+    loop.setRunning(true);
+    next(100);
+    next(150);
+    assert.equal(steps, 1);
+    assert.equal(pending.size, 0);
+    loop.setRunning(true);
+    assert.equal(pending.size, 1);
+    next(100_000);
+    assert.equal(steps, 1);
+    assert.equal(pending.size, 1);
+    loop.stop();
+  } finally {
+    globalThis.requestAnimationFrame = oldRequest;
+    globalThis.cancelAnimationFrame = oldCancel;
+  }
+});

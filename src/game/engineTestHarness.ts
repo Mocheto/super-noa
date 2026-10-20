@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import ts from "typescript";
-import type { GameSnapshot, Level, Rect } from "./types";
+import type { GameSnapshot, Level, Rect, ShopMatchCount } from "./types";
 import type { InputState } from "./input";
 import type { LiveEnemy } from "./gameState";
 import type { WolfSleepPhase } from "./worldMechanics";
@@ -11,6 +11,7 @@ export function engineModules(overrides: Record<string, unknown> = {}, globals: 
   const context = vm.createContext({ console, ...globals });
   const cache = new Map<string, { exports: unknown }>();
   const load = (name: string): unknown => {
+    if (name.endsWith(".css")) return {};
     if (name in overrides) return overrides[name];
     if (cache.has(name)) return cache.get(name)!.exports;
     const module = { exports: {} };
@@ -38,6 +39,11 @@ export function mountEngine(level: Level) {
   const drawnText: string[] = [];
   const drawnGuardians: LiveChainGuardian[] = [];
   const applePickups: number[] = [];
+  const shopVisits: string[] = [];
+  const shopWins: string[] = [];
+  const pad = { index: 0, connected: true, buttons: Array.from({ length: 16 }, () => ({ pressed: false })), axes: [0, 0] };
+  let padConnected = false;
+  let shopProps: { paused: boolean; onResult: (matches: ShopMatchCount) => void; onLeave: () => void } | undefined;
   let cameraX = 0;
   let playerRect: Rect | undefined;
   const input: InputState = { left: false, right: false, jump: false, shoot: false, jumpQueued: false, shootQueued: false };
@@ -66,6 +72,15 @@ export function mountEngine(level: Level) {
   }
   const load = engineModules({
     react: {
+      useState<T>(value: T) {
+        const index = hookIndex++;
+        const state = hooks[index] ??= { current: value };
+        return [state.current, (next: T) => {
+          if (Object.is(state.current, next)) return;
+          state.current = next;
+          renderProps();
+        }];
+      },
       useRef(value: unknown) {
         const index = hookIndex++;
         return hooks[index] ??= { current: index === 0 ? canvas : value };
@@ -80,13 +95,19 @@ export function mountEngine(level: Level) {
         });
       },
     },
-    "react/jsx-runtime": { jsx() {}, jsxs() {} },
+    "react/jsx-runtime": {
+      jsx(_tag: unknown, props: typeof shopProps) {
+        if (typeof props?.onResult === "function" && typeof props?.onLeave === "function") shopProps = props;
+      },
+      jsxs() {},
+    },
+    "./SecretShop": { SecretShop() {} },
     "./PixelIcon": { PixelIcon() {} },
     "./input": { useGameInput: () => ({ inputRef: inputContainer }) },
     "./stickers": { getStickerSprite: () => undefined },
   }, {
     Image: PendingImage,
-    navigator: { getGamepads: () => [] },
+    navigator: { getGamepads: () => padConnected ? [pad] : [] },
     requestAnimationFrame: (callback: (time: number) => void) => { pending.set(++nextId, callback); return nextId; },
     cancelAnimationFrame: (id: number) => pending.delete(id),
   });
@@ -112,6 +133,8 @@ export function mountEngine(level: Level) {
     level, running: true,
     onSnapshot: (snapshot: GameSnapshot) => { snapshots.push(snapshot); events.push("snapshot"); },
     onAppleCollected: (count: number) => applePickups.push(count),
+    onShopVisit: (id: string) => shopVisits.push(id),
+    onShopWin: (id: string) => shopWins.push(id),
     onComplete: (snapshot: GameSnapshot) => { completed.push(snapshot); events.push("complete"); },
     onBossEncounter: (snapshot: GameSnapshot) => { bosses.push(snapshot); events.push("boss"); },
     onLoseLife: () => events.push("life"),
@@ -122,6 +145,7 @@ export function mountEngine(level: Level) {
   const renderProps = () => {
     hookIndex = 0;
     effects = [];
+    shopProps = undefined;
     GameCanvas(props);
     effects.forEach((effect) => effect());
   };
@@ -129,6 +153,10 @@ export function mountEngine(level: Level) {
   return {
     input, snapshots, completed, bosses, events, requested, pending, focusCalls, drawnEnemies, drawnText, drawnGuardians, applePickups,
     get playerRect() { return playerRect; },
+    shopVisits, shopWins,
+    pad,
+    setPadConnected(connected: boolean) { padConnected = connected; },
+    get shopProps() { return shopProps; },
     get worldPlayerRect() { return playerRect && { ...playerRect, x: playerRect.x + cameraX }; },
     tick(time: number) {
       drawnEnemies.length = 0;

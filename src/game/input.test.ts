@@ -147,3 +147,24 @@ test("una liberación sobre un botón elimina la tecla que empezó en canvas", (
     hook.unmount();
   }
 });
+
+test("arriba encola una entrada por pulsación y la pausa borra la entrada pendiente", () => {
+  const hook = mountInput();
+  try {
+    const canvas = new TargetElement();
+    hook.key("ArrowUp", canvas);
+    assert.equal(hook.input.enterQueued, true);
+    assert.equal(hook.input.jumpQueued, true);
+    hook.input.enterQueued = false;
+    hook.key("ArrowUp", canvas);
+    assert.equal(hook.input.enterQueued, false);
+    hook.key("ArrowUp", canvas, "keyup");
+    hook.key("ArrowUp", canvas);
+    assert.equal(hook.input.enterQueued, true);
+    hook.setRunning(false);
+    assert.equal(hook.input.enterQueued, false);
+    hook.setRunning(true);
+    hook.key("ArrowUp", new TargetElement("button"));
+    assert.equal(hook.input.enterQueued, false);
+  } finally { hook.unmount(); }
+});

@@ -1,6 +1,51 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { collectLifetimeApples, emptyProgress, lifetimeApples, normalizeProgressDate, parseProgress, progressMilestone, resetCampaignProgress, serializeProgress, validProgressDate } from "./progress.ts";
+import { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
+
+test("las tiendas se guardan en versión 2 sin cambiar manzanas, fechas ni migraciones", () => {
+  const date = "2026-10-20T07:00:00.000Z";
+  const original = { ...emptyProgress, totalApples: 12, achievedAt: date };
+  const visited = visitSecretShop(original, "shop-1-2");
+  const completed = completeSecretShop(visited, "shop-3-2");
+  const saved = JSON.parse(serializeProgress(completed));
+  assert.equal(saved.version, 2);
+  assert.deepEqual(parseProgress(serializeProgress(completed)), completed);
+  for (const next of [visited, completed]) {
+    const milestone = progressMilestone(original, next, "2026-10-21T07:00:00.000Z");
+    assert.equal(milestone.achievedAt, date);
+    assert.equal(milestone.totalApples, 12);
+    assert.deepEqual(milestone.levelStats, original.levelStats);
+    assert.deepEqual(milestone.stickers, []);
+    assert.deepEqual(milestone.bossChallenges, {});
+    assert.equal(milestone.unlocked, 0);
+  }
+  assert.deepEqual(resetCampaignProgress(completed), original);
+  assert.equal(progressMilestone(emptyProgress, completeSecretShop(emptyProgress, "shop-1-2"), date).achievedAt, null);
+  for (const version of [undefined, 2]) {
+    const parsed = parseProgress(JSON.stringify({ version, unlocked: 0, levelStats: {} }));
+    assert.deepEqual(parsed.secretShops, {});
+    assert.equal(parsed.unlocked, 0);
+  }
+});
+
+test("cargar tiendas tolera datos ausentes y descarta identificadores desconocidos", () => {
+  const parsed = parseProgress(JSON.stringify({ version: 2, secretShops: {
+    "shop-1-2": { visited: "true", completed: false },
+    "shop-3-2": { completed: true },
+    "shop-6-2": { visited: true, completed: "sí" },
+    "shop-10-2": null, "shop-12-2": [],
+    "shop-2-2": { visited: true, completed: true },
+  } }));
+  assert.deepEqual(parsed.secretShops, {
+    "shop-1-2": { visited: false, completed: false },
+    "shop-3-2": { visited: true, completed: true },
+    "shop-6-2": { visited: true, completed: false },
+  });
+  for (const secretShops of [null, [], "sí", false]) {
+    assert.deepEqual(parseProgress(JSON.stringify({ version: 2, secretShops })).secretShops, {});
+  }
+});
 
 test("el progreso nuevo conserva la campaña y los desvíos al recargar", () => {
   const progress = {

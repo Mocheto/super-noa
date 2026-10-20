@@ -145,7 +145,7 @@ export function SecretShop({ world, paused, reduceMotion, onResult, onLeave, pla
                 data-cat={selected}
                 data-stopped={locked !== undefined}
               >
-                <div className="secret-shop-track" style={{ transform: `translateX(calc(var(--shop-tile) * ${-fraction - 1}))` }}>
+                <div className="secret-shop-track" style={{ transform: `translateX(calc(var(--shop-tile) * ${-fraction - 2.5}))` }}>
                   {[-2, -1, 0, 1, 2, 3].map((offset) => {
                     const column = ((whole + offset) % 3 + 3) % 3;
                     const style = {

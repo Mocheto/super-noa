@@ -10,23 +10,26 @@ import { guardianBounds, type LiveChainGuardian } from "./chainGuardians";
 import { starPowerLight } from "./starPowerVisuals.ts";
 
 export function drawSecretShopDoor(context: CanvasRenderingContext2D, shop: SecretShop, cameraX: number, used: boolean, nearby: boolean, raster: RasterAssets) {
-  const x = shop.x - cameraX;
-  if (x + shop.width < -20 || x > VIEW_WIDTH + 20) return;
-  if (!drawMechanicSprite(context, raster.secretShopDoor, "secretShopDoor", used ? 2 : nearby ? 1 : 0, x, shop.y, shop.width, shop.height)) {
+  const width = shop.width * 2.5;
+  const height = shop.height * 2.5;
+  const x = shop.x - cameraX - (width - shop.width) / 2;
+  const y = shop.y + shop.height - height;
+  if (x + width < -20 || x > VIEW_WIDTH + 20) return;
+  if (!drawMechanicSprite(context, raster.secretShopDoor, "secretShopDoor", used ? 2 : nearby ? 1 : 0, x, y, width, height)) {
     context.fillStyle = "#493058";
-    context.fillRect(x, shop.y, shop.width, shop.height);
+    context.fillRect(x, y, width, height);
     context.fillStyle = used ? "#927a9d" : "#e4ad76";
-    context.fillRect(x + 7, shop.y + 9, shop.width - 14, shop.height - 9);
+    context.fillRect(x + 7, y + 9, width - 14, height - 9);
     context.fillStyle = "#fff1ad";
-    context.fillRect(x + shop.width - 18, shop.y + shop.height / 2, 6, 6);
-    drawTinySparkle(context, x + shop.width / 2, shop.y + 24, "#f6d37c");
+    context.fillRect(x + width - 18, y + height / 2, 6, 6);
+    drawTinySparkle(context, x + width / 2, y + 24, "#f6d37c");
   }
   if (nearby && !used) {
     context.save();
     context.fillStyle = "#fff2ae";
     context.font = "bold 30px monospace";
     context.textAlign = "center";
-    context.fillText("↑", x + shop.width / 2, shop.y - 12);
+    context.fillText("↑", x + width / 2, y - 12);
     context.restore();
   }
 }

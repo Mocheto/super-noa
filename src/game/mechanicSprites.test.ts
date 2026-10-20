@@ -114,6 +114,21 @@ function drawing(loaded = true) {
   return { raster, context, calls, marks, scales };
 }
 
+test("la casita se dibuja a escala 2,5 sin mover su apoyo ni la zona de entrada", () => {
+  const shop = { id: "shop-test", x: 300, y: 240, width: 64, height: 80 };
+  for (const [used, nearby, frame] of [[false, false, 0], [false, true, 1], [true, false, 2]] as const) {
+    const { context, raster, calls } = drawing();
+    rendering.drawSecretShopDoor(context, shop, 100, used, nearby, raster);
+    const [image, sx, , , , x, y, width, height] = calls[0] as [HTMLImageElement, number, number, number, number, number, number, number, number];
+    assert.equal(image, raster.secretShopDoor);
+    assert.equal(sx, frame * 64);
+    assert.equal(width, 160);
+    assert.equal(height, 200);
+    assert.equal(x + width / 2, shop.x - 100 + shop.width / 2);
+    assert.equal(y + height, shop.y + shop.height);
+  }
+});
+
 test("las estrellas rodean la silueta completa de Noa, tanto de pie como al saltar", () => {
   for (const grounded of [true, false]) {
     const { context, raster, calls } = drawing();

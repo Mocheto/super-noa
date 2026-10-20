@@ -10,10 +10,10 @@ import { guardianBounds, type LiveChainGuardian } from "./chainGuardians";
 import { starPowerLight } from "./starPowerVisuals.ts";
 
 export function drawSecretShopDoor(context: CanvasRenderingContext2D, shop: SecretShop, cameraX: number, used: boolean, nearby: boolean, raster: RasterAssets) {
-  const width = shop.width * 2.5;
-  const height = shop.height * 2.5;
-  const x = shop.x - cameraX - (width - shop.width) / 2;
-  const y = shop.y + shop.height - height;
+  const width = shop.width;
+  const height = shop.height;
+  const x = shop.x - cameraX;
+  const y = shop.y;
   if (x + width < -20 || x > VIEW_WIDTH + 20) return;
   if (!drawMechanicSprite(context, raster.secretShopDoor, "secretShopDoor", used ? 2 : nearby ? 1 : 0, x, y, width, height)) {
     context.fillStyle = "#493058";

@@ -26,6 +26,24 @@ La aventura exterior queda congelada durante la visita. El mapa y las tarjetas m
 
 La entrada conserva su tamaño original. Dentro, el minijuego tiene un marco de madera y se integra en la habitación, dejando visibles los muebles laterales y la alfombra, sin desvanecer la ilustración. En móvil vertical se muestra además la habitación completa sobre el minijuego, sin recortarla. Los gatitos siguen siendo grandes y los controles se adaptan a cada orientación.
 
+### Desvíos secretos y atajos
+
+Cinco aventuras opcionales se descubren dentro de las pantallas, no desde un mapa lleno de marcadores cerrados:
+
+| Entrada | Desvío | Mecánica |
+| --- | --- | --- |
+| `1-1`, rama alta | El molino de las manzanas | Tablones horizontales sobre dos ruedas giratorias; una campana cambia su dirección sin saltos de posición. |
+| `2-1`, repisa de niebla | El sendero de las luciérnagas | Luces que se relevan para iluminar las piedras en un bosque nocturno. |
+| `2-2`, repisa de la gruta | El túnel del gatito minero | Vagoneta que transporta a Noa sobre raíles; se puede subir y bajar saltando. |
+| `6-1`, pasillo alto | La biblioteca de las patitas | Un interruptor de huella despliega y recoge puentes de libros. |
+| `11-1`, flor elevada | El jardín de los gigantes | Hojas que descienden con el peso y se recuperan al salir; una regadera hace crecer una plataforma vegetal. |
+
+Al acercarse a la entrada aparece una flecha: ↑, arriba en el mando o el botón táctil permiten explorar. Las señales del escenario son visuales, sin carteles explicativos permanentes. Se puede volver en cualquier momento; la posición, los enemigos, la cámara, los poderes, las cajas y el tiempo del recorrido original quedan congelados y se recuperan al salir. Los cinco desvíos tienen suelo seguro y no añaden guardianes ni insignias obligatorias. Las manzanas recogidas sí cuentan en el total histórico.
+
+El mapa revela únicamente los caminos descubiertos, con un sendero fino discontinuo y su icono, animación breve y marca de completado. Los caminos principales son más anchos y continuos. Los marcadores, senderos y accesos de los paneles permiten repetir cada desvío. Completar las luciérnagas prepara una conexión Manzanos–Lobos y completar el túnel, Gatitos–Castillo: los atajos solo funcionan cuando ambos destinos ya están desbloqueados. No adelantan la campaña ni sustituyen duelos. Sus iconos quedan animados y Noa utiliza esos caminos al viajar entre mundos. La opción de reducir movimiento elimina las animaciones decorativas, no la física de las plataformas.
+
+Los niveles opcionales, rutas, coordenadas y mecanismos viven en `src/game/detours.ts`; las entradas se declaran en `levels.ts`. `detourMechanics.ts` calcula las superficies y el transporte en el mismo paso fijo del motor. El campo opcional `detours` se guarda bajo la clave habitual y en versión 2, tolera datos ausentes y se borra al reiniciar la campaña. No cambia los treinta niveles de campaña, las treinta y seis insignias ni los límites del ranking. El arte SVG original se carga de forma diferida al encontrar una entrada o visitar el desvío.
+
 `node scripts/build-secret-shop-art.mjs` regenera el arte original de la tienda; `node scripts/build-shop-world-cats.mjs` prepara las cinco hojas pequeñas a partir de los retratos originales de los doce mundos, sin deformarlos ni cortar sus siluetas. Añade `--check` para verificar los archivos. `node scripts/build-star-music.mjs` compone «Brillo de Noa»: 12 segundos originales a 160 BPM, con notas agudas, corcheas y semicorcheas para transmitir que la invencibilidad es breve, sin subir excesivamente el volumen. Requiere Node.js y FFmpeg; `--check` compara la composición reproducible con el MP3. Suena solo durante las estrellas y la música del mundo continúa desde su posición anterior al terminar. En la cueva de hielo, la primera ráfaga termina antes del nuevo rincón de la tienda para que el viento no empuje a Noa al entrar o salir.
 
 ## Desarrollo

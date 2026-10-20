@@ -1,6 +1,8 @@
 import type { Progress } from "./progress.ts";
 import type { Level } from "./types.ts";
 import { campaignLevels } from "./routes.ts";
+import { detourCatalog } from "./detours.ts";
+import type { DetourId } from "./types.ts";
 
 export type WorldId = Level["world"];
 export const worldArtwork = (world: WorldId) => `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`;
@@ -23,7 +25,7 @@ export const worldCatalog: Array<{
   { id: 7, name: "El Reino Secreto", shortName: "Nubes", description: "Nubes mágicas y columnas de aire para subir junto a pájaros y unicornios.", cat: "Iris", catAsset: "./assets/sprites/world-cat-7-v1.png", x: 88, y: 12 },
 ];
 
-export type MapRoute = { from: WorldId; to: WorldId; path: string; branch?: "water" | "secret"; requiresCompletion?: string };
+export type MapRoute = { from: WorldId; to: WorldId; path: string; branch?: "water" | "secret"; requiresCompletion?: string; detour?: DetourId };
 
 // Coordenadas del lienzo SVG 1000 × 560: la imagen queda libre de caminos y marcadores.
 export const mapRoutes: MapRoute[] = [
@@ -49,6 +51,7 @@ export function worldAvailable(world: WorldId, progress: Progress): boolean {
 }
 
 export function mapRouteState(route: MapRoute, progress: Progress): "hidden" | "available" | "open" {
+  if (route.detour) return progress.detours?.[route.detour]?.completed && worldAvailable(route.from, progress) && worldAvailable(route.to, progress) ? "open" : "hidden";
   if (route.branch === "secret" && !progress.secretUnlocked) return "hidden";
   if (route.branch === "water" && route.from === 8 && !progress.waterUnlocked) return "hidden";
   if (route.requiresCompletion && !progress.levelStats[route.requiresCompletion]?.completed) return "available";
@@ -57,6 +60,7 @@ export function mapRouteState(route: MapRoute, progress: Progress): "hidden" | "
 }
 
 export type MapJourneyStep = { route: MapRoute; reverse: boolean };
+export const shortcutRoutes: MapRoute[] = detourCatalog.flatMap((detour) => detour.shortcut ? [{ ...detour.shortcut, detour: detour.id }] : []);
 
 export function findMapJourney(from: WorldId, to: WorldId, progress: Progress): MapJourneyStep[] | null {
   if (from === to) return [];
@@ -64,7 +68,8 @@ export function findMapJourney(from: WorldId, to: WorldId, progress: Progress): 
   const queue: Array<{ world: WorldId; steps: MapJourneyStep[] }> = [{ world: from, steps: [] }];
   const visited = new Set<WorldId>([from]);
   for (const entry of queue) {
-    for (const route of mapRoutes) {
+    // Prefer unlocked shortcuts when several routes join the same worlds.
+    for (const route of [...shortcutRoutes, ...mapRoutes]) {
       if (mapRouteState(route, progress) !== "open") continue;
       const reverse = route.to === entry.world;
       if (!reverse && route.from !== entry.world) continue;

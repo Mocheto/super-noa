@@ -20,6 +20,9 @@ import { worldArtwork, worldCatalog } from "./game/worldMapData";
 import { checkRankingAvailability, loadRanking, rankingConnectionMessage, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
 import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnrolled, safeEnrollmentMoment } from "./game/rankingOnboarding";
 import type { GameSnapshot } from "./game/types";
+import type { DetourId } from "./game/types";
+import { detourLevel, detourLevels } from "./game/detours";
+import { visitDetour } from "./game/detourProgress";
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
 const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
@@ -89,6 +92,7 @@ export default function App() {
   const [bossReplayReturn, setBossReplayReturn] = useState<"home" | "map">("map");
   const [snapshot, setSnapshot] = useState<GameSnapshot>(emptySnapshot);
   const [shopActive, setShopActive] = useState(false);
+  const [activeDetour, setActiveDetour] = useState<DetourId | null>(null);
   const starActive = screen === "game" && (snapshot.starSeconds ?? 0) > 0;
   const musicRef = useRef<ReturnType<typeof createMusicPlayer> | null>(null);
   const starMusicRef = useRef<ReturnType<typeof createMusicPlayer> | null>(null);
@@ -101,7 +105,8 @@ export default function App() {
   const secretTransitionRef = useRef({ target: -1, remaining: 1800 });
   const audioContextRef = useRef<AudioContext | null>(null);
   const playScreenRef = useRef<HTMLElement | null>(null);
-  const activeLevel = levels[activeIndex];
+  const activeLevel = levels[activeIndex] ?? detourLevels[activeIndex - levels.length];
+  const displayedLevel = activeDetour ? detourLevel(activeDetour) : activeLevel;
 
   const finishEnrollment = useCallback(() => {
     enrollmentRequiredRef.current = false;
@@ -485,7 +490,9 @@ export default function App() {
   };
 
   const isLevelUnlocked = (index: number) => {
-    const level = levels[index];
+    const level = levels[index] ?? detourLevels[index - levels.length];
+    if (!level) return false;
+    if (level.detour) return progress.detours?.[level.detour]?.discovered === true;
     if (level.world === 7) return progress.secretUnlocked;
     if (level.world === 8) return progress.waterUnlocked && (!level.route?.required || Boolean(progress.levelStats[level.route.required]?.completed));
     return campaignLevels.findIndex((entry) => entry.id === level.id) <= progress.unlocked;
@@ -551,9 +558,27 @@ export default function App() {
   }, []);
   const handleShopVisit = useCallback((id: string) => setProgress((current) => visitSecretShop(current, id)), []);
   const handleShopWin = useCallback((id: string) => setProgress((current) => completeSecretShop(current, id)), []);
+  const handleDetourVisit = useCallback((id: DetourId) => setProgress((current) => visitDetour(current, id)), []);
+  const handleDetourComplete = useCallback((id: DetourId) => setProgress((current) => visitDetour(current, id, true)), []);
+  const handleDetourReveal = useCallback((ids: DetourId[]) => setProgress((current) => {
+    const detours = { ...current.detours };
+    let changed = false;
+    for (const id of ids) {
+      const previous = detours[id];
+      if (!previous || previous.revealed) continue;
+      detours[id] = { ...previous, revealed: true };
+      changed = true;
+    }
+    return changed ? { ...current, detours } : current;
+  }), []);
 
   const handleComplete = useCallback((challengeCompleted = false, finalSnapshot = snapshot) => {
     setSnapshot(finalSnapshot);
+    if (activeLevel.detour) {
+      setProgress((current) => visitDetour(current, activeLevel.detour!, true));
+      setScreen("map");
+      return;
+    }
     setProgress((current) => {
       const previous = current.levelStats[activeLevel.id];
       return progressMilestone(current, {
@@ -685,7 +710,7 @@ export default function App() {
               <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label="Volver al inicio">⌂</button>
             </div>
           </header>
-          <WorldMap progress={progress} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} reduceMotion={reduceMotion} />
+          <WorldMap progress={progress} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
           <button className="text-button reset-button" type="button" onClick={resetProgress}>Borrar progreso</button>
         </section>
       )}
@@ -703,7 +728,7 @@ export default function App() {
       {(screen === "game" || screen === "boss" || screen === "complete" || screen === "gameover" || screen === "finished") && (
         <section className="play-screen" ref={playScreenRef}>
           {!bossReplay && <header className="game-hud">
-            <div className="hud-level"><span>{activeLevel.id}</span><strong>{activeLevel.title}</strong></div>
+            <div className="hud-level"><span>{displayedLevel.detour ? "✦" : displayedLevel.id}</span><strong>{displayedLevel.title}</strong></div>
             <div className="hud-stats">
               <span aria-label={`${lives} vidas`}><GameAssetIcon kind="heart" /> × {lives}</span>
               <span aria-label={`${snapshot.apples} manzanas`}><GameAssetIcon kind="apple" /> × {snapshot.apples}</span>
@@ -716,8 +741,8 @@ export default function App() {
               {(screen === "game" || screen === "boss") && <button type="button" onClick={() => setPaused((value) => !value)} aria-label="Pausa">Ⅱ</button>}
             </div>
           </header>}
-          {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} reduceMotion={reduceMotion} playSound={playSound} />}
-          {!bossReplay && <div className="level-caption"><span>{themeNames[activeLevel.theme]}</span><span>Bandera {snapshot.checkpoint}/{activeLevel.checkpoints.length}</span><small>{activeLevel.subtitle}</small></div>}
+          {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />}
+          {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? "Camino opcional" : `Bandera ${snapshot.checkpoint}/${displayedLevel.checkpoints.length}`}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
 
           {screen === "boss" && activeLevel.boss && (
             <BossBattle

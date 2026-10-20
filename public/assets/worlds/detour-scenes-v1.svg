@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2880" height="540" viewBox="0 0 2880 540">
+<defs>
+ <linearGradient id="day" x2="0" y2="1"><stop stop-color="#b7e4ce"/><stop offset="1" stop-color="#f7e4a5"/></linearGradient>
+ <linearGradient id="room" x2="0" y2="1"><stop stop-color="#665171"/><stop offset="1" stop-color="#b1837c"/></linearGradient>
+ <linearGradient id="garden" x2="0" y2="1"><stop stop-color="#b5d5e0"/><stop offset="1" stop-color="#d8ebbd"/></linearGradient>
+ <g id="shelf">
+  <rect width="170" height="275" rx="5" fill="#674452" stroke="#d3a276" stroke-width="8"/>
+  <g fill="#9c6a66" stroke="#edc99b" stroke-width="4"><path d="M0 86H170M0 175H170M0 265H170"/></g>
+  <g stroke="#ecd8b1" stroke-width="3"><path d="M13 12H33V81H13Z" fill="#86ad9d"/><path d="M40 23H63V81H40Z" fill="#b2a2c6"/><path d="M72 15H90V81H72Z" fill="#d3af72"/><path d="M98 25H120V81H98Z" fill="#aa7090"/><path d="M130 12H151V81H130Z" fill="#96a5c7"/><path d="M18 103H43V169H18Z" fill="#c5928e"/><path d="M49 114H71V169H49Z" fill="#a7bd91"/><path d="M80 100H102V169H80Z" fill="#b6a6c6"/><path d="M114 112H149V169H114Z" fill="#d5c48c"/><path d="M16 197H44V258H16Z" fill="#b7b2cc"/><path d="M54 190H78V258H54Z" fill="#b7c9ad"/><path d="M90 200H116V258H90Z" fill="#d6ab87"/><path d="M128 190H151V258H128Z" fill="#b58ba5"/></g>
+ </g>
+ <g id="flower"><path d="M0 180Q-20 100 0 0" fill="none" stroke="#62876a" stroke-width="18"/><path d="M0 110Q-110 20-130 100Q-40 150 0 130M0 75Q110 0 125 65Q60 120 0 90" fill="#9fbc75" stroke="#62876a" stroke-width="6"/><g fill="#dba9be" stroke="#ad819f" stroke-width="4"><ellipse cy="-30" rx="28" ry="50"/><ellipse cx="34" cy="-3" rx="48" ry="28" transform="rotate(-25)"/><ellipse cx="5" cy="33" rx="28" ry="48" transform="rotate(-32)"/><ellipse cx="-35" cy="5" rx="46" ry="28"/></g><circle r="25" fill="#eed795"/></g>
+</defs>
+<!-- An orchard mill, a warm library, and an oversized flower garden. -->
+<g>
+ <rect width="960" height="540" fill="url(#day)"/>
+ <path d="M0 360Q160 250 320 355T640 340T960 310V540H0" fill="#91b58d"/>
+ <path d="M0 430Q120 345 290 410T600 395T960 400V540H0" fill="#6c9977"/>
+ <path d="M355 430L391 176H556L592 430Z" fill="#d8b88a" stroke="#9a765d" stroke-width="8"/>
+ <path d="M362 177L475 78L585 177Z" fill="#ba7c70" stroke="#845865" stroke-width="8"/>
+ <path d="M444 430V340Q476 298 510 340V430" fill="#7a6263"/>
+ <g stroke="#7d6b5e" stroke-width="13"><path d="M475 235L360 113M475 235L597 120M475 235L592 355M475 235L355 351"/></g>
+ <g stroke="#edce97" stroke-width="28"><path d="M370 125L432 190M583 132L521 193M578 342L518 279M370 338L431 280"/></g>
+ <circle cx="475" cy="235" r="21" fill="#e7bd76" stroke="#80574f" stroke-width="7"/>
+ <g fill="#7a9f70" stroke="#527860" stroke-width="9"><path d="M100 450V290M825 450V300"/><ellipse cx="100" cy="265" rx="80" ry="90"/><ellipse cx="825" cy="280" rx="90" ry="95"/></g>
+ <g fill="#c87471"><circle cx="67" cy="235" r="14"/><circle cx="133" cy="275" r="13"/><circle cx="90" cy="305" r="13"/><circle cx="792" cy="248" r="14"/><circle cx="849" cy="292" r="14"/><circle cx="880" cy="245" r="13"/></g>
+</g>
+<g transform="translate(960)">
+ <rect width="960" height="540" fill="url(#room)"/>
+ <path d="M0 440H960V540H0" fill="#b48c71"/><path d="M0 445H960M0 480H960M0 515H960" stroke="#7d6265" stroke-width="6"/>
+ <path d="M0 38H960M0 420H960" stroke="#d8b78c" stroke-width="12"/>
+ <use href="#shelf" x="30" y="138"/><use href="#shelf" x="265" y="138"/><use href="#shelf" x="520" y="138"/><use href="#shelf" x="755" y="138"/>
+ <path d="M410 52H550L575 95H385Z" fill="#eed5a0" stroke="#9d7a76" stroke-width="7"/><path d="M480 0V53" stroke="#d8b78c" stroke-width="8"/>
+ <ellipse cx="480" cy="445" rx="210" ry="42" fill="#a17d9e" stroke="#e3be9b" stroke-width="7"/>
+ <g fill="#f4d9ac"><ellipse cx="480" cy="115" rx="15" ry="11"/><circle cx="460" cy="99" r="7"/><circle cx="473" cy="88" r="7"/><circle cx="488" cy="88" r="7"/><circle cx="501" cy="99" r="7"/></g>
+</g>
+<g transform="translate(1920)">
+ <rect width="960" height="540" fill="url(#garden)"/>
+ <path d="M0 390Q170 300 320 390T650 355T960 385V540H0" fill="#a1bb86"/>
+ <path d="M0 440Q150 390 310 440T640 425T960 430V540H0" fill="#80a379"/>
+ <use href="#flower" transform="translate(180 180) scale(1.3)"/><use href="#flower" transform="translate(650 205) scale(1.2)"/><use href="#flower" transform="translate(910 155) scale(.9)"/>
+ <g fill="#d7eef0" stroke="#9bbcc4" stroke-width="5"><path d="M340 365Q300 320 340 269Q381 323 340 365"/><path d="M780 430Q740 385 780 334Q821 388 780 430"/></g>
+ <path d="M400 420Q430 355 470 420Q510 365 545 420" fill="none" stroke="#608a66" stroke-width="9"/>
+</g>
+</svg>

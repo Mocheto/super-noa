@@ -180,6 +180,7 @@ const world12Floor3: Array<[number, number]> = [[0, 820], [960, 900], [2010, 940
 export const levels: Level[] = [
   {
     id: "1-1",
+    detourEntrance: { id: "mill", x: 1545, y: 220, width: 80, height: 80 },
     world: 1,
     screen: 1,
     title: "El sendero de las manzanas",
@@ -291,6 +292,7 @@ export const levels: Level[] = [
   },
   {
     id: "2-1",
+    detourEntrance: { id: "fireflies", x: 1365, y: 225, width: 80, height: 80 },
     world: 2,
     screen: 1,
     title: "El bosque de los bigotes",
@@ -323,6 +325,7 @@ export const levels: Level[] = [
   },
   {
     id: "2-2",
+    detourEntrance: { id: "mine", x: 2970, y: 290, width: 80, height: 80 },
     world: 2,
     screen: 2,
     title: "La gruta de los murciélagos",
@@ -746,6 +749,7 @@ export const levels: Level[] = [
   },
   {
     id: "6-1", world: 6, screen: 1,
+    detourEntrance: { id: "library", x: 1765, y: 265, width: 80, height: 80 },
     title: "Las puertas del castillo", subtitle: "Los perritos de cobre avisan antes de morder. ¡Busca el camino de arriba!",
     theme: "haunted-castle", width: 5200, start: { x: 80, y: 380 }, goalX: 5020,
     platforms: [
@@ -921,6 +925,7 @@ export const levels: Level[] = [
   },
   {
     id: "11-1", world: 11, screen: 1,
+    detourEntrance: { id: "garden", x: 1515, y: 165, width: 80, height: 80 },
     title: "El sendero de las flores gigantes", subtitle: "La flor abierta es un puente. Si avisa, ¡salta! También hay gotas de rocío.",
     theme: "giant-valley", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     platforms: [

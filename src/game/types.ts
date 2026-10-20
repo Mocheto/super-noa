@@ -110,6 +110,15 @@ export type BossId = "bramble-king" | "mist-countess" | "great-wolf" | "great-bo
 
 export type ShopMatchCount = 0 | 1 | 2 | 3;
 export type SecretShop = Rect & { id: string };
+export type DetourId = "fireflies" | "mine" | "mill" | "library" | "garden";
+export type DetourEntrance = Rect & { id: DetourId };
+export type DetourMechanism = Rect & {
+  id: string;
+  kind: "wheel" | "cart" | "book" | "leaf" | "vine";
+  travel: number;
+  period: number;
+  phase: number;
+};
 
 export type Level = {
   id: string;
@@ -137,6 +146,10 @@ export type Level = {
   updrafts?: Updraft[];
   chainGuardians?: ChainGuardian[];
   secretShop?: SecretShop;
+  detourEntrance?: DetourEntrance;
+  detour?: DetourId;
+  mechanisms?: DetourMechanism[];
+  detourSwitches?: Array<Rect & { id: "bell" | "books" | "water" }>;
   checkpoints: number[];
   boss?: BossId;
   route?: {

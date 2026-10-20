@@ -6,7 +6,10 @@ import { levels } from "./levels";
 import { campaignLevels } from "./routes";
 import type { Progress } from "./progress";
 import { getWorldSecretShopBadge } from "./secretShopProgress";
-import { findMapJourney, mapRoutes, mapRouteState, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
+import { findMapJourney, mapRoutes, mapRouteState, shortcutRoutes, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
+import { detourArtwork, detourCatalog, detourLevels } from "./detours";
+import type { DetourId } from "./types";
+import "./detours.css";
 
 export type WorldSummary = {
   complete: number; total: number; stickers: number; stickerTotal: number;
@@ -19,9 +22,10 @@ type WorldMapProps = {
   isLevelUnlocked: (index: number) => boolean;
   onBeginLevel: (index: number) => void;
   reduceMotion: boolean;
+  onDetourReveal: (ids: DetourId[]) => void;
 };
 
-export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, reduceMotion }: WorldMapProps) {
+export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, reduceMotion, onDetourReveal }: WorldMapProps) {
   const [selectedWorld, setSelectedWorld] = useState<WorldId | null>(null);
   const [openObjectives, setOpenObjectives] = useState<{ levelId: string; pinned: boolean } | null>(null);
   const openerRef = useRef<HTMLButtonElement | null>(null);
@@ -38,6 +42,16 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
   const systemReduceMotionRef = useRef(false);
   const selected = worldCatalog.find((world) => world.id === selectedWorld);
   const noaLocation = worldCatalog.find((world) => world.id === noaWorld)!;
+  const discoveredDetours = detourCatalog.filter((entry) => progress.detours?.[entry.id]?.discovered);
+  const newDetours = discoveredDetours.filter((entry) => !progress.detours?.[entry.id]?.revealed).map((entry) => entry.id);
+  const newDetourKey = newDetours.join(",");
+  useEffect(() => {
+    if (!newDetourKey) return;
+    const timeout = window.setTimeout(() => onDetourReveal(detourCatalog.filter((entry) => newDetourKey.split(",").includes(entry.id)).map((entry) => entry.id)), reduceMotion ? 0 : 2200);
+    return () => window.clearTimeout(timeout);
+  }, [newDetourKey, onDetourReveal, reduceMotion]);
+  const beginDetour = (id: DetourId) => onBeginLevel(levels.length + detourLevels.findIndex((entry) => entry.detour === id));
+  const detourIcon = (icon: number) => <span className="detour-icon" aria-hidden="true" style={{ backgroundImage: `url('${detourArtwork}')`, backgroundPosition: `${icon * 25}% 0%` }} />;
 
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -160,6 +174,15 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
               </g>;
             })}
           </svg>
+          <svg className="map-detour-paths" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-label="Senderos secretos descubiertos">
+            {discoveredDetours.map((entry) => <path key={entry.id} d={entry.path} pathLength="1"
+              className={`map-detour-path ${newDetours.includes(entry.id) ? "is-new" : ""}`} role="button"
+              tabIndex={moving ? -1 : 0} aria-label={`Explorar ${entry.title}`} aria-disabled={moving}
+              onClick={() => { if (!moving) beginDetour(entry.id); }}
+              onKeyDown={(event) => { if (!moving && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); beginDetour(entry.id); } }} />)}
+            {shortcutRoutes.filter((route) => mapRouteState(route, progress) === "open").map((route) =>
+              <path key={route.detour} className="map-detour-path map-shortcut" d={route.path} />)}
+          </svg>
           <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: `url('${optimizedAssetSource("./assets/sprites/noa-sprite-sheet.png")}')` }} role="img" aria-label={`Noa está en ${noaLocation.name}`} />
           {worldCatalog.map((world) => {
             const available = worldAvailable(world.id, progress);
@@ -181,6 +204,12 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
               {shop && <span className={`shop-visit-badge map-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.png')" }} role="img" aria-label={shop.label} title={shop.label} />}
             </button>;
           })}
+          {discoveredDetours.map((entry) => <button key={entry.id} type="button"
+            className={`map-detour map-detour-${entry.id} ${progress.detours?.[entry.id]?.completed ? "is-completed" : ""} ${newDetours.includes(entry.id) ? "is-new" : ""}`}
+            style={{ left: `${entry.x}%`, top: `${entry.y}%` }} disabled={moving} onClick={() => beginDetour(entry.id)}
+            aria-label={`${entry.title}: ${progress.detours?.[entry.id]?.completed ? "completado, volver a visitar" : "descubierto, explorar"}`}>
+            {detourIcon(entry.icon)}<span>{entry.shortName}{progress.detours?.[entry.id]?.completed ? " ✓" : ""}</span>
+          </button>)}
           <div className="map-compass" aria-hidden="true">✦ N</div>
         </div>
       </div>
@@ -205,6 +234,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
       </div>
       </div>
       <p className="map-location" aria-live="polite">{moving ? "Noa va de camino…" : <>Noa está en <strong>{noaLocation.name}</strong> · {summaries[noaWorld].complete}/{summaries[noaWorld].total} pantallas completadas</>}</p>
+      {newDetours.length > 0 && <p role="status">¡Un camino nuevo! {discoveredDetours.filter((entry) => newDetours.includes(entry.id)).map((entry) => entry.title).join(", ")}</p>}
 
       {selected && (
         <div className="modal-backdrop map-detail-backdrop">
@@ -232,6 +262,11 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
                 onOpenDetails={(pinned) => setOpenObjectives((current) => !pinned && current?.pinned ? current : { levelId: level.id, pinned })}
                 onCloseDetails={() => setOpenObjectives((current) => current?.levelId === level.id ? null : current)}
               />)}
+            </div>
+            <div className="detour-list" aria-label="Desvíos descubiertos">
+              {discoveredDetours.filter((entry) => entry.world === selected.id).map((entry) => <button key={entry.id} type="button" onClick={() => beginDetour(entry.id)}>
+                {detourIcon(entry.icon)} {entry.title} {progress.detours?.[entry.id]?.completed ? "✓" : ""}
+              </button>)}
             </div>
           </div>
         </div>

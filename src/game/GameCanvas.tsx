@@ -19,6 +19,11 @@ import { createChainGuardian, guardianHitbox, updateChainGuardian } from "./chai
 import type { Level, GameSnapshot, ShopMatchCount } from "./types";
 import { canEnterSecretShop, secretShopRewardSeconds } from "./secretShopRuntime";
 import { starPowerLight } from "./starPowerVisuals";
+import { detourLevel } from "./detours";
+import { advanceDetourClock, createDetourClock, detourSupports } from "./detourMechanics";
+import { drawDetourEntrance, drawDetourMechanisms, drawDetourScenery } from "./detourRendering";
+import type { DetourId } from "./types";
+import "./detours.css";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
@@ -43,6 +48,10 @@ type GameCanvasProps = {
   onShopVisit?: (id: string) => void;
   onShopWin?: (id: string) => void;
   onShopActiveChange?: (active: boolean) => void;
+  onDetourVisit?: (id: DetourId) => void;
+  onDetourComplete?: (id: DetourId) => void;
+  onDetourActiveChange?: (id: DetourId | null) => void;
+  onReturn?: () => void;
   reduceMotion?: boolean;
   playSound: (kind: SoundKind) => void;
 };
@@ -91,26 +100,30 @@ function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
   context.textAlign = "start";
 }
 
-export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, reduceMotion = false, playSound }: GameCanvasProps) {
+export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourComplete, onDetourActiveChange, onReturn, reduceMotion = false, playSound }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const [doorAvailable, setDoorAvailable] = useState(false);
+  const [excursion, setExcursion] = useState<DetourId | null>(null);
+  const [interactionLabel, setInteractionLabel] = useState("Entrar");
+  const interactionRef = useRef("");
+  const returnFromDetourRef = useRef<(() => void) | null>(null);
   const shopOpenRef = useRef(false);
   const doorAvailableRef = useRef(false);
   const returnFromShopRef = useRef<(() => void) | null>(null);
   const shopResultRef = useRef<ShopMatchCount | null>(null);
   const motionRef = useRef(reduceMotion);
-  const activeRunning = running && !shopOpen;
+  const activeRunning = running && !shopOpen && !excursion;
   const { inputRef, handleTouchStart, handleTouchEnd, handleTouchCancel, preventTouchMenu } = useGameInput(activeRunning);
   const runningRef = useRef(running);
   const gameLoopRef = useRef<GameLoop | null>(null);
-  const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, playSound });
+  const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourActiveChange, playSound });
 
   useEffect(() => {
-    callbacksRef.current = { onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, playSound };
+    callbacksRef.current = { onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourActiveChange, playSound };
     motionRef.current = reduceMotion;
-  }, [onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, reduceMotion, playSound]);
+  }, [onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourActiveChange, reduceMotion, playSound]);
 
   useEffect(() => {
     runningRef.current = activeRunning;
@@ -155,6 +168,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     let completed = false;
     let frame = 0;
     let levelAge = 0;
+    const detourClock = createDetourClock();
+    let standingOnMechanism: string | null = null;
     let walkCycleTime = 0;
     let lastSnapshot = 0;
     let vineStartedFrame = -1;
@@ -167,6 +182,13 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       checkpoint: checkpointIndex + 1, paused: !runningRef.current,
       ...(starRemaining > 0 ? { starSeconds: starRemaining } : {}),
     });
+    returnFromDetourRef.current = () => {
+      setExcursion(null);
+      callbacksRef.current.onDetourActiveChange?.(null);
+      inputRef.current.jump = false;
+      inputRef.current.jumpQueued = false;
+      callbacksRef.current.onSnapshot(currentSnapshot());
+    };
     returnFromShopRef.current = () => {
       starRemaining = secretShopRewardSeconds(shopResultRef.current ?? 0);
       starDuration = starRemaining;
@@ -232,17 +254,53 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     const update = (delta: number, now: number) => {
       levelAge += delta;
-      const platforms = getMechanicPlatforms(level, levelAge);
+      const previousSupports = detourSupports(level, detourClock);
+      advanceDetourClock(detourClock, level, delta, standingOnMechanism);
+      const supports = detourSupports(level, detourClock);
+      if (player.grounded && standingOnMechanism) {
+        const before = previousSupports.find((entry) => entry.id === standingOnMechanism);
+        const after = supports.find((entry) => entry.id === standingOnMechanism);
+        if (before && after) {
+          player.x += after.x - before.x;
+          player.y += after.y - before.y;
+        }
+      }
+      const platforms = [...getMechanicPlatforms(level, levelAge), ...supports];
       const input = inputRef.current;
       const pad = readGameplayPad(firstConnectedGamepad());
       const available = canEnterSecretShop(level.secretShop, player, shopUsed);
-      if (available !== doorAvailableRef.current) {
-        doorAvailableRef.current = available;
-        setDoorAvailable(available);
+      const detourAvailable = canEnterSecretShop(level.detourEntrance, player, false);
+      const toggle = level.detourSwitches?.find((entry) => canEnterSecretShop(entry, player, false));
+      const interaction = detourAvailable ? "Explorar" : toggle ? "Activar" : available ? "Entrar" : "";
+      if (interaction !== interactionRef.current) {
+        interactionRef.current = interaction;
+        setInteractionLabel(interaction);
+        doorAvailableRef.current = Boolean(interaction);
+        setDoorAvailable(Boolean(interaction));
       }
       const enter = Boolean(input.enterQueued) || (pad.up && !previousUp);
       previousUp = pad.up;
       input.enterQueued = false;
+      if (enter && detourAvailable && level.detourEntrance) {
+        runningRef.current = false;
+        gameLoopRef.current?.setRunning(false);
+        input.jumpQueued = false;
+        input.jump = false;
+        player.vx = 0;
+        callbacksRef.current.onDetourVisit?.(level.detourEntrance.id);
+        callbacksRef.current.onDetourActiveChange?.(level.detourEntrance.id);
+        callbacksRef.current.playSound("checkpoint");
+        setExcursion(level.detourEntrance.id);
+        return;
+      }
+      if (enter && toggle) {
+        if (detourClock.switches.has(toggle.id)) detourClock.switches.delete(toggle.id);
+        else detourClock.switches.add(toggle.id);
+        input.jumpQueued = false;
+        input.jump = false;
+        callbacksRef.current.playSound("block");
+        if (statusRef.current) statusRef.current.textContent = toggle.id === "bell" ? "La rueda cambia de dirección." : toggle.id === "books" ? "Los libros cambian el camino." : "El agua despierta la planta.";
+      }
       if (available && enter && level.secretShop) {
         shopUsed = true;
         shopOpenRef.current = true;
@@ -350,7 +408,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         player.vy = 0;
       }
       player.grounded = false;
-
+      standingOnMechanism = null;
       for (const platform of platforms) {
         const horizontal = player.x + player.width > platform.x && player.x < platform.x + platform.width;
         const surfaceY = platformSurfaceY(platform);
@@ -374,6 +432,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
             player.grounded = true;
             player.jumpsUsed = 0;
             player.springLaunch = false;
+            standingOnMechanism = supports.find((entry) => entry === platform)?.id ?? null;
           }
         } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall" || platform.kind === "sea-wall" || platform.kind === "dino-wall" || platform.kind === "volcano-wall" || platform.kind === "ice-wall") && horizontal && player.vy < 0) {
           const platformBottom = platform.y + platform.height;
@@ -763,9 +822,10 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     const render = () => {
       drawBackground(context, level, cameraX, frame, raster);
+      drawDetourScenery(context, level, cameraX);
       level.windZones?.forEach((zone) => drawWindZone(context, zone, cameraX, levelAge, raster));
       if (level.world === 7) level.updrafts?.forEach((zone) => drawUpdraft(context, zone, cameraX, levelAge, raster));
-      if (level.screen === 1 && cameraX < 520 && level.world >= 10 && !(level.world === 11 && level.bloomBridges?.length)) {
+      if (!level.detour && level.screen === 1 && cameraX < 520 && level.world >= 10 && !(level.world === 11 && level.bloomBridges?.length)) {
         const hint = level.world === 10 ? "¡MIRA EL RITMO DE LA LAVA!" : level.world === 11 ? "¡CAE SOBRE EL ROCÍO PARA REBOTAR!" : "¡EL HIELO RESBALA Y EL VIENTO EMPUJA!";
         context.save(); context.fillStyle = "rgba(42,24,55,.88)"; context.fillRect(205 - cameraX * .22, 82, 550, 42);
         context.strokeStyle = "#fff0b0"; context.lineWidth = 3; context.strokeRect(205 - cameraX * .22, 82, 550, 42);
@@ -788,6 +848,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster, level.theme));
       level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge, raster));
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
+      drawDetourMechanisms(context, level, detourClock, cameraX, motionRef.current);
+      if (level.detourEntrance) drawDetourEntrance(context, level.detourEntrance, cameraX, canEnterSecretShop(level.detourEntrance, player, false), levelAge, motionRef.current);
       if (level.secretShop) drawSecretShopDoor(context, level.secretShop, cameraX, shopUsed, doorAvailableRef.current, raster);
       if (level.world === 11) level.bloomBridges?.forEach((bridge) => drawBloomBridge(context, bridge, cameraX, levelAge, raster));
       level.spikePits?.forEach((pit) => {
@@ -952,17 +1014,21 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       gameLoopRef.current = null;
       transition.cancel();
       returnFromShopRef.current = null;
+      returnFromDetourRef.current = null;
       shopOpenRef.current = false;
       callbacksRef.current.onShopActiveChange?.(false);
+      callbacksRef.current.onDetourActiveChange?.(null);
     };
   }, [level, inputRef]);
 
   return (
-    <div className="game-frame">
+    <>
+    <div className="game-frame" hidden={Boolean(excursion)}>
       <div className="game-stage">
         <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={`Pantalla ${level.id}: ${level.title}`} />
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />
-        {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label="Entrar en la tienda secreta" onClick={() => { inputRef.current.enterQueued = true; }}>↑ Entrar</button>}
+        {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label={interactionLabel === "Entrar" ? "Entrar en la tienda secreta" : interactionLabel === "Explorar" ? "Explorar el desvío secreto" : "Activar mecanismo"} onClick={() => { inputRef.current.enterQueued = true; }}>↑ {interactionLabel}</button>}
+        {level.detour && onReturn && <button className="detour-return" type="button" disabled={!running} onClick={onReturn}>↩ Volver al camino</button>}
       </div>
       {shopOpen && <SecretShop world={level.world} paused={!running} reduceMotion={reduceMotion} playSound={playSound} onResult={(matches) => {
         if (shopResultRef.current !== null) return;
@@ -983,6 +1049,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         </div>
       </div>
     </div>
+    {excursion && <GameCanvas level={detourLevel(excursion)} running={running} reduceMotion={reduceMotion}
+      onLoseLife={onLoseLife} onSnapshot={onSnapshot} onAppleCollected={onAppleCollected} playSound={playSound}
+      onBossEncounter={onBossEncounter} onSecretExit={onSecretExit} onWaterExit={onWaterExit}
+      onComplete={() => { onDetourComplete?.(excursion); returnFromDetourRef.current?.(); }}
+      onReturn={() => returnFromDetourRef.current?.()} />}
+    </>
   );
 }
 

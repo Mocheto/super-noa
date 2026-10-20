@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import ts from "typescript";
-import type { GameSnapshot, Level, Rect, ShopMatchCount } from "./types";
+import type { DetourId, GameSnapshot, Level, Rect, ShopMatchCount } from "./types";
 import type { InputState } from "./input";
 import type { LiveEnemy } from "./gameState";
 import type { WolfSleepPhase } from "./worldMechanics";
@@ -41,6 +41,9 @@ export function mountEngine(level: Level) {
   const applePickups: number[] = [];
   const shopVisits: string[] = [];
   const shopWins: string[] = [];
+  const detourVisits: DetourId[] = [];
+  const detourWins: DetourId[] = [];
+  let detourProps: { level: Level; running: boolean; onComplete: () => void; onReturn: () => void } | undefined;
   const pad = { index: 0, connected: true, buttons: Array.from({ length: 16 }, () => ({ pressed: false })), axes: [0, 0] };
   let padConnected = false;
   let shopProps: { paused: boolean; onResult: (matches: ShopMatchCount) => void; onLeave: () => void } | undefined;
@@ -58,7 +61,7 @@ export function mountEngine(level: Level) {
       if (key === "fillRect") return (x: number, y: number, width: number, height: number) => {
         if (target.fillStyle === "#aa6bd5") playerRect = { x, y, width, height };
       };
-      return target[key] ?? (key === "createLinearGradient" ? () => gradient : () => undefined);
+      return target[key] ?? (key === "createLinearGradient" || key === "createRadialGradient" ? () => gradient : () => undefined);
     },
     set: (target, key: string, value) => { target[key] = value; return true; },
   });
@@ -96,8 +99,9 @@ export function mountEngine(level: Level) {
       },
     },
     "react/jsx-runtime": {
-      jsx(_tag: unknown, props: typeof shopProps) {
+      jsx(_tag: unknown, props: typeof shopProps & Partial<NonNullable<typeof detourProps>>) {
         if (typeof props?.onResult === "function" && typeof props?.onLeave === "function") shopProps = props;
+        if (props?.level?.detour && props.onReturn) detourProps = props as NonNullable<typeof detourProps>;
       },
       jsxs() {},
     },
@@ -135,6 +139,8 @@ export function mountEngine(level: Level) {
     onAppleCollected: (count: number) => applePickups.push(count),
     onShopVisit: (id: string) => shopVisits.push(id),
     onShopWin: (id: string) => shopWins.push(id),
+    onDetourVisit: (id: DetourId) => detourVisits.push(id),
+    onDetourComplete: (id: DetourId) => detourWins.push(id),
     onComplete: (snapshot: GameSnapshot) => { completed.push(snapshot); events.push("complete"); },
     onBossEncounter: (snapshot: GameSnapshot) => { bosses.push(snapshot); events.push("boss"); },
     onLoseLife: () => events.push("life"),
@@ -146,6 +152,7 @@ export function mountEngine(level: Level) {
     hookIndex = 0;
     effects = [];
     shopProps = undefined;
+    detourProps = undefined;
     GameCanvas(props);
     effects.forEach((effect) => effect());
   };
@@ -153,10 +160,11 @@ export function mountEngine(level: Level) {
   return {
     input, snapshots, completed, bosses, events, requested, pending, focusCalls, drawnEnemies, drawnText, drawnGuardians, applePickups,
     get playerRect() { return playerRect; },
-    shopVisits, shopWins,
+    shopVisits, shopWins, detourVisits, detourWins,
     pad,
     setPadConnected(connected: boolean) { padConnected = connected; },
     get shopProps() { return shopProps; },
+    get detourProps() { return detourProps; },
     get worldPlayerRect() { return playerRect && { ...playerRect, x: playerRect.x + cameraX }; },
     tick(time: number) {
       drawnEnemies.length = 0;

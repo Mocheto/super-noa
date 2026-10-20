@@ -17,6 +17,8 @@ export const rankingSchema = `
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
   ALTER TABLE super_noa_ranking_profiles ADD COLUMN IF NOT EXISTS campaign_world SMALLINT;
+  ALTER TABLE super_noa_ranking_profiles ADD COLUMN IF NOT EXISTS total_apples BIGINT NOT NULL DEFAULT 0;
+  ALTER TABLE super_noa_ranking_profiles ADD COLUMN IF NOT EXISTS achieved_at TIMESTAMPTZ;
   UPDATE super_noa_ranking_profiles
     SET campaign_world = CASE WHEN world BETWEEN 0 AND 6 THEN world WHEN world BETWEEN 9 AND 12 THEN world - 2 ELSE NULL END
     WHERE campaign_world IS NULL;
@@ -25,24 +27,47 @@ export const rankingSchema = `
     DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_completed_levels_check,
     DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_stickers_check,
     DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_boss_challenges_check,
-    DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_campaign_world_check;
+    DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_campaign_world_check,
+    DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_total_apples_check;
   ALTER TABLE super_noa_ranking_profiles
     ADD CONSTRAINT super_noa_ranking_profiles_world_check CHECK (world BETWEEN 0 AND 12),
     ADD CONSTRAINT super_noa_ranking_profiles_completed_levels_check CHECK (completed_levels BETWEEN 0 AND 30),
     ADD CONSTRAINT super_noa_ranking_profiles_stickers_check CHECK (stickers BETWEEN 0 AND 36),
     ADD CONSTRAINT super_noa_ranking_profiles_boss_challenges_check CHECK (boss_challenges BETWEEN 0 AND 12),
-    ADD CONSTRAINT super_noa_ranking_profiles_campaign_world_check CHECK (campaign_world BETWEEN 0 AND 10);
+    ADD CONSTRAINT super_noa_ranking_profiles_campaign_world_check CHECK (campaign_world BETWEEN 0 AND 10),
+    ADD CONSTRAINT super_noa_ranking_profiles_total_apples_check CHECK (total_apples BETWEEN 0 AND 9007199254740991);
 `;
 
 const playerColumns = `alias, world, campaign_world AS "campaignWorld", completed_levels AS "completedLevels",
-  stickers, boss_challenges AS "bossChallenges", updated_at AS "updatedAt"`;
+  stickers, boss_challenges AS "bossChallenges", total_apples::DOUBLE PRECISION AS "totalApples",
+  achieved_at AS "achievedAt", updated_at AS "updatedAt"`;
 
 // Los agregados antiguos con world=7/8 no permiten recuperar el mundo de campaña.
 // completed_levels sí es exacto en todas las versiones y nunca cuenta los desvíos.
 export const leaderboardQuery = `SELECT ${playerColumns}
   FROM super_noa_ranking_profiles
-  ORDER BY completed_levels DESC, stickers DESC, boss_challenges DESC, updated_at ASC, id ASC
+  ORDER BY completed_levels DESC, stickers DESC, boss_challenges DESC, total_apples DESC,
+    achieved_at ASC NULLS LAST, created_at ASC, id ASC
   LIMIT $1`;
+
+// Cada contador es acumulativo: un reintento antiguo nunca deshace otro envío.
+export const progressUpdateQuery = `UPDATE super_noa_ranking_profiles SET
+  world = CASE
+    WHEN $7::SMALLINT IS NOT NULL AND (campaign_world IS NULL OR $7 >= campaign_world) THEN $3
+    WHEN campaign_world IS NULL THEN GREATEST(world, $3)
+    ELSE world END,
+  campaign_world = GREATEST(campaign_world, $7::SMALLINT),
+  completed_levels = GREATEST(completed_levels, $4::SMALLINT),
+  stickers = GREATEST(stickers, $5::SMALLINT),
+  boss_challenges = GREATEST(boss_challenges, $6::SMALLINT),
+  total_apples = GREATEST(total_apples, $8::BIGINT),
+  achieved_at = CASE WHEN $10::BOOLEAN AND (
+    ($7::SMALLINT IS NOT NULL AND $7 > COALESCE(campaign_world, 0))
+    OR $4 > completed_levels OR $5 > stickers OR $6 > boss_challenges OR $8::BIGINT > total_apples
+  ) THEN CASE WHEN $9::TIMESTAMPTZ IS NULL THEN NULL ELSE GREATEST(achieved_at, $9::TIMESTAMPTZ) END
+    ELSE achieved_at END,
+  updated_at = NOW()
+  WHERE id = $1 AND token_hash = $2 RETURNING ${playerColumns}`;
 
 class RequestError extends Error {
   constructor(status, code, message) {
@@ -110,7 +135,10 @@ export function createRankingServer({ pool, tokenPepper, allowedOrigins = new Se
     if (origin && !allowedOrigins.has(origin)) return sendJson(response, 403, { error: "Origen no permitido.", code: "request_failed", retryable: false });
     try {
       const url = new URL(request.url ?? "/", "http://localhost");
-      if (request.method === "GET" && url.pathname === "/health") return sendJson(response, 200, { status: "bien", release, registrationVersion: 2 }, origin);
+      if (request.method === "GET" && url.pathname === "/health") {
+        await pool.query("SELECT total_apples, achieved_at FROM super_noa_ranking_profiles LIMIT 0");
+        return sendJson(response, 200, { status: "bien", release, registrationVersion: 2, progressVersion: 2 }, origin);
+      }
       if (request.method === "GET" && url.pathname === "/v1/leaderboard") {
         const requested = Number.parseInt(url.searchParams.get("limit") ?? "20", 10);
         const limit = Number.isInteger(requested) ? Math.min(Math.max(requested, 1), 50) : 20;
@@ -137,10 +165,9 @@ export function createRankingServer({ pool, tokenPepper, allowedOrigins = new Se
         const progress = validateProgress(await readJson(request));
         if (!progress) throw new RequestError(400, "request_failed", "El progreso no es válido.");
         const result = await pool.query(
-          `UPDATE super_noa_ranking_profiles SET world = $3, completed_levels = $4, stickers = $5,
-           boss_challenges = $6, campaign_world = $7, updated_at = NOW()
-           WHERE id = $1 AND token_hash = $2 RETURNING ${playerColumns}`,
-          [credentials.id, hashDeviceToken(tokenPepper, credentials.token), progress.world, progress.completedLevels, progress.stickers, progress.bossChallenges, progress.campaignWorld],
+          progressUpdateQuery,
+          [credentials.id, hashDeviceToken(tokenPepper, credentials.token), progress.world, progress.completedLevels, progress.stickers, progress.bossChallenges, progress.campaignWorld,
+            progress.totalApples ?? null, progress.achievedAt ?? null, Object.hasOwn(progress, "achievedAt")],
         );
         if (result.rowCount !== 1) throw new RequestError(401, "device_invalid", "La tarjeta de este dispositivo no es válida.");
         return sendJson(response, 200, result.rows[0], origin);

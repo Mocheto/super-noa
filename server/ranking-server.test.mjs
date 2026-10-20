@@ -13,13 +13,14 @@ function profilePool() {
         assert.match(sql, /ON CONFLICT DO NOTHING RETURNING alias/);
         const [id, alias, alias_key, token_hash] = params;
         if (profiles.has(id) || [...profiles.values()].some((profile) => profile.alias_key === alias_key)) return { rowCount: 0, rows: [] };
-        profiles.set(id, { alias, alias_key, token_hash });
+        profiles.set(id, { alias, alias_key, token_hash, totalApples: 0, achievedAt: null });
         return { rowCount: 1, rows: [{ alias }] };
       }
       if (sql.startsWith("SELECT alias, alias_key")) {
         const profile = profiles.get(params[0]);
         return { rows: profile ? [profile] : [] };
       }
+      if (sql.startsWith("SELECT total_apples")) return { rows: [] };
       if (sql.startsWith("UPDATE")) {
         const [id, hash, world, completedLevels, stickers, bossChallenges, campaignWorld] = params;
         const profile = profiles.get(id);
@@ -91,6 +92,46 @@ test("clientes antiguos conservan registro, tarjeta y envío del progreso sin ca
   assert.equal(modern.status, 200);
   assert.equal((await modern.json()).campaignWorld, 10);
   assert.equal((await fetch(`${api.url}/health`).then((result) => result.json())).registrationVersion, 2);
+});
+
+test("salud comprueba PostgreSQL y anuncia capacidades solo cuando está disponible", async (t) => {
+  let unavailable = false;
+  let queries = 0;
+  const errors = [];
+  const server = createRankingServer({
+    pool: { query: async (sql) => {
+      queries += 1;
+      assert.match(sql, /SELECT total_apples, achieved_at FROM super_noa_ranking_profiles/);
+      if (unavailable) throw new Error("base desconectada");
+      return { rows: [] };
+    } },
+    tokenPepper: "test-pepper", release: "abc123", logger: { error: (...args) => errors.push(args) },
+  });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+  });
+  const url = `http://127.0.0.1:${server.address().port}/health`;
+  const ready = await fetch(url);
+  assert.equal(ready.status, 200);
+  assert.deepEqual(await ready.json(), { status: "bien", release: "abc123", registrationVersion: 2, progressVersion: 2 });
+  unavailable = true;
+  const failed = await fetch(url);
+  assert.equal(failed.status, 503);
+  assert.equal((await failed.json()).code, "server_unavailable");
+  assert.equal(queries, 2);
+  assert.equal(errors.length, 1);
+});
+
+test("progreso rechaza manzanas y fechas inválidas antes de consultar PostgreSQL", async (t) => {
+  const api = await apiFixture(t, { query: async () => { assert.fail("No debe consultar PostgreSQL"); } });
+  const headers = { "X-Super-Noa-Device": randomUUID(), "X-Super-Noa-Token": "a".repeat(43) };
+  const progress = { world: 0, completedLevels: 0, stickers: 0, bossChallenges: 0 };
+  for (const fields of [{ totalApples: Number.MAX_SAFE_INTEGER + 1 }, { totalApples: null }, { achievedAt: "2026-02-30T00:00:00Z" }]) {
+    assert.equal((await api.post("/v1/progress", { ...progress, ...fields }, headers)).status, 400);
+  }
 });
 
 test("las respuestas distinguen JSON inválido, tarjeta inválida e infraestructura", async (t) => {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import { emptyProgress } from "./progress.ts";
-import { loadRanking, RankingError, rankingProgress, readRankingDevice, registerRankingDevice, syncRanking } from "./ranking.ts";
+import { checkRankingAvailability, loadRanking, RankingError, rankingProgress, readRankingDevice, registerRankingDevice, syncRanking } from "./ranking.ts";
 
 test("el tablón reconoce el mundo 12 y sus pantallas de campaña", () => {
   const levelStats = Object.fromEntries(["1-1", "9-1", "12-1"].map((id) => [id, {
@@ -16,6 +16,8 @@ test("el tablón reconoce el mundo 12 y sus pantallas de campaña", () => {
     completedLevels: 3,
     stickers: 0,
     bossChallenges: 0,
+    totalApples: 0,
+    achievedAt: null,
   });
 });
 
@@ -39,7 +41,7 @@ function jsonResponse(body: unknown, status = 200) {
 
 test("los desvíos opcionales no se convierten en avance de campaña", () => {
   assert.deepEqual(rankingProgress({ ...emptyProgress, waterUnlocked: true, secretUnlocked: true }), {
-    world: 0, campaignWorld: 0, completedLevels: 0, stickers: 0, bossChallenges: 0,
+    world: 0, campaignWorld: 0, completedLevels: 0, stickers: 0, bossChallenges: 0, totalApples: 0, achievedAt: null,
   });
   const levelStats = { "6-3": { completed: true, bestApples: 0, bestLives: 3, flawless: false } };
   const castle = rankingProgress({ ...emptyProgress, levelStats, waterUnlocked: true });
@@ -53,7 +55,7 @@ test("guarda la tarjeta antes de registrar y reintenta la misma tras perder la r
   const requests: { deviceId: string; deviceToken: string; alias: string }[] = [];
   let loseResponse = true;
   t.mock.method(globalThis, "fetch", async (url: string, init?: RequestInit) => {
-    if (url.endsWith("/health")) return jsonResponse({ registrationVersion: 2 });
+    if (url.endsWith("/health")) return jsonResponse({ registrationVersion: 2, progressVersion: 2 });
     const request = JSON.parse(init?.body as string);
     const saved = readRankingDevice();
     assert.equal(saved?.id, request.deviceId);
@@ -126,13 +128,13 @@ test("sync recupera una tarjeta pendiente antes de publicar el progreso", async 
   const paths: string[] = [];
   t.mock.method(globalThis, "fetch", async (url: string, init?: RequestInit) => {
     paths.push(new URL(url).pathname);
-    if (url.endsWith("/health")) return jsonResponse({ registrationVersion: 2 });
+    if (url.endsWith("/health")) return jsonResponse({ registrationVersion: 2, progressVersion: 2 });
     if (url.endsWith("/v1/devices")) return jsonResponse(JSON.parse(init?.body as string));
     assert.equal(readRankingDevice()?.registrationPending, undefined);
     return jsonResponse({});
   });
   await syncRanking(pending, emptyProgress);
-  assert.deepEqual(paths, ["/health", "/v1/devices", "/v1/progress"]);
+  assert.deepEqual(paths, ["/health", "/v1/devices", "/v1/progress", "/health"]);
 });
 
 test("si falla la confirmación local tras registrar conserva la tarjeta pendiente para recuperarla", async (t) => {
@@ -187,4 +189,82 @@ test("lee respuestas antiguas sin inventar el avance de campaña de agua o nubes
   const players = await loadRanking();
   assert.equal(players[0].campaignWorld, null);
   assert.equal(players[1].campaignWorld, 6);
+  assert.equal(players[0].totalApples, null);
+  assert.equal(players[0].achievedAt, null);
+});
+
+test("la disponibilidad comprueba la base de datos, no solo el health antiguo", async (t) => {
+  const paths: string[] = [];
+  t.mock.method(globalThis, "fetch", async (url: string) => {
+    paths.push(new URL(url).pathname);
+    return url.endsWith("/health") ? jsonResponse({ registrationVersion: 2 })
+      : jsonResponse({ error: "Base de datos no disponible" }, 503);
+  });
+  await assert.rejects(checkRankingAvailability(), (error: unknown) => error instanceof RankingError && error.code === "server_unavailable");
+  assert.deepEqual(paths, ["/health", "/v1/leaderboard"]);
+});
+
+test("la disponibilidad tolera health antiguo con base de datos funcional y detecta timeouts", async (t) => {
+  const mock = t.mock.method(globalThis, "fetch", async (url: string) =>
+    jsonResponse(url.endsWith("/health") ? { registrationVersion: 2 } : { players: [] }));
+  await checkRankingAvailability();
+  mock.mock.restore();
+  t.mock.method(globalThis, "fetch", async () => { throw new DOMException("Tarda", "TimeoutError"); });
+  await assert.rejects(checkRankingAvailability(), (error: unknown) => error instanceof RankingError && error.code === "timeout");
+});
+
+test("dos clics comparten el registro y las credenciales pendientes", async (t) => {
+  storageFixture(t);
+  let posts = 0;
+  t.mock.method(globalThis, "fetch", async (url: string, init?: RequestInit) => {
+    if (url.endsWith("/health")) return jsonResponse({ registrationVersion: 2 });
+    posts++;
+    return jsonResponse(JSON.parse(init?.body as string));
+  });
+  const first = registerRankingDevice("NoaLuna");
+  const second = registerRankingDevice("noaluna");
+  assert.equal(first, second);
+  assert.deepEqual(await first, await second);
+  assert.equal(posts, 1);
+});
+
+test("envía manzanas y fecha sin cambiarlas y avisa si el backend no las conserva", async (t) => {
+  const device = { id: "device", token: "token", alias: "Luna" };
+  const progress = { ...emptyProgress, totalApples: 123, achievedAt: "2026-10-20T07:00:00.000Z" };
+  let payload: unknown;
+  let modern = false;
+  t.mock.method(globalThis, "fetch", async (url: string, init?: RequestInit) => {
+    if (url.endsWith("/health")) return jsonResponse({ registrationVersion: 2, ...(modern ? { progressVersion: 2 } : {}) });
+    payload = JSON.parse(init?.body as string);
+    return jsonResponse({});
+  });
+  await assert.rejects(syncRanking(device, progress), (error: unknown) => error instanceof RankingError && error.code === "backend_outdated");
+  assert.deepEqual(payload, rankingProgress(progress));
+  modern = true;
+  await syncRanking(device, progress);
+  assert.deepEqual(payload, rankingProgress(progress));
+});
+
+test("valida los campos nuevos y conserva fechas históricas desconocidas", async (t) => {
+  const player = { alias: "Luna", world: 0, completedLevels: 0, stickers: 0, bossChallenges: 0 };
+  for (const extra of [{ totalApples: -1 }, { totalApples: 1.5 }, { totalApples: Number.MAX_SAFE_INTEGER + 1 }, { achievedAt: "ayer" },
+    { achievedAt: "2026-02-30T00:00:00Z" }, { achievedAt: "2026-01-01T24:00:00Z" }, { achievedAt: "2026-01-01T12:00:00Z extra" }]) {
+    const mock = t.mock.method(globalThis, "fetch", async () => jsonResponse({ players: [{ ...player, ...extra }] }));
+    await assert.rejects(loadRanking(), (error: unknown) => error instanceof RankingError && error.code === "invalid_response");
+    mock.mock.restore();
+  }
+  t.mock.method(globalThis, "fetch", async () => jsonResponse({ players: [{ ...player, totalApples: 125, achievedAt: null }] }));
+  assert.equal((await loadRanking())[0].totalApples, 125);
+  assert.equal((await loadRanking())[0].achievedAt, null);
+});
+
+test("la sincronización descarta fechas locales dañadas y normaliza zonas horarias válidas", async (t) => {
+  const invalid = rankingProgress({ ...emptyProgress, achievedAt: "2026-02-30T00:00:00Z" });
+  assert.equal(invalid.achievedAt, null);
+  const normalized = "2024-02-29T10:30:00.000Z";
+  assert.equal(rankingProgress({ ...emptyProgress, achievedAt: "2024-02-29T12:30:00+02:00" }).achievedAt, normalized);
+  t.mock.method(globalThis, "fetch", async () => jsonResponse({ players: [
+    { alias: "Luna", world: 0, completedLevels: 0, stickers: 0, bossChallenges: 0, achievedAt: "2024-02-29T12:30:00+02:00" },
+  ] }));
+  assert.equal((await loadRanking())[0].achievedAt, normalized);
 });

@@ -494,7 +494,7 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 .ranking-player-name strong { overflow: hidden; color: #3b2048; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
 .ranking-player-name em { border: 2px solid #91435e; border-radius: 999px; padding: 2px 7px; color: #7a304b; background: #ffd9df; font-family: system-ui, sans-serif; font-size: .64rem; font-style: normal; font-weight: 900; text-transform: uppercase; }
 .ranking-stats { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; color: #6d5a72; font-family: system-ui, sans-serif; font-size: .76rem; font-weight: 750; }
-.ranking-stats span { white-space: nowrap; }
+.ranking-stats span { max-width: 100%; overflow-wrap: anywhere; }
 .ranking-list li.ranking-podium { border-width: 4px; }
 .ranking-place-1 { background: linear-gradient(135deg, #fff1a8, #ffe071) !important; box-shadow: 5px 5px 0 #c5932e !important; }
 .ranking-place-1 .ranking-position { color: #5b3c0b; background: #ffd45f; }

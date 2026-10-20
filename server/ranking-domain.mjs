@@ -1,6 +1,7 @@
 import { createHmac, randomBytes, randomUUID } from "node:crypto";
 
 export const maxAliasLength = 16;
+export const maxTotalApples = Number.MAX_SAFE_INTEGER;
 const aliasPattern = /^[\p{L}\p{N} _-]{3,16}$/u;
 
 export function normalizeAlias(value) {
@@ -24,7 +25,33 @@ export function validateProgress(value) {
   if ([world, completedLevels, stickers, bossChallenges].some((item) => item === null)) return null;
   const campaignWorld = campaignWorldFromLegacyWorld(world);
   if (value.campaignWorld !== undefined && value.campaignWorld !== campaignWorld) return null;
-  return { world, campaignWorld, completedLevels, stickers, bossChallenges };
+  const progress = { world, campaignWorld, completedLevels, stickers, bossChallenges };
+  if (Object.hasOwn(value, "totalApples")) {
+    const totalApples = boundedInteger(value.totalApples, maxTotalApples);
+    if (totalApples === null) return null;
+    progress.totalApples = totalApples;
+  }
+  if (Object.hasOwn(value, "achievedAt")) {
+    const achievedAt = value.achievedAt === null ? null : normalizeAchievementDate(value.achievedAt);
+    if (achievedAt === null && value.achievedAt !== null) return null;
+    progress.achievedAt = achievedAt;
+  }
+  return progress;
+}
+
+function normalizeAchievementDate(value) {
+  if (typeof value !== "string") return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(Z|[+-]\d{2}:\d{2})$/.exec(value);
+  if (!match) return null;
+  const [, year, month, day, hour, minute, second, zone] = match;
+  const days = [31, Number(year) % 4 === 0 && (Number(year) % 100 !== 0 || Number(year) % 400 === 0) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (Number(year) < 1 || Number(month) < 1 || Number(month) > 12 || Number(day) < 1 || Number(day) > days[Number(month) - 1]
+    || Number(hour) > 23 || Number(minute) > 59 || Number(second) > 59
+    || (zone !== "Z" && (Number(zone.slice(1, 3)) > 23 || Number(zone.slice(4)) > 59))) return null;
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return null;
+  const normalized = new Date(timestamp).toISOString();
+  return /^\d{4}-/.test(normalized) && !normalized.startsWith("0000-") ? normalized : null;
 }
 
 export function campaignWorldFromLegacyWorld(world) {

@@ -14,10 +14,11 @@ import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";
 import { createMusicPlayer, musicTracks } from "./game/music";
 import { getLevelObjectives } from "./game/levelObjectives";
-import { emptyProgress, readProgress, saveProgress, type Progress } from "./game/progress";
+import { collectLifetimeApples, lifetimeApples, progressMilestone, readProgress, resetCampaignProgress, saveProgress, type Progress } from "./game/progress";
 import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
 import { worldArtwork, worldCatalog } from "./game/worldMapData";
-import { loadRanking, rankingConnectionMessage, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
+import { checkRankingAvailability, loadRanking, rankingConnectionMessage, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
+import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnrolled, safeEnrollmentMoment } from "./game/rankingOnboarding";
 import type { GameSnapshot } from "./game/types";
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
@@ -72,6 +73,11 @@ export default function App() {
   const [rankingSyncState, setRankingSyncState] = useState<"idle" | "syncing" | "saved" | "pending">("idle");
   const [rankingSyncMessage, setRankingSyncMessage] = useState("");
   const [rankingRetry, setRankingRetry] = useState(0);
+  const [enrollmentRequired, setEnrollmentRequired] = useState(false);
+  const [enrollmentChecking, setEnrollmentChecking] = useState(false);
+  const [enrollmentDeferred, setEnrollmentDeferred] = useState(() => Boolean(readRankingDevice()?.registrationPending));
+  const [enrollmentMessage, setEnrollmentMessage] = useState("");
+  const [enrollmentStorageBlocked, setEnrollmentStorageBlocked] = useState(false);
   const [audioMessage, setAudioMessage] = useState("");
   const [collectionTab, setCollectionTab] = useState<CollectionTab>("stickers");
   const [albumHints, setAlbumHints] = useState<string[]>([]);
@@ -84,10 +90,120 @@ export default function App() {
   const [snapshot, setSnapshot] = useState<GameSnapshot>(emptySnapshot);
   const musicRef = useRef<ReturnType<typeof createMusicPlayer> | null>(null);
   const rankingJoiningRef = useRef(false);
+  const rankingAliasRef = useRef<HTMLInputElement | null>(null);
+  const enrollmentBusyRef = useRef(false);
+  const enrollmentRequiredRef = useRef(false);
+  const enrollmentRetryAtRef = useRef(0);
+  const adventureActionRef = useRef<(() => void) | null>(null);
   const secretTransitionRef = useRef({ target: -1, remaining: 1800 });
   const audioContextRef = useRef<AudioContext | null>(null);
   const playScreenRef = useRef<HTMLElement | null>(null);
   const activeLevel = levels[activeIndex];
+
+  const finishEnrollment = useCallback(() => {
+    enrollmentRequiredRef.current = false;
+    setEnrollmentRequired(false);
+    setShowRanking(false);
+    const action = adventureActionRef.current;
+    adventureActionRef.current = null;
+    action?.();
+  }, []);
+
+  const deferEnrollment = useCallback((message: string) => {
+    enrollmentRetryAtRef.current = Date.now() + ENROLLMENT_RETRY_MS;
+    setEnrollmentDeferred(true);
+    setEnrollmentMessage(`${message} Puedes seguir jugando. Te pediremos un alias cuando vuelva el tablón, en el mapa o al inicio.`);
+    finishEnrollment();
+  }, [finishEnrollment]);
+
+  const requestAdventure = useCallback(async (action?: () => void) => {
+    if (enrollmentBusyRef.current || enrollmentRequiredRef.current || rankingJoiningRef.current) return;
+    if (isEnrolled(readRankingDevice() ?? rankingDevice)) { action?.(); return; }
+    if (enrollmentDeferred && Date.now() < enrollmentRetryAtRef.current) { action?.(); return; }
+    enrollmentBusyRef.current = true;
+    adventureActionRef.current = action ?? null;
+    setEnrollmentChecking(true);
+    try {
+      await checkRankingAvailability();
+      const pending = readRankingDevice();
+      if (pending?.registrationPending) {
+        const device = await registerRankingDevice(pending.alias);
+        setRankingDevice(device);
+        setEnrollmentDeferred(false);
+        setEnrollmentMessage("");
+        finishEnrollment();
+      } else {
+        setShowHelp(false);
+        setShowAlbum(false);
+        setShowSettings(false);
+        setShowCredits(false);
+        setPaused(false);
+        setScreen((current) => safeEnrollmentMoment(current, false) ? current : "map");
+        setRankingDevice(pending);
+        setRankingAlias(pending?.alias ?? "");
+        setRankingMessage("");
+        setEnrollmentStorageBlocked(false);
+        enrollmentRequiredRef.current = true;
+        setEnrollmentRequired(true);
+        setShowRanking(true);
+        window.requestAnimationFrame(() => rankingAliasRef.current?.focus());
+      }
+    } catch (error) {
+      const message = rankingErrorMessage(error, "El tablón no está disponible.");
+      if (enrollmentFailure(error) === "validate" || enrollmentFailure(error) === "storage") {
+        setRankingDevice(readRankingDevice());
+        setRankingAlias(readRankingDevice()?.alias ?? "");
+        setRankingMessage(message);
+        setEnrollmentStorageBlocked(enrollmentFailure(error) === "storage");
+        setShowHelp(false);
+        setShowAlbum(false);
+        setShowSettings(false);
+        setShowCredits(false);
+        setScreen((current) => safeEnrollmentMoment(current, false) ? current : "map");
+        enrollmentRequiredRef.current = true;
+        setEnrollmentRequired(true);
+        setShowRanking(true);
+        window.requestAnimationFrame(() => rankingAliasRef.current?.focus());
+      } else deferEnrollment(message);
+    } finally {
+      enrollmentBusyRef.current = false;
+      setEnrollmentChecking(false);
+    }
+  }, [deferEnrollment, enrollmentDeferred, finishEnrollment, rankingDevice]);
+
+  useEffect(() => {
+    if (!enrollmentDeferred || isEnrolled(rankingDevice)) return;
+    const { retry, online } = createEnrollmentRecovery(
+      enrollmentRetryAtRef,
+      () => document.visibilityState !== "hidden"
+        && safeEnrollmentMoment(screen, showRanking || showHelp || showAlbum || showCredits || showSettings),
+      () => { void requestAdventure(); },
+    );
+    const timeout = window.setTimeout(retry, Math.max(0, enrollmentRetryAtRef.current - Date.now()));
+    const interval = window.setInterval(retry, ENROLLMENT_RETRY_MS);
+    window.addEventListener("online", online);
+    return () => {
+      window.clearTimeout(timeout);
+      window.clearInterval(interval);
+      window.removeEventListener("online", online);
+    };
+  }, [enrollmentDeferred, rankingDevice, requestAdventure, screen, showRanking, showHelp, showAlbum, showCredits, showSettings]);
+
+  useEffect(() => {
+    if (!enrollmentRequired) return;
+    let cancelled = false;
+    let checking = false;
+    const check = async () => {
+      if (checking || rankingJoiningRef.current || document.visibilityState === "hidden") return;
+      checking = true;
+      try { await checkRankingAvailability(); }
+      catch (error) {
+        if (!cancelled && !rankingJoiningRef.current) deferEnrollment(rankingErrorMessage(error, "El tablón no está disponible."));
+      } finally { checking = false; }
+    };
+    const interval = window.setInterval(() => void check(), ENROLLMENT_RETRY_MS);
+    return () => { cancelled = true; window.clearInterval(interval); };
+  }, [deferEnrollment, enrollmentRequired]);
 
   useEffect(() => {
     const saved = saveProgress(progress);
@@ -96,7 +212,7 @@ export default function App() {
   }, [progress]);
 
   useEffect(() => {
-    if (!rankingDevice) return;
+    if (!rankingDevice || rankingDevice.registrationPending) return;
     let cancelled = false;
     let attempt = 0;
     const publish = async () => {
@@ -295,10 +411,7 @@ export default function App() {
     oscillator.stop(now + duration);
   }, [effectsVolume, muted]);
 
-  const totalApples = useMemo(
-    () => Object.values(progress.levelStats).reduce((total, stat) => total + (Number(stat.bestApples) || 0), 0),
-    [progress.levelStats],
-  );
+  const totalApples = lifetimeApples(progress);
   const albumStickers = stickerCatalog.filter((sticker) => (sticker.world !== 7 || progress.secretUnlocked) && (sticker.world !== 8 || progress.waterUnlocked));
   const knownBosses = bossLevels.filter(({ level }) => progress.levelStats[level.id]?.completed).length;
   const completedLevels = campaignLevels.filter((level) => progress.levelStats[level.id]?.completed).length;
@@ -342,17 +455,25 @@ export default function App() {
     setRankingJoining(true);
     setRankingMessage("");
     try {
-      const device = await registerRankingDevice(rankingAlias);
+      const device = await registerRankingDevice(readRankingDevice()?.registrationPending ? readRankingDevice()!.alias : rankingAlias);
       setRankingDevice(device);
+      setEnrollmentDeferred(false);
+      setEnrollmentMessage("");
+      setEnrollmentStorageBlocked(false);
       setRankingMessage(`¡Hola, ${device.alias}! Tu tarjeta está lista.`);
-      setRankingPlayers(await loadRanking());
+      if (enrollmentRequiredRef.current) finishEnrollment();
+      else void refreshRanking();
     } catch (error) {
       const pendingDevice = readRankingDevice();
-      if (pendingDevice?.registrationPending) setRankingDevice(pendingDevice);
-      setRankingMessage(rankingErrorMessage(error, "No pude guardar ese alias."));
+      setRankingDevice(pendingDevice);
+      const message = rankingErrorMessage(error, "No pude guardar ese alias.");
+      setRankingMessage(message);
+      setEnrollmentStorageBlocked(enrollmentFailure(error) === "storage");
+      if (enrollmentRequiredRef.current && enrollmentFailure(error) === "defer") deferEnrollment(message);
     } finally {
       rankingJoiningRef.current = false;
       setRankingJoining(false);
+      window.requestAnimationFrame(() => rankingAliasRef.current?.focus());
     }
   };
 
@@ -366,19 +487,21 @@ export default function App() {
   const replayBoss = (index: number) => {
     const level = levels[index];
     if (!level.boss || !progress.levelStats[level.id]?.completed) return;
-    setBossReplayReturn(screen === "home" ? "home" : "map");
-    setActiveIndex(index);
-    setLevelRun((current) => current + 1);
-    setLives(MAX_LIVES);
-    setSnapshot(emptySnapshot);
-    setPaused(false);
     setShowAlbum(false);
-    setBossReplay(true);
-    setScreen("boss");
+    void requestAdventure(() => {
+      setBossReplayReturn(screen === "home" ? "home" : "map");
+      setActiveIndex(index);
+      setLevelRun((current) => current + 1);
+      setLives(MAX_LIVES);
+      setSnapshot(emptySnapshot);
+      setPaused(false);
+      setBossReplay(true);
+      setScreen("boss");
+    });
   };
 
   const finishBossReplay = (challengeCompleted = false) => {
-    if (challengeCompleted && activeLevel.boss) setProgress((current) => ({ ...current, bossChallenges: { ...current.bossChallenges, [activeLevel.boss!]: true } }));
+    if (challengeCompleted && activeLevel.boss) setProgress((current) => progressMilestone(current, { ...current, bossChallenges: { ...current.bossChallenges, [activeLevel.boss!]: true } }));
     setBossReplay(false);
     openCollection("bosses");
     setScreen(bossReplayReturn);
@@ -386,13 +509,15 @@ export default function App() {
 
   const beginLevel = (index: number) => {
     if (!isLevelUnlocked(index)) return;
-    setActiveIndex(index);
-    setLevelRun((current) => current + 1);
-    setLives(MAX_LIVES);
-    setSnapshot(emptySnapshot);
-    setPaused(false);
-    setBossReplay(false);
-    setScreen("game");
+    void requestAdventure(() => {
+      setActiveIndex(index);
+      setLevelRun((current) => current + 1);
+      setLives(MAX_LIVES);
+      setSnapshot(emptySnapshot);
+      setPaused(false);
+      setBossReplay(false);
+      setScreen("game");
+    });
   };
 
   const handleLoseLife = useCallback(() => {
@@ -410,15 +535,19 @@ export default function App() {
     if (next.stickers.length === 0) return;
     setProgress((current) => {
       const newStickers = next.stickers.filter((id) => !current.stickers.includes(id));
-      return newStickers.length > 0 ? { ...current, stickers: [...current.stickers, ...newStickers] } : current;
+      return newStickers.length > 0 ? progressMilestone(current, { ...current, stickers: [...current.stickers, ...newStickers] }) : current;
     });
+  }, []);
+
+  const handleAppleCollected = useCallback((count: number) => {
+    setProgress((current) => collectLifetimeApples(current, count));
   }, []);
 
   const handleComplete = useCallback((challengeCompleted = false, finalSnapshot = snapshot) => {
     setSnapshot(finalSnapshot);
     setProgress((current) => {
       const previous = current.levelStats[activeLevel.id];
-      return {
+      return progressMilestone(current, {
         ...current,
         stickers: [...new Set([...current.stickers, ...finalSnapshot.stickers])],
         unlocked: Math.max(current.unlocked, campaignUnlockIndex(activeLevel)),
@@ -427,7 +556,7 @@ export default function App() {
           [activeLevel.id]: { completed: true, bestApples: Math.max(previous?.bestApples ?? 0, finalSnapshot.apples), flawless: previous?.flawless || lives === MAX_LIVES },
         },
         bossChallenges: activeLevel.boss && challengeCompleted ? { ...current.bossChallenges, [activeLevel.boss]: true } : current.bossChallenges,
-      };
+      });
     });
     setScreen(activeLevel.route?.finale ? "finished" : "complete");
   }, [activeLevel, lives, snapshot]);
@@ -437,7 +566,7 @@ export default function App() {
   const handleWaterExit = useCallback(() => {
     const target = levelIndex(activeLevel.route?.waterExit ?? "");
     if (target < 0) return;
-    setProgress((current) => ({ ...current, waterUnlocked: true }));
+    setProgress((current) => progressMilestone(current, { ...current, waterUnlocked: true }));
     setActiveIndex(target);
     setLevelRun((current) => current + 1);
     setLives(MAX_LIVES);
@@ -456,7 +585,7 @@ export default function App() {
   const handleSecretExit = useCallback(() => {
     const target = levelIndex(activeLevel.route?.secretExit ?? "");
     if (target < 0) return;
-    setProgress((current) => ({ ...current, secretUnlocked: true }));
+    setProgress((current) => progressMilestone(current, { ...current, secretUnlocked: true }));
     secretTransitionRef.current = { target, remaining: 1800 };
     setPaused(false);
     setScreen("secret-transition");
@@ -484,17 +613,12 @@ export default function App() {
   const nextLevel = () => {
     const nextIndex = nextLevelIndex(activeLevel);
     if (nextIndex < 0) { setScreen("map"); return; }
-    setActiveIndex(nextIndex);
-    setLevelRun((current) => current + 1);
-    setLives(MAX_LIVES);
-    setSnapshot(emptySnapshot);
-    setPaused(false);
-    setScreen("game");
+    beginLevel(nextIndex);
   };
 
   const resetProgress = () => {
-    if (!window.confirm("¿Empezar de nuevo? Se borrarán las pantallas, las manzanas, las pegatinas y los jefes amigos guardados.")) return;
-    setProgress(emptyProgress);
+    if (!window.confirm("¿Empezar de nuevo? Se borrarán las pantallas, las pegatinas y los jefes amigos guardados. Tu alias, las manzanas de toda la aventura y su fecha se conservan.")) return;
+    setProgress(resetCampaignProgress);
     setActiveIndex(0);
     setLives(MAX_LIVES);
   };
@@ -507,6 +631,8 @@ export default function App() {
   return (
     <main className={`app-shell ${reduceMotion ? "reduce-motion" : ""} ${touchControls === "always" ? "touch-controls-always" : ""}`}>
       {saveError && <p className="save-warning" role="alert">No se pudo guardar la partida en este dispositivo. Puedes seguir jugando, pero el progreso podría perderse al cerrar.</p>}
+      {enrollmentChecking && <p className="ranking-sync-warning" role="status">Buscando el tablón antes de la aventura…</p>}
+      {enrollmentMessage && <p className="ranking-sync-warning" role="status">{enrollmentMessage}</p>}
       {rankingDevice && rankingSyncState === "pending" && <p className="ranking-sync-warning" role="status">Tus logros del tablón están pendientes. {rankingSyncMessage} {saveError ? "Puedes seguir jugando, aunque este navegador no pudo guardar la partida." : "Tu partida sigue guardada en este dispositivo."} <button type="button" onClick={() => setRankingRetry((current) => current + 1)}>Reintentar envío</button></p>}
       {audioMessage && !muted && musicVolume > 0 && <p className="audio-warning" role="status">{audioMessage}</p>}
       {screen === "home" && (
@@ -518,7 +644,7 @@ export default function App() {
             <p className="home-invite"><PixelIcon kind="heart" /> Una gran aventura para pequeñas heroínas</p>
             <p className="coming-adventures"><strong>Próximas aventuras:</strong> El desierto de los deseos · La fábrica de juguetes · El bosque de los sueños</p>
             <div className="home-actions">
-              <button className="pixel-button primary home-play" type="button" data-gamepad-default onClick={() => setScreen("map")}>▶ ¡Jugar ahora!</button>
+              <button className="pixel-button primary home-play" type="button" data-gamepad-default disabled={enrollmentChecking} onClick={() => void requestAdventure(() => setScreen("map"))}>▶ ¡Jugar ahora!</button>
               <button className="pixel-button" type="button" onClick={() => setShowHelp(true)}>¿Cómo se juega?</button>
             </div>
             {progress.unlocked > 0 && !saveError && <p className="save-note">Partida guardada · {completedLevels}/{campaignLevelCount}{progress.secretUnlocked ? " + secreto" : ""}</p>}
@@ -581,7 +707,7 @@ export default function App() {
               {(screen === "game" || screen === "boss") && <button type="button" onClick={() => setPaused((value) => !value)} aria-label="Pausa">Ⅱ</button>}
             </div>
           </header>}
-          {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} playSound={playSound} />}
+          {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} playSound={playSound} />}
           {!bossReplay && <div className="level-caption"><span>{themeNames[activeLevel.theme]}</span><span>Bandera {snapshot.checkpoint}/{activeLevel.checkpoints.length}</span><small>{activeLevel.subtitle}</small></div>}
 
           {screen === "boss" && activeLevel.boss && (
@@ -686,7 +812,7 @@ export default function App() {
             <div><span><PixelIcon kind="sparkle" /></span><strong>Mira arriba</strong><small>Las pegatinas se esconden en caminos altos.</small></div>
           </div>
           <p className="help-note">Con teclado: A/D o flechas para caminar, espacio para saltar y X/K para lanzar lana. Con mando, usa la cruceta o palanca, A para saltar o elegir y B para volver. En el agua, SALTAR da una brazada hacia arriba; al soltarlo, Noa baja despacito y puede caminar por la arena. ¡Los erizos pinchan!</p>
-          <button className="pixel-button primary" type="button" onClick={() => { setShowHelp(false); setScreen("map"); }}>¡Lista para jugar!</button>
+          <button className="pixel-button primary" type="button" disabled={enrollmentChecking} onClick={() => { setShowHelp(false); void requestAdventure(() => setScreen("map")); }}>¡Lista para jugar!</button>
         </Dialog>
       )}
 
@@ -776,27 +902,29 @@ export default function App() {
         </Dialog>
       )}
       {showRanking && (
-        <Dialog labelledBy="ranking-title" className="game-modal ranking-modal" onClose={() => setShowRanking(false)}>
-          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowRanking(false)} aria-label="Cerrar">×</button>
+        <Dialog labelledBy="ranking-title" className="game-modal ranking-modal" onClose={enrollmentRequired ? undefined : () => setShowRanking(false)}>
+          {!enrollmentRequired && <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowRanking(false)} aria-label="Cerrar">×</button>}
           <div className="ranking-heading">
             <span className="ranking-trophy" aria-hidden="true">★</span>
-            <div><p className="eyebrow">Aventureras y aventureros</p><h2 id="ranking-title">Tablón mundial</h2></div>
+            <div><p className="eyebrow">Aventureras y aventureros</p><h2 id="ranking-title">{enrollmentRequired ? "Tu alias para la aventura" : "Tablón mundial"}</h2></div>
           </div>
-          {!rankingDevice ? <div className="ranking-join"><label htmlFor="ranking-alias">Tu alias de aventura</label><input id="ranking-alias" value={rankingAlias} onChange={(event) => setRankingAlias(event.target.value)} maxLength={16} disabled={rankingJoining} placeholder="Por ejemplo, Moche" /><button className="pixel-button primary" type="button" disabled={rankingJoining} onClick={() => void joinRanking()}>{rankingJoining ? "Preparando tu tarjeta…" : "¡Salir al tablón!"}</button><small>Solo compartimos tu alias y tus logros. No pongas tu nombre real.</small></div> : <><p className="ranking-welcome">¡Hola, {rankingDevice.alias}!</p><p className="ranking-sync-status" role="status">{rankingSyncState === "saved" ? "Tus logros ya están en el tablón." : rankingSyncState === "pending" ? `Envío pendiente. ${rankingSyncMessage}` : "Enviando tus logros…"}</p></>}
+          {enrollmentRequired && <p>Antes de jugar, elige un alias de fantasía para guardar tus logros en el tablón.</p>}
+          {!isEnrolled(rankingDevice) ? <form className="ranking-join" onSubmit={(event) => { event.preventDefault(); void joinRanking(); }}><label htmlFor="ranking-alias">Tu alias de aventura</label><input ref={rankingAliasRef} data-gamepad-default id="ranking-alias" value={rankingDevice?.registrationPending ? rankingDevice.alias : rankingAlias} onChange={(event) => setRankingAlias(event.target.value)} readOnly={Boolean(rankingDevice?.registrationPending)} maxLength={16} disabled={rankingJoining} placeholder="Por ejemplo, Moche" autoComplete="off" aria-describedby="ranking-alias-help" /><button className="pixel-button primary" type="submit" disabled={rankingJoining}>{rankingJoining ? "Preparando tu tarjeta…" : rankingDevice?.registrationPending ? "Reintentar mi tarjeta" : enrollmentRequired ? "Guardar alias y jugar" : "¡Salir al tablón!"}</button><small id="ranking-alias-help">Solo compartimos tu alias y tus logros. No pongas tu nombre real.{rankingDevice?.registrationPending ? " Recuperaremos tu tarjeta pendiente con el mismo alias." : ""}</small></form> : <><p className="ranking-welcome">¡Hola, {rankingDevice!.alias}!</p><p className="ranking-sync-status" role="status">{rankingSyncState === "saved" ? "Tus logros ya están en el tablón." : rankingSyncState === "pending" ? `Envío pendiente. ${rankingSyncMessage}` : "Enviando tus logros…"}</p></>}
           {rankingMessage && <p className="ranking-message" role="status">{rankingMessage}</p>}
-          <ol className="ranking-list">{rankingPlayers.map((player, index) => {
+          {enrollmentRequired && enrollmentStorageBlocked && <><p>No podemos guardar tu tarjeta en este navegador. Puedes permitir el almacenamiento y reintentar, o jugar sin conexión al tablón por ahora.</p><button className="pixel-button" type="button" disabled={rankingJoining} onClick={() => deferEnrollment("El navegador no permite guardar tu tarjeta del ranking.")}>Jugar sin guardar tarjeta</button></>}
+          {!enrollmentRequired && <><ol className="ranking-list">{rankingPlayers.map((player, index) => {
             const position = index + 1;
             const isCurrentPlayer = rankingDevice?.alias.toLocaleLowerCase("es") === player.alias.toLocaleLowerCase("es");
             return <li className={`${position <= 3 ? `ranking-podium ranking-place-${position}` : ""} ${isCurrentPlayer ? "is-current-player" : ""}`} key={`${player.alias}-${index}`}>
               <span className="ranking-position" aria-label={`Puesto ${position}`}>{position}</span>
               <div className="ranking-player">
                 <div className="ranking-player-name"><strong>{player.alias}</strong>{isCurrentPlayer && <em>Tú</em>}</div>
-                <div className="ranking-stats">{player.campaignWorld != null && player.campaignWorld > 0 && <span>🌍 Etapa {player.campaignWorld}/10</span>}<span>🚩 {player.completedLevels}/{campaignLevelCount} pantallas</span><span>★ {player.stickers} pegatinas</span></div>
+                <div className="ranking-stats">{player.campaignWorld != null && player.campaignWorld > 0 && <span>🌍 Etapa {player.campaignWorld}/10</span>}<span>🚩 {player.completedLevels}/{campaignLevelCount} pantallas</span><span>★ {player.stickers} pegatinas</span><span>🍎 {player.totalApples === null ? "Total sin datos" : `${player.totalApples.toLocaleString("es-ES")} en toda la aventura`}</span><span>{player.achievedAt === null ? "Fecha del progreso: sin datos" : `Progreso logrado el ${new Date(player.achievedAt).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })}`}</span></div>
               </div>
             </li>;
           })}</ol>
           {rankingPlayers.length === 0 && !rankingMessage && <p className="ranking-empty">Aún no hay nadie. ¡Puedes ser la primera aventurera!</p>}
-          <div className="ranking-footer"><button className="pixel-button ranking-refresh" type="button" disabled={rankingLoading} onClick={() => void refreshRanking()}><span aria-hidden="true">↻</span> {rankingLoading ? "Actualizando…" : "Actualizar tablón"}</button></div>
+          <div className="ranking-footer"><button className="pixel-button ranking-refresh" type="button" disabled={rankingLoading} onClick={() => void refreshRanking()}><span aria-hidden="true">↻</span> {rankingLoading ? "Actualizando…" : "Actualizar tablón"}</button></div></>}
         </Dialog>
       )}
     </main>

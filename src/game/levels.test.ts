@@ -11,11 +11,11 @@ const castle = levels.filter((level) => level.world === 6);
 test("solo cinco repisas opcionales tienen tiendas con identificadores estables", () => {
   const shops = levels.filter((level) => level.secretShop);
   assert.deepEqual(shops.map((level) => [level.id, level.secretShop]), [
-    ["1-2", { id: "shop-1-2", x: 328, y: 290, width: 64, height: 80 }],
-    ["3-2", { id: "shop-3-2", x: 358, y: 280, width: 64, height: 80 }],
-    ["6-2", { id: "shop-6-2", x: 358, y: 265, width: 64, height: 80 }],
-    ["10-2", { id: "shop-10-2", x: 338, y: 260, width: 64, height: 80 }],
-    ["12-2", { id: "shop-12-2", x: 338, y: 260, width: 64, height: 80 }],
+    ["1-2", { id: "shop-1-2", x: 1570, y: 230, width: 64, height: 80 }],
+    ["3-2", { id: "shop-3-2", x: 1710, y: 260, width: 64, height: 80 }],
+    ["6-2", { id: "shop-6-2", x: 1628, y: 265, width: 64, height: 80 }],
+    ["10-2", { id: "shop-10-2", x: 1738, y: 240, width: 64, height: 80 }],
+    ["12-2", { id: "shop-12-2", x: 1738, y: 240, width: 64, height: 80 }],
   ]);
   assert.equal(new Set(shops.map((level) => level.secretShop!.id)).size, 5);
   const overlap = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
@@ -29,10 +29,13 @@ test("solo cinco repisas opcionales tienen tiendas con identificadores estables"
     const floor = level.platforms.find((platform) => platform.y === 456 && platform.x <= support.x
       && platform.x + platform.width >= support.x + support.width);
     assert.ok(floor, `${level.id}: la repisa opcional no debe esconder un precipicio debajo`);
-    assert.ok(floor.y - support.y <= JUMP_SPEED ** 2 / (2 * GRAVITY),
-      `${level.id}: la tienda debe verse y alcanzarse con un salto normal`);
+    assert.ok(floor.y - support.y <= (JUMP_SPEED ** 2 + (JUMP_SPEED * .94) ** 2) / (2 * GRAVITY),
+      `${level.id}: la tienda debe alcanzarse con el doble salto`);
     assert.ok(door.height >= 58 && door.width >= 42);
     assert.ok(door.x > level.start.x + 150 && door.x + door.width < level.goalX - 900);
+    assert.ok(door.x > level.start.x + 960, `${level.id}: no debe verse desde la cámara inicial`);
+    assert.ok(door.x >= level.width * .2 && door.x + door.width < level.width * .5,
+      `${level.id}: el desvío debe quedar más adentro de la primera mitad`);
     assert.ok(level.enemies.some((enemy) => enemy.x > door.x + door.width && enemy.x < door.x + 1000),
       `${level.id}: la tienda debe preceder un reto útil`);
     assert.ok(level.checkpoints.every((checkpoint) => Math.abs(checkpoint + 43 - (door.x + 32)) > 180));

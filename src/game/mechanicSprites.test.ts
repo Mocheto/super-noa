@@ -29,7 +29,8 @@ test("los sprites tienen tamaño, transparencia, detalle y fotogramas propios", 
         visible++;
         colors.add(rgba.readUInt32BE(index));
       }
-      assert.ok(visible > sheet.frameWidth * sheet.frameHeight * .05, `${name}/${frame}: no está vacío`);
+      const minimumCoverage = name === "starAura" ? .01 : .05;
+      assert.ok(visible > sheet.frameWidth * sheet.frameHeight * minimumCoverage, `${name}/${frame}: no está vacío`);
       assert.ok(colors.size >= 6, `${name}/${frame}: conserva sombras y detalles`);
       if (!tileNames.includes(name as MechanicSprite)) {
         assert.equal(rgba[3], 0, `${name}/${frame}: esquina superior transparente`);
@@ -40,6 +41,40 @@ test("los sprites tienen tamaño, transparencia, detalle y fotogramas propios", 
     assert.equal(frames.size, sheet.columns, `${name}: cada pose es distinta`);
   }
   assert.ok(bytes <= 250 * 1024, `Sprites ligeros: ${bytes} bytes`);
+});
+
+test("las estrellas son destellos separados, nunca una burbuja o un aro alrededor de Noa", () => {
+  const sheet = mechanicSpriteSheets.starAura;
+  const png = readRgbaPng(sheet.source);
+  for (let frame = 0; frame < sheet.columns; frame++) {
+    const visible = (x: number, y: number) => png.pixels[(y * png.width + frame * sheet.frameWidth + x) * 4 + 3] > 0;
+    for (let y = 36; y < 92; y++) for (let x = 48; x < 80; x++) {
+      assert.equal(visible(x, y), false, `${frame}: el cuerpo queda libre`);
+    }
+    const visited = new Set<number>();
+    let components = 0;
+    for (let y = 0; y < sheet.frameHeight; y++) for (let x = 0; x < sheet.frameWidth; x++) {
+      const key = y * sheet.frameWidth + x;
+      if (!visible(x, y) || visited.has(key)) continue;
+      const pending = [[x, y]];
+      visited.add(key);
+      let left = x, right = x, top = y, bottom = y;
+      while (pending.length) {
+        const [px, py] = pending.pop()!;
+        left = Math.min(left, px); right = Math.max(right, px);
+        top = Math.min(top, py); bottom = Math.max(bottom, py);
+        for (const [nx, ny] of [[px - 1, py], [px + 1, py], [px, py - 1], [px, py + 1]]) {
+          const neighbor = ny * sheet.frameWidth + nx;
+          if (nx < 0 || nx >= sheet.frameWidth || ny < 0 || ny >= sheet.frameHeight || visited.has(neighbor) || !visible(nx, ny)) continue;
+          visited.add(neighbor);
+          pending.push([nx, ny]);
+        }
+      }
+      components++;
+      assert.ok(right - left < 40 && bottom - top < 40, `${frame}: no hay un borde conectado`);
+    }
+    assert.ok(components >= 7, `${frame}: hay varias estrellas independientes`);
+  }
 });
 
 test("los puentes, tablones y barcos conservan la superficie transitable en su recorte", () => {
@@ -78,6 +113,14 @@ function drawing(loaded = true) {
   }) as unknown as CanvasRenderingContext2D;
   return { raster, context, calls, marks, scales };
 }
+
+test("las estrellas rodean la silueta completa de Noa, tanto de pie como al saltar", () => {
+  for (const grounded of [true, false]) {
+    const { context, raster, calls } = drawing();
+    rendering.drawStarAura(context, { x: 100, y: 398, width: 42, height: 58, grounded }, 0, 12, 12, 0, false, raster);
+    assert.deepEqual(calls[0].slice(5), [41, grounded ? 323 : 347, 160, 160]);
+  }
+});
 const bridge: BloomBridge = { id: "flower", x: 100, y: 430, width: 180, height: 18, interval: 4, delay: 0, openDuration: 1, warningDuration: 1 };
 const jet: LavaJet = { id: "jet", x: 100, baseY: 456, width: 34, height: 180, interval: 4, delay: 0 };
 

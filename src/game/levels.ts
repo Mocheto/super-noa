@@ -214,7 +214,7 @@ export const levels: Level[] = [
   },
   {
     id: "1-2",
-    secretShop: { id: "shop-1-2", x: 328, y: 290, width: 64, height: 80 },
+    secretShop: { id: "shop-1-2", x: 1570, y: 230, width: 64, height: 80 },
     world: 1,
     screen: 2,
     title: "La gran fiesta de las copas",
@@ -447,7 +447,7 @@ export const levels: Level[] = [
   },
   {
     id: "3-2",
-    secretShop: { id: "shop-3-2", x: 358, y: 280, width: 64, height: 80 },
+    secretShop: { id: "shop-3-2", x: 1710, y: 260, width: 64, height: 80 },
     world: 3,
     screen: 2,
     title: "El corazón del bosque de los lobos",
@@ -766,7 +766,7 @@ export const levels: Level[] = [
   },
   {
     id: "6-2", world: 6, screen: 2,
-    secretShop: { id: "shop-6-2", x: 358, y: 265, width: 64, height: 80 },
+    secretShop: { id: "shop-6-2", x: 1628, y: 265, width: 64, height: 80 },
     title: "El laberinto de las torres", subtitle: "Busca pasillos altos y esquiva los pinchos brillantes.",
     theme: "haunted-castle", width: 5200, start: { x: 80, y: 380 }, goalX: 5020,
     platforms: [
@@ -881,7 +881,7 @@ export const levels: Level[] = [
   },
   {
     id: "10-2", world: 10, screen: 2,
-    secretShop: { id: "shop-10-2", x: 338, y: 260, width: 64, height: 80 },
+    secretShop: { id: "shop-10-2", x: 1738, y: 240, width: 64, height: 80 },
     title: "La cueva de los cristales", subtitle: "Busca el camino entre cristales rojos y charcos de lava brillante.",
     theme: "dragon-volcano", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [
@@ -996,7 +996,7 @@ export const levels: Level[] = [
   },
   {
     id: "12-2", world: 12, screen: 2,
-    secretShop: { id: "shop-12-2", x: 338, y: 260, width: 64, height: 80 },
+    secretShop: { id: "shop-12-2", x: 1738, y: 240, width: 64, height: 80 },
     title: "Las cuevas de hielo", subtitle: "Deslízate y usa las ráfagas para cruzar las cuevas azules.",
     theme: "ice-mountain", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [
@@ -1006,7 +1006,7 @@ export const levels: Level[] = [
       themedLedge(5520, 290, 185, "ice-ledge"), themedLedge(5880, 195, 180, "ice-ledge"), themedLedge(6210, 315, 190, "ice-ledge"), themedWall(1510, 330, 76, 126, "ice-wall"), themedWall(3660, 315, 80, 141, "ice-wall"),
     ],
     deadlyWater: deadlyWaterPits(world12Floor2),
-    windZones: [iceWind("i2-w1", 520, 1200, 1, 300), iceWind("i2-w2", 2050, 1200, -1, 330), iceWind("i2-w3", 3600, 1200, 1, 350), iceWind("i2-w4", 5300, 900, -1, 360)],
+    windZones: [iceWind("i2-w1", 520, 1080, 1, 300), iceWind("i2-w2", 2050, 1200, -1, 330), iceWind("i2-w3", 3600, 1200, 1, 350), iceWind("i2-w4", 5300, 900, -1, 360)],
     enemies: [enemy("i2-o1", "snowy-owl", 680, 180, 520, 980, 80), enemy("i2-f1", "snow-fox", 1110, 410, 1010, 1500, 56), enemy("i2-p1", "penguin", 2240, 416, 2100, 2760, 62), enemy("i2-o2", "snowy-owl", 3540, 135, 3330, 3890, 86), enemy("i2-f2", "snow-fox", 4550, 410, 4370, 4880, 60), enemy("i2-o3", "snowy-owl", 5800, 145, 5520, 6200, 92)],
     items: [apple("i2a1", 330, 290), apple("i2a2", 630, 210), apple("i2a3", 1390, 175), apple("i2a4", 2510, 140), sticker("sticker-12-2", 3580, 130), apple("i2a5", 4350, 190), apple("i2a6", 4820, 275), apple("i2a7", 5960, 145)],
     rewardBlocks: [reward("i2r1", 1040, 179), reward("i2r2", 3160, 99, "apple"), reward("i2r3", 4620, 305)], checkpoints: [930, 2030, 3090, 4230, 5500],

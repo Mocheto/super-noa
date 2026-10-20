@@ -1,5 +1,5 @@
 // Original, geometry-authored Super Noa artwork; no images, fonts or dependencies.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, inflateSync } from 'node:zlib';
@@ -171,23 +171,43 @@ function kitten(index) {
 }
 function aura(frame) {
   const c = new Canvas(64, 64);
-  // Leave the whole central 56x78 output rectangle clear, not just a round hole.
-  for (let y = 2; y < 62; y++) for (let x = 2; x < 62; x++) {
-    if (x >= 18 && x <= 45 && y >= 12 && y <= 51) continue;
-    const radius = ((x - 31.5) / 27) ** 2 + ((y - 31.5) / 29) ** 2;
-    if (radius >= 0.76 && radius <= 1.07) c.pixel(x, y, '#9f6acb70');
-    if (radius >= 0.90 && radius <= 0.99)
-      c.pixel(x, y, (x + y + frame * 2) % 19 < 11 ? '#e9b85fcc' : '#be8de6bb');
+  // Disconnected little sparks only: never an orbit, shield, disc or outline.
+  const poses = [
+    [[10, 19, 3], [53, 42, 4], [34, 6, 3], [22, 58, 3], [53, 13, 3], [9, 44, 3]],
+    [[11, 17, 4], [54, 40, 3], [36, 7, 3], [24, 57, 4], [52, 15, 3], [10, 46, 3]],
+    [[9, 18, 3], [52, 41, 3], [35, 5, 4], [23, 59, 3], [54, 14, 4], [8, 45, 3]],
+  ];
+  poses[frame].forEach(([x, y, r], i) => {
+    star(c, x, y, r, ['#ffd278', '#c99cf0', '#fff0ce'][i % 3]);
+    c.pixel(x, y, i % 3 === 1 ? '#f4d4ff' : '#fff8ea');
+  });
+  for (const [i, [x, y]] of [[16, 7], [48, 27], [7, 31], [42, 57], [51, 54], [14, 55]].entries()) {
+    const dx = frame === 1 ? 1 : 0, dy = frame === 2 ? -1 : 0;
+    c.pixel(x + dx, y + dy, '#fff0ce');
+    c.pixel(x + dx - 1, y + dy, '#dca1e5');
+    if (i % 2 === frame % 2) {
+      c.pixel(x + dx + 1, y + dy, '#ffd278');
+      c.pixel(x + dx, y + dy - 1, '#bc8de1');
+    }
   }
-  for (const [x, y, r] of [[11, 19, 4], [52, 43, 4], [36, 5, 4], [23, 59, 3], [55, 16, 3], [7, 42, 3]]) {
-    if (y < 53 && (x < 18 || x > 45))
-      c.line([[x - 2, y + 6], [x - 4, y + 8 + frame % 2], [x - 6, y + 8]], '#bc83d4a0');
-    star(c, x, y, r, frame === 1 ? '#ffe099' : '#f6c364');
+  // A connected rim would exceed this local spark-size limit.
+  const seen = new Set();
+  let components = 0;
+  for (let y = 0; y < 64; y++) for (let x = 0; x < 64; x++) {
+    const start = y * 64 + x;
+    if (!c.data[start * 4 + 3] || seen.has(start)) continue;
+    const queue = [start]; seen.add(start); components++;
+    for (let n = 0; n < queue.length; n++) {
+      const px = queue[n] % 64, py = Math.floor(queue[n] / 64);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+        const nx = px + dx, ny = py + dy, next = ny * 64 + nx;
+        if (nx < 0 || nx >= 64 || ny < 0 || ny >= 64 || seen.has(next) || !c.data[next * 4 + 3]) continue;
+        seen.add(next); queue.push(next);
+      }
+    }
+    assert(queue.length < 80, 'Stellar sparks must not connect into a ring');
   }
-  for (const [x, y] of [[17, 8], [47, 6], [59, 31], [8, 52], [41, 58]]) {
-    c.pixel(x, y, '#db9bde'); c.pixel(x + 1, y, '#ffe5a3');
-    if (frame === 2) c.pixel(x, y + 1, '#bc8de1');
-  }
+  assert(components >= 10, 'Stellar sparks must remain separate');
   return c;
 }
 function plant(c, x, y, scale = 1) {
@@ -362,7 +382,7 @@ export function buildSecretShopArt({ check = false } = {}) {
     if (check) {
       const actual = readFileSync(target); validatePng(actual, c);
       assert(actual.equals(bytes), `${path} differs; run node scripts/build-secret-shop-art.mjs`);
-    } else writeFileSync(target, bytes);
+    } else if (!existsSync(target) || !readFileSync(target).equals(bytes)) writeFileSync(target, bytes);
     console.log(`${check ? 'Verified' : 'Wrote'} ${path}: ${c.w}x${c.h} RGBA, ${bytes.length} bytes`);
   }
   console.log(`Total ${total} bytes; door baseline y=79; aura anchor (64,64), clear center x=36..91 y=24..103.`);

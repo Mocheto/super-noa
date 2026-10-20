@@ -26,7 +26,11 @@ test("un reloj detenido, atrasado o inválido no hace avanzar los gatitos", () =
   assert.equal(shopPhase(42, 1, false), shopPhase(advanceShopClock(initial, 999999, true).activeMs, 1, false));
 });
 
-test("el movimiento suave da dos segundos a cada gatito y encaja al más cercano", () => {
+test("el movimiento suave cambia de gatito cada 850 ms y encaja al más cercano", () => {
+  assert.equal(SHOP_CHOICE_MS, 850);
+  assert.equal(shopPhase(425, 0, false), 0.5);
+  assert.equal(shopPhase(850, 0, false), 1);
+  assert.equal(shopPhase(2550, 0, false), 0);
   assert.equal(shopPhase(0, 0, false), 0);
   assert.equal(shopPhase(SHOP_CHOICE_MS / 4, 0, false), 0.25);
   assert.equal(snapShopCat(0.49), 0);
@@ -36,7 +40,10 @@ test("el movimiento suave da dos segundos a cada gatito y encaja al más cercano
   assert.equal(shopPhase(SHOP_CHOICE_MS * 3, 2, false), 2);
 });
 
-test("movimiento reducido muestra opciones quietas durante dos segundos, sin deriva", () => {
+test("movimiento reducido muestra opciones quietas durante 850 ms, sin deriva", () => {
+  assert.equal(shopPhase(849, 0, true), 0);
+  assert.equal(shopPhase(850, 0, true), 1);
+  assert.equal(shopPhase(1700, 0, true), 2);
   for (const row of [0, 1, 2]) {
     assert.equal(shopPhase(0, row, true), row);
     assert.equal(shopPhase(SHOP_CHOICE_MS - 1, row, true), row);

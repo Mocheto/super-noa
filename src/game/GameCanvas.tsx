@@ -18,6 +18,7 @@ import { getStickerSprite } from "./stickers";
 import { createChainGuardian, guardianHitbox, updateChainGuardian } from "./chainGuardians";
 import type { Level, GameSnapshot, ShopMatchCount } from "./types";
 import { canEnterSecretShop, secretShopRewardSeconds } from "./secretShopRuntime";
+import { starPowerLight } from "./starPowerVisuals";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
@@ -651,14 +652,14 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
     const drawPlayer = () => {
       const x = Math.round(player.x - cameraX);
-      const protectedByApple = player.power === "apple";
+      const protectedByApple = player.power === "apple" && starRemaining <= 0;
       if (waterAt(player, level.waterZones) && !player.grounded && raster.swim.complete && raster.swim.naturalWidth) {
         const row = player.power === "cat" ? 2 : protectedByApple ? 1 : 0;
         const column = Math.floor(frame / 14) % 2;
         const cellWidth = raster.swim.naturalWidth / 2;
         const cellHeight = raster.swim.naturalHeight / 3;
         context.save();
-        context.globalAlpha = player.invincible > 0 && Math.floor(player.invincible * 12) % 2 === 0 ? 0.45 : 1;
+        context.globalAlpha = starRemaining <= 0 && player.invincible > 0 && Math.floor(player.invincible * 12) % 2 === 0 ? 0.45 : 1;
         context.translate(x + player.width / 2, player.y + player.height / 2);
         context.scale(player.facing, 1);
         context.drawImage(raster.swim, column * cellWidth, row * cellHeight, cellWidth, cellHeight, -53, -47, 106, 94);
@@ -679,7 +680,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         row = 1;
         column = runningFrame;
       }
-      const flashing = player.invincible > 0 && Math.floor(player.invincible * 12) % 2 === 0;
+      const flashing = starRemaining <= 0 && player.invincible > 0 && Math.floor(player.invincible * 12) % 2 === 0;
       if (flashing) context.globalAlpha = 0.38;
       const usesCatThrowSprite = player.power === "cat" && player.shootFx > 0;
       const usesCatYarnSprite = player.power === "cat" && player.grounded && Math.abs(player.vx) <= 25;
@@ -895,7 +896,15 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         } else if (level.boss) drawBossGate(context, level.goalX, cameraX, goalSurfaceY, raster.bossGate);
         else if (level.id !== "2-1") drawGoalCat(context, level.goalX, cameraX, false, raster.collectibles, goalCelebrationFrame < 0 ? 0 : Math.min(1, (frame - goalCelebrationFrame) / 22), goalSurfaceY, raster.goalFlag, raster.goalRescue);
       }
+      context.save();
+      if (starRemaining > 0) {
+        const light = starPowerLight(levelAge, motionRef.current);
+        context.filter = `brightness(${light.brightness}) saturate(${light.saturation})`;
+        context.shadowColor = "#fff1a1";
+        context.shadowBlur = light.glow;
+      }
       drawPlayer();
+      context.restore();
       if (starRemaining > 0) drawStarAura(context, player, cameraX, starRemaining, starDuration, levelAge, motionRef.current, raster);
       for (const zone of level.waterZones ?? []) {
         const left = Math.max(0, zone.x - cameraX);
@@ -955,7 +964,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />
         {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label="Entrar en la tienda secreta" onClick={() => { inputRef.current.enterQueued = true; }}>↑ Entrar</button>}
       </div>
-      {shopOpen && <SecretShop paused={!running} reduceMotion={reduceMotion} playSound={playSound} onResult={(matches) => {
+      {shopOpen && <SecretShop world={level.world} paused={!running} reduceMotion={reduceMotion} playSound={playSound} onResult={(matches) => {
         if (shopResultRef.current !== null) return;
         shopResultRef.current = matches;
         if (matches === 3 && level.secretShop) callbacksRef.current.onShopWin?.(level.secretShop.id);

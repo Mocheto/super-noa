@@ -7,6 +7,7 @@ import { bloomBridgeState, type WolfSleepPhase } from "./worldMechanics";
 import { drawMechanicSprite, drawMechanicStrip } from "./mechanicSprites.ts";
 import { worldEnemySpriteSources } from "./worldEnemySprites.ts";
 import { guardianBounds, type LiveChainGuardian } from "./chainGuardians";
+import { starPowerLight } from "./starPowerVisuals.ts";
 
 export function drawSecretShopDoor(context: CanvasRenderingContext2D, shop: SecretShop, cameraX: number, used: boolean, nearby: boolean, raster: RasterAssets) {
   const x = shop.x - cameraX;
@@ -30,14 +31,21 @@ export function drawSecretShopDoor(context: CanvasRenderingContext2D, shop: Secr
   }
 }
 
-export function drawStarAura(context: CanvasRenderingContext2D, player: Rect, cameraX: number, remaining: number, duration: number, elapsed: number, reduceMotion: boolean, raster: RasterAssets) {
+export function drawStarAura(context: CanvasRenderingContext2D, player: Rect & { grounded?: boolean }, cameraX: number, remaining: number, duration: number, elapsed: number, reduceMotion: boolean, raster: RasterAssets) {
   const x = player.x + player.width / 2 - cameraX;
-  const y = player.y + player.height / 2;
-  if (!drawMechanicSprite(context, raster.starAura, "starAura", reduceMotion ? 0 : Math.floor(elapsed * 2), x - 58, y - 64, 116, 116)) {
-    drawTinySparkle(context, x - 36, y - 21, "#ffe49b");
-    drawTinySparkle(context, x + 39, y + 18, "#cfa0ff");
-    drawTinySparkle(context, x + 16, y - 48, "#ffe49b");
+  const y = player.y + player.height / 2 - (player.grounded ? 24 : 0);
+  const light = starPowerLight(elapsed, reduceMotion);
+  context.save();
+  context.globalAlpha = .72 + light.pulse * .28;
+  context.shadowColor = "#fff1a1";
+  context.shadowBlur = light.glow;
+  if (!drawMechanicSprite(context, raster.starAura, "starAura", reduceMotion ? 0 : Math.floor(elapsed * 2), x - 80, y - 80, 160, 160)) {
+    for (let index = 0; index < 7; index++) {
+      const angle = index * Math.PI * 2 / 7 + (reduceMotion ? 0 : elapsed * .7);
+      drawTinySparkle(context, x + Math.cos(angle) * 61, y + Math.sin(angle) * 68, index % 2 ? "#cfa0ff" : "#ffe49b");
+    }
   }
+  context.restore();
   context.save();
   context.fillStyle = "#493058";
   context.beginPath();

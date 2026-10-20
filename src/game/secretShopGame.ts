@@ -3,7 +3,7 @@ import type { ShopMatchCount } from "./types.ts";
 export type ShopCat = 0 | 1 | 2;
 export type ShopClock = { activeMs: number; lastFrame: number | null };
 
-export const SHOP_CHOICE_MS = 2000;
+export const SHOP_CHOICE_MS = 850;
 export const SHOP_ACTIVATION_GAP_MS = 280;
 
 export function advanceShopClock(clock: ShopClock, timestamp: number, paused: boolean): ShopClock {

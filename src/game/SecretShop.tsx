@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { Dialog } from "./Dialog";
-import type { ShopMatchCount } from "./types";
+import type { Level, ShopMatchCount } from "./types";
+import { getSecretShopCatSet } from "./secretShopCats";
 import {
   advanceShopClock, countShopMatches, SHOP_ACTIVATION_GAP_MS, shopPhase,
   shopRewardSeconds, snapShopCat, type ShopCat, type ShopClock,
@@ -8,6 +9,7 @@ import {
 import "./secretShop.css";
 
 type SecretShopProps = {
+  world: Level["world"];
   paused: boolean;
   reduceMotion: boolean;
   onResult: (matches: ShopMatchCount) => void;
@@ -15,20 +17,27 @@ type SecretShopProps = {
   playSound: (kind: "countdown" | "cat" | "goal" | "block") => void;
 };
 
-const catNames = ["gatito Miel", "gatito Bruma", "gatito Pino"];
+const kittenColors: Record<Level["world"], string> = {
+  1: "#ffb050", 2: "#504060", 3: "#fff0f0", 4: "#ffa030",
+  5: "#fff0e0", 6: "#c0b0d0", 7: "#fffff0", 8: "#ffe0c0",
+  9: "#ffd090", 10: "#ff9020", 11: "#ff70a0", 12: "#d0e0ff",
+};
 const partNames = ["orejas", "carita", "patitas"];
 const prompts = ["¡Para las orejas!", "¡Para la carita!", "¡Para las patitas!"];
-const kittenSource = "./assets/sprites/secret-shop-kittens-v1.png";
 
-export function SecretShop({ paused, reduceMotion, onResult, onLeave, playSound }: SecretShopProps) {
+export function SecretShop({ world, paused, reduceMotion, onResult, onLeave, playSound }: SecretShopProps) {
+  const catSet = getSecretShopCatSet(world);
+  const kittenSource = catSet.source;
   const titleId = useId();
   const [localPaused, setLocalPaused] = useState(false);
   const [away, setAway] = useState(() => document.hidden || !document.hasFocus());
   const [activeMs, setActiveMs] = useState(0);
   const [stopped, setStopped] = useState<ShopCat[]>([]);
   const [result, setResult] = useState<ShopMatchCount | null>(null);
-  const [imageReady, setImageReady] = useState(false);
-  const [imageFailed, setImageFailed] = useState(false);
+  const [loadedSource, setLoadedSource] = useState<string | null>(null);
+  const [failedSource, setFailedSource] = useState<string | null>(null);
+  const imageReady = loadedSource === kittenSource && failedSource !== kittenSource;
+  const imageFailed = failedSource === kittenSource;
   const [roomFailed, setRoomFailed] = useState(false);
   const clock = useRef<ShopClock>({ activeMs: 0, lastFrame: null });
   const lockedCats = useRef<ShopCat[]>([]);
@@ -118,7 +127,7 @@ export function SecretShop({ paused, reduceMotion, onResult, onLeave, playSound 
           <h2 id={titleId}>El rincón de los gatitos</h2>
           <p>¡Junta las tres partes del mismo gatito!</p>
         </header>
-        <img className="secret-shop-preload" src={kittenSource} alt="" onLoad={() => setImageReady(true)} onError={() => { setImageFailed(true); setImageReady(false); }} />
+        <img key={kittenSource} className="secret-shop-preload" src={kittenSource} alt="" onLoad={() => setLoadedSource(kittenSource)} onError={() => setFailedSource(kittenSource)} />
         <div className="secret-shop-bands" aria-label="Retrato del gatito">
           {[0, 1, 2].map((row) => {
             const locked = stopped[row];
@@ -131,7 +140,7 @@ export function SecretShop({ paused, reduceMotion, onResult, onLeave, playSound 
                 key={row}
                 className={`secret-shop-band${locked !== undefined ? " is-stopped" : ""}${stopped.length === row ? " is-current" : ""}`}
                 role="img"
-                aria-label={`${partNames[row]}: ${catNames[selected]}${locked !== undefined ? ", listo" : ""}`}
+                aria-label={`${partNames[row]}: ${catSet.kittens[selected].name}${locked !== undefined ? ", listo" : ""}`}
                 data-testid={`shop-band-${row}`}
                 data-cat={selected}
                 data-stopped={locked !== undefined}
@@ -140,7 +149,7 @@ export function SecretShop({ paused, reduceMotion, onResult, onLeave, playSound 
                   {[-2, -1, 0, 1, 2, 3].map((offset) => {
                     const column = ((whole + offset) % 3 + 3) % 3;
                     const style = {
-                      "--kitten-color": ["#e7ac64", "#b7a5cf", "#658f83"][column],
+                      "--kitten-color": kittenColors[catSet.kittens[column].world],
                       backgroundImage: imageReady ? `url("${kittenSource}")` : undefined,
                       backgroundPosition: `${column * 50}% ${row * 50}%`,
                     } as CSSProperties;
@@ -159,7 +168,7 @@ export function SecretShop({ paused, reduceMotion, onResult, onLeave, playSound 
         <div className="secret-shop-feedback" role="status" aria-live="polite" aria-atomic="true">
           {result !== null ? <>
             <span className="secret-shop-stars" aria-hidden="true">{"★".repeat(result)}</span>
-            <p>{seconds ? `¡${seconds} segundos de escudo al salir!` : "¡Qué gatito tan divertido!"}</p>
+            <p>{seconds ? `¡${seconds} segundos de estrellas al salir!` : "¡Qué gatito tan divertido!"}</p>
           </> : <p>{frozen ? "Descansamos un poquito." : `${prompts[stopped.length]} (${stopped.length + 1}/3)`}</p>}
         </div>
         <div className="secret-shop-controls">
@@ -175,7 +184,7 @@ export function SecretShop({ paused, reduceMotion, onResult, onLeave, playSound 
             {localPaused ? "Seguir" : "Pausa"}
           </button>
         </div>
-        <p className="secret-shop-hint">3 iguales: 🛡️ 12 s · 2 iguales: 🛡️ 5 s</p>
+        <p className="secret-shop-hint">3 iguales: ★ 12 s · 2 iguales: ★ 5 s</p>
         {imageFailed && <p className="secret-shop-notice">El dibujo no ha llegado. ¡Jugamos con gatitos de colores!</p>}
       </div>
     </Dialog>

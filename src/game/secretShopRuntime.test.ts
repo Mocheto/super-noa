@@ -183,9 +183,9 @@ test("Noa Estelar protege del contacto enemigo, pero no de un foso mortal", () =
 });
 
 for (const data of levels.filter((candidate) => candidate.secretShop)) {
-  test(`la puerta real ${data.id} se alcanza caminando y haciendo doble salto, sin perder vidas`, () => {
-    const engine = mountEngine(data);
+  test(`la puerta real ${data.id} se alcanza desde el suelo de su desvío con doble salto, sin perder vidas`, () => {
     const door = data.secretShop!;
+    const engine = mountEngine({ ...data, start: { x: door.x - 150, y: 398 } });
     try {
       engine.tick(1000);
       let now = advance(engine, 2);

@@ -8,7 +8,7 @@ const { drawEnemy } = engineModules()("./rendering") as typeof import("./renderi
 const species: LiveEnemy["kind"][] = [
   "slime", "beetle", "cloud", "wolf", "boar", "bird", "pirate", "parrot", "bat", "sky-unicorn",
   "skeleton", "zombie", "ghost", "fish", "urchin", "baby-t-rex", "pterodactyl",
-  "baby-dragon", "fire-salamander", "ant", "snail", "bee", "penguin", "snow-fox", "snowy-owl",
+  "baby-dragon", "fire-salamander", "flying-dragon", "ant", "snail", "bee", "penguin", "snow-fox", "snowy-owl",
 ];
 
 for (const complete of [false, true]) {
@@ -22,7 +22,7 @@ for (const complete of [false, true]) {
       } as unknown as CanvasRenderingContext2D;
       const image = { complete, naturalWidth: 0 } as HTMLImageElement;
       const raster = Object.fromEntries([
-        "enemies", "boar", "bird", "cave", "secret", "castleEnemies", "waterEnemies", "dinosaurEnemies", "worldCharacters",
+        "enemies", "boar", "bird", "cave", "secret", "castleEnemies", "waterEnemies", "dinosaurEnemies", "worldCharacters", "flyingDragon",
       ].map((key) => [key, image])) as unknown as RasterAssets;
       drawEnemy(context, {
         id: kind, kind, x: 100, y: 300, width: 58, height: 50,

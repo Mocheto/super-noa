@@ -16,7 +16,7 @@ export type PixelBurst = { x: number; y: number; life: number; color: string; ki
 export const positiveModulo = (value: number, divisor: number) => ((value % divisor) + divisor) % divisor;
 
 export const enemyY = (enemy: LiveEnemy) =>
-  enemy.y + (enemy.kind === "bird" || enemy.kind === "parrot" || enemy.kind === "bat" || enemy.kind === "ghost" || enemy.kind === "fish" || enemy.kind === "pterodactyl" || enemy.kind === "bee" || enemy.kind === "snowy-owl" ? Math.sin(enemy.phase) * 20 : enemy.kind === "cloud" ? Math.sin(enemy.phase) * 7 : 0);
+  enemy.y + (enemy.kind === "bird" || enemy.kind === "parrot" || enemy.kind === "bat" || enemy.kind === "ghost" || enemy.kind === "fish" || enemy.kind === "pterodactyl" || enemy.kind === "flying-dragon" || enemy.kind === "bee" || enemy.kind === "snowy-owl" ? Math.sin(enemy.phase) * 20 : enemy.kind === "cloud" ? Math.sin(enemy.phase) * 7 : 0);
 
 export const waterJumperState = (jumper: LiveWaterJumper) => {
   const flightDuration = Math.min(1.45, jumper.interval * 0.62);

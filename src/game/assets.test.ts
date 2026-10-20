@@ -48,6 +48,7 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     assert.equal(giants.worldTerrain.src, "./assets/atlases/giant-valley-terrain-v1.png");
     assert.equal(giants.dewTrampoline.src, "./assets/sprites/dew-trampoline-v1.png");
     const mechanicLevels: Record<MechanicSprite, string> = {
+      flyingDragon: "10-1",
       sleepingWolf: "3-1", bloomFlower: "11-1", bloomBridge: "11-1", updraft: "S-1", windGust: "12-1",
       lavaJet: "10-1", lavaSurface: "10-1", waterSurface: "11-1", waterEntrance: "3-3", flyingShip: "5-1", airPlank: "5-1", mistPlatform: "2-1",
     };

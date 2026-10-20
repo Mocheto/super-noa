@@ -20,7 +20,7 @@ export type SleepCycle = {
 
 export type Enemy = Rect & {
   id: string;
-  kind: "slime" | "beetle" | "cloud" | "wolf" | "boar" | "bird" | "pirate" | "parrot" | "bat" | "sky-unicorn" | "skeleton" | "zombie" | "ghost" | "fish" | "urchin" | "baby-t-rex" | "pterodactyl" | "baby-dragon" | "fire-salamander" | "ant" | "snail" | "bee" | "penguin" | "snow-fox" | "snowy-owl";
+  kind: "slime" | "beetle" | "cloud" | "wolf" | "boar" | "bird" | "pirate" | "parrot" | "bat" | "sky-unicorn" | "skeleton" | "zombie" | "ghost" | "fish" | "urchin" | "baby-t-rex" | "pterodactyl" | "baby-dragon" | "fire-salamander" | "flying-dragon" | "ant" | "snail" | "bee" | "penguin" | "snow-fox" | "snowy-owl";
   minX: number;
   maxX: number;
   speed: number;

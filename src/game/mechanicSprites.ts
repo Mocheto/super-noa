@@ -1,4 +1,5 @@
 export const mechanicSpriteSheets = {
+  flyingDragon: { source: "./assets/sprites/enemy-flying-dragon-v1.png", columns: 4, frameWidth: 128, frameHeight: 112 },
   sleepingWolf: { source: "./assets/sprites/mechanic-wolf-v1.png", columns: 3, frameWidth: 128, frameHeight: 96 },
   bloomFlower: { source: "./assets/sprites/bloom-flower-v1.png", columns: 4, frameWidth: 96, frameHeight: 128 },
   bloomBridge: { source: "./assets/sprites/bloom-bridge-v1.png", columns: 2, frameWidth: 64, frameHeight: 32 },

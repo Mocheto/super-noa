@@ -5,6 +5,7 @@ import { enemyY, lavaJetState, positiveModulo, waterJumperState } from "./gameSt
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import { bloomBridgeState, type WolfSleepPhase } from "./worldMechanics";
 import { drawMechanicSprite, drawMechanicStrip } from "./mechanicSprites.ts";
+import { worldEnemySpriteSources } from "./worldEnemySprites.ts";
 
 const enemyAtlasCell = {
   slime: [0, 0], beetle: [1, 0], cloud: [2, 0], wolf: [3, 0],
@@ -998,7 +999,7 @@ function drawEnemyWarning(context: CanvasRenderingContext2D, x: number, y: numbe
 
 function drawEnemyFallback(context: CanvasRenderingContext2D, enemy: LiveEnemy, x: number, y: number) {
   const { width, height, kind } = enemy;
-  const flying = kind === "pterodactyl" || kind === "bee" || kind === "snowy-owl";
+  const flying = kind === "pterodactyl" || kind === "bee" || kind === "snowy-owl" || kind === "flying-dragon";
   const aquatic = kind === "fish" || kind === "urchin";
   context.save();
   context.translate(x + (enemy.vx < 0 ? width : 0), y);
@@ -1078,6 +1079,17 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
     drawSleepingWolf(context, enemy, x, y, sleepPhase, raster.sleepingWolf, elapsed);
     return;
   }
+  if (enemy.kind === "flying-dragon") {
+    const width = 84;
+    const height = 74;
+    context.save();
+    context.translate(x + enemy.width / 2, y + enemy.height / 2);
+    if (enemy.vx < 0) context.scale(-1, 1);
+    const drawn = drawMechanicSprite(context, raster.flyingDragon, "flyingDragon", Math.floor(elapsed * 6), -width / 2, -height / 2, width, height);
+    context.restore();
+    if (!drawn) drawEnemyFallback(context, enemy, x, y);
+    return;
+  }
   const specializedImage = enemy.kind === "fish" || enemy.kind === "urchin" ? raster.waterEnemies
     : enemy.kind === "baby-t-rex" || enemy.kind === "pterodactyl" ? raster.dinosaurEnemies
     : enemy.kind === "sky-unicorn" ? raster.secret
@@ -1088,16 +1100,19 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
     return;
   }
   if (enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl") {
-    const columns: Partial<Record<LiveEnemy["kind"], number>> = { "baby-dragon": 0, "fire-salamander": 1, ant: 0, snail: 1, bee: 2, penguin: 0, "snow-fox": 1, "snowy-owl": 2 };
+    const [sx, sy, sw, sh] = worldEnemySpriteSources[enemy.kind];
     const flying = enemy.kind === "bee" || enemy.kind === "snowy-owl";
     const giant = enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee";
-    const width = giant ? enemy.width + 24 : flying ? 64 : 58;
-    const height = giant ? enemy.height + 14 : flying ? 56 : 60;
+    const width = giant ? enemy.width + 8 : flying ? 64 : 58;
+    const height = width * sh / sw;
     const drawX = x + (enemy.width - width) / 2;
     const drawY = y + enemy.height - height + (flying ? Math.sin(enemy.phase * 4) * 3 : 0);
     context.save();
-    if (enemy.vx < 0) { context.translate(drawX + width, 0); context.scale(-1, 1); drawAtlasCell(context, raster.worldCharacters, 5, 2, columns[enemy.kind] ?? 0, 0, 0, drawY, width, height); }
-    else drawAtlasCell(context, raster.worldCharacters, 5, 2, columns[enemy.kind] ?? 0, 0, drawX, drawY, width, height);
+    if (enemy.vx < 0) {
+      context.translate(drawX + width, 0);
+      context.scale(-1, 1);
+      context.drawImage(raster.worldCharacters, sx, sy, sw, sh, 0, drawY, width, height);
+    } else context.drawImage(raster.worldCharacters, sx, sy, sw, sh, drawX, drawY, width, height);
     context.restore(); return;
   }
   if (enemy.kind === "fish" || enemy.kind === "urchin") {

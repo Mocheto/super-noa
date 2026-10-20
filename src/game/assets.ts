@@ -64,6 +64,7 @@ export function getLevelAssets(level: Level): RasterAssets {
     Object.defineProperty(stickerSheets, id, { enumerable: true, get: () => when(id === world, `./assets/stickers/world-${id}-v1.png`) });
   }
   return {
+    get flyingDragon() { return when(level.enemies.some((enemy) => enemy.kind === "flying-dragon"), mechanicSpriteSheets.flyingDragon.source); },
     get sleepingWolf() { return when(level.enemies.some((enemy) => enemy.kind === "wolf" && Boolean(enemy.sleepCycle)), mechanicSpriteSheets.sleepingWolf.source); },
     get bloomFlower() { return when(Boolean(level.bloomBridges?.length), mechanicSpriteSheets.bloomFlower.source); },
     get bloomBridge() { return when(Boolean(level.bloomBridges?.length), mechanicSpriteSheets.bloomBridge.source); },

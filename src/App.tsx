@@ -639,6 +639,16 @@ export default function App() {
     setScreen("game");
   }, []);
 
+  const restartCurrentLevel = useCallback(() => {
+    setLevelRun((current) => current + 1);
+    setLives(MAX_LIVES);
+    setSnapshot(emptySnapshot);
+    setActiveDetour(null);
+    setPaused(false);
+    setBossReplay(false);
+    setScreen("game");
+  }, []);
+
   const abandonBossBattle = useCallback(() => {
     setPaused(false);
     setScreen("map");
@@ -803,6 +813,7 @@ export default function App() {
         <Dialog labelledBy="pause-title" className="game-modal compact" onClose={() => setPaused(false)}>
           <p className="eyebrow">Descanso</p><h2 id="pause-title">Juego en pausa</h2>
           <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => setPaused(false)}>Seguir jugando</button>
+          <button className="pause-restart" type="button" onClick={restartCurrentLevel}>Reiniciar pantalla</button>
           <button className="pixel-button" type="button" data-gamepad-back onClick={() => { setPaused(false); setScreen("map"); }}>Volver al mapa</button>
         </Dialog>
       )}

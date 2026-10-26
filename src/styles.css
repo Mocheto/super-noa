@@ -428,6 +428,8 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 .game-modal p { font-family: system-ui, sans-serif; line-height: 1.55; }
 .game-modal .eyebrow { color: #8b4b9b; }
 .game-modal .pixel-button { display: block; width: 100%; margin-top: 14px; }
+.pause-restart { margin-top: 14px; border: 0; padding: 4px 8px; color: #725078; background: transparent; font: inherit; font-size: .78rem; text-decoration: underline; cursor: pointer; }
+.pause-restart:hover, .pause-restart:focus-visible { color: #4c1d62; }
 .big-icon { display: grid; place-items: center; min-height: 78px; font-size: 4.2rem; }
 .big-icon .pixel-icon, .big-icon .game-asset-icon { --icon-size: 1.1em; }
 .completion-cat, .completion-trophy { display: block; height: auto; image-rendering: pixelated; filter: drop-shadow(6px 7px 0 rgba(69, 38, 78, .2)); }

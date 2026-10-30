@@ -6,8 +6,9 @@ const dt = 1 / 60;
 
 test("caminar es continuo, el salto usa gravedad y admite solo un segundo impulso", () => {
   const s = createSantaBattle();
+  const startX = s.player.x;
   for (let i = 0; i < 30; i++) stepSantaBattle(s, { ...idle, right: true }, dt);
-  assert.ok(Math.abs(s.player.x - 225) < .001);
+  assert.ok(Math.abs(s.player.x - (startX + 125)) < .001);
   assert.deepEqual(stepSantaBattle(s, { ...idle, jumpPressed: true }, dt), ["jump"]);
   assert.ok(s.player.vy < 0);
   const y = s.player.y;

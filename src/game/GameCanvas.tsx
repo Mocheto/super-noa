@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SecretShop } from "./SecretShop";
 import "./secretDoors.css";
-import { PixelIcon } from "./PixelIcon";
+import { TouchControls } from "./TouchControls";
 import { getImage, getLevelAssets } from "./assets";
 import {
   drawAmbientForeground, drawApple, drawBackground, drawBloomBridge, drawBossGate, drawCannon,
@@ -115,7 +115,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
   const shopResultRef = useRef<ShopMatchCount | null>(null);
   const motionRef = useRef(reduceMotion);
   const activeRunning = running && !shopOpen && !excursion;
-  const { inputRef, handleTouchStart, handleTouchEnd, handleTouchCancel, preventTouchMenu } = useGameInput(activeRunning);
+  const { inputRef, handleTouchStart, handleTouchEnd, handleTouchCancel } = useGameInput(activeRunning);
   const runningRef = useRef(running);
   const gameLoopRef = useRef<GameLoop | null>(null);
   const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourActiveChange, playSound });
@@ -1038,16 +1038,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         if (shopResultRef.current === null) return;
         returnFromShopRef.current?.();
       }} />}
-      <div className="touch-controls" aria-label="Controles táctiles">
-        <div className="touch-group touch-move">
-          <button type="button" className="touch-button touch-direction" aria-label="Mover a la izquierda" onPointerDown={(event) => handleTouchStart("left", event)} onPointerUp={(event) => handleTouchEnd("left", event)} onPointerCancel={(event) => handleTouchCancel("left", event)} onLostPointerCapture={(event) => handleTouchCancel("left", event)} onContextMenu={preventTouchMenu}><span>◀</span><small>IZQ.</small></button>
-          <button type="button" className="touch-button touch-direction" aria-label="Mover a la derecha" onPointerDown={(event) => handleTouchStart("right", event)} onPointerUp={(event) => handleTouchEnd("right", event)} onPointerCancel={(event) => handleTouchCancel("right", event)} onLostPointerCapture={(event) => handleTouchCancel("right", event)} onContextMenu={preventTouchMenu}><span>▶</span><small>DER.</small></button>
-        </div>
-        <div className="touch-group touch-actions">
-          <button type="button" className="touch-button touch-yarn" aria-label="Lanzar bola de lana" onPointerDown={(event) => handleTouchStart("shoot", event)} onPointerUp={(event) => handleTouchEnd("shoot", event)} onPointerCancel={(event) => handleTouchCancel("shoot", event)} onLostPointerCapture={(event) => handleTouchCancel("shoot", event)} onContextMenu={preventTouchMenu}><PixelIcon kind="yarn" /><small>LANA</small></button>
-          <button type="button" className="touch-button touch-jump" aria-label="Saltar; vuelve a tocar para hacer doble salto" onPointerDown={(event) => handleTouchStart("jump", event)} onPointerUp={(event) => handleTouchEnd("jump", event)} onPointerCancel={(event) => handleTouchCancel("jump", event)} onLostPointerCapture={(event) => handleTouchCancel("jump", event)} onContextMenu={preventTouchMenu}><span className="touch-jump-arrows">↑<i>↑</i></span><small>SALTAR</small></button>
-        </div>
-      </div>
+      <TouchControls onPress={handleTouchStart} onRelease={handleTouchEnd} onCancel={handleTouchCancel} />
     </div>
     {excursion && <GameCanvas level={detourLevel(excursion)} running={running} reduceMotion={reduceMotion}
       onLoseLife={onLoseLife} onSnapshot={onSnapshot} onAppleCollected={onAppleCollected} playSound={playSound}

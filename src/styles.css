@@ -543,6 +543,7 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 .boss-friend-card button { min-height: 42px; border: 3px solid #352044; padding: 6px; color: #fff8e9; background: #a84265; font-size: .75rem; font-weight: 900; cursor: pointer; }
 .boss-friend-card button:hover { background: #c55273; }
 .boss-friend-card.is-mystery { border-color: #6c6670; background: #e1dee3; box-shadow: inset 0 0 0 4px #d1ccd3; }
+.boss-friend-atlas-santa { background-size: 300% 200%; background-position: 0 0; }
 .boss-friend-card.is-mystery .boss-friend-portrait { border-color: #89828e; background: #cbc7ce; }
 .boss-friend-card.has-challenge-frame { border-color: #c58b2a; background: #fff0b3; box-shadow: inset 0 0 0 4px #f5cc60, 0 0 0 3px #8a5d24; }
 .boss-friend-card.has-challenge-frame .boss-friend-portrait { border-color: #c58b2a; box-shadow: inset 0 0 0 3px #ffe58b; }
@@ -590,18 +591,15 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 .santa-hit-counter { display: grid; gap: 5px; flex-shrink: 0; text-align: right; color: #fff1a8; font: 14px system-ui, sans-serif; }
 .santa-hit-counter span { font-size: 25px; letter-spacing: 2px; }
 .santa-arena { position: relative; flex-shrink: 0; width: 100%; max-width: min(960px, calc((100dvh - 220px) * 2)); margin: auto; overflow: hidden; border: 3px solid #fff2b7; border-radius: 12px; background: #344986; }
-.santa-arena canvas { display: block; width: 100%; height: auto; }
-.santa-controls { display: flex; gap: 12px; align-items: center; width: 100%; max-width: 960px; margin: 0 auto; }
-.santa-controls button { min-width: 68px; min-height: 62px; touch-action: none; user-select: none; -webkit-user-select: none; }
-.santa-controls .santa-control-jump { margin-left: auto; min-width: 112px; }
-.santa-control-hint { font: 12px/1.4 system-ui, sans-serif; max-width: 180px; }
+.santa-arena .game-stage { border: 0; }
+.santa-arena .game-stage canvas { display: block; width: 100%; height: auto; aspect-ratio: auto; }
 .santa-exit { align-self: center; padding: 8px 14px; font: 13px system-ui, sans-serif; }
 .santa-result { text-align: center; max-width: 620px; width: 100%; margin: auto; padding: 12px; background: #fff6d3; color: #4f2b4b; border-radius: 12px; }
 .santa-result h3 { margin: 0; color: #b83c4d; }
 .santa-result p { font: 14px/1.4 system-ui, sans-serif; }
 .santa-result .pixel-button { font-size: 13px; max-width: 100%; }
-@media (max-width: 600px) { .santa-control-hint { display: none; } .santa-boss-hud { align-items: flex-start; } .santa-boss-hud p { font-size: 12px; } .santa-arena { max-width: 100%; } }
-@media (max-height: 500px) and (min-width: 601px) { .santa-boss-battle { gap: 5px; padding: 7px 14px; } .santa-boss-hud p, .santa-boss-hud .eyebrow, .santa-control-hint { display: none; } .santa-arena { max-width: min(800px, calc((100dvh - 135px) * 2)); } .santa-controls { max-width: 800px; } .santa-controls button { min-height: 44px; } .santa-exit { position: absolute; top: 8px; left: 14px; font-size: 11px; } .santa-boss-hud { padding-left: 140px; } }
+@media (max-width: 600px) { .santa-boss-hud { align-items: flex-start; } .santa-boss-hud p { font-size: 12px; } .santa-arena { max-width: 100%; } }
+@media (max-height: 500px) and (min-width: 601px) { .santa-boss-battle { gap: 5px; padding: 7px 14px; } .santa-boss-hud p, .santa-boss-hud .eyebrow { display: none; } .santa-arena { max-width: min(960px, calc((100dvh - 90px) * 2)); } .santa-exit { position: absolute; top: 8px; left: 14px; font-size: 11px; } .santa-boss-hud { padding-left: 140px; } }
 .boss-theme-bramble-king::before { background-image: linear-gradient(90deg, transparent 0 8%, #69924d 8% 12%, transparent 12% 23%, #4f783f 23% 29%, transparent 29% 76%, #69924d 76% 81%, transparent 81%); }
 .boss-theme-mist-countess::before { background-image: linear-gradient(180deg, transparent 10%, #cfbce5 10% 22%, transparent 22% 36%, #b89bd6 36% 48%, transparent 48%); }
 .boss-theme-shark-captain::before { background-image: repeating-linear-gradient(175deg, transparent 0 32px, #46c9ca 34px 45px, transparent 47px 85px); }

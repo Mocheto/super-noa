@@ -3,8 +3,8 @@ import type { Rect } from "./types";
 
 export const SANTA_ARENA = { width: 960, height: 480, floor: 400 };
 export const SANTA_PLATFORMS: Rect[] = [
-  { x: 285, y: 320, width: 145, height: 22 },
-  { x: 805, y: 320, width: 115, height: 22 },
+  { x: 285, y: 240, width: 145, height: 22 },
+  { x: 805, y: 240, width: 115, height: 22 },
 ];
 export type SantaInput = { left: boolean; right: boolean; jumpPressed: boolean; jumpHeld: boolean };
 export type SantaBattle = {
@@ -17,7 +17,7 @@ export type SantaEvent = "jump" | "stomp" | "hurt" | "throw";
 
 export function createSantaBattle(): SantaBattle {
   return {
-    player: { x: 100, y: 342, width: 42, height: 58, vx: 0, vy: 0, grounded: true, jumps: 0, facing: 1, invincible: 0, bouncing: false },
+    player: { x: 300, y: 342, width: 42, height: 58, vx: 0, vy: 0, grounded: true, jumps: 0, facing: 1, invincible: 0, bouncing: false },
     boss: { x: 650, y: 280, width: 96, height: 120, direction: -1, stun: 0, attackIn: 3.2 },
     gifts: [], hits: 0, lives: 3, elapsed: 0, status: "playing",
   };

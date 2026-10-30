@@ -919,7 +919,7 @@ export default function App() {
                     <span className="boss-friend-world">{level.world === 7 ? (progress.secretUnlocked ? "Mundo secreto" : "Mundo misterioso") : level.world === 8 ? "Mundo del agua" : `Mundo ${level.world}`}</span>
                     <div className="boss-friend-portrait" aria-hidden="true">
                       {known ? boss.assetAtlas
-                        ? <span className="boss-friend-atlas" style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />
+                        ? <span className={`boss-friend-atlas ${level.boss === "santa-claus" ? "boss-friend-atlas-santa" : ""}`} style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />
                         : <img src={`${boss.assetPrefix}-0.png`} alt="" />
                         : <span className="boss-mystery-shape">?</span>}
                     </div>

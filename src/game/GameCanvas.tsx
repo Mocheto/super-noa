@@ -29,7 +29,7 @@ import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
-import { boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay";
+import { conveyorSpeed, boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay";
 
 const MOVE_SPEED = 250;
 
@@ -386,7 +386,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       previousShoot = shoot;
 
       const previousX = player.x;
-      player.x += player.vx * delta;
+      player.x += (player.vx + conveyorSpeed(player, level.platforms)) * delta;
       player.x = Math.max(0, Math.min(level.width - player.width, player.x));
       for (const platform of level.platforms) {
         const resolvedX = resolveHorizontalWallCollision(previousX, player.x, player.y, player.width, player.height, platform);
@@ -413,12 +413,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         const horizontal = player.x + player.width > platform.x && player.x < platform.x + platform.width;
         const surfaceY = platformSurfaceY(platform);
         // El muelle solo responde al aterrizaje de un salto: al caminar se puede pasar de largo.
-        const landed = platform.kind === "spring" || platform.kind === "dew"
+        const landed = platform.kind === "spring" || platform.kind === "dew" || platform.kind === "gift-spring"
           ? landsOnSpring(wasGrounded, previousBottom, player.y + player.height, surfaceY, player.vy)
           : player.vy >= 0 && previousBottom <= surfaceY + 10 && player.y + player.height >= surfaceY;
         if (horizontal && landed) {
           player.y = surfaceY - player.height;
-          if (platform.kind === "spring" || platform.kind === "dew") {
+          if (platform.kind === "spring" || platform.kind === "dew" || platform.kind === "gift-spring") {
             player.vy = -SPRING_SPEED;
             player.grounded = false;
             player.jumpsUsed = 2;

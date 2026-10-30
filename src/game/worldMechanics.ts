@@ -52,7 +52,7 @@ export function mechanicRespawn(level: Level, x: number, width: number, height: 
   if (!hasWorldMechanics(level)) return { x, y: level.start.y };
   const hazards = [...(level.deadlyWater ?? []), ...(level.spikePits ?? [])];
   const supports = level.platforms.filter((platform) => {
-    if (platform.kind === "spring" || platform.kind === "dew" || x < platform.x || x + width > platform.x + platform.width) return false;
+    if (platform.kind === "spring" || platform.kind === "dew" || platform.kind === "gift-spring" || x < platform.x || x + width > platform.x + platform.width) return false;
     const y = platform.y - height;
     return !hazards.some((hazard) =>
       x < hazard.x + hazard.width && x + width > hazard.x && y < hazard.y + hazard.height && y + height > hazard.y);

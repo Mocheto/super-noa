@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { lavaJetState, waterJumperState, type LiveWaterJumper } from "./gameState.ts";
-import { boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, resolveHorizontalWallCollision, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay.ts";
+import { conveyorSpeed, boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, resolveHorizontalWallCollision, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay.ts";
 
 test("el banderín tiene una zona elevada y alcanzable al saltar", () => {
   const flag = goalFlagHitbox(900, 456);
@@ -90,4 +90,16 @@ test("los chorros de lava suben, esperan y vuelven a bajar con ritmo", () => {
   assert.equal(lavaJetState(jet, 1.7).extension, 0);
   assert.equal(lavaJetState(jet, 2.5).extension, 0);
   assert.equal(lavaJetState(jet, .75).rect.y, 156);
+});
+
+
+test("las cintas solo arrastran a Noa cuando pisa su superficie", () => {
+  const player = { x: 120, y: 242, width: 42, height: 58, grounded: true };
+  const belt = { x: 100, y: 300, width: 200, height: 28, beltSpeed: 85 };
+  assert.equal(conveyorSpeed(player, [belt]), 85);
+  assert.equal(conveyorSpeed(player, [{ ...belt, beltSpeed: -75 }]), -75);
+  assert.equal(conveyorSpeed({ ...player, grounded: false }, [belt]), 0);
+  assert.equal(conveyorSpeed({ ...player, y: 180 }, [belt]), 0);
+  assert.equal(conveyorSpeed({ ...player, x: 310 }, [belt]), 0);
+  assert.equal(conveyorSpeed(player, [{ ...belt, beltSpeed: undefined }]), 0);
 });

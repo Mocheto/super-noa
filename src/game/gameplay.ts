@@ -80,3 +80,11 @@ export const boarChargeVelocity = (boarX: number, playerX: number, minX: number,
   if (boarX >= maxX && playerX >= boarX) return -speed;
   return playerX < boarX ? -speed : speed;
 };
+
+/** Belts carry feet on their surface, never a player jumping above or below. */
+export function conveyorSpeed(player: Rect & { grounded: boolean }, platforms: readonly Platform[]): number {
+  if (!player.grounded) return 0;
+  return platforms.find((platform) => platform.beltSpeed
+    && player.x + player.width > platform.x && player.x < platform.x + platform.width
+    && Math.abs(player.y + player.height - platformSurfaceY(platform)) < 6)?.beltSpeed ?? 0;
+}

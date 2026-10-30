@@ -537,3 +537,22 @@ test("cada mundo presente conserva una identidad jugable propia", () => {
     }
   }
 });
+
+test("Papá Noel ofrece rutas escalonadas, cintas reversibles y regalos sobre suelo seguro", () => {
+  const holiday = levels.filter((level) => level.world === 13);
+  for (const level of holiday) {
+    assert.ok(level.platforms.filter((p) => p.y < 400).length >= 17, level.id);
+    for (const parcel of level.platforms.filter((p) => p.kind === "gift-spring")) {
+      assert.ok(level.platforms.some((p) => p.y === 456 && p.x <= parcel.x && p.x + p.width >= parcel.x + parcel.width));
+      assert.ok(level.platforms.some((p) => p.y < 300 && p.x > parcel.x && p.x - parcel.x < 400));
+    }
+    for (const belt of level.platforms.filter((p) => p.beltSpeed)) {
+      assert.ok(Math.abs(belt.beltSpeed!) <= 100);
+      assert.ok(belt.x > 200 && belt.x + belt.width < level.goalX);
+    }
+  }
+  for (const level of holiday.slice(1)) {
+    assert.ok(level.platforms.some((p) => (p.beltSpeed ?? 0) > 0));
+    assert.ok(level.platforms.some((p) => (p.beltSpeed ?? 0) < 0));
+  }
+});

@@ -582,21 +582,26 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 .boss-battle::before { content: ""; position: absolute; z-index: 0; inset: 0; pointer-events: none; opacity: .2; background-repeat: repeat-x; background-position: center bottom; background-size: auto 46%; image-rendering: pixelated; }
 .boss-battle > * { position: relative; z-index: 1; }
 
-.santa-boss-battle { position: fixed; z-index: 20; inset: 0; display: grid; grid-template-rows: auto 1fr auto; padding: clamp(14px, 3vw, 38px); background: #172754; color: #fff; }
-.santa-boss-hud { display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 1100px; width: 100%; margin: 0 auto 12px; }.santa-boss-hud h2 { margin: 0; color: #fff2b7; }.santa-boss-hud p { margin: 4px 0; }.santa-hit-counter { display: grid; gap: 5px; text-align: right; color: #fff1a8; }.santa-hit-counter span { font-size: 28px; letter-spacing: 3px; }
-.santa-arena { position: relative; min-height: 330px; max-width: 1100px; width: 100%; margin: auto; overflow: hidden; border: 5px solid #fff2b7; border-radius: 22px; background: linear-gradient(#344986, #a9dcf5 72%, #eaffff 72%); box-shadow: inset 0 -28px #d7f5fb; }
-.santa-snow { position: absolute; inset: 18px 0 auto; display: flex; justify-content: space-around; color: #fff; font-size: 27px; animation: santa-snow-fall 3s linear infinite; }
-.santa-floor { position: absolute; bottom: 29px; left: 0; right: 0; height: 25px; background: repeating-linear-gradient(90deg, #ecfbff 0 55px, #c4eaf2 55px 70px); border-top: 5px solid #fff; }
-.santa-noa { position: absolute; z-index: 2; bottom: 50px; width: 58px; height: 58px; border: 0; border-radius: 50%; background: #fff3d0; font-size: 34px; cursor: pointer; transition: left .14s ease; }
-.santa-noa.is-jumping { animation: santa-jump .52s ease-out; }
-.santa-sprite { position: absolute; right: 8%; bottom: 42px; width: 175px; height: 215px; overflow: hidden; filter: drop-shadow(0 9px 3px rgba(32, 37, 78, .25)); }
-.santa-sprite img { width: 500%; max-width: none; height: 100%; object-fit: fill; object-position: left top; transform: translateX(0); }
-.santa-sprite.is-surprised img { transform: translateX(-40%); }
-.flying-present { position: absolute; z-index: 3; bottom: 68px; font-size: 36px; filter: drop-shadow(0 4px 2px rgba(0,0,0,.2)); transition: left .08s linear; }
-.santa-controls { display: flex; gap: 12px; align-items: center; justify-content: center; max-width: 1100px; width: 100%; margin: 16px auto 0; }.santa-controls button { min-height: 42px; }.santa-controls button:last-child { margin-left: auto; }
-.santa-result { position: relative; z-index: 3; text-align: center; max-width: 620px; width: 100%; margin: 18px auto 0; padding: 14px; background: #fff6d3; color: #4f2b4b; border-radius: 16px; }.santa-result h3 { margin: 0; color: #b83c4d; }
-@keyframes santa-jump { 50% { transform: translateY(-142px) rotate(-8deg); } }
-@keyframes santa-snow-fall { to { transform: translateY(215px); } }
+.santa-boss-battle { position: fixed; z-index: 20; inset: 0; display: flex; flex-direction: column; gap: 12px; padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); background: #172754; color: #fff; overflow-y: auto; }
+.santa-boss-hud { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 960px; width: 100%; margin: 0 auto; }
+.santa-boss-hud h2 { margin: 0; color: #fff2b7; font-size: clamp(1.2rem, 3vw, 2rem); }
+.santa-boss-hud p { margin: 4px 0; font: 14px/1.4 system-ui, sans-serif; max-width: 600px; }
+.santa-boss-hud .eyebrow { font-size: 10px; }
+.santa-hit-counter { display: grid; gap: 5px; flex-shrink: 0; text-align: right; color: #fff1a8; font: 14px system-ui, sans-serif; }
+.santa-hit-counter span { font-size: 25px; letter-spacing: 2px; }
+.santa-arena { position: relative; flex-shrink: 0; width: 100%; max-width: min(960px, calc((100dvh - 220px) * 2)); margin: auto; overflow: hidden; border: 3px solid #fff2b7; border-radius: 12px; background: #344986; }
+.santa-arena canvas { display: block; width: 100%; height: auto; }
+.santa-controls { display: flex; gap: 12px; align-items: center; width: 100%; max-width: 960px; margin: 0 auto; }
+.santa-controls button { min-width: 68px; min-height: 62px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.santa-controls .santa-control-jump { margin-left: auto; min-width: 112px; }
+.santa-control-hint { font: 12px/1.4 system-ui, sans-serif; max-width: 180px; }
+.santa-exit { align-self: center; padding: 8px 14px; font: 13px system-ui, sans-serif; }
+.santa-result { text-align: center; max-width: 620px; width: 100%; margin: auto; padding: 12px; background: #fff6d3; color: #4f2b4b; border-radius: 12px; }
+.santa-result h3 { margin: 0; color: #b83c4d; }
+.santa-result p { font: 14px/1.4 system-ui, sans-serif; }
+.santa-result .pixel-button { font-size: 13px; max-width: 100%; }
+@media (max-width: 600px) { .santa-control-hint { display: none; } .santa-boss-hud { align-items: flex-start; } .santa-boss-hud p { font-size: 12px; } .santa-arena { max-width: 100%; } }
+@media (max-height: 500px) and (min-width: 601px) { .santa-boss-battle { gap: 5px; padding: 7px 14px; } .santa-boss-hud p, .santa-boss-hud .eyebrow, .santa-control-hint { display: none; } .santa-arena { max-width: min(800px, calc((100dvh - 135px) * 2)); } .santa-controls { max-width: 800px; } .santa-controls button { min-height: 44px; } .santa-exit { position: absolute; top: 8px; left: 14px; font-size: 11px; } .santa-boss-hud { padding-left: 140px; } }
 .boss-theme-bramble-king::before { background-image: linear-gradient(90deg, transparent 0 8%, #69924d 8% 12%, transparent 12% 23%, #4f783f 23% 29%, transparent 29% 76%, #69924d 76% 81%, transparent 81%); }
 .boss-theme-mist-countess::before { background-image: linear-gradient(180deg, transparent 10%, #cfbce5 10% 22%, transparent 22% 36%, #b89bd6 36% 48%, transparent 48%); }
 .boss-theme-shark-captain::before { background-image: repeating-linear-gradient(175deg, transparent 0 32px, #46c9ca 34px 45px, transparent 47px 85px); }

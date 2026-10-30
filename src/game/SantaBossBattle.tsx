@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Dialog } from "./Dialog";
-import { GameAssetIcon } from "./GameAssetIcon";
 import type { SoundKind } from "./GameCanvas";
 
 type Props = {
@@ -54,8 +52,8 @@ export function SantaBossBattle({ paused, apples, onSpendApple, onRestartLevel, 
     window.addEventListener("keydown", key); return () => window.removeEventListener("keydown", key);
   });
   const retry = () => { if (apples > 0) { onSpendApple(); setLost(false); setPresents([]); setNoaX(18); } else onRestartLevel(); };
-  return <Dialog labelledBy="santa-boss-title" backdropClassName="boss-backdrop" className="santa-boss-battle">
-    <header className="boss-header"><div><p className="eyebrow">Jefe final de Navidad</p><h2 id="santa-boss-title">Ayuda a Papá Noel</h2><p>Esquiva los regalos, acércate y salta sobre él dos veces. ¡Con suavidad!</p></div><div className="duel-status-panel"><div className="duel-score"><span>SALTOS <strong>{hits}</strong></span><b>—</b><span><strong>2</strong> META</span></div><div className="duel-attempts"><span><GameAssetIcon kind="apple" /> × {apples}</span><small>reintentos</small></div></div></header>
+  return <section className="santa-boss-battle" role="dialog" aria-modal="true" aria-labelledby="santa-boss-title">
+    <header className="santa-boss-hud"><div><p className="eyebrow">Jefe final de Navidad</p><h2 id="santa-boss-title">Ayuda a Papá Noel</h2><p>Esquiva regalos, acércate y dale dos saltitos suaves.</p></div><div className="santa-hit-counter" aria-label={`Has saltado ${hits} de 2 veces`}><span>♥ ♥ {hits === 2 ? "♥" : "○"}</span><b>{hits}/2 pisotones</b></div></header>
     <div className="santa-arena" aria-label="Arena de Papá Noel">
       <div className="santa-snow" aria-hidden="true">❄ ❄ ❄ ❄ ❄ ❄ ❄</div>
       {presents.map((gift) => <span className="flying-present" key={gift.id} style={{ left: `${gift.x}%` }}>🎁</span>)}
@@ -64,5 +62,5 @@ export function SantaBossBattle({ paused, apples, onSpendApple, onRestartLevel, 
       <div className="santa-floor" />
     </div>
     {won ? <div className="santa-result"><h3>¡Lo conseguiste!</h3><p>Papá Noel sonríe: ahora los regalos saldrán a tiempo.</p><button className="pixel-button primary" onClick={() => { playSound("goal"); onWin(true); }}>Abrir el camino ▶</button></div> : lost ? <div className="santa-result"><h3>¡Uy, un regalo!</h3><p>Los paquetes ruedan rápido. Prueba a saltar un poquito antes.</p><button className="pixel-button primary" onClick={retry}>{apples > 0 ? "Usar una manzana y reintentar" : "Volver a la pantalla"}</button></div> : <footer className="santa-controls"><button type="button" onClick={() => setNoaX((x) => Math.max(5, x - 8))}>←</button><button className="pixel-button primary" type="button" onClick={jump}>SALTAR</button><button type="button" onClick={() => setNoaX((x) => Math.min(78, x + 8))}>→</button><button type="button" onClick={onAbandon}>Volver al mapa</button></footer>}
-  </Dialog>;
+  </section>;
 }

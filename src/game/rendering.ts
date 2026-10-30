@@ -504,7 +504,36 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
     context.fillStyle = "#2b834b"; context.fillRect(0, 448, VIEW_WIDTH, 92);
     return;
   }
-  if (level.theme === "ice-mountain" || level.theme === "winter-workshop") {
+  if (level.theme === "toy-factory") {
+    const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+    gradient.addColorStop(0, "#3d245d"); gradient.addColorStop(.62, "#9d5b8f"); gradient.addColorStop(1, "#ffc685");
+    context.fillStyle = gradient; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    for (let index = -1; index < 6; index += 1) {
+      const x = index * 210 - positiveModulo(cameraX * .17, 210);
+      context.fillStyle = "#f1bd63"; context.fillRect(x + 42, 165, 128, 280);
+      context.fillStyle = "#6e385d"; context.fillRect(x + 60, 215, 34, 52); context.fillRect(x + 118, 215, 34, 52);
+      context.fillStyle = "#e44f59"; context.fillRect(x + 96, 130, 20, 315);
+      context.fillStyle = "#fff2bd"; context.fillRect(x + 101, 130, 10, 315);
+      context.fillStyle = "#76cbb7"; context.beginPath(); context.arc(x + 106, 117, 33, 0, Math.PI * 2); context.fill();
+    }
+    context.fillStyle = "#78445d"; context.fillRect(0, 445, VIEW_WIDTH, 95);
+    for (let x = -positiveModulo(cameraX * .32, 86); x < VIEW_WIDTH + 86; x += 86) { context.fillStyle = "#d99754"; context.fillRect(x, 468, 70, 19); context.fillStyle = "#5e3353"; context.fillRect(x + 10, 487, 6, 38); }
+    return;
+  }
+  if (level.theme === "gift-warehouse") {
+    const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
+    gradient.addColorStop(0, "#182b56"); gradient.addColorStop(.68, "#6b587e"); gradient.addColorStop(1, "#b88d75");
+    context.fillStyle = gradient; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    for (let index = -1; index < 6; index += 1) {
+      const x = index * 195 - positiveModulo(cameraX * .14, 195);
+      context.fillStyle = "#513552"; context.fillRect(x + 25, 75, 150, 370);
+      context.fillStyle = "#dbb26d"; context.fillRect(x + 42, 120, 116, 12); context.fillRect(x + 42, 250, 116, 12); context.fillRect(x + 42, 380, 116, 12);
+      for (const y of [142, 272, 402]) { context.fillStyle = (index + y) % 2 ? "#dd4d58" : "#5ab59e"; context.fillRect(x + 55, y, 34, 30); context.fillStyle = "#f3d66e"; context.fillRect(x + 69, y, 6, 30); context.fillRect(x + 55, y + 12, 34, 6); }
+    }
+    context.fillStyle = "#7d4c4f"; context.fillRect(0, 445, VIEW_WIDTH, 95);
+    return;
+  }
+  if (level.theme === "ice-mountain" || level.theme === "winter-snow") {
     const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
     gradient.addColorStop(0, "#455ca4"); gradient.addColorStop(.48, "#9bd8ee"); gradient.addColorStop(1, "#e9fbff");
     context.fillStyle = gradient; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
@@ -513,9 +542,6 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
     context.globalAlpha = 1;
     for (let index = -1; index < 7; index += 1) { const x = index * 210 - positiveModulo(cameraX * .12, 210); context.fillStyle = index % 2 ? "#6383aa" : "#789abd"; context.beginPath(); context.moveTo(x, 440); context.lineTo(x + 105, 170 + positiveModulo(index * 31, 90)); context.lineTo(x + 220, 440); context.fill(); context.fillStyle = "#f5fdff"; context.beginPath(); context.moveTo(x + 72, 255); context.lineTo(x + 105, 170 + positiveModulo(index * 31, 90)); context.lineTo(x + 143, 268); context.fill(); }
     for (let index = 0; index < 34; index += 1) { context.fillStyle = "rgba(255,255,255,.8)"; context.fillRect(positiveModulo(index * 97 - cameraX * .13, VIEW_WIDTH), positiveModulo(index * 61 + frame * .35, 440), index % 3 ? 3 : 5, index % 3 ? 3 : 5); }
-    if (level.theme === "winter-workshop") {
-      for (let index = -1; index < 6; index += 1) { const x = index * 190 - positiveModulo(cameraX * .1, 190); context.fillStyle = "#b8414f"; context.fillRect(x + 60, 275, 78, 145); context.fillStyle = "#fff1c5"; context.fillRect(x + 69, 300, 18, 18); context.fillRect(x + 108, 300, 18, 18); context.fillStyle = "#d99b43"; context.fillRect(x + 96, 250, 7, 170); }
-    }
     context.fillStyle = "#dff8ff"; context.fillRect(0, 448, VIEW_WIDTH, 92);
     return;
   }

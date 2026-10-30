@@ -529,7 +529,7 @@ test("cada mundo presente conserva una identidad jugable propia", () => {
           level.windZones?.length));
         break;
       case 13:
-        assert.ok(screens.some((level) => level.theme === "winter-workshop" && level.windZones?.length));
+        assert.deepEqual(screens.map((level) => level.theme), ["winter-snow", "toy-factory", "gift-warehouse"]);
         assert.equal(screens.find((level) => level.boss)?.boss, "santa-claus");
         break;
       default:

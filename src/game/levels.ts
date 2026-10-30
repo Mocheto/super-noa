@@ -119,7 +119,9 @@ export const themeNames: Record<Theme, string> = {
   "dragon-volcano": "El volcán de los dragones",
   "giant-valley": "El valle de los gigantes",
   "ice-mountain": "La montaña de hielo",
-  "winter-workshop": "El mundo de Papá Noel",
+  "winter-snow": "La senda de la nieve",
+  "toy-factory": "La fábrica de juguetes",
+  "gift-warehouse": "El almacén de regalos",
 };
 
 // Identificadores estables: A es el desvío acuático entre los mundos 3 y 4.
@@ -1037,7 +1039,7 @@ export const levels: Level[] = [
   {
     id: "13-1", world: 13, screen: 1,
     title: "La senda de la nieve", subtitle: "Sigue los faroles dorados entre los pinos nevados.",
-    theme: "winter-workshop", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
+    theme: "winter-snow", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     platforms: [...themedGround([[0, 860], [980, 780], [1890, 940], [2960, 810], [3900, 850], [4880, 720]], "ice-ground"), themedLedge(360, 325, 180, "ice-ledge"), themedLedge(720, 245, 180, "ice-ledge"), themedLedge(1300, 280, 190, "ice-ledge"), themedLedge(2160, 230, 180, "ice-ledge"), themedLedge(2550, 320, 180, "ice-ledge"), themedLedge(3300, 250, 190, "ice-ledge"), themedLedge(4250, 210, 180, "ice-ledge"), themedLedge(5100, 250, 180, "ice-ledge")],
     deadlyWater: deadlyWaterPits([[0, 860], [980, 780], [1890, 940], [2960, 810], [3900, 850], [4880, 720]]),
     windZones: [iceWind("santa-snow-1", 800, 180, 1, 180), iceWind("santa-snow-2", 3640, 190, -1, 190)],
@@ -1047,7 +1049,7 @@ export const levels: Level[] = [
   {
     id: "13-2", world: 13, screen: 2,
     title: "La fábrica de juguetes", subtitle: "Cruza el taller de los duendes sin despertar a los búhos.",
-    theme: "winter-workshop", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    theme: "toy-factory", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     platforms: [...themedGround([[0, 790], [920, 900], [1940, 760], [2820, 990], [3940, 840], [4910, 820], [5860, 700]], "ice-ground"), themedLedge(280, 335, 180, "ice-ledge"), themedLedge(600, 255, 180, "ice-ledge"), themedLedge(1120, 220, 180, "ice-ledge"), themedLedge(1540, 320, 180, "ice-ledge"), themedLedge(2210, 235, 190, "ice-ledge"), themedLedge(3060, 205, 180, "ice-ledge"), themedLedge(3510, 285, 180, "ice-ledge"), themedLedge(4180, 220, 190, "ice-ledge"), themedLedge(5300, 205, 180, "ice-ledge"), themedLedge(6020, 220, 180, "ice-ledge")],
     deadlyWater: deadlyWaterPits([[0, 790], [920, 900], [1940, 760], [2820, 990], [3940, 840], [4910, 820], [5860, 700]]),
     enemies: [enemy("s13-o1", "snowy-owl", 700, 180, 520, 860, 70), enemy("s13-f1", "snow-fox", 1350, 410, 1100, 1690, 52), enemy("s13-p1", "penguin", 2420, 416, 2130, 2630, 58), enemy("s13-o2", "snowy-owl", 3290, 145, 3080, 3650, 76), enemy("s13-f2", "snow-fox", 4440, 410, 4210, 4670, 58), enemy("s13-p2", "penguin", 6100, 416, 5900, 6280, 60)],
@@ -1056,7 +1058,7 @@ export const levels: Level[] = [
   {
     id: "13-3", world: 13, screen: 3, route: { finale: true },
     title: "El almacén de regalos", subtitle: "Encuentra la gran puerta roja y ayuda a Papá Noel con cuidado.",
-    theme: "winter-workshop", width: 7300, start: { x: 80, y: 380 }, goalX: 7100,
+    theme: "gift-warehouse", width: 7300, start: { x: 80, y: 380 }, goalX: 7100,
     platforms: [...themedGround([[0, 820], [960, 770], [1850, 850], [2820, 780], [3720, 920], [4760, 790], [5680, 760], [6570, 820]], "ice-ground"), themedLedge(320, 330, 180, "ice-ledge"), themedLedge(680, 245, 180, "ice-ledge"), themedLedge(1130, 280, 180, "ice-ledge"), themedLedge(2080, 220, 190, "ice-ledge"), themedLedge(2480, 320, 180, "ice-ledge"), themedLedge(3150, 240, 190, "ice-ledge"), themedLedge(4050, 205, 180, "ice-ledge"), themedLedge(5210, 230, 190, "ice-ledge"), themedLedge(6090, 185, 180, "ice-ledge"), themedLedge(6800, 280, 180, "ice-ledge")],
     deadlyWater: deadlyWaterPits([[0, 820], [960, 770], [1850, 850], [2820, 780], [3720, 920], [4760, 790], [5680, 760], [6570, 820]]),
     enemies: [enemy("s13c-p1", "penguin", 430, 416, 280, 720, 58), enemy("s13c-o1", "snowy-owl", 1300, 160, 1100, 1570, 78), enemy("s13c-f1", "snow-fox", 2280, 410, 2050, 2580, 60), enemy("s13c-o2", "snowy-owl", 4210, 150, 3980, 4520, 82), enemy("s13c-p2", "penguin", 5360, 416, 5100, 5540, 64), enemy("s13c-f2", "snow-fox", 6840, 410, 6640, 7050, 62)],

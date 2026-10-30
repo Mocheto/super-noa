@@ -8,7 +8,7 @@ const { drawEnemy } = engineModules()("./rendering") as typeof import("./renderi
 const species: LiveEnemy["kind"][] = [
   "slime", "beetle", "cloud", "wolf", "boar", "bird", "pirate", "parrot", "bat", "sky-unicorn",
   "skeleton", "zombie", "ghost", "fish", "urchin", "baby-t-rex", "pterodactyl",
-  "baby-dragon", "fire-salamander", "flying-dragon", "ant", "snail", "bee", "penguin", "snow-fox", "snowy-owl",
+  "baby-dragon", "fire-salamander", "flying-dragon", "ant", "snail", "bee", "penguin", "snow-fox", "snowy-owl", "snow-scout", "toy-reindeer", "winter-robin", "toy-elf", "toy-robot", "toy-bird", "gift-box", "gift-gnome", "star-lantern",
 ];
 
 for (const complete of [false, true]) {

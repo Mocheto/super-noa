@@ -61,6 +61,15 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
       assert.equal(assets[name], getLevelAssets(level)[name], "los fotogramas comparten la imagen en caché");
     }
     assert.equal(getLevelAssets(levels.find((level) => level.id === "12-1")!).worldTerrain.src, "./assets/atlases/ice-mountain-terrain-v1.png");
+    for (const [id, background] of [["13-1", "winter-village-background-v1"], ["13-2", "toy-factory-background-v2"], ["13-3", "gift-warehouse-background-v2"]]) {
+      const holiday = getLevelAssets(levels.find((level) => level.id === id)!);
+      assert.equal(holiday.holidayBackground.src, `./assets/worlds/${background}.webp`);
+      if (id === "13-1") {
+        assert.equal(holiday.worldTerrain.src, "./assets/atlases/winter-village-terrain-v1.png");
+        assert.equal(holiday.worldCharacters.src, "./assets/atlases/winter-village-enemies-v1.png");
+      }
+    }
+    assert.equal(first.holidayBackground.src, "");
     for (const level of levels) {
       const assets = getLevelAssets(level);
       for (const key of Object.keys(assets) as (keyof typeof assets)[]) {

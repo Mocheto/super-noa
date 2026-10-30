@@ -9,7 +9,7 @@ export type Rect = {
 
 export type Platform = Rect & {
   beltSpeed?: number;
-  kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall" | "factory-ground" | "factory-ledge" | "factory-wall" | "warehouse-ground" | "warehouse-ledge" | "warehouse-wall" | "gift-spring";
+  kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall" | "factory-ground" | "factory-ledge" | "factory-wall" | "warehouse-ground" | "warehouse-ledge" | "warehouse-wall" | "gift-spring" | "snow-ground" | "snow-ledge";
 };
 
 export type SleepCycle = {
@@ -21,7 +21,7 @@ export type SleepCycle = {
 
 export type Enemy = Rect & {
   id: string;
-  kind: "slime" | "beetle" | "cloud" | "wolf" | "boar" | "bird" | "pirate" | "parrot" | "bat" | "sky-unicorn" | "skeleton" | "zombie" | "ghost" | "fish" | "urchin" | "baby-t-rex" | "pterodactyl" | "baby-dragon" | "fire-salamander" | "flying-dragon" | "ant" | "snail" | "bee" | "penguin" | "snow-fox" | "snowy-owl" | "toy-elf" | "toy-robot" | "toy-bird" | "gift-box" | "gift-gnome" | "star-lantern";
+  kind: "slime" | "beetle" | "cloud" | "wolf" | "boar" | "bird" | "pirate" | "parrot" | "bat" | "sky-unicorn" | "skeleton" | "zombie" | "ghost" | "fish" | "urchin" | "baby-t-rex" | "pterodactyl" | "baby-dragon" | "fire-salamander" | "flying-dragon" | "ant" | "snail" | "bee" | "penguin" | "snow-fox" | "snowy-owl" | "toy-elf" | "toy-robot" | "toy-bird" | "gift-box" | "gift-gnome" | "star-lantern" | "snow-scout" | "toy-reindeer" | "winter-robin";
   minX: number;
   maxX: number;
   speed: number;

@@ -521,36 +521,29 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
     context.fillStyle = "#2b834b"; context.fillRect(0, 448, VIEW_WIDTH, 92);
     return;
   }
-  if (level.theme === "toy-factory") {
-    const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
-    gradient.addColorStop(0, "#3d245d"); gradient.addColorStop(.62, "#9d5b8f"); gradient.addColorStop(1, "#ffc685");
-    context.fillStyle = gradient; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
-    for (let index = -1; index < 6; index += 1) {
-      const x = index * 210 - positiveModulo(cameraX * .17, 210);
-      context.fillStyle = "#f1bd63"; context.fillRect(x + 42, 165, 128, 280);
-      context.fillStyle = "#6e385d"; context.fillRect(x + 60, 215, 34, 52); context.fillRect(x + 118, 215, 34, 52);
-      context.fillStyle = "#e44f59"; context.fillRect(x + 96, 130, 20, 315);
-      context.fillStyle = "#fff2bd"; context.fillRect(x + 101, 130, 10, 315);
-      context.fillStyle = "#76cbb7"; context.beginPath(); context.arc(x + 106, 117, 33, 0, Math.PI * 2); context.fill();
+  if (level.world === 13) {
+    context.fillStyle = level.theme === "winter-snow" ? "#254861" : "#47343c";
+    context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    const image = raster.holidayBackground;
+    if (image?.complete && image.naturalWidth) {
+      // Mirror adjacent panels to join their edges without a hard repeat seam.
+      const scroll = cameraX * .12;
+      const firstPanel = Math.floor(scroll / VIEW_WIDTH);
+      for (let panel = firstPanel; panel <= firstPanel + 1; panel++) {
+        const x = panel * VIEW_WIDTH - scroll;
+        context.save();
+        context.translate(x + (panel % 2 ? VIEW_WIDTH : 0), 0);
+        if (panel % 2) context.scale(-1, 1);
+        const crop = level.theme === "toy-factory" ? .58 : level.theme === "gift-warehouse" ? .75 : 1;
+        context.drawImage(image, image.naturalWidth * (1 - crop) / 2, 0, image.naturalWidth * crop, image.naturalHeight * crop, 0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+        context.restore();
+      }
+      context.fillStyle = "rgba(21,23,43,.12)";
+      context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
     }
-    context.fillStyle = "#78445d"; context.fillRect(0, 445, VIEW_WIDTH, 95);
-    for (let x = -positiveModulo(cameraX * .32, 86); x < VIEW_WIDTH + 86; x += 86) { context.fillStyle = "#d99754"; context.fillRect(x, 468, 70, 19); context.fillStyle = "#5e3353"; context.fillRect(x + 10, 487, 6, 38); }
     return;
   }
-  if (level.theme === "gift-warehouse") {
-    const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
-    gradient.addColorStop(0, "#182b56"); gradient.addColorStop(.68, "#6b587e"); gradient.addColorStop(1, "#b88d75");
-    context.fillStyle = gradient; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
-    for (let index = -1; index < 6; index += 1) {
-      const x = index * 195 - positiveModulo(cameraX * .14, 195);
-      context.fillStyle = "#513552"; context.fillRect(x + 25, 75, 150, 370);
-      context.fillStyle = "#dbb26d"; context.fillRect(x + 42, 120, 116, 12); context.fillRect(x + 42, 250, 116, 12); context.fillRect(x + 42, 380, 116, 12);
-      for (const y of [142, 272, 402]) { context.fillStyle = (index + y) % 2 ? "#dd4d58" : "#5ab59e"; context.fillRect(x + 55, y, 34, 30); context.fillStyle = "#f3d66e"; context.fillRect(x + 69, y, 6, 30); context.fillRect(x + 55, y + 12, 34, 6); }
-    }
-    context.fillStyle = "#7d4c4f"; context.fillRect(0, 445, VIEW_WIDTH, 95);
-    return;
-  }
-  if (level.theme === "ice-mountain" || level.theme === "winter-snow") {
+  if (level.theme === "ice-mountain") {
     const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
     gradient.addColorStop(0, "#455ca4"); gradient.addColorStop(.48, "#9bd8ee"); gradient.addColorStop(1, "#e9fbff");
     context.fillStyle = gradient; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
@@ -758,6 +751,23 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   const forest = world >= 2 && world <= 4;
   const worldTiles = worldPlatformCells(world);
   if (x + platform.width < 0 || x > VIEW_WIDTH) return;
+  if (platform.kind === "snow-ground" || platform.kind === "snow-ledge") {
+    const image = raster.worldTerrain;
+    const ground = platform.kind === "snow-ground";
+    if (image.complete && image.naturalWidth) {
+      const crop = ground ? [.08, .313, .84, .14] : [.035, .626, .93, .15];
+      const [sx, sy, sw, sh] = crop.map((value, index) => value * (index % 2 === 0 ? image.naturalWidth : image.naturalHeight));
+      const tileWidth = ground ? 600 : platform.width;
+      for (let offset = 0; offset < platform.width; offset += tileWidth) {
+        const width = Math.min(tileWidth, platform.width - offset);
+        context.drawImage(image, sx, sy, sw * width / tileWidth, sh, x + offset, platform.y, width, ground ? platform.height : 40);
+      }
+    } else {
+      context.fillStyle = "#74563c"; context.fillRect(x, platform.y, platform.width, platform.height);
+      context.fillStyle = "#fff8e9"; context.fillRect(x, platform.y, platform.width, 9);
+    }
+    return;
+  }
   if (platform.kind === "volcano-ground" || platform.kind === "volcano-ledge" || platform.kind === "volcano-wall") {
     const wall = platform.kind === "volcano-wall";
     if (drawNewWorldTerrain(context, raster.worldTerrain, 10, wall ? "wall" : platform.kind === "volcano-ground" ? "ground" : "ledge", x, platform.y, platform.width, platform.height)) return;
@@ -1299,15 +1309,15 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
   const specializedImage = enemy.kind === "fish" || enemy.kind === "urchin" ? raster.waterEnemies
     : enemy.kind === "baby-t-rex" || enemy.kind === "pterodactyl" ? raster.dinosaurEnemies
     : enemy.kind === "sky-unicorn" ? raster.secret
-    : enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl" || enemy.kind === "toy-elf" || enemy.kind === "toy-robot" || enemy.kind === "toy-bird" || enemy.kind === "gift-box" || enemy.kind === "gift-gnome" || enemy.kind === "star-lantern" ? raster.worldCharacters
+    : enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl" || enemy.kind === "toy-elf" || enemy.kind === "toy-robot" || enemy.kind === "toy-bird" || enemy.kind === "gift-box" || enemy.kind === "gift-gnome" || enemy.kind === "star-lantern" || enemy.kind === "snow-scout" || enemy.kind === "toy-reindeer" || enemy.kind === "winter-robin" ? raster.worldCharacters
     : undefined;
   if (specializedImage && (!specializedImage.complete || !specializedImage.naturalWidth)) {
     drawEnemyFallback(context, enemy, x, y);
     return;
   }
-  if (enemy.kind === "toy-elf" || enemy.kind === "toy-robot" || enemy.kind === "toy-bird" || enemy.kind === "gift-box" || enemy.kind === "gift-gnome" || enemy.kind === "star-lantern") {
-    const column = enemy.kind === "toy-elf" || enemy.kind === "gift-box" ? 0 : enemy.kind === "toy-robot" || enemy.kind === "gift-gnome" ? 1 : 2;
-    const flying = enemy.kind === "toy-bird" || enemy.kind === "star-lantern";
+  if (enemy.kind === "toy-elf" || enemy.kind === "toy-robot" || enemy.kind === "toy-bird" || enemy.kind === "gift-box" || enemy.kind === "gift-gnome" || enemy.kind === "star-lantern" || enemy.kind === "snow-scout" || enemy.kind === "toy-reindeer" || enemy.kind === "winter-robin") {
+    const column = enemy.kind === "toy-elf" || enemy.kind === "gift-box" || enemy.kind === "snow-scout" ? 0 : enemy.kind === "toy-robot" || enemy.kind === "gift-gnome" || enemy.kind === "toy-reindeer" ? 1 : 2;
+    const flying = enemy.kind === "toy-bird" || enemy.kind === "star-lantern" || enemy.kind === "winter-robin";
     const width = flying ? 66 : 62;
     const height = width;
     const drawX = x + (enemy.width - width) / 2;
@@ -1669,6 +1679,13 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
 export function drawDeadlyWater(context: CanvasRenderingContext2D, zone: NonNullable<Level["deadlyWater"]>[number], cameraX: number, frame: number, raster: RasterAssets, theme: Level["theme"]) {
   const x = Math.round(zone.x - cameraX);
   if (x + zone.width < 0 || x > VIEW_WIDTH) return;
+  if (theme === "winter-snow" || theme === "toy-factory" || theme === "gift-warehouse") {
+    const shade = context.createLinearGradient(0, zone.y, 0, zone.y + zone.height);
+    shade.addColorStop(0, theme === "winter-snow" ? "#254e65" : "#342538");
+    shade.addColorStop(1, "#111525"); context.fillStyle = shade;
+    context.fillRect(x, zone.y, zone.width, zone.height);
+    return;
+  }
   const surfaceY = zone.y + 8;
   context.save();
   context.beginPath();

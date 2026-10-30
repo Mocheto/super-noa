@@ -234,7 +234,7 @@ test("los tres nuevos mundos forman una aventura completa con mecánicas propias
     { world: 10, ids: ["10-1", "10-2", "10-3"], boss: "ruby-dragon", enemies: ["baby-dragon", "fire-salamander", "flying-dragon"], platforms: ["volcano-ground"] },
     { world: 11, ids: ["11-1", "11-2", "11-3"], boss: "queen-bee", enemies: ["ant", "snail", "bee"], platforms: ["garden-ground"] },
     { world: 12, ids: ["12-1", "12-2", "12-3"], boss: "polar-bear", enemies: ["penguin", "snow-fox", "snowy-owl"], platforms: ["ice-ground"] },
-    { world: 13, ids: ["13-1", "13-2", "13-3"], boss: "santa-claus", enemies: ["toy-elf", "toy-robot", "toy-bird", "gift-box", "gift-gnome", "star-lantern"], platforms: ["ice-ground", "factory-ground", "warehouse-ground"] },
+    { world: 13, ids: ["13-1", "13-2", "13-3"], boss: "santa-claus", enemies: ["toy-elf", "toy-robot", "toy-bird", "gift-box", "gift-gnome", "star-lantern"], platforms: ["snow-ground", "factory-ground", "warehouse-ground"] },
   ] as const;
   for (const expected of expectations) {
     const world = levels.filter((level) => level.world === expected.world);
@@ -555,4 +555,48 @@ test("Papá Noel ofrece rutas escalonadas, cintas reversibles y regalos sobre su
     assert.ok(level.platforms.some((p) => (p.beltSpeed ?? 0) > 0));
     assert.ok(level.platforms.some((p) => (p.beltSpeed ?? 0) < 0));
   }
+});
+
+
+test("Navidad mantiene los precipicios abiertos y todos los apoyos dentro de suelo seguro", () => {
+  for (const level of levels.filter((l) => l.world === 13)) {
+    const ground = level.platforms.filter((p) => p.y === 456);
+    for (const ledge of level.platforms.filter((p) => p.y < 456)) {
+      assert.ok(ground.some((p) => ledge.x >= p.x + 16 && ledge.x + ledge.width <= p.x + p.width - 16),
+        `${level.id}: apoyo ${ledge.x} dentro de un tramo de suelo`);
+      for (const pit of level.deadlyWater ?? []) {
+        assert.ok(ledge.x + ledge.width <= pit.x || ledge.x >= pit.x + pit.width,
+          `${level.id}: apoyo ${ledge.x} tapa un precipicio`);
+      }
+    }
+    const ledges = level.platforms.filter((p) => p.y < 400);
+    for (const p of ledges) for (const q of ledges) {
+      if (p === q || p.x + p.width <= q.x || p.x >= q.x + q.width) continue;
+      assert.ok(Math.abs(p.y - q.y) >= 152, `${level.id}: no hay pasillos bajos entre repisas ${p.x}/${q.x}`);
+    }
+  }
+});
+
+test("Noa cabe bajo cada caja navideña, incluso donde un apoyo solo la solapa parcialmente", () => {
+  const maxRise = JUMP_SPEED ** 2 / (2 * GRAVITY);
+  for (const level of levels.filter((l) => l.world === 13)) {
+    for (const box of level.rewardBlocks) {
+      const supports = level.platforms.filter((p) => p.x < box.x + 48 && p.x + p.width > box.x && p.y > box.y);
+      assert.ok(supports.length);
+      for (const p of supports) {
+        const clearance = p.y - box.y - 48;
+        assert.ok(clearance >= 150, `${level.id}/${box.id}: ${clearance}px de espacio real`);
+      }
+      assert.ok(supports.some((p) => p.x + 20 <= box.x && p.x + p.width - 20 >= box.x + 48
+        && p.y - box.y - 48 - 58 < maxRise), `${box.id}: se golpea con un salto desde un apoyo amplio`);
+      assert.ok(box.y >= 30, `${box.id}: la caja permanece visible`);
+    }
+  }
+});
+
+test("la senda navideña tiene terreno y criaturas propios, sin suelo resbaladizo de hielo", () => {
+  const snow = levels.find((l) => l.id === "13-1")!;
+  assert.ok(snow.platforms.some((p) => p.kind === "snow-ground"));
+  assert.ok(snow.platforms.every((p) => !p.kind?.startsWith("ice-")));
+  assert.deepEqual([...new Set(snow.enemies.map((e) => e.kind))], ["snow-scout", "toy-reindeer", "winter-robin"]);
 });

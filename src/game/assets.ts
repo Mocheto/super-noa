@@ -8,6 +8,7 @@ export type RasterAssets = {
   dinosaurEnemies: HTMLImageElement; dinosaurTerrain: HTMLImageElement;
   worldCharacters: HTMLImageElement;
   worldTerrain: HTMLImageElement;
+  holidayBackground: HTMLImageElement;
   dewTrampoline: HTMLImageElement;
   jumpingFish: HTMLImageElement;
   bird: HTMLImageElement; collectibles: HTMLImageElement; cave: HTMLImageElement;
@@ -92,8 +93,9 @@ export function getLevelAssets(level: Level): RasterAssets {
     get castleEnemies() { return when(world === 6, "./assets/atlases/castle-enemies-v1.png"); },
     get dinosaurEnemies() { return when(world === 9, "./assets/atlases/dinosaur-enemies-v1.png"); },
     get dinosaurTerrain() { return when(world === 9, "./assets/atlases/dinosaur-island-v1.png"); },
-    get worldCharacters() { return when(world >= 10, `./assets/atlases/${level.theme === "toy-factory" ? "toy-factory-enemies-v1" : level.theme === "gift-warehouse" ? "gift-warehouse-enemies-v1" : world === 10 ? "volcano-characters-v1" : world === 11 ? "giant-valley-characters-v1" : "ice-mountain-characters-v1"}.png`); },
-    get worldTerrain() { return when(world >= 10, `./assets/atlases/${level.theme === "toy-factory" ? "toy-factory" : level.theme === "gift-warehouse" ? "gift-warehouse" : world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-terrain-v1.png`); },
+    get holidayBackground() { return when(world === 13, `./assets/worlds/${level.theme === "winter-snow" ? "winter-village-background-v1" : level.theme === "toy-factory" ? "toy-factory-background-v2" : "gift-warehouse-background-v2"}.webp`); },
+    get worldCharacters() { return when(world >= 10, `./assets/atlases/${level.theme === "winter-snow" ? "winter-village-enemies-v1" : level.theme === "toy-factory" ? "toy-factory-enemies-v1" : level.theme === "gift-warehouse" ? "gift-warehouse-enemies-v1" : world === 10 ? "volcano-characters-v1" : world === 11 ? "giant-valley-characters-v1" : "ice-mountain-characters-v1"}.png`); },
+    get worldTerrain() { return when(world >= 10, `./assets/atlases/${level.theme === "winter-snow" ? "winter-village" : level.theme === "toy-factory" ? "toy-factory" : level.theme === "gift-warehouse" ? "gift-warehouse" : world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-terrain-v1.png`); },
     get dewTrampoline() { return when(world === 11, "./assets/sprites/dew-trampoline-v1.png"); },
     get jumpingFish() { return when(Boolean(level.waterJumpers?.length), "./assets/sprites/enemy-jumping-fish-v1.png"); },
     get boar() { return when(world === 4, "./assets/sprites/enemy-boar-v2.png"); },

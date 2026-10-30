@@ -8,7 +8,7 @@ export type Rect = {
 };
 
 export type Platform = Rect & {
-  kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall";
+  kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall" | "factory-ground" | "factory-ledge" | "factory-wall" | "warehouse-ground" | "warehouse-ledge" | "warehouse-wall";
 };
 
 export type SleepCycle = {

@@ -231,10 +231,10 @@ test("la isla jurásica continúa tras el castillo y todos sus huecos son agua m
 
 test("los tres nuevos mundos forman una aventura completa con mecánicas propias", () => {
   const expectations = [
-    { world: 10, ids: ["10-1", "10-2", "10-3"], boss: "ruby-dragon", enemies: ["baby-dragon", "fire-salamander", "flying-dragon"], platform: "volcano-ground" },
-    { world: 11, ids: ["11-1", "11-2", "11-3"], boss: "queen-bee", enemies: ["ant", "snail", "bee"], platform: "garden-ground" },
-    { world: 12, ids: ["12-1", "12-2", "12-3"], boss: "polar-bear", enemies: ["penguin", "snow-fox", "snowy-owl"], platform: "ice-ground" },
-    { world: 13, ids: ["13-1", "13-2", "13-3"], boss: "santa-claus", enemies: ["toy-elf", "toy-robot", "toy-bird", "gift-box", "gift-gnome", "star-lantern"], platform: "ice-ground" },
+    { world: 10, ids: ["10-1", "10-2", "10-3"], boss: "ruby-dragon", enemies: ["baby-dragon", "fire-salamander", "flying-dragon"], platforms: ["volcano-ground"] },
+    { world: 11, ids: ["11-1", "11-2", "11-3"], boss: "queen-bee", enemies: ["ant", "snail", "bee"], platforms: ["garden-ground"] },
+    { world: 12, ids: ["12-1", "12-2", "12-3"], boss: "polar-bear", enemies: ["penguin", "snow-fox", "snowy-owl"], platforms: ["ice-ground"] },
+    { world: 13, ids: ["13-1", "13-2", "13-3"], boss: "santa-claus", enemies: ["toy-elf", "toy-robot", "toy-bird", "gift-box", "gift-gnome", "star-lantern"], platforms: ["ice-ground", "factory-ground", "warehouse-ground"] },
   ] as const;
   for (const expected of expectations) {
     const world = levels.filter((level) => level.world === expected.world);
@@ -243,7 +243,7 @@ test("los tres nuevos mundos forman una aventura completa con mecánicas propias
     for (const level of world) {
       assert.ok(level.width >= 5600, `${level.id} debe ser más largo que los mundos iniciales`);
       assert.equal(level.items.find((item) => item.kind === "sticker")?.id, `sticker-${level.id}`);
-      assert.ok(level.platforms.some((platform) => platform.kind === expected.platform));
+      assert.ok(level.platforms.some((platform) => expected.platforms.includes(platform.kind as never)));
       assert.ok(level.deadlyWater?.length);
     }
     for (const kind of expected.enemies) assert.ok(world.some((level) => level.enemies.some((enemy) => enemy.kind === kind)));

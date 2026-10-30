@@ -212,6 +212,17 @@ const drawNewWorldTerrain = (context: CanvasRenderingContext2D, image: HTMLImage
   return true;
 };
 
+const drawHolidayTerrain = (context: CanvasRenderingContext2D, image: HTMLImageElement, part: "ground" | "ledge" | "wall", x: number, y: number, width: number, height: number) => {
+  if (!image.complete || !image.naturalWidth) return false;
+  const column = part === "ground" ? 0 : part === "ledge" ? 1 : 2;
+  const cellWidth = image.naturalWidth / 3;
+  const inset = Math.max(5, Math.round(cellWidth * .025));
+  if (part === "ground") {
+    for (let tileX = x; tileX < x + width; tileX += 135) context.drawImage(image, column * cellWidth + inset, inset, cellWidth - inset * 2, image.naturalHeight - inset * 2, tileX, y - 3, Math.min(138, x + width - tileX), height + 5);
+  } else context.drawImage(image, column * cellWidth + inset, inset, cellWidth - inset * 2, image.naturalHeight - inset * 2, x - (part === "ledge" ? 4 : 0), y - (part === "ledge" ? 8 : 0), width + (part === "ledge" ? 8 : 0), part === "ledge" ? Math.max(68, height + 52) : height);
+  return true;
+};
+
 const drawCollectibleSprite = (context: CanvasRenderingContext2D, image: HTMLImageElement, column: number, row: number, x: number, y: number, width: number, height: number) =>
   drawAtlasCell(context, image, 4, 2, column, row, x, y, width, height);
 
@@ -756,6 +767,16 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
     context.fillStyle = "#5acb55"; context.fillRect(x, platform.y, platform.width, 11);
     context.fillStyle = "#a7e45e"; for (let px = x + 4; px < x + platform.width; px += 18) context.fillRect(px, platform.y - 5 - ((px / 18) % 2) * 3, 7, 8);
     context.fillStyle = "#a16940"; for (let px = x + 18; px < x + platform.width; px += 43) context.fillRect(px, platform.y + 27, 13, 9);
+    return;
+  }
+  if (platform.kind === "factory-ground" || platform.kind === "factory-ledge" || platform.kind === "factory-wall" || platform.kind === "warehouse-ground" || platform.kind === "warehouse-ledge" || platform.kind === "warehouse-wall") {
+    const wall = platform.kind.endsWith("wall");
+    const ground = platform.kind.endsWith("ground");
+    if (drawHolidayTerrain(context, raster.worldTerrain, wall ? "wall" : ground ? "ground" : "ledge", x, platform.y, platform.width, platform.height)) return;
+    context.fillStyle = platform.kind.startsWith("factory") ? "#a54a4f" : "#87554f";
+    context.fillRect(x, platform.y, platform.width, platform.height);
+    context.fillStyle = platform.kind.startsWith("factory") ? "#f2bd60" : "#e8c56e";
+    context.fillRect(x, platform.y, platform.width, 10);
     return;
   }
   if (platform.kind === "dew") {

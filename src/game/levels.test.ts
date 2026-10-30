@@ -234,7 +234,7 @@ test("los tres nuevos mundos forman una aventura completa con mecánicas propias
     { world: 10, ids: ["10-1", "10-2", "10-3"], boss: "ruby-dragon", enemies: ["baby-dragon", "fire-salamander", "flying-dragon"], platform: "volcano-ground" },
     { world: 11, ids: ["11-1", "11-2", "11-3"], boss: "queen-bee", enemies: ["ant", "snail", "bee"], platform: "garden-ground" },
     { world: 12, ids: ["12-1", "12-2", "12-3"], boss: "polar-bear", enemies: ["penguin", "snow-fox", "snowy-owl"], platform: "ice-ground" },
-    { world: 13, ids: ["13-1", "13-2", "13-3"], boss: "santa-claus", enemies: ["penguin", "snow-fox", "snowy-owl"], platform: "ice-ground" },
+    { world: 13, ids: ["13-1", "13-2", "13-3"], boss: "santa-claus", enemies: ["toy-elf", "toy-robot", "toy-bird", "gift-box", "gift-gnome", "star-lantern"], platform: "ice-ground" },
   ] as const;
   for (const expected of expectations) {
     const world = levels.filter((level) => level.world === expected.world);

@@ -1254,11 +1254,23 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
   const specializedImage = enemy.kind === "fish" || enemy.kind === "urchin" ? raster.waterEnemies
     : enemy.kind === "baby-t-rex" || enemy.kind === "pterodactyl" ? raster.dinosaurEnemies
     : enemy.kind === "sky-unicorn" ? raster.secret
-    : enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl" ? raster.worldCharacters
+    : enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl" || enemy.kind === "toy-elf" || enemy.kind === "toy-robot" || enemy.kind === "toy-bird" || enemy.kind === "gift-box" || enemy.kind === "gift-gnome" || enemy.kind === "star-lantern" ? raster.worldCharacters
     : undefined;
   if (specializedImage && (!specializedImage.complete || !specializedImage.naturalWidth)) {
     drawEnemyFallback(context, enemy, x, y);
     return;
+  }
+  if (enemy.kind === "toy-elf" || enemy.kind === "toy-robot" || enemy.kind === "toy-bird" || enemy.kind === "gift-box" || enemy.kind === "gift-gnome" || enemy.kind === "star-lantern") {
+    const column = enemy.kind === "toy-elf" || enemy.kind === "gift-box" ? 0 : enemy.kind === "toy-robot" || enemy.kind === "gift-gnome" ? 1 : 2;
+    const flying = enemy.kind === "toy-bird" || enemy.kind === "star-lantern";
+    const width = flying ? 66 : 62;
+    const height = width;
+    const drawX = x + (enemy.width - width) / 2;
+    const drawY = y + enemy.height - height + (flying ? Math.sin(enemy.phase * 4) * 4 : 0);
+    context.save();
+    if (enemy.vx < 0) { context.translate(drawX + width, 0); context.scale(-1, 1); context.drawImage(raster.worldCharacters, column * raster.worldCharacters.naturalWidth / 3, 0, raster.worldCharacters.naturalWidth / 3, raster.worldCharacters.naturalHeight, 0, drawY, width, height); }
+    else context.drawImage(raster.worldCharacters, column * raster.worldCharacters.naturalWidth / 3, 0, raster.worldCharacters.naturalWidth / 3, raster.worldCharacters.naturalHeight, drawX, drawY, width, height);
+    context.restore(); return;
   }
   if (enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl") {
     const [sx, sy, sw, sh] = worldEnemySpriteSources[enemy.kind];

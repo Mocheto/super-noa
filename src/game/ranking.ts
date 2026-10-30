@@ -160,12 +160,12 @@ export async function loadRanking(): Promise<RankingPlayer[]> {
   const body = await request("/v1/leaderboard?limit=20");
   if (!Array.isArray(body.players)) throw new RankingError("invalid_response", "No pude leer la lista del ranking. Puedes volver a intentarlo.", true);
   return body.players.map((player: unknown) => {
-    if (!isRecord(player) || typeof player.alias !== "string" || !Object.entries({ world: 12, completedLevels: 30, stickers: 36, bossChallenges: 12 })
+    if (!isRecord(player) || typeof player.alias !== "string" || !Object.entries({ world: 13, completedLevels: 33, stickers: 39, bossChallenges: 13 })
       .every(([key, maximum]) => typeof player[key] === "number" && Number.isInteger(player[key]) && (player[key] as number) >= 0 && (player[key] as number) <= maximum)
       || (player.totalApples !== undefined && (!Number.isSafeInteger(player.totalApples) || (player.totalApples as number) < 0))
       || (player.achievedAt !== undefined && player.achievedAt !== null && !validProgressDate(player.achievedAt))
       || (player.campaignWorld !== undefined && player.campaignWorld !== null
-        && (typeof player.campaignWorld !== "number" || !Number.isInteger(player.campaignWorld) || player.campaignWorld < 0 || player.campaignWorld > 10))) {
+        && (typeof player.campaignWorld !== "number" || !Number.isInteger(player.campaignWorld) || player.campaignWorld < 0 || player.campaignWorld > 11))) {
       throw new RankingError("invalid_response", "No pude leer la lista del ranking. Puedes volver a intentarlo.", true);
     }
     return { ...player, campaignWorld: player.campaignWorld === undefined ? campaignWorld(player.world as number) : player.campaignWorld,

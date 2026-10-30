@@ -9,7 +9,7 @@ import { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
 const level = (id: string) => levels.find((entry) => entry.id === id)!;
 
 test("visitas y estrellas de las cinco tiendas no añaden medallas ni objetivos al álbum", () => {
-  const progress = { ...emptyProgress, unlocked: 29, secretUnlocked: true, waterUnlocked: true, levelStats: {
+  const progress = { ...emptyProgress, unlocked: 32, secretUnlocked: true, waterUnlocked: true, levelStats: {
     "A-1": { completed: true, bestApples: 0 }, "A-2": { completed: true, bestApples: 0 },
   } };
   const shops = levels.flatMap((entry) => entry.secretShop ? [entry.secretShop.id] : []);
@@ -20,8 +20,8 @@ test("visitas y estrellas de las cinco tiendas no añaden medallas ni objetivos 
     assert.deepEqual(getLevelObjectives(entry, visited), original);
     assert.deepEqual(getLevelObjectives(entry, completed), original);
   }
-  assert.equal(stickerCatalog.length, 36);
-  assert.equal(levels.reduce((total, entry) => total + entry.items.filter((item) => item.kind === "sticker").length, 0), 36);
+  assert.equal(stickerCatalog.length, 39);
+  assert.equal(levels.reduce((total, entry) => total + entry.items.filter((item) => item.kind === "sticker").length, 0), 39);
   assert.deepEqual(completed.stickers, []);
   assert.deepEqual(completed.bossChallenges, {});
 });
@@ -74,7 +74,7 @@ test("completar una pantalla no concede la pegatina, la partida perfecta ni el r
 });
 
 test("todas las pantallas abiertas tienen objetivos únicos y pistas", () => {
-  const progress = { ...emptyProgress, unlocked: 29, waterUnlocked: true, secretUnlocked: true, levelStats: {
+  const progress = { ...emptyProgress, unlocked: 32, waterUnlocked: true, secretUnlocked: true, levelStats: {
     "A-1": { completed: true, bestApples: 0 }, "A-2": { completed: true, bestApples: 0 },
   } };
   for (const entry of levels) {

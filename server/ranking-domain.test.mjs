@@ -13,7 +13,10 @@ test("acepta únicamente totales posibles del progreso", () => {
   assert.deepEqual(validateProgress({ world: 12, completedLevels: 30, stickers: 36, bossChallenges: 12 }), {
     world: 12, campaignWorld: 10, completedLevels: 30, stickers: 36, bossChallenges: 12,
   });
-  assert.equal(validateProgress({ world: 13, completedLevels: 30, stickers: 36, bossChallenges: 12 }), null);
+  assert.deepEqual(validateProgress({ world: 13, completedLevels: 33, stickers: 39, bossChallenges: 13 }), {
+    world: 13, campaignWorld: 11, completedLevels: 33, stickers: 39, bossChallenges: 13,
+  });
+  assert.equal(validateProgress({ world: 14, completedLevels: 30, stickers: 36, bossChallenges: 12 }), null);
   assert.equal(validateProgress({ world: 1.5, completedLevels: 2, stickers: 3, bossChallenges: 4 }), null);
 });
 
@@ -23,6 +26,7 @@ test("migra IDs históricos sin confundir agua y nubes con mundos de campaña", 
   assert.equal(campaignWorldFromLegacyWorld(8), null);
   assert.equal(campaignWorldFromLegacyWorld(9), 7);
   assert.equal(campaignWorldFromLegacyWorld(12), 10);
+  assert.equal(campaignWorldFromLegacyWorld(13), 11);
   assert.equal(validateProgress({ world: 8, completedLevels: 3, stickers: 0, bossChallenges: 0 }).campaignWorld, null);
   assert.equal(validateProgress({ world: 12, campaignWorld: 12, completedLevels: 30, stickers: 36, bossChallenges: 12 }), null);
 });

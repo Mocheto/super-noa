@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BossBattle } from "./game/BossBattle";
+import { SantaBossBattle } from "./game/SantaBossBattle";
 import { Dialog } from "./game/Dialog";
 import { optimizedAssetSource } from "./game/assets";
 import { bossCatalog } from "./game/bosses";
@@ -755,7 +756,11 @@ export default function App() {
           {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? "Camino opcional" : `Bandera ${snapshot.checkpoint}/${displayedLevel.checkpoints.length}`}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
 
           {screen === "boss" && activeLevel.boss && (
-            <BossBattle
+            activeLevel.boss === "santa-claus" ? <SantaBossBattle
+              key={`santa-boss-${activeLevel.id}-${levelRun}`}
+              paused={paused} apples={snapshot.apples} onSpendApple={spendBossApple} onRestartLevel={restartBossLevel}
+              onAbandon={abandonBossBattle} onWin={handleComplete} playSound={playSound}
+            /> : <BossBattle
               key={`boss-${activeLevel.id}-${levelRun}`}
               bossId={activeLevel.boss}
               paused={paused}

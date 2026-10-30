@@ -20,7 +20,7 @@ type SecretShopProps = {
 const kittenColors: Record<Level["world"], string> = {
   1: "#ffb050", 2: "#504060", 3: "#fff0f0", 4: "#ffa030",
   5: "#fff0e0", 6: "#c0b0d0", 7: "#fffff0", 8: "#ffe0c0",
-  9: "#ffd090", 10: "#ff9020", 11: "#ff70a0", 12: "#d0e0ff",
+  9: "#ffd090", 10: "#ff9020", 11: "#ff70a0", 12: "#d0e0ff", 13: "#ffe0a0",
 };
 const partNames = ["orejas", "carita", "patitas"];
 const prompts = ["¡Para las orejas!", "¡Para la carita!", "¡Para las patitas!"];

@@ -504,7 +504,7 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
     context.fillStyle = "#2b834b"; context.fillRect(0, 448, VIEW_WIDTH, 92);
     return;
   }
-  if (level.theme === "ice-mountain") {
+  if (level.theme === "ice-mountain" || level.theme === "winter-workshop") {
     const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
     gradient.addColorStop(0, "#455ca4"); gradient.addColorStop(.48, "#9bd8ee"); gradient.addColorStop(1, "#e9fbff");
     context.fillStyle = gradient; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
@@ -513,6 +513,9 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
     context.globalAlpha = 1;
     for (let index = -1; index < 7; index += 1) { const x = index * 210 - positiveModulo(cameraX * .12, 210); context.fillStyle = index % 2 ? "#6383aa" : "#789abd"; context.beginPath(); context.moveTo(x, 440); context.lineTo(x + 105, 170 + positiveModulo(index * 31, 90)); context.lineTo(x + 220, 440); context.fill(); context.fillStyle = "#f5fdff"; context.beginPath(); context.moveTo(x + 72, 255); context.lineTo(x + 105, 170 + positiveModulo(index * 31, 90)); context.lineTo(x + 143, 268); context.fill(); }
     for (let index = 0; index < 34; index += 1) { context.fillStyle = "rgba(255,255,255,.8)"; context.fillRect(positiveModulo(index * 97 - cameraX * .13, VIEW_WIDTH), positiveModulo(index * 61 + frame * .35, 440), index % 3 ? 3 : 5, index % 3 ? 3 : 5); }
+    if (level.theme === "winter-workshop") {
+      for (let index = -1; index < 6; index += 1) { const x = index * 190 - positiveModulo(cameraX * .1, 190); context.fillStyle = "#b8414f"; context.fillRect(x + 60, 275, 78, 145); context.fillStyle = "#fff1c5"; context.fillRect(x + 69, 300, 18, 18); context.fillRect(x + 108, 300, 18, 18); context.fillStyle = "#d99b43"; context.fillRect(x + 96, 250, 7, 170); }
+    }
     context.fillStyle = "#dff8ff"; context.fillRect(0, 448, VIEW_WIDTH, 92);
     return;
   }

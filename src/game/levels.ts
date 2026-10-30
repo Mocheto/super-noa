@@ -119,6 +119,7 @@ export const themeNames: Record<Theme, string> = {
   "dragon-volcano": "El volcán de los dragones",
   "giant-valley": "El valle de los gigantes",
   "ice-mountain": "La montaña de hielo",
+  "winter-workshop": "El mundo de Papá Noel",
 };
 
 // Identificadores estables: A es el desvío acuático entre los mundos 3 y 4.
@@ -1018,7 +1019,7 @@ export const levels: Level[] = [
   },
   {
     id: "12-3", world: 12, screen: 3,
-    route: { finale: true },
+    route: { next: "13-1", nextLabel: "Seguir a Papá Noel ▶" },
     title: "La cima de la aurora", subtitle: "Domina el hielo y el viento para llegar hasta la gran Osa Boreal.",
     theme: "ice-mountain", width: 7800, start: { x: 80, y: 380 }, goalX: 7620,
     platforms: [
@@ -1032,6 +1033,34 @@ export const levels: Level[] = [
     enemies: [enemy("i3-p1", "penguin", 440, 416, 310, 720, 62), enemy("i3-o1", "snowy-owl", 1130, 165, 990, 1450, 86), enemy("i3-f1", "snow-fox", 2250, 410, 2100, 2720, 62), enemy("i3-o2", "snowy-owl", 3300, 125, 3160, 3650, 92), enemy("i3-p2", "penguin", 4340, 416, 4200, 4630, 68), enemy("i3-o3", "snowy-owl", 5450, 135, 5310, 5810, 98), enemy("i3-f2", "snow-fox", 7020, 410, 6740, 7440, 72)],
     items: [apple("i3a1", 360, 285), apple("i3a2", 700, 200), apple("i3a3", 1430, 175), apple("i3a4", 2520, 125), apple("i3a5", 3610, 115), sticker("sticker-12-3", 4710, 110), apple("i3a6", 5510, 170), apple("i3a7", 6000, 260), apple("i3a8", 7140, 140)],
     rewardBlocks: [reward("i3r1", 1080, 179), reward("i3r2", 3220, 89, "apple"), reward("i3r3", 5160, 159)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890, 6690], boss: "polar-bear",
+  },
+  {
+    id: "13-1", world: 13, screen: 1,
+    title: "La senda de la nieve", subtitle: "Sigue los faroles dorados entre los pinos nevados.",
+    theme: "winter-workshop", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
+    platforms: [...themedGround([[0, 860], [980, 780], [1890, 940], [2960, 810], [3900, 850], [4880, 720]], "ice-ground"), themedLedge(360, 325, 180, "ice-ledge"), themedLedge(720, 245, 180, "ice-ledge"), themedLedge(1300, 280, 190, "ice-ledge"), themedLedge(2160, 230, 180, "ice-ledge"), themedLedge(2550, 320, 180, "ice-ledge"), themedLedge(3300, 250, 190, "ice-ledge"), themedLedge(4250, 210, 180, "ice-ledge"), themedLedge(5100, 250, 180, "ice-ledge")],
+    deadlyWater: deadlyWaterPits([[0, 860], [980, 780], [1890, 940], [2960, 810], [3900, 850], [4880, 720]]),
+    windZones: [iceWind("santa-snow-1", 800, 180, 1, 180), iceWind("santa-snow-2", 3640, 190, -1, 190)],
+    enemies: [enemy("s13-p1", "penguin", 500, 416, 330, 750, 48), enemy("s13-f1", "snow-fox", 1400, 410, 1120, 1630, 50), enemy("s13-o1", "snowy-owl", 2410, 180, 2210, 2720, 65), enemy("s13-p2", "penguin", 4350, 416, 4120, 4640, 54)],
+    items: [apple("s13a1", 410, 265), apple("s13a2", 760, 185), sticker("sticker-13-1", 1470, 215), apple("s13a3", 2260, 150), apple("s13a4", 3360, 180), apple("s13a5", 5150, 185)], rewardBlocks: [reward("s13r1", 1120, 300), reward("s13r2", 3150, 300, "apple")], checkpoints: [1050, 1930, 3000, 3900, 4930],
+  },
+  {
+    id: "13-2", world: 13, screen: 2,
+    title: "La fábrica de juguetes", subtitle: "Cruza el taller de los duendes sin despertar a los búhos.",
+    theme: "winter-workshop", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    platforms: [...themedGround([[0, 790], [920, 900], [1940, 760], [2820, 990], [3940, 840], [4910, 820], [5860, 700]], "ice-ground"), themedLedge(280, 335, 180, "ice-ledge"), themedLedge(600, 255, 180, "ice-ledge"), themedLedge(1120, 220, 180, "ice-ledge"), themedLedge(1540, 320, 180, "ice-ledge"), themedLedge(2210, 235, 190, "ice-ledge"), themedLedge(3060, 205, 180, "ice-ledge"), themedLedge(3510, 285, 180, "ice-ledge"), themedLedge(4180, 220, 190, "ice-ledge"), themedLedge(5300, 205, 180, "ice-ledge"), themedLedge(6020, 220, 180, "ice-ledge")],
+    deadlyWater: deadlyWaterPits([[0, 790], [920, 900], [1940, 760], [2820, 990], [3940, 840], [4910, 820], [5860, 700]]),
+    enemies: [enemy("s13-o1", "snowy-owl", 700, 180, 520, 860, 70), enemy("s13-f1", "snow-fox", 1350, 410, 1100, 1690, 52), enemy("s13-p1", "penguin", 2420, 416, 2130, 2630, 58), enemy("s13-o2", "snowy-owl", 3290, 145, 3080, 3650, 76), enemy("s13-f2", "snow-fox", 4440, 410, 4210, 4670, 58), enemy("s13-p2", "penguin", 6100, 416, 5900, 6280, 60)],
+    items: [apple("s13b1", 330, 290), apple("s13b2", 640, 205), apple("s13b3", 1220, 150), sticker("sticker-13-2", 3160, 135), apple("s13b4", 4280, 170), apple("s13b5", 6060, 155)], rewardBlocks: [reward("s13r3", 1020, 300), reward("s13r4", 3980, 300, "apple")], checkpoints: [970, 1990, 2860, 3990, 4960, 5900],
+  },
+  {
+    id: "13-3", world: 13, screen: 3, route: { finale: true },
+    title: "El almacén de regalos", subtitle: "Encuentra la gran puerta roja y ayuda a Papá Noel con cuidado.",
+    theme: "winter-workshop", width: 7300, start: { x: 80, y: 380 }, goalX: 7100,
+    platforms: [...themedGround([[0, 820], [960, 770], [1850, 850], [2820, 780], [3720, 920], [4760, 790], [5680, 760], [6570, 820]], "ice-ground"), themedLedge(320, 330, 180, "ice-ledge"), themedLedge(680, 245, 180, "ice-ledge"), themedLedge(1130, 280, 180, "ice-ledge"), themedLedge(2080, 220, 190, "ice-ledge"), themedLedge(2480, 320, 180, "ice-ledge"), themedLedge(3150, 240, 190, "ice-ledge"), themedLedge(4050, 205, 180, "ice-ledge"), themedLedge(5210, 230, 190, "ice-ledge"), themedLedge(6090, 185, 180, "ice-ledge"), themedLedge(6800, 280, 180, "ice-ledge")],
+    deadlyWater: deadlyWaterPits([[0, 820], [960, 770], [1850, 850], [2820, 780], [3720, 920], [4760, 790], [5680, 760], [6570, 820]]),
+    enemies: [enemy("s13c-p1", "penguin", 430, 416, 280, 720, 58), enemy("s13c-o1", "snowy-owl", 1300, 160, 1100, 1570, 78), enemy("s13c-f1", "snow-fox", 2280, 410, 2050, 2580, 60), enemy("s13c-o2", "snowy-owl", 4210, 150, 3980, 4520, 82), enemy("s13c-p2", "penguin", 5360, 416, 5100, 5540, 64), enemy("s13c-f2", "snow-fox", 6840, 410, 6640, 7050, 62)],
+    items: [apple("s13c1", 360, 280), apple("s13c2", 740, 190), apple("s13c3", 1210, 210), apple("s13c4", 3220, 170), sticker("sticker-13-3", 6200, 135), apple("s13c5", 6900, 185)], rewardBlocks: [reward("s13r5", 1060, 300), reward("s13r6", 4900, 300, "apple")], checkpoints: [1000, 1900, 2850, 3750, 4800, 5730, 6620], boss: "santa-claus",
   },
   {
     id: "S-1",

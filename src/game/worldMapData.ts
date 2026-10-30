@@ -22,6 +22,7 @@ export const worldCatalog: Array<{
   { id: 10, name: "El Volcán de los Dragones", shortName: "Dragones", description: "Lava brillante, cristales rojos y pequeños dragones valientes.", cat: "Chispa", catAsset: "./assets/sprites/world-cat-10-v1.png", x: 51, y: 82 },
   { id: 11, name: "El Valle de los Gigantes", shortName: "Gigantes", description: "Flores que abren puentes de pétalos, gotas de rocío y bichitos gigantes.", cat: "Botón", catAsset: "./assets/sprites/world-cat-11-v1.png", x: 32, y: 79 },
   { id: 12, name: "La Montaña de Hielo", shortName: "Hielo", description: "Nieve suave, cuevas azules y caminos muy resbaladizos.", cat: "Copito", catAsset: "./assets/sprites/world-cat-12-v1.png", x: 10, y: 80 },
+  { id: 13, name: "El Mundo de Papá Noel", shortName: "Navidad", description: "Nieve, duendes, juguetes y regalos para repartir.", cat: "Estrella", catAsset: "./assets/sprites/completion-cat-v1.png", x: 26, y: 92 },
   { id: 7, name: "El Reino Secreto", shortName: "Nubes", description: "Nubes mágicas y columnas de aire para subir junto a pájaros y unicornios.", cat: "Iris", catAsset: "./assets/sprites/world-cat-7-v1.png", x: 88, y: 12 },
 ];
 
@@ -38,6 +39,7 @@ export const mapRoutes: MapRoute[] = [
   { from: 9, to: 10, path: "M 710 470 C 650 493 575 480 510 459" },
   { from: 10, to: 11, path: "M 510 459 C 448 445 382 440 320 442" },
   { from: 11, to: 12, path: "M 320 442 C 244 430 168 438 100 448" },
+  { from: 12, to: 13, path: "M 100 448 C 144 485 204 515 260 520" },
   { from: 3, to: 8, path: "M 510 134 C 564 227 434 282 510 392", branch: "water" },
   { from: 8, to: 4, path: "M 510 392 C 594 340 642 251 730 190", branch: "water", requiresCompletion: "A-3" },
   { from: 4, to: 7, path: "M 730 190 C 807 162 788 70 880 67", branch: "secret" },

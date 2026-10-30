@@ -55,11 +55,11 @@ export function getLevelAssets(level: Level): RasterAssets {
     1: "world-1-tiles-v1.png", 2: "world-2-tiles-v1.png", 3: "world-3-tiles-v1.png",
     4: "world-4-tiles-v1.png", 5: "world-5-tiles-v1.png", 6: "castle-v1.png",
     7: "secret-sky-v1.png", 8: "water-terrain-v1.png", 9: "dinosaur-island-v1.png",
-    10: "platform-tiles-v1.png", 11: "platform-tiles-v1.png", 12: "platform-tiles-v1.png",
+    10: "platform-tiles-v1.png", 11: "platform-tiles-v1.png", 12: "platform-tiles-v1.png", 13: "platform-tiles-v1.png",
   } as const;
   const tiles = {} as RasterAssets["tiles"];
   const stickerSheets = {} as RasterAssets["stickerSheets"];
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const) {
+  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] as const) {
     Object.defineProperty(tiles, id, { enumerable: true, get: () => when(id === world, `./assets/atlases/${tileImages[id]}`) });
     Object.defineProperty(stickerSheets, id, { enumerable: true, get: () => when(id === world, `./assets/stickers/world-${id}-v1.png`) });
   }

@@ -20,7 +20,7 @@ export const rankingSchema = `
   ALTER TABLE super_noa_ranking_profiles ADD COLUMN IF NOT EXISTS total_apples BIGINT NOT NULL DEFAULT 0;
   ALTER TABLE super_noa_ranking_profiles ADD COLUMN IF NOT EXISTS achieved_at TIMESTAMPTZ;
   UPDATE super_noa_ranking_profiles
-    SET campaign_world = CASE WHEN world BETWEEN 0 AND 6 THEN world WHEN world BETWEEN 9 AND 12 THEN world - 2 ELSE NULL END
+    SET campaign_world = CASE WHEN world BETWEEN 0 AND 6 THEN world WHEN world BETWEEN 9 AND 13 THEN world - 2 ELSE NULL END
     WHERE campaign_world IS NULL;
   ALTER TABLE super_noa_ranking_profiles
     DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_world_check,
@@ -30,11 +30,11 @@ export const rankingSchema = `
     DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_campaign_world_check,
     DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_total_apples_check;
   ALTER TABLE super_noa_ranking_profiles
-    ADD CONSTRAINT super_noa_ranking_profiles_world_check CHECK (world BETWEEN 0 AND 12),
-    ADD CONSTRAINT super_noa_ranking_profiles_completed_levels_check CHECK (completed_levels BETWEEN 0 AND 30),
-    ADD CONSTRAINT super_noa_ranking_profiles_stickers_check CHECK (stickers BETWEEN 0 AND 36),
-    ADD CONSTRAINT super_noa_ranking_profiles_boss_challenges_check CHECK (boss_challenges BETWEEN 0 AND 12),
-    ADD CONSTRAINT super_noa_ranking_profiles_campaign_world_check CHECK (campaign_world BETWEEN 0 AND 10),
+    ADD CONSTRAINT super_noa_ranking_profiles_world_check CHECK (world BETWEEN 0 AND 13),
+    ADD CONSTRAINT super_noa_ranking_profiles_completed_levels_check CHECK (completed_levels BETWEEN 0 AND 33),
+    ADD CONSTRAINT super_noa_ranking_profiles_stickers_check CHECK (stickers BETWEEN 0 AND 39),
+    ADD CONSTRAINT super_noa_ranking_profiles_boss_challenges_check CHECK (boss_challenges BETWEEN 0 AND 13),
+    ADD CONSTRAINT super_noa_ranking_profiles_campaign_world_check CHECK (campaign_world BETWEEN 0 AND 11),
     ADD CONSTRAINT super_noa_ranking_profiles_total_apples_check CHECK (total_apples BETWEEN 0 AND 9007199254740991);
 `;
 

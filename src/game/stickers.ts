@@ -4,7 +4,7 @@ export type StickerDefinition = {
   id: string;
   name: string;
   icon: PixelIconKind;
-  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
   hint: string;
 };
 
@@ -42,6 +42,9 @@ export const stickerCatalog: StickerDefinition[] = [
   { id: "sticker-12-1", name: "Copo brillante", icon: "sparkle", world: 12, hint: "Busca sobre el primer bloque de hielo." },
   { id: "sticker-12-2", name: "Bufanda pingüina", icon: "paw", world: 12, hint: "Deslízate por la cueva hasta encontrarla." },
   { id: "sticker-12-3", name: "Corona de aurora", icon: "crown", world: 12, hint: "Brilla cerca de la cima nevada." },
+  { id: "sticker-13-1", name: "Campana de nieve", icon: "sparkle", world: 13, hint: "Busca junto al pino grande." },
+  { id: "sticker-13-2", name: "Muñeco de juguete", icon: "cat", world: 13, hint: "Mira arriba de la cinta transportadora." },
+  { id: "sticker-13-3", name: "Estrella del regalo", icon: "crown", world: 13, hint: "Está ante la puerta roja de Papá Noel." },
   { id: "sticker-s-1", name: "Pluma celeste", icon: "sparkle", world: 7, hint: "Sube con la primera columna de aire y salta a la nube de la derecha." },
   { id: "sticker-s-2", name: "Herradura arcoíris", icon: "crown", world: 7, hint: "La segunda columna de aire te ayuda a subir a la nube alta." },
   { id: "sticker-s-3", name: "Estrella secreta", icon: "gem", world: 7, hint: "Sube con la última columna de aire hasta la nube más alta." },

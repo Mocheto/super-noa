@@ -70,3 +70,19 @@ export function mechanicRespawn(level: Level, x: number, width: number, height: 
   const support = supports.sort((a, b) => Math.abs(a.y - height - level.start.y) - Math.abs(b.y - height - level.start.y))[0];
   return support ? { x, y: support.y - height } : { ...level.start };
 }
+
+/** Recupera a Noa sobre la nube normal más baja que todavía se ve en una subida vertical. */
+export function visibleSkyRespawn(level: Level, cameraY: number, viewHeight: number, playerWidth: number, playerHeight: number): { x: number; y: number } | null {
+  if (level.orientation !== "vertical") return null;
+  const topMargin = cameraY + 80;
+  const bottomMargin = cameraY + viewHeight - 34;
+  const support = level.platforms
+    .filter((platform) => platform.kind === "sky-cloud" && platform.width >= playerWidth + 20
+      && platform.y >= topMargin && platform.y <= bottomMargin)
+    .sort((first, second) => second.y - first.y)[0];
+  if (!support) return null;
+  return {
+    x: support.x + (support.width - playerWidth) / 2,
+    y: support.y - playerHeight,
+  };
+}

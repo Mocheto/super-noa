@@ -13,7 +13,7 @@ import { useGameInput } from "./input";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createGameLoop, type GameLoop } from "./gameLoop";
 import { createLevelTransition } from "./levelTransition";
-import { beatPlatformActive, getMechanicPlatforms, hasWorldMechanics, mechanicRespawn, updraftVelocity, wolfSleepState } from "./worldMechanics";
+import { beatPlatformActive, getMechanicPlatforms, hasWorldMechanics, mechanicRespawn, updraftVelocity, visibleSkyRespawn, wolfSleepState } from "./worldMechanics";
 import { getStickerSprite } from "./stickers";
 import { createChainGuardian, guardianHitbox, updateChainGuardian } from "./chainGuardians";
 import type { Level, GameSnapshot, ShopMatchCount } from "./types";
@@ -219,7 +219,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     };
 
     const respawn = () => {
-      const spawn = level.orientation === "vertical" ? { x: respawnX, y: respawnY } : mechanicRespawn(level, respawnX, player.width, player.height);
+      const spawn = level.orientation === "vertical"
+        ? visibleSkyRespawn(level, cameraY, VIEW_HEIGHT, player.width, player.height) ?? { x: respawnX, y: respawnY }
+        : mechanicRespawn(level, respawnX, player.width, player.height);
       player.x = spawn.x;
       player.y = spawn.y;
       player.vx = 0;
@@ -240,6 +242,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       projectiles.length = 0;
       cannonballs.length = 0;
       callbacksRef.current.onLoseLife();
+      if (level.orientation === "vertical" && statusRef.current) statusRef.current.textContent = "¡Una nube cercana ha recogido a Noa!";
     };
 
     const hurt = () => {

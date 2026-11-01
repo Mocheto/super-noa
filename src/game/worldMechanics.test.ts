@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { beatPlatformActive, bloomBridgeState, getMechanicPlatforms, mechanicRespawn, updraftVelocity, wolfSleepState } from "./worldMechanics.ts";
+import { beatPlatformActive, bloomBridgeState, getMechanicPlatforms, mechanicRespawn, updraftVelocity, visibleSkyRespawn, wolfSleepState } from "./worldMechanics.ts";
 import { engineModules, mountEngine } from "./engineTestHarness.ts";
 import type { BloomBridge, Enemy, Level, Updraft } from "./types";
 import type { RasterAssets } from "./assets";
@@ -267,6 +267,23 @@ test("los respawns usan suelo permanente, nunca pétalos, sin cambiar el contrat
   assert.deepEqual(mechanicRespawn({ ...data, platforms: [] }, 122, 42, 58), data.start);
   const original = level({ world: 1, start: { x: 100, y: 350 }, bloomBridges: [flower] });
   assert.deepEqual(mechanicRespawn(original, 122, 42, 58), { x: 122, y: 350 });
+});
+
+test("una caída celeste reaparece sobre una nube normal visible y nunca en el atajo esponjoso", () => {
+  const sky = level({
+    world: 17, orientation: "vertical", height: 3200, width: 960, start: { x: 100, y: 3050 },
+    platforms: [
+      { x: 70, y: 2180, width: 190, height: 30, kind: "sky-cloud" },
+      { x: 700, y: 2350, width: 145, height: 34, kind: "sky-bounce", bounceSpeed: 1450, bounceDrift: 330 },
+      { x: 520, y: 2470, width: 190, height: 30, kind: "sky-cloud" },
+      { x: 250, y: 2600, width: 190, height: 30, kind: "sky-cloud" },
+    ],
+  });
+  const cameraY = 2000;
+  const spawn = visibleSkyRespawn(sky, cameraY, 540, 42, 58);
+  assert.deepEqual(spawn, { x: 594, y: 2412 });
+  assert.ok(spawn!.y >= cameraY && spawn!.y + 58 <= cameraY + 540, "la reaparición debe verse en cámara");
+  assert.equal(visibleSkyRespawn({ ...sky, orientation: "horizontal" }, cameraY, 540, 42, 58), null);
 });
 
 test("una muerte real reaparece en el checkpoint sobre suelo permanente y no sobre la flor", () => {

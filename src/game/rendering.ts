@@ -425,6 +425,37 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
     context.fillRect(0, 120, VIEW_WIDTH, VIEW_HEIGHT - 120);
     return;
   }
+  const illustratedBackground = raster.worldBackground;
+  if (level.world <= 12 && level.world !== 8 && illustratedBackground.complete && illustratedBackground.naturalWidth) {
+    const imageRatio = illustratedBackground.naturalWidth / illustratedBackground.naturalHeight;
+    const viewRatio = VIEW_WIDTH / VIEW_HEIGHT;
+    const sourceWidth = imageRatio > viewRatio ? illustratedBackground.naturalHeight * viewRatio : illustratedBackground.naturalWidth;
+    const sourceHeight = imageRatio > viewRatio ? illustratedBackground.naturalHeight : illustratedBackground.naturalWidth / viewRatio;
+    const sourceX = (illustratedBackground.naturalWidth - sourceWidth) / 2;
+    const sourceY = (illustratedBackground.naturalHeight - sourceHeight) / 2;
+    const scroll = cameraX * .1;
+    const firstPanel = Math.floor(scroll / VIEW_WIDTH);
+    for (let panel = firstPanel; panel <= firstPanel + 1; panel += 1) {
+      const x = panel * VIEW_WIDTH - scroll;
+      context.save();
+      context.translate(x + (panel % 2 ? VIEW_WIDTH : 0), 0);
+      if (panel % 2) context.scale(-1, 1);
+      context.drawImage(illustratedBackground, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+      context.restore();
+    }
+    context.fillStyle = level.theme === "haunted-castle" ? "rgba(10,8,30,.2)" : level.theme === "dragon-volcano" ? "rgba(70,16,24,.1)" : "rgba(20,45,55,.08)";
+    context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    if (level.theme === "dragon-volcano") {
+      for (let index = 0; index < 16; index += 1) drawTinySparkle(context, positiveModulo(index * 151 - cameraX * .2, VIEW_WIDTH), 70 + positiveModulo(index * 79 + frame, 330), index % 2 ? "#ffb04a" : "#ff6c62", 2);
+    }
+    if (level.theme === "ice-mountain") {
+      for (let index = 0; index < 34; index += 1) {
+        context.fillStyle = "rgba(255,255,255,.8)";
+        context.fillRect(positiveModulo(index * 97 - cameraX * .13, VIEW_WIDTH), positiveModulo(index * 61 + frame * .35, 440), index % 3 ? 3 : 5, index % 3 ? 3 : 5);
+      }
+    }
+    return;
+  }
   if (level.theme === "haunted-castle") {
     context.fillStyle = "#160f2e";
     context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);

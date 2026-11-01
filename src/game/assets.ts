@@ -2,6 +2,7 @@ import type { Level } from "./types";
 import { mechanicSpriteSheets, type MechanicSprite } from "./mechanicSprites.ts";
 
 export type RasterAssets = {
+  worldBackground: HTMLImageElement;
   waterBackground: HTMLImageElement; waterTerrain: HTMLImageElement; seaWall: HTMLImageElement;
   waterEnemies: HTMLImageElement; swim: HTMLImageElement; waterCat: HTMLImageElement;
   enemies: HTMLImageElement; castleEnemies: HTMLImageElement; boar: HTMLImageElement;
@@ -85,6 +86,7 @@ export function getLevelAssets(level: Level): RasterAssets {
     get flyingShip() { return when(level.platforms.some((platform) => platform.kind === "ship"), mechanicSpriteSheets.flyingShip.source); },
     get airPlank() { return when(level.platforms.some((platform) => platform.kind === "air-plank"), mechanicSpriteSheets.airPlank.source); },
     get mistPlatform() { return when(level.platforms.some((platform) => platform.kind === "mist"), mechanicSpriteSheets.mistPlatform.source); },
+    get worldBackground() { return when(world <= 12 && world !== 8, `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`); },
     get waterBackground() { return when(world === 8, "./assets/worlds/world-8.png"); },
     get waterTerrain() { return when(world === 8, "./assets/atlases/water-terrain-v1.png"); },
     get seaWall() { return when(world === 8, "./assets/sprites/sea-reef-wall-v2.png"); },

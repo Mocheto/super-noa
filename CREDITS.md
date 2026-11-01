@@ -6,7 +6,7 @@ Las pistas `manzanos.mp3`, `gatitos.mp3` y `lobos.mp3` proceden del paquete [Pla
 
 - Licencia declarada por el autor: [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/).
 - Archivos originales: `stage1.mp3`, `stage2.mp3` y `stage3.mp3`.
-- El cuarto mundo reutiliza `lobos.mp3`, el quinto reutiliza `manzanos.mp3` y el Reino Celeste reutiliza `gatitos.mp3`; no incorporan pistas con otra licencia.
+- Cada una se usa solo en un mundo: `gatitos.mp3` en el Bosque de los Gatitos, `lobos.mp3` en el Bosque de los Lobos y `manzanos.mp3` en la Flota de las Nubes.
 - Descargados el 3 de octubre de 2026.
 
 La pista `castillo.wav` del sexto mundo es una composición original sintetizada para Super Noa mediante `scripts/build-castle-music.mjs`; no emplea muestras ni melodías de terceros.
@@ -19,7 +19,7 @@ La pista `noa-estelar.mp3`, «Brillo de Noa», es una composición original de 1
 
 La atribución no es obligatoria bajo CC0, pero se conserva por cortesía y trazabilidad.
 
-### Música original del bosque y de las últimas aventuras
+### Música original del bosque y las aventuras
 
 Las siguientes composiciones se han creado específicamente para Super Noa mediante `scripts/build-adventure-music.mjs`. Sus partituras, armonías, arreglos y sonidos son originales: no utilizan grabaciones, muestras, melodías ni personajes de juegos comerciales. La mención de CC0 anterior corresponde al paquete de Guy G. Gamerson; estas pistas no proceden de ese paquete ni alteran su atribución o licencia.
 
@@ -30,9 +30,15 @@ Las siguientes composiciones se han creado específicamente para Super Noa media
 | `hielo.mp3` | Patines de cristal | 4/4, 90 BPM | Re mayor / Si menor; campanas redondeadas, celesta arpegiada y acordes sostenidos como nieve | 85,333 s | 834,6 KiB |
 | `bosque-manzanos.mp3` | Brisa entre manzanos | 4/4, 84 BPM | Do mayor; paseo tranquilo entre manzanos, flauta senoidal de registro medio, arpa amortiguada y pad cálido, sin percusión | 91,429 s | 894,2 KiB |
 | `musica.mp3` | La gran orquesta de Tempo | 4/4, 112 BPM | Do mayor; desfile alegre con campanas, piano de juguete, tamborcitos y bajo saltarín | 68,571 s | 670,9 KiB |
+| `encinas.mp3` | Pasos entre encinas | 4/4, 104 BPM | Re menor; flauta de madera, bajo suave y campanitas de bellota | 73,846 s | 722,6 KiB |
+| `nubes-piratas.mp3` | Brisa de las nubes secretas | 4/4, 112 BPM | Sol mayor; silbato redondo, arpa y tambor de viaje | 68,571 s | 670,8 KiB |
+| `invierno-regalos.mp3` | Copos y juguetes | 4/4, 98 BPM | Si bemol mayor; celesta tibia, cascabeles suaves y bajo acogedor | 78,367 s | 766,4 KiB |
+| `dunas-doradas.mp3` | Brisa de las dunas | 4/4, 92 BPM | La menor; cuerda pulsada, palmas ligeras y estrellas lejanas | 83,478 s | 816,3 KiB |
+| `expreso-noa.mp3` | Rieles de colores | 4/4, 108 BPM | Mi mayor; piano de juguete, ruedas rítmicas y silbato amable | 71,111 s | 695,9 KiB |
+| `reino-celeste.mp3` | Puentes de estrella | 4/4, 88 BPM | Re mayor; arpa luminosa, campanas y una nube de acordes | 87,273 s | 853,6 KiB |
 
 - Composición y síntesis: originales de Super Noa, generadas localmente con Node.js; codificación con FFmpeg y `libmp3lame`. No se han empleado servicios externos ni recursos musicales ajenos.
-- Cada pieza tiene su propia melodía y progresión, 32 compases y dos vueltas con pequeñas variaciones de arreglo. Las ondas contienen pocos armónicos, con ataques y salidas suaves, sin ruido explosivo ni efectos de susto.
+- Cada pieza tiene su propia melodía y progresión, 32 compases y dos vueltas con pequeñas variaciones de arreglo. Ningún mundo reutiliza una pista. Las ondas contienen pocos armónicos, con ataques y salidas suaves, sin ruido explosivo ni efectos de susto.
 - Formato: MP3 estéreo, 32 kHz, 80 kbit/s, menos de 1 MiB por pista, reproducible mediante HTMLAudio. Los metadatos ID3 incluyen título, proyecto, composición original, BPM, tonalidad, estilo y compás.
 - Las colas y los ecos se mezclan circularmente, sin fundido general ni silencio añadido entre vueltas. La cabecera Xing/LAME conserva la compensación del retardo y del relleno del codificador; la continuidad exacta de la reproducción repetida depende también del navegador y su implementación de HTMLAudio.
 - La validación sobre los tres MP3 de las últimas aventuras decodificados confirma cero muestras recortadas, picos de −3,79 dBFS y niveles RMS respectivos de −17,52, −17,54 y −16,20 dBFS. El salto máximo de muestra en la unión es inferior a 0,004 y el cambio de pendiente inferior a 0,006 (escala normalizada ±1). Se comprueba también que la unión conserva sonido y que su ataque energético es coherente con los otros inicios de compás.
@@ -49,7 +55,7 @@ node scripts/build-adventure-music.mjs --only=musica
 node scripts/build-adventure-music.mjs --check --only=musica
 ```
 
-El primer comando genera las cinco pistas y las verifica; el segundo solo verifica los archivos existentes. `--only=nombre` permite generar o comprobar únicamente una de ellas, sin escribir las demás. Se comprueban formato, duración musical exacta tras compensar el retardo MP3, tamaño, metadatos de título, nivel medio, margen de pico, clipping y continuidad de la unión; el bosque incluye también la comparación espectral con el archivo anterior. Los errores terminan con código distinto de cero. Todo el PCM se procesa en memoria: no se guardan WAV ni archivos intermedios. Con las mismas versiones de Node.js, FFmpeg y `libmp3lame`, la generación es determinista.
+El primer comando genera las once pistas y las verifica; el segundo solo verifica los archivos existentes. `--only=nombre` permite generar o comprobar únicamente una de ellas, sin escribir las demás. Se comprueban formato, duración musical exacta tras compensar el retardo MP3, tamaño, metadatos de título, nivel medio, margen de pico, clipping y continuidad de la unión; el bosque incluye también la comparación espectral con el archivo anterior. Los errores terminan con código distinto de cero. Todo el PCM se procesa en memoria: no se guardan WAV ni archivos intermedios. Con las mismas versiones de Node.js, FFmpeg y `libmp3lame`, la generación es determinista.
 
 ## Recursos originales del proyecto
 

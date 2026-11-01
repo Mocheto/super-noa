@@ -185,6 +185,56 @@ const songs = [
     ],
   },
 ];
+
+// Cada mundo que antes compartía pista tiene ahora su propia partitura. Las
+// frases se repiten en la segunda vuelta, donde render() cambia el arreglo.
+function makeWorldSong(file, title, bpm, key, style, lead, roots, chords, melody) {
+  return {
+    file, title, bpm, meter: 4, key, style, lead,
+    roots: [...roots, ...roots, ...roots, ...roots],
+    chords: [...chords, ...chords, ...chords, ...chords],
+    melody: [...melody, ...melody, ...melody, ...melody],
+  };
+}
+
+songs.push(
+  makeWorldSong(
+    "encinas", "Pasos entre encinas", 104, "Re menor",
+    "Bosque de jabalíes; flauta de madera, bajo suave y campanitas de bellota", "wood",
+    [38, 41, 36, 43], [[57, 62, 65, 69], [57, 60, 65, 69], [55, 60, 64, 67], [58, 62, 65, 70]],
+    ["D5:1 F5:.5 A5:.5 G5:1 F5:1", "E5:.5 G5:.5 A5:1 G5:.5 E5:.5 D5:1", "C5:1 D5:.5 F5:.5 E5:1 D5:1", "F5:.5 A5:.5 G5:.5 F5:.5 D5:1 R:1"],
+  ),
+  makeWorldSong(
+    "nubes-piratas", "Brisa de las nubes secretas", 112, "Sol mayor",
+    "Nubes mágicas alegres; silbato redondo, arpa y tambor de viaje", "reed",
+    [43, 50, 48, 43], [[55, 59, 62, 67], [57, 62, 66, 69], [55, 60, 64, 67], [55, 59, 62, 67]],
+    ["G5:.5 B5:.5 D6:1 B5:.5 G5:.5 A5:1", "A5:1 C6:.5 B5:.5 A5:1 F#5:1", "E5:.5 G5:.5 A5:.5 C6:.5 B5:1 G5:1", "D6:1 B5:.5 A5:.5 G5:1 R:1"],
+  ),
+  makeWorldSong(
+    "invierno-regalos", "Copos y juguetes", 98, "Si bemol mayor",
+    "Invierno festivo; celesta tibia, cascabeles suaves y bajo acogedor", "bell",
+    [46, 43, 41, 46], [[58, 62, 65, 70], [55, 58, 62, 67], [53, 58, 62, 65], [58, 62, 65, 70]],
+    ["F5:1 A5:.5 Bb5:.5 C6:1 A5:1", "G5:.5 F5:.5 D5:1 F5:.5 G5:.5 A5:1", "E5:1 G5:.5 F5:.5 D5:1 C5:1", "D5:.5 F5:.5 Bb5:1 A5:.5 F5:.5 R:1"],
+  ),
+  makeWorldSong(
+    "dunas-doradas", "Brisa de las dunas", 92, "La menor",
+    "Desierto amable; cuerda pulsada, palmas ligeras y estrellas lejanas", "seed",
+    [45, 41, 48, 43], [[57, 60, 64, 69], [57, 60, 65, 69], [55, 60, 64, 67], [55, 59, 62, 67]],
+    ["A5:1 G5:.5 E5:.5 A5:1 C6:1", "G5:.5 A5:.5 C6:1 A5:.5 G5:.5 E5:1", "E5:1 G5:.5 A5:.5 G5:1 E5:1", "D5:.5 E5:.5 G5:1 A5:.5 G5:.5 R:1"],
+  ),
+  makeWorldSong(
+    "expreso-noa", "Rieles de colores", 108, "Mi mayor",
+    "Tren chispeante; piano de juguete, ruedas rítmicas y silbato amable", "music-box",
+    [40, 47, 45, 40], [[56, 59, 64, 68], [59, 63, 66, 71], [57, 61, 64, 69], [56, 59, 64, 68]],
+    ["E5:.5 G#5:.5 B5:1 C#6:.5 B5:.5 G#5:1", "F#5:1 A5:.5 B5:.5 A5:1 F#5:1", "G#5:.5 B5:.5 C#6:1 B5:.5 G#5:.5 E5:1", "B5:1 G#5:.5 F#5:.5 E5:1 R:1"],
+  ),
+  makeWorldSong(
+    "reino-celeste", "Puentes de estrella", 88, "Re mayor",
+    "Reino celeste sereno; arpa luminosa, campanas y una nube de acordes", "bell",
+    [50, 47, 45, 50], [[57, 62, 66, 69], [59, 62, 66, 71], [57, 61, 64, 69], [57, 62, 66, 69]],
+    ["D5:1 F#5:.5 A5:.5 D6:1 A5:1", "B5:.5 A5:.5 F#5:1 E5:.5 F#5:.5 A5:1", "G5:1 B5:.5 A5:.5 F#5:1 E5:1", "F#5:.5 A5:.5 D6:1 B5:.5 A5:.5 R:1"],
+  ),
+);
 assert(!only || songs.some((song) => song.file === only), `Pista desconocida: ${only}`);
 
 function run(tool, args, input) {

@@ -3,13 +3,16 @@ import test from "node:test";
 import { createMusicPlayer, musicTracks } from "./music.ts";
 import { existsSync } from "node:fs";
 
-test("el bosque usa una melodía calmada propia sin cambiar la música pirata", () => {
+test("cada mundo tiene una melodía propia y su archivo existe", () => {
   assert.equal(musicTracks[1], "./assets/music/bosque-manzanos.mp3");
-  assert.equal(musicTracks[5], "./assets/music/manzanos.mp3");
-  assert.notEqual(musicTracks[1], musicTracks[5]);
   assert.ok(existsSync(new URL("../../public/assets/music/bosque-manzanos.mp3", import.meta.url)));
   assert.equal(musicTracks[16], "./assets/music/musica.mp3");
   assert.ok(existsSync(new URL("../../public/assets/music/musica.mp3", import.meta.url)));
+  const tracks = Object.values(musicTracks);
+  assert.equal(new Set(tracks).size, tracks.length, "ningún mundo puede reutilizar una melodía");
+  for (const track of tracks) {
+    assert.ok(existsSync(new URL(`../../public/${track.replace("./", "")}`, import.meta.url)), `${track} no existe`);
+  }
 });
 
 test("pausar, silenciar y ajustar volumen conservan el reproductor y su tiempo", async () => {

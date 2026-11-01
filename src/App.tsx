@@ -1,15 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { BossBattle } from "./game/BossBattle";
-import { GuardianMiniGame } from "./game/GuardianMiniGame";
-import { SantaBossBattle } from "./game/SantaBossBattle";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "./game/Dialog";
 import { optimizedAssetSource } from "./game/assets";
 import { bossCatalog } from "./game/bosses";
 import { isGuardianGameId } from "./game/guardianGames";
 import { GameAssetIcon } from "./game/GameAssetIcon";
 import { PixelIcon } from "./game/PixelIcon";
-import { WorldMap } from "./game/WorldMap";
-import { GameCanvas, type SoundKind } from "./game/GameCanvas";
+import type { SoundKind } from "./game/GameCanvas";
 import { levels, themeNames } from "./game/levels";
 import { campaignLevels, campaignUnlockIndex, levelIndex, nextLevelIndex } from "./game/routes";
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
@@ -26,6 +22,12 @@ import type { GameSnapshot } from "./game/types";
 import type { DetourId } from "./game/types";
 import { detourLevel, detourLevels } from "./game/detours";
 import { visitDetour } from "./game/detourProgress";
+
+const WorldMap = lazy(() => import("./game/WorldMap").then((module) => ({ default: module.WorldMap })));
+const GameCanvas = lazy(() => import("./game/GameCanvas").then((module) => ({ default: module.GameCanvas })));
+const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
+const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((module) => ({ default: module.GuardianMiniGame })));
+const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module) => ({ default: module.SantaBossBattle })));
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
 const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
@@ -108,8 +110,11 @@ export default function App() {
   const secretTransitionRef = useRef({ target: -1, remaining: 1800 });
   const audioContextRef = useRef<AudioContext | null>(null);
   const playScreenRef = useRef<HTMLElement | null>(null);
+  const screenRef = useRef(screen);
   const activeLevel = levels[activeIndex] ?? detourLevels[activeIndex - levels.length];
   const displayedLevel = activeDetour ? detourLevel(activeDetour) : activeLevel;
+
+  useEffect(() => { screenRef.current = screen; }, [screen]);
 
   const finishEnrollment = useCallback(() => {
     enrollmentRequiredRef.current = false;
@@ -128,11 +133,12 @@ export default function App() {
   }, [finishEnrollment]);
 
   const requestAdventure = useCallback(async (action?: () => void) => {
+    action?.();
     if (enrollmentBusyRef.current || enrollmentRequiredRef.current || rankingJoiningRef.current) return;
-    if (isEnrolled(readRankingDevice() ?? rankingDevice)) { action?.(); return; }
-    if (enrollmentDeferred && Date.now() < enrollmentRetryAtRef.current) { action?.(); return; }
+    if (isEnrolled(readRankingDevice() ?? rankingDevice)) return;
+    if (enrollmentDeferred && Date.now() < enrollmentRetryAtRef.current) return;
     enrollmentBusyRef.current = true;
-    adventureActionRef.current = action ?? null;
+    adventureActionRef.current = null;
     setEnrollmentChecking(true);
     try {
       await checkRankingAvailability();
@@ -144,12 +150,17 @@ export default function App() {
         setEnrollmentMessage("");
         finishEnrollment();
       } else {
+        if (!safeEnrollmentMoment(screenRef.current, false)) {
+          enrollmentRetryAtRef.current = 0;
+          setEnrollmentDeferred(true);
+          finishEnrollment();
+          return;
+        }
         setShowHelp(false);
         setShowAlbum(false);
         setShowSettings(false);
         setShowCredits(false);
         setPaused(false);
-        setScreen((current) => safeEnrollmentMoment(current, false) ? current : "map");
         setRankingDevice(pending);
         setRankingAlias(pending?.alias ?? "");
         setRankingMessage("");
@@ -166,6 +177,12 @@ export default function App() {
         setRankingAlias(readRankingDevice()?.alias ?? "");
         setRankingMessage(message);
         setEnrollmentStorageBlocked(enrollmentFailure(error) === "storage");
+        if (!safeEnrollmentMoment(screenRef.current, false)) {
+          enrollmentRetryAtRef.current = 0;
+          setEnrollmentDeferred(true);
+          finishEnrollment();
+          return;
+        }
         setShowHelp(false);
         setShowAlbum(false);
         setShowSettings(false);
@@ -175,6 +192,10 @@ export default function App() {
         setEnrollmentRequired(true);
         setShowRanking(true);
         window.requestAnimationFrame(() => rankingAliasRef.current?.focus());
+      } else if (!safeEnrollmentMoment(screenRef.current, false)) {
+        enrollmentRetryAtRef.current = Date.now() + ENROLLMENT_RETRY_MS;
+        setEnrollmentDeferred(true);
+        finishEnrollment();
       } else deferEnrollment(message);
     } finally {
       enrollmentBusyRef.current = false;
@@ -678,7 +699,7 @@ export default function App() {
   return (
     <main className={`app-shell ${reduceMotion ? "reduce-motion" : ""} ${touchControls === "always" ? "touch-controls-always" : ""}`}>
       {saveError && <p className="save-warning" role="alert">No se pudo guardar la partida en este dispositivo. Puedes seguir jugando, pero el progreso podría perderse al cerrar.</p>}
-      {enrollmentChecking && <p className="ranking-sync-warning" role="status">Buscando el tablón antes de la aventura…</p>}
+      {enrollmentChecking && <p className="ranking-sync-warning" role="status">Conectando el tablón en segundo plano…</p>}
       {enrollmentMessage && <p className="ranking-sync-warning" role="status">{enrollmentMessage}</p>}
       {rankingDevice && rankingSyncState === "pending" && <p className="ranking-sync-warning" role="status">Tus logros del tablón están pendientes. {rankingSyncMessage} {saveError ? "Puedes seguir jugando, aunque este navegador no pudo guardar la partida." : "Tu partida sigue guardada en este dispositivo."} <button type="button" onClick={() => setRankingRetry((current) => current + 1)}>Reintentar envío</button></p>}
       {audioMessage && !muted && musicVolume > 0 && <p className="audio-warning" role="status">{audioMessage}</p>}
@@ -691,7 +712,7 @@ export default function App() {
             <p className="home-invite"><PixelIcon kind="heart" /> Una gran aventura para pequeñas heroínas</p>
             <p className="coming-adventures"><strong>Nuevas aventuras:</strong> El Tren de las Estaciones · El Reino de la Música · El Reino Celeste</p>
             <div className="home-actions">
-              <button className="pixel-button primary home-play" type="button" data-gamepad-default disabled={enrollmentChecking} onClick={() => void requestAdventure(() => setScreen("map"))}>▶ ¡Jugar ahora!</button>
+              <button className="pixel-button primary home-play" type="button" data-gamepad-default onClick={() => void requestAdventure(() => setScreen("map"))}>▶ ¡Jugar ahora!</button>
               <button className="pixel-button" type="button" onClick={() => setShowHelp(true)}>¿Cómo se juega?</button>
             </div>
             {progress.unlocked > 0 && !saveError && <p className="save-note">Partida guardada · {completedLevels}/{campaignLevelCount}{progress.secretUnlocked ? " + secreto" : ""}</p>}
@@ -723,7 +744,9 @@ export default function App() {
               <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label="Volver al inicio">⌂</button>
             </div>
           </header>
-          <WorldMap progress={progress} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
+          <Suspense fallback={<p className="lazy-loading" role="status">Preparando el mapa…</p>}>
+            <WorldMap progress={progress} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
+          </Suspense>
           <button className="text-button reset-button" type="button" onClick={resetProgress}>Borrar progreso</button>
         </section>
       )}
@@ -754,10 +777,13 @@ export default function App() {
               {(screen === "game" || screen === "boss") && <button type="button" onClick={() => setPaused((value) => !value)} aria-label="Pausa">Ⅱ</button>}
             </div>
           </header>}
-          {!bossReplay && <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />}
+          {!bossReplay && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status">Preparando la aventura…</p>}>
+            <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
+          </Suspense>}
           {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? "Camino opcional" : `Bandera ${snapshot.checkpoint}/${displayedLevel.checkpoints.length}`}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
 
-          {screen === "boss" && activeLevel.boss && (
+          {screen === "boss" && activeLevel.boss && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status">Preparando al guardián…</p>}>
+            {
             (activeLevel.boss === "santa-claus" || activeLevel.boss === "siroco" || activeLevel.boss === "don-silbato") ? <SantaBossBattle
               key={`santa-boss-${activeLevel.id}-${levelRun}`}
               bossId={activeLevel.boss}
@@ -787,8 +813,8 @@ export default function App() {
               onWin={bossReplay ? finishBossReplay : handleComplete}
               playSound={playSound}
               friendlyReplay={bossReplay}
-            />
-          )}
+            />}
+          </Suspense>}
 
           {screen === "complete" && (
             <Dialog labelledBy="complete-title" backdropClassName="celebration" onClose={() => setScreen("map")}>

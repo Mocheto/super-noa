@@ -29,16 +29,16 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     assert.equal(requested.length, count);
     assert.equal(first.tiles[1], second.tiles[1]);
     assert.ok(requested.includes("./assets/stickers/world-1-v1.webp"));
-    assert.ok(!requested.includes("./assets/stickers/world-8-v1.png"));
-    assert.ok(!requested.includes("./assets/worlds/world-8.png"));
-    assert.equal(first.worldBackground.src, "./assets/worlds/world-1-hd-v1.png");
+    assert.ok(!requested.includes("./assets/stickers/world-8-v1.webp"));
+    assert.ok(!requested.includes("./assets/worlds/world-8.webp"));
+    assert.equal(first.worldBackground.src, "./assets/worlds/world-1-hd-v1.webp");
     for (const world of [2, 3, 4, 5, 7, 9, 10, 11, 12] as const) {
       const level = levels.find((entry) => entry.world === world)!;
-      assert.equal(getLevelAssets(level).worldBackground.src, `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`);
+      assert.equal(getLevelAssets(level).worldBackground.src, `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.webp`);
     }
-    assert.equal(getLevelAssets(levels.find((level) => level.id === "2-2")!).worldBackground.src, "./assets/worlds/crystal-cave-background-v1.png");
-    assert.equal(getLevelAssets(levels.find((level) => level.id === "2-3")!).worldBackground.src, "./assets/worlds/crystal-cave-background-v1.png");
-    assert.equal(getLevelAssets(levels.find((level) => level.id === "6-1")!).worldBackground.src, "./assets/worlds/castle-interior-background-v1.png");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "2-2")!).worldBackground.src, "./assets/worlds/crystal-cave-background-v1.webp");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "2-3")!).worldBackground.src, "./assets/worlds/crystal-cave-background-v1.webp");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "6-1")!).worldBackground.src, "./assets/worlds/castle-interior-background-v1.webp");
     assert.equal(getLevelAssets(levels.find((level) => level.world === 8)!).worldBackground.src, "");
     const birds = getLevelAssets(levels.find((level) => level.id === "4-2")!);
     assert.equal(birds.bird.src, "./assets/sprites/enemy-bird-v2.png");
@@ -79,22 +79,22 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
       }
     }
     const desert = getLevelAssets(levels.find((level) => level.id === "14-1")!);
-    assert.equal(desert.adventureBackground.src, "./assets/worlds/desert-background-v1.png");
+    assert.equal(desert.adventureBackground.src, "./assets/worlds/desert-background-v1.webp");
     assert.equal(desert.worldCharacters.src, "./assets/atlases/desert-enemies-v1.png");
     assert.equal(desert.worldTerrain.src, "./assets/atlases/desert-terrain-v1.png");
     assert.equal(desert.adventurePrecipices.src, "./assets/atlases/adventure-precipices-v1.png");
-    assert.equal(desert.stickerSheets[14].src, "./assets/stickers/world-14-v1.png");
+    assert.equal(desert.stickerSheets[14].src, "./assets/stickers/world-14-v1.webp");
     const train = getLevelAssets(levels.find((level) => level.id === "15-1")!);
-    assert.equal(train.adventureBackground.src, "./assets/worlds/train-background-v1.png");
+    assert.equal(train.adventureBackground.src, "./assets/worlds/train-background-v1.webp");
     assert.equal(train.worldCharacters.src, "./assets/atlases/train-enemies-v1.png");
     assert.equal(train.worldTerrain.src, "./assets/atlases/train-terrain-v1.png");
-    assert.equal(train.stickerSheets[15].src, "./assets/stickers/world-15-v1.png");
+    assert.equal(train.stickerSheets[15].src, "./assets/stickers/world-15-v1.webp");
     const music = getLevelAssets(levels.find((level) => level.id === "16-1")!);
-    assert.equal(music.adventureBackground.src, "./assets/worlds/music-background-v1.png");
+    assert.equal(music.adventureBackground.src, "./assets/worlds/music-background-v1.webp");
     assert.equal(music.worldCharacters.src, "./assets/atlases/music-characters-v1.png");
     assert.equal(music.worldTerrain.src, "./assets/atlases/music-terrain-v1.png");
     assert.equal(music.adventurePrecipices.src, "./assets/atlases/adventure-precipices-v1.png");
-    assert.equal(music.stickerSheets[16].src, "./assets/stickers/world-16-v1.png");
+    assert.equal(music.stickerSheets[16].src, "./assets/stickers/world-16-v1.webp");
     assert.equal(first.holidayBackground.src, "");
     for (const level of levels) {
       const assets = getLevelAssets(level);
@@ -114,7 +114,7 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
 
 test("la interfaz y el motor comparten una fuente optimizada y la misma imagen", () => {
   for (const original of [
-    "./assets/home-adventure-v3.png", "./assets/worlds/noa-adventure-map-v1.png",
+    "./assets/home-adventure-v3.png",
     "./assets/sprites/noa-sprite-sheet.png", "./assets/atlases/collectibles-v1.png",
   ]) {
     const source = optimizedAssetSource(original);
@@ -126,7 +126,7 @@ test("la interfaz y el motor comparten una fuente optimizada y la misma imagen",
     assert.equal(webp.toString("ascii", 8, 12), "WEBP");
     assert.ok(webp.length < png.length);
   }
-  assert.equal(optimizedAssetSource("./assets/worlds/world-8.png"), "./assets/worlds/world-8.png");
+  assert.equal(optimizedAssetSource("./assets/worlds/world-8.webp"), "./assets/worlds/world-8.webp");
   const originalImage = globalThis.Image;
   const requested: string[] = [];
   globalThis.Image = class {

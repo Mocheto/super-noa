@@ -68,7 +68,7 @@ const stickerSprites = new Map<string, StickerSprite>(
   stickerCatalog.map((sticker) => [
     sticker.id,
     {
-      src: `./assets/stickers/world-${sticker.world}-v1.png`,
+      src: `./assets/stickers/world-${sticker.world}-v1.webp`,
       column: (Number(sticker.id.at(-1)) - 1) as StickerSprite["column"],
     },
   ]),

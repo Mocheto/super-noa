@@ -88,7 +88,7 @@ La API migra de forma aditiva las columnas `total_apples` y `achieved_at`, admit
 
 El contenedor del tablón debe ejecutar `node server/ranking-supervisor.mjs`. El supervisor comprueba `main` cada cinco minutos (`RANKING_UPDATE_INTERVAL_MS`), valida una versión antes de activarla y conserva la anterior si falla. Los cambios del propio supervisor requieren actualizar su archivo y reiniciar su proceso Node; no se recrea el contenedor ni se modifican los volúmenes o PostgreSQL.
 
-Los gráficos de partida se cargan por mundo y los poderes se solicitan cuando hacen falta. Los recursos iniciales optimizados conservan los píxeles y la transparencia con WebP sin pérdida; los PNG originales siguen disponibles. Mientras llega un atlas de enemigos, su silueta permanece visible.
+Los gráficos de partida se cargan por mundo y las pantallas grandes se descargan solo cuando hacen falta. Los fondos e insignias usan WebP de alta calidad para reducir la descarga, conservando la transparencia de los atlas. Mientras llega un atlas de enemigos, su silueta permanece visible.
 
 El bosque de manzanos, el volcán, el valle de flores gigantes y la montaña de hielo tienen composiciones originales propias. El bosque usa una melodía cálida y tranquila, independiente de la pista que conservan los piratas. La música conserva su posición al pausar, silenciar o ajustar el volumen. Para regenerar estos temas se necesita FFmpeg:
 
@@ -103,7 +103,7 @@ Los cañones, sus bolas, los puntos de control y los banderines usan sprites pro
 
 - `src/App.tsx` coordina pantallas, HUD, música y pausa automática; `src/game/progress.ts` lee, valida y guarda el progreso y `storage.ts` protege todo acceso al almacenamiento local.
 - `src/game/GameCanvas.tsx` coordina la partida. `rendering.ts` dibuja los mundos, `assets.ts` carga y reutiliza los recursos de cada mundo, `input.ts` gestiona teclado y tacto, y `gameLoop.ts` ejecuta la física en pasos constantes de 60 Hz.
-- `src/game/levels.ts` mantiene los niveles y sus rutas especiales de forma declarativa; `routes.ts` resuelve el avance de campaña. `WorldMap.tsx` dibuja la interfaz interactiva sobre la ilustración original `public/assets/worlds/noa-adventure-map-v1.png`; `worldMapData.ts` define lugares y caminos. `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts` interpretan el mando durante la partida, los menús y los duelos.
+- `src/game/levels.ts` mantiene los niveles y sus rutas especiales de forma declarativa; `routes.ts` resuelve el avance de campaña. `WorldMap.tsx` dibuja la interfaz interactiva sobre la ilustración original optimizada `public/assets/worlds/noa-adventure-map-v1.webp`; `worldMapData.ts` define lugares y caminos. `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts` interpretan el mando durante la partida, los menús y los duelos.
 
 ## Licencias
 

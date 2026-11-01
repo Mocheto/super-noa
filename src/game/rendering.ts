@@ -1,4 +1,4 @@
-import type { BloomBridge, Level, Rect, SecretShop, Updraft } from "./types";
+import type { BloomBridge, Level, Rect, SecretShop, SkyLift, Updraft } from "./types";
 import type { RasterAssets } from "./assets";
 import type { LiveEnemy, LiveCannon, Cannonball, LiveWaterJumper } from "./gameState";
 import { enemyY, lavaJetState, positiveModulo, waterJumperState } from "./gameState";
@@ -8,6 +8,43 @@ import { drawMechanicSprite, drawMechanicStrip } from "./mechanicSprites.ts";
 import { worldEnemySpriteSources } from "./worldEnemySprites.ts";
 import { guardianBounds, type LiveChainGuardian } from "./chainGuardians";
 import { starPowerLight } from "./starPowerVisuals.ts";
+
+export function drawSkyLift(context: CanvasRenderingContext2D, lift: SkyLift, y: number, cameraX: number, active: boolean, nearby: boolean) {
+  const x = lift.x - cameraX;
+  const leverX = lift.lever.x - cameraX;
+  context.save();
+  context.strokeStyle = active ? "rgba(255,229,132,.72)" : "rgba(224,213,247,.45)";
+  context.lineWidth = 4;
+  context.setLineDash([10, 12]);
+  context.beginPath();
+  context.moveTo(x + lift.width / 2, lift.topY);
+  context.lineTo(x + lift.width / 2, lift.bottomY + lift.height);
+  context.stroke();
+  context.setLineDash([]);
+  context.fillStyle = "#39284f";
+  context.fillRect(leverX + 22, lift.lever.y + 18, 24, lift.lever.height - 18);
+  context.fillStyle = active ? "#ffe06e" : "#bfa7d8";
+  context.fillRect(leverX + 28, lift.lever.y + 8, 12, 31);
+  context.fillRect(leverX + (active ? 12 : 34), lift.lever.y + 5, 24, 14);
+  context.strokeStyle = "#fff8dc";
+  context.lineWidth = 4;
+  context.strokeRect(leverX + 22, lift.lever.y + 18, 24, lift.lever.height - 18);
+  if (nearby && !active) {
+    context.fillStyle = "#fff3a6";
+    context.font = "bold 28px monospace";
+    context.textAlign = "center";
+    context.fillText("↑", leverX + lift.lever.width / 2, lift.lever.y - 8);
+  }
+  context.fillStyle = active ? "#fff4bd" : "#e3d8f1";
+  context.beginPath();
+  context.ellipse(x + 36, y + 15, 38, 19, 0, 0, Math.PI * 2);
+  context.ellipse(x + lift.width / 2, y + 10, 54, 25, 0, 0, Math.PI * 2);
+  context.ellipse(x + lift.width - 35, y + 16, 38, 19, 0, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = active ? "#b98bdd" : "#9b87ba";
+  context.fillRect(x + 17, y + lift.height - 7, lift.width - 34, 7);
+  context.restore();
+}
 
 export function drawSecretShopDoor(context: CanvasRenderingContext2D, shop: SecretShop, cameraX: number, used: boolean, nearby: boolean, raster: RasterAssets) {
   const width = shop.width;

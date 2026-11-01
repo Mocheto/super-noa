@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { beatPlatformActive, bloomBridgeState, getMechanicPlatforms, mechanicRespawn, updraftVelocity, visibleSkyRespawn, wolfSleepState } from "./worldMechanics.ts";
+import { beatPlatformActive, bloomBridgeState, getMechanicPlatforms, mechanicRespawn, skyLiftPlatform, skyLiftY, updraftVelocity, visibleSkyRespawn, wolfSleepState } from "./worldMechanics.ts";
 import { engineModules, mountEngine } from "./engineTestHarness.ts";
-import type { BloomBridge, Enemy, Level, Updraft } from "./types";
+import type { BloomBridge, Enemy, Level, SkyLift, Updraft } from "./types";
 import type { RasterAssets } from "./assets";
 import type { LiveEnemy } from "./gameState";
 
@@ -18,6 +18,21 @@ const flower: BloomBridge = {
 const current: Updraft = {
   id: "air", x: 50, y: 150, width: 220, height: 310, strength: 2050, maxRiseSpeed: 130,
 };
+const skyLift: SkyLift = {
+  id: "lift", x: 480, bottomY: 2400, topY: 1960, width: 170, height: 30, speed: 88, waitDuration: 2,
+  lever: { id: "lever", x: 300, y: 2320, width: 68, height: 80 },
+};
+
+test("el ascensor celeste espera, sube, vuelve a esperar y siempre regresa para otro intento", () => {
+  assert.equal(skyLiftY(skyLift, undefined, 50), skyLift.bottomY);
+  assert.equal(skyLiftY(skyLift, 10, 11.9), skyLift.bottomY);
+  assert.equal(skyLiftY(skyLift, 10, 14.5), 2180);
+  assert.equal(skyLiftY(skyLift, 10, 17), skyLift.topY);
+  assert.equal(skyLiftY(skyLift, 10, 19), skyLift.topY);
+  assert.equal(skyLiftY(skyLift, 10, 21.5), 2180);
+  assert.equal(skyLiftY(skyLift, 10, 24), skyLift.bottomY);
+  assert.deepEqual(skyLiftPlatform(skyLift, 10, 17), { x: 480, y: 1960, width: 170, height: 30, kind: "sky-cloud" });
+});
 
 test("las plataformas musicales siguen un compás declarativo y la pausa no altera su fase", () => {
   const beat = { id: "beat", x: 200, y: 320, width: 140, height: 24, kind: "music-stage" as const, interval: 2.4, delay: .4, activeDuration: 1.2 };

@@ -1,4 +1,4 @@
-import type { BeatPlatform, BloomBridge, Enemy, Level, Platform, Updraft } from "./types";
+import type { BeatPlatform, BloomBridge, Enemy, Level, Platform, SkyLift, Updraft } from "./types";
 
 export type WolfSleepPhase = "sleeping" | "warning" | "awake";
 export type BloomBridgePhase = "closed" | "open" | "warning";
@@ -48,12 +48,31 @@ export function updraftVelocity(velocity: number, zones: readonly Updraft[], del
   }, velocity);
 }
 
+export function skyLiftY(lift: SkyLift, activatedAt: number | undefined, elapsed: number): number {
+  if (activatedAt === undefined) return lift.bottomY;
+  const distance = Math.max(0, lift.bottomY - lift.topY);
+  const travelDuration = distance / Math.max(1, lift.speed);
+  const wait = Math.max(0, lift.waitDuration);
+  const cycleDuration = travelDuration * 2 + wait * 2;
+  if (cycleDuration === 0) return lift.topY;
+  const phase = Math.max(0, elapsed - activatedAt) % cycleDuration;
+  if (phase < wait) return lift.bottomY;
+  if (phase < wait + travelDuration) return lift.bottomY - (phase - wait) / travelDuration * distance;
+  if (phase < wait * 2 + travelDuration) return lift.topY;
+  return lift.topY + (phase - wait * 2 - travelDuration) / travelDuration * distance;
+}
+
+export function skyLiftPlatform(lift: SkyLift, activatedAt: number | undefined, elapsed: number): Platform {
+  return { x: lift.x, y: skyLiftY(lift, activatedAt, elapsed), width: lift.width, height: lift.height, kind: "sky-cloud" };
+}
+
 export function hasWorldMechanics(level: Level): boolean {
   return Boolean(level.chainGuardians?.length)
     || (level.world === 3 && level.enemies.some((enemy) => enemy.kind === "wolf" && enemy.sleepCycle))
     || (level.world === 11 && Boolean(level.bloomBridges?.length))
     || (level.world === 7 && Boolean(level.updrafts?.length))
     || (level.world === 14 && Boolean(level.sandGeysers?.length))
+    || Boolean(level.skyLifts?.length)
     || Boolean(level.beatPlatforms?.length);
 }
 

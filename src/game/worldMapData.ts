@@ -6,10 +6,10 @@ import type { DetourId } from "./types.ts";
 
 export type WorldId = Level["world"];
 export const worldArtwork = (world: WorldId) => world === 14
-  ? "./assets/worlds/desert-background-v1.png"
-  : world === 15 ? "./assets/worlds/train-background-v1.png"
-    : world === 16 ? "./assets/worlds/music-background-v1.png"
-      : world === 17 ? "./assets/worlds/sky-kingdom-background-v1.png" : `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`;
+  ? "./assets/worlds/desert-background-v1.webp"
+  : world === 15 ? "./assets/worlds/train-background-v1.webp"
+    : world === 16 ? "./assets/worlds/music-background-v1.webp"
+      : world === 17 ? "./assets/worlds/sky-kingdom-background-v1.webp" : `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.webp`;
 
 export const worldCatalog: Array<{
   id: WorldId; name: string; shortName: string; description: string; cat: string; catAsset: string;

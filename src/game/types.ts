@@ -95,6 +95,18 @@ export type Updraft = Rect & {
   maxRiseSpeed: number;
 };
 
+export type SkyLift = {
+  id: string;
+  x: number;
+  bottomY: number;
+  topY: number;
+  width: number;
+  height: number;
+  speed: number;
+  waitDuration: number;
+  lever: Rect & { id: string };
+};
+
 export type ChainGuardian = {
   id: string;
   anchorX: number;
@@ -154,6 +166,7 @@ export type Level = {
   bloomBridges?: BloomBridge[];
   updrafts?: Updraft[];
   sandGeysers?: Updraft[];
+  skyLifts?: SkyLift[];
   chainGuardians?: ChainGuardian[];
   secretShop?: SecretShop;
   detourEntrance?: DetourEntrance;

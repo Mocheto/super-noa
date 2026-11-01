@@ -8,7 +8,7 @@ import { findMapJourney, mapRoutes, mapRouteState, worldAvailable, worldCatalog 
 test("el mapa representa los diecisiete mundos y todos sus caminos tienen destinos", () => {
   assert.equal(worldCatalog.length, 17);
   assert.equal(new Set(worldCatalog.map((world) => world.id)).size, 17);
-  assert.ok(existsSync(new URL("../../public/assets/worlds/noa-adventure-map-v1.png", import.meta.url)));
+  assert.ok(existsSync(new URL("../../public/assets/worlds/noa-adventure-map-v1.webp", import.meta.url)));
   for (const world of worldCatalog) {
     assert.ok(levels.some((level) => level.world === world.id));
     assert.ok(world.x > 0 && world.x < 100 && world.y > 0 && world.y < 100);

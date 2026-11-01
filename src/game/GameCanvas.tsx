@@ -7,13 +7,13 @@ import {
   drawAmbientForeground, drawApple, drawBackground, drawBloomBridge, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawChainGuardian, drawCheckpoint,
   drawDeadlyWater, drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock, drawSecretShopDoor, drawStarAura,
-  drawAdventurePrecipices, drawLavaJet, drawSecretVine, drawSticker, drawTinySparkle, drawUpdraft, drawWaterEntrance, drawWaterJumper, drawWindZone,
+  drawAdventurePrecipices, drawLavaJet, drawSecretVine, drawSkyLift, drawSticker, drawTinySparkle, drawUpdraft, drawWaterEntrance, drawWaterJumper, drawWindZone,
 } from "./rendering";
 import { useGameInput } from "./input";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createGameLoop, type GameLoop } from "./gameLoop";
 import { createLevelTransition } from "./levelTransition";
-import { beatPlatformActive, getMechanicPlatforms, hasWorldMechanics, mechanicRespawn, updraftVelocity, visibleSkyRespawn, wolfSleepState } from "./worldMechanics";
+import { beatPlatformActive, getMechanicPlatforms, hasWorldMechanics, mechanicRespawn, skyLiftPlatform, updraftVelocity, visibleSkyRespawn, wolfSleepState } from "./worldMechanics";
 import { getStickerSprite } from "./stickers";
 import { createChainGuardian, guardianHitbox, updateChainGuardian } from "./chainGuardians";
 import type { Level, GameSnapshot, ShopMatchCount } from "./types";
@@ -173,7 +173,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     let frame = 0;
     let levelAge = 0;
     const detourClock = createDetourClock();
+    const activatedSkyLifts = new Map<string, number>();
     let standingOnMechanism: string | null = null;
+    let standingOnSkyLift: string | null = null;
     let walkCycleTime = 0;
     let lastSnapshot = 0;
     let vineStartedFrame = -1;
@@ -275,13 +277,13 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           player.y += after.y - before.y;
         }
       }
-      const platforms = [...getMechanicPlatforms(level, levelAge), ...supports];
       const input = inputRef.current;
       const pad = readGameplayPad(firstConnectedGamepad());
       const available = canEnterSecretShop(level.secretShop, player, shopUsed);
       const detourAvailable = canEnterSecretShop(level.detourEntrance, player, false);
       const toggle = level.detourSwitches?.find((entry) => canEnterSecretShop(entry, player, false));
-      const interaction = detourAvailable ? "Explorar" : toggle ? "Activar" : available ? "Entrar" : "";
+      const skyLift = level.skyLifts?.find((entry) => !activatedSkyLifts.has(entry.id) && canEnterSecretShop(entry.lever, player, false));
+      const interaction = detourAvailable ? "Explorar" : skyLift ? "Subir" : toggle ? "Activar" : available ? "Entrar" : "";
       if (interaction !== interactionRef.current) {
         interactionRef.current = interaction;
         setInteractionLabel(interaction);
@@ -311,6 +313,13 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         callbacksRef.current.playSound("block");
         if (statusRef.current) statusRef.current.textContent = toggle.id === "bell" ? "La rueda cambia de dirección." : toggle.id === "books" ? "Los libros cambian el camino." : "El agua despierta la planta.";
       }
+      if (enter && skyLift) {
+        activatedSkyLifts.set(skyLift.id, levelAge);
+        input.jumpQueued = false;
+        input.jump = false;
+        callbacksRef.current.playSound("checkpoint");
+        if (statusRef.current) statusRef.current.textContent = "¡Ascensor despierto! La nube sube, espera arriba y vuelve a bajar.";
+      }
       if (available && enter && level.secretShop) {
         shopUsed = true;
         shopOpenRef.current = true;
@@ -328,6 +337,13 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         setShopOpen(true);
         return;
       }
+      const previousLiftPlatforms = (level.skyLifts ?? []).map((lift) => skyLiftPlatform(lift, activatedSkyLifts.get(lift.id), levelAge - delta));
+      const liftPlatforms = (level.skyLifts ?? []).map((lift) => skyLiftPlatform(lift, activatedSkyLifts.get(lift.id), levelAge));
+      if (player.grounded && standingOnSkyLift) {
+        const index = level.skyLifts?.findIndex((lift) => lift.id === standingOnSkyLift) ?? -1;
+        if (index >= 0) player.y += liftPlatforms[index].y - previousLiftPlatforms[index].y;
+      }
+      const platforms = [...getMechanicPlatforms(level, levelAge), ...supports, ...liftPlatforms];
       const previousStar = starRemaining;
       starRemaining = Math.max(0, starRemaining - delta);
       if (previousStar > 0 && starRemaining === 0) callbacksRef.current.onSnapshot(currentSnapshot());
@@ -425,6 +441,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       }
       player.grounded = false;
       standingOnMechanism = null;
+      standingOnSkyLift = null;
       for (const platform of platforms) {
         const horizontal = player.x + player.width > platform.x && player.x < platform.x + platform.width;
         const surfaceY = platformSurfaceY(platform);
@@ -459,6 +476,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
             player.jumpsUsed = 0;
             player.springLaunch = false;
             standingOnMechanism = supports.find((entry) => entry === platform)?.id ?? null;
+            const liftIndex = liftPlatforms.indexOf(platform);
+            standingOnSkyLift = liftIndex >= 0 ? level.skyLifts?.[liftIndex]?.id ?? null : null;
           }
         } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall" || platform.kind === "sea-wall" || platform.kind === "dino-wall" || platform.kind === "volcano-wall" || platform.kind === "ice-wall") && horizontal && player.vy < 0) {
           const platformBottom = platform.y + platform.height;
@@ -904,6 +923,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         context.fillStyle = active ? "#fff19a" : "#9d83b9";
         context.fillRect(x + 8, platform.y + 5, Math.max(8, platform.width - 16), 5);
       });
+      level.skyLifts?.forEach((lift) => drawSkyLift(context, lift, skyLiftPlatform(lift, activatedSkyLifts.get(lift.id), levelAge).y,
+        cameraX, activatedSkyLifts.has(lift.id), canEnterSecretShop(lift.lever, player, false)));
       drawDetourMechanisms(context, level, detourClock, cameraX, motionRef.current);
       if (level.detourEntrance) drawDetourEntrance(context, level.detourEntrance, cameraX, canEnterSecretShop(level.detourEntrance, player, false), levelAge, motionRef.current);
       if (level.secretShop) drawSecretShopDoor(context, level.secretShop, cameraX, shopUsed, doorAvailableRef.current, raster);
@@ -1091,7 +1112,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       <div className="game-stage">
         <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={`Pantalla ${level.id}: ${level.title}`} />
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />
-        {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label={interactionLabel === "Entrar" ? "Entrar en la tienda secreta" : interactionLabel === "Explorar" ? "Explorar el desvío secreto" : "Activar mecanismo"} onClick={() => { inputRef.current.enterQueued = true; }}>↑ {interactionLabel}</button>}
+        {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label={interactionLabel === "Entrar" ? "Entrar en la tienda secreta" : interactionLabel === "Explorar" ? "Explorar el desvío secreto" : interactionLabel === "Subir" ? "Activar el ascensor de nubes" : "Activar mecanismo"} onClick={() => { inputRef.current.enterQueued = true; }}>↑ {interactionLabel}</button>}
         {level.detour && onReturn && <button className="detour-return" type="button" disabled={!running} onClick={onReturn}>↩ Volver al camino</button>}
       </div>
       {shopOpen && <SecretShop world={level.world} paused={!running} reduceMotion={reduceMotion} playSound={playSound} onResult={(matches) => {

@@ -164,7 +164,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
       <div className="map-layout">
       <div className="map-scroll" role="region" aria-label="Mapa ilustrado de los mundos de Noa">
         <div className="map-board">
-          <img className="map-landscape" src={optimizedAssetSource("./assets/worlds/noa-adventure-map-v1.png")} alt="" aria-hidden="true" />
+          <img className="map-landscape" src="./assets/worlds/noa-adventure-map-v1.webp" alt="" aria-hidden="true" />
           <svg className="map-paths" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
             {mapRoutes.map((route) => {
               const state = mapRouteState(route, progress);

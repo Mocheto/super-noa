@@ -6,7 +6,7 @@ Dentro del agua, SALTAR impulsa hacia arriba. Al soltarlo, Noa se hunde lentamen
 
 ## Recursos generados
 
-Todos los PNG siguientes se generaron con la herramienta de imágenes integrada, con fondo transparente donde corresponde. Los atlas de gestos se recortaron en celdas sin modificar la ilustración. Se emplearon los sprites existentes de Noa como referencia de identidad; ninguna fotografía privada se incorporó al repositorio.
+Los recursos siguientes se generaron con la herramienta de imágenes integrada, con fondo transparente donde corresponde. Los atlas de gestos se recortaron en celdas sin modificar la ilustración; los fondos e insignias finales pueden conservarse optimizados en WebP. Se emplearon los sprites existentes de Noa como referencia de identidad; ninguna fotografía privada se incorporó al repositorio.
 
 | Archivo | Brief visual final |
 | --- | --- |
@@ -14,8 +14,8 @@ Todos los PNG siguientes se generaron con la herramienta de imágenes integrada,
 | `public/assets/atlases/boss-don-aleta-v1.png` y `public/assets/sprites/boss-don-aleta-0.png` a `-5.png` | Tiburón humanoide original, amistoso y reconocible, azul, con chaleco de capitán marino. Seis gestos completos en cuadrícula 3 × 2: reposo, piedra, papel, tijera, derrota respetuosa y saludo; fondo transparente. |
 | `public/assets/atlases/water-enemies-v1.png` | Dos enemigos originales y separados: pez naranja con aletas turquesa y erizo de mar morado de púas claras; pixel art colorido, transparencia. |
 | `public/assets/atlases/water-terrain-v1.png` | Atlas de arena marina, plataforma de coral, pared de arrecife y puerta palaciega de conchas; motivos separados para componer niveles de plataformas. |
-| `public/assets/stickers/world-8-v1.png` | Tres pegatinas coleccionables troqueladas: concha de Perla, pez aventurero y corona de coral de Don Aleta, una por cada columna, bordes completos y fondo transparente. |
+| `public/assets/stickers/world-8-v1.webp` | Tres pegatinas coleccionables troqueladas: concha de Perla, pez aventurero y corona de coral de Don Aleta, una por cada columna, bordes completos y fondo transparente. |
 | `public/assets/sprites/world-cat-8-v1.png` | Perla, gatita crema con detalles turquesa y pequeño amuleto de concha, sentada y completa, pixel art y fondo transparente. |
-| `public/assets/worlds/world-8.png` | Escenario pixel art original: laguna soleada en la franja superior y ruinas, corales, cuevas y arena bajo el agua; sin personajes ni texto, utilizable como fondo panorámico. |
+| `public/assets/worlds/world-8.webp` | Escenario pixel art original: laguna soleada en la franja superior y ruinas, corales, cuevas y arena bajo el agua; sin personajes ni texto, utilizable como fondo panorámico. |
 
 `public/assets/music/laguna.wav` es una composición sintetizada original reproducible con `node scripts/build-water-music.mjs`. Su atribución consta en `CREDITS.md`.

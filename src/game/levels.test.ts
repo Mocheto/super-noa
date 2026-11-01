@@ -273,9 +273,28 @@ test("el Reino Celeste sube en vertical sin camino de regreso", () => {
     assert.equal(level.width, 960);
     assert.ok(level.platforms.every((platform) => platform.kind === "sky-cloud" || platform.kind === "sky-bounce"));
     assert.ok(level.verticalCheckpoints?.length);
+    assert.equal(level.skyLifts?.length, 1);
+    const lift = level.skyLifts![0];
+    assert.ok(lift.bottomY - lift.topY >= 400, `${level.id}: el ascensor debe ahorrar varios saltos`);
+    assert.ok(lift.speed <= 100, `${level.id}: el ascensor debe subir despacio`);
+    assert.ok(level.platforms.some((platform) => platform.kind === "sky-cloud" && platform.y === lift.bottomY
+      && platform.x <= lift.lever.x && platform.x + platform.width >= lift.lever.x + lift.lever.width), `${level.id}: la palanca necesita una nube segura`);
     assert.ok(level.enemies.every((enemy) => enemy.kind === "puffling"));
     assert.equal(level.items.find((item) => item.kind === "sticker")?.id, `sticker-${level.id}`);
   }
+});
+
+test("desierto, tren y música ya no repiten la misma plantilla de precipicios y plataformas", () => {
+  const pitSignature = (id: string) => levels.find((level) => level.id === id)!.deadlyWater!.map((pit) => `${pit.x}:${pit.width}`).join("|");
+  assert.ok(levels.find((level) => level.id === "14-2")!.deadlyWater!.length < levels.find((level) => level.id === "14-3")!.deadlyWater!.length,
+    "el oasis ofrece un descanso más largo que las ruinas");
+  assert.ok(levels.find((level) => level.id === "15-1")!.platforms.some((platform) => platform.kind === "train-roof" && platform.width >= 500),
+    "el andén necesita un trayecto largo sobre un vagón");
+  assert.ok(levels.find((level) => level.id === "16-1")!.deadlyWater!.length < levels.find((level) => level.id === "16-2")!.deadlyWater!.length,
+    "el jardín musical empieza con menos precipicios");
+  assert.ok(levels.find((level) => level.id === "16-3")!.platforms.some((platform) => platform.kind === "music-ground" && platform.width >= 2500),
+    "el teatro termina sobre un escenario continuo");
+  assert.equal(new Set([pitSignature("14-2"), pitSignature("15-2"), pitSignature("16-2")]).size, 3);
 });
 
 test("cada nube normal del Reino Celeste se alcanza con doble salto y los bordes conectados", () => {
@@ -422,12 +441,23 @@ test("todas las insignias del juego tienen un sprite transparente y su celda cor
     const sprite = getStickerSprite(sticker.id);
     assert.ok(sprite);
     assert.equal(sprite.column, Number(sticker.id.at(-1)) - 1);
-    assert.equal(sprite.src, `./assets/stickers/world-${sticker.world}-v1.png`);
-    const png = readFileSync(new URL(`../../public/${sprite.src.slice(2)}`, import.meta.url));
-    assert.equal(png.toString("ascii", 1, 4), "PNG");
-    assert.equal(png.readUInt32BE(16), 2172);
-    assert.equal(png.readUInt32BE(20), 724);
-    assert.equal(png[25], 6, "El atlas debe conservar la transparencia RGBA");
+    assert.equal(sprite.src, `./assets/stickers/world-${sticker.world}-v1.webp`);
+    const webp = readFileSync(new URL(`../../public/${sprite.src.slice(2)}`, import.meta.url));
+    assert.equal(webp.toString("ascii", 0, 4), "RIFF");
+    assert.equal(webp.toString("ascii", 8, 12), "WEBP");
+    const format = webp.toString("ascii", 12, 16);
+    assert.ok(format === "VP8X" || format === "VP8L", `Formato WebP no esperado: ${format}`);
+    if (format === "VP8X") {
+      assert.equal(webp.readUIntLE(24, 3) + 1, 2172);
+      assert.equal(webp.readUIntLE(27, 3) + 1, 724);
+      assert.ok((webp[20] & 0x10) !== 0, "El atlas debe declarar transparencia");
+      assert.ok(webp.indexOf(Buffer.from("ALPH")) >= 0, "El atlas debe conservar la transparencia");
+    } else {
+      const losslessHeader = webp.readUInt32LE(21);
+      assert.equal((losslessHeader & 0x3fff) + 1, 2172);
+      assert.equal(((losslessHeader >>> 14) & 0x3fff) + 1, 724);
+      assert.ok((losslessHeader & 0x10000000) !== 0, "El atlas debe conservar la transparencia");
+    }
   }
 });
 

@@ -13,7 +13,7 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 - `src/game/input.ts`: teclado y controles táctiles; `src/game/gameLoop.ts`: física en pasos fijos y pausa del renderizado.
 - `src/game/gameState.ts`, `src/game/gameplay.ts` y `src/game/constants.ts`: tipos de estado, reglas de movimiento y dimensiones del Canvas.
 - `src/game/levels.ts`: definición declarativa de las treinta pantallas de campaña, las tres acuáticas y la pantalla secreta de las nubes, sus rutas especiales, cajas de recompensa, cañones, trampas y encuentros finales; `src/game/routes.ts`: avance y desbloqueo a partir de esos datos.
-- `src/game/WorldMap.tsx` y `src/game/worldMapData.ts`: mapa ilustrado, marcadores, caminos según el progreso y cuadros de resumen; `public/assets/worlds/noa-adventure-map-v1.png`: fondo original sin interfaz incrustada.
+- `src/game/WorldMap.tsx` y `src/game/worldMapData.ts`: mapa ilustrado, marcadores, caminos según el progreso y cuadros de resumen; `public/assets/worlds/noa-adventure-map-v1.webp`: fondo original optimizado sin interfaz incrustada.
 - `src/game/BossBattle.tsx`: doce duelos de piedra, papel o tijera contra los monstruos finales; `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts`: entrada de mando en partida, menús y duelos.
 - `src/game/stickers.ts`: catálogo estable de 36 insignias coleccionables: treinta de campaña, tres acuáticas y tres secretas.
 - `server/ranking-server.mjs`: API y migraciones del tablón mundial; `server/ranking-supervisor.mjs`: descarga y activa automáticamente el backend del último commit de `main`, con recuperación de la versión anterior si falla.

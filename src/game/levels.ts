@@ -1185,17 +1185,17 @@ export const levels: Level[] = [
   },
   {
     id: "14-2", world: 14, screen: 2,
-    title: "El oasis de los espejos", subtitle: "Combina los géiseres y el viento para cruzar las palmeras.",
+    title: "El oasis de los espejos", subtitle: "Descansa en la gran isla del oasis y usa sus géiseres para volver a las dunas.",
     theme: "desert-oasis", width: 6500, start: { x: 80, y: 380 }, goalX: 6310,
     platforms: [
-      ...themedGround([[0, 760], [900, 780], [1810, 760], [2700, 820], [3650, 800], [4580, 850], [5560, 940]], "desert-ground"),
+      ...themedGround([[0, 760], [900, 780], [1810, 2640], [4580, 850], [5560, 940]], "desert-ground"),
       ...[280, 1050, 1940, 2840, 3760, 4700, 5660].flatMap((x, i) => [themedLedge(x, 315, 185, "desert-ledge"), themedLedge(x + 280, i % 2 ? 175 : 205, 170, "desert-ledge")]),
     ],
-    deadlyWater: deadlyWaterPits([[0, 760], [900, 780], [1810, 760], [2700, 820], [3650, 800], [4580, 850], [5560, 940]]),
+    deadlyWater: deadlyWaterPits([[0, 760], [900, 780], [1810, 2640], [4580, 850], [5560, 940]]),
     sandGeysers: [{ id: "oasis-1", x: 540, y: 90, width: 145, height: 366, strength: 1950, maxRiseSpeed: 155 }, { id: "oasis-2", x: 3100, y: 80, width: 150, height: 376, strength: 2050, maxRiseSpeed: 160 }, { id: "oasis-3", x: 5900, y: 80, width: 150, height: 376, strength: 2100, maxRiseSpeed: 165 }],
     windZones: [iceWind("oasis-w1", 1250, 460, -1, 215), iceWind("oasis-w2", 4050, 480, 1, 235)],
     enemies: [enemy("d14b-s", "desert-scarab", 420, 416, 260, 700, 58), enemy("d14b-f", "fennec", 1530, 410, 1120, 1650, 64), enemy("d14b-t1", "tumbleweed", 2350, 416, 1970, 2540, 78), enemy("d14b-f2", "fennec", 4240, 410, 3820, 4420, 68), enemy("d14b-t2", "tumbleweed", 5290, 416, 4860, 5480, 82)],
-    items: [apple("d14b1", 340, 265), apple("d14b2", 610, 150), sticker("sticker-14-2", 2220, 125), apple("d14b3", 3160, 130), apple("d14b4", 4080, 255), apple("d14b5", 5960, 125)],
+    items: [apple("d14b1", 340, 265), apple("d14b2", 610, 150), sticker("sticker-14-2", 2220, 125), apple("d14b3", 3160, 130), apple("d14b4", 3820, 405), apple("d14b5", 4080, 255), apple("d14b6", 5960, 125)],
     rewardBlocks: [reward("d14rb1", 1090, 174), reward("d14rb2", 4720, 174, "apple")], checkpoints: [920, 1820, 2720, 3660, 4600, 5580],
   },
   {
@@ -1215,16 +1215,21 @@ export const levels: Level[] = [
   },
   {
     id: "15-1", world: 15, screen: 1,
-    title: "El andén de las maletas", subtitle: "Los techos se mueven. Camina contra su marcha o déjate llevar.",
+    title: "El andén de las maletas", subtitle: "Monta en los techos largos del tren: puedes caminar o dejar que te lleven.",
     theme: "train-station", width: 6000, start: { x: 80, y: 380 }, goalX: 5810,
     platforms: [
       ...themedGround([[0, 850], [980, 800], [1910, 820], [2860, 840], [3830, 820], [4780, 1220]], "train-ground"),
-      ...[300, 1080, 2010, 2960, 3930, 4880].flatMap((x, i) => [{ ...themedLedge(x, 300, 210, "train-roof"), beltSpeed: i % 2 ? -95 : 95 }, themedLedge(x + 310, 190, 175, "train-roof")]),
+      { ...themedLedge(280, 315, 390, "train-roof"), beltSpeed: 82 }, themedLedge(760, 210, 180, "train-roof"),
+      { ...themedLedge(1120, 270, 440, "train-roof"), beltSpeed: 95 }, themedLedge(1640, 165, 190, "train-roof"),
+      { ...themedLedge(2060, 320, 360, "train-roof"), beltSpeed: -88 }, themedLedge(2500, 205, 190, "train-roof"),
+      { ...themedLedge(3000, 260, 460, "train-roof"), beltSpeed: 102 }, themedLedge(3520, 155, 190, "train-roof"),
+      { ...themedLedge(3970, 315, 380, "train-roof"), beltSpeed: -94 }, themedLedge(4440, 205, 180, "train-roof"),
+      { ...themedLedge(4880, 250, 520, "train-roof"), beltSpeed: 108 }, themedLedge(5480, 150, 210, "train-roof"),
     ],
     deadlyWater: deadlyWaterPits([[0, 850], [980, 800], [1910, 820], [2860, 840], [3830, 820], [4780, 1220]]),
     enemies: [enemy("t15-s1", "rolling-suitcase", 460, 416, 270, 760, 58), enemy("t15-p1", "conductor-pigeon", 1420, 160, 1110, 1670, 76), enemy("t15-m1", "clockwork-mouse", 2440, 416, 2050, 2690, 66), enemy("t15-s2", "rolling-suitcase", 4350, 416, 4020, 4600, 68)],
     items: [apple("t15a1", 360, 250), sticker("sticker-15-1", 660, 140), apple("t15a2", 1400, 140), apple("t15a3", 2360, 140), apple("t15a4", 4240, 250), apple("t15a5", 5200, 140)],
-    rewardBlocks: [reward("t15r1", 1120, 159), reward("t15r2", 3980, 159, "apple")], checkpoints: [1000, 1930, 2890, 3850, 4800],
+    rewardBlocks: [reward("t15r1", 1120, 110), reward("t15r2", 3980, 159, "apple")], checkpoints: [1000, 1930, 2890, 3850, 4800],
   },
   {
     id: "15-2", world: 15, screen: 2,
@@ -1256,13 +1261,13 @@ export const levels: Level[] = [
   },
   {
     id: "16-1", world: 16, screen: 1,
-    title: "El jardín de los tambores", subtitle: "Las ondas de música empujan suave. Salta siguiendo su dirección.",
+    title: "El jardín de los tambores", subtitle: "Empieza con un paseo tranquilo y cruza tres pequeños puentes siguiendo el compás.",
     theme: "music-garden", width: 6000, start: { x: 80, y: 380 }, goalX: 5810,
     platforms: [
-      ...themedGround([[0, 850], [980, 800], [1910, 820], [2860, 840], [3830, 820], [4780, 1220]], "music-ground"),
+      ...themedGround([[0, 1780], [1910, 820], [2860, 840], [3830, 2070]], "music-ground"),
       ...[300, 1080, 2010, 2960, 3930, 4880].flatMap((x, i) => [themedLedge(x, 305, 205, "music-stage"), themedLedge(x + 300, i % 2 ? 180 : 205, 175, "music-stage")]),
     ],
-    deadlyWater: deadlyWaterPits([[0, 850], [980, 800], [1910, 820], [2860, 840], [3830, 820], [4780, 1220]]),
+    deadlyWater: deadlyWaterPits([[0, 1780], [1910, 820], [2860, 840], [3830, 2070]]),
     windZones: [iceWind("beat-1", 980, 620, 1, 175), iceWind("beat-2", 2860, 650, -1, 185), iceWind("beat-3", 4780, 650, 1, 195)],
     beatPlatforms: [
       { id: "compas-1a", x: 855, y: 360, width: 120, height: 24, kind: "music-stage", interval: 2.4, delay: 0, activeDuration: 1.65 },
@@ -1278,10 +1283,10 @@ export const levels: Level[] = [
     title: "El bosque de las campanas", subtitle: "Escucha el camino: las ondas cambian de lado entre las campanas.",
     theme: "music-bells", width: 6700, start: { x: 80, y: 380 }, goalX: 6510,
     platforms: [
-      ...themedGround([[0, 760], [890, 770], [1790, 790], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]], "music-ground"),
+      ...themedGround([[0, 760], [890, 1690], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]], "music-ground"),
       ...[280, 1030, 1930, 2850, 3760, 4690, 5600].flatMap((x, i) => [themedLedge(x, 305, 205, "music-stage"), themedLedge(x + 300, i % 2 ? 175 : 200, 180, "music-stage")]),
     ],
-    deadlyWater: deadlyWaterPits([[0, 760], [890, 770], [1790, 790], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]]),
+    deadlyWater: deadlyWaterPits([[0, 760], [890, 1690], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]]),
     windZones: [iceWind("bell-1", 890, 700, 1, 190), iceWind("bell-2", 2710, 720, -1, 205), iceWind("bell-3", 4550, 730, 1, 215)],
     beatPlatforms: [
       { id: "compas-2a", x: 765, y: 355, width: 120, height: 24, kind: "music-stage", interval: 2.1, delay: 0, activeDuration: 1.35 },
@@ -1295,13 +1300,13 @@ export const levels: Level[] = [
   },
   {
     id: "16-3", world: 16, screen: 3, route: { next: "17-1", nextLabel: "Subir al Reino Celeste" },
-    title: "El gran teatro de Armonía", subtitle: "Sigue las ondas hasta el escenario y reta a la Maestra Armonía.",
+    title: "El gran teatro de Armonía", subtitle: "Cruza el compás y termina sobre un gran escenario continuo antes de saludar a Armonía.",
     theme: "music-theater", width: 7400, start: { x: 80, y: 380 }, goalX: 7200,
     platforms: [
-      ...themedGround([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 800], [5520, 800], [6450, 950]], "music-ground"),
+      ...themedGround([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 2810]], "music-ground"),
       ...[290, 1050, 1960, 2880, 3810, 4730, 5660, 6580].flatMap((x, i) => [themedLedge(x, 300, 215, "music-stage"), themedLedge(x + 310, i % 2 ? 180 : 205, 180, "music-stage")]),
     ],
-    deadlyWater: deadlyWaterPits([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 800], [5520, 800], [6450, 950]]),
+    deadlyWater: deadlyWaterPits([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 2810]]),
     windZones: [iceWind("show-1", 910, 760, 1, 205), iceWind("show-2", 2740, 760, -1, 220), iceWind("show-3", 4590, 770, 1, 230), iceWind("show-4", 6450, 700, -1, 240)],
     beatPlatforms: [
       { id: "compas-3a", x: 785, y: 350, width: 120, height: 24, kind: "music-stage", interval: 1.8, delay: 0, activeDuration: 1.18 },
@@ -1316,7 +1321,7 @@ export const levels: Level[] = [
   },
   {
     id: "17-1", world: 17, screen: 1,
-    title: "Las nubes del amanecer", subtitle: "Sube de nube en nube. El cielo avanza contigo y ya no vuelve a bajar.",
+    title: "Las nubes del amanecer", subtitle: "Sube de nube en nube. A mitad del camino, una palanca despierta un ascensor de nubes.",
     theme: "sky-dawn", width: 960, height: 3500, orientation: "vertical", start: { x: 110, y: 3352 }, goalX: 480, goalY: 175,
     platforms: skyLevelPlatforms(3500),
     enemies: [
@@ -1325,10 +1330,12 @@ export const levels: Level[] = [
     ],
     items: [apple("c17a1", 570, 2780), apple("c17a2", 310, 2200), sticker("sticker-17-1", 680, 1600), apple("c17a3", 280, 880)],
     rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 280, y: 2460 }, { x: 650, y: 1450 }, { x: 350, y: 580 }],
+    skyLifts: [{ id: "sky-lift-17-1", x: 485, bottomY: 2385, topY: 1950, width: 170, height: 30, speed: 92, waitDuration: 1.6,
+      lever: { id: "sky-lever-17-1", x: 300, y: 2305, width: 68, height: 80 } }],
   },
   {
     id: "17-2", world: 17, screen: 2,
-    title: "La escalera del cielo", subtitle: "Las nubes están más separadas. Mira arriba, elige tu salto y sigue subiendo.",
+    title: "La escalera del cielo", subtitle: "Las nubes están más separadas. Usa la palanca si quieres descansar en el ascensor.",
     theme: "sky-blue", width: 960, height: 3900, orientation: "vertical", start: { x: 110, y: 3752 }, goalX: 480, goalY: 175,
     platforms: skyLevelPlatforms(3900, 1),
     enemies: [
@@ -1337,10 +1344,12 @@ export const levels: Level[] = [
     ],
     items: [apple("c17b1", 200, 3120), apple("c17b2", 650, 2530), sticker("sticker-17-2", 310, 1940), apple("c17b3", 690, 1350), apple("c17b4", 280, 630)],
     rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 520, y: 2860 }, { x: 270, y: 1880 }, { x: 620, y: 900 }],
+    skyLifts: [{ id: "sky-lift-17-2", x: 485, bottomY: 2350, topY: 1915, width: 170, height: 30, speed: 88, waitDuration: 1.8,
+      lever: { id: "sky-lever-17-2", x: 300, y: 2270, width: 68, height: 80 } }],
   },
   {
     id: "17-3", world: 17, screen: 3, route: { finale: true },
-    title: "La puerta de las estrellas", subtitle: "Alcanza la luna y conoce a Aurora Celeste, la guardiana de las nubes.",
+    title: "La puerta de las estrellas", subtitle: "Alcanza la luna. La última palanca ofrece un ascensor antes de conocer a Aurora Celeste.",
     theme: "sky-stars", width: 960, height: 4300, orientation: "vertical", start: { x: 110, y: 4152 }, goalX: 480, goalY: 175,
     platforms: skyLevelPlatforms(4300, 2),
     enemies: [
@@ -1349,7 +1358,9 @@ export const levels: Level[] = [
       enemy("c17c-p5", "puffling", 610, 1240, 530, 830, 84), enemy("c17c-p6", "puffling", 240, 650, 160, 470, 86),
     ],
     items: [apple("c17c1", 660, 3530), apple("c17c2", 280, 2940), sticker("sticker-17-3", 650, 2350), apple("c17c3", 290, 1760), apple("c17c4", 670, 1170)],
-    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 260, y: 3260 }, { x: 620, y: 2260 }, { x: 270, y: 1260 }, { x: 560, y: 520 }], boss: "aurora-celeste",
+    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 260, y: 3260 }, { x: 620, y: 2260 }, { x: 270, y: 1260 }, { x: 560, y: 520 }],
+    skyLifts: [{ id: "sky-lift-17-3", x: 485, bottomY: 2315, topY: 1880, width: 170, height: 30, speed: 84, waitDuration: 2,
+      lever: { id: "sky-lever-17-3", x: 300, y: 2235, width: 68, height: 80 } }], boss: "aurora-celeste",
   },
   {
     id: "S-1",

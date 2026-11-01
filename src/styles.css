@@ -237,6 +237,8 @@ h1 span {
 .home-footer .pixel-icon { --icon-size: .95em; margin-right: 4px; }
 
 .map-screen { min-height: 100vh; padding: clamp(18px, 3vw, 42px); }
+.lazy-loading { max-width: 1500px; margin: 28px auto; border: 4px solid #ead4f4; padding: 24px; color: #fff8e9; background: #39234d; text-align: center; }
+.lazy-loading-game { width: min(960px, 100%); min-height: 240px; display: grid; place-items: center; margin: 0 auto; }
 
 .map-header { display: flex; align-items: end; justify-content: space-between; max-width: 1500px; margin: 0 auto 12px; }
 .map-header h2, .game-modal h2 { margin: 0; font-size: clamp(2rem, 5vw, 4rem); color: #fff8e9; letter-spacing: -.06em; }

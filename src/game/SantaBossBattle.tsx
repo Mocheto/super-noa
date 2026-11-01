@@ -5,14 +5,23 @@ import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createSantaBattle, SANTA_ARENA, stepSantaBattle } from "./santaBattle";
 import { drawSantaBattle } from "./santaBattleRendering";
 import { TouchControls, type TouchControl } from "./TouchControls";
+import type { BossId } from "./types";
 
 type Props = {
+  bossId?: Extract<BossId, "santa-claus" | "siroco" | "don-silbato">;
   paused: boolean; apples: number; onSpendApple: () => void; onRestartLevel: () => void;
   onAbandon: () => void; onWin: (challengeCompleted: boolean) => void; playSound: (kind: SoundKind) => void;
 };
 const emptyInput = () => ({ left: false, right: false, jump: false, queued: false });
 
-export function SantaBossBattle({ paused, apples, onSpendApple, onRestartLevel, onAbandon, onWin, playSound }: Props) {
+const battleCopy = {
+  "santa-claus": { eyebrow: "Jefe final de Navidad", title: "Ayuda a Papá Noel", projectile: "regalos", win: "Papá Noel sonríe: ahora los regalos saldrán a tiempo.", aria: "Noa y Papá Noel en el patio nevado de los regalos." },
+  siroco: { eyebrow: "Guardián del desierto", title: "Juega con Siroco", projectile: "bolas de arena", win: "Siroco sonríe y abre el camino entre las dunas.", aria: "Noa y Siroco en las ruinas doradas del desierto." },
+  "don-silbato": { eyebrow: "Guardián de la locomotora", title: "Ayuda a Don Silbato", projectile: "maletas", win: "Don Silbato toca su silbato: el tren puede continuar.", aria: "Noa y Don Silbato junto a la gran locomotora." },
+} as const;
+
+export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpendApple, onRestartLevel, onAbandon, onWin, playSound }: Props) {
+  const copy = battleCopy[bossId];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const battle = useRef(createSantaBattle());
   const keys = useRef(emptyInput()), touch = useRef(emptyInput());
@@ -26,7 +35,7 @@ export function SantaBossBattle({ paused, apples, onSpendApple, onRestartLevel, 
     if (!context) return;
     const resize = () => {
       context.canvas.width = window.innerWidth <= 600 ? 640 : SANTA_ARENA.width;
-      drawSantaBattle(context, battle.current);
+      drawSantaBattle(context, battle.current, bossId);
     };
     resize(); window.addEventListener("resize", resize);
     let previousPadJump = false;
@@ -49,7 +58,7 @@ export function SantaBossBattle({ paused, apples, onSpendApple, onRestartLevel, 
       const { hits, lives, status } = battle.current;
       setHud((previous) => previous.hits === hits && previous.lives === lives && previous.status === status ? previous : { hits, lives, status });
       if (status !== "playing") loop.setRunning(false);
-    }, () => drawSantaBattle(context, battle.current), () => {});
+    }, () => drawSantaBattle(context, battle.current, bossId), () => {});
     const key = (event: KeyboardEvent) => {
       const control = ["ArrowLeft", "KeyA"].includes(event.code) ? "left" : ["ArrowRight", "KeyD"].includes(event.code) ? "right" : ["Space", "ArrowUp", "KeyW"].includes(event.code) ? "jump" : null;
       if (!control || (control === "jump" && event.target instanceof HTMLButtonElement)) return;
@@ -64,13 +73,13 @@ export function SantaBossBattle({ paused, apples, onSpendApple, onRestartLevel, 
     clearInput();
     if (!paused && battle.current.status === "playing") canvasRef.current?.focus({ preventScroll: true });
     loop.setRunning(!paused && battle.current.status === "playing" && !document.hidden);
-    if (paused || battle.current.status !== "playing") drawSantaBattle(context, battle.current);
+    if (paused || battle.current.status !== "playing") drawSantaBattle(context, battle.current, bossId);
     return () => {
       loop.stop(); clearInput(); window.removeEventListener("resize", resize);
       window.removeEventListener("keydown", key); window.removeEventListener("keyup", key);
       window.removeEventListener("blur", blur); document.removeEventListener("visibilitychange", visibility);
     };
-  }, [paused, hud.status]);
+  }, [bossId, paused, hud.status]);
 
   const retry = () => {
     if (apples <= 0) { onRestartLevel(); return; }
@@ -93,14 +102,14 @@ export function SantaBossBattle({ paused, apples, onSpendApple, onRestartLevel, 
   };
   const won = hud.status === "won", lost = hud.status === "lost";
   return <section className="santa-boss-battle" role="dialog" aria-modal="true" aria-labelledby="santa-boss-title">
-    <header className="santa-boss-hud"><div><p className="eyebrow">Jefe final de Navidad</p><h2 id="santa-boss-title">Ayuda a Papá Noel</h2><p>Salta los regalos y cae sobre su cabeza dos veces. ¡Puedes dar un doble salto!</p></div><div className="santa-hit-counter"><span aria-label={`${hud.lives} vidas`}>{"♥".repeat(hud.lives)}{"♡".repeat(3 - hud.lives)}</span><b aria-live="polite">{hud.hits}/2 saltos</b></div></header>
+    <header className="santa-boss-hud"><div><p className="eyebrow">{copy.eyebrow}</p><h2 id="santa-boss-title">{copy.title}</h2><p>Salta las {copy.projectile} y cae sobre su cabeza dos veces. ¡Puedes dar un doble salto!</p></div><div className="santa-hit-counter"><span aria-label={`${hud.lives} vidas`}>{"♥".repeat(hud.lives)}{"♡".repeat(3 - hud.lives)}</span><b aria-live="polite">{hud.hits}/2 saltos</b></div></header>
     <div className="santa-arena game-frame">
-      <div className="game-stage"><canvas ref={canvasRef} tabIndex={0} width={SANTA_ARENA.width} height={SANTA_ARENA.height} aria-label="Noa y Papá Noel en el patio nevado de los regalos. Muévete con las flechas y salta con espacio." /></div>
+      <div className="game-stage"><canvas ref={canvasRef} tabIndex={0} width={SANTA_ARENA.width} height={SANTA_ARENA.height} aria-label={`${copy.aria} Muévete con las flechas y salta con espacio.`} /></div>
       {!won && !lost && <TouchControls showYarn={false} disabled={paused} onPress={press} onRelease={release} onCancel={release}
         onKeyboardPress={(control) => { if (control !== "shoot") { touch.current[control] = true; if (control === "jump") touch.current.queued = true; } }}
         onKeyboardRelease={(control) => { if (control !== "shoot") touch.current[control] = false; }} />}
     </div>
-    {won ? <div className="santa-result"><h3>¡Lo conseguiste!</h3><p>Papá Noel sonríe: ahora los regalos saldrán a tiempo.</p><button className="pixel-button primary" onClick={() => { playSound("goal"); onWin(true); }}>Abrir el camino ▶</button></div> : lost ? <div className="santa-result"><h3>¡Vamos otra vez!</h3><p>Usa las plataformas y el doble salto para caer sobre su cabeza.</p><button className="pixel-button primary" onClick={retry}>{apples > 0 ? "Usar una manzana y reintentar" : "Volver a la pantalla"}</button></div> : null}
+    {won ? <div className="santa-result"><h3>¡Lo conseguiste!</h3><p>{copy.win}</p><button className="pixel-button primary" onClick={() => { playSound("goal"); onWin(true); }}>Abrir el camino ▶</button></div> : lost ? <div className="santa-result"><h3>¡Vamos otra vez!</h3><p>Usa las plataformas y el doble salto para caer sobre su cabeza.</p><button className="pixel-button primary" onClick={retry}>{apples > 0 ? "Usar una manzana y reintentar" : "Volver a la pantalla"}</button></div> : null}
     <button className="santa-exit" onClick={onAbandon}>Volver al mapa</button>
   </section>;
 }

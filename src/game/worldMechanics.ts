@@ -44,7 +44,8 @@ export function hasWorldMechanics(level: Level): boolean {
   return Boolean(level.chainGuardians?.length)
     || (level.world === 3 && level.enemies.some((enemy) => enemy.kind === "wolf" && enemy.sleepCycle))
     || (level.world === 11 && Boolean(level.bloomBridges?.length))
-    || (level.world === 7 && Boolean(level.updrafts?.length));
+    || (level.world === 7 && Boolean(level.updrafts?.length))
+    || (level.world === 14 && Boolean(level.sandGeysers?.length));
 }
 
 /** Temporary flowers are never respawn supports; preserve legacy spawning in other worlds. */

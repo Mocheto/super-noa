@@ -24,8 +24,8 @@ const spikePits = (segments: Array<[number, number]>) => segments.slice(0, -1).m
 const dinoGround = (segments: Array<[number, number]>): Platform[] => segments.map(([x, width]) => ({ x, y: 456, width, height: 120, kind: "dino-ground" }));
 const dinoLedge = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 24, kind: "dino-ledge" });
 const dinoWall = (x: number, y: number, width: number, height: number): Platform => ({ x, y, width, height, kind: "dino-wall" });
-const themedGround = (segments: Array<[number, number]>, kind: "volcano-ground" | "garden-ground" | "ice-ground" | "factory-ground" | "warehouse-ground" | "snow-ground"): Platform[] => segments.map(([x, width]) => ({ x, y: 456, width, height: 120, kind }));
-const themedLedge = (x: number, y: number, width: number, kind: "volcano-ledge" | "garden-ledge" | "ice-ledge" | "factory-ledge" | "warehouse-ledge" | "snow-ledge"): Platform => ({ x, y, width, height: 24, kind });
+const themedGround = (segments: Array<[number, number]>, kind: "volcano-ground" | "garden-ground" | "ice-ground" | "factory-ground" | "warehouse-ground" | "snow-ground" | "desert-ground" | "train-ground"): Platform[] => segments.map(([x, width]) => ({ x, y: 456, width, height: 120, kind }));
+const themedLedge = (x: number, y: number, width: number, kind: "volcano-ledge" | "garden-ledge" | "ice-ledge" | "factory-ledge" | "warehouse-ledge" | "snow-ledge" | "desert-ledge" | "train-roof"): Platform => ({ x, y, width, height: 24, kind });
 const themedWall = (x: number, y: number, width: number, height: number, kind: "volcano-wall" | "ice-wall" | "factory-wall" | "warehouse-wall"): Platform => ({ x, y, width, height, kind });
 const dew = (x: number, width = 110): Platform => ({ x, y: 418, width, height: 38, kind: "dew" });
 const deadlyWaterPits = (segments: Array<[number, number]>) => segments.slice(0, -1).map(([x, width], index) => ({ x: x + width, y: 448, width: segments[index + 1][0] - x - width, height: 128 }));
@@ -122,6 +122,12 @@ export const themeNames: Record<Theme, string> = {
   "winter-snow": "La senda de la nieve",
   "toy-factory": "La fábrica de juguetes",
   "gift-warehouse": "El almacén de regalos",
+  "desert-dunes": "Las dunas que cantan",
+  "desert-oasis": "El oasis de los espejos",
+  "desert-ruins": "Las ruinas de Siroco",
+  "train-station": "El andén de las maletas",
+  "train-valley": "El puente del silbido",
+  "train-engine": "La locomotora de Don Silbato",
 };
 
 // Identificadores estables: A es el desvío acuático entre los mundos 3 y 4.
@@ -1101,7 +1107,7 @@ export const levels: Level[] = [
     rewardBlocks: [reward("s13r3", 1060, 90), reward("s13r4", 4080, 90, "apple")], checkpoints: [970, 1990, 2860, 3990, 4960, 5900],
   },
   {
-    id: "13-3", world: 13, screen: 3, route: { finale: true },
+    id: "13-3", world: 13, screen: 3, route: { next: "14-1", nextLabel: "Seguir hacia el desierto ▶" },
     title: "El almacén de regalos", subtitle: "¡Combina las cintas y el regalo saltarín para llegar hasta Papá Noel!",
     theme: "gift-warehouse", width: 7300, start: { x: 80, y: 380 }, goalX: 7100,
     platforms: [
@@ -1136,6 +1142,95 @@ export const levels: Level[] = [
     enemies: [enemy("s13c-e1", "gift-box", 430, 416, 280, 720, 58), enemy("s13c-e2", "star-lantern", 1300, 160, 1100, 1570, 78), enemy("s13c-e3", "gift-gnome", 2280, 410, 2050, 2580, 60), enemy("s13c-e4", "star-lantern", 4210, 150, 3980, 4520, 82), enemy("s13c-e5", "gift-box", 5360, 416, 5100, 5540, 64), enemy("s13c-e6", "gift-gnome", 6840, 410, 6640, 7050, 62)],
     items: [apple("s13c1", 340, 260), apple("s13c2", 600, 135), apple("s13c3", 1350, 135), apple("s13c4", 3210, 135), sticker("sticker-13-3", 6100, 135), apple("s13c5", 6960, 135)],
     rewardBlocks: [reward("s13r5", 1100, 90), reward("s13r6", 4900, 90, "apple")], checkpoints: [1000, 1900, 2850, 3750, 4800, 5730, 6620], boss: "santa-claus",
+  },
+  {
+    id: "14-1", world: 14, screen: 1,
+    title: "Las dunas que cantan", subtitle: "Entra en el géiser de arena para subir. Los remolinos empujan despacito.",
+    theme: "desert-dunes", width: 5900, start: { x: 80, y: 380 }, goalX: 5710,
+    platforms: [
+      ...themedGround([[0, 820], [960, 830], [1920, 850], [2900, 820], [3850, 860], [4840, 1060]], "desert-ground"),
+      themedLedge(300, 315, 180, "desert-ledge"), themedLedge(590, 220, 170, "desert-ledge"), themedLedge(1040, 315, 190, "desert-ledge"),
+      themedLedge(1370, 205, 170, "desert-ledge"), themedLedge(2010, 310, 180, "desert-ledge"), themedLedge(2310, 190, 180, "desert-ledge"),
+      themedLedge(3010, 315, 190, "desert-ledge"), themedLedge(3340, 205, 170, "desert-ledge"), themedLedge(3970, 310, 180, "desert-ledge"),
+      themedLedge(4300, 190, 180, "desert-ledge"), themedLedge(4970, 300, 190, "desert-ledge"), themedLedge(5320, 190, 170, "desert-ledge"),
+    ],
+    deadlyWater: deadlyWaterPits([[0, 820], [960, 830], [1920, 850], [2900, 820], [3850, 860], [4840, 1060]]),
+    sandGeysers: [{ id: "sand-1", x: 610, y: 105, width: 130, height: 351, strength: 1850, maxRiseSpeed: 150 }, { id: "sand-2", x: 3330, y: 90, width: 150, height: 366, strength: 1950, maxRiseSpeed: 155 }],
+    windZones: [iceWind("dune-wind-1", 1500, 330, 1, 190), iceWind("dune-wind-2", 4200, 360, -1, 210)],
+    enemies: [enemy("d14-s1", "desert-scarab", 470, 416, 300, 760, 52), enemy("d14-f1", "fennec", 1510, 410, 1120, 1710, 58), enemy("d14-t1", "tumbleweed", 2560, 416, 2070, 2740, 72), enemy("d14-s2", "desert-scarab", 4150, 416, 3970, 4610, 62)],
+    items: [apple("d14a1", 360, 265), sticker("sticker-14-1", 650, 165), apple("d14a2", 1430, 155), apple("d14a3", 2360, 140), apple("d14a4", 3390, 155), apple("d14a5", 5360, 140)],
+    rewardBlocks: [reward("d14r1", 1080, 174), reward("d14r2", 4020, 169, "apple")], checkpoints: [1000, 1950, 2950, 3900, 4860],
+  },
+  {
+    id: "14-2", world: 14, screen: 2,
+    title: "El oasis de los espejos", subtitle: "Combina los géiseres y el viento para cruzar las palmeras.",
+    theme: "desert-oasis", width: 6500, start: { x: 80, y: 380 }, goalX: 6310,
+    platforms: [
+      ...themedGround([[0, 760], [900, 780], [1810, 760], [2700, 820], [3650, 800], [4580, 850], [5560, 940]], "desert-ground"),
+      ...[280, 1050, 1940, 2840, 3760, 4700, 5660].flatMap((x, i) => [themedLedge(x, 315, 185, "desert-ledge"), themedLedge(x + 280, i % 2 ? 175 : 205, 170, "desert-ledge")]),
+    ],
+    deadlyWater: deadlyWaterPits([[0, 760], [900, 780], [1810, 760], [2700, 820], [3650, 800], [4580, 850], [5560, 940]]),
+    sandGeysers: [{ id: "oasis-1", x: 540, y: 90, width: 145, height: 366, strength: 1950, maxRiseSpeed: 155 }, { id: "oasis-2", x: 3100, y: 80, width: 150, height: 376, strength: 2050, maxRiseSpeed: 160 }, { id: "oasis-3", x: 5900, y: 80, width: 150, height: 376, strength: 2100, maxRiseSpeed: 165 }],
+    windZones: [iceWind("oasis-w1", 1250, 460, -1, 215), iceWind("oasis-w2", 4050, 480, 1, 235)],
+    enemies: [enemy("d14b-s", "desert-scarab", 420, 416, 260, 700, 58), enemy("d14b-f", "fennec", 1530, 410, 1120, 1650, 64), enemy("d14b-t1", "tumbleweed", 2350, 416, 1970, 2540, 78), enemy("d14b-f2", "fennec", 4240, 410, 3820, 4420, 68), enemy("d14b-t2", "tumbleweed", 5290, 416, 4860, 5480, 82)],
+    items: [apple("d14b1", 340, 265), apple("d14b2", 610, 150), sticker("sticker-14-2", 2220, 125), apple("d14b3", 3160, 130), apple("d14b4", 4080, 255), apple("d14b5", 5960, 125)],
+    rewardBlocks: [reward("d14rb1", 1090, 174), reward("d14rb2", 4720, 174, "apple")], checkpoints: [920, 1820, 2720, 3660, 4600, 5580],
+  },
+  {
+    id: "14-3", world: 14, screen: 3, route: { next: "15-1", nextLabel: "Subir al tren ▶" },
+    title: "Las ruinas de Siroco", subtitle: "Cruza las columnas de arena y visita al guardián del desierto.",
+    theme: "desert-ruins", width: 7200, start: { x: 80, y: 380 }, goalX: 7000,
+    platforms: [
+      ...themedGround([[0, 780], [920, 800], [1850, 780], [2760, 830], [3720, 790], [4640, 820], [5590, 760], [6480, 720]], "desert-ground"),
+      ...[290, 1060, 1980, 2900, 3840, 4770, 5710, 6590].flatMap((x, i) => [themedLedge(x, 310, 190, "desert-ledge"), themedLedge(x + 290, i % 2 ? 185 : 205, 175, "desert-ledge")]),
+    ],
+    deadlyWater: deadlyWaterPits([[0, 780], [920, 800], [1850, 780], [2760, 830], [3720, 790], [4640, 820], [5590, 760], [6480, 720]]),
+    sandGeysers: [{ id: "ruins-1", x: 560, y: 80, width: 150, height: 376, strength: 2000, maxRiseSpeed: 160 }, { id: "ruins-2", x: 3220, y: 70, width: 160, height: 386, strength: 2100, maxRiseSpeed: 165 }, { id: "ruins-3", x: 6010, y: 70, width: 160, height: 386, strength: 2150, maxRiseSpeed: 170 }],
+    windZones: [iceWind("ruins-w1", 1450, 450, 1, 230), iceWind("ruins-w2", 4050, 480, -1, 250), iceWind("ruins-w3", 6200, 300, 1, 260)],
+    enemies: [enemy("d14c-f1", "fennec", 430, 410, 260, 730, 64), enemy("d14c-t1", "tumbleweed", 1500, 416, 1110, 1690, 84), enemy("d14c-s1", "desert-scarab", 2500, 416, 2050, 2660, 68), enemy("d14c-f2", "fennec", 4200, 410, 3900, 4480, 72), enemy("d14c-t2", "tumbleweed", 5350, 416, 4930, 5500, 90), enemy("d14c-s2", "desert-scarab", 6670, 416, 6540, 6910, 74)],
+    items: [apple("d14c1", 350, 260), apple("d14c2", 620, 150), apple("d14c3", 2300, 145), sticker("sticker-14-3", 3290, 125), apple("d14c4", 4800, 135), apple("d14c5", 6060, 120)],
+    rewardBlocks: [reward("d14rc1", 1100, 169), reward("d14rc2", 4770, 169, "apple")], checkpoints: [940, 1870, 2780, 3740, 4660, 5610, 6500], boss: "siroco",
+  },
+  {
+    id: "15-1", world: 15, screen: 1,
+    title: "El andén de las maletas", subtitle: "Los techos se mueven. Camina contra su marcha o déjate llevar.",
+    theme: "train-station", width: 6000, start: { x: 80, y: 380 }, goalX: 5810,
+    platforms: [
+      ...themedGround([[0, 850], [980, 800], [1910, 820], [2860, 840], [3830, 820], [4780, 1220]], "train-ground"),
+      ...[300, 1080, 2010, 2960, 3930, 4880].flatMap((x, i) => [{ ...themedLedge(x, 300, 210, "train-roof"), beltSpeed: i % 2 ? -95 : 95 }, themedLedge(x + 310, 190, 175, "train-roof")]),
+    ],
+    deadlyWater: deadlyWaterPits([[0, 850], [980, 800], [1910, 820], [2860, 840], [3830, 820], [4780, 1220]]),
+    enemies: [enemy("t15-s1", "rolling-suitcase", 460, 416, 270, 760, 58), enemy("t15-p1", "conductor-pigeon", 1420, 160, 1110, 1670, 76), enemy("t15-m1", "clockwork-mouse", 2440, 416, 2050, 2690, 66), enemy("t15-s2", "rolling-suitcase", 4350, 416, 4020, 4600, 68)],
+    items: [apple("t15a1", 360, 250), sticker("sticker-15-1", 660, 140), apple("t15a2", 1400, 140), apple("t15a3", 2360, 140), apple("t15a4", 4240, 250), apple("t15a5", 5200, 140)],
+    rewardBlocks: [reward("t15r1", 1120, 159), reward("t15r2", 3980, 159, "apple")], checkpoints: [1000, 1930, 2890, 3850, 4800],
+  },
+  {
+    id: "15-2", world: 15, screen: 2,
+    title: "El puente del silbido", subtitle: "El vapor avisa antes de subir. Espera y salta cuando se esconda.",
+    theme: "train-valley", width: 6700, start: { x: 80, y: 380 }, goalX: 6510,
+    platforms: [
+      ...themedGround([[0, 760], [890, 770], [1790, 790], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]], "train-ground"),
+      ...[280, 1030, 1930, 2850, 3760, 4690, 5600].flatMap((x, i) => [{ ...themedLedge(x, 305, 210, "train-roof"), beltSpeed: i % 2 ? 110 : -105 }, themedLedge(x + 300, i % 2 ? 175 : 200, 180, "train-roof")]),
+    ],
+    deadlyWater: deadlyWaterPits([[0, 760], [890, 770], [1790, 790], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]]),
+    lavaJets: [lavaJet("steam-1", 840, 4.2, 0, 250), lavaJet("steam-2", 1740, 4.4, 1.2, 290), lavaJet("steam-3", 3570, 4.1, 2.1, 270), lavaJet("steam-4", 5410, 4.5, .8, 300)],
+    enemies: [enemy("t15b-s", "rolling-suitcase", 430, 416, 260, 700, 62), enemy("t15b-p", "conductor-pigeon", 1480, 145, 1130, 1660, 82), enemy("t15b-m1", "clockwork-mouse", 2350, 416, 1980, 2580, 72), enemy("t15b-s2", "rolling-suitcase", 4210, 416, 3880, 4430, 72), enemy("t15b-p2", "conductor-pigeon", 5750, 150, 5540, 6120, 88)],
+    items: [apple("t15b1", 350, 255), apple("t15b2", 620, 150), sticker("sticker-15-2", 2120, 125), apple("t15b3", 2900, 145), apple("t15b4", 4700, 135), apple("t15b5", 5700, 120)],
+    rewardBlocks: [reward("t15rb1", 1050, 164), reward("t15rb2", 4710, 164, "apple")], checkpoints: [910, 1810, 2730, 3640, 4570, 5480],
+  },
+  {
+    id: "15-3", world: 15, screen: 3, route: { finale: true },
+    title: "La locomotora de Don Silbato", subtitle: "Combina los vagones y el vapor para llegar hasta el maquinista.",
+    theme: "train-engine", width: 7400, start: { x: 80, y: 380 }, goalX: 7200,
+    platforms: [
+      ...themedGround([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 800], [5520, 800], [6450, 950]], "train-ground"),
+      ...[290, 1050, 1960, 2880, 3810, 4730, 5660, 6580].flatMap((x, i) => [{ ...themedLedge(x, 300, 215, "train-roof"), beltSpeed: i % 2 ? -120 : 120 }, themedLedge(x + 310, i % 2 ? 180 : 205, 180, "train-roof")]),
+    ],
+    deadlyWater: deadlyWaterPits([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 800], [5520, 800], [6450, 950]]),
+    lavaJets: [lavaJet("engine-steam-1", 860, 4, 0, 270), lavaJet("engine-steam-2", 1770, 4.3, 1.1, 300), lavaJet("engine-steam-3", 3620, 4.1, 2, 290), lavaJet("engine-steam-4", 5470, 4.4, .6, 310), lavaJet("engine-steam-5", 6400, 4.2, 1.7, 280)],
+    enemies: [enemy("t15c-s1", "rolling-suitcase", 450, 416, 270, 720, 68), enemy("t15c-p1", "conductor-pigeon", 1450, 145, 1120, 1680, 88), enemy("t15c-m1", "clockwork-mouse", 2380, 416, 2040, 2600, 76), enemy("t15c-s2", "rolling-suitcase", 4200, 416, 3900, 4450, 78), enemy("t15c-p2", "conductor-pigeon", 5770, 140, 5550, 6120, 94), enemy("t15c-m2", "clockwork-mouse", 6810, 416, 6560, 7080, 82)],
+    items: [apple("t15c1", 350, 250), apple("t15c2", 630, 145), apple("t15c3", 2270, 140), sticker("sticker-15-3", 3860, 125), apple("t15c4", 4780, 135), apple("t15c5", 6630, 135)],
+    rewardBlocks: [reward("t15rc1", 1100, 159), reward("t15rc2", 4760, 159, "apple")], checkpoints: [930, 1840, 2760, 3690, 4610, 5540, 6470], boss: "don-silbato",
   },
   {
     id: "S-1",

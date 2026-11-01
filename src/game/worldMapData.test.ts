@@ -5,9 +5,9 @@ import { levels } from "./levels.ts";
 import { emptyProgress } from "./progress.ts";
 import { findMapJourney, mapRoutes, mapRouteState, worldAvailable, worldCatalog } from "./worldMapData.ts";
 
-test("el mapa representa los trece mundos y todos sus caminos tienen destinos", () => {
-  assert.equal(worldCatalog.length, 13);
-  assert.equal(new Set(worldCatalog.map((world) => world.id)).size, 13);
+test("el mapa representa los quince mundos y todos sus caminos tienen destinos", () => {
+  assert.equal(worldCatalog.length, 15);
+  assert.equal(new Set(worldCatalog.map((world) => world.id)).size, 15);
   assert.ok(existsSync(new URL("../../public/assets/worlds/noa-adventure-map-v1.png", import.meta.url)));
   for (const world of worldCatalog) {
     assert.ok(levels.some((level) => level.world === world.id));

@@ -543,6 +543,26 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
     }
     return;
   }
+  if (level.world === 14 || level.world === 15) {
+    context.fillStyle = level.world === 14 ? "#e7b45e" : "#7dc5e8";
+    context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    const image = raster.adventureBackground;
+    if (image?.complete && image.naturalWidth) {
+      const scroll = cameraX * .1;
+      const panelWidth = VIEW_WIDTH;
+      const firstPanel = Math.floor(scroll / panelWidth);
+      for (let panel = firstPanel; panel <= firstPanel + 1; panel += 1) {
+        const x = panel * panelWidth - scroll;
+        context.save(); context.translate(x + (panel % 2 ? panelWidth : 0), 0);
+        if (panel % 2) context.scale(-1, 1);
+        context.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight, 0, 0, panelWidth, VIEW_HEIGHT);
+        context.restore();
+      }
+      context.fillStyle = level.world === 14 ? "rgba(122,65,25,.08)" : "rgba(20,48,78,.08)";
+      context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    }
+    return;
+  }
   if (level.theme === "ice-mountain") {
     const gradient = context.createLinearGradient(0, 0, 0, VIEW_HEIGHT);
     gradient.addColorStop(0, "#455ca4"); gradient.addColorStop(.48, "#9bd8ee"); gradient.addColorStop(1, "#e9fbff");
@@ -751,6 +771,21 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   const forest = world >= 2 && world <= 4;
   const worldTiles = worldPlatformCells(world);
   if (x + platform.width < 0 || x > VIEW_WIDTH) return;
+  if (platform.kind === "desert-ground" || platform.kind === "desert-ledge") {
+    context.fillStyle = platform.kind === "desert-ground" ? "#b86f35" : "#d28a45";
+    context.fillRect(x, platform.y, platform.width, platform.height);
+    context.fillStyle = "#f5c96e"; context.fillRect(x, platform.y, platform.width, platform.kind === "desert-ground" ? 12 : 9);
+    context.fillStyle = "rgba(118,65,33,.3)";
+    for (let px = x + 18; px < x + platform.width; px += 48) context.fillRect(px, platform.y + 30, 26, 5);
+    return;
+  }
+  if (platform.kind === "train-ground" || platform.kind === "train-roof") {
+    context.fillStyle = platform.kind === "train-ground" ? "#51434a" : "#9d3039";
+    context.fillRect(x, platform.y, platform.width, platform.height);
+    context.fillStyle = platform.kind === "train-ground" ? "#d7c6a1" : "#f0c85b";
+    context.fillRect(x, platform.y, platform.width, platform.kind === "train-ground" ? 10 : 7);
+    if (!platform.beltSpeed) return;
+  }
   if (platform.kind === "snow-ground" || platform.kind === "snow-ledge") {
     const image = raster.worldTerrain;
     const ground = platform.kind === "snow-ground";
@@ -1309,7 +1344,7 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
   const specializedImage = enemy.kind === "fish" || enemy.kind === "urchin" ? raster.waterEnemies
     : enemy.kind === "baby-t-rex" || enemy.kind === "pterodactyl" ? raster.dinosaurEnemies
     : enemy.kind === "sky-unicorn" ? raster.secret
-    : enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl" || enemy.kind === "toy-elf" || enemy.kind === "toy-robot" || enemy.kind === "toy-bird" || enemy.kind === "gift-box" || enemy.kind === "gift-gnome" || enemy.kind === "star-lantern" || enemy.kind === "snow-scout" || enemy.kind === "toy-reindeer" || enemy.kind === "winter-robin" ? raster.worldCharacters
+    : enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl" || enemy.kind === "toy-elf" || enemy.kind === "toy-robot" || enemy.kind === "toy-bird" || enemy.kind === "gift-box" || enemy.kind === "gift-gnome" || enemy.kind === "star-lantern" || enemy.kind === "snow-scout" || enemy.kind === "toy-reindeer" || enemy.kind === "winter-robin" || enemy.kind === "desert-scarab" || enemy.kind === "fennec" || enemy.kind === "tumbleweed" || enemy.kind === "rolling-suitcase" || enemy.kind === "conductor-pigeon" || enemy.kind === "clockwork-mouse" ? raster.worldCharacters
     : undefined;
   if (specializedImage && (!specializedImage.complete || !specializedImage.naturalWidth)) {
     drawEnemyFallback(context, enemy, x, y);
@@ -1320,6 +1355,17 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
     const flying = enemy.kind === "toy-bird" || enemy.kind === "star-lantern" || enemy.kind === "winter-robin";
     const width = flying ? 66 : 62;
     const height = width;
+    const drawX = x + (enemy.width - width) / 2;
+    const drawY = y + enemy.height - height + (flying ? Math.sin(enemy.phase * 4) * 4 : 0);
+    context.save();
+    if (enemy.vx < 0) { context.translate(drawX + width, 0); context.scale(-1, 1); context.drawImage(raster.worldCharacters, column * raster.worldCharacters.naturalWidth / 3, 0, raster.worldCharacters.naturalWidth / 3, raster.worldCharacters.naturalHeight, 0, drawY, width, height); }
+    else context.drawImage(raster.worldCharacters, column * raster.worldCharacters.naturalWidth / 3, 0, raster.worldCharacters.naturalWidth / 3, raster.worldCharacters.naturalHeight, drawX, drawY, width, height);
+    context.restore(); return;
+  }
+  if (enemy.kind === "desert-scarab" || enemy.kind === "fennec" || enemy.kind === "tumbleweed" || enemy.kind === "rolling-suitcase" || enemy.kind === "conductor-pigeon" || enemy.kind === "clockwork-mouse") {
+    const column = enemy.kind === "desert-scarab" || enemy.kind === "rolling-suitcase" ? 0 : enemy.kind === "fennec" || enemy.kind === "conductor-pigeon" ? 1 : 2;
+    const flying = enemy.kind === "conductor-pigeon";
+    const width = 68, height = 68;
     const drawX = x + (enemy.width - width) / 2;
     const drawY = y + enemy.height - height + (flying ? Math.sin(enemy.phase * 4) * 4 : 0);
     context.save();
@@ -1731,11 +1777,18 @@ export function drawWaterJumper(context: CanvasRenderingContext2D, jumper: LiveW
   context.restore();
 }
 
-export function drawLavaJet(context: CanvasRenderingContext2D, jet: NonNullable<Level["lavaJets"]>[number], cameraX: number, elapsed: number, raster: RasterAssets) {
+export function drawLavaJet(context: CanvasRenderingContext2D, jet: NonNullable<Level["lavaJets"]>[number], cameraX: number, elapsed: number, raster: RasterAssets, steam = false) {
   const { extension, rect } = lavaJetState(jet, elapsed);
   if (extension <= 0 || rect.x + rect.width < cameraX || rect.x > cameraX + VIEW_WIDTH) return;
   const x = Math.round(rect.x - cameraX);
-  if (drawMechanicSprite(context, raster.lavaJet, "lavaJet", Math.floor(elapsed * 6), x, rect.y, rect.width, rect.height)) return;
+  if (!steam && drawMechanicSprite(context, raster.lavaJet, "lavaJet", Math.floor(elapsed * 6), x, rect.y, rect.width, rect.height)) return;
+  if (steam) {
+    const gradient = context.createLinearGradient(x, rect.y, x + rect.width, rect.y);
+    gradient.addColorStop(0, "rgba(210,235,245,.45)"); gradient.addColorStop(.5, "rgba(255,255,255,.92)"); gradient.addColorStop(1, "rgba(180,220,238,.5)");
+    context.fillStyle = gradient; context.fillRect(x, rect.y, rect.width, rect.height);
+    for (let py = rect.y; py < jet.baseY; py += 34) { context.beginPath(); context.arc(x + rect.width / 2 + Math.sin(py) * 8, py, 18, 0, Math.PI * 2); context.fill(); }
+    return;
+  }
   const gradient = context.createLinearGradient(x, rect.y, x + rect.width, rect.y);
   gradient.addColorStop(0, "#ff6a32"); gradient.addColorStop(.5, "#ffe064"); gradient.addColorStop(1, "#e93636");
   context.fillStyle = gradient;

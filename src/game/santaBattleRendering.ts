@@ -1,14 +1,17 @@
 import { getImage } from "./assets";
 import { santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets";
 import { SANTA_ARENA, SANTA_PLATFORMS, type SantaBattle } from "./santaBattle";
+import type { BossId } from "./types";
 
-export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattle) {
+type PlatformBossId = Extract<BossId, "santa-claus" | "siroco" | "don-silbato">;
+
+export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattle, bossId: PlatformBossId = "santa-claus") {
   const { width, height, floor } = SANTA_ARENA;
   const viewWidth = ctx.canvas.width;
   const cameraX = Math.max(0, Math.min(width - viewWidth, state.player.x - viewWidth * .4));
   ctx.save(); ctx.translate(-cameraX, 0);
-  const background = getImage(santaBattleAssets.background);
-  ctx.fillStyle = "#284365"; ctx.fillRect(0, 0, width, height);
+  const background = getImage(bossId === "santa-claus" ? santaBattleAssets.background : `./assets/worlds/${bossId === "siroco" ? "desert" : "train"}-background-v1.png`);
+  ctx.fillStyle = bossId === "siroco" ? "#d79b4d" : bossId === "don-silbato" ? "#6faed2" : "#284365"; ctx.fillRect(0, 0, width, height);
   if (background.complete && background.naturalWidth) ctx.drawImage(background, 0, 0, width, height);
   ctx.fillStyle = "rgba(22,26,48,.1)"; ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = "#fff6d2";
@@ -31,12 +34,13 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
       ctx.fillStyle = "#fff6e7"; ctx.fillRect(support.x, support.y, support.width, 7);
     }
   }
-  const sheet = getImage(santaBattleAssets.characters);
+  const sheet = getImage(bossId === "santa-claus" ? santaBattleAssets.characters : `./assets/sprites/boss-${bossId === "siroco" ? "siroco" : "don-silbato"}-sheet-v1.png`);
   for (const gift of state.gifts) {
-    if (sheet.complete && sheet.naturalWidth) ctx.drawImage(sheet, ...santaGiftSource, gift.x, gift.y, gift.width, gift.height);
+    if (bossId === "santa-claus" && sheet.complete && sheet.naturalWidth) ctx.drawImage(sheet, ...santaGiftSource, gift.x, gift.y, gift.width, gift.height);
     else {
-      ctx.fillStyle = "#c4364c"; ctx.fillRect(gift.x, gift.y, gift.width, gift.height);
-      ctx.fillStyle = "#ffde78"; ctx.fillRect(gift.x + 12, gift.y, 6, gift.height);
+      ctx.fillStyle = bossId === "siroco" ? "#d49a43" : "#a74a42";
+      if (bossId === "siroco") { ctx.beginPath(); ctx.arc(gift.x + gift.width / 2, gift.y + gift.height / 2, gift.width / 2, 0, Math.PI * 2); ctx.fill(); }
+      else { ctx.fillRect(gift.x, gift.y, gift.width, gift.height); ctx.fillStyle = "#f0c85b"; ctx.fillRect(gift.x + 12, gift.y, 6, gift.height); }
     }
   }
   const boss = state.boss;
@@ -44,7 +48,7 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
   const sprite = santaSpriteFrames[pose];
   const [sx, sy, sw, sh] = sprite.source;
   const scale = 132 / sprite.bodyHeight;
-  if (sheet.complete && sheet.naturalWidth) {
+  if (sheet.complete && sheet.naturalWidth && bossId === "santa-claus") {
     ctx.save();
     // The atlas faces left. Face the player when he approaches from the right.
     const center = boss.x + boss.width / 2;
@@ -52,10 +56,18 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
     if (state.player.x > center) ctx.scale(-1, 1);
     ctx.drawImage(sheet, sx, sy, sw, sh, (sx - sprite.anchorX) * scale, boss.y + boss.height - sh * scale, sw * scale, sh * scale);
     ctx.restore();
+  } else if (sheet.complete && sheet.naturalWidth) {
+    const cellWidth = sheet.naturalWidth / 5;
+    ctx.save();
+    const center = boss.x + boss.width / 2;
+    ctx.translate(center, 0);
+    if (state.player.x > center) ctx.scale(-1, 1);
+    ctx.drawImage(sheet, pose * cellWidth, 0, cellWidth, sheet.naturalHeight, -72, boss.y - 10, 144, boss.height + 18);
+    ctx.restore();
   } else { ctx.fillStyle = "#bd3047"; ctx.fillRect(boss.x, boss.y, boss.width, boss.height); }
   if (boss.attackIn < .65 && !boss.stun && state.status === "playing") {
     ctx.fillStyle = "#fff1a2"; ctx.font = "bold 24px sans-serif"; ctx.textAlign = "center";
-    ctx.fillText("¡Va un regalo!", boss.x + boss.width / 2, boss.y - 30);
+    ctx.fillText(bossId === "siroco" ? "¡Va la arena!" : bossId === "don-silbato" ? "¡Va una maleta!" : "¡Va un regalo!", boss.x + boss.width / 2, boss.y - 30);
   }
   const p = state.player;
   ctx.save();
@@ -73,6 +85,6 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
   ctx.restore();
   if (boss.x > cameraX + viewWidth - 30) {
     ctx.fillStyle = "#fff1a2"; ctx.font = "bold 20px sans-serif"; ctx.textAlign = "right";
-    ctx.fillText("Papá Noel →", viewWidth - 18, 190); ctx.textAlign = "left";
+    ctx.fillText(`${bossId === "siroco" ? "Siroco" : bossId === "don-silbato" ? "Don Silbato" : "Papá Noel"} →`, viewWidth - 18, 190); ctx.textAlign = "left";
   }
 }

@@ -4,7 +4,7 @@ export type StickerDefinition = {
   id: string;
   name: string;
   icon: PixelIconKind;
-  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
+  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
   hint: string;
 };
 
@@ -45,6 +45,12 @@ export const stickerCatalog: StickerDefinition[] = [
   { id: "sticker-13-1", name: "Campana de nieve", icon: "sparkle", world: 13, hint: "Sube a los troncos del segundo camino." },
   { id: "sticker-13-2", name: "Muñeco de juguete", icon: "cat", world: 13, hint: "Sube al estante alto del taller." },
   { id: "sticker-13-3", name: "Estrella del regalo", icon: "crown", world: 13, hint: "Usa el regalo saltarín y mira arriba." },
+  { id: "sticker-14-1", name: "Oasis brillante", icon: "sparkle", world: 14, hint: "Sube con el primer géiser de arena." },
+  { id: "sticker-14-2", name: "Escarabajo dorado", icon: "gem", world: 14, hint: "Busca sobre el arco más alto del oasis." },
+  { id: "sticker-14-3", name: "Sol de Siroco", icon: "crown", world: 14, hint: "Cruza los remolinos antes de las ruinas." },
+  { id: "sticker-15-1", name: "Billete rojo", icon: "sparkle", world: 15, hint: "Salta sobre el primer vagón en marcha." },
+  { id: "sticker-15-2", name: "Campana dorada", icon: "gem", world: 15, hint: "Espera al vapor y sube al techo alto." },
+  { id: "sticker-15-3", name: "Locomotora feliz", icon: "crown", world: 15, hint: "Busca encima del último vagón." },
   { id: "sticker-s-1", name: "Pluma celeste", icon: "sparkle", world: 7, hint: "Sube con la primera columna de aire y salta a la nube de la derecha." },
   { id: "sticker-s-2", name: "Herradura arcoíris", icon: "crown", world: 7, hint: "La segunda columna de aire te ayuda a subir a la nube alta." },
   { id: "sticker-s-3", name: "Estrella secreta", icon: "gem", world: 7, hint: "Sube con la última columna de aire hasta la nube más alta." },

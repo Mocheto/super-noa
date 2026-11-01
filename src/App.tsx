@@ -685,9 +685,9 @@ export default function App() {
           <div className="home-copy">
             <p className="eyebrow home-eyebrow"><PixelIcon kind="sparkle" /> Una aventura pixel art</p>
             <h1 id="game-title"><span>SUPER</span> NOA</h1>
-            <p className="home-lead">Corre, salta y explora castillos, volcanes de dragones, flores gigantes y montañas de hielo. ¡Los gatitos te esperan!</p>
+            <p className="home-lead">Corre, salta y explora castillos, volcanes, flores gigantes, desiertos y trenes. ¡Los gatitos te esperan!</p>
             <p className="home-invite"><PixelIcon kind="heart" /> Una gran aventura para pequeñas heroínas</p>
-            <p className="coming-adventures"><strong>Próximas aventuras:</strong> El desierto de los deseos · La fábrica de juguetes · El bosque de los sueños</p>
+            <p className="coming-adventures"><strong>Nuevas aventuras:</strong> El Desierto de los Espejismos · El Tren de las Estaciones</p>
             <div className="home-actions">
               <button className="pixel-button primary home-play" type="button" data-gamepad-default disabled={enrollmentChecking} onClick={() => void requestAdventure(() => setScreen("map"))}>▶ ¡Jugar ahora!</button>
               <button className="pixel-button" type="button" onClick={() => setShowHelp(true)}>¿Cómo se juega?</button>
@@ -756,8 +756,9 @@ export default function App() {
           {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? "Camino opcional" : `Bandera ${snapshot.checkpoint}/${displayedLevel.checkpoints.length}`}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
 
           {screen === "boss" && activeLevel.boss && (
-            activeLevel.boss === "santa-claus" ? <SantaBossBattle
+            (activeLevel.boss === "santa-claus" || activeLevel.boss === "siroco" || activeLevel.boss === "don-silbato") ? <SantaBossBattle
               key={`santa-boss-${activeLevel.id}-${levelRun}`}
+              bossId={activeLevel.boss}
               paused={paused} apples={snapshot.apples} onSpendApple={spendBossApple} onRestartLevel={restartBossLevel}
               onAbandon={abandonBossBattle} onWin={handleComplete} playSound={playSound}
             /> : <BossBattle

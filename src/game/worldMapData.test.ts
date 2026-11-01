@@ -12,12 +12,20 @@ test("el mapa representa los dieciséis mundos y todos sus caminos tienen destin
   for (const world of worldCatalog) {
     assert.ok(levels.some((level) => level.world === world.id));
     assert.ok(world.x > 0 && world.x < 100 && world.y > 0 && world.y < 100);
+    assert.ok(existsSync(new URL(`../../public/${world.catAsset.slice(2)}`, import.meta.url)), `Falta el gatito de ${world.name}`);
   }
   for (const route of mapRoutes) {
     assert.ok(worldCatalog.some((world) => world.id === route.from));
     assert.ok(worldCatalog.some((world) => world.id === route.to));
     if (route.requiresCompletion) assert.ok(levels.some((level) => level.id === route.requiresCompletion));
   }
+});
+
+test("los cuatro mundos nuevos tienen gatitos propios en finales y postales", () => {
+  const newWorlds = worldCatalog.filter((world) => world.id >= 13 && world.id <= 16);
+  assert.equal(newWorlds.length, 4);
+  assert.equal(new Set(newWorlds.map((world) => world.catAsset)).size, 4);
+  for (const world of newWorlds) assert.equal(world.catAsset, `./assets/sprites/world-cat-${world.id}-v1.png`);
 });
 
 test("los caminos se iluminan con el progreso sin adelantar la salida de la laguna", () => {

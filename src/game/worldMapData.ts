@@ -25,9 +25,9 @@ export const worldCatalog: Array<{
   { id: 10, name: "El Volcán de los Dragones", shortName: "Dragones", description: "Lava brillante, cristales rojos y pequeños dragones valientes.", cat: "Chispa", catAsset: "./assets/sprites/world-cat-10-v1.png", x: 51, y: 82 },
   { id: 11, name: "El Valle de los Gigantes", shortName: "Gigantes", description: "Flores que abren puentes de pétalos, gotas de rocío y bichitos gigantes.", cat: "Botón", catAsset: "./assets/sprites/world-cat-11-v1.png", x: 32, y: 79 },
   { id: 12, name: "La Montaña de Hielo", shortName: "Hielo", description: "Nieve suave, cuevas azules y caminos muy resbaladizos.", cat: "Copito", catAsset: "./assets/sprites/world-cat-12-v1.png", x: 10, y: 80 },
-  { id: 13, name: "El Mundo de Papá Noel", shortName: "Navidad", description: "Nieve, duendes, juguetes y regalos para repartir.", cat: "Estrella", catAsset: "./assets/sprites/completion-cat-v1.png", x: 26, y: 92 },
-  { id: 14, name: "El Desierto de los Espejismos", shortName: "Desierto", description: "Dunas, oasis, géiseres de arena y ruinas doradas.", cat: "Duna", catAsset: "./assets/sprites/completion-cat-v1.png", x: 48, y: 92 },
-  { id: 15, name: "El Tren de las Estaciones", shortName: "Tren", description: "Andenes, vagones veloces, vapor y una locomotora alegre.", cat: "Vía", catAsset: "./assets/sprites/completion-cat-v1.png", x: 70, y: 92 },
+  { id: 13, name: "El Mundo de Papá Noel", shortName: "Navidad", description: "Nieve, duendes, juguetes y regalos para repartir.", cat: "Estrella", catAsset: "./assets/sprites/world-cat-13-v1.png", x: 26, y: 92 },
+  { id: 14, name: "El Desierto de los Espejismos", shortName: "Desierto", description: "Dunas, oasis, géiseres de arena y ruinas doradas.", cat: "Duna", catAsset: "./assets/sprites/world-cat-14-v1.png", x: 48, y: 92 },
+  { id: 15, name: "El Tren de las Estaciones", shortName: "Tren", description: "Andenes, vagones veloces, vapor y una locomotora alegre.", cat: "Vía", catAsset: "./assets/sprites/world-cat-15-v1.png", x: 70, y: 92 },
   { id: 16, name: "El Reino de la Música", shortName: "Música", description: "Tambores, campanas, ondas musicales y un gran teatro brillante.", cat: "Tempo", catAsset: "./assets/sprites/world-cat-16-v1.png", x: 90, y: 92 },
   { id: 7, name: "El Reino Secreto", shortName: "Nubes", description: "Nubes mágicas y columnas de aire para subir junto a pájaros y unicornios.", cat: "Iris", catAsset: "./assets/sprites/world-cat-7-v1.png", x: 88, y: 12 },
 ];

@@ -970,7 +970,7 @@ export default function App() {
               <span className="ranking-position" aria-label={`Puesto ${position}`}>{position}</span>
               <div className="ranking-player">
                 <div className="ranking-player-name"><strong>{player.alias}</strong>{isCurrentPlayer && <em>Tú</em>}</div>
-                <div className="ranking-stats">{player.campaignWorld != null && player.campaignWorld > 0 && <span>🌍 Etapa {player.campaignWorld}/14</span>}<span>🚩 {player.completedLevels}/{campaignLevelCount} pantallas</span><span>★ {player.stickers} pegatinas</span><span>🍎 {player.totalApples === null ? "Total sin datos" : `${player.totalApples.toLocaleString("es-ES")} en toda la aventura`}</span><span>{player.achievedAt === null ? "Fecha del progreso: sin datos" : `Progreso logrado el ${new Date(player.achievedAt).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })}`}</span></div>
+                <div className="ranking-stats">{player.campaignWorld != null && player.campaignWorld > 0 && <span>🌍 Etapa {player.campaignWorld}/14</span>}<span>🚩 {player.completedLevels}/{campaignLevelCount} pantallas</span><span>★ {player.stickers}/48 pegatinas</span><span>🤝 {player.bossChallenges}/16 retos de amistad</span><span>🍎 {player.totalApples === null ? "Total sin datos" : `${player.totalApples.toLocaleString("es-ES")} en toda la aventura`}</span><span>{player.achievedAt === null ? "Fecha del progreso: sin datos" : `Progreso logrado el ${new Date(player.achievedAt).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })}`}</span></div>
               </div>
             </li>;
           })}</ol>

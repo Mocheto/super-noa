@@ -30,11 +30,11 @@ export const rankingSchema = `
     DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_campaign_world_check,
     DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_total_apples_check;
   ALTER TABLE super_noa_ranking_profiles
-    ADD CONSTRAINT super_noa_ranking_profiles_world_check CHECK (world BETWEEN 0 AND 13),
-    ADD CONSTRAINT super_noa_ranking_profiles_completed_levels_check CHECK (completed_levels BETWEEN 0 AND 33),
-    ADD CONSTRAINT super_noa_ranking_profiles_stickers_check CHECK (stickers BETWEEN 0 AND 39),
-    ADD CONSTRAINT super_noa_ranking_profiles_boss_challenges_check CHECK (boss_challenges BETWEEN 0 AND 13),
-    ADD CONSTRAINT super_noa_ranking_profiles_campaign_world_check CHECK (campaign_world BETWEEN 0 AND 11),
+    ADD CONSTRAINT super_noa_ranking_profiles_world_check CHECK (world BETWEEN 0 AND 16),
+    ADD CONSTRAINT super_noa_ranking_profiles_completed_levels_check CHECK (completed_levels BETWEEN 0 AND 42),
+    ADD CONSTRAINT super_noa_ranking_profiles_stickers_check CHECK (stickers BETWEEN 0 AND 48),
+    ADD CONSTRAINT super_noa_ranking_profiles_boss_challenges_check CHECK (boss_challenges BETWEEN 0 AND 16),
+    ADD CONSTRAINT super_noa_ranking_profiles_campaign_world_check CHECK (campaign_world BETWEEN 0 AND 14),
     ADD CONSTRAINT super_noa_ranking_profiles_total_apples_check CHECK (total_apples BETWEEN 0 AND 9007199254740991);
 `;
 

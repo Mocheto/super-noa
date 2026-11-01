@@ -1,4 +1,4 @@
-export type Theme = "orchard-day" | "orchard-sunset" | "forest-dusk" | "forest-night" | "crystal-cave" | "wolf-pines" | "wolf-moon" | "boar-canopy" | "boar-storm" | "sky-pirates" | "sky-storm" | "haunted-castle" | "secret-sky" | "water-lagoon" | "dinosaur-island" | "dragon-volcano" | "giant-valley" | "ice-mountain" | "winter-snow" | "toy-factory" | "gift-warehouse" | "desert-dunes" | "desert-oasis" | "desert-ruins" | "train-station" | "train-valley" | "train-engine";
+export type Theme = "orchard-day" | "orchard-sunset" | "forest-dusk" | "forest-night" | "crystal-cave" | "wolf-pines" | "wolf-moon" | "boar-canopy" | "boar-storm" | "sky-pirates" | "sky-storm" | "haunted-castle" | "secret-sky" | "water-lagoon" | "dinosaur-island" | "dragon-volcano" | "giant-valley" | "ice-mountain" | "winter-snow" | "toy-factory" | "gift-warehouse" | "desert-dunes" | "desert-oasis" | "desert-ruins" | "train-station" | "train-valley" | "train-engine" | "music-garden" | "music-bells" | "music-theater";
 
 export type Rect = {
   x: number;
@@ -9,7 +9,7 @@ export type Rect = {
 
 export type Platform = Rect & {
   beltSpeed?: number;
-  kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall" | "factory-ground" | "factory-ledge" | "factory-wall" | "warehouse-ground" | "warehouse-ledge" | "warehouse-wall" | "gift-spring" | "snow-ground" | "snow-ledge" | "desert-ground" | "desert-ledge" | "train-ground" | "train-roof";
+  kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall" | "factory-ground" | "factory-ledge" | "factory-wall" | "warehouse-ground" | "warehouse-ledge" | "warehouse-wall" | "gift-spring" | "snow-ground" | "snow-ledge" | "desert-ground" | "desert-ledge" | "train-ground" | "train-roof" | "music-ground" | "music-stage";
 };
 
 export type SleepCycle = {
@@ -21,7 +21,7 @@ export type SleepCycle = {
 
 export type Enemy = Rect & {
   id: string;
-  kind: "slime" | "beetle" | "cloud" | "wolf" | "boar" | "bird" | "pirate" | "parrot" | "bat" | "sky-unicorn" | "skeleton" | "zombie" | "ghost" | "fish" | "urchin" | "baby-t-rex" | "pterodactyl" | "baby-dragon" | "fire-salamander" | "flying-dragon" | "ant" | "snail" | "bee" | "penguin" | "snow-fox" | "snowy-owl" | "toy-elf" | "toy-robot" | "toy-bird" | "gift-box" | "gift-gnome" | "star-lantern" | "snow-scout" | "toy-reindeer" | "winter-robin" | "desert-scarab" | "fennec" | "tumbleweed" | "rolling-suitcase" | "conductor-pigeon" | "clockwork-mouse";
+  kind: "slime" | "beetle" | "cloud" | "wolf" | "boar" | "bird" | "pirate" | "parrot" | "bat" | "sky-unicorn" | "skeleton" | "zombie" | "ghost" | "fish" | "urchin" | "baby-t-rex" | "pterodactyl" | "baby-dragon" | "fire-salamander" | "flying-dragon" | "ant" | "snail" | "bee" | "penguin" | "snow-fox" | "snowy-owl" | "toy-elf" | "toy-robot" | "toy-bird" | "gift-box" | "gift-gnome" | "star-lantern" | "snow-scout" | "toy-reindeer" | "winter-robin" | "desert-scarab" | "fennec" | "tumbleweed" | "rolling-suitcase" | "conductor-pigeon" | "clockwork-mouse" | "walking-drum" | "note-bird" | "violin-mouse";
   minX: number;
   maxX: number;
   speed: number;
@@ -107,7 +107,7 @@ export type ChainGuardian = {
   delay: number;
 };
 
-export type BossId = "bramble-king" | "mist-countess" | "great-wolf" | "great-boar" | "sky-captain" | "vampire-count" | "rainbow-queen" | "shark-captain" | "triceratops-queen" | "ruby-dragon" | "queen-bee" | "polar-bear" | "santa-claus" | "siroco" | "don-silbato";
+export type BossId = "bramble-king" | "mist-countess" | "great-wolf" | "great-boar" | "sky-captain" | "vampire-count" | "rainbow-queen" | "shark-captain" | "triceratops-queen" | "ruby-dragon" | "queen-bee" | "polar-bear" | "santa-claus" | "siroco" | "don-silbato" | "maestra-armonia";
 
 export type ShopMatchCount = 0 | 1 | 2 | 3;
 export type SecretShop = Rect & { id: string };
@@ -123,7 +123,7 @@ export type DetourMechanism = Rect & {
 
 export type Level = {
   id: string;
-  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
+  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16;
   screen: 1 | 2 | 3;
   title: string;
   subtitle: string;

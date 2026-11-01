@@ -94,7 +94,7 @@ test("todos los checkpoints reaparecen sobre una superficie que permite aterriza
       `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
     }
   }
-  assert.equal(checkpointCount, 211);
+  assert.equal(checkpointCount, 229);
 });
 
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {
@@ -103,7 +103,7 @@ test("el mundo del agua se abre entre los dos bosques desde una poza segura", ()
   assert.equal(levels[levels.findIndex((level) => level.id === "3-3") + 1].id, "A-1");
   assert.equal(levels[levels.findIndex((level) => level.id === "A-3") + 1].id, "4-1");
   assert.equal(aquatic[2].boss, "shark-captain");
-  assert.equal(levels.filter((level) => level.world !== 7 && level.world !== 8).length, 39);
+  assert.equal(levels.filter((level) => level.world !== 7 && level.world !== 8).length, 42);
   assert.equal(levels.find((level) => level.id === "2-3")?.waterEntrance, undefined);
   const forest = levels.find((level) => level.id === "3-3")!;
   const entrance = forest.waterEntrance!;
@@ -123,10 +123,10 @@ test("el mundo del agua se abre entre los dos bosques desde una poza segura", ()
   }
 });
 
-test("los quince jefes del álbum tienen retrato y duelo", () => {
+test("los dieciséis jefes del álbum tienen retrato y duelo", () => {
   const bosses = levels.filter((level) => level.boss);
-  assert.equal(bosses.length, 15);
-  assert.equal(new Set(bosses.map((level) => level.boss)).size, 15);
+  assert.equal(bosses.length, 16);
+  assert.equal(new Set(bosses.map((level) => level.boss)).size, 16);
   for (const level of bosses) {
     assert.ok(level.boss);
     const boss = bossCatalog[level.boss];
@@ -237,6 +237,7 @@ test("los tres nuevos mundos forman una aventura completa con mecánicas propias
     { world: 13, ids: ["13-1", "13-2", "13-3"], boss: "santa-claus", enemies: ["toy-elf", "toy-robot", "toy-bird", "gift-box", "gift-gnome", "star-lantern"], platforms: ["snow-ground", "factory-ground", "warehouse-ground"] },
     { world: 14, ids: ["14-1", "14-2", "14-3"], boss: "siroco", enemies: ["desert-scarab", "fennec", "tumbleweed"], platforms: ["desert-ground"] },
     { world: 15, ids: ["15-1", "15-2", "15-3"], boss: "don-silbato", enemies: ["rolling-suitcase", "conductor-pigeon", "clockwork-mouse"], platforms: ["train-ground", "train-roof"] },
+    { world: 16, ids: ["16-1", "16-2", "16-3"], boss: "maestra-armonia", enemies: ["walking-drum", "note-bird", "violin-mouse"], platforms: ["music-ground", "music-stage"] },
   ] as const;
   for (const expected of expectations) {
     const world = levels.filter((level) => level.world === expected.world);
@@ -256,7 +257,8 @@ test("los tres nuevos mundos forman una aventura completa con mecánicas propias
   assert.equal(levels.find((level) => level.id === "12-3")?.route?.next, "13-1");
   assert.equal(levels.find((level) => level.id === "13-3")?.route?.next, "14-1");
   assert.equal(levels.find((level) => level.id === "14-3")?.route?.next, "15-1");
-  assert.equal(levels.find((level) => level.id === "15-3")?.route?.finale, true);
+  assert.equal(levels.find((level) => level.id === "15-3")?.route?.next, "16-1");
+  assert.equal(levels.find((level) => level.id === "16-3")?.route?.finale, true);
 });
 
 test("el valle usa monstruos gigantes y trampolines sin tapar los precipicios", () => {
@@ -358,7 +360,7 @@ test("el reino secreto conserva sus identificadores y está después de la campa
 
 test("todas las insignias del juego tienen un sprite transparente y su celda correcta", () => {
   const ids = levels.flatMap((level) => level.items.filter((item) => item.kind === "sticker").map((item) => item.id));
-  assert.equal(ids.length, 45);
+  assert.equal(ids.length, 48);
   assert.deepEqual(new Set(ids), new Set(stickerCatalog.map((entry) => entry.id)));
   for (const sticker of stickerCatalog) {
     const sprite = getStickerSprite(sticker.id);
@@ -484,7 +486,7 @@ test("las tres corrientes del reino secreto son ayudas locales con entrada y des
 
 test("cada mundo presente conserva una identidad jugable propia", () => {
   const worlds = new Set(levels.map((level) => level.world));
-  assert.equal(worlds.size, 15);
+  assert.equal(worlds.size, 16);
   for (const world of worlds) {
     const screens = levels.filter((level) => level.world === world);
     const platforms = screens.flatMap((level) => level.platforms);
@@ -544,6 +546,11 @@ test("cada mundo presente conserva una identidad jugable propia", () => {
         assert.ok(platforms.some((platform) => platform.kind === "train-roof" && platform.beltSpeed));
         assert.ok(screens.some((level) => level.lavaJets?.length));
         assert.equal(screens.find((level) => level.boss)?.boss, "don-silbato");
+        break;
+      case 16:
+        assert.ok(screens.every((level) => level.windZones?.length));
+        assert.ok(platforms.some((platform) => platform.kind === "music-stage"));
+        assert.equal(screens.find((level) => level.boss)?.boss, "maestra-armonia");
         break;
       default:
         assert.fail(`El mundo ${world} necesita una comprobación de identidad jugable`);

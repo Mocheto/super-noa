@@ -88,6 +88,11 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     assert.equal(train.worldCharacters.src, "./assets/atlases/train-enemies-v1.png");
     assert.equal(train.worldTerrain.src, "./assets/atlases/train-terrain-v1.png");
     assert.equal(train.stickerSheets[15].src, "./assets/stickers/world-15-v1.png");
+    const music = getLevelAssets(levels.find((level) => level.id === "16-1")!);
+    assert.equal(music.adventureBackground.src, "./assets/worlds/music-background-v1.png");
+    assert.equal(music.worldCharacters.src, "./assets/atlases/music-characters-v1.png");
+    assert.equal(music.worldTerrain.src, "./assets/atlases/music-terrain-v1.png");
+    assert.equal(music.stickerSheets[16].src, "./assets/stickers/world-16-v1.png");
     assert.equal(first.holidayBackground.src, "");
     for (const level of levels) {
       const assets = getLevelAssets(level);

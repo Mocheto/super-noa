@@ -229,10 +229,12 @@ const drawHolidayTerrain = (context: CanvasRenderingContext2D, image: HTMLImageE
   return true;
 };
 
-const drawAdventureTerrain = (context: CanvasRenderingContext2D, image: HTMLImageElement, world: 14 | 15, part: "ground" | "ledge" | "wall", x: number, y: number, width: number, height: number) => {
+const drawAdventureTerrain = (context: CanvasRenderingContext2D, image: HTMLImageElement, world: 14 | 15 | 16, part: "ground" | "ledge" | "wall", x: number, y: number, width: number, height: number) => {
   if (!image.complete || !image.naturalWidth) return false;
   const crops = world === 14
     ? { ground: [.008, .515, .52, .35], ledge: [.53, .515, .29, .35], wall: [.825, .11, .17, .77] }
+    : world === 16
+      ? { ground: [.03, .08, .94, .30], ledge: [.17, .53, .36, .33], wall: [.705, .41, .16, .54] }
     : { ground: [.008, .245, .77, .30], ledge: [.018, .63, .75, .30], wall: [.77, .025, .225, .94] };
   const [sx, sy, sw, sh] = crops[part].map((value, index) => value * (index % 2 === 0 ? image.naturalWidth : image.naturalHeight));
   const tileWidth = part === "ground" ? 190 : width;
@@ -588,8 +590,8 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
     }
     return;
   }
-  if (level.world === 14 || level.world === 15) {
-    context.fillStyle = level.world === 14 ? "#e7b45e" : "#7dc5e8";
+  if (level.world === 14 || level.world === 15 || level.world === 16) {
+    context.fillStyle = level.world === 14 ? "#e7b45e" : level.world === 15 ? "#7dc5e8" : "#6a4fa3";
     context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
     const image = raster.adventureBackground;
     if (image?.complete && image.naturalWidth) {
@@ -603,7 +605,7 @@ export function drawBackground(context: CanvasRenderingContext2D, level: Level, 
         context.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight, 0, 0, panelWidth, VIEW_HEIGHT);
         context.restore();
       }
-      context.fillStyle = level.world === 14 ? "rgba(122,65,25,.08)" : "rgba(20,48,78,.08)";
+      context.fillStyle = level.world === 14 ? "rgba(122,65,25,.08)" : level.world === 15 ? "rgba(20,48,78,.08)" : "rgba(45,22,76,.08)";
       context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
     }
     return;
@@ -839,6 +841,15 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
     const offset = ((frame * platform.beltSpeed / 60) % 32 + 32) % 32;
     for (let px = x - 32 + offset; px < x + platform.width; px += 32) context.fillText(platform.beltSpeed > 0 ? "›" : "‹", px, platform.y + 23);
     context.restore();
+    return;
+  }
+  if (platform.kind === "music-ground" || platform.kind === "music-stage") {
+    if (drawAdventureTerrain(context, raster.worldTerrain, 16, platform.kind === "music-ground" ? "ground" : "ledge", x, platform.y, platform.width, platform.height)) return;
+    context.fillStyle = platform.kind === "music-ground" ? "#37294f" : "#684a88";
+    context.fillRect(x, platform.y, platform.width, platform.height);
+    context.fillStyle = "#f4ca58"; context.fillRect(x, platform.y, platform.width, platform.kind === "music-ground" ? 10 : 7);
+    context.fillStyle = "#fff8e8";
+    for (let key = x + 8; key < x + platform.width - 8; key += 28) context.fillRect(key, platform.y + 12, 18, 9);
     return;
   }
   if (platform.kind === "snow-ground" || platform.kind === "snow-ledge") {
@@ -1399,7 +1410,7 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
   const specializedImage = enemy.kind === "fish" || enemy.kind === "urchin" ? raster.waterEnemies
     : enemy.kind === "baby-t-rex" || enemy.kind === "pterodactyl" ? raster.dinosaurEnemies
     : enemy.kind === "sky-unicorn" ? raster.secret
-    : enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl" || enemy.kind === "toy-elf" || enemy.kind === "toy-robot" || enemy.kind === "toy-bird" || enemy.kind === "gift-box" || enemy.kind === "gift-gnome" || enemy.kind === "star-lantern" || enemy.kind === "snow-scout" || enemy.kind === "toy-reindeer" || enemy.kind === "winter-robin" || enemy.kind === "desert-scarab" || enemy.kind === "fennec" || enemy.kind === "tumbleweed" || enemy.kind === "rolling-suitcase" || enemy.kind === "conductor-pigeon" || enemy.kind === "clockwork-mouse" ? raster.worldCharacters
+    : enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander" || enemy.kind === "ant" || enemy.kind === "snail" || enemy.kind === "bee" || enemy.kind === "penguin" || enemy.kind === "snow-fox" || enemy.kind === "snowy-owl" || enemy.kind === "toy-elf" || enemy.kind === "toy-robot" || enemy.kind === "toy-bird" || enemy.kind === "gift-box" || enemy.kind === "gift-gnome" || enemy.kind === "star-lantern" || enemy.kind === "snow-scout" || enemy.kind === "toy-reindeer" || enemy.kind === "winter-robin" || enemy.kind === "desert-scarab" || enemy.kind === "fennec" || enemy.kind === "tumbleweed" || enemy.kind === "rolling-suitcase" || enemy.kind === "conductor-pigeon" || enemy.kind === "clockwork-mouse" || enemy.kind === "walking-drum" || enemy.kind === "note-bird" || enemy.kind === "violin-mouse" ? raster.worldCharacters
     : undefined;
   if (specializedImage && (!specializedImage.complete || !specializedImage.naturalWidth)) {
     drawEnemyFallback(context, enemy, x, y);
@@ -1415,6 +1426,19 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
     context.save();
     if (enemy.vx < 0) { context.translate(drawX + width, 0); context.scale(-1, 1); context.drawImage(raster.worldCharacters, column * raster.worldCharacters.naturalWidth / 3, 0, raster.worldCharacters.naturalWidth / 3, raster.worldCharacters.naturalHeight, 0, drawY, width, height); }
     else context.drawImage(raster.worldCharacters, column * raster.worldCharacters.naturalWidth / 3, 0, raster.worldCharacters.naturalWidth / 3, raster.worldCharacters.naturalHeight, drawX, drawY, width, height);
+    context.restore(); return;
+  }
+  if (enemy.kind === "walking-drum" || enemy.kind === "note-bird" || enemy.kind === "violin-mouse") {
+    const column = enemy.kind === "walking-drum" ? 0 : enemy.kind === "note-bird" ? 1 : 2;
+    const flying = enemy.kind === "note-bird";
+    const cellWidth = raster.worldCharacters.naturalWidth / 5;
+    const cellHeight = raster.worldCharacters.naturalHeight / 2;
+    const width = 70, height = 70;
+    const drawX = x + (enemy.width - width) / 2;
+    const drawY = y + enemy.height - height + (flying ? Math.sin(enemy.phase * 4) * 4 : 0);
+    context.save();
+    if (enemy.vx < 0) { context.translate(drawX + width, 0); context.scale(-1, 1); context.drawImage(raster.worldCharacters, column * cellWidth, 0, cellWidth, cellHeight, 0, drawY, width, height); }
+    else context.drawImage(raster.worldCharacters, column * cellWidth, 0, cellWidth, cellHeight, drawX, drawY, width, height);
     context.restore(); return;
   }
   if (enemy.kind === "desert-scarab" || enemy.kind === "fennec" || enemy.kind === "tumbleweed" || enemy.kind === "rolling-suitcase" || enemy.kind === "conductor-pigeon" || enemy.kind === "clockwork-mouse") {

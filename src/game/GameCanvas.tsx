@@ -828,7 +828,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       if (level.world === 7) level.updrafts?.forEach((zone) => drawUpdraft(context, zone, cameraX, levelAge, raster));
       if (level.world === 14) level.sandGeysers?.forEach((zone) => drawUpdraft(context, zone, cameraX, levelAge, raster));
       if (!level.detour && level.screen === 1 && cameraX < 520 && level.world >= 10 && !(level.world === 11 && level.bloomBridges?.length)) {
-        const hint = level.world === 10 ? "¡MIRA EL RITMO DE LA LAVA!" : level.world === 11 ? "¡CAE SOBRE EL ROCÍO PARA REBOTAR!" : level.world === 13 ? "¡SALTA SOBRE EL REGALO DE LA FLECHA!" : level.world === 14 ? "¡LA ARENA TE AYUDA A SUBIR!" : level.world === 15 ? "¡LOS VAGONES TE LLEVAN!" : "¡EL HIELO RESBALA Y EL VIENTO EMPUJA!";
+        const hint = level.world === 10 ? "¡MIRA EL RITMO DE LA LAVA!" : level.world === 11 ? "¡CAE SOBRE EL ROCÍO PARA REBOTAR!" : level.world === 13 ? "¡SALTA SOBRE EL REGALO DE LA FLECHA!" : level.world === 14 ? "¡LA ARENA TE AYUDA A SUBIR!" : level.world === 15 ? "¡LOS VAGONES TE LLEVAN!" : level.world === 16 ? "¡SIGUE LAS ONDAS DE LA MÚSICA!" : "¡EL HIELO RESBALA Y EL VIENTO EMPUJA!";
         context.save(); context.fillStyle = "rgba(42,24,55,.88)"; context.fillRect(205 - cameraX * .22, 82, 550, 42);
         context.strokeStyle = "#fff0b0"; context.lineWidth = 3; context.strokeRect(205 - cameraX * .22, 82, 550, 42);
         context.fillStyle = "#fff7dd"; context.font = "bold 17px monospace"; context.textAlign = "center"; context.fillText(hint, 480 - cameraX * .22, 109); context.restore();
@@ -837,6 +837,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         const hint = level.world === 3 ? "ZZZ: PASA · ¡OJO AL DESPERTAR!"
           : level.world === 11 ? "PÉTALOS ROSAS: PASA · AMARILLOS: ¡SE CIERRA!"
           : level.world === 6 ? "¡EL PERRITO AVISA! PASA POR ARRIBA"
+          : level.world === 16 ? "¡LAS ONDAS TE EMPUJAN SUAVE!"
           : "↑ EL AIRE TE AYUDA A SUBIR ↑";
         context.save();
         context.fillStyle = "#fff8e7";

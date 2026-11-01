@@ -7,7 +7,8 @@ import type { DetourId } from "./types.ts";
 export type WorldId = Level["world"];
 export const worldArtwork = (world: WorldId) => world === 14
   ? "./assets/worlds/desert-background-v1.png"
-  : world === 15 ? "./assets/worlds/train-background-v1.png" : `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`;
+  : world === 15 ? "./assets/worlds/train-background-v1.png"
+    : world === 16 ? "./assets/worlds/music-background-v1.png" : `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`;
 
 export const worldCatalog: Array<{
   id: WorldId; name: string; shortName: string; description: string; cat: string; catAsset: string;
@@ -27,6 +28,7 @@ export const worldCatalog: Array<{
   { id: 13, name: "El Mundo de Papá Noel", shortName: "Navidad", description: "Nieve, duendes, juguetes y regalos para repartir.", cat: "Estrella", catAsset: "./assets/sprites/completion-cat-v1.png", x: 26, y: 92 },
   { id: 14, name: "El Desierto de los Espejismos", shortName: "Desierto", description: "Dunas, oasis, géiseres de arena y ruinas doradas.", cat: "Duna", catAsset: "./assets/sprites/completion-cat-v1.png", x: 48, y: 92 },
   { id: 15, name: "El Tren de las Estaciones", shortName: "Tren", description: "Andenes, vagones veloces, vapor y una locomotora alegre.", cat: "Vía", catAsset: "./assets/sprites/completion-cat-v1.png", x: 70, y: 92 },
+  { id: 16, name: "El Reino de la Música", shortName: "Música", description: "Tambores, campanas, ondas musicales y un gran teatro brillante.", cat: "Tempo", catAsset: "./assets/sprites/world-cat-16-v1.png", x: 90, y: 92 },
   { id: 7, name: "El Reino Secreto", shortName: "Nubes", description: "Nubes mágicas y columnas de aire para subir junto a pájaros y unicornios.", cat: "Iris", catAsset: "./assets/sprites/world-cat-7-v1.png", x: 88, y: 12 },
 ];
 
@@ -46,6 +48,7 @@ export const mapRoutes: MapRoute[] = [
   { from: 12, to: 13, path: "M 100 448 C 144 485 204 515 260 520" },
   { from: 13, to: 14, path: "M 260 520 C 330 520 410 520 480 520" },
   { from: 14, to: 15, path: "M 480 520 C 550 520 630 520 700 520" },
+  { from: 15, to: 16, path: "M 700 520 C 770 520 835 520 900 520" },
   { from: 3, to: 8, path: "M 510 134 C 564 227 434 282 510 392", branch: "water" },
   { from: 8, to: 4, path: "M 510 392 C 594 340 642 251 730 190", branch: "water", requiresCompletion: "A-3" },
   { from: 4, to: 7, path: "M 730 190 C 807 162 788 70 880 67", branch: "secret" },

@@ -16,6 +16,7 @@ export const musicTracks: Record<Level["world"], string> = {
   13: "./assets/music/hielo.mp3",
   14: "./assets/music/volcan.mp3",
   15: "./assets/music/manzanos.mp3",
+  16: "./assets/music/gatitos.mp3",
 };
 
 type MusicAudio = Pick<HTMLAudioElement, "loop" | "volume" | "paused" | "play" | "pause">;

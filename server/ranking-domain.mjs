@@ -18,10 +18,10 @@ function boundedInteger(value, maximum) {
 
 export function validateProgress(value) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return null;
-  const world = boundedInteger(value.world, 15);
-  const completedLevels = boundedInteger(value.completedLevels, 39);
-  const stickers = boundedInteger(value.stickers, 45);
-  const bossChallenges = boundedInteger(value.bossChallenges, 15);
+  const world = boundedInteger(value.world, 16);
+  const completedLevels = boundedInteger(value.completedLevels, 42);
+  const stickers = boundedInteger(value.stickers, 48);
+  const bossChallenges = boundedInteger(value.bossChallenges, 16);
   if ([world, completedLevels, stickers, bossChallenges].some((item) => item === null)) return null;
   const campaignWorld = campaignWorldFromLegacyWorld(world);
   if (value.campaignWorld !== undefined && value.campaignWorld !== campaignWorld) return null;

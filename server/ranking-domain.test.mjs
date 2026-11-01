@@ -16,10 +16,10 @@ test("acepta únicamente totales posibles del progreso", () => {
   assert.deepEqual(validateProgress({ world: 13, completedLevels: 33, stickers: 39, bossChallenges: 13 }), {
     world: 13, campaignWorld: 11, completedLevels: 33, stickers: 39, bossChallenges: 13,
   });
-  assert.deepEqual(validateProgress({ world: 15, completedLevels: 39, stickers: 45, bossChallenges: 15 }), {
-    world: 15, campaignWorld: 13, completedLevels: 39, stickers: 45, bossChallenges: 15,
+  assert.deepEqual(validateProgress({ world: 16, completedLevels: 42, stickers: 48, bossChallenges: 16 }), {
+    world: 16, campaignWorld: 14, completedLevels: 42, stickers: 48, bossChallenges: 16,
   });
-  assert.equal(validateProgress({ world: 16, completedLevels: 39, stickers: 45, bossChallenges: 15 }), null);
+  assert.equal(validateProgress({ world: 17, completedLevels: 42, stickers: 48, bossChallenges: 16 }), null);
   assert.equal(validateProgress({ world: 1.5, completedLevels: 2, stickers: 3, bossChallenges: 4 }), null);
 });
 

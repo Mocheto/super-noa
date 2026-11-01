@@ -24,8 +24,8 @@ const spikePits = (segments: Array<[number, number]>) => segments.slice(0, -1).m
 const dinoGround = (segments: Array<[number, number]>): Platform[] => segments.map(([x, width]) => ({ x, y: 456, width, height: 120, kind: "dino-ground" }));
 const dinoLedge = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 24, kind: "dino-ledge" });
 const dinoWall = (x: number, y: number, width: number, height: number): Platform => ({ x, y, width, height, kind: "dino-wall" });
-const themedGround = (segments: Array<[number, number]>, kind: "volcano-ground" | "garden-ground" | "ice-ground" | "factory-ground" | "warehouse-ground" | "snow-ground" | "desert-ground" | "train-ground"): Platform[] => segments.map(([x, width]) => ({ x, y: 456, width, height: 120, kind }));
-const themedLedge = (x: number, y: number, width: number, kind: "volcano-ledge" | "garden-ledge" | "ice-ledge" | "factory-ledge" | "warehouse-ledge" | "snow-ledge" | "desert-ledge" | "train-roof"): Platform => ({ x, y, width, height: 24, kind });
+const themedGround = (segments: Array<[number, number]>, kind: "volcano-ground" | "garden-ground" | "ice-ground" | "factory-ground" | "warehouse-ground" | "snow-ground" | "desert-ground" | "train-ground" | "music-ground"): Platform[] => segments.map(([x, width]) => ({ x, y: 456, width, height: 120, kind }));
+const themedLedge = (x: number, y: number, width: number, kind: "volcano-ledge" | "garden-ledge" | "ice-ledge" | "factory-ledge" | "warehouse-ledge" | "snow-ledge" | "desert-ledge" | "train-roof" | "music-stage"): Platform => ({ x, y, width, height: 24, kind });
 const themedWall = (x: number, y: number, width: number, height: number, kind: "volcano-wall" | "ice-wall" | "factory-wall" | "warehouse-wall"): Platform => ({ x, y, width, height, kind });
 const dew = (x: number, width = 110): Platform => ({ x, y: 418, width, height: 38, kind: "dew" });
 const deadlyWaterPits = (segments: Array<[number, number]>) => segments.slice(0, -1).map(([x, width], index) => ({ x: x + width, y: 448, width: segments[index + 1][0] - x - width, height: 128 }));
@@ -128,6 +128,9 @@ export const themeNames: Record<Theme, string> = {
   "train-station": "El andén de las maletas",
   "train-valley": "El puente del silbido",
   "train-engine": "La locomotora de Don Silbato",
+  "music-garden": "El jardín de los tambores",
+  "music-bells": "El bosque de las campanas",
+  "music-theater": "El gran teatro de Armonía",
 };
 
 // Identificadores estables: A es el desvío acuático entre los mundos 3 y 4.
@@ -1219,7 +1222,7 @@ export const levels: Level[] = [
     rewardBlocks: [reward("t15rb1", 1050, 164), reward("t15rb2", 4710, 164, "apple")], checkpoints: [910, 1810, 2730, 3640, 4570, 5480],
   },
   {
-    id: "15-3", world: 15, screen: 3, route: { finale: true },
+    id: "15-3", world: 15, screen: 3, route: { next: "16-1", nextLabel: "Seguir la melodía ▶" },
     title: "La locomotora de Don Silbato", subtitle: "Combina los vagones y el vapor para llegar hasta el maquinista.",
     theme: "train-engine", width: 7400, start: { x: 80, y: 380 }, goalX: 7200,
     platforms: [
@@ -1231,6 +1234,48 @@ export const levels: Level[] = [
     enemies: [enemy("t15c-s1", "rolling-suitcase", 450, 416, 270, 720, 68), enemy("t15c-p1", "conductor-pigeon", 1450, 145, 1120, 1680, 88), enemy("t15c-m1", "clockwork-mouse", 2380, 416, 2040, 2600, 76), enemy("t15c-s2", "rolling-suitcase", 4200, 416, 3900, 4450, 78), enemy("t15c-p2", "conductor-pigeon", 5770, 140, 5550, 6120, 94), enemy("t15c-m2", "clockwork-mouse", 6810, 416, 6560, 7080, 82)],
     items: [apple("t15c1", 350, 250), apple("t15c2", 630, 145), apple("t15c3", 2270, 140), sticker("sticker-15-3", 3860, 125), apple("t15c4", 4780, 135), apple("t15c5", 6630, 135)],
     rewardBlocks: [reward("t15rc1", 1100, 159), reward("t15rc2", 4760, 159, "apple")], checkpoints: [930, 1840, 2760, 3690, 4610, 5540, 6470], boss: "don-silbato",
+  },
+  {
+    id: "16-1", world: 16, screen: 1,
+    title: "El jardín de los tambores", subtitle: "Las ondas de música empujan suave. Salta siguiendo su dirección.",
+    theme: "music-garden", width: 6000, start: { x: 80, y: 380 }, goalX: 5810,
+    platforms: [
+      ...themedGround([[0, 850], [980, 800], [1910, 820], [2860, 840], [3830, 820], [4780, 1220]], "music-ground"),
+      ...[300, 1080, 2010, 2960, 3930, 4880].flatMap((x, i) => [themedLedge(x, 305, 205, "music-stage"), themedLedge(x + 300, i % 2 ? 180 : 205, 175, "music-stage")]),
+    ],
+    deadlyWater: deadlyWaterPits([[0, 850], [980, 800], [1910, 820], [2860, 840], [3830, 820], [4780, 1220]]),
+    windZones: [iceWind("beat-1", 980, 620, 1, 175), iceWind("beat-2", 2860, 650, -1, 185), iceWind("beat-3", 4780, 650, 1, 195)],
+    enemies: [enemy("m16-d1", "walking-drum", 460, 416, 270, 760, 56), enemy("m16-n1", "note-bird", 1420, 155, 1110, 1670, 78), enemy("m16-v1", "violin-mouse", 2440, 416, 2050, 2690, 62), enemy("m16-d2", "walking-drum", 4350, 416, 4020, 4600, 66)],
+    items: [apple("m16a1", 360, 250), sticker("sticker-16-1", 660, 145), apple("m16a2", 1400, 140), apple("m16a3", 2360, 140), apple("m16a4", 4240, 250), apple("m16a5", 5200, 140)],
+    rewardBlocks: [reward("m16r1", 1120, 159), reward("m16r2", 3980, 159, "apple")], checkpoints: [1000, 1930, 2890, 3850, 4800],
+  },
+  {
+    id: "16-2", world: 16, screen: 2,
+    title: "El bosque de las campanas", subtitle: "Escucha el camino: las ondas cambian de lado entre las campanas.",
+    theme: "music-bells", width: 6700, start: { x: 80, y: 380 }, goalX: 6510,
+    platforms: [
+      ...themedGround([[0, 760], [890, 770], [1790, 790], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]], "music-ground"),
+      ...[280, 1030, 1930, 2850, 3760, 4690, 5600].flatMap((x, i) => [themedLedge(x, 305, 205, "music-stage"), themedLedge(x + 300, i % 2 ? 175 : 200, 180, "music-stage")]),
+    ],
+    deadlyWater: deadlyWaterPits([[0, 760], [890, 770], [1790, 790], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]]),
+    windZones: [iceWind("bell-1", 890, 700, 1, 190), iceWind("bell-2", 2710, 720, -1, 205), iceWind("bell-3", 4550, 730, 1, 215)],
+    enemies: [enemy("m16b-d1", "walking-drum", 430, 416, 260, 700, 62), enemy("m16b-n1", "note-bird", 1480, 145, 1130, 1660, 84), enemy("m16b-v1", "violin-mouse", 2350, 416, 1980, 2580, 68), enemy("m16b-d2", "walking-drum", 4210, 416, 3880, 4430, 72), enemy("m16b-n2", "note-bird", 5750, 150, 5540, 6120, 90)],
+    items: [apple("m16b1", 350, 255), apple("m16b2", 620, 150), sticker("sticker-16-2", 2120, 125), apple("m16b3", 2900, 145), apple("m16b4", 4700, 135), apple("m16b5", 5700, 120)],
+    rewardBlocks: [reward("m16rb1", 1050, 159), reward("m16rb2", 4710, 159, "apple")], checkpoints: [910, 1810, 2730, 3640, 4570, 5480],
+  },
+  {
+    id: "16-3", world: 16, screen: 3, route: { finale: true },
+    title: "El gran teatro de Armonía", subtitle: "Sigue las ondas hasta el escenario y reta a la Maestra Armonía.",
+    theme: "music-theater", width: 7400, start: { x: 80, y: 380 }, goalX: 7200,
+    platforms: [
+      ...themedGround([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 800], [5520, 800], [6450, 950]], "music-ground"),
+      ...[290, 1050, 1960, 2880, 3810, 4730, 5660, 6580].flatMap((x, i) => [themedLedge(x, 300, 215, "music-stage"), themedLedge(x + 310, i % 2 ? 180 : 205, 180, "music-stage")]),
+    ],
+    deadlyWater: deadlyWaterPits([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 800], [5520, 800], [6450, 950]]),
+    windZones: [iceWind("show-1", 910, 760, 1, 205), iceWind("show-2", 2740, 760, -1, 220), iceWind("show-3", 4590, 770, 1, 230), iceWind("show-4", 6450, 700, -1, 240)],
+    enemies: [enemy("m16c-d1", "walking-drum", 450, 416, 270, 720, 68), enemy("m16c-n1", "note-bird", 1450, 145, 1120, 1680, 90), enemy("m16c-v1", "violin-mouse", 2380, 416, 2040, 2600, 74), enemy("m16c-d2", "walking-drum", 4200, 416, 3900, 4450, 78), enemy("m16c-n2", "note-bird", 5770, 140, 5550, 6120, 96), enemy("m16c-v2", "violin-mouse", 6810, 416, 6560, 7080, 80)],
+    items: [apple("m16c1", 350, 250), apple("m16c2", 630, 145), apple("m16c3", 2270, 140), sticker("sticker-16-3", 3860, 125), apple("m16c4", 4780, 135), apple("m16c5", 6630, 135)],
+    rewardBlocks: [reward("m16rc1", 1100, 159), reward("m16rc2", 4760, 159, "apple")], checkpoints: [930, 1840, 2760, 3690, 4610, 5540, 6470], boss: "maestra-armonia",
   },
   {
     id: "S-1",

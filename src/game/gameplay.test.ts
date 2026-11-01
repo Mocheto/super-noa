@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { lavaJetState, waterJumperState, type LiveWaterJumper } from "./gameState.ts";
-import { conveyorSpeed, boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, resolveHorizontalWallCollision, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay.ts";
+import { conveyorSpeed, boarChargeVelocity, goalFlagHitbox, hasReachedGoalFlag, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, resolveHorizontalWallCollision, swimmingVelocity, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay.ts";
+
+test("los bordes del Reino Celeste se conectan sin cambiar el salto", () => {
+  assert.equal(wrapHorizontalPosition(-22, 42, 960), 938);
+  assert.equal(wrapHorizontalPosition(939, 42, 960), -21);
+  assert.equal(wrapHorizontalPosition(300, 42, 960), 300);
+  assert.equal(wrapHorizontalPosition(-22, 42, 40), -22, "un ancho inválido no debe teletransportar");
+});
 
 test("el banderín tiene una zona elevada y alcanzable al saltar", () => {
   const flag = goalFlagHitbox(900, 456);

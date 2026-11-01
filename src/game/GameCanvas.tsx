@@ -29,7 +29,7 @@ import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
-import { conveyorSpeed, boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt } from "./gameplay";
+import { conveyorSpeed, boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
 
 const MOVE_SPEED = 250;
 
@@ -392,7 +392,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
       const previousX = player.x;
       player.x += (player.vx + conveyorSpeed(player, level.platforms)) * delta;
-      player.x = Math.max(0, Math.min(level.width - player.width, player.x));
+      player.x = level.orientation === "vertical"
+        ? wrapHorizontalPosition(player.x, player.width, level.width)
+        : Math.max(0, Math.min(level.width - player.width, player.x));
       for (const platform of level.platforms) {
         const resolvedX = resolveHorizontalWallCollision(previousX, player.x, player.y, player.width, player.height, platform);
         if (resolvedX === player.x) continue;
@@ -1022,8 +1024,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       if (level.orientation === "vertical" && levelAge < 8) {
         context.fillStyle = "rgba(42,24,70,.9)"; context.fillRect(176, 18, 608, 54);
         context.fillStyle = "#fff7dd"; context.font = "bold 15px monospace"; context.textAlign = "center";
-        context.fillText("¡SUBE POR LAS NUBES! LA CÁMARA NO BAJA", VIEW_WIDTH / 2, 40);
-        context.fillText("Si caes por debajo, pierdes una vida.", VIEW_WIDTH / 2, 61); context.textAlign = "start";
+        context.fillText("¡SUBE! LOS DOS BORDES ESTÁN CONECTADOS", VIEW_WIDTH / 2, 40);
+        context.fillText("Sal por un lado y entrarás por el otro. ¡No caigas!", VIEW_WIDTH / 2, 61); context.textAlign = "start";
       }
       if (level.world === 8 && player.x < 650) {
         context.fillStyle = "#fff8e9";

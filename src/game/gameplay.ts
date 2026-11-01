@@ -6,6 +6,15 @@ export const SPRING_SPEED = 1080;
 
 export const walkAnimationFrame = (elapsedSeconds: number) => Math.floor(elapsedSeconds / 0.095) % 4;
 
+/** En los ascensos celestes, el centro de Noa une ambos lados de la pantalla. */
+export const wrapHorizontalPosition = (nextX: number, playerWidth: number, worldWidth: number) => {
+  if (!(worldWidth > playerWidth) || !(playerWidth > 0)) return nextX;
+  const center = nextX + playerWidth / 2;
+  if (center <= 0) return nextX + worldWidth;
+  if (center >= worldWidth) return nextX - worldWidth;
+  return nextX;
+};
+
 /** En el arrecife, las algas sobresalen por encima de la roca que se puede pisar. */
 export const platformSurfaceY = (platform: Platform) => platform.kind === "sea-wall"
   ? platform.y + Math.round(platform.height * 0.3)

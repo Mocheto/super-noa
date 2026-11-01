@@ -90,7 +90,7 @@ El contenedor del tablón debe ejecutar `node server/ranking-supervisor.mjs`. El
 
 Los gráficos de partida se cargan por mundo y las pantallas grandes se descargan solo cuando hacen falta. Los fondos e insignias usan WebP de alta calidad para reducir la descarga, conservando la transparencia de los atlas. Mientras llega un atlas de enemigos, su silueta permanece visible.
 
-El bosque de manzanos, el volcán, el valle de flores gigantes y la montaña de hielo tienen composiciones originales propias. El bosque usa una melodía cálida y tranquila, independiente de la pista que conservan los piratas. La música conserva su posición al pausar, silenciar o ajustar el volumen. Para regenerar estos temas se necesita FFmpeg:
+Cada mundo tiene una melodía propia. Las composiciones originales incluyen el bosque de manzanos, los jabalíes, el reino secreto, Navidad, el desierto, el tren, el reino celeste y las aventuras posteriores; las tres pistas CC0 también se asignan una sola vez. La música conserva su posición al pausar, silenciar o ajustar el volumen. Para regenerar las composiciones sintetizadas se necesita FFmpeg:
 
 ```bash
 node scripts/build-adventure-music.mjs

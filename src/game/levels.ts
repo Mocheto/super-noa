@@ -131,6 +131,21 @@ export const themeNames: Record<Theme, string> = {
   "music-garden": "El jardín de los tambores",
   "music-bells": "El bosque de las campanas",
   "music-theater": "El gran teatro de Armonía",
+  "sky-dawn": "Las nubes del amanecer",
+  "sky-blue": "La escalera del cielo",
+  "sky-stars": "La puerta de las estrellas",
+};
+
+const skyCloud = (x: number, y: number, width = 190): Platform => ({ x, y, width, height: 30, kind: "sky-cloud" });
+const skyLevelPlatforms = (height: number, offset = 0): Platform[] => {
+  const platforms: Platform[] = [skyCloud(40, height - 90, 880)];
+  for (let index = 0, y = height - 245; y > 105; index += 1, y -= 145) {
+    const pattern = (index + offset) % 4;
+    const x = pattern === 0 ? 120 : pattern === 1 ? 520 : pattern === 2 ? 260 : 650;
+    platforms.push(skyCloud(x, y, pattern === 2 ? 220 : 190));
+  }
+  platforms.push(skyCloud(330, 90, 300));
+  return platforms;
 };
 
 // Identificadores estables: A es el desvío acuático entre los mundos 3 y 4.
@@ -1245,6 +1260,11 @@ export const levels: Level[] = [
     ],
     deadlyWater: deadlyWaterPits([[0, 850], [980, 800], [1910, 820], [2860, 840], [3830, 820], [4780, 1220]]),
     windZones: [iceWind("beat-1", 980, 620, 1, 175), iceWind("beat-2", 2860, 650, -1, 185), iceWind("beat-3", 4780, 650, 1, 195)],
+    beatPlatforms: [
+      { id: "compas-1a", x: 855, y: 360, width: 120, height: 24, kind: "music-stage", interval: 2.4, delay: 0, activeDuration: 1.65 },
+      { id: "compas-1b", x: 1782, y: 330, width: 125, height: 24, kind: "music-stage", interval: 2.4, delay: .8, activeDuration: 1.65 },
+      { id: "compas-1c", x: 2735, y: 350, width: 120, height: 24, kind: "music-stage", interval: 2.4, delay: 1.6, activeDuration: 1.65 },
+    ],
     enemies: [enemy("m16-d1", "walking-drum", 460, 416, 270, 760, 56), enemy("m16-n1", "note-bird", 1420, 155, 1110, 1670, 78), enemy("m16-v1", "violin-mouse", 2440, 416, 2050, 2690, 62), enemy("m16-d2", "walking-drum", 4350, 416, 4020, 4600, 66)],
     items: [apple("m16a1", 360, 250), sticker("sticker-16-1", 660, 145), apple("m16a2", 1400, 140), apple("m16a3", 2360, 140), apple("m16a4", 4240, 250), apple("m16a5", 5200, 140)],
     rewardBlocks: [reward("m16r1", 1120, 159), reward("m16r2", 3980, 159, "apple")], checkpoints: [1000, 1930, 2890, 3850, 4800],
@@ -1259,12 +1279,18 @@ export const levels: Level[] = [
     ],
     deadlyWater: deadlyWaterPits([[0, 760], [890, 770], [1790, 790], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]]),
     windZones: [iceWind("bell-1", 890, 700, 1, 190), iceWind("bell-2", 2710, 720, -1, 205), iceWind("bell-3", 4550, 730, 1, 215)],
+    beatPlatforms: [
+      { id: "compas-2a", x: 765, y: 355, width: 120, height: 24, kind: "music-stage", interval: 2.1, delay: 0, activeDuration: 1.35 },
+      { id: "compas-2b", x: 1662, y: 315, width: 125, height: 24, kind: "music-stage", interval: 2.1, delay: .7, activeDuration: 1.35 },
+      { id: "compas-2c", x: 2582, y: 350, width: 125, height: 24, kind: "music-stage", interval: 2.1, delay: 1.4, activeDuration: 1.35 },
+      { id: "compas-2d", x: 3495, y: 320, width: 120, height: 24, kind: "music-stage", interval: 2.1, delay: .35, activeDuration: 1.35 },
+    ],
     enemies: [enemy("m16b-d1", "walking-drum", 430, 416, 260, 700, 62), enemy("m16b-n1", "note-bird", 1480, 145, 1130, 1660, 84), enemy("m16b-v1", "violin-mouse", 2350, 416, 1980, 2580, 68), enemy("m16b-d2", "walking-drum", 4210, 416, 3880, 4430, 72), enemy("m16b-n2", "note-bird", 5750, 150, 5540, 6120, 90)],
     items: [apple("m16b1", 350, 255), apple("m16b2", 620, 150), sticker("sticker-16-2", 2120, 125), apple("m16b3", 2900, 145), apple("m16b4", 4700, 135), apple("m16b5", 5700, 120)],
     rewardBlocks: [reward("m16rb1", 1050, 159), reward("m16rb2", 4710, 159, "apple")], checkpoints: [910, 1810, 2730, 3640, 4570, 5480],
   },
   {
-    id: "16-3", world: 16, screen: 3, route: { finale: true },
+    id: "16-3", world: 16, screen: 3, route: { next: "17-1", nextLabel: "Subir al Reino Celeste" },
     title: "El gran teatro de Armonía", subtitle: "Sigue las ondas hasta el escenario y reta a la Maestra Armonía.",
     theme: "music-theater", width: 7400, start: { x: 80, y: 380 }, goalX: 7200,
     platforms: [
@@ -1273,9 +1299,53 @@ export const levels: Level[] = [
     ],
     deadlyWater: deadlyWaterPits([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 800], [5520, 800], [6450, 950]]),
     windZones: [iceWind("show-1", 910, 760, 1, 205), iceWind("show-2", 2740, 760, -1, 220), iceWind("show-3", 4590, 770, 1, 230), iceWind("show-4", 6450, 700, -1, 240)],
+    beatPlatforms: [
+      { id: "compas-3a", x: 785, y: 350, width: 120, height: 24, kind: "music-stage", interval: 1.8, delay: 0, activeDuration: 1.18 },
+      { id: "compas-3b", x: 1692, y: 315, width: 125, height: 24, kind: "music-stage", interval: 1.8, delay: .6, activeDuration: 1.18 },
+      { id: "compas-3c", x: 2610, y: 350, width: 125, height: 24, kind: "music-stage", interval: 1.8, delay: 1.2, activeDuration: 1.18 },
+      { id: "compas-3d", x: 3542, y: 315, width: 125, height: 24, kind: "music-stage", interval: 1.8, delay: .3, activeDuration: 1.18 },
+      { id: "compas-3e", x: 4462, y: 350, width: 125, height: 24, kind: "music-stage", interval: 1.8, delay: .9, activeDuration: 1.18 },
+    ],
     enemies: [enemy("m16c-d1", "walking-drum", 450, 416, 270, 720, 68), enemy("m16c-n1", "note-bird", 1450, 145, 1120, 1680, 90), enemy("m16c-v1", "violin-mouse", 2380, 416, 2040, 2600, 74), enemy("m16c-d2", "walking-drum", 4200, 416, 3900, 4450, 78), enemy("m16c-n2", "note-bird", 5770, 140, 5550, 6120, 96), enemy("m16c-v2", "violin-mouse", 6810, 416, 6560, 7080, 80)],
     items: [apple("m16c1", 350, 250), apple("m16c2", 630, 145), apple("m16c3", 2270, 140), sticker("sticker-16-3", 3860, 125), apple("m16c4", 4780, 135), apple("m16c5", 6630, 135)],
     rewardBlocks: [reward("m16rc1", 1100, 159), reward("m16rc2", 4760, 159, "apple")], checkpoints: [930, 1840, 2760, 3690, 4610, 5540, 6470], boss: "maestra-armonia",
+  },
+  {
+    id: "17-1", world: 17, screen: 1,
+    title: "Las nubes del amanecer", subtitle: "Sube de nube en nube. El cielo avanza contigo y ya no vuelve a bajar.",
+    theme: "sky-dawn", width: 960, height: 3500, orientation: "vertical", start: { x: 110, y: 3352 }, goalX: 480, goalY: 175,
+    platforms: skyLevelPlatforms(3500),
+    enemies: [
+      enemy("c17a-p1", "puffling", 520, 2850, 470, 720, 58), enemy("c17a-p2", "puffling", 180, 2260, 120, 390, 62),
+      enemy("c17a-p3", "puffling", 610, 1680, 540, 820, 66), enemy("c17a-p4", "puffling", 250, 950, 180, 470, 70),
+    ],
+    items: [apple("c17a1", 570, 2780), apple("c17a2", 310, 2200), sticker("sticker-17-1", 680, 1600), apple("c17a3", 280, 880)],
+    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 280, y: 2460 }, { x: 650, y: 1450 }, { x: 350, y: 580 }],
+  },
+  {
+    id: "17-2", world: 17, screen: 2,
+    title: "La escalera del cielo", subtitle: "Las nubes están más separadas. Mira arriba, elige tu salto y sigue subiendo.",
+    theme: "sky-blue", width: 960, height: 3900, orientation: "vertical", start: { x: 110, y: 3752 }, goalX: 480, goalY: 175,
+    platforms: skyLevelPlatforms(3900, 1),
+    enemies: [
+      enemy("c17b-p1", "puffling", 170, 3180, 120, 400, 64), enemy("c17b-p2", "puffling", 590, 2600, 520, 820, 68),
+      enemy("c17b-p3", "puffling", 250, 2010, 170, 470, 72), enemy("c17b-p4", "puffling", 620, 1420, 540, 830, 76), enemy("c17b-p5", "puffling", 220, 700, 150, 440, 78),
+    ],
+    items: [apple("c17b1", 200, 3120), apple("c17b2", 650, 2530), sticker("sticker-17-2", 310, 1940), apple("c17b3", 690, 1350), apple("c17b4", 280, 630)],
+    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 520, y: 2860 }, { x: 270, y: 1880 }, { x: 620, y: 900 }],
+  },
+  {
+    id: "17-3", world: 17, screen: 3, route: { finale: true },
+    title: "La puerta de las estrellas", subtitle: "Alcanza la luna y conoce a Aurora Celeste, la guardiana de las nubes.",
+    theme: "sky-stars", width: 960, height: 4300, orientation: "vertical", start: { x: 110, y: 4152 }, goalX: 480, goalY: 175,
+    platforms: skyLevelPlatforms(4300, 2),
+    enemies: [
+      enemy("c17c-p1", "puffling", 610, 3600, 530, 830, 68), enemy("c17c-p2", "puffling", 220, 3010, 140, 450, 72),
+      enemy("c17c-p3", "puffling", 600, 2420, 520, 820, 76), enemy("c17c-p4", "puffling", 230, 1830, 150, 470, 80),
+      enemy("c17c-p5", "puffling", 610, 1240, 530, 830, 84), enemy("c17c-p6", "puffling", 240, 650, 160, 470, 86),
+    ],
+    items: [apple("c17c1", 660, 3530), apple("c17c2", 280, 2940), sticker("sticker-17-3", 650, 2350), apple("c17c3", 290, 1760), apple("c17c4", 670, 1170)],
+    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 260, y: 3260 }, { x: 620, y: 2260 }, { x: 270, y: 1260 }, { x: 560, y: 520 }], boss: "aurora-celeste",
   },
   {
     id: "S-1",

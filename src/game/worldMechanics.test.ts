@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { bloomBridgeState, getMechanicPlatforms, mechanicRespawn, updraftVelocity, wolfSleepState } from "./worldMechanics.ts";
+import { beatPlatformActive, bloomBridgeState, getMechanicPlatforms, mechanicRespawn, updraftVelocity, wolfSleepState } from "./worldMechanics.ts";
 import { engineModules, mountEngine } from "./engineTestHarness.ts";
 import type { BloomBridge, Enemy, Level, Updraft } from "./types";
 import type { RasterAssets } from "./assets";
@@ -18,6 +18,17 @@ const flower: BloomBridge = {
 const current: Updraft = {
   id: "air", x: 50, y: 150, width: 220, height: 310, strength: 2050, maxRiseSpeed: 130,
 };
+
+test("las plataformas musicales siguen un compás declarativo y la pausa no altera su fase", () => {
+  const beat = { id: "beat", x: 200, y: 320, width: 140, height: 24, kind: "music-stage" as const, interval: 2.4, delay: .4, activeDuration: 1.2 };
+  assert.equal(beatPlatformActive(beat, 0), true);
+  assert.equal(beatPlatformActive(beat, .8), true);
+  assert.equal(beatPlatformActive(beat, 1.8), false);
+  assert.equal(beatPlatformActive(beat, 2.9), true);
+  const music = level({ world: 16, beatPlatforms: [beat] });
+  assert.equal(getMechanicPlatforms(music, .8).at(-1), beat);
+  assert.equal(getMechanicPlatforms(music, 1.8).includes(beat), false);
+});
 const level = (overrides: Partial<Level> = {}): Level => ({
   id: "mechanic-test", world: 1, screen: 2, title: "Prueba", subtitle: "", theme: "orchard-day",
   width: 2000, start: { x: 100, y: 398 }, goalX: 1800,

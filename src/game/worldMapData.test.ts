@@ -5,9 +5,9 @@ import { levels } from "./levels.ts";
 import { emptyProgress } from "./progress.ts";
 import { findMapJourney, mapRoutes, mapRouteState, worldAvailable, worldCatalog } from "./worldMapData.ts";
 
-test("el mapa representa los dieciséis mundos y todos sus caminos tienen destinos", () => {
-  assert.equal(worldCatalog.length, 16);
-  assert.equal(new Set(worldCatalog.map((world) => world.id)).size, 16);
+test("el mapa representa los diecisiete mundos y todos sus caminos tienen destinos", () => {
+  assert.equal(worldCatalog.length, 17);
+  assert.equal(new Set(worldCatalog.map((world) => world.id)).size, 17);
   assert.ok(existsSync(new URL("../../public/assets/worlds/noa-adventure-map-v1.png", import.meta.url)));
   for (const world of worldCatalog) {
     assert.ok(levels.some((level) => level.world === world.id));
@@ -21,10 +21,10 @@ test("el mapa representa los dieciséis mundos y todos sus caminos tienen destin
   }
 });
 
-test("los cuatro mundos nuevos tienen gatitos propios en finales y postales", () => {
-  const newWorlds = worldCatalog.filter((world) => world.id >= 13 && world.id <= 16);
-  assert.equal(newWorlds.length, 4);
-  assert.equal(new Set(newWorlds.map((world) => world.catAsset)).size, 4);
+test("los cinco mundos nuevos tienen gatitos propios en finales y postales", () => {
+  const newWorlds = worldCatalog.filter((world) => world.id >= 13 && world.id <= 17);
+  assert.equal(newWorlds.length, 5);
+  assert.equal(new Set(newWorlds.map((world) => world.catAsset)).size, 5);
   for (const world of newWorlds) assert.equal(world.catAsset, `./assets/sprites/world-cat-${world.id}-v1.png`);
 });
 

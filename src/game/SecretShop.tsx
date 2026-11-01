@@ -22,6 +22,7 @@ const kittenColors: Record<Level["world"], string> = {
   5: "#fff0e0", 6: "#c0b0d0", 7: "#fffff0", 8: "#ffe0c0",
   9: "#ffd090", 10: "#ff9020", 11: "#ff70a0", 12: "#d0e0ff", 13: "#ffe0a0",
   14: "#f2b85f", 15: "#d35f52", 16: "#8d6ad1",
+  17: "#84cce9",
 };
 const partNames = ["orejas", "carita", "patitas"];
 const prompts = ["¡Para las orejas!", "¡Para la carita!", "¡Para las patitas!"];

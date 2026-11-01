@@ -59,11 +59,11 @@ export function getLevelAssets(level: Level): RasterAssets {
     4: "world-4-tiles-v1.png", 5: "world-5-tiles-v1.png", 6: "castle-v1.png",
     7: "secret-sky-v1.png", 8: "water-terrain-v1.png", 9: "dinosaur-island-v1.png",
     10: "platform-tiles-v1.png", 11: "platform-tiles-v1.png", 12: "platform-tiles-v1.png", 13: "platform-tiles-v1.png",
-    14: "platform-tiles-v1.png", 15: "platform-tiles-v1.png", 16: "platform-tiles-v1.png",
+    14: "platform-tiles-v1.png", 15: "platform-tiles-v1.png", 16: "platform-tiles-v1.png", 17: "sky-kingdom-terrain-v1.png",
   } as const;
   const tiles = {} as RasterAssets["tiles"];
   const stickerSheets = {} as RasterAssets["stickerSheets"];
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] as const) {
+  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] as const) {
     Object.defineProperty(tiles, id, { enumerable: true, get: () => when(id === world, `./assets/atlases/${tileImages[id]}`) });
     Object.defineProperty(stickerSheets, id, { enumerable: true, get: () => when(id === world, `./assets/stickers/world-${id}-v1.png`) });
   }
@@ -105,9 +105,9 @@ export function getLevelAssets(level: Level): RasterAssets {
     get dinosaurEnemies() { return when(world === 9, "./assets/atlases/dinosaur-enemies-v1.png"); },
     get dinosaurTerrain() { return when(world === 9, "./assets/atlases/dinosaur-island-v1.png"); },
     get holidayBackground() { return when(world === 13, `./assets/worlds/${level.theme === "winter-snow" ? "winter-village-background-v1" : level.theme === "toy-factory" ? "toy-factory-background-v2" : "gift-warehouse-background-v2"}.webp`); },
-    get adventureBackground() { return when(world >= 14, `./assets/worlds/${world === 14 ? "desert" : world === 15 ? "train" : "music"}-background-v1.png`); },
-    get worldCharacters() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert-enemies-v1" : world === 15 ? "train-enemies-v1" : world === 16 ? "music-characters-v1" : level.theme === "winter-snow" ? "winter-village-enemies-v1" : level.theme === "toy-factory" ? "toy-factory-enemies-v1" : level.theme === "gift-warehouse" ? "gift-warehouse-enemies-v1" : world === 10 ? "volcano-characters-v1" : world === 11 ? "giant-valley-characters-v1" : "ice-mountain-characters-v1"}.png`); },
-    get worldTerrain() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert" : world === 15 ? "train" : world === 16 ? "music" : level.theme === "winter-snow" ? "winter-village" : level.theme === "toy-factory" ? "toy-factory" : level.theme === "gift-warehouse" ? "gift-warehouse" : world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-terrain-v1.png`); },
+    get adventureBackground() { return when(world >= 14, `./assets/worlds/${world === 14 ? "desert" : world === 15 ? "train" : world === 16 ? "music" : "sky-kingdom"}-background-v1.png`); },
+    get worldCharacters() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert-enemies-v1" : world === 15 ? "train-enemies-v1" : world === 16 ? "music-characters-v1" : world === 17 ? "sky-kingdom-characters-v1" : level.theme === "winter-snow" ? "winter-village-enemies-v1" : level.theme === "toy-factory" ? "toy-factory-enemies-v1" : level.theme === "gift-warehouse" ? "gift-warehouse-enemies-v1" : world === 10 ? "volcano-characters-v1" : world === 11 ? "giant-valley-characters-v1" : "ice-mountain-characters-v1"}.png`); },
+    get worldTerrain() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert" : world === 15 ? "train" : world === 16 ? "music" : world === 17 ? "sky-kingdom" : level.theme === "winter-snow" ? "winter-village" : level.theme === "toy-factory" ? "toy-factory" : level.theme === "gift-warehouse" ? "gift-warehouse" : world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-terrain-v1.png`); },
     get dewTrampoline() { return when(world === 11, "./assets/sprites/dew-trampoline-v1.png"); },
     get jumpingFish() { return when(Boolean(level.waterJumpers?.length), "./assets/sprites/enemy-jumping-fish-v1.png"); },
     get boar() { return when(world === 4, "./assets/sprites/enemy-boar-v2.png"); },

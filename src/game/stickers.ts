@@ -4,7 +4,7 @@ export type StickerDefinition = {
   id: string;
   name: string;
   icon: PixelIconKind;
-  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16;
+  world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17;
   hint: string;
 };
 
@@ -54,6 +54,9 @@ export const stickerCatalog: StickerDefinition[] = [
   { id: "sticker-16-1", name: "Tambor sonriente", icon: "sparkle", world: 16, hint: "Sigue la primera onda hasta la plataforma alta." },
   { id: "sticker-16-2", name: "Campana dorada", icon: "gem", world: 16, hint: "Cambia de lado con la onda entre las campanas." },
   { id: "sticker-16-3", name: "Clave de Armonía", icon: "crown", world: 16, hint: "Está sobre el último escenario antes de la maestra." },
+  { id: "sticker-17-1", name: "Pluma de nube", icon: "sparkle", world: 17, hint: "Sigue subiendo por las nubes del amanecer." },
+  { id: "sticker-17-2", name: "Puerta de luna", icon: "moon", world: 17, hint: "Mira en la mitad de la escalera celeste." },
+  { id: "sticker-17-3", name: "Corona de Aurora", icon: "crown", world: 17, hint: "Brilla antes de la puerta de las estrellas." },
   { id: "sticker-s-1", name: "Pluma celeste", icon: "sparkle", world: 7, hint: "Sube con la primera columna de aire y salta a la nube de la derecha." },
   { id: "sticker-s-2", name: "Herradura arcoíris", icon: "crown", world: 7, hint: "La segunda columna de aire te ayuda a subir a la nube alta." },
   { id: "sticker-s-3", name: "Estrella secreta", icon: "gem", world: 7, hint: "Sube con la última columna de aire hasta la nube más alta." },

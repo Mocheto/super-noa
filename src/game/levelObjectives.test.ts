@@ -20,8 +20,8 @@ test("visitas y estrellas de las cinco tiendas no añaden medallas ni objetivos 
     assert.deepEqual(getLevelObjectives(entry, visited), original);
     assert.deepEqual(getLevelObjectives(entry, completed), original);
   }
-  assert.equal(stickerCatalog.length, 48);
-  assert.equal(levels.reduce((total, entry) => total + entry.items.filter((item) => item.kind === "sticker").length, 0), 48);
+  assert.equal(stickerCatalog.length, 51);
+  assert.equal(levels.reduce((total, entry) => total + entry.items.filter((item) => item.kind === "sticker").length, 0), 51);
   assert.deepEqual(completed.stickers, []);
   assert.deepEqual(completed.bossChallenges, {});
 });
@@ -74,7 +74,7 @@ test("completar una pantalla no concede la pegatina, la partida perfecta ni el r
 });
 
 test("todas las pantallas abiertas tienen objetivos únicos y pistas", () => {
-  const progress = { ...emptyProgress, unlocked: 41, waterUnlocked: true, secretUnlocked: true, levelStats: {
+  const progress = { ...emptyProgress, unlocked: 44, waterUnlocked: true, secretUnlocked: true, levelStats: {
     "A-1": { completed: true, bestApples: 0 }, "A-2": { completed: true, bestApples: 0 },
   } };
   for (const entry of levels) {

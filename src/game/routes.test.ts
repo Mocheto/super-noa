@@ -32,6 +32,7 @@ test("la ruta normal evita el agua y la laguna vuelve al bosque de los jabalíes
   assert.equal(levels[nextLevelIndex(levels[levelIndex("13-3")])].id, "14-1");
   assert.equal(levels[nextLevelIndex(levels[levelIndex("14-3")])].id, "15-1");
   assert.equal(nextLevelIndex(levels[levelIndex("15-3")]), levelIndex("16-1"));
-  assert.equal(nextLevelIndex(levels[levelIndex("16-3")]), -1);
-  assert.equal(campaignUnlockIndex(levels[levelIndex("16-3")]), campaignLevels.length - 1);
+  assert.equal(nextLevelIndex(levels[levelIndex("16-3")]), levelIndex("17-1"));
+  assert.equal(nextLevelIndex(levels[levelIndex("17-3")]), -1);
+  assert.equal(campaignUnlockIndex(levels[levelIndex("17-3")]), campaignLevels.length - 1);
 });

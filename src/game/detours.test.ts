@@ -19,7 +19,7 @@ function advance(engine: ReturnType<typeof mountEngine>, count: number, now = 10
 
 test("cinco desvíos declarativos separados de campaña, insignias y guardianes", () => {
   assert.equal(detourLevels.length, 5);
-  assert.equal(campaignLevels.length, 42);
+  assert.equal(campaignLevels.length, 45);
   assert.equal(new Set(detourLevels.map((level) => level.id)).size, 5);
   for (const entry of detourCatalog) {
     const level = detourLevel(entry.id);

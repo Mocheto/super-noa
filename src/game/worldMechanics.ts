@@ -1,7 +1,12 @@
-import type { BloomBridge, Enemy, Level, Platform, Updraft } from "./types";
+import type { BeatPlatform, BloomBridge, Enemy, Level, Platform, Updraft } from "./types";
 
 export type WolfSleepPhase = "sleeping" | "warning" | "awake";
 export type BloomBridgePhase = "closed" | "open" | "warning";
+
+export function beatPlatformActive(platform: BeatPlatform, elapsed: number): boolean {
+  const time = cycleTime(elapsed, platform.delay, platform.interval);
+  return time < 0 || time < platform.activeDuration;
+}
 
 const cycleTime = (elapsed: number, delay: number, interval: number) => {
   const time = elapsed - delay;
@@ -25,10 +30,13 @@ export function bloomBridgeState(bridge: BloomBridge, elapsed: number): BloomBri
 }
 
 export function getMechanicPlatforms(level: Level, elapsed: number): Platform[] {
-  if (level.world !== 11 || !level.bloomBridges?.length) return level.platforms;
-  return [...level.platforms, ...level.bloomBridges
+  const flowers = level.world === 11 ? level.bloomBridges ?? [] : [];
+  const beats = level.beatPlatforms ?? [];
+  if (!flowers.length && !beats.length) return level.platforms;
+  return [...level.platforms, ...flowers
     .filter((bridge) => bloomBridgeState(bridge, elapsed) !== "closed")
-    .map((bridge): Platform => ({ x: bridge.x, y: bridge.y, width: bridge.width, height: bridge.height, kind: "garden-ledge" }))];
+    .map((bridge): Platform => ({ x: bridge.x, y: bridge.y, width: bridge.width, height: bridge.height, kind: "garden-ledge" })),
+  ...beats.filter((platform) => beatPlatformActive(platform, elapsed))];
 }
 
 /** Apply only the strongest overlapping current, without clipping a faster existing jump. */
@@ -45,7 +53,8 @@ export function hasWorldMechanics(level: Level): boolean {
     || (level.world === 3 && level.enemies.some((enemy) => enemy.kind === "wolf" && enemy.sleepCycle))
     || (level.world === 11 && Boolean(level.bloomBridges?.length))
     || (level.world === 7 && Boolean(level.updrafts?.length))
-    || (level.world === 14 && Boolean(level.sandGeysers?.length));
+    || (level.world === 14 && Boolean(level.sandGeysers?.length))
+    || Boolean(level.beatPlatforms?.length);
 }
 
 /** Temporary flowers are never respawn supports; preserve legacy spawning in other worlds. */

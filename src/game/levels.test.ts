@@ -103,7 +103,7 @@ test("el mundo del agua se abre entre los dos bosques desde una poza segura", ()
   assert.equal(levels[levels.findIndex((level) => level.id === "3-3") + 1].id, "A-1");
   assert.equal(levels[levels.findIndex((level) => level.id === "A-3") + 1].id, "4-1");
   assert.equal(aquatic[2].boss, "shark-captain");
-  assert.equal(levels.filter((level) => level.world !== 7 && level.world !== 8).length, 42);
+  assert.equal(levels.filter((level) => level.world !== 7 && level.world !== 8).length, 45);
   assert.equal(levels.find((level) => level.id === "2-3")?.waterEntrance, undefined);
   const forest = levels.find((level) => level.id === "3-3")!;
   const entrance = forest.waterEntrance!;
@@ -123,10 +123,10 @@ test("el mundo del agua se abre entre los dos bosques desde una poza segura", ()
   }
 });
 
-test("los dieciséis jefes del álbum tienen retrato y duelo", () => {
+test("los diecisiete jefes del álbum tienen retrato y duelo", () => {
   const bosses = levels.filter((level) => level.boss);
-  assert.equal(bosses.length, 16);
-  assert.equal(new Set(bosses.map((level) => level.boss)).size, 16);
+  assert.equal(bosses.length, 17);
+  assert.equal(new Set(bosses.map((level) => level.boss)).size, 17);
   for (const level of bosses) {
     assert.ok(level.boss);
     const boss = bossCatalog[level.boss];
@@ -229,7 +229,7 @@ test("la isla jurásica continúa tras el castillo y todos sus huecos son agua m
   }
 });
 
-test("los tres nuevos mundos forman una aventura completa con mecánicas propias", () => {
+test("los mundos recientes forman una aventura completa con mecánicas propias", () => {
   const expectations = [
     { world: 10, ids: ["10-1", "10-2", "10-3"], boss: "ruby-dragon", enemies: ["baby-dragon", "fire-salamander", "flying-dragon"], platforms: ["volcano-ground"] },
     { world: 11, ids: ["11-1", "11-2", "11-3"], boss: "queen-bee", enemies: ["ant", "snail", "bee"], platforms: ["garden-ground"] },
@@ -254,11 +254,28 @@ test("los tres nuevos mundos forman una aventura completa con mecánicas propias
   for (const level of levels.filter((entry) => entry.world === 10)) assert.ok(level.lavaJets?.length, `${level.id} necesita chorros de lava`);
   for (const level of levels.filter((entry) => entry.world === 11)) assert.ok(level.platforms.some((platform) => platform.kind === "dew"), `${level.id} necesita gotas de rocío`);
   for (const level of levels.filter((entry) => entry.world === 12)) assert.ok(level.windZones?.length, `${level.id} necesita ráfagas de viento`);
+  for (const level of levels.filter((entry) => entry.world === 16)) assert.ok(level.beatPlatforms?.length, `${level.id} necesita plataformas de compás`);
   assert.equal(levels.find((level) => level.id === "12-3")?.route?.next, "13-1");
   assert.equal(levels.find((level) => level.id === "13-3")?.route?.next, "14-1");
   assert.equal(levels.find((level) => level.id === "14-3")?.route?.next, "15-1");
   assert.equal(levels.find((level) => level.id === "15-3")?.route?.next, "16-1");
-  assert.equal(levels.find((level) => level.id === "16-3")?.route?.finale, true);
+  assert.equal(levels.find((level) => level.id === "16-3")?.route?.next, "17-1");
+  assert.equal(levels.find((level) => level.id === "17-3")?.route?.finale, true);
+});
+
+test("el Reino Celeste sube en vertical sin camino de regreso", () => {
+  const sky = levels.filter((level) => level.world === 17);
+  assert.deepEqual(sky.map((level) => level.id), ["17-1", "17-2", "17-3"]);
+  assert.equal(sky[2].boss, "aurora-celeste");
+  for (const level of sky) {
+    assert.equal(level.orientation, "vertical");
+    assert.ok((level.height ?? 0) >= 3500);
+    assert.equal(level.width, 960);
+    assert.ok(level.platforms.every((platform) => platform.kind === "sky-cloud"));
+    assert.ok(level.verticalCheckpoints?.length);
+    assert.ok(level.enemies.every((enemy) => enemy.kind === "puffling"));
+    assert.equal(level.items.find((item) => item.kind === "sticker")?.id, `sticker-${level.id}`);
+  }
 });
 
 test("el valle usa monstruos gigantes y trampolines sin tapar los precipicios", () => {
@@ -360,7 +377,7 @@ test("el reino secreto conserva sus identificadores y está después de la campa
 
 test("todas las insignias del juego tienen un sprite transparente y su celda correcta", () => {
   const ids = levels.flatMap((level) => level.items.filter((item) => item.kind === "sticker").map((item) => item.id));
-  assert.equal(ids.length, 48);
+  assert.equal(ids.length, 51);
   assert.deepEqual(new Set(ids), new Set(stickerCatalog.map((entry) => entry.id)));
   for (const sticker of stickerCatalog) {
     const sprite = getStickerSprite(sticker.id);
@@ -486,7 +503,7 @@ test("las tres corrientes del reino secreto son ayudas locales con entrada y des
 
 test("cada mundo presente conserva una identidad jugable propia", () => {
   const worlds = new Set(levels.map((level) => level.world));
-  assert.equal(worlds.size, 16);
+  assert.equal(worlds.size, 17);
   for (const world of worlds) {
     const screens = levels.filter((level) => level.world === world);
     const platforms = screens.flatMap((level) => level.platforms);
@@ -549,8 +566,15 @@ test("cada mundo presente conserva una identidad jugable propia", () => {
         break;
       case 16:
         assert.ok(screens.every((level) => level.windZones?.length));
+        assert.ok(screens.every((level) => level.beatPlatforms?.length));
         assert.ok(platforms.some((platform) => platform.kind === "music-stage"));
         assert.equal(screens.find((level) => level.boss)?.boss, "maestra-armonia");
+        break;
+      case 17:
+        assert.ok(screens.every((level) => level.orientation === "vertical"));
+        assert.ok(platforms.every((platform) => platform.kind === "sky-cloud"));
+        assert.ok(enemies.every((enemy) => enemy.kind === "puffling"));
+        assert.equal(screens.find((level) => level.boss)?.boss, "aurora-celeste");
         break;
       default:
         assert.fail(`El mundo ${world} necesita una comprobación de identidad jugable`);

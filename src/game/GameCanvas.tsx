@@ -7,7 +7,7 @@ import {
   drawAmbientForeground, drawApple, drawBackground, drawBloomBridge, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawChainGuardian, drawCheckpoint,
   drawDeadlyWater, drawEnemy, drawGoalCat, drawPlatform, drawRewardBlock, drawSecretBlock, drawSecretShopDoor, drawStarAura,
-  drawLavaJet, drawSecretVine, drawSticker, drawTinySparkle, drawUpdraft, drawWaterEntrance, drawWaterJumper, drawWindZone,
+  drawAdventurePrecipices, drawLavaJet, drawSecretVine, drawSticker, drawTinySparkle, drawUpdraft, drawWaterEntrance, drawWaterJumper, drawWindZone,
 } from "./rendering";
 import { useGameInput } from "./input";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
@@ -893,6 +893,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       if (level.orientation === "vertical") context.translate(0, -cameraY);
       level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster, level.theme));
       level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge, raster, level.world === 15));
+      drawAdventurePrecipices(context, level, cameraX, raster.adventurePrecipices);
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
       level.beatPlatforms?.forEach((platform) => {
         const active = beatPlatformActive(platform, levelAge);

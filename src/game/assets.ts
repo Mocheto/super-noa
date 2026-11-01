@@ -11,6 +11,7 @@ export type RasterAssets = {
   worldTerrain: HTMLImageElement;
   holidayBackground: HTMLImageElement;
   adventureBackground: HTMLImageElement;
+  adventurePrecipices: HTMLImageElement;
   dewTrampoline: HTMLImageElement;
   jumpingFish: HTMLImageElement;
   bird: HTMLImageElement; collectibles: HTMLImageElement; cave: HTMLImageElement;
@@ -106,6 +107,7 @@ export function getLevelAssets(level: Level): RasterAssets {
     get dinosaurTerrain() { return when(world === 9, "./assets/atlases/dinosaur-island-v1.png"); },
     get holidayBackground() { return when(world === 13, `./assets/worlds/${level.theme === "winter-snow" ? "winter-village-background-v1" : level.theme === "toy-factory" ? "toy-factory-background-v2" : "gift-warehouse-background-v2"}.webp`); },
     get adventureBackground() { return when(world >= 14, `./assets/worlds/${world === 14 ? "desert" : world === 15 ? "train" : world === 16 ? "music" : "sky-kingdom"}-background-v1.png`); },
+    get adventurePrecipices() { return when(world >= 14 && world <= 16, "./assets/atlases/adventure-precipices-v1.png"); },
     get worldCharacters() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert-enemies-v1" : world === 15 ? "train-enemies-v1" : world === 16 ? "music-characters-v1" : world === 17 ? "sky-kingdom-characters-v1" : level.theme === "winter-snow" ? "winter-village-enemies-v1" : level.theme === "toy-factory" ? "toy-factory-enemies-v1" : level.theme === "gift-warehouse" ? "gift-warehouse-enemies-v1" : world === 10 ? "volcano-characters-v1" : world === 11 ? "giant-valley-characters-v1" : "ice-mountain-characters-v1"}.png`); },
     get worldTerrain() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert" : world === 15 ? "train" : world === 16 ? "music" : world === 17 ? "sky-kingdom" : level.theme === "winter-snow" ? "winter-village" : level.theme === "toy-factory" ? "toy-factory" : level.theme === "gift-warehouse" ? "gift-warehouse" : world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-terrain-v1.png`); },
     get dewTrampoline() { return when(world === 11, "./assets/sprites/dew-trampoline-v1.png"); },

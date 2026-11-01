@@ -238,12 +238,40 @@ const drawAdventureTerrain = (context: CanvasRenderingContext2D, image: HTMLImag
     : { ground: [.008, .245, .77, .30], ledge: [.018, .63, .75, .30], wall: [.77, .025, .225, .94] };
   const [sx, sy, sw, sh] = crops[part].map((value, index) => value * (index % 2 === 0 ? image.naturalWidth : image.naturalHeight));
   const tileWidth = part === "ground" ? 190 : width;
+  // El atlas del desierto deja aire transparente encima de la arena. Lo compensamos
+  // solo al dibujar: la superficie visible queda en la misma línea que la colisión.
+  const surfaceLift = world === 14 ? (part === "ground" ? 20 : 11) : 0;
   for (let offset = 0; offset < width; offset += tileWidth) {
     const drawnWidth = Math.min(tileWidth, width - offset);
-    context.drawImage(image, sx, sy, sw * drawnWidth / tileWidth, sh, x + offset, y, drawnWidth, part === "ledge" ? Math.max(58, height + 34) : height);
+    const drawnHeight = part === "ledge" ? Math.max(58, height + 34) : height;
+    context.drawImage(image, sx, sy, sw * drawnWidth / tileWidth, sh, x + offset, y - surfaceLift, drawnWidth, drawnHeight + surfaceLift);
   }
   return true;
 };
+
+export function drawAdventurePrecipices(context: CanvasRenderingContext2D, level: Level, cameraX: number, image: HTMLImageElement) {
+  if (level.world < 14 || level.world > 16 || !image.complete || !image.naturalWidth) return;
+  const groundKind = level.world === 14 ? "desert-ground" : level.world === 15 ? "train-ground" : "music-ground";
+  const ground = level.platforms.filter((platform) => platform.kind === groundKind).slice().sort((a, b) => a.x - b.x);
+  const row = level.world - 14;
+  const sourceHeight = image.naturalHeight / 3;
+  for (let index = 0; index < ground.length - 1; index += 1) {
+    const left = ground[index];
+    const right = ground[index + 1];
+    const start = left.x + left.width;
+    const width = right.x - start;
+    if (width < 18) continue;
+    const x = Math.round(start - cameraX);
+    if (x + width < 0 || x > VIEW_WIDTH) continue;
+    context.save();
+    context.beginPath();
+    context.rect(x, left.y, width, VIEW_HEIGHT - left.y);
+    context.clip();
+    // Se pinta antes del suelo: los extremos se esconden bajo cada orilla y el hueco parece profundo.
+    context.drawImage(image, 0, row * sourceHeight, image.naturalWidth, sourceHeight, x - 8, left.y, width + 16, VIEW_HEIGHT - left.y + 34);
+    context.restore();
+  }
+}
 
 const drawCollectibleSprite = (context: CanvasRenderingContext2D, image: HTMLImageElement, column: number, row: number, x: number, y: number, width: number, height: number) =>
   drawAtlasCell(context, image, 4, 2, column, row, x, y, width, height);

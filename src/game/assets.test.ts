@@ -82,6 +82,7 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     assert.equal(desert.adventureBackground.src, "./assets/worlds/desert-background-v1.png");
     assert.equal(desert.worldCharacters.src, "./assets/atlases/desert-enemies-v1.png");
     assert.equal(desert.worldTerrain.src, "./assets/atlases/desert-terrain-v1.png");
+    assert.equal(desert.adventurePrecipices.src, "./assets/atlases/adventure-precipices-v1.png");
     assert.equal(desert.stickerSheets[14].src, "./assets/stickers/world-14-v1.png");
     const train = getLevelAssets(levels.find((level) => level.id === "15-1")!);
     assert.equal(train.adventureBackground.src, "./assets/worlds/train-background-v1.png");
@@ -92,6 +93,7 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     assert.equal(music.adventureBackground.src, "./assets/worlds/music-background-v1.png");
     assert.equal(music.worldCharacters.src, "./assets/atlases/music-characters-v1.png");
     assert.equal(music.worldTerrain.src, "./assets/atlases/music-terrain-v1.png");
+    assert.equal(music.adventurePrecipices.src, "./assets/atlases/adventure-precipices-v1.png");
     assert.equal(music.stickerSheets[16].src, "./assets/stickers/world-16-v1.png");
     assert.equal(first.holidayBackground.src, "");
     for (const level of levels) {

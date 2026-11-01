@@ -16,6 +16,8 @@ export type GuardianGame = {
   sequenceLengths?: readonly number[];
 };
 
+export const GUARDIAN_GAME_ROUNDS = 5;
+
 const flowerOptions = [
   { id: "pink", sprite: [0, 0], label: "Flor rosa", color: "#ef79a9" },
   { id: "yellow", sprite: [0, 1], label: "Flor amarilla", color: "#e0ad25" },
@@ -57,9 +59,9 @@ export const guardianGames: Record<GuardianGameId, GuardianGame> = {
   "triceratops-queen": { kind: "choice", title: "Protege los huevos", instruction: "Mira dónde cae el huevo y coloca allí la cesta.", prompt: "El huevo cae aquí", success: "¡Huevo a salvo!", options: laneOptions },
   "sky-captain": { kind: "choice", title: "Cañones de colores", instruction: "Mira la bandera y dispara el cañón del mismo color.", prompt: "La bandera del capitán", success: "¡Nube despejada!", options: cannonOptions },
   "great-boar": { kind: "choice", title: "Esquiva la carrera", instruction: "Mira la flecha. Si viene de un lado, escóndete en el contrario. Si viene de abajo, salta.", prompt: "El Jabalí viene desde", success: "¡Bien esquivado! Has encontrado una bellota.", options: dodgeOptions },
-  "maestra-armonia": { kind: "sequence", title: "El eco musical", instruction: "Mira los instrumentos y repítelos en el mismo orden.", prompt: "Melodía de Armonía", success: "¡La melodía suena genial!", options: noteOptions, sequenceLengths: [2, 3, 4] },
-  "aurora-celeste": { kind: "sequence", title: "Une las estrellas", instruction: "Mira el camino del cielo y toca los dibujos en el mismo orden.", prompt: "Camino de estrellas", success: "¡Constelación encendida!", options: starOptions, sequenceLengths: [2, 3, 4] },
-  "rainbow-queen": { kind: "sequence", title: "Pinta el arcoíris", instruction: "Mira los colores y repítelos en el mismo orden.", prompt: "Colores del arcoíris", success: "¡El arcoíris vuelve a brillar!", options: rainbowOptions, sequenceLengths: [3, 3, 4] },
+  "maestra-armonia": { kind: "sequence", title: "El eco musical", instruction: "Mira los instrumentos y repítelos en el mismo orden.", prompt: "Melodía de Armonía", success: "¡La melodía suena genial!", options: noteOptions, sequenceLengths: [2, 3, 3, 4, 5] },
+  "aurora-celeste": { kind: "sequence", title: "Une las estrellas", instruction: "Mira el camino del cielo y toca los dibujos en el mismo orden.", prompt: "Camino de estrellas", success: "¡Constelación encendida!", options: starOptions, sequenceLengths: [2, 3, 3, 4, 5] },
+  "rainbow-queen": { kind: "sequence", title: "Pinta el arcoíris", instruction: "Mira los colores y repítelos en el mismo orden.", prompt: "Colores del arcoíris", success: "¡El arcoíris vuelve a brillar!", options: rainbowOptions, sequenceLengths: [3, 3, 4, 4, 5] },
 };
 
 export function isGuardianGameId(id: BossId): id is GuardianGameId {

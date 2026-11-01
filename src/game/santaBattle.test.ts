@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createSantaBattle, SANTA_PLATFORMS, stepSantaBattle } from "./santaBattle.ts";
+import { createSantaBattle, PLATFORM_BOSS_HITS, SANTA_PLATFORMS, stepSantaBattle } from "./santaBattle.ts";
 const idle = { left: false, right: false, jumpPressed: false, jumpHeld: true };
 const dt = 1 / 60;
 
@@ -38,6 +38,9 @@ test("solo caer cruzando la cabeza produce un golpe y un rebote, nunca pulsar ce
   s.player.y = s.boss.y - s.player.height - 2; s.player.vy = 180;
   stepSantaBattle(s, idle, dt);
   assert.equal(s.hits, 1, "la misma caída no puede descontar dos golpes");
+  s.boss.stun = 0; s.player.y = s.boss.y - s.player.height - 2; s.player.vy = 180;
+  stepSantaBattle(s, idle, dt);
+  assert.equal(s.status, "playing");
   s.boss.stun = 0; s.player.y = s.boss.y - s.player.height - 2; s.player.vy = 180;
   stepSantaBattle(s, idle, dt);
   assert.equal(s.status, "won");
@@ -94,6 +97,6 @@ test("se puede ganar jugando con movimiento y saltos, sin modificar posiciones",
     stepSantaBattle(s, { left: distance < -12, right: distance > 12, jumpPressed: s.player.grounded && Math.abs(distance) < 240, jumpHeld: true }, dt);
   }
   assert.equal(s.status, "won");
-  assert.equal(s.hits, 2);
+  assert.equal(s.hits, PLATFORM_BOSS_HITS);
   assert.ok(s.lives > 0);
 });

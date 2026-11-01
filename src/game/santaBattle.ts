@@ -2,6 +2,7 @@ import { GRAVITY, JUMP_SPEED, rectanglesOverlap } from "./gameplay.ts";
 import type { Rect } from "./types";
 
 export const SANTA_ARENA = { width: 960, height: 480, floor: 400 };
+export const PLATFORM_BOSS_HITS = 3;
 export const SANTA_PLATFORMS: Rect[] = [
   { x: 285, y: 240, width: 145, height: 22 },
   { x: 805, y: 240, width: 115, height: 22 },
@@ -34,7 +35,7 @@ export function stepSantaBattle(state: SantaBattle, input: SantaInput, delta: nu
   if (!boss.stun) {
     boss.attackIn -= delta;
     if (boss.attackIn > .65) {
-      boss.x += boss.direction * 38 * delta;
+      boss.x += boss.direction * (38 + state.hits * 10) * delta;
       if (boss.x < 510 || boss.x > 735) {
         boss.x = Math.max(510, Math.min(735, boss.x));
         boss.direction = boss.direction === 1 ? -1 : 1;
@@ -42,8 +43,8 @@ export function stepSantaBattle(state: SantaBattle, input: SantaInput, delta: nu
     }
     if (boss.attackIn <= 0) {
       const direction = p.x + p.width / 2 < boss.x + boss.width / 2 ? -1 : 1;
-      state.gifts.push({ x: direction < 0 ? boss.x - 34 : boss.x + boss.width + 4, y: 368, width: 30, height: 32, vx: direction * 210 });
-      boss.attackIn = 2.8;
+      state.gifts.push({ x: direction < 0 ? boss.x - 34 : boss.x + boss.width + 4, y: 368, width: 30, height: 32, vx: direction * (210 + state.hits * 25) });
+      boss.attackIn = Math.max(1.9, 2.8 - state.hits * .35);
       events.push("throw");
     }
   }
@@ -75,7 +76,7 @@ export function stepSantaBattle(state: SantaBattle, input: SantaInput, delta: nu
       state.hits += 1; boss.stun = 1.2; boss.attackIn = 2.8;
       p.invincible = Math.max(p.invincible, .5); state.gifts = [];
       events.push("stomp");
-      if (state.hits >= 2) state.status = "won";
+      if (state.hits >= PLATFORM_BOSS_HITS) state.status = "won";
     }
   }
   state.gifts.forEach((gift) => { gift.x += gift.vx * delta; });

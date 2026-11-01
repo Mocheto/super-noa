@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { bossCatalog } from "./bosses.ts";
-import { choiceAnswer, guardianGames, isGuardianGameId, makeGuardianSequence } from "./guardianGames.ts";
+import { choiceAnswer, GUARDIAN_GAME_ROUNDS, guardianGames, isGuardianGameId, makeGuardianSequence } from "./guardianGames.ts";
 
 test("los siete guardianes nuevos tienen juegos cortos, tres opciones y reto sin azar", () => {
   assert.equal(Object.keys(guardianGames).length, 7);
@@ -13,12 +13,14 @@ test("los siete guardianes nuevos tienen juegos cortos, tres opciones y reto sin
   }
 });
 
-test("las secuencias progresan sin superar cuatro pasos", () => {
+test("las cinco rondas de secuencias progresan sin superar cinco pasos", () => {
+  assert.equal(GUARDIAN_GAME_ROUNDS, 5);
   for (const [id, game] of Object.entries(guardianGames)) {
     if (game.kind !== "sequence") continue;
-    const lengths = [0, 1, 2].map((round) => makeGuardianSequence(game, round, [0, 1, 2, 1]).length);
+    const lengths = Array.from({ length: GUARDIAN_GAME_ROUNDS }, (_, round) => makeGuardianSequence(game, round, [0, 1, 2, 1, 0]).length);
     assert.deepEqual(lengths, [...game.sequenceLengths!], id);
-    assert.ok(Math.max(...lengths) <= 4, id);
+    assert.ok(Math.max(...lengths) <= 5, id);
+    assert.ok(lengths.every((length, index) => index === 0 || length >= lengths[index - 1]), id);
   }
 });
 

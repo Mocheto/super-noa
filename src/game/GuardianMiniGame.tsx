@@ -3,7 +3,7 @@ import type { SoundKind } from "./GameCanvas";
 import { Dialog } from "./Dialog";
 import { GameAssetIcon } from "./GameAssetIcon";
 import { bossCatalog } from "./bosses";
-import { choiceAnswer, guardianGames, type GuardianGameId, makeGuardianSequence } from "./guardianGames";
+import { choiceAnswer, GUARDIAN_GAME_ROUNDS, guardianGames, type GuardianGameId, makeGuardianSequence } from "./guardianGames";
 import type { GuardianOption } from "./guardianGames";
 
 type Props = {
@@ -61,7 +61,7 @@ export function GuardianMiniGame({ bossId, paused, apples, protectedByApple, onS
       return;
     }
     playSound("checkpoint"); setInput([]); setMessage(game.success);
-    if (round >= 2) setPhase("won");
+    if (round >= GUARDIAN_GAME_ROUNDS - 1) setPhase("won");
     else setPhase("feedback");
   };
   const choose = (id: string) => {
@@ -80,8 +80,8 @@ export function GuardianMiniGame({ bossId, paused, apples, protectedByApple, onS
 
   return <><Dialog labelledBy="guardian-game-title" backdropClassName="boss-backdrop" className={`boss-battle guardian-game boss-theme-${bossId}`} gamepad>
     <header className="boss-header">
-      <div><p className="eyebrow">{friendlyReplay ? "Juego amistoso" : "Juego del guardián"} · Ronda {Math.min(round + 1, 3)} de 3</p><h2 id="guardian-game-title">{game.title}</h2><p>{game.instruction}</p><p className="boss-challenge">★ Reto de amistad: completa el juego sin equivocarte.</p></div>
-      <div className="guardian-game-status"><span aria-label={`${3 - mistakes} oportunidades`}>{"♥".repeat(3 - mistakes)}{"♡".repeat(mistakes)}</span><b>{round + (won ? 1 : 0)}/3</b>{!friendlyReplay && <small><GameAssetIcon kind="apple" /> × {apples}</small>}</div>
+      <div><p className="eyebrow">{friendlyReplay ? "Juego amistoso" : "Juego del guardián"} · Ronda {Math.min(round + 1, GUARDIAN_GAME_ROUNDS)} de {GUARDIAN_GAME_ROUNDS}</p><h2 id="guardian-game-title">{game.title}</h2><p>{game.instruction}</p><p className="boss-challenge">★ Reto de amistad: completa las cinco rondas sin equivocarte.</p></div>
+      <div className="guardian-game-status"><span aria-label={`${3 - mistakes} oportunidades`}>{"♥".repeat(3 - mistakes)}{"♡".repeat(mistakes)}</span><b>{round + (won ? 1 : 0)}/{GUARDIAN_GAME_ROUNDS}</b>{!friendlyReplay && <small><GameAssetIcon kind="apple" /> × {apples}</small>}</div>
     </header>
     <div className="guardian-game-stage">
       <GuardianPortrait bossId={bossId} won={won} />

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent } from "react";
 import type { SoundKind } from "./GameCanvas";
 import { createGameLoop } from "./gameLoop";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
-import { createSantaBattle, SANTA_ARENA, stepSantaBattle } from "./santaBattle";
+import { createSantaBattle, PLATFORM_BOSS_HITS, SANTA_ARENA, stepSantaBattle } from "./santaBattle";
 import { drawSantaBattle } from "./santaBattleRendering";
 import { TouchControls, type TouchControl } from "./TouchControls";
 import type { BossId } from "./types";
@@ -102,7 +102,7 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
   };
   const won = hud.status === "won", lost = hud.status === "lost";
   return <section className="santa-boss-battle" role="dialog" aria-modal="true" aria-labelledby="santa-boss-title">
-    <header className="santa-boss-hud"><div><p className="eyebrow">{copy.eyebrow}</p><h2 id="santa-boss-title">{copy.title}</h2><p>Salta las {copy.projectile} y cae sobre su cabeza dos veces. ¡Puedes dar un doble salto!</p></div><div className="santa-hit-counter"><span aria-label={`${hud.lives} vidas`}>{"♥".repeat(hud.lives)}{"♡".repeat(3 - hud.lives)}</span><b aria-live="polite">{hud.hits}/2 saltos</b></div></header>
+    <header className="santa-boss-hud"><div><p className="eyebrow">{copy.eyebrow}</p><h2 id="santa-boss-title">{copy.title}</h2><p>Salta las {copy.projectile} y cae sobre su cabeza tres veces. ¡Atención, cada ronda va un poquito más rápido!</p></div><div className="santa-hit-counter"><span aria-label={`${hud.lives} vidas`}>{"♥".repeat(hud.lives)}{"♡".repeat(3 - hud.lives)}</span><b aria-live="polite">{hud.hits}/{PLATFORM_BOSS_HITS} saltos</b></div></header>
     <div className="santa-arena game-frame">
       <div className="game-stage"><canvas ref={canvasRef} tabIndex={0} width={SANTA_ARENA.width} height={SANTA_ARENA.height} aria-label={`${copy.aria} Muévete con las flechas y salta con espacio.`} /></div>
       {!won && !lost && <TouchControls showYarn={false} disabled={paused} onPress={press} onRelease={release} onCancel={release}

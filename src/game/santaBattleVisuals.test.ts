@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
-import { santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets.ts";
+import { actionBossBackgrounds, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets.ts";
 import { readRgbaPng } from "./pngTestUtils.ts";
 import { SANTA_ARENA, SANTA_PLATFORMS } from "./santaBattle.ts";
 
@@ -29,6 +29,15 @@ test("el atlas nuevo conserva cinco poses completas, regalo y transparencia sin 
     assert.ok(frame.bodyHeight >= 440 && frame.bodyHeight <= 480, "el cuerpo mantiene la misma escala incluso al aturdirse");
   }
   assert.equal(pixels[3], 0, "las esquinas son transparentes");
+});
+
+test("cada jefe de acción carga su propia sala ilustrada", () => {
+  const backgrounds = Object.values(actionBossBackgrounds);
+  assert.equal(new Set(backgrounds).size, backgrounds.length);
+  for (const source of backgrounds) {
+    assert.match(source, /^\.\/assets\/worlds\/.*-boss-.*\.webp$/);
+    assert.ok(existsSync(new URL(`../../public/${source.slice(2)}`, import.meta.url)), `falta ${source}`);
+  }
 });
 
 test("el terreno nuevo alinea la nieve con la colisión y deja pasar a Noa completa por debajo", () => {

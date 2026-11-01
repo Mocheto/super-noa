@@ -4,6 +4,14 @@ export const santaBattleAssets = {
   terrain: "./assets/atlases/santa-boss-terrain-v1.png",
 } as const;
 
+// Las tres salas de acción necesitan fondos propios: son panoramas separados
+// del escenario para que los sprites y las plataformas sigan siendo legibles.
+export const actionBossBackgrounds = {
+  "santa-claus": santaBattleAssets.background,
+  siroco: "./assets/worlds/desert-boss-arena-v1.webp",
+  "don-silbato": "./assets/worlds/train-boss-arena-v1.webp",
+} as const;
+
 // Tight alpha bounds, with each pose anchored to the middle of its boots.
 // The stunned pose includes stars above the hat without reducing Santa's body.
 export const santaSpriteFrames = [

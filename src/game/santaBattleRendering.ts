@@ -1,5 +1,5 @@
 import { getImage } from "./assets";
-import { santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets";
+import { actionBossBackgrounds, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets";
 import { SANTA_ARENA, SANTA_PLATFORMS, type SantaBattle } from "./santaBattle";
 import type { BossId } from "./types";
 
@@ -10,7 +10,7 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
   const viewWidth = ctx.canvas.width;
   const cameraX = Math.max(0, Math.min(width - viewWidth, state.player.x - viewWidth * .4));
   ctx.save(); ctx.translate(-cameraX, 0);
-  const background = getImage(bossId === "santa-claus" ? santaBattleAssets.background : `./assets/worlds/${bossId === "siroco" ? "desert" : "train"}-background-v1.png`);
+  const background = getImage(actionBossBackgrounds[bossId]);
   ctx.fillStyle = bossId === "siroco" ? "#d79b4d" : bossId === "don-silbato" ? "#6faed2" : "#284365"; ctx.fillRect(0, 0, width, height);
   if (background.complete && background.naturalWidth) ctx.drawImage(background, 0, 0, width, height);
   ctx.fillStyle = "rgba(22,26,48,.1)"; ctx.fillRect(0, 0, width, height);

@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { LiveEnemy } from "./gameState";
 import type { RasterAssets } from "./assets";
+import type { SkyLift } from "./types";
 import { engineModules } from "./engineTestHarness.ts";
 
-const { drawEnemy } = engineModules()("./rendering") as typeof import("./rendering");
+const { drawEnemy, drawSkyLift } = engineModules()("./rendering") as typeof import("./rendering");
 const species: LiveEnemy["kind"][] = [
   "slime", "beetle", "cloud", "wolf", "boar", "bird", "pirate", "parrot", "bat", "sky-unicorn",
   "skeleton", "zombie", "ghost", "fish", "urchin", "baby-t-rex", "pterodactyl",
@@ -48,5 +49,24 @@ test("el atlas cargado reemplaza la silueta provisional", () => {
   };
   drawEnemy(context, enemy, 0, false, { dinosaurEnemies: image } as RasterAssets);
   assert.equal(images, 1);
+  assert.equal(rectangles, 0);
+});
+
+test("el ascensor cargado dibuja todos sus elementos con sprites y sin piezas geométricas", () => {
+  let images = 0;
+  let rectangles = 0;
+  const context = {
+    globalAlpha: 1,
+    save() {}, restore() {},
+    fillRect: () => { rectangles += 1; },
+    drawImage: () => { images += 1; },
+  } as unknown as CanvasRenderingContext2D;
+  const image = { complete: true, naturalWidth: 1536, naturalHeight: 1024 } as HTMLImageElement;
+  const lift: SkyLift = {
+    id: "lift", x: 40, bottomY: 2385, topY: 1950, width: 170, height: 30, speed: 92, waitDuration: 1.6,
+    lever: { id: "lever", x: 300, y: 2305, width: 68, height: 80 },
+  };
+  drawSkyLift(context, lift, 2180, 0, false, true, image);
+  assert.equal(images, 5, "guía, estación, palanca, nube y flecha deben proceder del atlas");
   assert.equal(rectangles, 0);
 });

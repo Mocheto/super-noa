@@ -9,40 +9,35 @@ import { worldEnemySpriteSources } from "./worldEnemySprites.ts";
 import { guardianBounds, type LiveChainGuardian } from "./chainGuardians";
 import { starPowerLight } from "./starPowerVisuals.ts";
 
-export function drawSkyLift(context: CanvasRenderingContext2D, lift: SkyLift, y: number, cameraX: number, active: boolean, nearby: boolean) {
+const SKY_LIFT_CROPS = {
+  platform: [0, 90, 870, 420], leverOff: [850, 35, 330, 475], leverOn: [1175, 35, 361, 475],
+  rail: [175, 520, 250, 490], station: [550, 555, 510, 455], arrow: [1110, 555, 426, 445],
+} as const;
+
+function drawSkyLiftSprite(context: CanvasRenderingContext2D, image: HTMLImageElement, crop: readonly [number, number, number, number], x: number, y: number, width: number, height: number) {
+  context.drawImage(image, crop[0], crop[1], crop[2], crop[3], x, y, width, height);
+}
+
+export function drawSkyLift(context: CanvasRenderingContext2D, lift: SkyLift, y: number, cameraX: number, active: boolean, nearby: boolean, image: HTMLImageElement) {
   const x = lift.x - cameraX;
   const leverX = lift.lever.x - cameraX;
   context.save();
-  context.strokeStyle = active ? "rgba(255,229,132,.72)" : "rgba(224,213,247,.45)";
-  context.lineWidth = 4;
-  context.setLineDash([10, 12]);
-  context.beginPath();
-  context.moveTo(x + lift.width / 2, lift.topY);
-  context.lineTo(x + lift.width / 2, lift.bottomY + lift.height);
-  context.stroke();
-  context.setLineDash([]);
-  context.fillStyle = "#39284f";
-  context.fillRect(leverX + 22, lift.lever.y + 18, 24, lift.lever.height - 18);
-  context.fillStyle = active ? "#ffe06e" : "#bfa7d8";
-  context.fillRect(leverX + 28, lift.lever.y + 8, 12, 31);
-  context.fillRect(leverX + (active ? 12 : 34), lift.lever.y + 5, 24, 14);
-  context.strokeStyle = "#fff8dc";
-  context.lineWidth = 4;
-  context.strokeRect(leverX + 22, lift.lever.y + 18, 24, lift.lever.height - 18);
-  if (nearby && !active) {
-    context.fillStyle = "#fff3a6";
-    context.font = "bold 28px monospace";
-    context.textAlign = "center";
-    context.fillText("↑", leverX + lift.lever.width / 2, lift.lever.y - 8);
+  if (image.complete && image.naturalWidth) {
+    context.globalAlpha = active ? .76 : .42;
+    drawSkyLiftSprite(context, image, SKY_LIFT_CROPS.rail, x + lift.width / 2 - 23, lift.topY - 8, 46, lift.bottomY - lift.topY + 46);
+    context.globalAlpha = 1;
+    drawSkyLiftSprite(context, image, SKY_LIFT_CROPS.station, x - 5, lift.topY - 82, lift.width + 10, 94);
+    drawSkyLiftSprite(context, image, active ? SKY_LIFT_CROPS.leverOn : SKY_LIFT_CROPS.leverOff,
+      leverX - 1, lift.lever.y - 10, lift.lever.width + 2, lift.lever.height + 20);
+    drawSkyLiftSprite(context, image, SKY_LIFT_CROPS.platform, x - 8, y - 24, lift.width + 16, lift.height + 50);
+    if (nearby && !active) drawSkyLiftSprite(context, image, SKY_LIFT_CROPS.arrow,
+      leverX + lift.lever.width / 2 - 23, lift.lever.y - 58, 46, 48);
+  } else {
+    context.fillStyle = active ? "#fff4bd" : "#e3d8f1";
+    context.fillRect(x, y, lift.width, lift.height);
+    context.fillStyle = active ? "#ffe06e" : "#bfa7d8";
+    context.fillRect(leverX + 22, lift.lever.y, 24, lift.lever.height);
   }
-  context.fillStyle = active ? "#fff4bd" : "#e3d8f1";
-  context.beginPath();
-  context.ellipse(x + 36, y + 15, 38, 19, 0, 0, Math.PI * 2);
-  context.ellipse(x + lift.width / 2, y + 10, 54, 25, 0, 0, Math.PI * 2);
-  context.ellipse(x + lift.width - 35, y + 16, 38, 19, 0, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = active ? "#b98bdd" : "#9b87ba";
-  context.fillRect(x + 17, y + lift.height - 7, lift.width - 34, 7);
   context.restore();
 }
 
@@ -897,6 +892,15 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   const forest = world >= 2 && world <= 4;
   const worldTiles = worldPlatformCells(world);
   if (x + platform.width < 0 || x > VIEW_WIDTH) return;
+  if (platform.kind === "sky-lift-station") {
+    if (raster.skyLift.complete && raster.skyLift.naturalWidth) {
+      drawSkyLiftSprite(context, raster.skyLift, SKY_LIFT_CROPS.platform, x - 8, platform.y - 24, platform.width + 16, platform.height + 50);
+    } else {
+      context.fillStyle = "#fff4d8";
+      context.fillRect(x, platform.y, platform.width, platform.height);
+    }
+    return;
+  }
   if (platform.kind === "sky-cloud" || platform.kind === "sky-bounce" || platform.kind === "sky-wall") {
     const image = raster.worldTerrain;
     const bouncy = platform.kind === "sky-bounce";

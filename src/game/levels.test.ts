@@ -271,7 +271,7 @@ test("el Reino Celeste sube en vertical sin camino de regreso", () => {
     assert.equal(level.orientation, "vertical");
     assert.ok((level.height ?? 0) >= 3500);
     assert.equal(level.width, 960);
-    assert.ok(level.platforms.every((platform) => platform.kind === "sky-cloud" || platform.kind === "sky-bounce"));
+    assert.ok(level.platforms.every((platform) => platform.kind === "sky-cloud" || platform.kind === "sky-bounce" || platform.kind === "sky-lift-station"));
     assert.ok(level.verticalCheckpoints?.length);
     assert.equal(level.skyLifts?.length, 1);
     const lift = level.skyLifts![0];
@@ -279,6 +279,13 @@ test("el Reino Celeste sube en vertical sin camino de regreso", () => {
     assert.ok(lift.speed <= 100, `${level.id}: el ascensor debe subir despacio`);
     assert.ok(level.platforms.some((platform) => platform.kind === "sky-cloud" && platform.y === lift.bottomY
       && platform.x <= lift.lever.x && platform.x + platform.width >= lift.lever.x + lift.lever.width), `${level.id}: la palanca necesita una nube segura`);
+    const corridor = { left: lift.x, right: lift.x + lift.width };
+    assert.ok(level.platforms.some((platform) => platform.kind === "sky-lift-station" && platform.y === lift.topY
+      && platform.x === corridor.right), `${level.id}: la salida debe conectar el ascensor con la ruta alta`);
+    assert.ok(level.platforms.filter((platform) => platform.kind === "sky-cloud" && platform.y < lift.bottomY && platform.y > lift.topY)
+      .every((platform) => platform.x >= corridor.right || platform.x + platform.width <= corridor.left), `${level.id}: la ruta de saltos no debe cruzar el hueco del ascensor`);
+    assert.ok(level.platforms.some((platform) => platform.kind === "sky-cloud" && platform.y === lift.bottomY
+      && platform.x - corridor.right >= 35 && platform.x - corridor.right <= 70), `${level.id}: subir al ascensor debe requerir elegir el desvío lateral`);
     assert.ok(level.enemies.every((enemy) => enemy.kind === "puffling"));
     assert.equal(level.items.find((item) => item.kind === "sticker")?.id, `sticker-${level.id}`);
   }
@@ -641,7 +648,7 @@ test("cada mundo presente conserva una identidad jugable propia", () => {
         break;
       case 17:
         assert.ok(screens.every((level) => level.orientation === "vertical"));
-        assert.ok(platforms.every((platform) => platform.kind === "sky-cloud" || platform.kind === "sky-bounce"));
+        assert.ok(platforms.every((platform) => platform.kind === "sky-cloud" || platform.kind === "sky-bounce" || platform.kind === "sky-lift-station"));
         assert.ok(enemies.every((enemy) => enemy.kind === "puffling"));
         assert.equal(screens.find((level) => level.boss)?.boss, "aurora-celeste");
         break;

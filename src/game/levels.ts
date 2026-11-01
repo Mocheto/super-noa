@@ -152,6 +152,14 @@ const skyLevelPlatforms = (height: number, offset = 0): Platform[] => {
   return platforms;
 };
 
+const skyLiftLevelPlatforms = (height: number, offset: number, bottomY: number, topY: number): Platform[] => [
+  ...skyLevelPlatforms(height, offset).map((platform) =>
+    platform.kind === "sky-cloud" && platform.x === 120 && platform.y > topY && platform.y < bottomY
+      ? { ...platform, x: 400 }
+      : platform),
+  { x: 210, y: topY, width: 250, height: 30, kind: "sky-lift-station" },
+];
+
 // Identificadores estables: A es el desvío acuático entre los mundos 3 y 4.
 const seaFloor = (width: number): Platform => ({ x: 0, y: 490, width, height: 90, kind: "sea-ground" });
 const reef = (x: number, y: number, width: number, height: number): Platform => ({ x, y, width, height, kind: "sea-wall" });
@@ -1321,37 +1329,37 @@ export const levels: Level[] = [
   },
   {
     id: "17-1", world: 17, screen: 1,
-    title: "Las nubes del amanecer", subtitle: "Sube de nube en nube. A mitad del camino, una palanca despierta un ascensor de nubes.",
+    title: "Las nubes del amanecer", subtitle: "Sube de nube en nube o busca la palanca del desvío lateral para tomar el ascensor.",
     theme: "sky-dawn", width: 960, height: 3500, orientation: "vertical", start: { x: 110, y: 3352 }, goalX: 480, goalY: 175,
-    platforms: skyLevelPlatforms(3500),
+    platforms: skyLiftLevelPlatforms(3500, 0, 2385, 1950),
     enemies: [
       enemy("c17a-p1", "puffling", 520, 2850, 470, 720, 58), enemy("c17a-p2", "puffling", 180, 2260, 120, 390, 62),
       enemy("c17a-p3", "puffling", 610, 1680, 540, 820, 66), enemy("c17a-p4", "puffling", 250, 950, 180, 470, 70),
     ],
     items: [apple("c17a1", 570, 2780), apple("c17a2", 310, 2200), sticker("sticker-17-1", 680, 1600), apple("c17a3", 280, 880)],
     rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 280, y: 2460 }, { x: 650, y: 1450 }, { x: 350, y: 580 }],
-    skyLifts: [{ id: "sky-lift-17-1", x: 485, bottomY: 2385, topY: 1950, width: 170, height: 30, speed: 92, waitDuration: 1.6,
+    skyLifts: [{ id: "sky-lift-17-1", x: 40, bottomY: 2385, topY: 1950, width: 170, height: 30, speed: 92, waitDuration: 1.6,
       lever: { id: "sky-lever-17-1", x: 300, y: 2305, width: 68, height: 80 } }],
   },
   {
     id: "17-2", world: 17, screen: 2,
-    title: "La escalera del cielo", subtitle: "Las nubes están más separadas. Usa la palanca si quieres descansar en el ascensor.",
+    title: "La escalera del cielo", subtitle: "La ruta sigue por el centro. La palanca lateral abre un camino más fácil en ascensor.",
     theme: "sky-blue", width: 960, height: 3900, orientation: "vertical", start: { x: 110, y: 3752 }, goalX: 480, goalY: 175,
-    platforms: skyLevelPlatforms(3900, 1),
+    platforms: skyLiftLevelPlatforms(3900, 1, 2350, 1915),
     enemies: [
       enemy("c17b-p1", "puffling", 170, 3180, 120, 400, 64), enemy("c17b-p2", "puffling", 590, 2600, 520, 820, 68),
       enemy("c17b-p3", "puffling", 250, 2010, 170, 470, 72), enemy("c17b-p4", "puffling", 620, 1420, 540, 830, 76), enemy("c17b-p5", "puffling", 220, 700, 150, 440, 78),
     ],
     items: [apple("c17b1", 200, 3120), apple("c17b2", 650, 2530), sticker("sticker-17-2", 310, 1940), apple("c17b3", 690, 1350), apple("c17b4", 280, 630)],
     rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 520, y: 2860 }, { x: 270, y: 1880 }, { x: 620, y: 900 }],
-    skyLifts: [{ id: "sky-lift-17-2", x: 485, bottomY: 2350, topY: 1915, width: 170, height: 30, speed: 88, waitDuration: 1.8,
+    skyLifts: [{ id: "sky-lift-17-2", x: 40, bottomY: 2350, topY: 1915, width: 170, height: 30, speed: 88, waitDuration: 1.8,
       lever: { id: "sky-lever-17-2", x: 300, y: 2270, width: 68, height: 80 } }],
   },
   {
     id: "17-3", world: 17, screen: 3, route: { finale: true },
-    title: "La puerta de las estrellas", subtitle: "Alcanza la luna. La última palanca ofrece un ascensor antes de conocer a Aurora Celeste.",
+    title: "La puerta de las estrellas", subtitle: "Alcanza la luna o toma el desvío lateral en ascensor antes de conocer a Aurora Celeste.",
     theme: "sky-stars", width: 960, height: 4300, orientation: "vertical", start: { x: 110, y: 4152 }, goalX: 480, goalY: 175,
-    platforms: skyLevelPlatforms(4300, 2),
+    platforms: skyLiftLevelPlatforms(4300, 2, 2315, 1880),
     enemies: [
       enemy("c17c-p1", "puffling", 610, 3600, 530, 830, 68), enemy("c17c-p2", "puffling", 220, 3010, 140, 450, 72),
       enemy("c17c-p3", "puffling", 600, 2420, 520, 820, 76), enemy("c17c-p4", "puffling", 230, 1830, 150, 470, 80),
@@ -1359,7 +1367,7 @@ export const levels: Level[] = [
     ],
     items: [apple("c17c1", 660, 3530), apple("c17c2", 280, 2940), sticker("sticker-17-3", 650, 2350), apple("c17c3", 290, 1760), apple("c17c4", 670, 1170)],
     rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 260, y: 3260 }, { x: 620, y: 2260 }, { x: 270, y: 1260 }, { x: 560, y: 520 }],
-    skyLifts: [{ id: "sky-lift-17-3", x: 485, bottomY: 2315, topY: 1880, width: 170, height: 30, speed: 84, waitDuration: 2,
+    skyLifts: [{ id: "sky-lift-17-3", x: 40, bottomY: 2315, topY: 1880, width: 170, height: 30, speed: 84, waitDuration: 2,
       lever: { id: "sky-lever-17-3", x: 300, y: 2235, width: 68, height: 80 } }], boss: "aurora-celeste",
   },
   {

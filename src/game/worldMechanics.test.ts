@@ -31,7 +31,7 @@ test("el ascensor celeste espera, sube, vuelve a esperar y siempre regresa para 
   assert.equal(skyLiftY(skyLift, 10, 19), skyLift.topY);
   assert.equal(skyLiftY(skyLift, 10, 21.5), 2180);
   assert.equal(skyLiftY(skyLift, 10, 24), skyLift.bottomY);
-  assert.deepEqual(skyLiftPlatform(skyLift, 10, 17), { x: 480, y: 1960, width: 170, height: 30, kind: "sky-cloud" });
+  assert.deepEqual(skyLiftPlatform(skyLift, 10, 17), { x: 480, y: 1960, width: 170, height: 30, kind: "sky-lift-station" });
 });
 
 test("las plataformas musicales siguen un compás declarativo y la pausa no altera su fase", () => {

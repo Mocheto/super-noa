@@ -63,7 +63,7 @@ export function skyLiftY(lift: SkyLift, activatedAt: number | undefined, elapsed
 }
 
 export function skyLiftPlatform(lift: SkyLift, activatedAt: number | undefined, elapsed: number): Platform {
-  return { x: lift.x, y: skyLiftY(lift, activatedAt, elapsed), width: lift.width, height: lift.height, kind: "sky-cloud" };
+  return { x: lift.x, y: skyLiftY(lift, activatedAt, elapsed), width: lift.width, height: lift.height, kind: "sky-lift-station" };
 }
 
 export function hasWorldMechanics(level: Level): boolean {

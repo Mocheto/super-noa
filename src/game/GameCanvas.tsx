@@ -924,7 +924,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         context.fillRect(x + 8, platform.y + 5, Math.max(8, platform.width - 16), 5);
       });
       level.skyLifts?.forEach((lift) => drawSkyLift(context, lift, skyLiftPlatform(lift, activatedSkyLifts.get(lift.id), levelAge).y,
-        cameraX, activatedSkyLifts.has(lift.id), canEnterSecretShop(lift.lever, player, false)));
+        cameraX, activatedSkyLifts.has(lift.id), canEnterSecretShop(lift.lever, player, false), raster.skyLift));
       drawDetourMechanisms(context, level, detourClock, cameraX, motionRef.current);
       if (level.detourEntrance) drawDetourEntrance(context, level.detourEntrance, cameraX, canEnterSecretShop(level.detourEntrance, player, false), levelAge, motionRef.current);
       if (level.secretShop) drawSecretShopDoor(context, level.secretShop, cameraX, shopUsed, doorAvailableRef.current, raster);

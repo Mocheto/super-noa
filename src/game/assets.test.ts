@@ -4,6 +4,7 @@ import test from "node:test";
 import { getImage, getLevelAssets, optimizedAssetSource } from "./assets.ts";
 import { levels } from "./levels.ts";
 import { mechanicSpriteSheets, type MechanicSprite } from "./mechanicSprites.ts";
+import { readRgbaPng } from "./pngTestUtils.ts";
 
 test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
   const originalImage = globalThis.Image;
@@ -95,6 +96,9 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     assert.equal(music.worldTerrain.src, "./assets/atlases/music-terrain-v1.png");
     assert.equal(music.adventurePrecipices.src, "./assets/atlases/adventure-precipices-v1.png");
     assert.equal(music.stickerSheets[16].src, "./assets/stickers/world-16-v1.webp");
+    const sky = getLevelAssets(levels.find((level) => level.id === "17-1")!);
+    assert.equal(sky.skyLift.src, "./assets/atlases/sky-lift-v1.png");
+    assert.equal(sky.worldTerrain.src, "./assets/atlases/sky-kingdom-terrain-v1.png");
     assert.equal(first.holidayBackground.src, "");
     for (const level of levels) {
       const assets = getLevelAssets(level);
@@ -109,6 +113,25 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     }
   } finally {
     globalThis.Image = originalImage;
+  }
+});
+
+test("el ascensor celeste usa un atlas RGBA completo para nube, palancas, guía, estación y flecha", () => {
+  const atlas = readRgbaPng("./assets/atlases/sky-lift-v1.png");
+  assert.deepEqual([atlas.width, atlas.height], [1536, 1024]);
+  const crops = [
+    [0, 90, 870, 420], [850, 35, 330, 475], [1175, 35, 361, 475],
+    [175, 520, 250, 490], [550, 555, 510, 455], [1110, 555, 426, 445],
+  ] as const;
+  for (const [x, y, width, height] of crops) {
+    let visible = 0;
+    for (let py = y; py < y + height; py += 1) {
+      for (let px = x; px < x + width; px += 1) {
+        if (atlas.pixels[(py * atlas.width + px) * 4 + 3] > 24) visible += 1;
+      }
+    }
+    assert.ok(visible > 2000, `El recorte ${x},${y} debe contener un sprite visible`);
+    assert.ok(visible < width * height * .8, `El recorte ${x},${y} debe conservar espacio transparente`);
   }
 });
 

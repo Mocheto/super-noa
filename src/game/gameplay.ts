@@ -3,6 +3,7 @@ import type { Platform, Rect } from "./types";
 export const GRAVITY = 1650;
 export const JUMP_SPEED = 625;
 export const SPRING_SPEED = 1080;
+export const SKY_BOUNCE_SPEED = 1450;
 
 export const walkAnimationFrame = (elapsedSeconds: number) => Math.floor(elapsedSeconds / 0.095) % 4;
 

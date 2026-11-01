@@ -9,7 +9,9 @@ export type Rect = {
 
 export type Platform = Rect & {
   beltSpeed?: number;
-  kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "sky-cloud" | "sky-wall" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall" | "factory-ground" | "factory-ledge" | "factory-wall" | "warehouse-ground" | "warehouse-ledge" | "warehouse-wall" | "gift-spring" | "snow-ground" | "snow-ledge" | "desert-ground" | "desert-ledge" | "train-ground" | "train-roof" | "music-ground" | "music-stage";
+  bounceSpeed?: number;
+  bounceDrift?: number;
+  kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "sky-cloud" | "sky-bounce" | "sky-wall" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall" | "factory-ground" | "factory-ledge" | "factory-wall" | "warehouse-ground" | "warehouse-ledge" | "warehouse-wall" | "gift-spring" | "snow-ground" | "snow-ledge" | "desert-ground" | "desert-ledge" | "train-ground" | "train-roof" | "music-ground" | "music-stage";
 };
 
 export type BeatPlatform = Platform & { id: string; interval: number; delay: number; activeDuration: number };

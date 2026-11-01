@@ -143,6 +143,10 @@ const skyLevelPlatforms = (height: number, offset = 0): Platform[] => {
     const pattern = (index + offset) % 4;
     const x = pattern === 0 ? 120 : pattern === 1 ? 520 : pattern === 2 ? 260 : 650;
     platforms.push(skyCloud(x, y, pattern === 2 ? 220 : 190));
+    if (index >= 3 && index % 7 === 3) platforms.push({
+      x: x < 400 ? 740 : 45, y, width: 145, height: 34, kind: "sky-bounce",
+      bounceSpeed: 1450, bounceDrift: 330,
+    });
   }
   platforms.push(skyCloud(330, 90, 300));
   return platforms;

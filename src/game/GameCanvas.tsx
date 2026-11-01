@@ -29,7 +29,7 @@ import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
-import { conveyorSpeed, boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
+import { conveyorSpeed, boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SKY_BOUNCE_SPEED, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
 
 const MOVE_SPEED = 250;
 
@@ -180,6 +180,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     let goalCelebrationFrame = -1;
     let lastSpringX = -1;
     let lastSpringFrame = -100;
+    let skyBounceUses = 0;
+    let skyBounceSteerLock = 0;
     const transition = createLevelTransition((snapshot) => callbacksRef.current.onSnapshot(snapshot));
     const currentSnapshot = (): GameSnapshot => ({
       apples, stickers: [...collectedStickers], power: player.power,
@@ -234,6 +236,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       player.springLaunch = false;
       player.doubleJumpFx = 0;
       player.shootFx = 0;
+      skyBounceSteerLock = 0;
       projectiles.length = 0;
       cannonballs.length = 0;
       callbacksRef.current.onLoseLife();
@@ -333,12 +336,15 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       const liftZones = level.world === 7 ? level.updrafts : level.sandGeysers;
       const inUpdraft = !swimming && liftZones?.some((zone) => intersects(player, zone));
       const newStroke = input.jumpQueued || (jump && !previousJump);
+      skyBounceSteerLock = Math.max(0, skyBounceSteerLock - delta);
 
       const standingOnIce = player.grounded && level.platforms.some((platform) =>
         (platform.kind === "ice-ground" || platform.kind === "ice-ledge" || platform.kind === "ice-wall") &&
         player.x + player.width > platform.x && player.x < platform.x + platform.width &&
         Math.abs(player.y + player.height - platformSurfaceY(platform)) < 6);
-      if (left === right) player.vx *= Math.pow(standingOnIce ? 0.32 : 0.0008, delta);
+      if (skyBounceSteerLock > 0) {
+        // La nube elige el primer tramo; enseguida se recupera el control para buscar dónde aterrizar.
+      } else if (left === right) player.vx *= Math.pow(standingOnIce ? 0.32 : 0.0008, delta);
       else {
         const targetVelocity = (left ? -1 : 1) * (swimming ? 175 : MOVE_SPEED);
         player.vx = standingOnIce ? player.vx + Math.max(-520 * delta, Math.min(520 * delta, targetVelocity - player.vx)) : targetVelocity;
@@ -419,14 +425,24 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       for (const platform of platforms) {
         const horizontal = player.x + player.width > platform.x && player.x < platform.x + platform.width;
         const surfaceY = platformSurfaceY(platform);
+        const isSpring = platform.kind === "spring" || platform.kind === "dew" || platform.kind === "gift-spring" || platform.kind === "sky-bounce";
         // El muelle solo responde al aterrizaje de un salto: al caminar se puede pasar de largo.
-        const landed = platform.kind === "spring" || platform.kind === "dew" || platform.kind === "gift-spring"
+        const landed = isSpring
           ? landsOnSpring(wasGrounded, previousBottom, player.y + player.height, surfaceY, player.vy)
           : player.vy >= 0 && previousBottom <= surfaceY + 10 && player.y + player.height >= surfaceY;
         if (horizontal && landed) {
           player.y = surfaceY - player.height;
-          if (platform.kind === "spring" || platform.kind === "dew" || platform.kind === "gift-spring") {
-            player.vy = -SPRING_SPEED;
+          if (isSpring) {
+            const skyBounce = platform.kind === "sky-bounce";
+            player.vy = -(skyBounce ? platform.bounceSpeed ?? SKY_BOUNCE_SPEED : SPRING_SPEED);
+            if (skyBounce) {
+              const direction = (skyBounceUses + Math.round(platform.x)) % 2 === 0 ? -1 : 1;
+              player.vx = direction * (platform.bounceDrift ?? 330);
+              player.facing = direction;
+              skyBounceSteerLock = .42;
+              skyBounceUses += 1;
+              if (statusRef.current) statusRef.current.textContent = "¡Nube esponjosa! Noa sale disparada hacia otra parte del cielo.";
+            }
             player.grounded = false;
             player.jumpsUsed = 2;
             player.springLaunch = true;
@@ -1022,10 +1038,11 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       context.restore();
       if (level.id === "1-1" && player.x >= 130 && player.x < 1120) drawDoubleJumpTip(context);
       if (level.orientation === "vertical" && levelAge < 8) {
-        context.fillStyle = "rgba(42,24,70,.9)"; context.fillRect(176, 18, 608, 54);
+        context.fillStyle = "rgba(42,24,70,.9)"; context.fillRect(176, 12, 608, 72);
         context.fillStyle = "#fff7dd"; context.font = "bold 15px monospace"; context.textAlign = "center";
-        context.fillText("¡SUBE! LOS DOS BORDES ESTÁN CONECTADOS", VIEW_WIDTH / 2, 40);
-        context.fillText("Sal por un lado y entrarás por el otro. ¡No caigas!", VIEW_WIDTH / 2, 61); context.textAlign = "start";
+        context.fillText("¡SUBE! LOS DOS BORDES ESTÁN CONECTADOS", VIEW_WIDTH / 2, 33);
+        context.fillText("Sal por un lado y entrarás por el otro.", VIEW_WIDTH / 2, 54);
+        context.fillStyle = "#ffb8ec"; context.fillText("NUBE ROSA ↑? = ¡SUPERSALTO SORPRESA!", VIEW_WIDTH / 2, 75); context.textAlign = "start";
       }
       if (level.world === 8 && player.x < 650) {
         context.fillStyle = "#fff8e9";

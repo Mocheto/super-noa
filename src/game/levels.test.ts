@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { levels } from "./levels.ts";
-import { GRAVITY, JUMP_SPEED, SPRING_SPEED } from "./gameplay.ts";
+import { GRAVITY, JUMP_SPEED, SKY_BOUNCE_SPEED, SPRING_SPEED } from "./gameplay.ts";
 import { getStickerSprite, stickerCatalog } from "./stickers.ts";
 import { bossCatalog } from "./bosses.ts";
 
@@ -271,10 +271,49 @@ test("el Reino Celeste sube en vertical sin camino de regreso", () => {
     assert.equal(level.orientation, "vertical");
     assert.ok((level.height ?? 0) >= 3500);
     assert.equal(level.width, 960);
-    assert.ok(level.platforms.every((platform) => platform.kind === "sky-cloud"));
+    assert.ok(level.platforms.every((platform) => platform.kind === "sky-cloud" || platform.kind === "sky-bounce"));
     assert.ok(level.verticalCheckpoints?.length);
     assert.ok(level.enemies.every((enemy) => enemy.kind === "puffling"));
     assert.equal(level.items.find((item) => item.kind === "sticker")?.id, `sticker-${level.id}`);
+  }
+});
+
+test("cada nube normal del Reino Celeste se alcanza con doble salto y los bordes conectados", () => {
+  const maxRise = (JUMP_SPEED ** 2 + (JUMP_SPEED * .94) ** 2) / (2 * GRAVITY);
+  let maxFlightTime = 0;
+  for (let tick = 0; tick <= 760; tick += 1) {
+    const doubleJumpAt = tick / 1000;
+    const firstRise = JUMP_SPEED * doubleJumpAt - GRAVITY * doubleJumpAt ** 2 / 2;
+    const remainingRise = 145 - firstRise;
+    const discriminant = (JUMP_SPEED * .94) ** 2 - 2 * GRAVITY * remainingRise;
+    if (discriminant < 0) continue;
+    maxFlightTime = Math.max(maxFlightTime, doubleJumpAt + (JUMP_SPEED * .94 + Math.sqrt(discriminant)) / GRAVITY);
+  }
+  const intervalGap = (left: (typeof levels)[number]["platforms"][number], right: typeof left) =>
+    Math.max(0, right.x - (left.x + left.width), left.x - (right.x + right.width));
+  for (const level of levels.filter((entry) => entry.world === 17)) {
+    const route = level.platforms.filter((platform) => platform.kind === "sky-cloud").sort((a, b) => b.y - a.y);
+    for (let index = 0; index < route.length - 1; index += 1) {
+      const from = route[index], to = route[index + 1];
+      const rise = from.y - to.y;
+      const gap = Math.min(intervalGap(from, to), intervalGap(from, { ...to, x: to.x + level.width }), intervalGap(from, { ...to, x: to.x - level.width }));
+      assert.ok(rise <= maxRise, `${level.id}: nube demasiado alta, ${rise}px`);
+      assert.ok(gap <= 250 * maxFlightTime, `${level.id}: nube demasiado lejos, ${gap}px`);
+    }
+  }
+});
+
+test("las nubes esponjosas son atajos opcionales de cuatro alturas", () => {
+  const bounceRise = SKY_BOUNCE_SPEED ** 2 / (2 * GRAVITY);
+  assert.ok(bounceRise > 145 * 4);
+  for (const level of levels.filter((entry) => entry.world === 17)) {
+    const bounces = level.platforms.filter((platform) => platform.kind === "sky-bounce");
+    assert.ok(bounces.length >= 3, `${level.id}: faltan atajos esponjosos`);
+    for (const cloud of bounces) {
+      assert.equal(cloud.bounceSpeed, SKY_BOUNCE_SPEED);
+      assert.ok((cloud.bounceDrift ?? 0) >= 300);
+      assert.ok(level.platforms.some((platform) => platform.kind === "sky-cloud" && platform.y === cloud.y), "el atajo debe ser opcional junto a una ruta normal");
+    }
   }
 });
 
@@ -572,7 +611,7 @@ test("cada mundo presente conserva una identidad jugable propia", () => {
         break;
       case 17:
         assert.ok(screens.every((level) => level.orientation === "vertical"));
-        assert.ok(platforms.every((platform) => platform.kind === "sky-cloud"));
+        assert.ok(platforms.every((platform) => platform.kind === "sky-cloud" || platform.kind === "sky-bounce"));
         assert.ok(enemies.every((enemy) => enemy.kind === "puffling"));
         assert.equal(screens.find((level) => level.boss)?.boss, "aurora-celeste");
         break;

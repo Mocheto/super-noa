@@ -832,15 +832,29 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   const forest = world >= 2 && world <= 4;
   const worldTiles = worldPlatformCells(world);
   if (x + platform.width < 0 || x > VIEW_WIDTH) return;
-  if (platform.kind === "sky-cloud" || platform.kind === "sky-wall") {
+  if (platform.kind === "sky-cloud" || platform.kind === "sky-bounce" || platform.kind === "sky-wall") {
     const image = raster.worldTerrain;
+    const bouncy = platform.kind === "sky-bounce";
+    const bounceSquash = bouncy && springCompressed ? 8 : 0;
     if (image.complete && image.naturalWidth) {
       const crop = platform.kind === "sky-wall" ? [.84, 0, .16, 1] : platform.width > 300 ? [0, .42, .52, .58] : [.54, .42, .28, .58];
       const [sx, sy, sw, sh] = crop.map((value, index) => value * (index % 2 === 0 ? image.naturalWidth : image.naturalHeight));
-      context.drawImage(image, sx, sy, sw, sh, x, platform.y - (platform.kind === "sky-wall" ? 0 : 5), platform.width, platform.kind === "sky-wall" ? platform.height : Math.max(62, platform.height + 42));
+      context.save();
+      if (bouncy) { context.shadowColor = "#ff8ee9"; context.shadowBlur = 12 + Math.sin(frame * .12) * 4; }
+      context.drawImage(image, sx, sy, sw, sh, x, platform.y - (platform.kind === "sky-wall" ? 0 : 5) + bounceSquash, platform.width, platform.kind === "sky-wall" ? platform.height : Math.max(62, platform.height + 42) - bounceSquash);
+      context.restore();
     } else {
       context.fillStyle = "#e9f7ff"; context.fillRect(x, platform.y, platform.width, platform.height);
       context.fillStyle = "#fffdf5"; context.fillRect(x, platform.y, platform.width, 8);
+    }
+    if (bouncy) {
+      const pulse = Math.sin(frame * .12) * 3;
+      context.fillStyle = "rgba(255,111,220,.72)";
+      context.fillRect(x + 18, platform.y + 5 + bounceSquash, platform.width - 36, 6);
+      context.fillStyle = "#fff5a8";
+      context.font = "bold 22px monospace"; context.textAlign = "center";
+      context.fillText("↑?", x + platform.width / 2, platform.y + 30 + pulse + bounceSquash);
+      context.textAlign = "start";
     }
     return;
   }

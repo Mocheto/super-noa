@@ -229,6 +229,20 @@ const drawHolidayTerrain = (context: CanvasRenderingContext2D, image: HTMLImageE
   return true;
 };
 
+const drawAdventureTerrain = (context: CanvasRenderingContext2D, image: HTMLImageElement, world: 14 | 15, part: "ground" | "ledge" | "wall", x: number, y: number, width: number, height: number) => {
+  if (!image.complete || !image.naturalWidth) return false;
+  const crops = world === 14
+    ? { ground: [.008, .515, .52, .35], ledge: [.53, .515, .29, .35], wall: [.825, .11, .17, .77] }
+    : { ground: [.008, .245, .77, .30], ledge: [.018, .63, .75, .30], wall: [.77, .025, .225, .94] };
+  const [sx, sy, sw, sh] = crops[part].map((value, index) => value * (index % 2 === 0 ? image.naturalWidth : image.naturalHeight));
+  const tileWidth = part === "ground" ? 190 : width;
+  for (let offset = 0; offset < width; offset += tileWidth) {
+    const drawnWidth = Math.min(tileWidth, width - offset);
+    context.drawImage(image, sx, sy, sw * drawnWidth / tileWidth, sh, x + offset, y, drawnWidth, part === "ledge" ? Math.max(58, height + 34) : height);
+  }
+  return true;
+};
+
 const drawCollectibleSprite = (context: CanvasRenderingContext2D, image: HTMLImageElement, column: number, row: number, x: number, y: number, width: number, height: number) =>
   drawAtlasCell(context, image, 4, 2, column, row, x, y, width, height);
 
@@ -803,6 +817,7 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   const worldTiles = worldPlatformCells(world);
   if (x + platform.width < 0 || x > VIEW_WIDTH) return;
   if (platform.kind === "desert-ground" || platform.kind === "desert-ledge") {
+    if (drawAdventureTerrain(context, raster.worldTerrain, 14, platform.kind === "desert-ground" ? "ground" : "ledge", x, platform.y, platform.width, platform.height)) return;
     context.fillStyle = platform.kind === "desert-ground" ? "#b86f35" : "#d28a45";
     context.fillRect(x, platform.y, platform.width, platform.height);
     context.fillStyle = "#f5c96e"; context.fillRect(x, platform.y, platform.width, platform.kind === "desert-ground" ? 12 : 9);
@@ -811,11 +826,20 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
     return;
   }
   if (platform.kind === "train-ground" || platform.kind === "train-roof") {
-    context.fillStyle = platform.kind === "train-ground" ? "#51434a" : "#9d3039";
-    context.fillRect(x, platform.y, platform.width, platform.height);
-    context.fillStyle = platform.kind === "train-ground" ? "#d7c6a1" : "#f0c85b";
-    context.fillRect(x, platform.y, platform.width, platform.kind === "train-ground" ? 10 : 7);
+    const drawn = drawAdventureTerrain(context, raster.worldTerrain, 15, platform.kind === "train-ground" ? "ground" : "ledge", x, platform.y, platform.width, platform.height);
+    if (!drawn) {
+      context.fillStyle = platform.kind === "train-ground" ? "#51434a" : "#9d3039";
+      context.fillRect(x, platform.y, platform.width, platform.height);
+      context.fillStyle = platform.kind === "train-ground" ? "#d7c6a1" : "#f0c85b";
+      context.fillRect(x, platform.y, platform.width, platform.kind === "train-ground" ? 10 : 7);
+    }
     if (!platform.beltSpeed) return;
+    context.save(); context.beginPath(); context.rect(x, platform.y + 5, platform.width, 24); context.clip();
+    context.fillStyle = "#fff0b5"; context.font = "bold 20px sans-serif";
+    const offset = ((frame * platform.beltSpeed / 60) % 32 + 32) % 32;
+    for (let px = x - 32 + offset; px < x + platform.width; px += 32) context.fillText(platform.beltSpeed > 0 ? "›" : "‹", px, platform.y + 23);
+    context.restore();
+    return;
   }
   if (platform.kind === "snow-ground" || platform.kind === "snow-ledge") {
     const image = raster.worldTerrain;

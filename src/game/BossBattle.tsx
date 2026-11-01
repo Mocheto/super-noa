@@ -45,7 +45,7 @@ const choices: Array<{ id: Choice; label: string }> = [
 const choiceById = Object.fromEntries(choices.map((choice) => [choice.id, choice])) as Record<Choice, (typeof choices)[number]>;
 
 function RpsIcon({ choice, small = false }: { choice: Choice; small?: boolean }) {
-  return <span className={`rps-icon rps-${choice} ${small ? "is-small" : ""}`} aria-hidden="true" />;
+  return <span className={`rps-icon rps-${choice} ${small ? "is-small" : ""}`} style={{ backgroundImage: 'url("./assets/sprites/rps-icons-v1.png")' }} aria-hidden="true" />;
 }
 
 function getWinner(noa: Choice, boss: Choice): RoundWinner {

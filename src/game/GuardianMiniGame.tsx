@@ -4,6 +4,7 @@ import { Dialog } from "./Dialog";
 import { GameAssetIcon } from "./GameAssetIcon";
 import { bossCatalog } from "./bosses";
 import { choiceAnswer, guardianGames, type GuardianGameId, makeGuardianSequence } from "./guardianGames";
+import type { GuardianOption } from "./guardianGames";
 
 type Props = {
   bossId: GuardianGameId; paused: boolean; apples: number; protectedByApple: boolean;
@@ -11,6 +12,11 @@ type Props = {
   onWin: (challengeCompleted: boolean) => void; playSound: (kind: SoundKind) => void; friendlyReplay?: boolean;
 };
 type Phase = "watch" | "play" | "feedback" | "won" | "lost";
+
+function GuardianGameIcon({ option }: { option: GuardianOption }) {
+  const [row, column] = option.sprite;
+  return <span className="guardian-game-icon" style={{ backgroundImage: 'url("./assets/sprites/guardian-game-icons-v1.png")', backgroundPosition: `${column * 50}% ${row * (100 / 6)}%` }} aria-hidden="true" />;
+}
 
 function randomSequence(gameId: GuardianGameId, round: number) {
   const game = guardianGames[gameId];
@@ -81,14 +87,14 @@ export function GuardianMiniGame({ bossId, paused, apples, protectedByApple, onS
       <GuardianPortrait bossId={bossId} won={won} />
       <div className="guardian-game-board">
         <strong>{phase === "watch" || game.kind === "choice" ? game.prompt : phase === "play" ? "Ahora repítelo" : message}</strong>
-        {game.kind === "choice" && !won && !lost && <div className="guardian-target" style={{ "--guardian-color": target.color } as CSSProperties}><span>{bossId === "great-boar" ? (target.id === "left" ? "➡" : target.id === "right" ? "⬅" : "⬆") : target.icon}</span><b>{bossId === "great-boar" ? (target.id === "left" ? "la izquierda" : target.id === "right" ? "la derecha" : "abajo") : target.label}</b></div>}
-        {game.kind === "sequence" && phase === "watch" && <div className="guardian-sequence">{sequence.map((id, index) => <span role="img" aria-label={`${index + 1}: ${option(id).label}`} style={{ "--guardian-color": option(id).color } as CSSProperties} key={`${id}-${index}`}>{option(id).icon}<small aria-hidden="true">{index + 1}</small></span>)}</div>}
+        {game.kind === "choice" && !won && !lost && <div className="guardian-target" style={{ "--guardian-color": target.color } as CSSProperties}><GuardianGameIcon option={target} /><b>{bossId === "great-boar" ? (target.id === "left" ? "la izquierda" : target.id === "right" ? "la derecha" : "abajo") : target.label}</b></div>}
+        {game.kind === "sequence" && phase === "watch" && <div className="guardian-sequence">{sequence.map((id, index) => <span role="img" aria-label={`${index + 1}: ${option(id).label}`} style={{ "--guardian-color": option(id).color } as CSSProperties} key={`${id}-${index}`}><GuardianGameIcon option={option(id)} /><small aria-hidden="true">{index + 1}</small></span>)}</div>}
         {game.kind === "sequence" && phase === "play" && <div className="guardian-progress" aria-label={`${input.length} de ${sequence.length} pasos`} >{sequence.map((_, index) => <span className={index < input.length ? "is-done" : ""} key={index}>{index < input.length ? "★" : index + 1}</span>)}</div>}
         <p aria-live="polite">{message}</p>
       </div>
     </div>
     {phase === "watch" && <button className="pixel-button primary guardian-ready" type="button" disabled={paused} data-gamepad-default onClick={() => { setPhase("play"); setMessage("Toca los dibujos en el mismo orden."); }}>¡Ya me acuerdo! ▶</button>}
-    {phase === "play" && <div className="guardian-options">{game.options.map((item) => <button type="button" disabled={paused} onClick={() => choose(item.id)} style={{ "--guardian-color": item.color } as CSSProperties} key={item.id}><span>{item.icon}</span><strong>{item.label}</strong></button>)}</div>}
+    {phase === "play" && <div className="guardian-options">{game.options.map((item) => <button type="button" disabled={paused} onClick={() => choose(item.id)} style={{ "--guardian-color": item.color } as CSSProperties} key={item.id}><GuardianGameIcon option={item} /><strong>{item.label}</strong></button>)}</div>}
     {phase === "feedback" && <button className="pixel-button primary guardian-ready" type="button" disabled={paused} data-gamepad-default onClick={nextRound}>Siguiente ronda ▶</button>}
     {won && <div className="guardian-result"><h3>¡Juego completado!</h3><p>{mistakes === 0 ? `¡Reto logrado! ${boss.name} te regala un marco especial.` : `${boss.name} sonríe y abre el camino.`}</p><button className="pixel-button primary" data-gamepad-default onClick={() => { playSound("goal"); onWin(mistakes === 0); }}>{friendlyReplay ? "Volver a mis amigos" : "Continuar la aventura ▶"}</button></div>}
     {lost && <div className="guardian-result"><h3>¡Vamos otra vez!</h3><p>{message}</p>{friendlyReplay ? <button className="pixel-button primary" data-gamepad-default onClick={() => reset(false)}>Jugar otra vez</button> : apples > 0 ? <button className="pixel-button primary" data-gamepad-default onClick={() => reset(true)}><GameAssetIcon kind="apple" /> Usar una manzana y repetir</button> : <button className="pixel-button primary" data-gamepad-default onClick={onRestartLevel}>Volver a empezar la pantalla</button>}</div>}

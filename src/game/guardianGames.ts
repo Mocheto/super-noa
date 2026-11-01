@@ -5,7 +5,7 @@ export type GuardianGameId = Extract<BossId,
   "maestra-armonia" | "aurora-celeste" | "rainbow-queen"
 >;
 
-export type GuardianOption = { id: string; icon: string; label: string; color: string };
+export type GuardianOption = { id: string; sprite: readonly [row: number, column: number]; label: string; color: string };
 export type GuardianGame = {
   kind: "choice" | "sequence";
   title: string;
@@ -17,39 +17,39 @@ export type GuardianGame = {
 };
 
 const flowerOptions = [
-  { id: "pink", icon: "✿", label: "Flor rosa", color: "#ef79a9" },
-  { id: "yellow", icon: "✿", label: "Flor amarilla", color: "#e0ad25" },
-  { id: "blue", icon: "✿", label: "Flor azul", color: "#438fc9" },
+  { id: "pink", sprite: [0, 0], label: "Flor rosa", color: "#ef79a9" },
+  { id: "yellow", sprite: [0, 1], label: "Flor amarilla", color: "#e0ad25" },
+  { id: "blue", sprite: [0, 2], label: "Flor azul", color: "#438fc9" },
 ] as const;
 const laneOptions = [
-  { id: "left", icon: "◀", label: "Cesta izquierda", color: "#76b98c" },
-  { id: "center", icon: "●", label: "Cesta del centro", color: "#e0a452" },
-  { id: "right", icon: "▶", label: "Cesta derecha", color: "#8b79cf" },
+  { id: "left", sprite: [1, 0], label: "Cesta izquierda", color: "#76b98c" },
+  { id: "center", sprite: [1, 1], label: "Cesta del centro", color: "#e0a452" },
+  { id: "right", sprite: [1, 2], label: "Cesta derecha", color: "#8b79cf" },
 ] as const;
 const cannonOptions = [
-  { id: "red", icon: "●", label: "Cañón rojo", color: "#df5c62" },
-  { id: "yellow", icon: "●", label: "Cañón amarillo", color: "#efc94f" },
-  { id: "blue", icon: "●", label: "Cañón azul", color: "#58a9df" },
+  { id: "red", sprite: [2, 0], label: "Cañón rojo", color: "#df5c62" },
+  { id: "yellow", sprite: [2, 1], label: "Cañón amarillo", color: "#efc94f" },
+  { id: "blue", sprite: [2, 2], label: "Cañón azul", color: "#58a9df" },
 ] as const;
 const dodgeOptions = [
-  { id: "left", icon: "🌳", label: "Arbusto izquierdo", color: "#60945d" },
-  { id: "jump", icon: "⬆", label: "Saltar", color: "#d39a4c" },
-  { id: "right", icon: "🌳", label: "Arbusto derecho", color: "#60945d" },
+  { id: "left", sprite: [3, 0], label: "Arbusto izquierdo", color: "#60945d" },
+  { id: "jump", sprite: [3, 1], label: "Saltar", color: "#d39a4c" },
+  { id: "right", sprite: [3, 2], label: "Arbusto derecho", color: "#60945d" },
 ] as const;
 const noteOptions = [
-  { id: "drum", icon: "🥁", label: "Tambor", color: "#df765f" },
-  { id: "bell", icon: "🔔", label: "Campana", color: "#e8bd45" },
-  { id: "flute", icon: "♫", label: "Flauta", color: "#6da6dc" },
+  { id: "drum", sprite: [4, 0], label: "Tambor", color: "#df765f" },
+  { id: "bell", sprite: [4, 1], label: "Campana", color: "#e8bd45" },
+  { id: "flute", sprite: [4, 2], label: "Flauta", color: "#6da6dc" },
 ] as const;
 const starOptions = [
-  { id: "moon", icon: "☾", label: "Luna", color: "#8b78cf" },
-  { id: "star", icon: "★", label: "Estrella", color: "#efc84d" },
-  { id: "cloud", icon: "☁", label: "Nube", color: "#71b5de" },
+  { id: "moon", sprite: [5, 0], label: "Luna", color: "#8b78cf" },
+  { id: "star", sprite: [5, 1], label: "Estrella", color: "#efc84d" },
+  { id: "cloud", sprite: [5, 2], label: "Nube", color: "#71b5de" },
 ] as const;
 const rainbowOptions = [
-  { id: "red", icon: "●", label: "Rojo", color: "#e45e66" },
-  { id: "yellow", icon: "●", label: "Amarillo", color: "#f0c84d" },
-  { id: "blue", icon: "●", label: "Azul", color: "#5aa9df" },
+  { id: "red", sprite: [6, 0], label: "Rojo", color: "#e45e66" },
+  { id: "yellow", sprite: [6, 1], label: "Amarillo", color: "#f0c84d" },
+  { id: "blue", sprite: [6, 2], label: "Azul", color: "#5aa9df" },
 ] as const;
 
 export const guardianGames: Record<GuardianGameId, GuardianGame> = {

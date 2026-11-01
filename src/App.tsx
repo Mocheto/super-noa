@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BossBattle } from "./game/BossBattle";
+import { GuardianMiniGame } from "./game/GuardianMiniGame";
 import { SantaBossBattle } from "./game/SantaBossBattle";
 import { Dialog } from "./game/Dialog";
 import { optimizedAssetSource } from "./game/assets";
 import { bossCatalog } from "./game/bosses";
+import { isGuardianGameId } from "./game/guardianGames";
 import { GameAssetIcon } from "./game/GameAssetIcon";
 import { PixelIcon } from "./game/PixelIcon";
 import { WorldMap } from "./game/WorldMap";
@@ -761,6 +763,18 @@ export default function App() {
               bossId={activeLevel.boss}
               paused={paused} apples={snapshot.apples} onSpendApple={spendBossApple} onRestartLevel={restartBossLevel}
               onAbandon={abandonBossBattle} onWin={handleComplete} playSound={playSound}
+            /> : isGuardianGameId(activeLevel.boss) ? <GuardianMiniGame
+              key={`guardian-game-${activeLevel.id}-${levelRun}`}
+              bossId={activeLevel.boss}
+              paused={paused}
+              apples={bossReplay ? 0 : snapshot.apples}
+              protectedByApple={!bossReplay && snapshot.power === "apple"}
+              onSpendApple={spendBossApple}
+              onRestartLevel={restartBossLevel}
+              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
+              onWin={bossReplay ? finishBossReplay : handleComplete}
+              playSound={playSound}
+              friendlyReplay={bossReplay}
             /> : <BossBattle
               key={`boss-${activeLevel.id}-${levelRun}`}
               bossId={activeLevel.boss}
@@ -778,7 +792,7 @@ export default function App() {
 
           {screen === "complete" && (
             <Dialog labelledBy="complete-title" backdropClassName="celebration" onClose={() => setScreen("map")}>
-              <div className="big-icon">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt="Trofeo dorado con una huella de gato" /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.png"} alt="Gatito feliz rescatado" />}</div><p className="eyebrow">{activeLevel.boss ? "¡Duelo ganado!" : "¡Gatito encontrado!"}</p>
+              <div className="big-icon">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt="Trofeo dorado con una huella de gato" /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.png"} alt="Gatito feliz rescatado" />}</div><p className="eyebrow">{activeLevel.boss ? "¡Juego ganado!" : "¡Gatito encontrado!"}</p>
               <h2 id="complete-title">Pantalla {activeLevel.id} completada</h2>
               <p>Noa ha recogido {snapshot.apples} {snapshot.apples === 1 ? "manzana" : "manzanas"}. {activeLevel.world === 7 ? "La Reina Arcoíris guarda para siempre las insignias encontradas." : activeLevel.boss ? "El monstruo guardián ha dejado libre el camino." : "La siguiente aventura ya está abierta."}</p>
               <div className="completion-medals" aria-label="Medallas de esta pantalla"><span className="is-earned">★ Pantalla</span><span className={snapshot.stickers.length > 0 || progress.stickers.includes(activeLevel.items.find((item) => item.kind === "sticker")?.id ?? "") ? "is-earned" : ""}>★ Pegatina</span><span className={lives === MAX_LIVES ? "is-earned" : ""}>★ Sin perder vida</span></div>
@@ -859,7 +873,7 @@ export default function App() {
           <div className="help-grid">
             <div><span><PixelIcon kind="yarn" /></span><strong>Bola de lana</strong><small>Cuando Noa tenga orejas de gato, toca <b>LANA</b>.</small></div>
             <div><span><GameAssetIcon kind="apple" /></span><strong>Manzana escudo</strong><small>La manzana salva a Noa de un golpe.</small></div>
-            <div><span className="help-rps"><PixelIcon kind="rock" /><PixelIcon kind="paper" /><PixelIcon kind="scissors" /></span><strong>Duelo final</strong><small>Gana dos rondas de piedra, papel o tijera.</small></div>
+            <div><span className="help-rps"><PixelIcon kind="rock" /><PixelIcon kind="paper" /><PixelIcon kind="scissors" /></span><strong>Juego final</strong><small>Cada guardián propone un juego sencillo. Mira su explicación y completa tres rondas.</small></div>
             <div><span><PixelIcon kind="sparkle" /></span><strong>Mira arriba</strong><small>Las pegatinas se esconden en caminos altos.</small></div>
           </div>
           <p className="help-note">Con teclado: A/D o flechas para caminar, espacio para saltar y X/K para lanzar lana. Con mando, usa la cruceta o palanca, A para saltar o elegir y B para volver. En el agua, SALTAR da una brazada hacia arriba; al soltarlo, Noa baja despacito y puede caminar por la arena. ¡Los erizos pinchan!</p>
@@ -910,7 +924,7 @@ export default function App() {
             </div>
             <p className="album-progress"><PixelIcon kind="sparkle" /> {progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length} de {albumStickers.length}</p>
           </> : collectionTab === "bosses" ? <>
-            <p>Gana un duelo para hacerte amiga de cada guardián. Después podréis jugar otra vez.</p>
+            <p>Completa el juego de cada guardián para hacerte su amiga. Después podréis jugar otra vez.</p>
             <div className="boss-friends-grid">
               {bossLevels.map(({ level, index, boss }) => {
                 const known = Boolean(progress.levelStats[level.id]?.completed);
@@ -925,7 +939,7 @@ export default function App() {
                         : <span className="boss-mystery-shape">?</span>}
                     </div>
                     <strong>{known ? boss.name : "Amigo por descubrir"}</strong>
-                    {known ? <>{challengeDone ? <small className="challenge-frame-label">★ Marco especial conseguido</small> : <small>★ Reto pendiente: {boss.challenge.label}</small>}<button type="button" onClick={() => replayBoss(index)}>Jugar otra vez</button></> : <small>Gana su duelo para conocerlo.</small>}
+                    {known ? <>{challengeDone ? <small className="challenge-frame-label">★ Marco especial conseguido</small> : <small>★ Reto pendiente: {boss.challenge.label}</small>}<button type="button" onClick={() => replayBoss(index)}>Jugar otra vez</button></> : <small>Completa su juego para conocerlo.</small>}
                   </article>
                 );
               })}

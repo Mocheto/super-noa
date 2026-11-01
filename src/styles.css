@@ -699,6 +699,37 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 .duel-confetti i { position: absolute; top: -18px; left: var(--piece-x); width: 9px; height: 16px; background: hsl(var(--piece-hue) 72% 58%); animation: confetti-fall 1.15s ease-out both; animation-delay: var(--piece-delay); }
 @keyframes confetti-fall { to { top: 88%; transform: translateX(var(--piece-drift)) rotate(480deg); opacity: .2; } }
 
+.guardian-game-status { display: grid; min-width: 125px; border: 4px solid var(--ink); padding: 9px 12px; text-align: center; color: #fff; background: #5b386c; }
+.guardian-game-status span { color: #ffdf76; font-size: 1.35rem; letter-spacing: 3px; }
+.guardian-game-status b { margin-top: 4px; font-size: 1rem; }
+.guardian-game-status small { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 6px; font-family: system-ui, sans-serif; }
+.guardian-game-stage { display: grid; grid-template-columns: minmax(155px, 32%) minmax(0, 1fr); align-items: center; gap: clamp(12px, 4vw, 42px); min-height: 300px; margin: 14px 0; }
+.guardian-game-portrait { display: grid; place-items: center; width: 100%; height: 270px; image-rendering: pixelated; filter: drop-shadow(7px 8px 0 rgba(46, 27, 56, .22)); }
+.guardian-game-portrait img { width: 100%; height: 100%; object-fit: contain; }
+.guardian-game-portrait.is-atlas span { display: block; width: 100%; max-width: 280px; aspect-ratio: 1; background-repeat: no-repeat; background-size: 500% 200%; image-rendering: pixelated; }
+.guardian-game-board { display: grid; justify-items: center; gap: 12px; min-height: 230px; border: 4px solid #513061; padding: clamp(14px, 3vw, 28px); text-align: center; background: rgba(255,253,246,.94); box-shadow: 0 6px 0 rgba(46,27,56,.22); }
+.guardian-game-board > strong { font-size: clamp(1rem, 2.5vw, 1.35rem); }
+.guardian-game-board > p { margin: 0; color: #67566d; font: 800 .92rem/1.35 system-ui, sans-serif; }
+.guardian-target { display: grid; justify-items: center; gap: 7px; min-width: 190px; border: 5px solid var(--guardian-color); padding: 15px 26px; background: #fff; box-shadow: 0 5px 0 var(--guardian-color); }
+.guardian-target span { color: var(--guardian-color); font-size: clamp(3rem, 8vw, 5.2rem); line-height: .9; text-shadow: 3px 3px 0 #40264e; }
+.guardian-target b { font-family: system-ui, sans-serif; }
+.guardian-sequence { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.guardian-sequence > span { position: relative; display: grid; place-items: center; width: clamp(64px, 10vw, 94px); aspect-ratio: 1; border: 5px solid var(--guardian-color); color: var(--guardian-color); background: #fff; box-shadow: 0 5px 0 var(--guardian-color); font-size: clamp(2.2rem, 5vw, 3.5rem); }
+.guardian-sequence small { position: absolute; right: 2px; bottom: 0; display: grid; place-items: center; width: 23px; height: 23px; color: #fff; background: #513061; font: 900 .72rem system-ui, sans-serif; }
+.guardian-progress { display: flex; gap: 8px; }
+.guardian-progress span { display: grid; place-items: center; width: 43px; height: 43px; border: 3px solid #8b728f; color: #765d7d; background: #eee4ef; font-weight: 900; }
+.guardian-progress span.is-done { border-color: #3f8452; color: #fff; background: #61a46e; }
+.guardian-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.guardian-options button { min-height: 94px; border: 4px solid #40264e; border-bottom: 8px solid #40264e; padding: 9px; color: #40264e; background: #fffdf6; cursor: pointer; }
+.guardian-options button:hover, .guardian-options button:focus-visible { outline: 5px solid var(--guardian-color); outline-offset: 2px; transform: translateY(-2px); }
+.guardian-options button:active { border-bottom-width: 4px; transform: translateY(4px); }
+.guardian-options button span { display: block; color: var(--guardian-color); font-size: clamp(2.2rem, 6vw, 3.8rem); line-height: 1; text-shadow: 2px 2px 0 #40264e; }
+.guardian-options button strong { display: block; margin-top: 7px; }
+.guardian-ready { display: block; width: min(460px, 100%); margin: 10px auto; }
+.guardian-result { border: 4px solid #3f8452; padding: 14px; text-align: center; background: #e5f4dd; }
+.guardian-result h3, .guardian-result p { margin: 4px 0 10px; }
+.guardian-armor-note { margin: 9px 0 0; text-align: center; color: #806324; font: 800 .75rem system-ui, sans-serif; }
+
 @media (hover: none), (pointer: coarse) {
   .touch-controls { display: flex; }
 }
@@ -817,6 +848,17 @@ dialog.modal-backdrop::backdrop { background: transparent; }
   .duel-choices span { font-size: 1.8rem; }
   .duel-choices strong { font-size: .66rem; }
   .duel-rules { gap: 4px 10px; margin-top: 12px; font-size: .7rem; }
+  .guardian-game-stage { grid-template-columns: 105px minmax(0, 1fr); min-height: 190px; gap: 8px; margin: 8px 0; }
+  .guardian-game-portrait { height: 170px; }
+  .guardian-game-board { min-height: 170px; gap: 7px; padding: 9px 5px; }
+  .guardian-game-board > p { font-size: .72rem; }
+  .guardian-target { min-width: 130px; padding: 9px 13px; }
+  .guardian-sequence { gap: 5px; }
+  .guardian-sequence > span { width: 54px; border-width: 3px; }
+  .guardian-options { gap: 5px; }
+  .guardian-options button { min-height: 72px; padding: 5px 2px; }
+  .guardian-options button span { font-size: 2rem; }
+  .guardian-options button strong { font-size: .64rem; }
 }
 
 @media (max-width: 400px) {

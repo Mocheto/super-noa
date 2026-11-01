@@ -157,6 +157,7 @@ test("la migración es aditiva y el orden no depende de IDs históricos ni del c
   assert.match(rankingSchema, /WHEN world BETWEEN 0 AND 6 THEN world WHEN world BETWEEN 9 AND 13 THEN world - 2 ELSE NULL/);
   assert.match(rankingSchema, /WHERE campaign_world IS NULL/);
   assert.doesNotMatch(rankingSchema, /DROP TABLE|DELETE FROM|SET world =/);
+  assert.match(rankingSchema, /campaign_world BETWEEN 0 AND 15/);
   const ordering = leaderboardQuery.split("ORDER BY")[1];
   assert.match(ordering, /^\s*completed_levels DESC/);
   assert.doesNotMatch(ordering, /\bworld\b|\bcampaign_world\b/);

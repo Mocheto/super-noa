@@ -193,6 +193,18 @@ test("lee respuestas antiguas sin inventar el avance de campaña de agua o nubes
   assert.equal(players[0].achievedAt, null);
 });
 
+test("lee el avance completo del Reino Celeste", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => jsonResponse({ players: [
+    { alias: "Noa", world: 17, campaignWorld: 15, completedLevels: 45, stickers: 51, bossChallenges: 17 },
+  ] }));
+  const [player] = await loadRanking();
+  assert.equal(player.world, 17);
+  assert.equal(player.campaignWorld, 15);
+  assert.equal(player.completedLevels, 45);
+  assert.equal(player.stickers, 51);
+  assert.equal(player.bossChallenges, 17);
+});
+
 test("la disponibilidad comprueba la base de datos, no solo el health antiguo", async (t) => {
   const paths: string[] = [];
   t.mock.method(globalThis, "fetch", async (url: string) => {

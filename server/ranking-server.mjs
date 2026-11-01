@@ -34,7 +34,7 @@ export const rankingSchema = `
     ADD CONSTRAINT super_noa_ranking_profiles_completed_levels_check CHECK (completed_levels BETWEEN 0 AND 45),
     ADD CONSTRAINT super_noa_ranking_profiles_stickers_check CHECK (stickers BETWEEN 0 AND 51),
     ADD CONSTRAINT super_noa_ranking_profiles_boss_challenges_check CHECK (boss_challenges BETWEEN 0 AND 17),
-    ADD CONSTRAINT super_noa_ranking_profiles_campaign_world_check CHECK (campaign_world BETWEEN 0 AND 14),
+    ADD CONSTRAINT super_noa_ranking_profiles_campaign_world_check CHECK (campaign_world BETWEEN 0 AND 15),
     ADD CONSTRAINT super_noa_ranking_profiles_total_apples_check CHECK (total_apples BETWEEN 0 AND 9007199254740991);
 `;
 

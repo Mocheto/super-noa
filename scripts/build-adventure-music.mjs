@@ -117,6 +117,40 @@ const songs = [
     ],
   },
   {
+    file: "musica",
+    title: "La gran orquesta de Tempo",
+    bpm: 112,
+    meter: 4,
+    key: "Do mayor",
+    style: "Desfile musical alegre; campanas, piano de juguete, tamborcitos y bajo saltarín",
+    lead: "music-box",
+    roots: [48, 53, 57, 55, 48, 53, 50, 55, 57, 53, 48, 55, 53, 50, 55, 55],
+    chords: [
+      [60, 64, 67, 72], [60, 65, 69, 72], [60, 64, 69, 72], [59, 62, 67, 71],
+      [60, 64, 67, 72], [60, 65, 69, 72], [62, 65, 69, 74], [59, 62, 67, 71],
+      [60, 64, 69, 72], [60, 65, 69, 72], [60, 64, 67, 72], [59, 62, 67, 71],
+      [60, 65, 69, 72], [62, 65, 69, 74], [59, 62, 67, 71], [59, 62, 67, 72],
+    ],
+    melody: [
+      "C5:.5 E5:.5 G5:1 E5:.5 G5:.5 C6:1",
+      "A5:.5 G5:.5 F5:1 C5:.5 F5:.5 A5:1",
+      "E5:.5 A5:.5 C6:1 B5:.5 A5:.5 E5:1",
+      "D5:.5 G5:.5 B5:1 A5:.5 G5:.5 D5:1",
+      "G5:.5 E5:.5 C5:1 E5:.5 G5:.5 C6:1",
+      "F5:.5 A5:.5 C6:1 A5:.5 G5:.5 F5:1",
+      "D5:.5 F5:.5 A5:.5 D6:.5 C6:1 A5:1",
+      "B5:.5 A5:.5 G5:1 D5:.5 G5:.5 R:1",
+      "C6:1 A5:.5 E5:.5 G5:1 A5:1",
+      "A5:.5 F5:.5 C5:1 F5:.5 G5:.5 A5:1",
+      "G5:.5 E5:.5 C5:.5 E5:.5 G5:1 C6:1",
+      "D6:.5 B5:.5 G5:1 A5:.5 G5:.5 D5:1",
+      "F5:.5 A5:.5 C6:.5 A5:.5 G5:1 F5:1",
+      "D5:.5 F5:.5 A5:1 D6:.5 C6:.5 A5:1",
+      "B5:.5 G5:.5 D5:1 G5:.5 A5:.5 B5:1",
+      "A5:.5 G5:.5 E5:.5 D5:.5 C5:1 R:1",
+    ],
+  },
+  {
     file: "bosque-manzanos",
     title: "Brisa entre manzanos",
     bpm: 84,
@@ -186,6 +220,9 @@ function voice(kind, frequency, time) {
     case "bell":
       return .82 * sine(phase) + .13 * sine(phase * 2) * Math.exp(-time * 3)
         + .05 * sine(phase * 3) * Math.exp(-time * 5);
+    case "music-box":
+      return .78 * sine(phase) + .16 * sine(phase * 2) * Math.exp(-time * 2.8)
+        + .06 * sine(phase * 4) * Math.exp(-time * 7);
     case "pad":
       return .85 * sine(phase) + .1 * sine(phase * 2) + .05 * sine(phase * 3);
     case "tom":
@@ -294,6 +331,17 @@ function render(song) {
         note(start + offset, .12, 83, .018, "seed", -.4);
       }
       if (bar % 2) note(start + 2.25, .55, chord[3] + 12, .035, "bell", .6, true);
+    } else if (song.file === "musica") {
+      for (const offset of [0, 1.5, 2, 3.5]) {
+        note(start + offset, .42, root - (offset === 2 ? 5 : 0), .105, "bass", offset < 2 ? -.12 : .12);
+      }
+      for (let step = 0; step < 8; step += 1) {
+        const pitch = chord[[0, 2, 1, 3, 1, 2, 0, 3][step]] + 12;
+        note(start + step * .5 + .25, .32, pitch, bar >= 16 ? .047 : .038,
+          step % 3 === 0 ? "bell" : "wood", step % 2 ? -.5 : .5, step % 3 === 0);
+      }
+      for (const offset of [0, 1, 2, 3]) note(start + offset, .2, offset === 0 || offset === 2 ? 40 : 47, .052, "tom", offset % 2 ? .18 : -.18);
+      for (const offset of [.5, 1.5, 2.5, 3.5]) note(start + offset, .1, 88, .012, "seed", .4);
     } else {
       note(start, 1.8, root, .10, "bass");
       note(start + 2, 1.7, root + 7, .065, "bass");

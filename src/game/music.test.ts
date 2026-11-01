@@ -8,6 +8,8 @@ test("el bosque usa una melodía calmada propia sin cambiar la música pirata", 
   assert.equal(musicTracks[5], "./assets/music/manzanos.mp3");
   assert.notEqual(musicTracks[1], musicTracks[5]);
   assert.ok(existsSync(new URL("../../public/assets/music/bosque-manzanos.mp3", import.meta.url)));
+  assert.equal(musicTracks[16], "./assets/music/musica.mp3");
+  assert.ok(existsSync(new URL("../../public/assets/music/musica.mp3", import.meta.url)));
 });
 
 test("pausar, silenciar y ajustar volumen conservan el reproductor y su tiempo", async () => {

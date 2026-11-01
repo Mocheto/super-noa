@@ -32,10 +32,13 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     assert.ok(!requested.includes("./assets/stickers/world-8-v1.png"));
     assert.ok(!requested.includes("./assets/worlds/world-8.png"));
     assert.equal(first.worldBackground.src, "./assets/worlds/world-1-hd-v1.png");
-    for (const world of [2, 3, 4, 5, 6, 7, 9, 10, 11, 12] as const) {
+    for (const world of [2, 3, 4, 5, 7, 9, 10, 11, 12] as const) {
       const level = levels.find((entry) => entry.world === world)!;
       assert.equal(getLevelAssets(level).worldBackground.src, `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`);
     }
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "2-2")!).worldBackground.src, "./assets/worlds/crystal-cave-background-v1.png");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "2-3")!).worldBackground.src, "./assets/worlds/crystal-cave-background-v1.png");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "6-1")!).worldBackground.src, "./assets/worlds/castle-interior-background-v1.png");
     assert.equal(getLevelAssets(levels.find((level) => level.world === 8)!).worldBackground.src, "");
     const birds = getLevelAssets(levels.find((level) => level.id === "4-2")!);
     assert.equal(birds.bird.src, "./assets/sprites/enemy-bird-v2.png");

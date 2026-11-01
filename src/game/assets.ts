@@ -86,7 +86,14 @@ export function getLevelAssets(level: Level): RasterAssets {
     get flyingShip() { return when(level.platforms.some((platform) => platform.kind === "ship"), mechanicSpriteSheets.flyingShip.source); },
     get airPlank() { return when(level.platforms.some((platform) => platform.kind === "air-plank"), mechanicSpriteSheets.airPlank.source); },
     get mistPlatform() { return when(level.platforms.some((platform) => platform.kind === "mist"), mechanicSpriteSheets.mistPlatform.source); },
-    get worldBackground() { return when(world <= 12 && world !== 8, `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`); },
+    get worldBackground() {
+      const source = level.theme === "crystal-cave"
+        ? "./assets/worlds/crystal-cave-background-v1.png"
+        : level.theme === "haunted-castle"
+          ? "./assets/worlds/castle-interior-background-v1.png"
+          : `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.png`;
+      return when(world <= 12 && world !== 8, source);
+    },
     get waterBackground() { return when(world === 8, "./assets/worlds/world-8.png"); },
     get waterTerrain() { return when(world === 8, "./assets/atlases/water-terrain-v1.png"); },
     get seaWall() { return when(world === 8, "./assets/sprites/sea-reef-wall-v2.png"); },

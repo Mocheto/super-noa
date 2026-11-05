@@ -1,5 +1,10 @@
 # Guía para agentes
 
+## Tracker del proyecto
+
+- Usa siempre GitHub Issues de https://github.com/Mocheto/super-noa/issues como tracker de este repositorio, también para wayfinder. No crees un tracker local alternativo.
+- Consulta [las operaciones de wayfinder](docs/wayfinder-tracker.md) para mapas de decisiones, issues hijas, dependencias y selección de la frontera.
+
 ## Arquitectura
 
 Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.

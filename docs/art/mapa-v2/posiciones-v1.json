@@ -1,0 +1,147 @@
+{
+  "reference": {
+    "width": 3000,
+    "height": 2000
+  },
+  "worlds": [
+    {
+      "id": 1,
+      "name": "Manzanos",
+      "x": 10,
+      "y": 76
+    },
+    {
+      "id": 2,
+      "name": "Gatitos",
+      "x": 30,
+      "y": 78
+    },
+    {
+      "id": 3,
+      "name": "Lobos",
+      "x": 50,
+      "y": 81
+    },
+    {
+      "id": 4,
+      "name": "Jabalíes",
+      "x": 70,
+      "y": 79
+    },
+    {
+      "id": 5,
+      "name": "Barcos",
+      "x": 90,
+      "y": 79
+    },
+    {
+      "id": 6,
+      "name": "Castillo",
+      "x": 90,
+      "y": 52
+    },
+    {
+      "id": 9,
+      "name": "Dinosaurios",
+      "x": 71,
+      "y": 48
+    },
+    {
+      "id": 10,
+      "name": "Dragones",
+      "x": 50,
+      "y": 47
+    },
+    {
+      "id": 11,
+      "name": "Gigantes",
+      "x": 29,
+      "y": 49
+    },
+    {
+      "id": 12,
+      "name": "Hielo",
+      "x": 10,
+      "y": 49
+    },
+    {
+      "id": 13,
+      "name": "Navidad",
+      "x": 11,
+      "y": 20
+    },
+    {
+      "id": 14,
+      "name": "Desierto",
+      "x": 30,
+      "y": 20
+    },
+    {
+      "id": 15,
+      "name": "Tren",
+      "x": 51,
+      "y": 20
+    },
+    {
+      "id": 16,
+      "name": "Música",
+      "x": 70,
+      "y": 21
+    },
+    {
+      "id": 17,
+      "name": "Celeste",
+      "x": 89,
+      "y": 20
+    },
+    {
+      "id": 8,
+      "name": "Laguna",
+      "x": 60,
+      "y": 58
+    },
+    {
+      "id": 7,
+      "name": "Nubes secretas",
+      "x": 78,
+      "y": 93
+    }
+  ],
+  "detours": [
+    {
+      "id": "mill",
+      "name": "Molino",
+      "world": 1,
+      "x": 10,
+      "y": 94
+    },
+    {
+      "id": "fireflies",
+      "name": "Luciérnagas",
+      "world": 2,
+      "x": 29,
+      "y": 95
+    },
+    {
+      "id": "mine",
+      "name": "Túnel minero",
+      "world": 2,
+      "x": 30,
+      "y": 58
+    },
+    {
+      "id": "library",
+      "name": "Biblioteca",
+      "world": 6,
+      "x": 94,
+      "y": 60
+    },
+    {
+      "id": "garden",
+      "name": "Jardín",
+      "world": 11,
+      "x": 26,
+      "y": 33
+    }
+  ]
+}

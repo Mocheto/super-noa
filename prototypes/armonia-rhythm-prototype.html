@@ -47,19 +47,24 @@
     .lead { max-width: 680px; margin: 12px 0 23px; color: var(--muted); font-size: 16px; line-height: 1.5; }
     .game-shell { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(270px, .85fr); overflow: hidden; border: 1px solid var(--line); border-radius: 30px; background: rgba(17, 17, 45, .66); box-shadow: 0 24px 60px rgba(5, 5, 25, .32); }
     .playfield { position: relative; min-height: 470px; overflow: hidden; isolation: isolate; background: #38345f; }
-    .scene-sprite { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; pointer-events: none; image-rendering: pixelated; }
-    .stage-caption { position: absolute; top: 22px; left: 26px; color: rgba(255,247,230,.72); font-size: 12px; }
-    .scene-prompt { position: absolute; top: 58px; left: 26px; max-width: 62%; margin: 0; color: var(--paper); font-size: 16px; font-weight: 700; line-height: 1.35; }
-    .character { position: absolute; z-index: 3; left: calc(50% - 50px); top: 145px; width: 100px; height: 100px; opacity: 0; transform: translateY(-78px) rotate(-7deg); filter: drop-shadow(0 12px 13px rgba(12, 9, 31, .28)); image-rendering: pixelated; }
-    .character svg { display: block; width: 100%; height: 100%; overflow: visible; image-rendering: pixelated; }
+    .scene-sprite { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; image-rendering: pixelated; }
+    .stage-caption { position: absolute; z-index: 1; top: 22px; left: 26px; color: #403350; font-size: 12px; font-weight: 800; text-shadow: 0 1px rgba(255,255,255,.45); }
+    .scene-prompt { position: absolute; z-index: 1; top: 58px; left: 26px; max-width: 62%; margin: 0; color: #403350; font-size: 16px; font-weight: 900; line-height: 1.35; text-shadow: 0 1px rgba(255,255,255,.45); }
+    .character { position: absolute; z-index: 3; left: calc(50% - 50px); top: 145px; width: 100px; height: 100px; opacity: 0; transform: translateY(-78px) rotate(-7deg); filter: drop-shadow(0 12px 13px rgba(12, 9, 31, .28)); image-rendering: pixelated; background-image: url("./assets/armonia-sprite-atlas.png"); background-size: 400% 200%; background-position: 0 100%; background-repeat: no-repeat; --landing-distance: 84px; }
+    .character.is-target { background-position: 0 0; }
+    .character.frame-1 { background-position: 33.333% 0; }
+    .character.frame-2 { background-position: 66.666% 0; }
+    .character.frame-3 { background-position: 100% 0; }
+    .character.other-frame-1 { background-position: 33.333% 100%; }
+    .character.other-frame-2 { background-position: 66.666% 100%; }
     .character.is-visible { opacity: 1; transform: translateY(0) rotate(0); transition: transform .38s cubic-bezier(.2,.8,.3,1), opacity .15s ease; }
     .character.is-jumping { animation: fall .36s cubic-bezier(.42,0,.72,.34) forwards; }
     .character.is-landed { transform: translateY(var(--landing-distance, 54px)) scale(.96); }
     .character.is-target { filter: drop-shadow(0 0 12px rgba(248,217,120,.72)); }
     .character.is-sad { filter: grayscale(.55) drop-shadow(0 12px 13px rgba(12,9,31,.28)); transform: translateY(12px) rotate(8deg); }
-    .drum { position: absolute; z-index: 2; left: calc(50% - 104px); bottom: 45px; width: 208px; height: 134px; overflow: visible; filter: drop-shadow(0 18px 12px rgba(13, 9, 30, .32)); image-rendering: pixelated; }
+    .drum { position: absolute; z-index: 2; left: calc(50% - 104px); bottom: 45px; width: 208px; height: 134px; overflow: visible; filter: drop-shadow(0 18px 12px rgba(13, 9, 30, .32)); image-rendering: pixelated; background-image: url("./assets/armonia-sprite-atlas.png"); background-size: 400% 200%; background-position: 100% 100%; background-repeat: no-repeat; }
     .drum.is-hit { animation: drum 220ms ease-out; }
-    .ground-glow { position: absolute; left: 50%; bottom: 128px; width: 230px; height: 26px; border-radius: 50%; background: rgba(245, 217, 120, .2); transform: translateX(-50%); }
+    .ground-glow { position: absolute; z-index: 1; left: 50%; bottom: 128px; width: 230px; height: 26px; border-radius: 50%; background: rgba(245, 217, 120, .2); transform: translateX(-50%); }
     .hit-flash { position: absolute; z-index: 5; left: 50%; bottom: 165px; color: var(--mint); font-size: 22px; font-weight: 900; opacity: 0; transform: translate(-50%, 10px) scale(.88); pointer-events: none; }
     .hit-flash.show { animation: cheer .8s ease-out forwards; }
     .beat-line { position: absolute; left: 22px; right: 22px; bottom: 15px; display: flex; justify-content: center; gap: 7px; padding: 11px; border: 1px solid rgba(255,255,255,.12); border-radius: 15px; background: rgba(23,24,55,.55); }
@@ -114,7 +119,7 @@
       .playfield { min-height: 365px; }
       .stage-caption { top: 18px; left: 18px; }
       .scene-prompt { top: 48px; left: 18px; max-width: 66%; font-size: 14px; }
-      .character { top: 110px; width: 82px; height: 82px; left: calc(50% - 41px); --landing-distance: 18px; }
+      .character { top: 110px; width: 82px; height: 82px; left: calc(50% - 41px); --landing-distance: 52px; }
       .drum { width: 174px; height: 112px; left: calc(50% - 87px); bottom: 43px; }
       .ground-glow { bottom: 115px; width: 190px; }
       .hit-flash { bottom: 151px; font-size: 19px; }
@@ -129,56 +134,13 @@
     @media (max-width: 380px) {
       .playfield { min-height: 338px; }
       .scene-prompt { max-width: 60%; font-size: 12px; }
-      .character { top: 90px; --landing-distance: 11px; }
+      .character { top: 90px; --landing-distance: 44px; }
       .beat-line { gap: 3px; }
       .beat { width: 25px; height: 25px; font-size: 11px; }
     }
   </style>
 </head>
 <body>
-  <svg id="spriteBank" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" shape-rendering="crispEdges">
-    <defs>
-      <symbol id="scene-sprite" viewBox="0 0 1000 470">
-        <rect width="1000" height="470" fill="#38345f"/>
-        <path d="M0 0h1000v114H0z" fill="#2c264f"/>
-        <path d="M0 91h1000v42H0z" fill="#493160"/>
-        <path d="M0 0h112v156H0zM888 0h112v156H888z" fill="#3b2857"/>
-        <path d="M0 142h1000v14H0z" fill="#f0ca72"/>
-        <path d="M0 156h1000v9H0z" fill="#644879"/>
-        <path d="M0 291h1000v179H0z" fill="#634c70"/>
-        <path d="M0 291h1000v9H0z" fill="#9b7890"/>
-        <path d="M105 63h10v10h-10zM242 35h8v8h-8zM350 106h7v7h-7zM581 47h9v9h-9zM688 113h7v7h-7zM807 31h9v9h-9zM927 91h8v8h-8z" fill="#fff0af"/>
-        <path d="M786 56h70v70h-70z" fill="#f7d98a"/><path d="M776 46h70v70h-70z" fill="#38345f"/>
-        <path d="M126 86h24v36h-24zM119 94h38v24h-38z" fill="#f8d978"/><path d="M132 92h12v24h-12z" fill="#ffc66c"/>
-        <path d="M33 177h8v8h-8zM146 223h6v6h-6zM258 184h7v7h-7zM429 245h8v8h-8zM627 191h7v7h-7zM738 252h7v7h-7zM911 207h8v8h-8z" fill="#d2c8ef"/>
-      </symbol>
-      <symbol id="moth-target-sprite" viewBox="0 0 32 32">
-        <path d="M3 8h7v5H5v5H2v-7h1zM29 8h-7v5h5v5h3v-7h-1z" fill="#f8d978"/>
-        <path d="M11 5h10v3h4v5h3v9h-4v5h-5v3h-6v-3H8v-5H4v-9h3V8h4z" fill="#a98be8"/>
-        <path d="M9 7h4v3H9zM19 7h4v3h-4zM6 13h3v7H6zM23 13h3v7h-3z" fill="#f8d978"/>
-        <path d="M10 15h3v3h-3zM19 15h3v3h-3zM13 22h6v2h-6z" fill="#32254e"/>
-        <path d="M14 12h4v2h-4z" fill="#fff2c6"/>
-        <path d="M15 2h2v3h-2zM12 3h2v2h-2zM18 3h2v2h-2z" fill="#fff0af"/>
-      </symbol>
-      <symbol id="moth-other-sprite" viewBox="0 0 32 32">
-        <path d="M3 9h7v5H5v5H2v-7h1zM29 9h-7v5h5v5h3v-7h-1z" fill="#8ee6c4"/>
-        <path d="M11 5h10v3h4v5h3v9h-4v5h-5v3h-6v-3H8v-5H4v-9h3V8h4z" fill="#5f91da"/>
-        <path d="M9 7h4v3H9zM19 7h4v3h-4zM6 13h3v7H6zM23 13h3v7h-3z" fill="#8ee6c4"/>
-        <path d="M10 15h3v3h-3zM19 15h3v3h-3zM13 22h6v2h-6z" fill="#1d3157"/>
-        <path d="M14 12h4v2h-4z" fill="#fff2c6"/>
-        <path d="M15 2h2v3h-2zM12 3h2v2h-2zM18 3h2v2h-2z" fill="#d2c8ef"/>
-      </symbol>
-      <symbol id="drum-sprite" viewBox="0 0 112 72">
-        <path d="M12 14h88v36H12z" fill="#d95755"/>
-        <path d="M18 18h76v31H18z" fill="#f27768"/>
-        <path d="M8 10h96v12H8z" fill="#ffd88a"/><path d="M13 8h86v9H13z" fill="#fff0bd"/>
-        <path d="M23 22h5v25h-5zM84 22h5v25h-5z" fill="#ffd88a"/>
-        <path d="M43 25h26v20H43z" fill="#e96962"/><path d="M48 29h16v12H48z" fill="#f8d978"/>
-        <path d="M52 31h3v8h-3zM58 31h3v8h-3z" fill="#65415d"/>
-        <path d="M16 50h80v8H16z" fill="#9c494f"/><path d="M8 58h96v6H8z" fill="#753e53"/>
-      </symbol>
-    </defs>
-  </svg>
   <main class="page" id="page">
     <header class="topline">
       <div class="brand"><span class="brand-mark" aria-hidden="true">♫</span><span>El tambor de Armonía</span><span class="prototype-tag">muestra interactiva</span></div>
@@ -189,12 +151,12 @@
 
     <section class="game-shell" aria-label="Muestra del juego rítmico">
       <div class="playfield" id="playfield" aria-label="Escena musical">
-        <svg class="scene-sprite" viewBox="0 0 1000 470" aria-hidden="true"><use href="#scene-sprite"></use></svg>
+        <img class="scene-sprite" src="./assets/armonia-forest-background.png" alt="" aria-hidden="true">
         <div class="stage-caption" id="stageCaption">Tu nota: la campanita dorada</div>
         <p class="scene-prompt" id="scenePrompt">Escucha la melodía. Tu nota suena tres veces.</p>
-        <div class="character is-visible" id="character" aria-hidden="true"><svg viewBox="0 0 32 32" shape-rendering="crispEdges"><use id="characterSprite" href="#moth-other-sprite"></use></svg></div>
+        <div class="character is-visible" id="character" aria-hidden="true"></div>
         <div class="ground-glow" aria-hidden="true"></div>
-        <svg class="drum" id="drum" viewBox="0 0 112 72" role="img" aria-label="Tambor coral"><use href="#drum-sprite"></use></svg>
+        <div class="drum" id="drum" role="img" aria-label="Tambor verde y dorado"></div>
         <div class="hit-flash" id="hitFlash" aria-hidden="true">¡A tiempo!</div>
         <div class="beat-line" id="beatLine" aria-label="Ocho pulsos; tres son tu nota"></div>
       </div>
@@ -263,8 +225,9 @@
         beatEls.forEach((el) => el.classList.remove("current"));
         if (index < 0 || index > 7) return;
         const isTarget = targetBeats.has(index);
-        $("characterSprite").setAttribute("href", isTarget ? "#moth-target-sprite" : "#moth-other-sprite");
+        character.classList.remove("frame-1", "frame-2", "frame-3", "other-frame-1", "other-frame-2");
         character.classList.toggle("is-target", isTarget);
+        character.classList.toggle("is-other", !isTarget);
         $("scenePrompt").textContent = isTarget ? "¡Tu campanita!" : "Escucha la melodía…";
         character.classList.remove("is-sad", "is-jumping", "is-landed");
         character.classList.add("is-visible");
@@ -274,6 +237,10 @@
         window.setTimeout(() => {
           if (beat !== index || !mode.endsWith("Play")) return;
           beatEls[index].classList.add("current");
+          const frame = Math.floor((performance.now() / 150) % (isTarget ? 4 : 3));
+          character.classList.remove("frame-1", "frame-2", "frame-3", "other-frame-1", "other-frame-2");
+          if (isTarget && frame > 0) character.classList.add(`frame-${frame}`);
+          if (!isTarget && frame > 0) character.classList.add(`other-frame-${frame}`);
           character.classList.remove("is-jumping"); character.classList.add("is-landed");
           cueSound(index);
         }, reduced ? 0 : 360);

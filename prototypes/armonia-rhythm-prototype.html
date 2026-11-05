@@ -46,32 +46,27 @@
     h1 { max-width: 680px; margin: 0; font-size: clamp(30px, 4vw, 44px); line-height: 1.06; letter-spacing: -.04em; }
     .lead { max-width: 680px; margin: 12px 0 23px; color: var(--muted); font-size: 16px; line-height: 1.5; }
     .game-shell { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(270px, .85fr); overflow: hidden; border: 1px solid var(--line); border-radius: 30px; background: rgba(17, 17, 45, .66); box-shadow: 0 24px 60px rgba(5, 5, 25, .32); }
-    .playfield { position: relative; min-height: 470px; overflow: hidden; isolation: isolate; background: linear-gradient(180deg, #36325f 0%, #4d3973 58%, #5a4771 59%, #524167 100%); }
-    .playfield::before { position: absolute; z-index: -1; inset: 0; content: ""; opacity: .68; background-image: radial-gradient(2px 2px at 8% 18%, #f8d978 98%, transparent), radial-gradient(2px 2px at 19% 39%, #fff7e6 98%, transparent), radial-gradient(2px 2px at 29% 11%, #f8d978 98%, transparent), radial-gradient(2px 2px at 55% 21%, #fff7e6 98%, transparent), radial-gradient(2px 2px at 73% 14%, #f8d978 98%, transparent), radial-gradient(2px 2px at 91% 34%, #fff7e6 98%, transparent), radial-gradient(1px 1px at 43% 38%, #fff7e6 98%, transparent); }
-    .curtain { position: absolute; z-index: -1; top: -60px; left: -5%; width: 110%; height: 142px; border-bottom: 8px solid rgba(250, 211, 122, .32); border-radius: 0 0 50% 50%; background: linear-gradient(180deg, #302550, #49325f); }
-    .moon { position: absolute; top: 54px; right: 11%; width: 62px; height: 62px; border-radius: 50%; background: #f7d98a; box-shadow: 0 0 42px rgba(248,217,120,.26); }
-    .moon::after { position: absolute; top: -7px; left: -10px; width: 62px; height: 62px; border-radius: 50%; background: #39315f; content: ""; }
-    .lantern { position: absolute; top: 92px; left: 12%; width: 22px; height: 34px; border: 2px solid #f8d978; border-radius: 45% 45% 50% 50%; background: #ffce6d; box-shadow: 0 0 30px rgba(255,206,109,.35); animation: sway 3s ease-in-out infinite alternate; }
+    .playfield { position: relative; min-height: 470px; overflow: hidden; isolation: isolate; background: #38345f; }
+    .scene-sprite { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; pointer-events: none; image-rendering: pixelated; }
     .stage-caption { position: absolute; top: 22px; left: 26px; color: rgba(255,247,230,.72); font-size: 12px; }
     .scene-prompt { position: absolute; top: 58px; left: 26px; max-width: 62%; margin: 0; color: var(--paper); font-size: 16px; font-weight: 700; line-height: 1.35; }
-    .character { position: absolute; z-index: 3; left: calc(50% - 50px); top: 145px; width: 100px; height: 100px; opacity: 0; transform: translateY(-78px) rotate(-7deg); filter: drop-shadow(0 12px 13px rgba(12, 9, 31, .28)); }
+    .character { position: absolute; z-index: 3; left: calc(50% - 50px); top: 145px; width: 100px; height: 100px; opacity: 0; transform: translateY(-78px) rotate(-7deg); filter: drop-shadow(0 12px 13px rgba(12, 9, 31, .28)); image-rendering: pixelated; }
+    .character svg { display: block; width: 100%; height: 100%; overflow: visible; image-rendering: pixelated; }
     .character.is-visible { opacity: 1; transform: translateY(0) rotate(0); transition: transform .38s cubic-bezier(.2,.8,.3,1), opacity .15s ease; }
     .character.is-jumping { animation: fall .36s cubic-bezier(.42,0,.72,.34) forwards; }
-    .character.is-landed { transform: translateY(54px); }
+    .character.is-landed { transform: translateY(var(--landing-distance, 54px)) scale(.96); }
+    .character.is-target { filter: drop-shadow(0 0 12px rgba(248,217,120,.72)); }
     .character.is-sad { filter: grayscale(.55) drop-shadow(0 12px 13px rgba(12,9,31,.28)); transform: translateY(12px) rotate(8deg); }
-    .drum { position: absolute; z-index: 2; left: calc(50% - 104px); bottom: 45px; width: 208px; height: 126px; filter: drop-shadow(0 18px 12px rgba(13, 9, 30, .32)); }
-    .drum-top { position: absolute; inset: 0 0 auto; height: 43px; border: 5px solid #ffd88a; border-radius: 50%; background: #ffe7af; }
-    .drum-body { position: absolute; top: 23px; left: 9px; right: 9px; height: 79px; border: 4px solid #f5a078; border-top: 0; border-radius: 12px 12px 46px 46px; background: linear-gradient(90deg, #db5c5d, #f27b68 45%, #cf5158); }
-    .drum-body::before, .drum-body::after { position: absolute; top: 5px; bottom: 8px; width: 3px; border-radius: 3px; background: rgba(255,224,160,.9); content: ""; }
-    .drum-body::before { left: 25px; } .drum-body::after { right: 25px; }
-    .drum-badge { position: absolute; top: 39px; left: calc(50% - 23px); z-index: 3; display: grid; place-items: center; width: 46px; height: 46px; border: 3px solid #ffc68d; border-radius: 50%; color: #fff1c7; font-size: 22px; }
+    .drum { position: absolute; z-index: 2; left: calc(50% - 104px); bottom: 45px; width: 208px; height: 134px; overflow: visible; filter: drop-shadow(0 18px 12px rgba(13, 9, 30, .32)); image-rendering: pixelated; }
     .drum.is-hit { animation: drum 220ms ease-out; }
     .ground-glow { position: absolute; left: 50%; bottom: 128px; width: 230px; height: 26px; border-radius: 50%; background: rgba(245, 217, 120, .2); transform: translateX(-50%); }
     .hit-flash { position: absolute; z-index: 5; left: 50%; bottom: 165px; color: var(--mint); font-size: 22px; font-weight: 900; opacity: 0; transform: translate(-50%, 10px) scale(.88); pointer-events: none; }
     .hit-flash.show { animation: cheer .8s ease-out forwards; }
     .beat-line { position: absolute; left: 22px; right: 22px; bottom: 15px; display: flex; justify-content: center; gap: 7px; padding: 11px; border: 1px solid rgba(255,255,255,.12); border-radius: 15px; background: rgba(23,24,55,.55); }
-    .beat { display: grid; place-items: center; width: clamp(25px, 5vw, 38px); height: clamp(25px, 5vw, 38px); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; color: rgba(255,247,230,.6); font-size: 13px; font-weight: 800; transition: background .1s ease, color .1s ease, transform .1s ease; }
+    .beat { position: relative; display: grid; place-items: center; width: clamp(25px, 5vw, 38px); height: clamp(25px, 5vw, 38px); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; color: rgba(255,247,230,.6); font-size: 13px; font-weight: 800; transition: background .1s ease, color .1s ease, transform .1s ease; }
     .beat.current { color: #29234d; border-color: var(--sun); background: var(--sun); transform: scale(1.12); }
+    .beat.target { border: 2px solid var(--sun); color: var(--sun); }
+    .beat.target::after { position: absolute; width: 5px; height: 5px; margin-top: -31px; border-radius: 1px; background: var(--sun); content: ""; }
     .beat.good { color: #102d28; border-color: var(--mint); background: var(--mint); }
     .beat.missed { color: #fff; border-color: var(--coral); background: var(--coral); }
     .side { display: flex; flex-direction: column; padding: 28px 27px 24px; }
@@ -102,7 +97,8 @@
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
     .is-reduced *, .is-reduced *::before, .is-reduced *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
     .is-reduced .character.is-visible { transform: none; }
-    @keyframes fall { to { transform: translateY(54px) rotate(0) scale(.96); } }
+    .is-reduced .character.is-landed { transform: translateY(var(--landing-distance, 54px)) scale(.96); }
+    @keyframes fall { to { transform: translateY(var(--landing-distance, 54px)) rotate(0) scale(.96); } }
     @keyframes drum { 50% { transform: scale(1.04,.91); } }
     @keyframes cheer { 15% { opacity: 1; transform: translate(-50%, -7px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -30px) scale(1.05); } }
     @keyframes sway { to { transform: rotate(7deg) translateY(3px); } }
@@ -116,16 +112,10 @@
       .lead { margin: 9px 0 18px; font-size: 14px; }
       .game-shell { grid-template-columns: 1fr; border-radius: 24px; }
       .playfield { min-height: 365px; }
-      .curtain { height: 114px; }
-      .moon { top: 43px; width: 48px; height: 48px; }
-      .moon::after { width: 48px; height: 48px; }
       .stage-caption { top: 18px; left: 18px; }
       .scene-prompt { top: 48px; left: 18px; max-width: 66%; font-size: 14px; }
-      .character { top: 110px; width: 82px; height: 82px; left: calc(50% - 41px); }
-      .drum { width: 174px; height: 111px; left: calc(50% - 87px); bottom: 43px; }
-      .drum-top { height: 37px; }
-      .drum-body { top: 20px; height: 69px; }
-      .drum-badge { top: 33px; width: 40px; height: 40px; left: calc(50% - 20px); }
+      .character { top: 110px; width: 82px; height: 82px; left: calc(50% - 41px); --landing-distance: 18px; }
+      .drum { width: 174px; height: 112px; left: calc(50% - 87px); bottom: 43px; }
       .ground-glow { bottom: 115px; width: 190px; }
       .hit-flash { bottom: 151px; font-size: 19px; }
       .beat-line { left: 12px; right: 12px; bottom: 10px; gap: 5px; padding: 8px; }
@@ -138,48 +128,82 @@
     }
     @media (max-width: 380px) {
       .playfield { min-height: 338px; }
+      .scene-prompt { max-width: 60%; font-size: 12px; }
+      .character { top: 90px; --landing-distance: 11px; }
       .beat-line { gap: 3px; }
       .beat { width: 25px; height: 25px; font-size: 11px; }
     }
   </style>
 </head>
 <body>
+  <svg id="spriteBank" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" shape-rendering="crispEdges">
+    <defs>
+      <symbol id="scene-sprite" viewBox="0 0 1000 470">
+        <rect width="1000" height="470" fill="#38345f"/>
+        <path d="M0 0h1000v114H0z" fill="#2c264f"/>
+        <path d="M0 91h1000v42H0z" fill="#493160"/>
+        <path d="M0 0h112v156H0zM888 0h112v156H888z" fill="#3b2857"/>
+        <path d="M0 142h1000v14H0z" fill="#f0ca72"/>
+        <path d="M0 156h1000v9H0z" fill="#644879"/>
+        <path d="M0 291h1000v179H0z" fill="#634c70"/>
+        <path d="M0 291h1000v9H0z" fill="#9b7890"/>
+        <path d="M105 63h10v10h-10zM242 35h8v8h-8zM350 106h7v7h-7zM581 47h9v9h-9zM688 113h7v7h-7zM807 31h9v9h-9zM927 91h8v8h-8z" fill="#fff0af"/>
+        <path d="M786 56h70v70h-70z" fill="#f7d98a"/><path d="M776 46h70v70h-70z" fill="#38345f"/>
+        <path d="M126 86h24v36h-24zM119 94h38v24h-38z" fill="#f8d978"/><path d="M132 92h12v24h-12z" fill="#ffc66c"/>
+        <path d="M33 177h8v8h-8zM146 223h6v6h-6zM258 184h7v7h-7zM429 245h8v8h-8zM627 191h7v7h-7zM738 252h7v7h-7zM911 207h8v8h-8z" fill="#d2c8ef"/>
+      </symbol>
+      <symbol id="moth-target-sprite" viewBox="0 0 32 32">
+        <path d="M3 8h7v5H5v5H2v-7h1zM29 8h-7v5h5v5h3v-7h-1z" fill="#f8d978"/>
+        <path d="M11 5h10v3h4v5h3v9h-4v5h-5v3h-6v-3H8v-5H4v-9h3V8h4z" fill="#a98be8"/>
+        <path d="M9 7h4v3H9zM19 7h4v3h-4zM6 13h3v7H6zM23 13h3v7h-3z" fill="#f8d978"/>
+        <path d="M10 15h3v3h-3zM19 15h3v3h-3zM13 22h6v2h-6z" fill="#32254e"/>
+        <path d="M14 12h4v2h-4z" fill="#fff2c6"/>
+        <path d="M15 2h2v3h-2zM12 3h2v2h-2zM18 3h2v2h-2z" fill="#fff0af"/>
+      </symbol>
+      <symbol id="moth-other-sprite" viewBox="0 0 32 32">
+        <path d="M3 9h7v5H5v5H2v-7h1zM29 9h-7v5h5v5h3v-7h-1z" fill="#8ee6c4"/>
+        <path d="M11 5h10v3h4v5h3v9h-4v5h-5v3h-6v-3H8v-5H4v-9h3V8h4z" fill="#5f91da"/>
+        <path d="M9 7h4v3H9zM19 7h4v3h-4zM6 13h3v7H6zM23 13h3v7h-3z" fill="#8ee6c4"/>
+        <path d="M10 15h3v3h-3zM19 15h3v3h-3zM13 22h6v2h-6z" fill="#1d3157"/>
+        <path d="M14 12h4v2h-4z" fill="#fff2c6"/>
+        <path d="M15 2h2v3h-2zM12 3h2v2h-2zM18 3h2v2h-2z" fill="#d2c8ef"/>
+      </symbol>
+      <symbol id="drum-sprite" viewBox="0 0 112 72">
+        <path d="M12 14h88v36H12z" fill="#d95755"/>
+        <path d="M18 18h76v31H18z" fill="#f27768"/>
+        <path d="M8 10h96v12H8z" fill="#ffd88a"/><path d="M13 8h86v9H13z" fill="#fff0bd"/>
+        <path d="M23 22h5v25h-5zM84 22h5v25h-5z" fill="#ffd88a"/>
+        <path d="M43 25h26v20H43z" fill="#e96962"/><path d="M48 29h16v12H48z" fill="#f8d978"/>
+        <path d="M52 31h3v8h-3zM58 31h3v8h-3z" fill="#65415d"/>
+        <path d="M16 50h80v8H16z" fill="#9c494f"/><path d="M8 58h96v6H8z" fill="#753e53"/>
+      </symbol>
+    </defs>
+  </svg>
   <main class="page" id="page">
     <header class="topline">
       <div class="brand"><span class="brand-mark" aria-hidden="true">♫</span><span>El tambor de Armonía</span><span class="prototype-tag">muestra interactiva</span></div>
       <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true"><span aria-hidden="true">♫</span><span id="soundLabel">Sonido activado</span></button>
     </header>
-    <h1>¡Que nadie pierda el compás!</h1>
-    <p class="lead">Mira cómo cae la nota y dale al tambor cuando aterrice. Primero ensayamos juntas; los puntos vienen después.</p>
+    <h1>¡Escucha tu nota!</h1>
+    <p class="lead">La melodía tiene ocho pulsos, pero solo tres son tuyos. Espera a que llegue tu campanita y entonces dale al tambor.</p>
 
     <section class="game-shell" aria-label="Muestra del juego rítmico">
       <div class="playfield" id="playfield" aria-label="Escena musical">
-        <div class="curtain" aria-hidden="true"></div><div class="moon" aria-hidden="true"></div><div class="lantern" aria-hidden="true"></div>
-        <div class="stage-caption" id="stageCaption">Escenario de prueba · tempo tranquilo</div>
-        <p class="scene-prompt" id="scenePrompt">La nota baja… ¡escucha y mira el tambor!</p>
-        <div class="character is-visible" id="character" aria-hidden="true">
-          <svg viewBox="0 0 120 120" role="presentation">
-            <path d="M28 56C9 40 9 23 22 20c13-3 22 14 23 27M92 56c19-16 19-33 6-36-13-3-22 14-23 27" fill="#f8d978" stroke="#fff0b4" stroke-width="4" stroke-linecap="round"/>
-            <path d="M60 15c-8 12-33 9-39 34-7 29 8 54 39 57 31-3 46-28 39-57-6-25-31-22-39-34Z" fill="#a98be8" stroke="#d9c8ff" stroke-width="5"/>
-            <path d="M39 59c4-7 12-7 16 0M65 59c4-7 12-7 16 0" fill="none" stroke="#32254e" stroke-width="5" stroke-linecap="round"/>
-            <path d="M52 74c5 7 11 7 16 0" fill="none" stroke="#32254e" stroke-width="4" stroke-linecap="round"/>
-            <circle cx="35" cy="73" r="6" fill="#f395a4"/><circle cx="85" cy="73" r="6" fill="#f395a4"/>
-            <path d="M60 4v15m-7-8h14" stroke="#fff0b4" stroke-width="4" stroke-linecap="round"/>
-          </svg>
-        </div>
+        <svg class="scene-sprite" viewBox="0 0 1000 470" aria-hidden="true"><use href="#scene-sprite"></use></svg>
+        <div class="stage-caption" id="stageCaption">Tu nota: la campanita dorada</div>
+        <p class="scene-prompt" id="scenePrompt">Escucha la melodía. Tu nota suena tres veces.</p>
+        <div class="character is-visible" id="character" aria-hidden="true"><svg viewBox="0 0 32 32" shape-rendering="crispEdges"><use id="characterSprite" href="#moth-other-sprite"></use></svg></div>
         <div class="ground-glow" aria-hidden="true"></div>
-        <div class="drum" id="drum" role="img" aria-label="Tambor coral">
-          <div class="drum-body"></div><div class="drum-top"></div><div class="drum-badge" aria-hidden="true">♫</div>
-        </div>
+        <svg class="drum" id="drum" viewBox="0 0 112 72" role="img" aria-label="Tambor coral"><use href="#drum-sprite"></use></svg>
         <div class="hit-flash" id="hitFlash" aria-hidden="true">¡A tiempo!</div>
-        <div class="beat-line" id="beatLine" aria-label="Ocho pulsos"></div>
+        <div class="beat-line" id="beatLine" aria-label="Ocho pulsos; tres son tu nota"></div>
       </div>
       <aside class="side" aria-live="polite">
         <div class="round-label"><span id="phaseLabel">Antes de empezar</span><span class="round-dots" aria-label="Tres rondas"><i></i><i></i><i></i></span></div>
-        <h2 id="sideTitle">Mira y escucha</h2>
-        <p class="side-copy" id="sideCopy">La nota hace un saltito y el tambor responde. Cuando llegue al tambor, tú también puedes dar un golpe.</p>
-        <div class="score" id="scoreBox" hidden><strong id="score">0</strong><span>de 8 · necesitas 6</span></div>
-        <p class="score-help" id="scoreHelp" hidden>Los golpes a tiempo suman. Tienes mucho margen para probar.</p>
+        <h2 id="sideTitle">Escucha tu campanita</h2>
+        <p class="side-copy" id="sideCopy">Las notas azules son de tus amigos. Cuando llegue la nota dorada, golpea el tambor. Las otras notas solo se escuchan.</p>
+        <div class="score" id="scoreBox" hidden><strong id="score">0</strong><span id="scoreSummary">de 3 · necesitas 2</span></div>
+        <p class="score-help" id="scoreHelp" hidden>Solo cuentan las tres notas doradas de los ocho pulsos.</p>
         <button class="action" id="primaryAction" type="button">Ver una demostración</button>
         <button class="secondary" id="secondaryAction" type="button" hidden>Empezar reto</button>
         <div class="tap-hint"><b aria-hidden="true">␣</b><span>Teclado: Espacio · Mando: botón A / principal</span></div>
@@ -198,12 +222,14 @@
       let mode = "intro", beat = -1, score = 0, round = 1, practiceCount = 0, hits = new Set();
       let active = false, soundOn = true, reduced = false, targetAt = 0, beatMs = 690, raf = 0, nextBeat = 0, audio = null;
       let gamepadDown = false, lastFeedback = 0;
+      const beatPatterns = [[1, 4, 6], [0, 3, 6], [2, 5, 7]];
+      let targetBeats = new Set(beatPatterns[0]);
       const beatEls = [];
       for (let i = 0; i < 8; i++) {
-        const dot = document.createElement("span"); dot.className = "beat"; dot.textContent = String(i + 1); beatLine.append(dot); beatEls.push(dot);
+        const dot = document.createElement("span"); dot.className = `beat${targetBeats.has(i) ? " target" : ""}`; dot.textContent = String(i + 1); dot.setAttribute("aria-label", `Pulso ${i + 1}${targetBeats.has(i) ? ", tu campanita" : ""}`); beatLine.append(dot); beatEls.push(dot);
       }
       const bpmForRound = [87, 96, 105];
-      const roundTone = [660, 740, 880];
+      const melodyNotes = [440, 523, 587, 392, 659, 494, 784, 587];
       const setMessage = (text) => { $("liveMessage").textContent = text; };
       function startAudio() {
         if (!soundOn) return;
@@ -219,11 +245,27 @@
         osc.connect(gain); gain.connect(audio.destination); osc.start(); osc.stop(audio.currentTime + duration);
       }
       function hitSound() { tone(210, .16, "triangle", .1); setTimeout(() => tone(140, .18, "sine", .055), 30); }
-      function cueSound(index) { tone(roundTone[(round - 1) % roundTone.length] * (index % 2 ? 1.125 : 1), .1, "sine", .035); }
-      function resetDots() { beatEls.forEach((el) => { el.className = "beat"; }); }
+      function cueSound(index) {
+        if (targetBeats.has(index)) { tone(988, .18, "triangle", .055); window.setTimeout(() => tone(1480, .09, "sine", .025), 24); }
+        else tone(melodyNotes[index], .12, "sine", .027);
+      }
+      function resetDots() { beatEls.forEach((el, index) => { el.className = `beat${targetBeats.has(index) ? " target" : ""}`; }); }
+      function selectPattern() {
+        targetBeats = new Set(beatPatterns[(round - 1) % beatPatterns.length]);
+        beatEls.forEach((el, index) => {
+          el.className = `beat${targetBeats.has(index) ? " target" : ""}`;
+          el.setAttribute("aria-label", `Pulso ${index + 1}${targetBeats.has(index) ? ", tu campanita" : ""}`);
+        });
+        $("scoreSummary").textContent = `de ${targetBeats.size} · necesitas 2`;
+        $("scoreHelp").textContent = "Golpea las notas doradas. Las azules se escuchan, pero no se golpean.";
+      }
       function animateLanding(index) {
         beatEls.forEach((el) => el.classList.remove("current"));
         if (index < 0 || index > 7) return;
+        const isTarget = targetBeats.has(index);
+        $("characterSprite").setAttribute("href", isTarget ? "#moth-target-sprite" : "#moth-other-sprite");
+        character.classList.toggle("is-target", isTarget);
+        $("scenePrompt").textContent = isTarget ? "¡Tu campanita!" : "Escucha la melodía…";
         character.classList.remove("is-sad", "is-jumping", "is-landed");
         character.classList.add("is-visible");
         character.getBoundingClientRect();
@@ -244,27 +286,28 @@
       }
       function setState(next) {
         mode = next;
-        const scored = next === "challenge" || next === "result";
-        $("phaseLabel").textContent = next === "intro" ? "Antes de empezar" : next.includes("practice") || next === "readyPractice" ? "Práctica libre" : next.includes("demo") ? "Demostración" : next === "result" ? "Ronda terminada" : next === "challenge" || next === "readyChallenge" ? `Ronda ${round} de 3` : phases[next === "countdown" ? 1 : 2];
-        $("scoreBox").hidden = !scored || next === "result" && practiceCount > 0 && score === -99;
+        const scored = ["challengeCount", "challengePlay", "challenge", "result"].includes(next);
+        $("phaseLabel").textContent = next === "intro" ? "Antes de empezar" : next.includes("practice") || next === "readyPractice" ? "Práctica libre" : next.includes("demo") ? "Demostración" : next === "result" ? "Ronda terminada" : next.includes("challenge") || next === "readyChallenge" ? `Ronda ${round} de 3` : phases[next === "countdown" ? 1 : 2];
+        $("scoreBox").hidden = !scored;
         $("scoreHelp").hidden = !scored;
         primary.disabled = ["demoCount", "demoPlay", "practiceCount", "practicePlay", "challengeCount", "challengePlay"].includes(next);
         secondary.hidden = true;
-        $("sideTitle").textContent = next === "intro" ? "Mira y escucha" : next.includes("demo") ? "La nota hace pum" : next.includes("practice") || next === "readyPractice" ? next === "readyPractice" ? "Ahora tú" : "Ensayamos juntas" : next.includes("challenge") || next === "readyChallenge" ? "¡A por el pulso!" : next === "result" ? score >= 6 ? "¡Ronda superada!" : "¡Vamos de nuevo!" : "Prepara tus manos";
-        $("sideCopy").textContent = next === "intro" ? "La nota hace un saltito y el tambor responde. Cuando llegue al tambor, tú también puedes dar un golpe." : next.includes("demo") ? "Mira la luz y escucha el tambor. Cada nota llega con el pulso." : next.includes("practice") || next === "readyPractice" ? "Toca cuando quieras. Aquí no hay puntos y podemos repetirlo." : next.includes("challenge") || next === "readyChallenge" ? "Sigue las luces y golpea cuando la nota aterrice. ¡Tienes tiempo!" : next === "result" ? score >= 6 ? "¡Has conseguido las seis estrellas! Cuando quieras, seguimos con otra melodía." : "No pasa nada: la misma melodía espera para que la pruebes otra vez." : "";
+        $("score").textContent = String(score);
+        $("sideTitle").textContent = next === "intro" ? "Escucha tu campanita" : next.includes("demo") ? "La nota dorada suena" : next.includes("practice") || next === "readyPractice" ? next === "readyPractice" ? "Ahora tú" : "Ensayamos juntas" : next.includes("challenge") || next === "readyChallenge" ? "¡Espera tu nota!" : next === "result" ? score >= 2 ? "¡Ronda superada!" : "¡Vamos de nuevo!" : "Prepara tus manos";
+        $("sideCopy").textContent = next === "intro" ? "Las notas azules son de tus amigos. Cuando llegue la nota dorada, golpea el tambor. Las otras solo se escuchan." : next.includes("demo") ? "Escucha la campanita y mira la nota dorada. Solo aparece en tres de los ocho pulsos." : next.includes("practice") || next === "readyPractice" ? "Ensaya cuándo llega la nota dorada. Aquí no hay puntos y podemos repetirlo." : next.includes("challenge") || next === "readyChallenge" ? "Escucha la campanita y golpea solo cuando llegue tu nota dorada." : next === "result" ? score >= 2 ? "¡Has encontrado tu nota! Cuando quieras, seguimos con otra melodía." : "No pasa nada: la misma melodía espera para que la pruebes otra vez." : "";
         if (next === "intro") { primary.textContent = "Ver una demostración"; primary.className = "action"; }
         else if (next === "readyPractice") { primary.textContent = "Practicar juntas"; primary.className = "action mint"; secondary.hidden = false; secondary.textContent = "Ver la demostración otra vez"; }
         else if (next === "practiceDone") { primary.textContent = "Practicar otra vez"; primary.className = "action mint"; secondary.hidden = false; secondary.textContent = "Empezar reto"; }
-        else if (next === "result") { primary.textContent = score >= 6 ? round < 3 ? "Siguiente melodía" : "Celebrar con Armonía" : "Repetir esta ronda"; primary.className = "action coral"; secondary.hidden = score < 6; if (score >= 6) secondary.textContent = "Reiniciar el reto"; }
+        else if (next === "result") { primary.textContent = score >= 2 ? round < 3 ? "Siguiente melodía" : "Celebrar con Armonía" : "Repetir esta ronda"; primary.className = "action coral"; secondary.hidden = score < 2; if (score >= 2) secondary.textContent = "Reiniciar el reto"; }
         else if (next === "readyChallenge") { primary.textContent = "Empezar reto"; primary.className = "action"; }
         else if (next.endsWith("Count") || next.endsWith("Play")) { primary.textContent = "Escucha…"; primary.className = "action"; }
         else if (next === "challenge") { primary.textContent = "¡Golpea!"; primary.className = "action coral"; }
         else { primary.textContent = "Ver una demostración"; primary.className = "action"; }
       }
-      function beginDemo() { startAudio(); score = 0; resetDots(); setMessage("Mira: la nota baja ocho veces."); setState("demoCount"); countdown("demo"); }
-      function beginPractice() { startAudio(); resetDots(); hits.clear(); practiceCount = 0; setMessage("Ensayo: toca sin preocuparte por acertar."); setState("practiceCount"); countdown("practice"); }
-      function beginChallenge() { startAudio(); round = 1; score = 0; resetDots(); hits.clear(); roundSetup(); }
-      function roundSetup() { beatMs = 60000 / bpmForRound[round - 1]; $("stageCaption").textContent = `Ronda ${round} · ${bpmForRound[round - 1]} pulsos por minuto`; setState("challengeCount"); countdown("challenge"); }
+      function beginDemo() { startAudio(); score = 0; selectPattern(); resetDots(); setMessage("Escucha la campanita dorada: es la nota que te toca."); setState("demoCount"); countdown("demo"); }
+      function beginPractice() { startAudio(); selectPattern(); resetDots(); hits.clear(); practiceCount = 0; setMessage("Ensayo libre: escucha y espera a tu campanita."); setState("practiceCount"); countdown("practice"); }
+      function beginChallenge() { startAudio(); round = 1; score = 0; selectPattern(); resetDots(); hits.clear(); roundSetup(); }
+      function roundSetup() { beatMs = 60000 / bpmForRound[round - 1]; selectPattern(); $("stageCaption").textContent = `Melodía ${round} · escucha la campanita dorada`; setMessage("Solo tres de las ocho notas son tuyas."); setState("challengeCount"); countdown("challenge"); }
       function countdown(forMode) {
         active = true; beat = -1; let n = 4; $("scenePrompt").textContent = ""; $("hitFlash").classList.remove("show");
         const tick = () => {
@@ -279,8 +322,8 @@
         $("phaseLabel").textContent = forMode === "challenge" ? `Ronda ${round} de 3` : forMode === "demo" ? "Demostración" : "Práctica libre";
         $("scenePrompt").textContent = forMode === "challenge" ? "¡Golpea al aterrizar!" : "Mira el saltito";
         if (forMode === "challenge") {
-          $("sideTitle").textContent = "¡A por el pulso!";
-          $("sideCopy").textContent = "Sigue las luces y golpea cuando la nota aterrice. ¡Tienes tiempo!";
+          $("sideTitle").textContent = "¡Espera tu nota!";
+          $("sideCopy").textContent = "Escucha la campanita dorada. Golpea solo esas tres notas.";
           $("scoreBox").hidden = false; $("scoreHelp").hidden = false;
           primary.disabled = false; primary.textContent = "¡Golpea!"; primary.className = "action coral";
         } else if (forMode === "practice") {
@@ -304,8 +347,8 @@
         if (!active || !mode.endsWith("Play")) return;
         const now = performance.now();
         if (forMode === "practice" && now - lastFeedback > 1300) character.classList.remove("is-sad");
-        if (forMode === "challenge" && beat >= 0 && beat < 8 && !hits.has(beat) && now > targetAt + 180) {
-          hits.add(beat); beatEls[beat].classList.add("missed"); score = Math.max(0, score - 1); $("score").textContent = String(score); setMessage("Ese pulso ya pasó. ¡Viene otro!");
+        if (forMode === "challenge" && beat >= 0 && beat < 8 && targetBeats.has(beat) && !hits.has(beat) && now > targetAt + 180) {
+          hits.add(beat); beatEls[beat].classList.add("missed"); setMessage("Tu campanita pasó. Escucha la siguiente.");
         }
         if (beat >= 8) return;
         raf = requestAnimationFrame(() => pulseLoop(forMode));
@@ -314,16 +357,22 @@
         active = false; cancelAnimationFrame(raf); character.classList.remove("is-visible", "is-jumping");
         if (forMode === "demo") { setMessage("Ahora puedes probarlo sin puntos."); setState("readyPractice"); }
         else if (forMode === "practice") { practiceCount++; setMessage("¡Buen ensayo! Puedes repetir o empezar el reto."); setState("practiceDone"); }
-        else { setMessage(score >= 6 ? "¡Ronda superada!" : "La melodía se repite sin coste."); setState("result"); }
+        else { setMessage(score >= 2 ? "¡Ronda superada!" : "La melodía se repite sin coste."); setState("result"); }
       }
       function press() {
-        if (mode === "practicePlay") { lastFeedback = performance.now(); character.classList.remove("is-sad"); showFeedback("¡Pum!", true); setMessage("¡Pum! En el ensayo puedes golpear cuando quieras."); return; }
+        if (mode === "practicePlay") {
+          lastFeedback = performance.now();
+          const rightNote = targetBeats.has(beat) && Math.abs(performance.now() - targetAt) <= 360;
+          showFeedback(rightNote ? "¡Esa es!" : "¡Escucha!", rightNote);
+          setMessage(rightNote ? "¡Encontraste tu campanita!" : "Las notas azules pasan. Espera a la dorada."); return;
+        }
         if (mode !== "challengePlay" || beat < 0 || beat > 7) return;
         const now = performance.now(), delta = Math.abs(now - targetAt);
-        if (hits.has(beat)) { score = Math.max(0, score - 1); $("score").textContent = String(score); showFeedback("¡Ups!", false); setMessage("Un golpe por pulso. ¡Mira la próxima luz!"); return; }
+        if (hits.has(beat)) { score = Math.max(0, score - 1); $("score").textContent = String(score); showFeedback("¡Ups!", false); setMessage("Un golpe por nota. ¡Escucha la próxima!"); return; }
         hits.add(beat);
-        if (delta <= 180) { score++; beatEls[beat].classList.remove("missed"); beatEls[beat].classList.add("good"); showFeedback("¡A tiempo!", true); setMessage("¡Qué bien! Sigue la luz."); }
-        else { score = Math.max(0, score - 1); beatEls[beat].classList.add("missed"); showFeedback("¡Casi!", false); setMessage("¡Casi! El tambor te espera en el siguiente pulso."); }
+        if (!targetBeats.has(beat)) { score = Math.max(0, score - 1); beatEls[beat].classList.add("missed"); showFeedback("¡Espera!", false); setMessage("Esa nota era de tus amigos. Espera a la campanita dorada."); }
+        else if (delta <= 180) { score++; beatEls[beat].classList.remove("missed"); beatEls[beat].classList.add("good"); showFeedback("¡Tu nota!", true); setMessage("¡A tiempo! Esa era tu campanita."); }
+        else { beatEls[beat].classList.add("missed"); showFeedback("¡Casi!", false); setMessage("¡Casi! Esa campanita no suma. Escucha la siguiente."); }
         $("score").textContent = String(score);
       }
       primary.addEventListener("click", () => {
@@ -332,7 +381,7 @@
         else if (mode === "readyPractice" || mode === "practiceDone") beginPractice();
         else if (mode === "readyChallenge") beginChallenge();
         else if (mode === "result") {
-          if (score < 6) { resetDots(); hits.clear(); score = 0; $("score").textContent = "0"; roundSetup(); }
+          if (score < 2) { resetDots(); hits.clear(); score = 0; $("score").textContent = "0"; roundSetup(); }
           else if (round < 3) { round++; score = 0; resetDots(); roundSetup(); }
           else { setMessage("¡Las tres rondas están listas para celebrarse!"); primary.textContent = "Volver al principio"; primary.onclick = () => location.reload(); }
         }

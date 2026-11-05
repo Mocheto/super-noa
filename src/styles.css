@@ -585,6 +585,61 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 .boss-battle::before { content: ""; position: absolute; z-index: 0; inset: 0; pointer-events: none; opacity: .2; background-repeat: repeat-x; background-position: center bottom; background-size: auto 46%; image-rendering: pixelated; }
 .boss-battle > * { position: relative; z-index: 1; }
 
+.armonia-rhythm-game { width: min(900px, 100%); background-color: #fff8e9; background-image: linear-gradient(180deg, rgba(255,248,233,.94), rgba(238,225,242,.96)); }
+.armonia-header { align-items: flex-start; gap: 16px; }
+.armonia-header h2 { margin-bottom: 4px; }
+.armonia-header > div:first-child > p:last-child { margin: 4px 0 0; font: 800 .9rem/1.35 system-ui, sans-serif; }
+.armonia-score { flex: 0 0 auto; display: grid; min-width: 96px; border: 4px solid #352044; padding: 7px 10px; text-align: center; color: #fff8e9; background: #604272; box-shadow: 4px 4px 0 #352044; }
+.armonia-score strong { color: #ffe17c; font-size: 1.7rem; line-height: 1; }
+.armonia-score small { margin-top: 4px; font: 800 .63rem system-ui, sans-serif; }
+.armonia-stage { position: relative; min-height: 350px; margin: 16px 0 10px; overflow: hidden; border: 4px solid #352044; background: #ffc5a8; isolation: isolate; }
+.armonia-background { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.armonia-scene-label { position: absolute; z-index: 2; top: 12px; left: 14px; max-width: calc(100% - 28px); border: 2px solid rgba(54,35,63,.7); padding: 5px 8px; color: #362340; background: rgba(255,248,224,.87); font: 900 .76rem/1.1 system-ui, sans-serif; }
+.armonia-moth { position: absolute; z-index: 2; top: 26px; left: calc(50% - 46px); width: 92px; height: 92px; background-repeat: no-repeat; background-size: 400% 200%; image-rendering: pixelated; filter: drop-shadow(0 5px 4px rgba(29,32,51,.27)); transition: top 260ms linear, filter 100ms ease; }
+.armonia-moth.is-falling, .armonia-moth.is-landed { top: var(--landed-top); }
+.armonia-moth.is-gold { filter: drop-shadow(0 0 11px rgba(255,200,58,.92)); }
+.armonia-moth.is-blue { filter: drop-shadow(0 4px 5px rgba(31,80,126,.5)); }
+.armonia-moth.is-paused { transition: none; }
+.armonia-drum { position: absolute; z-index: 1; left: calc(50% - 105px); bottom: 48px; width: 210px; height: 95px; background-position: 100% 100%; background-size: 400% 200%; background-repeat: no-repeat; image-rendering: pixelated; filter: drop-shadow(0 8px 5px rgba(40,36,49,.32)); transition: transform 120ms ease; }
+.armonia-drum.is-hit { transform: scale(1.04,.92); }
+.armonia-drum.is-extra { animation: armonia-drum-wrong 260ms ease-out; }
+@keyframes armonia-drum-wrong { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+.armonia-beat-line { position: absolute; z-index: 3; right: 10px; bottom: 9px; left: 10px; display: flex; justify-content: center; gap: clamp(3px, 1vw, 9px); padding: 8px 6px; border: 2px solid rgba(48,34,64,.78); background: rgba(26,34,55,.68); }
+.armonia-beat { position: relative; display: grid; place-items: center; width: clamp(26px, 5vw, 38px); height: clamp(26px, 5vw, 38px); flex: 0 1 38px; border: 2px solid rgba(255,255,255,.55); border-radius: 50%; color: #fff; background: rgba(56,69,88,.7); font: 900 .76rem system-ui, sans-serif; }
+.armonia-beat.is-target { border-color: #ffd96d; color: #ffe58c; box-shadow: inset 0 0 0 2px rgba(255,217,109,.2); }
+.armonia-beat.is-current { transform: scale(1.12); outline: 2px solid #fff8d0; outline-offset: 2px; }
+.armonia-beat.is-hit { border-color: #b9f1b1; color: #1f5735; background: #b9f1b1; }
+.armonia-beat.is-missed { border-color: #ff9991; color: #54222d; background: #ff9991; }
+.armonia-controls { display: grid; justify-items: center; gap: 8px; text-align: center; }
+.armonia-message { min-height: 1.4em; margin: 3px 0 0; color: #47324f; font: 900 .98rem/1.3 system-ui, sans-serif; }
+.armonia-tempo, .armonia-audio-note, .armonia-input-help { margin: 0; color: #65536c; font: 750 .73rem/1.3 system-ui, sans-serif; }
+.armonia-hit { width: min(480px,100%); min-height: 68px; margin: 3px auto; border: 4px solid #352044; border-bottom-width: 8px; color: #352044; background: #ffe07d; font-size: 1.35rem; font-weight: 1000; }
+.armonia-hit:hover, .armonia-hit:focus-visible { outline: 4px solid #ffb937; outline-offset: 3px; }
+.armonia-hit:active { border-bottom-width: 4px; transform: translateY(4px); }
+.armonia-hit:disabled { opacity: .55; }
+.armonia-main-action { display: block; width: min(480px,100%); margin: 3px auto; }
+.armonia-secondary { min-height: 46px; color: #493253; font-weight: 900; }
+.armonia-restart, .armonia-audio-retry { min-height: 38px; }
+.armonia-win-note { margin: 0; color: #317043; font: 900 .9rem system-ui, sans-serif; }
+.armonia-rhythm-game .duel-abandon { margin: 3px auto 0; }
+@media (max-width: 600px) {
+  .armonia-rhythm-game { max-height: calc(100dvh - 18px); padding: 12px; border-width: 4px; }
+  .armonia-header { gap: 8px; }
+  .armonia-header .eyebrow { font-size: .62rem; }
+  .armonia-header h2 { font-size: 1.25rem; }
+  .armonia-header > div:first-child > p:last-child { font-size: .75rem; }
+  .armonia-score { min-width: 72px; padding: 5px; border-width: 3px; }
+  .armonia-score strong { font-size: 1.3rem; }
+  .armonia-score small { font-size: .55rem; }
+  .armonia-stage { min-height: 310px; margin: 10px 0 8px; border-width: 3px; }
+  .armonia-moth { left: calc(50% - 40px); width: 80px; height: 80px; --landed-top: calc(100% - 48px - 85px - 30px) !important; }
+  .armonia-drum { left: calc(50% - 90px); width: 180px; height: 85px; bottom: 48px; }
+  .armonia-beat-line { right: 5px; left: 5px; gap: 3px; padding: 7px 3px; }
+  .armonia-beat { width: clamp(25px, 8.3vw, 34px); height: clamp(25px, 8.3vw, 34px); border-width: 1px; font-size: .66rem; }
+  .armonia-hit { min-height: 62px; font-size: 1.2rem; }
+  .armonia-controls { gap: 6px; }
+}
+
 .santa-boss-battle { position: fixed; z-index: 20; inset: 0; display: flex; flex-direction: column; gap: 12px; padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); background: #172754; color: #fff; overflow-y: auto; }
 .santa-boss-hud { display: flex; align-items: center; justify-content: space-between; gap: 16px; max-width: 960px; width: 100%; margin: 0 auto; }
 .santa-boss-hud h2 { margin: 0; color: #fff2b7; font-size: clamp(1.2rem, 3vw, 2rem); }

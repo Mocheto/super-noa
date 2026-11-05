@@ -27,6 +27,7 @@ const WorldMap = lazy(() => import("./game/WorldMap").then((module) => ({ defaul
 const GameCanvas = lazy(() => import("./game/GameCanvas").then((module) => ({ default: module.GameCanvas })));
 const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
 const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((module) => ({ default: module.GuardianMiniGame })));
+const ArmoniaRhythmGame = lazy(() => import("./game/ArmoniaRhythmGame").then((module) => ({ default: module.ArmoniaRhythmGame })));
 const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module) => ({ default: module.SantaBossBattle })));
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
@@ -789,6 +790,14 @@ export default function App() {
               bossId={activeLevel.boss}
               paused={paused} apples={snapshot.apples} onSpendApple={spendBossApple} onRestartLevel={restartBossLevel}
               onAbandon={abandonBossBattle} onWin={handleComplete} playSound={playSound}
+            /> : activeLevel.boss === "maestra-armonia" ? <ArmoniaRhythmGame
+              key={`armonia-game-${activeLevel.id}-${levelRun}`}
+              paused={paused}
+              muted={muted}
+              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
+              onWin={bossReplay ? finishBossReplay : handleComplete}
+              playSound={playSound}
+              friendlyReplay={bossReplay}
             /> : isGuardianGameId(activeLevel.boss) ? <GuardianMiniGame
               key={`guardian-game-${activeLevel.id}-${levelRun}`}
               bossId={activeLevel.boss}

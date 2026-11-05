@@ -101,9 +101,19 @@ Los cañones, sus bolas, los puntos de control y los banderines usan sprites pro
 
 ## Organización del código
 
-- `src/App.tsx` coordina pantallas, HUD, música y pausa automática; `src/game/progress.ts` lee, valida y guarda el progreso y `storage.ts` protege todo acceso al almacenamiento local.
+- `src/App.tsx` coordina pantallas, HUD, música y pausa automática; `src/game/music.ts` gestiona las pistas de audio; `src/game/progress.ts` lee, valida y guarda el progreso y `storage.ts` protege todo acceso al almacenamiento local.
 - `src/game/GameCanvas.tsx` coordina la partida. `rendering.ts` dibuja los mundos, `assets.ts` carga y reutiliza los recursos de cada mundo, `input.ts` gestiona teclado y tacto, y `gameLoop.ts` ejecuta la física en pasos constantes de 60 Hz.
-- `src/game/levels.ts` mantiene los niveles y sus rutas especiales de forma declarativa; `routes.ts` resuelve el avance de campaña. `WorldMap.tsx` dibuja la interfaz interactiva sobre la ilustración original optimizada `public/assets/worlds/noa-adventure-map-v1.webp`; `worldMapData.ts` define lugares y caminos. `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts` interpretan el mando durante la partida, los menús y los duelos.
+- `src/game/levels.ts` mantiene los niveles y sus rutas especiales de forma declarativa; `routes.ts` resuelve el avance de campaña. `WorldMap.tsx` dibuja la interfaz interactiva sobre la ilustración original optimizada `public/assets/worlds/noa-adventure-map-v1.webp`; `worldMapData.ts` define lugares y caminos.
+- `src/game/secretShop.ts` y archivos relacionados (`secretShopGame.ts`, `secretShopRuntime.ts`, `secretShopCats.ts`, `secretShopProgress.ts`, `SecretShop.tsx`) gestionan la tienda secreta con minijuego de gatos; `secretDoors.css` y `secretShop.css` contienen sus estilos.
+- `src/game/detour*.ts` y `detours.css` codifican los desvíos secretos y su progreso; `starPowerVisuals.ts` renderiza los efectos de protección estelar.
+- `src/game/santaBattle.ts` y archivos relacionados (`santaBattleAssets.ts`, `santaBattleRendering.ts`, `SantaBossBattle.tsx`) gestionan la batalla navideña contra Papá Noel.
+- `src/game/BossBattle.tsx`, `src/game/GuardianMiniGame.tsx` y `src/game/guardianGames.ts` implementan los duelos de piedra, papel y tijera.
+- `src/game/chainGuardians.ts` y `src/game/mechanicSprites.ts` controlan perritos encadenados y sprites de mecánicas.
+- `src/game/stickers.ts` cataloga las insignias; `src/game/worldEnemySprites.ts` define los sprites troquelados por mundo; `src/game/worldMechanics.ts` gestiona las mecánicas por mundo.
+- `src/game/ranking*.ts` implementa el tablón mundial con alias, envío, recuperación y onboarding.
+- `src/game/levelTransition.ts`, `src/game/levelSelectCard.tsx` y `src/game/levelObjectives.ts` gestionan transiciones, tarjetas del selector y pistas.
+- `src/game/touchControls.tsx`, `src/game/TouchControls.tsx`, `src/game/Dialog.tsx`, `src/game/GameAssetIcon.tsx` y `src/game/PixelIcon.tsx` aportan controles móviles, diálogos e iconos.
+- `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts` interpretan el mando durante la partida, menús y duelos.
 
 ## Licencias
 

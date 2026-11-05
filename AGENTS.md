@@ -9,22 +9,32 @@
 
 Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 
-- `src/App.tsx`: navegación, HUD, música, modales y pausa automática al perder visibilidad o foco.
-- `src/game/progress.ts`: lectura, validación, migración y escritura del progreso local.
-- `src/game/storage.ts`: acceso seguro al almacenamiento local, incluso si el navegador lo bloquea.
+- `src/App.tsx`: navegación, HUD, música, modales y pausa automática al perder visibilidad o foco; `src/game/music.ts`: motor de audio y gestión de pistas.
+- `src/game/progress.ts`: lectura, validación, migración y escritura del progreso local; `src/game/storage.ts`: acceso seguro al almacenamiento local, incluso si el navegador lo bloquea.
 - `src/game/GameCanvas.tsx`: coordinación de la partida, física y estado de cada pantalla.
-- `src/game/rendering.ts`: dibujo de escenarios, objetos y enemigos sobre Canvas 2D.
-- `src/game/assets.ts`: carga diferida por mundo y reutilización de imágenes.
+- `src/game/gameState.ts`, `src/game/gameplay.ts` y `src/game/constants.ts`: tipos de estado (`Rect`, `Theme`, `Level`), reglas de movimiento y dimensiones del Canvas.
 - `src/game/input.ts`: teclado y controles táctiles; `src/game/gameLoop.ts`: física en pasos fijos y pausa del renderizado.
-- `src/game/gameState.ts`, `src/game/gameplay.ts` y `src/game/constants.ts`: tipos de estado, reglas de movimiento y dimensiones del Canvas.
-- `src/game/levels.ts`: definición declarativa de las treinta pantallas de campaña, las tres acuáticas y la pantalla secreta de las nubes, sus rutas especiales, cajas de recompensa, cañones, trampas y encuentros finales; `src/game/routes.ts`: avance y desbloqueo a partir de esos datos.
-- `src/game/WorldMap.tsx` y `src/game/worldMapData.ts`: mapa ilustrado, marcadores, caminos según el progreso y cuadros de resumen; `public/assets/worlds/noa-adventure-map-v1.webp`: fondo original optimizado sin interfaz incrustada.
-- `src/game/BossBattle.tsx`: doce duelos de piedra, papel o tijera contra los monstruos finales; `gamepad.ts`, `menuGamepad.ts` y `duelGamepad.ts`: entrada de mando en partida, menús y duelos.
-- `src/game/stickers.ts`: catálogo estable de 36 insignias coleccionables: treinta de campaña, tres acuáticas y tres secretas.
-- `server/ranking-server.mjs`: API y migraciones del tablón mundial; `server/ranking-supervisor.mjs`: descarga y activa automáticamente el backend del último commit de `main`, con recuperación de la versión anterior si falla.
+- `src/game/levels.ts`: definición declarativa de los trece mundos de campaña, tres acuáticas y una pantalla secreta de las nubes, rutas especiales, cajas, cañones y encuentros; `src/game/routes.ts`: resolución del avance y desbloqueo a partir de esos datos.
+- `src/game/WorldMap.tsx` y `src/game/worldMapData.ts`: mapa ilustrado, mecánicas, marcadores, caminos según el progreso, cuadros de resumen y coordenadas del mapa.
+- `src/game/rendering.ts`: dibujo de escenarios, objetos, terreno, enemigos, jefe y efectos sobre Canvas 2D.
+- `src/game/assets.ts`: carga diferida por mundo y reutilización de imágenes, atlas, sprites y música.
+- `src/game/secretShop*.ts` / `src/game/SecretShop.tsx`: tienda de minijuego gatito con su progreso, estado de juego, runtime, sprites de gatos por mundo y arte de puertas.
+- `src/game/secretDoors.css` y `src/game/secretShop.css`: estilos de la tienda y puertas secretas.
+- `src/game/secretShopGame.ts`, `src/game/secretShopRuntime.ts`, `src/game/secretShopCats.ts`, `src/game/secretShopProgress.ts`: lógica de juego, estado, gatos y progreso de la tienda.
+- `src/game/starPowerVisuals.ts` y `src/game/detour*.ts` / `src/game/detours.css`: efectos visuales de protección, mecánica de desvíos y progreso.
+- `src/game/santaBattle.ts`, `src/game/santaBattleAssets.ts`, `src/game/santaBattleRendering.ts` y `src/game/SantaBossBattle.tsx`: batalla navideña contra Papá Noel, renderizado y assets.
+- `src/game/BossBattle.tsx`, `src/game/GuardianMiniGame.tsx` y `src/game/guardianGames.ts`: doce duelos de piedra, papel o tijera contra los guardianes.
+- `src/game/chainGuardians.ts` y `src/game/mechanicSprites.ts`: perritos encadenados del castillo y sprites de mecánicas.
+- `src/game/stickers.ts`: catálogo estable de 36 insignias coleccionables; `src/game/worldEnemySprites.ts`: sprites troquelados de enemigos por mundo.
+- `src/game/worldMechanics.ts`: mecánicas por mundo.
+- `src/game/ranking*.ts`: tablón mundial con alias, envío, recuperación y onboarding.
+- `src/game/levelTransition.ts`, `src/game/levelSelectCard.tsx` y `src/game/levelObjectives.ts`: transiciones entre pantallas, tarjetas del selector de niveles y objetivos/pistas.
+- `src/game/touchControls.tsx`, `src/game/TouchControls.tsx` y `src/game/Dialog.tsx`: controles móviles, interfaz y diálogos.
+- `src/game/GameAssetIcon.tsx` y `src/game/PixelIcon.tsx`: iconos de assets y pixeles.
+- `server/ranking-server.mjs`: API y migraciones del tablón; `server/ranking-supervisor.mjs`: supervisor que descarga y activa automáticamente el backend del último commit de `main`, con recuperación si falla.
 - `src/game/types.ts`: tipos del motor y extensión futura.
-- `src/styles.css`: interfaz adaptable, mapa desplazable en móvil y controles táctiles.
-- `public/assets/`: hojas de animaciones, sprites raster, atlas y música.
+- `src/styles.css` y `src/game/secretDoors.css`, `src/game/secretShop.css`, `src/game/detours.css`: estilos generales y de subcaracterísticas.
+- `public/assets/`: ilustraciones por mundo, atlas, sprites, hojas de animación, música y arte de la tienda.
 
 ## Reglas
 
@@ -56,9 +66,9 @@ Antes de publicar comprueba las treinta pantallas de campaña, las tres acuátic
 
 ## Cómo añadir un mundo
 
-1. Añade el identificador del mundo y sus variantes a `types.ts` (`Theme`, `Level.world`, enemigos, terreno y jefe si procede). Mantén los niveles, peligros, rutas y recompensas como datos declarativos en `levels.ts`.
+1. Añade el identificador del mundo y sus variantes a `types.ts` (`Theme`, `Level.world`, enemigos, terreno y jefe si procede). Mantén los niveles, peligros, rutas y recompensas como datos declarativos en `levels.ts`. Registra el arte y la música en `assets.ts` y `App.tsx`.
 2. Crea tres pantallas con identificadores estables, una pegatina por pantalla, checkpoints sobre suelo seguro y una ruta explícita desde el final del mundo anterior. Solo la última pantalla de la campaña debe usar `route.finale`; las anteriores deben enlazar con `route.next` cuando el orden del array no sea suficiente.
-3. Guarda arte original en `public/assets/`: ilustración en `worlds/`, atlas de terreno y enemigos en `atlases/`, gato y cinco poses del jefe en `sprites/`, y atlas horizontal RGBA de tres pegatinas en `stickers/`. Los atlas de terreno deben tener fondo transparente y separar suelo repetible, plataforma flotante y pared en zonas de recorte estables; registra esos recortes en `rendering.ts`, evita fondos rectangulares de color y coloca la superficie transitable en el borde visual superior del césped, roca o hielo. Usa siempre rutas `./assets/...` y registra la carga diferida en `assets.ts`.
+3. Guarda arte original en `public/assets/`: ilustración en `worlds/`, atlas de terreno y enemigos en `atlases/`, gato y cinco poses del jefe en `sprites/`, y atlas horizontal RGBA de tres pegatinas en `stickers/`. Los atlas de terreno deben tener fondo transparente y separar suelo repetible, plataforma flotante y pared en zonas de recorte estables; registra esos recortes en `rendering.ts`, evita fondos rectangulares de color y coloca la superficie transitable en el borde visual superior del césped, roca o hielo. Usa siempre rutas `./assets/...`.
 4. Añade el dibujo del tema, terreno, peligros y enemigos en `rendering.ts`; añade la colisión del peligro en `GameCanvas.tsx` y cualquier movimiento especial en `gameState.ts` o `gameplay.ts`. Los enemigos acuáticos que saltan se declaran en `Level.waterJumpers` y los peligros o fuerzas rítmicas en colecciones declarativas como `Level.lavaJets` y `Level.windZones`, siempre con intervalo, retraso y dimensiones; no codifiques sus posiciones en el motor. Los trampolines deben tener sprite propio, descansar sobre terreno seguro y facilitar una maniobra concreta sin cubrir precipicios ni anular otros peligros.
-5. Registra mundo, coordenadas y camino interactivo en `worldMapData.ts`; no dibujes el marcador ni el camino dentro del fondo. Añade el jefe en `bosses.ts`, las pegatinas en `stickers.ts`, música reutilizada o debidamente acreditada en `App.tsx`, y amplía los límites del ranking si cambian los máximos.
+5. Registra mundo, coordenadas y camino interactivo en `worldMapData.ts`; no dibujes el marcador ni el camino dentro del fondo. Añade el jefe en `bosses.ts`, las pegatinas en `stickers.ts`, música en `App.tsx`, y amplía los límites del ranking si cambian los máximos.
 6. Añade pruebas de estructura, recursos, rutas, desbloqueo, peligros, pegatinas, jefe y compatibilidad del progreso. Comprueba también que cada caja deja espacio alcanzable sobre su apoyo y que el mapa sitúa el marcador y su camino encima del bioma correspondiente. Ejecuta la verificación completa indicada arriba y revisa visualmente las tres pantallas antes de publicar.

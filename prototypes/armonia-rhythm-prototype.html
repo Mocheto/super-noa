@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171837">
+  <title>Prototipo · El tambor de Armonía</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --night: #171837;
+      --plum: #29234d;
+      --stage: #39315f;
+      --coral: #f27768;
+      --coral-deep: #d95755;
+      --mint: #8ee6c4;
+      --sun: #f8d978;
+      --paper: #fff7e6;
+      --muted: #c7c2dc;
+      --line: rgba(255, 247, 230, .17);
+      --round: 26px;
+      font-family: "Trebuchet MS", "Arial Rounded MT Bold", system-ui, sans-serif;
+      background: var(--night);
+      color: var(--paper);
+      font-synthesis: none;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 48% 22%, rgba(105, 86, 160, .36), transparent 45%),
+        linear-gradient(160deg, #191a3d 0%, #252044 65%, #171837 100%);
+    }
+    button { font: inherit; }
+    button:focus-visible { outline: 4px solid var(--sun); outline-offset: 4px; }
+    .page { width: min(1100px, 100%); margin: auto; padding: 24px 28px 32px; }
+    .topline { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 24px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 800; letter-spacing: .01em; }
+    .brand-mark { display: grid; place-items: center; width: 38px; height: 38px; border: 2px solid rgba(255,255,255,.58); border-radius: 50%; color: var(--sun); font-size: 22px; transform: rotate(-9deg); }
+    .prototype-tag { color: var(--muted); font-size: 12px; }
+    .sound-toggle { display: flex; align-items: center; gap: 9px; min-height: 42px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.06); color: var(--paper); cursor: pointer; }
+    .sound-toggle span { font-size: 18px; }
+    h1 { max-width: 680px; margin: 0; font-size: clamp(30px, 4vw, 44px); line-height: 1.06; letter-spacing: -.04em; }
+    .lead { max-width: 680px; margin: 12px 0 23px; color: var(--muted); font-size: 16px; line-height: 1.5; }
+    .game-shell { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(270px, .85fr); overflow: hidden; border: 1px solid var(--line); border-radius: 30px; background: rgba(17, 17, 45, .66); box-shadow: 0 24px 60px rgba(5, 5, 25, .32); }
+    .playfield { position: relative; min-height: 470px; overflow: hidden; isolation: isolate; background: linear-gradient(180deg, #36325f 0%, #4d3973 58%, #5a4771 59%, #524167 100%); }
+    .playfield::before { position: absolute; z-index: -1; inset: 0; content: ""; opacity: .68; background-image: radial-gradient(2px 2px at 8% 18%, #f8d978 98%, transparent), radial-gradient(2px 2px at 19% 39%, #fff7e6 98%, transparent), radial-gradient(2px 2px at 29% 11%, #f8d978 98%, transparent), radial-gradient(2px 2px at 55% 21%, #fff7e6 98%, transparent), radial-gradient(2px 2px at 73% 14%, #f8d978 98%, transparent), radial-gradient(2px 2px at 91% 34%, #fff7e6 98%, transparent), radial-gradient(1px 1px at 43% 38%, #fff7e6 98%, transparent); }
+    .curtain { position: absolute; z-index: -1; top: -60px; left: -5%; width: 110%; height: 142px; border-bottom: 8px solid rgba(250, 211, 122, .32); border-radius: 0 0 50% 50%; background: linear-gradient(180deg, #302550, #49325f); }
+    .moon { position: absolute; top: 54px; right: 11%; width: 62px; height: 62px; border-radius: 50%; background: #f7d98a; box-shadow: 0 0 42px rgba(248,217,120,.26); }
+    .moon::after { position: absolute; top: -7px; left: -10px; width: 62px; height: 62px; border-radius: 50%; background: #39315f; content: ""; }
+    .lantern { position: absolute; top: 92px; left: 12%; width: 22px; height: 34px; border: 2px solid #f8d978; border-radius: 45% 45% 50% 50%; background: #ffce6d; box-shadow: 0 0 30px rgba(255,206,109,.35); animation: sway 3s ease-in-out infinite alternate; }
+    .stage-caption { position: absolute; top: 22px; left: 26px; color: rgba(255,247,230,.72); font-size: 12px; }
+    .scene-prompt { position: absolute; top: 58px; left: 26px; max-width: 62%; margin: 0; color: var(--paper); font-size: 16px; font-weight: 700; line-height: 1.35; }
+    .character { position: absolute; z-index: 3; left: calc(50% - 50px); top: 145px; width: 100px; height: 100px; opacity: 0; transform: translateY(-78px) rotate(-7deg); filter: drop-shadow(0 12px 13px rgba(12, 9, 31, .28)); }
+    .character.is-visible { opacity: 1; transform: translateY(0) rotate(0); transition: transform .38s cubic-bezier(.2,.8,.3,1), opacity .15s ease; }
+    .character.is-jumping { animation: fall .36s cubic-bezier(.42,0,.72,.34) forwards; }
+    .character.is-landed { transform: translateY(54px); }
+    .character.is-sad { filter: grayscale(.55) drop-shadow(0 12px 13px rgba(12,9,31,.28)); transform: translateY(12px) rotate(8deg); }
+    .drum { position: absolute; z-index: 2; left: calc(50% - 104px); bottom: 45px; width: 208px; height: 126px; filter: drop-shadow(0 18px 12px rgba(13, 9, 30, .32)); }
+    .drum-top { position: absolute; inset: 0 0 auto; height: 43px; border: 5px solid #ffd88a; border-radius: 50%; background: #ffe7af; }
+    .drum-body { position: absolute; top: 23px; left: 9px; right: 9px; height: 79px; border: 4px solid #f5a078; border-top: 0; border-radius: 12px 12px 46px 46px; background: linear-gradient(90deg, #db5c5d, #f27b68 45%, #cf5158); }
+    .drum-body::before, .drum-body::after { position: absolute; top: 5px; bottom: 8px; width: 3px; border-radius: 3px; background: rgba(255,224,160,.9); content: ""; }
+    .drum-body::before { left: 25px; } .drum-body::after { right: 25px; }
+    .drum-badge { position: absolute; top: 39px; left: calc(50% - 23px); z-index: 3; display: grid; place-items: center; width: 46px; height: 46px; border: 3px solid #ffc68d; border-radius: 50%; color: #fff1c7; font-size: 22px; }
+    .drum.is-hit { animation: drum 220ms ease-out; }
+    .ground-glow { position: absolute; left: 50%; bottom: 128px; width: 230px; height: 26px; border-radius: 50%; background: rgba(245, 217, 120, .2); transform: translateX(-50%); }
+    .hit-flash { position: absolute; z-index: 5; left: 50%; bottom: 165px; color: var(--mint); font-size: 22px; font-weight: 900; opacity: 0; transform: translate(-50%, 10px) scale(.88); pointer-events: none; }
+    .hit-flash.show { animation: cheer .8s ease-out forwards; }
+    .beat-line { position: absolute; left: 22px; right: 22px; bottom: 15px; display: flex; justify-content: center; gap: 7px; padding: 11px; border: 1px solid rgba(255,255,255,.12); border-radius: 15px; background: rgba(23,24,55,.55); }
+    .beat { display: grid; place-items: center; width: clamp(25px, 5vw, 38px); height: clamp(25px, 5vw, 38px); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; color: rgba(255,247,230,.6); font-size: 13px; font-weight: 800; transition: background .1s ease, color .1s ease, transform .1s ease; }
+    .beat.current { color: #29234d; border-color: var(--sun); background: var(--sun); transform: scale(1.12); }
+    .beat.good { color: #102d28; border-color: var(--mint); background: var(--mint); }
+    .beat.missed { color: #fff; border-color: var(--coral); background: var(--coral); }
+    .side { display: flex; flex-direction: column; padding: 28px 27px 24px; }
+    .round-label { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 13px; }
+    .round-dots { display: flex; gap: 5px; }
+    .round-dots i { display: block; width: 18px; height: 7px; border-radius: 999px; background: rgba(255,255,255,.2); }
+    .round-dots i.done { background: var(--mint); }
+    .side h2 { margin: 25px 0 8px; font-size: 25px; line-height: 1.15; letter-spacing: -.03em; }
+    .side-copy { min-height: 74px; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
+    .score { display: flex; align-items: baseline; gap: 9px; margin: 23px 0 5px; }
+    .score strong { color: var(--mint); font-size: 44px; line-height: 1; }
+    .score span { color: var(--muted); font-size: 14px; }
+    .score-help { margin: 0 0 20px; color: var(--muted); font-size: 12px; }
+    .action { width: 100%; min-height: 54px; padding: 13px 17px; border: 0; border-radius: 16px; background: var(--sun); color: #342848; font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 5px 0 #d1a84d; transition: transform .12s ease, box-shadow .12s ease, filter .12s ease; }
+    .action:hover { filter: brightness(1.05); transform: translateY(-1px); box-shadow: 0 6px 0 #d1a84d; }
+    .action:active { transform: translateY(3px); box-shadow: 0 2px 0 #d1a84d; }
+    .action.coral { background: var(--coral); color: #321e3a; box-shadow: 0 5px 0 #a94551; }
+    .action.mint { background: var(--mint); color: #173a37; box-shadow: 0 5px 0 #4aa78c; }
+    .action:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+    .secondary { display: block; width: 100%; min-height: 46px; margin-top: 11px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.04); color: var(--paper); cursor: pointer; }
+    .help { margin: auto 0 0; padding-top: 24px; color: rgba(199,194,220,.75); font-size: 12px; line-height: 1.5; }
+    .tap-hint { display: flex; align-items: center; gap: 8px; margin-top: 14px; color: var(--muted); font-size: 12px; }
+    .tap-hint b { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--line); border-radius: 8px; color: var(--paper); font-size: 14px; }
+    .reduced-motion { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--muted); font-size: 12px; }
+    .reduced-motion input { accent-color: var(--mint); }
+    .note { display: flex; gap: 12px; align-items: flex-start; margin-top: 17px; padding: 13px 15px; border-left: 3px solid var(--mint); border-radius: 0 12px 12px 0; background: rgba(142,230,196,.07); color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .note strong { color: var(--paper); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .is-reduced *, .is-reduced *::before, .is-reduced *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    .is-reduced .character.is-visible { transform: none; }
+    @keyframes fall { to { transform: translateY(54px) rotate(0) scale(.96); } }
+    @keyframes drum { 50% { transform: scale(1.04,.91); } }
+    @keyframes cheer { 15% { opacity: 1; transform: translate(-50%, -7px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -30px) scale(1.05); } }
+    @keyframes sway { to { transform: rotate(7deg) translateY(3px); } }
+    @media (max-width: 760px) {
+      .page { padding: 16px 15px 28px; }
+      .topline { margin-bottom: 19px; }
+      .brand { font-size: 13px; }
+      .prototype-tag { display: none; }
+      .sound-toggle { min-height: 40px; padding: 7px 11px; font-size: 13px; }
+      h1 { font-size: clamp(28px, 8vw, 38px); }
+      .lead { margin: 9px 0 18px; font-size: 14px; }
+      .game-shell { grid-template-columns: 1fr; border-radius: 24px; }
+      .playfield { min-height: 365px; }
+      .curtain { height: 114px; }
+      .moon { top: 43px; width: 48px; height: 48px; }
+      .moon::after { width: 48px; height: 48px; }
+      .stage-caption { top: 18px; left: 18px; }
+      .scene-prompt { top: 48px; left: 18px; max-width: 66%; font-size: 14px; }
+      .character { top: 110px; width: 82px; height: 82px; left: calc(50% - 41px); }
+      .drum { width: 174px; height: 111px; left: calc(50% - 87px); bottom: 43px; }
+      .drum-top { height: 37px; }
+      .drum-body { top: 20px; height: 69px; }
+      .drum-badge { top: 33px; width: 40px; height: 40px; left: calc(50% - 20px); }
+      .ground-glow { bottom: 115px; width: 190px; }
+      .hit-flash { bottom: 151px; font-size: 19px; }
+      .beat-line { left: 12px; right: 12px; bottom: 10px; gap: 5px; padding: 8px; }
+      .side { padding: 20px 19px 19px; }
+      .side h2 { margin: 16px 0 6px; font-size: 22px; }
+      .side-copy { min-height: 0; }
+      .score { margin: 14px 0 3px; }
+      .score strong { font-size: 37px; }
+      .help { padding-top: 15px; }
+    }
+    @media (max-width: 380px) {
+      .playfield { min-height: 338px; }
+      .beat-line { gap: 3px; }
+      .beat { width: 25px; height: 25px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page" id="page">
+    <header class="topline">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">♫</span><span>El tambor de Armonía</span><span class="prototype-tag">muestra interactiva</span></div>
+      <button class="sound-toggle" id="soundToggle" type="button" aria-pressed="true"><span aria-hidden="true">♫</span><span id="soundLabel">Sonido activado</span></button>
+    </header>
+    <h1>¡Que nadie pierda el compás!</h1>
+    <p class="lead">Mira cómo cae la nota y dale al tambor cuando aterrice. Primero ensayamos juntas; los puntos vienen después.</p>
+
+    <section class="game-shell" aria-label="Muestra del juego rítmico">
+      <div class="playfield" id="playfield" aria-label="Escena musical">
+        <div class="curtain" aria-hidden="true"></div><div class="moon" aria-hidden="true"></div><div class="lantern" aria-hidden="true"></div>
+        <div class="stage-caption" id="stageCaption">Escenario de prueba · tempo tranquilo</div>
+        <p class="scene-prompt" id="scenePrompt">La nota baja… ¡escucha y mira el tambor!</p>
+        <div class="character is-visible" id="character" aria-hidden="true">
+          <svg viewBox="0 0 120 120" role="presentation">
+            <path d="M28 56C9 40 9 23 22 20c13-3 22 14 23 27M92 56c19-16 19-33 6-36-13-3-22 14-23 27" fill="#f8d978" stroke="#fff0b4" stroke-width="4" stroke-linecap="round"/>
+            <path d="M60 15c-8 12-33 9-39 34-7 29 8 54 39 57 31-3 46-28 39-57-6-25-31-22-39-34Z" fill="#a98be8" stroke="#d9c8ff" stroke-width="5"/>
+            <path d="M39 59c4-7 12-7 16 0M65 59c4-7 12-7 16 0" fill="none" stroke="#32254e" stroke-width="5" stroke-linecap="round"/>
+            <path d="M52 74c5 7 11 7 16 0" fill="none" stroke="#32254e" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="35" cy="73" r="6" fill="#f395a4"/><circle cx="85" cy="73" r="6" fill="#f395a4"/>
+            <path d="M60 4v15m-7-8h14" stroke="#fff0b4" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="ground-glow" aria-hidden="true"></div>
+        <div class="drum" id="drum" role="img" aria-label="Tambor coral">
+          <div class="drum-body"></div><div class="drum-top"></div><div class="drum-badge" aria-hidden="true">♫</div>
+        </div>
+        <div class="hit-flash" id="hitFlash" aria-hidden="true">¡A tiempo!</div>
+        <div class="beat-line" id="beatLine" aria-label="Ocho pulsos"></div>
+      </div>
+      <aside class="side" aria-live="polite">
+        <div class="round-label"><span id="phaseLabel">Antes de empezar</span><span class="round-dots" aria-label="Tres rondas"><i></i><i></i><i></i></span></div>
+        <h2 id="sideTitle">Mira y escucha</h2>
+        <p class="side-copy" id="sideCopy">La nota hace un saltito y el tambor responde. Cuando llegue al tambor, tú también puedes dar un golpe.</p>
+        <div class="score" id="scoreBox" hidden><strong id="score">0</strong><span>de 8 · necesitas 6</span></div>
+        <p class="score-help" id="scoreHelp" hidden>Los golpes a tiempo suman. Tienes mucho margen para probar.</p>
+        <button class="action" id="primaryAction" type="button">Ver una demostración</button>
+        <button class="secondary" id="secondaryAction" type="button" hidden>Empezar reto</button>
+        <div class="tap-hint"><b aria-hidden="true">␣</b><span>Teclado: Espacio · Mando: botón A / principal</span></div>
+        <label class="reduced-motion"><input id="reduceMotion" type="checkbox"> Menos movimiento</label>
+        <p class="help" id="liveMessage" role="status">La luz también marca cada pulso, por si prefieres jugar sin sonido.</p>
+      </aside>
+    </section>
+    <div class="note"><span aria-hidden="true">✦</span><span><strong>Prototipo para comentar.</strong> La canción, el nombre y los dibujos son provisionales. La muestra usa una melodía generada aquí y tres tempos de prueba.</span></div>
+  </main>
+  <script>
+    (() => {
+      const $ = (id) => document.getElementById(id);
+      const beatLine = $("beatLine"), character = $("character"), drum = $("drum"), page = $("page");
+      const primary = $("primaryAction"), secondary = $("secondaryAction"), soundToggle = $("soundToggle");
+      const phases = ["Práctica", "Cuenta", "Pulso", "Resultado"];
+      let mode = "intro", beat = -1, score = 0, round = 1, practiceCount = 0, hits = new Set();
+      let active = false, soundOn = true, reduced = false, targetAt = 0, beatMs = 690, raf = 0, nextBeat = 0, audio = null;
+      let gamepadDown = false, lastFeedback = 0;
+      const beatEls = [];
+      for (let i = 0; i < 8; i++) {
+        const dot = document.createElement("span"); dot.className = "beat"; dot.textContent = String(i + 1); beatLine.append(dot); beatEls.push(dot);
+      }
+      const bpmForRound = [87, 96, 105];
+      const roundTone = [660, 740, 880];
+      const setMessage = (text) => { $("liveMessage").textContent = text; };
+      function startAudio() {
+        if (!soundOn) return;
+        try {
+          audio ??= new (window.AudioContext || window.webkitAudioContext)();
+          if (audio.state === "suspended") audio.resume();
+        } catch (_) { soundOn = false; }
+      }
+      function tone(freq, duration = .11, type = "sine", volume = .045) {
+        if (!soundOn || !audio) return;
+        const osc = audio.createOscillator(), gain = audio.createGain();
+        osc.type = type; osc.frequency.value = freq; gain.gain.setValueAtTime(volume, audio.currentTime); gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + duration);
+        osc.connect(gain); gain.connect(audio.destination); osc.start(); osc.stop(audio.currentTime + duration);
+      }
+      function hitSound() { tone(210, .16, "triangle", .1); setTimeout(() => tone(140, .18, "sine", .055), 30); }
+      function cueSound(index) { tone(roundTone[(round - 1) % roundTone.length] * (index % 2 ? 1.125 : 1), .1, "sine", .035); }
+      function resetDots() { beatEls.forEach((el) => { el.className = "beat"; }); }
+      function animateLanding(index) {
+        beatEls.forEach((el) => el.classList.remove("current"));
+        if (index < 0 || index > 7) return;
+        character.classList.remove("is-sad", "is-jumping", "is-landed");
+        character.classList.add("is-visible");
+        character.getBoundingClientRect();
+        character.classList.add("is-jumping");
+        targetAt = performance.now() + (reduced ? 0 : 360);
+        window.setTimeout(() => {
+          if (beat !== index || !mode.endsWith("Play")) return;
+          beatEls[index].classList.add("current");
+          character.classList.remove("is-jumping"); character.classList.add("is-landed");
+          cueSound(index);
+        }, reduced ? 0 : 360);
+      }
+      function showFeedback(text, good) {
+        const flash = $("hitFlash");
+        flash.textContent = text; flash.style.color = good ? "var(--mint)" : "#ffc0a7"; flash.classList.remove("show"); flash.getBoundingClientRect(); flash.classList.add("show");
+        drum.classList.remove("is-hit"); drum.getBoundingClientRect(); drum.classList.add("is-hit");
+        if (good) hitSound();
+      }
+      function setState(next) {
+        mode = next;
+        const scored = next === "challenge" || next === "result";
+        $("phaseLabel").textContent = next === "intro" ? "Antes de empezar" : next.includes("practice") || next === "readyPractice" ? "Práctica libre" : next.includes("demo") ? "Demostración" : next === "result" ? "Ronda terminada" : next === "challenge" || next === "readyChallenge" ? `Ronda ${round} de 3` : phases[next === "countdown" ? 1 : 2];
+        $("scoreBox").hidden = !scored || next === "result" && practiceCount > 0 && score === -99;
+        $("scoreHelp").hidden = !scored;
+        primary.disabled = ["demoCount", "demoPlay", "practiceCount", "practicePlay", "challengeCount", "challengePlay"].includes(next);
+        secondary.hidden = true;
+        $("sideTitle").textContent = next === "intro" ? "Mira y escucha" : next.includes("demo") ? "La nota hace pum" : next.includes("practice") || next === "readyPractice" ? next === "readyPractice" ? "Ahora tú" : "Ensayamos juntas" : next.includes("challenge") || next === "readyChallenge" ? "¡A por el pulso!" : next === "result" ? score >= 6 ? "¡Ronda superada!" : "¡Vamos de nuevo!" : "Prepara tus manos";
+        $("sideCopy").textContent = next === "intro" ? "La nota hace un saltito y el tambor responde. Cuando llegue al tambor, tú también puedes dar un golpe." : next.includes("demo") ? "Mira la luz y escucha el tambor. Cada nota llega con el pulso." : next.includes("practice") || next === "readyPractice" ? "Toca cuando quieras. Aquí no hay puntos y podemos repetirlo." : next.includes("challenge") || next === "readyChallenge" ? "Sigue las luces y golpea cuando la nota aterrice. ¡Tienes tiempo!" : next === "result" ? score >= 6 ? "¡Has conseguido las seis estrellas! Cuando quieras, seguimos con otra melodía." : "No pasa nada: la misma melodía espera para que la pruebes otra vez." : "";
+        if (next === "intro") { primary.textContent = "Ver una demostración"; primary.className = "action"; }
+        else if (next === "readyPractice") { primary.textContent = "Practicar juntas"; primary.className = "action mint"; secondary.hidden = false; secondary.textContent = "Ver la demostración otra vez"; }
+        else if (next === "practiceDone") { primary.textContent = "Practicar otra vez"; primary.className = "action mint"; secondary.hidden = false; secondary.textContent = "Empezar reto"; }
+        else if (next === "result") { primary.textContent = score >= 6 ? round < 3 ? "Siguiente melodía" : "Celebrar con Armonía" : "Repetir esta ronda"; primary.className = "action coral"; secondary.hidden = score < 6; if (score >= 6) secondary.textContent = "Reiniciar el reto"; }
+        else if (next === "readyChallenge") { primary.textContent = "Empezar reto"; primary.className = "action"; }
+        else if (next.endsWith("Count") || next.endsWith("Play")) { primary.textContent = "Escucha…"; primary.className = "action"; }
+        else if (next === "challenge") { primary.textContent = "¡Golpea!"; primary.className = "action coral"; }
+        else { primary.textContent = "Ver una demostración"; primary.className = "action"; }
+      }
+      function beginDemo() { startAudio(); score = 0; resetDots(); setMessage("Mira: la nota baja ocho veces."); setState("demoCount"); countdown("demo"); }
+      function beginPractice() { startAudio(); resetDots(); hits.clear(); practiceCount = 0; setMessage("Ensayo: toca sin preocuparte por acertar."); setState("practiceCount"); countdown("practice"); }
+      function beginChallenge() { startAudio(); round = 1; score = 0; resetDots(); hits.clear(); roundSetup(); }
+      function roundSetup() { beatMs = 60000 / bpmForRound[round - 1]; $("stageCaption").textContent = `Ronda ${round} · ${bpmForRound[round - 1]} pulsos por minuto`; setState("challengeCount"); countdown("challenge"); }
+      function countdown(forMode) {
+        active = true; beat = -1; let n = 4; $("scenePrompt").textContent = ""; $("hitFlash").classList.remove("show");
+        const tick = () => {
+          if (!active) return;
+          if (n > 0) { $("scenePrompt").textContent = String(n); tone(440, .08, "sine", .035); n--; window.setTimeout(tick, beatMs); return; }
+          $("scenePrompt").textContent = "¡Ya!"; tone(660, .12, "sine", .05); window.setTimeout(() => startBeats(forMode), beatMs * .65);
+        };
+        tick();
+      }
+      function startBeats(forMode) {
+        mode = forMode === "demo" ? "demoPlay" : forMode === "practice" ? "practicePlay" : "challengePlay";
+        $("phaseLabel").textContent = forMode === "challenge" ? `Ronda ${round} de 3` : forMode === "demo" ? "Demostración" : "Práctica libre";
+        $("scenePrompt").textContent = forMode === "challenge" ? "¡Golpea al aterrizar!" : "Mira el saltito";
+        if (forMode === "challenge") {
+          $("sideTitle").textContent = "¡A por el pulso!";
+          $("sideCopy").textContent = "Sigue las luces y golpea cuando la nota aterrice. ¡Tienes tiempo!";
+          $("scoreBox").hidden = false; $("scoreHelp").hidden = false;
+          primary.disabled = false; primary.textContent = "¡Golpea!"; primary.className = "action coral";
+        } else if (forMode === "practice") {
+          primary.disabled = false; primary.textContent = "¡Golpea!"; primary.className = "action mint";
+        }
+        active = true; beat = 0; nextBeat = performance.now(); hits.clear();
+        if (forMode === "challenge") { score = 0; $("score").textContent = "0"; }
+        animateLanding(0); scheduleNext(forMode);
+        raf = requestAnimationFrame(() => pulseLoop(forMode));
+      }
+      function scheduleNext(forMode) {
+        const duration = forMode === "demo" ? 430 : beatMs;
+        window.setTimeout(() => {
+          if (!active || !mode.endsWith("Play")) return;
+          const next = beat + 1;
+          if (next > 7) { endSequence(forMode); return; }
+          beat = next; animateLanding(beat); scheduleNext(forMode);
+        }, duration);
+      }
+      function pulseLoop(forMode) {
+        if (!active || !mode.endsWith("Play")) return;
+        const now = performance.now();
+        if (forMode === "practice" && now - lastFeedback > 1300) character.classList.remove("is-sad");
+        if (forMode === "challenge" && beat >= 0 && beat < 8 && !hits.has(beat) && now > targetAt + 180) {
+          hits.add(beat); beatEls[beat].classList.add("missed"); score = Math.max(0, score - 1); $("score").textContent = String(score); setMessage("Ese pulso ya pasó. ¡Viene otro!");
+        }
+        if (beat >= 8) return;
+        raf = requestAnimationFrame(() => pulseLoop(forMode));
+      }
+      function endSequence(forMode) {
+        active = false; cancelAnimationFrame(raf); character.classList.remove("is-visible", "is-jumping");
+        if (forMode === "demo") { setMessage("Ahora puedes probarlo sin puntos."); setState("readyPractice"); }
+        else if (forMode === "practice") { practiceCount++; setMessage("¡Buen ensayo! Puedes repetir o empezar el reto."); setState("practiceDone"); }
+        else { setMessage(score >= 6 ? "¡Ronda superada!" : "La melodía se repite sin coste."); setState("result"); }
+      }
+      function press() {
+        if (mode === "practicePlay") { lastFeedback = performance.now(); character.classList.remove("is-sad"); showFeedback("¡Pum!", true); setMessage("¡Pum! En el ensayo puedes golpear cuando quieras."); return; }
+        if (mode !== "challengePlay" || beat < 0 || beat > 7) return;
+        const now = performance.now(), delta = Math.abs(now - targetAt);
+        if (hits.has(beat)) { score = Math.max(0, score - 1); $("score").textContent = String(score); showFeedback("¡Ups!", false); setMessage("Un golpe por pulso. ¡Mira la próxima luz!"); return; }
+        hits.add(beat);
+        if (delta <= 180) { score++; beatEls[beat].classList.remove("missed"); beatEls[beat].classList.add("good"); showFeedback("¡A tiempo!", true); setMessage("¡Qué bien! Sigue la luz."); }
+        else { score = Math.max(0, score - 1); beatEls[beat].classList.add("missed"); showFeedback("¡Casi!", false); setMessage("¡Casi! El tambor te espera en el siguiente pulso."); }
+        $("score").textContent = String(score);
+      }
+      primary.addEventListener("click", () => {
+        if (mode === "practicePlay" || mode === "challengePlay") press();
+        else if (mode === "intro") beginDemo();
+        else if (mode === "readyPractice" || mode === "practiceDone") beginPractice();
+        else if (mode === "readyChallenge") beginChallenge();
+        else if (mode === "result") {
+          if (score < 6) { resetDots(); hits.clear(); score = 0; $("score").textContent = "0"; roundSetup(); }
+          else if (round < 3) { round++; score = 0; resetDots(); roundSetup(); }
+          else { setMessage("¡Las tres rondas están listas para celebrarse!"); primary.textContent = "Volver al principio"; primary.onclick = () => location.reload(); }
+        }
+      });
+      secondary.addEventListener("click", () => {
+        if (mode === "readyPractice") beginDemo();
+        else if (mode === "practiceDone") { mode = "readyChallenge"; setState("readyChallenge"); setMessage("Ya puedes empezar cuando quieras."); }
+        else if (mode === "result") { round = 1; score = 0; resetDots(); hits.clear(); setState("readyChallenge"); setMessage("El reto empieza desde la primera melodía."); }
+      });
+      // «Empezar reto» aparece en la segunda acción y entra en la cuenta de inicio.
+      secondary.addEventListener("click", () => { if (mode === "readyChallenge") beginChallenge(); });
+      $("playfield").addEventListener("pointerdown", (event) => { if (event.target.closest("button")) return; });
+      window.addEventListener("keydown", (event) => { if (event.code === "Space" && !event.repeat && !event.target.closest("button")) { event.preventDefault(); press(); } });
+      function pollPad() {
+        const pad = navigator.getGamepads?.()[0]; const down = Boolean(pad?.buttons?.[0]?.pressed);
+        if (down && !gamepadDown) press(); gamepadDown = down; requestAnimationFrame(pollPad);
+      }
+      requestAnimationFrame(pollPad);
+      soundToggle.addEventListener("click", () => {
+        soundOn = !soundOn; soundToggle.setAttribute("aria-pressed", String(soundOn)); $("soundLabel").textContent = soundOn ? "Sonido activado" : "Jugar sin sonido";
+        soundToggle.querySelector("span").textContent = soundOn ? "♫" : "◌"; if (soundOn) startAudio();
+      });
+      $("reduceMotion").addEventListener("change", (event) => { reduced = event.target.checked; page.classList.toggle("is-reduced", reduced); });
+      // Bring the intro into its first explicit state.
+      setState("intro");
+    })();
+  </script>
+</body>
+</html>

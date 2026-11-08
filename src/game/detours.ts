@@ -6,18 +6,18 @@ export const detourCatalog: Array<{
   x: number; y: number; path: string; icon: number;
   shortcut?: { from: Level["world"]; to: Level["world"]; path: string };
 }> = [
-  { id: "fireflies", title: "El sendero de las luciérnagas", shortName: "Luciérnagas", source: "2-1", world: 2, x: 26, y: 23,
-    path: "M 310 235 Q 240 208 260 129", icon: 0,
-    shortcut: { from: 1, to: 3, path: "M 130 342 C 65 200 170 90 260 129 Q 370 65 510 134" } },
-  { id: "mine", title: "El túnel del gatito minero", shortName: "Túnel minero", source: "2-2", world: 2, x: 40, y: 52,
-    path: "M 310 235 Q 325 295 400 291", icon: 1,
-    shortcut: { from: 2, to: 6, path: "M 310 235 Q 325 295 400 291 C 560 310 665 408 830 431" } },
-  { id: "mill", title: "El molino de las manzanas", shortName: "Molino", source: "1-1", world: 1, x: 13, y: 38,
-    path: "M 130 342 Q 180 275 130 213", icon: 2 },
-  { id: "library", title: "La biblioteca de las patitas", shortName: "Biblioteca", source: "6-1", world: 6, x: 94, y: 69,
-    path: "M 830 431 Q 920 460 940 386", icon: 3 },
-  { id: "garden", title: "El jardín de los gigantes", shortName: "Jardín", source: "11-1", world: 11, x: 23, y: 92,
-    path: "M 320 442 Q 310 503 230 515", icon: 4 },
+  { id: "fireflies", title: "El sendero de las luciérnagas", shortName: "Luciérnagas", source: "2-1", world: 2, x: 29, y: 95,
+    path: "M 900 1560 Q 870 1560 870 1900", icon: 0,
+    shortcut: { from: 1, to: 3, path: "M 300 1520 C 600 1600 600 1850 870 1900 C 1080 1810 1350 1800 1500 1620" } },
+  { id: "mine", title: "El túnel del gatito minero", shortName: "Túnel minero", source: "2-2", world: 2, x: 30, y: 58,
+    path: "M 900 1560 Q 900 1560 900 1160", icon: 1,
+    shortcut: { from: 2, to: 6, path: "M 900 1560 L 900 1160 C 1350 1080 2400 1080 2700 1040" } },
+  { id: "mill", title: "El molino de las manzanas", shortName: "Molino", source: "1-1", world: 1, x: 10, y: 94,
+    path: "M 300 1520 Q 300 1520 300 1880", icon: 2 },
+  { id: "library", title: "La biblioteca de las patitas", shortName: "Biblioteca", source: "6-1", world: 6, x: 94, y: 60,
+    path: "M 2700 1040 Q 2820 1040 2820 1200", icon: 3 },
+  { id: "garden", title: "El jardín de los gigantes", shortName: "Jardín", source: "11-1", world: 11, x: 26, y: 33,
+    path: "M 870 980 Q 780 980 780 660", icon: 4 },
 ];
 
 const floor = (kind: Platform["kind"], width: number): Platform => ({ x: 0, y: 456, width, height: 120, kind });

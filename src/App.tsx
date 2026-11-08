@@ -16,7 +16,7 @@ import { createMusicPlayer, musicTracks } from "./game/music";
 import { getLevelObjectives } from "./game/levelObjectives";
 import { collectLifetimeApples, completeSecretShop, lifetimeApples, progressMilestone, readProgress, resetCampaignProgress, saveProgress, visitSecretShop, type Progress } from "./game/progress";
 import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
-import { worldArtwork, worldCatalog } from "./game/worldMapData";
+import { worldArtwork, worldCatalog, type WorldId } from "./game/worldMapData";
 import { checkRankingAvailability, loadRanking, rankingConnectionMessage, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
 import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnrolled, safeEnrollmentMoment } from "./game/rankingOnboarding";
 import type { GameSnapshot } from "./game/types";
@@ -98,6 +98,7 @@ export default function App() {
   const [effectsVolume, setEffectsVolume] = useState(() => readSavedPercentage(EFFECTS_VOLUME_KEY, 100));
   const [reduceMotion, setReduceMotion] = useState(() => readStorage("super-noa-reduce-motion") === "true");
   const [touchControls, setTouchControls] = useState<TouchControlsMode>(() => readStorage("super-noa-touch-controls") === "always" ? "always" : "auto");
+  const [mapReturnWorld, setMapReturnWorld] = useState<WorldId>();
   const [showCatPartyInvite, setShowCatPartyInvite] = useState(false);
   const [bossReplay, setBossReplay] = useState(false);
   const [bossReplayReturn, setBossReplayReturn] = useState<"home" | "map">("map");
@@ -536,6 +537,7 @@ export default function App() {
     void requestAdventure(() => {
       setBossReplayReturn(screen === "home" ? "home" : "map");
       setActiveIndex(index);
+      setMapReturnWorld(undefined);
       setLevelRun((current) => current + 1);
       setLives(MAX_LIVES);
       setSnapshot(emptySnapshot);
@@ -556,6 +558,7 @@ export default function App() {
     if (!isLevelUnlocked(index)) return;
     void requestAdventure(() => {
       setActiveIndex(index);
+      setMapReturnWorld(undefined);
       setLevelRun((current) => current + 1);
       setLives(MAX_LIVES);
       setSnapshot(emptySnapshot);
@@ -693,6 +696,7 @@ export default function App() {
   };
 
   const leaveCatParty = () => {
+    setMapReturnWorld(2);
     setPaused(false);
     setScreen("map");
   };
@@ -705,6 +709,8 @@ export default function App() {
 
   const resetProgress = () => {
     if (!window.confirm("¿Empezar de nuevo? Se borrarán las pantallas, las pegatinas y los jefes amigos guardados. Tu alias, las manzanas de toda la aventura y su fecha se conservan.")) return;
+    setMapReturnWorld(undefined);
+    setLevelRun(0);
     setProgress(resetCampaignProgress);
     setActiveIndex(0);
     setLives(MAX_LIVES);
@@ -764,7 +770,7 @@ export default function App() {
             </div>
           </header>
           <Suspense fallback={<p className="lazy-loading" role="status">Preparando el mapa…</p>}>
-            <WorldMap progress={progress} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
+            <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
           </Suspense>
           <button className="text-button reset-button" type="button" onClick={resetProgress}>Borrar progreso</button>
         </section>
@@ -893,7 +899,7 @@ export default function App() {
           <p className="eyebrow">Descanso</p><h2 id="pause-title">Juego en pausa</h2>
           <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => setPaused(false)}>{screen === "cat-party" ? "Continuar" : "Seguir jugando"}</button>
           {screen !== "cat-party" && <button className="pause-restart" type="button" onClick={restartCurrentLevel}>Reiniciar pantalla</button>}
-          <button className="pixel-button" type="button" data-gamepad-back onClick={() => { setPaused(false); setScreen("map"); }}>Volver al mapa</button>
+          <button className="pixel-button" type="button" data-gamepad-back onClick={screen === "cat-party" ? leaveCatParty : () => { setPaused(false); setScreen("map"); }}>Volver al mapa</button>
         </Dialog>
       )}
 

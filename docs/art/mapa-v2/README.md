@@ -1,6 +1,6 @@
 # Propuesta de composición del mapa
 
-Estado: prototipo pendiente de revisión humana en [Validar la composición ilustrada sobre el grafo acordado](https://github.com/Mocheto/super-noa/issues/5). No se consume desde el juego.
+La [composición de referencia aprobada](https://github.com/Mocheto/super-noa/issues/5) se conserva aquí. El juego usa la [ilustración final en WebP](../../../public/assets/worlds/noa-adventure-map-v2.webp), una edición generada con la herramienta integrada de ImageGen a 1536 × 1024 píxeles nativos. Mantiene la escena 3:2, las posiciones de los hitos y los claros del prototipo. Las rutas, los marcadores y el avatar se dibujan sobre la imagen.
 
 ## Archivos
 

@@ -1,7 +1,7 @@
 .game-frame[hidden] { display: none; }
 .detour-return { position: absolute; top: 10px; left: 10px; z-index: 3; min-height: 44px; padding: 8px 12px; border: 3px solid #624659; border-radius: 12px; color: #3d294a; background: #fff2d2; font: inherit; font-weight: 800; cursor: pointer; }
 .detour-return:focus-visible { outline: 4px solid #fff4a5; outline-offset: 2px; }
-.map-detour { position: absolute; z-index: 3; transform: translate(-50%, -50%); display: grid; justify-items: center; width: 102px; min-height: 68px; border: 2px dashed #f7d58e; border-radius: 16px; background: #362b47ed; color: #fff2ce; font: inherit; font-size: 11px; cursor: pointer; }
+.map-detour { position: absolute; z-index: 3; transform: translate(-50%, -50%); display: grid; justify-items: center; width: 102px; min-height: 68px; border: 2px dashed #f7d58e; border-radius: 16px; background: #362b47ed; color: #fff2ce; font: inherit; font-size: 14px; cursor: pointer; }
 .map-detour:focus-visible, .map-detour:hover { outline: 3px solid #fff2a3; }
 .detour-icon { display: inline-block; flex-shrink: 0; width: 46px; height: 46px; background-size: 500% 200%; background-repeat: no-repeat; }
 .map-detour.is-completed { border-style: solid; background: #365148ed; }
@@ -9,11 +9,18 @@
 .map-detour-mine.is-completed .detour-icon { background-position: 25% 100% !important; animation-name: detour-cart; }
 .map-detour-paths { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; pointer-events: none; }
 .map-detour-path[role="button"] { pointer-events: stroke; cursor: pointer; stroke-dasharray: .06 .04; }
-.map-detour-path[role="button"]:focus-visible { stroke: #fff; stroke-width: 9; outline: none; }
-.map-detour-path { fill: none; stroke: #ffe7b1; stroke-width: 5; stroke-dasharray: 10 9; stroke-linecap: round; filter: drop-shadow(0 2px 1px #35233c); }
+.map-detour-path[role="button"]:focus-visible { stroke: #fff; stroke-width: 19; outline: none; }
+.map-detour-path { fill: none; stroke: #ffe7b1; stroke-width: 11; stroke-dasharray: 18 15; stroke-linecap: round; filter: drop-shadow(0 2px 1px #35233c); }
 .map-detour-path.is-new { stroke-dasharray: 1; animation: detour-reveal 1.8s ease-out both; }
 .map-detour.is-new { animation: detour-arrive 1.8s ease-out both; }
-.map-shortcut { stroke: #baf2bd; stroke-width: 4; stroke-dasharray: 3 8; }
+.map-shortcut { stroke: #baf2bd; stroke-width: 12; stroke-dasharray: 8 16; }
+.map-shortcut.is-tunnel { stroke: #e1b3ff; stroke-width: 16; stroke-dasharray: 28 14; filter: drop-shadow(0 0 3px #281340); }
+.map-board.is-overview .map-detour {
+  width: 20px; height: 20px; min-height: 0; padding: 0; align-content: center; border-radius: 50%;
+}
+.map-board.is-overview .map-detour .detour-icon { width: 13px; height: 13px; }
+.map-board.is-overview .map-detour span:last-child { display: none; }
+.map-board.is-overview .map-detour-path[role="button"] { pointer-events: none; }
 .detour-list { display: flex; flex-wrap: wrap; gap: 10px; padding: 16px; }
 .detour-list button { display: flex; align-items: center; gap: 8px; border: 2px dashed #bd9565; border-radius: 12px; padding: 8px; color: #402a4d; background: #fff3d6; font: inherit; cursor: pointer; }
 .map-path:not(.map-path-water):not(.map-path-secret) .map-path-core { stroke-dasharray: none; stroke-width: 10; }

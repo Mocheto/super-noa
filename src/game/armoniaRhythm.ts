@@ -1,3 +1,7 @@
+import { beatTimeMs, nearestRhythmTarget } from "./rhythmEngine.ts";
+
+export { beatTimeMs };
+
 export const ARMONIA_BEAT_COUNT = 8;
 export const ARMONIA_TARGET_COUNT = 3;
 export const ARMONIA_ROUNDS = 3;
@@ -77,23 +81,14 @@ export function makeArmoniaChallenge(
   return chosen;
 }
 
-export function beatTimeMs(index: number, bpm: number) {
-  return index * 60_000 / bpm;
-}
-
 export function findTargetWithinWindow(
   musicPositionMs: number,
   round: ArmoniaRound,
   alreadyHit: ReadonlySet<number>,
 ): number | null {
   const beatMs = 60_000 / round.bpm;
-  let nearest: { index: number; distance: number } | null = null;
-  for (const index of round.melody.targetBeatIndexes) {
-    if (alreadyHit.has(index)) continue;
-    const distance = Math.abs(musicPositionMs - index * beatMs);
-    if (distance <= round.melody.windowMs && (!nearest || distance < nearest.distance)) nearest = { index, distance };
-  }
-  return nearest?.index ?? null;
+  const available = round.melody.targetBeatIndexes.filter((index) => !alreadyHit.has(index));
+  return nearestRhythmTarget(available, musicPositionMs, round.melody.windowMs, (index) => index * beatMs);
 }
 
 export function adjustArmoniaScore(score: number, delta: 1 | -1) {

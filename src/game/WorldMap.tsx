@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CAT_PARTY_LEVEL_ID } from "./catParty";
 import { LevelSelectCard } from "./LevelSelectCard";
 import { PixelIcon } from "./PixelIcon";
 import { optimizedAssetSource } from "./assets";
@@ -21,11 +22,12 @@ type WorldMapProps = {
   summaries: Record<number, WorldSummary>;
   isLevelUnlocked: (index: number) => boolean;
   onBeginLevel: (index: number) => void;
+  onOpenCatParty: () => void;
   reduceMotion: boolean;
   onDetourReveal: (ids: DetourId[]) => void;
 };
 
-export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, reduceMotion, onDetourReveal }: WorldMapProps) {
+export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal }: WorldMapProps) {
   const [selectedWorld, setSelectedWorld] = useState<WorldId | null>(null);
   const [openObjectives, setOpenObjectives] = useState<{ levelId: string; pinned: boolean } | null>(null);
   const openerRef = useRef<HTMLButtonElement | null>(null);
@@ -263,6 +265,7 @@ export function WorldMap({ progress, summaries, isLevelUnlocked, onBeginLevel, r
                 onCloseDetails={() => setOpenObjectives((current) => current?.levelId === level.id ? null : current)}
               />)}
             </div>
+            {selected.id === 2 && progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed && <button className="pixel-button" type="button" onClick={onOpenCatParty}>Jugar a la fiesta</button>}
             <div className="detour-list" aria-label="Desvíos descubiertos">
               {discoveredDetours.filter((entry) => entry.world === selected.id).map((entry) => <button key={entry.id} type="button" onClick={() => beginDetour(entry.id)}>
                 {detourIcon(entry.icon)} {entry.title} {progress.detours?.[entry.id]?.completed ? "✓" : ""}

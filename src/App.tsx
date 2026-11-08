@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { CAT_PARTY_LEVEL_ID } from "./game/catParty";
 import { Dialog } from "./game/Dialog";
 import { optimizedAssetSource } from "./game/assets";
 import { bossCatalog } from "./game/bosses";
@@ -28,12 +29,15 @@ const GameCanvas = lazy(() => import("./game/GameCanvas").then((module) => ({ de
 const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
 const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((module) => ({ default: module.GuardianMiniGame })));
 const ArmoniaRhythmGame = lazy(() => import("./game/ArmoniaRhythmGame").then((module) => ({ default: module.ArmoniaRhythmGame })));
+const CatParty = lazy(() => import("./game/CatParty").then((module) => ({ default: module.CatParty })));
 const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module) => ({ default: module.SantaBossBattle })));
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
 const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
 
-type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition";
+type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition" | "cat-party";
+const isTimedScreen = (screen: Screen) => screen === "game" || screen === "boss" || screen === "secret-transition" || screen === "cat-party";
+
 type CollectionTab = "stickers" | "bosses" | "memories";
 type TouchControlsMode = "auto" | "always";
 
@@ -94,6 +98,7 @@ export default function App() {
   const [effectsVolume, setEffectsVolume] = useState(() => readSavedPercentage(EFFECTS_VOLUME_KEY, 100));
   const [reduceMotion, setReduceMotion] = useState(() => readStorage("super-noa-reduce-motion") === "true");
   const [touchControls, setTouchControls] = useState<TouchControlsMode>(() => readStorage("super-noa-touch-controls") === "always" ? "always" : "auto");
+  const [showCatPartyInvite, setShowCatPartyInvite] = useState(false);
   const [bossReplay, setBossReplay] = useState(false);
   const [bossReplayReturn, setBossReplayReturn] = useState<"home" | "map">("map");
   const [snapshot, setSnapshot] = useState<GameSnapshot>(emptySnapshot);
@@ -113,6 +118,7 @@ export default function App() {
   const playScreenRef = useRef<HTMLElement | null>(null);
   const screenRef = useRef(screen);
   const activeLevel = levels[activeIndex] ?? detourLevels[activeIndex - levels.length];
+  const forestComplete = Boolean(progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed);
   const displayedLevel = activeDetour ? detourLevel(activeDetour) : activeLevel;
 
   useEffect(() => { screenRef.current = screen; }, [screen]);
@@ -314,14 +320,14 @@ export default function App() {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!event.defaultPrevented && event.code === "Escape" && !event.repeat && (screen === "game" || screen === "boss" || screen === "secret-transition")) setPaused((value) => !value);
+      if (!event.defaultPrevented && event.code === "Escape" && !event.repeat && isTimedScreen(screen)) setPaused((value) => !value);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [screen]);
 
   useEffect(() => {
-    if (screen !== "game" && screen !== "boss" && screen !== "secret-transition") return;
+    if (!isTimedScreen(screen)) return;
     const pauseWhenHidden = () => {
       if (document.visibilityState === "hidden") setPaused(true);
     };
@@ -337,7 +343,7 @@ export default function App() {
   }, [screen]);
 
   useEffect(() => {
-    if (screen !== "game" && screen !== "boss" && screen !== "secret-transition") return;
+    if (!isTimedScreen(screen)) return;
     let animationId = 0;
     let previous = readMenuPad(firstConnectedGamepad())[6];
     const poll = () => {
@@ -363,7 +369,7 @@ export default function App() {
         previousPadIndex = pad?.index ?? -1;
       } else if (pad) {
         const overlays = document.querySelectorAll<HTMLElement>(".modal-backdrop");
-        const container = overlays.item(overlays.length - 1) ?? document.querySelector<HTMLElement>(screen === "home" ? ".home-screen" : ".map-screen");
+        const container = overlays.item(overlays.length - 1) ?? document.querySelector<HTMLElement>(screen === "home" ? ".home-screen" : screen === "cat-party" ? ".cat-party-screen" : ".map-screen");
         if (container && container.dataset.gamepadManaged !== "true") {
           const focusables = Array.from(container.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), a[href]"))
             .filter((element) => element.getClientRects().length > 0);
@@ -604,6 +610,7 @@ export default function App() {
       setScreen("map");
       return;
     }
+    setShowCatPartyInvite(activeLevel.id === CAT_PARTY_LEVEL_ID && !forestComplete);
     setProgress((current) => {
       const previous = current.levelStats[activeLevel.id];
       return progressMilestone(current, {
@@ -618,7 +625,7 @@ export default function App() {
       });
     });
     setScreen(activeLevel.route?.finale ? "finished" : "complete");
-  }, [activeLevel, lives, snapshot]);
+  }, [activeLevel, forestComplete, lives, snapshot]);
 
   const handleCanvasComplete = useCallback((finalSnapshot: GameSnapshot) => handleComplete(false, finalSnapshot), [handleComplete]);
 
@@ -678,6 +685,17 @@ export default function App() {
     setPaused(false);
     setScreen("map");
   }, []);
+
+  const openCatParty = () => {
+    setPaused(false);
+    setShowCatPartyInvite(false);
+    setScreen("cat-party");
+  };
+
+  const leaveCatParty = () => {
+    setPaused(false);
+    setScreen("map");
+  };
 
   const nextLevel = () => {
     const nextIndex = nextLevelIndex(activeLevel);
@@ -746,11 +764,16 @@ export default function App() {
             </div>
           </header>
           <Suspense fallback={<p className="lazy-loading" role="status">Preparando el mapa…</p>}>
-            <WorldMap progress={progress} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
+            <WorldMap progress={progress} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
           </Suspense>
           <button className="text-button reset-button" type="button" onClick={resetProgress}>Borrar progreso</button>
         </section>
       )}
+
+      {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status">Preparando la fiesta…</p>}>
+        <CatParty paused={paused} muted={muted} musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotion}
+          onPause={() => setPaused(true)} onExit={leaveCatParty} />
+      </Suspense>}
 
       {screen === "secret-transition" && (
         <section className="secret-transition" aria-live="polite">
@@ -832,7 +855,8 @@ export default function App() {
               <p>Noa ha recogido {snapshot.apples} {snapshot.apples === 1 ? "manzana" : "manzanas"}. {activeLevel.world === 7 ? "La Reina Arcoíris guarda para siempre las insignias encontradas." : activeLevel.boss ? "El monstruo guardián ha dejado libre el camino." : "La siguiente aventura ya está abierta."}</p>
               <div className="completion-medals" aria-label="Medallas de esta pantalla"><span className="is-earned">★ Pantalla</span><span className={snapshot.stickers.length > 0 || progress.stickers.includes(activeLevel.items.find((item) => item.kind === "sticker")?.id ?? "") ? "is-earned" : ""}>★ Pegatina</span><span className={lives === MAX_LIVES ? "is-earned" : ""}>★ Sin perder vida</span></div>
               {snapshot.stickers.length > 0 && <p className="sticker-found"><PixelIcon kind="sparkle" /> {snapshot.stickers.length === 1 ? "Insignia guardada" : `${snapshot.stickers.length} insignias guardadas`} en el álbum.</p>}
-              {activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}>{activeLevel.route?.nextLabel ?? "Siguiente pantalla ▶"}</button>}
+              {showCatPartyInvite && <><p>Bruma te invita a preparar la leña para la fiesta. ¿Vamos al claro?</p><button className="pixel-button primary" type="button" data-gamepad-default onClick={openCatParty}>Ir a la fiesta</button></>}
+              {!showCatPartyInvite && activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}>{activeLevel.route?.nextLabel ?? "Siguiente pantalla ▶"}</button>}
               {activeLevel.world === 7 && <button className="pixel-button primary" type="button" data-gamepad-back onClick={() => setScreen("map")}>Volver al mapa secreto</button>}
               {activeLevel.world !== 7 && <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("map")}>Volver al mapa</button>}
             </Dialog>
@@ -864,11 +888,11 @@ export default function App() {
         </section>
       )}
 
-      {paused && (screen === "game" || screen === "boss" || screen === "secret-transition") && (
+      {paused && isTimedScreen(screen) && (
         <Dialog labelledBy="pause-title" className="game-modal compact" onClose={() => setPaused(false)}>
           <p className="eyebrow">Descanso</p><h2 id="pause-title">Juego en pausa</h2>
-          <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => setPaused(false)}>Seguir jugando</button>
-          <button className="pause-restart" type="button" onClick={restartCurrentLevel}>Reiniciar pantalla</button>
+          <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => setPaused(false)}>{screen === "cat-party" ? "Continuar" : "Seguir jugando"}</button>
+          {screen !== "cat-party" && <button className="pause-restart" type="button" onClick={restartCurrentLevel}>Reiniciar pantalla</button>}
           <button className="pixel-button" type="button" data-gamepad-back onClick={() => { setPaused(false); setScreen("map"); }}>Volver al mapa</button>
         </Dialog>
       )}

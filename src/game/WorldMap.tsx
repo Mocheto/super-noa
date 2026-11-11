@@ -175,7 +175,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
 
   return (
     <>
-      <p className="map-intro">Elige un mundo para ver sus pantallas. Noa puede visitar los lugares que ya conoce.</p>
+      <p className="map-intro">Arrastra el mapa para explorar y toca un mundo para ver sus pantallas. Noa puede visitar los lugares que ya conoce.</p>
       <div className="map-layout">
       <div className="map-controls" inert={selectedWorld !== null} aria-label="Explorar el mapa">
         <div className="map-mode">

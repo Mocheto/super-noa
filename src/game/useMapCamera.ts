@@ -80,6 +80,12 @@ export function useMapCamera(viewportRef: RefObject<HTMLDivElement | null>, init
   const onPointerLeave = (event: PointerEvent<HTMLDivElement>) => {
     if (event.pointerType === "mouse" && !event.currentTarget.hasPointerCapture(event.pointerId)) onPointerUp(event);
   };
+  const onLostPointerCapture = (event: PointerEvent<HTMLDivElement>) => {
+    // Touch starts with implicit capture on the image or marker. Transferring
+    // capture to the viewport emits a bubbling loss from that child; it must
+    // not end the gesture we have just captured on the viewport.
+    if (event.target === event.currentTarget) onPointerUp(event);
+  };
   const onClickCapture = (event: MouseEvent<HTMLDivElement>) => {
     if (!gesture.current.dragged || event.detail === 0) return;
     event.preventDefault();
@@ -93,6 +99,6 @@ export function useMapCamera(viewportRef: RefObject<HTMLDivElement | null>, init
   return {
     frame, overview, showAll, showNear, centerOn, ensureVisible, zoomBy,
     atMin: frame.width <= fit + 1, atMax: frame.width >= max - 1,
-    viewportEvents: { onPointerDown, onPointerMove, onPointerUp, onPointerLeave, onPointerCancel: onPointerUp, onLostPointerCapture: onPointerUp, onClick, onClickCapture },
+    viewportEvents: { onPointerDown, onPointerMove, onPointerUp, onPointerLeave, onPointerCancel: onPointerUp, onLostPointerCapture, onClick, onClickCapture },
   };
 }

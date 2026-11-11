@@ -29,7 +29,7 @@ const GameCanvas = lazy(() => import("./game/GameCanvas").then((module) => ({ de
 const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
 const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((module) => ({ default: module.GuardianMiniGame })));
 const ArmoniaRhythmGame = lazy(() => import("./game/ArmoniaRhythmGame").then((module) => ({ default: module.ArmoniaRhythmGame })));
-const CatParty = lazy(() => import("./game/CatParty").then((module) => ({ default: module.CatParty })));
+const CatParty = lazy(() => import("./game/CatPartyGame").then((module) => ({ default: module.CatParty })));
 const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module) => ({ default: module.SantaBossBattle })));
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";

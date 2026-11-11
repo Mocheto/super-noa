@@ -49,10 +49,18 @@ export function useMapCamera(viewportRef: RefObject<HTMLDivElement | null>, init
     return { x: event.clientX - rect.left - event.currentTarget.clientLeft, y: event.clientY - rect.top - event.currentTarget.clientTop };
   };
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || contacts.current.size >= 2) return;
     const point = local(event);
     if (contacts.current.size === 0) gesture.current = { dragged: false, start: point };
     contacts.current.set(event.pointerId, point);
+    if (contacts.current.size === 2) {
+      // A two-finger gesture belongs to the map, even before either finger
+      // moves. Capture both contacts so lifting them cannot select a marker.
+      gesture.current.dragged = true;
+      onExplore();
+      for (const id of contacts.current.keys()) event.currentTarget.setPointerCapture(id);
+      event.preventDefault();
+    }
   };
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     const previous = contacts.current.get(event.pointerId);
@@ -62,6 +70,7 @@ export function useMapCamera(viewportRef: RefObject<HTMLDivElement | null>, init
     if (!other && !gesture.current.dragged && distance(gesture.current.start, point) < 6) return;
     contacts.current.set(event.pointerId, point);
     gesture.current.dragged = true;
+    event.preventDefault();
     onExplore();
     if (!event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.setPointerCapture(event.pointerId);
     const origin = other ? midpoint(other, previous) : previous;

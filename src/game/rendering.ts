@@ -1567,7 +1567,7 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
     const flying = enemy.kind === "conductor-pigeon";
     const width = 68, height = 68;
     const drawX = x + (enemy.width - width) / 2;
-    const drawY = y + enemy.height - height + (flying ? Math.sin(enemy.phase * 4) * 4 : 0);
+    const drawY = y + enemy.height - height + (flying ? Math.sin(enemy.phase * 4) * 4 : height * .068);
     context.save();
     if (enemy.vx < 0) { context.translate(drawX + width, 0); context.scale(-1, 1); context.drawImage(raster.worldCharacters, column * raster.worldCharacters.naturalWidth / 3, 0, raster.worldCharacters.naturalWidth / 3, raster.worldCharacters.naturalHeight, 0, drawY, width, height); }
     else context.drawImage(raster.worldCharacters, column * raster.worldCharacters.naturalWidth / 3, 0, raster.worldCharacters.naturalWidth / 3, raster.worldCharacters.naturalHeight, drawX, drawY, width, height);

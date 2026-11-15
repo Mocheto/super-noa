@@ -270,9 +270,10 @@ const drawAdventureTerrain = (context: CanvasRenderingContext2D, image: HTMLImag
     : { ground: [.008, .245, .77, .30], ledge: [.018, .63, .75, .30], wall: [.77, .025, .225, .94] };
   const [sx, sy, sw, sh] = crops[part].map((value, index) => value * (index % 2 === 0 ? image.naturalWidth : image.naturalHeight));
   const tileWidth = part === "ground" ? 190 : width;
-  // El atlas del desierto deja aire transparente encima de la arena. Lo compensamos
-  // solo al dibujar: la superficie visible queda en la misma línea que la colisión.
-  const surfaceLift = world === 14 ? (part === "ground" ? 20 : 11) : 0;
+  // Los atlas dejan aire transparente encima de la arena, la piedra y el metal. Lo compensamos
+  // solo al dibujar: la superficie visible queda en la misma línea que la colisión (y = platform.y).
+  // Valores medidos sobre la primera fila opaca de cada recorte; el suelo se estira hasta y + 120.
+  const surfaceLift = world === 14 ? (part === "ground" ? 36 : 11) : world === 15 ? (part === "ground" ? 9 : 3) : 0;
   for (let offset = 0; offset < width; offset += tileWidth) {
     const drawnWidth = Math.min(tileWidth, width - offset);
     const drawnHeight = part === "ledge" ? Math.max(58, height + 34) : height;

@@ -227,19 +227,25 @@ const newWorldTerrainSources = {
   12: { ground: [45, 115, 745, 525], ledge: [855, 110, 685, 445], wall: [1610, 5, 390, 650] },
 } as const;
 
+// Aire transparente sobre la superficie de cada atlas, medido en la primera fila opaca del recorte.
+// Se compensa solo al dibujar para que la línea visible coincida con la colisión (y = platform.y).
+const newWorldSurfaceLift = { 10: { ground: 5, ledge: 5 }, 11: { ground: 9, ledge: 5 }, 12: { ground: 12, ledge: 8 } } as const;
+
 const drawNewWorldTerrain = (context: CanvasRenderingContext2D, image: HTMLImageElement, world: 10 | 11 | 12, part: "ground" | "ledge" | "wall", x: number, y: number, width: number, height: number) => {
   if (!image.complete || !image.naturalWidth) return false;
   const [sx, sy, sw, sh] = newWorldTerrainSources[world][part];
   if (part === "ledge") {
-    context.drawImage(image, sx, sy, sw, sh, x - 4, y - 3, width + 8, Math.max(70, height + 55));
+    const lift = newWorldSurfaceLift[world].ledge;
+    context.drawImage(image, sx, sy, sw, sh, x - 4, y - lift, width + 8, Math.max(70, height + 55) + lift - 3);
     return true;
   }
   if (part === "wall") {
     context.drawImage(image, sx, sy, sw, sh, x, y, width, height);
     return true;
   }
+  const groundLift = newWorldSurfaceLift[world].ground;
   for (let tileX = x; tileX < x + width; tileX += 150) {
-    context.drawImage(image, sx, sy, sw, sh, tileX, y, Math.min(153, x + width - tileX), height);
+    context.drawImage(image, sx, sy, sw, sh, tileX, y - groundLift, Math.min(153, x + width - tileX), height + groundLift);
   }
   return true;
 };
@@ -273,7 +279,7 @@ const drawAdventureTerrain = (context: CanvasRenderingContext2D, image: HTMLImag
   // Los atlas dejan aire transparente encima de la arena, la piedra y el metal. Lo compensamos
   // solo al dibujar: la superficie visible queda en la misma línea que la colisión (y = platform.y).
   // Valores medidos sobre la primera fila opaca de cada recorte; el suelo se estira hasta y + 120.
-  const surfaceLift = world === 14 ? (part === "ground" ? 36 : 11) : world === 15 ? (part === "ground" ? 9 : 3) : 0;
+  const surfaceLift = world === 14 ? (part === "ground" ? 40 : 11) : world === 15 ? (part === "ground" ? 11 : 3) : 0;
   for (let offset = 0; offset < width; offset += tileWidth) {
     const drawnWidth = Math.min(tileWidth, width - offset);
     const drawnHeight = part === "ledge" ? Math.max(58, height + 34) : height;

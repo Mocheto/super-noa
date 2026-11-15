@@ -35,16 +35,16 @@ test("cinco desvíos declarativos separados de campaña, insignias y guardianes"
     assert.ok(level.platforms.some((platform) => platform.x === 0 && platform.width === level.width && platform.y === 456), "suelo seguro de regreso");
     assert.ok(entry.x > 0 && entry.x < 100 && entry.y > 0 && entry.y < 100);
   }
-  const art = readFileSync(new URL(`../../public/${detourArtwork.slice(2)}`, import.meta.url), "utf8");
-  assert.match(art, /width="640" height="256"/);
-  assert.doesNotMatch(art, /https?:\/\/(?!www.w3.org)/);
+  const png = (path: string) => readFileSync(new URL(`../../public/assets/${path}`, import.meta.url));
   for (const [path, width, height] of [
-    ["atlases/detour-switches-v1.svg", 384, 96],
-    ["worlds/detour-scenes-v1.svg", 2880, 540],
+    ["atlases/secret-detours-v1.png", 1280, 512],
+    ["atlases/detour-switches-v1.png", 768, 192],
+    ["worlds/detour-scenes-v1.png", 2880, 540],
   ] as const) {
-    const svg = readFileSync(new URL(`../../public/assets/${path}`, import.meta.url), "utf8");
-    assert.ok(svg.includes(`width="${width}" height="${height}"`));
-    assert.doesNotMatch(svg, /<image|<script|https?:\/\/(?!www.w3.org)/);
+    const bytes = png(path);
+    assert.equal(bytes.subarray(1, 4).toString("ascii"), "PNG");
+    assert.equal(bytes.readUInt32BE(16), width);
+    assert.equal(bytes.readUInt32BE(20), height);
   }
 });
 

@@ -1,6 +1,6 @@
 import type { DetourId, Level, Platform } from "./types.ts";
 
-export const detourArtwork = "./assets/atlases/secret-detours-v1.svg";
+export const detourArtwork = "./assets/atlases/secret-detours-v1.png";
 export const detourCatalog: Array<{
   id: DetourId; title: string; shortName: string; source: string; world: Level["world"];
   x: number; y: number; path: string; icon: number;

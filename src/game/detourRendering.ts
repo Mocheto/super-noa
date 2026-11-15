@@ -5,7 +5,7 @@ import type { DetourEntrance, Level } from "./types.ts";
 
 function sprite(context: CanvasRenderingContext2D, column: number, row: number, x: number, y: number, width: number, height: number) {
   const image = getImage(detourArtwork);
-  if (image.complete && image.naturalWidth) context.drawImage(image, column * 128, row * 128, 128, 128, x, y, width, height);
+  if (image.complete && image.naturalWidth) context.drawImage(image, column * 256, row * 256, 256, 256, x, y, width, height);
   else {
     context.fillStyle = row ? "#d5b77c" : "#75995b";
     context.fillRect(x, y, width, height);
@@ -107,9 +107,12 @@ export function drawDetourMechanisms(context: CanvasRenderingContext2D, level: L
   }
   for (const toggle of level.detourSwitches ?? []) {
     const column = toggle.id === "bell" ? 0 : toggle.id === "books" ? 1 : 2;
-    const image = getImage("./assets/atlases/detour-switches-v1.svg");
-    if (image.complete && image.naturalWidth) context.drawImage(image, column * 128, 0, 128, 96, toggle.x - cameraX, toggle.y, toggle.width, toggle.height);
-    else sprite(context, column + 2, 0, toggle.x - cameraX, toggle.y, toggle.width, toggle.height);
+    const image = getImage("./assets/atlases/detour-switches-v1.png");
+    if (image.complete && image.naturalWidth) context.drawImage(image, column * 256, 0, 256, 192, toggle.x - cameraX, toggle.y, toggle.width, toggle.height);
+    else {
+      context.fillStyle = "#d5b77c";
+      context.fillRect(toggle.x - cameraX, toggle.y, toggle.width, toggle.height);
+    }
     context.fillStyle = clock.switches.has(toggle.id) ? "#b1f5c0" : "#fff0ac";
     context.font = "bold 25px monospace"; context.textAlign = "center";
     context.fillText("↑", toggle.x + toggle.width / 2 - cameraX, toggle.y - 10);
@@ -120,7 +123,7 @@ export function drawDetourMechanisms(context: CanvasRenderingContext2D, level: L
 export function drawDetourScenery(context: CanvasRenderingContext2D, level: Level, cameraX: number) {
   const column = level.detour === "mill" ? 0 : level.detour === "library" ? 1 : level.detour === "garden" ? 2 : -1;
   if (column < 0) return;
-  const image = getImage("./assets/worlds/detour-scenes-v1.svg");
+  const image = getImage("./assets/worlds/detour-scenes-v1.png");
   if (!image.complete || !image.naturalWidth) return;
   const offset = cameraX * .15 % 960;
   for (const x of [-offset, 960 - offset]) context.drawImage(image, column * 960, 0, 960, 540, x, 0, 960, 540);

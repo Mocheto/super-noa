@@ -258,7 +258,7 @@ export const levels: Level[] = [
     world: 1,
     screen: 2,
     title: "La gran fiesta de las copas",
-    subtitle: "Un recorrido largo entre ramas, cajas y tres pequeños precipicios.",
+    subtitle: "Un recorrido largo entre ramas, cajas y tres huecos grandes.",
     theme: "orchard-sunset",
     width: 5200,
     start: { x: 80, y: 380 },
@@ -638,7 +638,7 @@ export const levels: Level[] = [
     world: 4,
     screen: 3,
     title: "La fortaleza del Gran Jabalí",
-    subtitle: "Busca el gran muelle para alcanzar la enredadera secreta.",
+    subtitle: "Busca la gran plataforma de madera para alcanzar la enredadera secreta.",
     theme: "boar-storm",
     width: 7600,
     start: { x: 80, y: 380 },
@@ -868,7 +868,7 @@ export const levels: Level[] = [
   },
   {
     id: "9-2", world: 9, screen: 2,
-    title: "El vuelo de los terodáctilos", subtitle: "Sube por los riscos y cruza cada cala sin tocar el agua.",
+    title: "El vuelo de los terodáctilos", subtitle: "Sube por las rocas y cruza cada bahía sin tocar el agua.",
     theme: "dinosaur-island", width: 5300, start: { x: 80, y: 380 }, goalX: 5120,
     platforms: [
       ...dinoGround(dinoFloor2),
@@ -1074,7 +1074,7 @@ export const levels: Level[] = [
   },
   {
     id: "13-1", world: 13, screen: 1,
-    title: "La senda de la nieve", subtitle: "¡Salta sobre el regalo de la flecha para subir hasta los pinos!",
+    title: "El camino de los regalos", subtitle: "¡Salta sobre el regalo saltarín para subir hasta los pinos!",
     theme: "winter-snow", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     platforms: [
       ...themedGround([[0, 860], [980, 780], [1890, 940], [2960, 810], [3900, 850], [4880, 720]], "snow-ground"),
@@ -1269,7 +1269,7 @@ export const levels: Level[] = [
   },
   {
     id: "16-1", world: 16, screen: 1,
-    title: "El jardín de los tambores", subtitle: "Empieza con un paseo tranquilo y cruza tres pequeños puentes siguiendo el compás.",
+    title: "El jardín de los tambores", subtitle: "Empieza con un paseo tranquilo y cruza tres pequeños puentes siguiendo la música.",
     theme: "music-garden", width: 6000, start: { x: 80, y: 380 }, goalX: 5810,
     platforms: [
       ...themedGround([[0, 1780], [1910, 820], [2860, 840], [3830, 2070]], "music-ground"),
@@ -1308,7 +1308,7 @@ export const levels: Level[] = [
   },
   {
     id: "16-3", world: 16, screen: 3, route: { next: "17-1", nextLabel: "Subir al Reino Celeste" },
-    title: "El gran teatro de Armonía", subtitle: "Cruza el compás y termina sobre un gran escenario continuo antes de saludar a Armonía.",
+    title: "El gran teatro de Armonía", subtitle: "Sigue la música entre los tambores y llega al gran escenario para saludar a Armonía.",
     theme: "music-theater", width: 7400, start: { x: 80, y: 380 }, goalX: 7200,
     platforms: [
       ...themedGround([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 2810]], "music-ground"),
@@ -1329,7 +1329,7 @@ export const levels: Level[] = [
   },
   {
     id: "17-1", world: 17, screen: 1,
-    title: "Las nubes del amanecer", subtitle: "Sube de nube en nube o busca la palanca del desvío lateral para tomar el ascensor.",
+    title: "Las nubes del amanecer", subtitle: "Sube de nube en nube o tira de la palanca para tomar el ascensor.",
     theme: "sky-dawn", width: 960, height: 3500, orientation: "vertical", start: { x: 110, y: 3352 }, goalX: 480, goalY: 175,
     platforms: skyLiftLevelPlatforms(3500, 0, 2385, 1950),
     enemies: [
@@ -1343,7 +1343,7 @@ export const levels: Level[] = [
   },
   {
     id: "17-2", world: 17, screen: 2,
-    title: "La escalera del cielo", subtitle: "La ruta sigue por el centro. La palanca lateral abre un camino más fácil en ascensor.",
+    title: "La escalera del cielo", subtitle: "El camino sigue por el centro. La palanca abre un camino más fácil en ascensor.",
     theme: "sky-blue", width: 960, height: 3900, orientation: "vertical", start: { x: 110, y: 3752 }, goalX: 480, goalY: 175,
     platforms: skyLiftLevelPlatforms(3900, 1, 2350, 1915),
     enemies: [
@@ -1357,7 +1357,7 @@ export const levels: Level[] = [
   },
   {
     id: "17-3", world: 17, screen: 3, route: { finale: true },
-    title: "La puerta de las estrellas", subtitle: "Alcanza la luna o toma el desvío lateral en ascensor antes de conocer a Aurora Celeste.",
+    title: "La puerta de las estrellas", subtitle: "Alcanza la luna o tira de la palanca para subir en ascensor y conocer a Aurora Celeste.",
     theme: "sky-stars", width: 960, height: 4300, orientation: "vertical", start: { x: 110, y: 4152 }, goalX: 480, goalY: 175,
     platforms: skyLiftLevelPlatforms(4300, 2, 2315, 1880),
     enemies: [

@@ -27,6 +27,13 @@ const DEMO_ROUND: ArmoniaRound = { melody: armoniaMelodies[0], bpm: 92 };
 const GOLD_FRAME_POSITIONS = ["0% 0%", "33.333% 0%", "66.666% 0%", "100% 0%"];
 const BLUE_FRAME_POSITIONS = ["0% 100%", "33.333% 100%", "66.666% 100%"];
 
+// Retraso entre programar una nota y oírla: el reloj de la partida lo descuenta para que
+// la luz de la polilla y el golpe de tambor caigan cuando suena la nota, no antes.
+function outputLatencySeconds(context: AudioContext) {
+  const latency = (context.outputLatency || 0) + (context.baseLatency || 0);
+  return Number.isFinite(latency) ? Math.min(0.25, Math.max(0, latency)) : 0;
+}
+
 function getAudioContext() {
   return typeof window !== "undefined" && "AudioContext" in window ? new window.AudioContext() : null;
 }
@@ -295,7 +302,7 @@ export function ArmoniaRhythmGame({ paused, onAbandon, onWin, playSound, muted =
     }
     if (audioRef.current?.state === "suspended" && !interactionPaused && (phase === "countin" || phase === "playing")) {
       void audioRef.current.resume().then(() => {
-        if (audioRef.current) audioOriginRef.current = audioRef.current.currentTime - elapsedRef.current / 1000;
+        if (audioRef.current) audioOriginRef.current = audioRef.current.currentTime - elapsedRef.current / 1000 - outputLatencySeconds(audioRef.current);
         setAudioAvailable(true);
       }).catch(() => { setAudioAvailable(false); });
     }
@@ -314,13 +321,19 @@ export function ArmoniaRhythmGame({ paused, onAbandon, onWin, playSound, muted =
       if (lastFrameRef.current === null) lastFrameRef.current = now;
       const delta = Math.min(100, now - lastFrameRef.current);
       lastFrameRef.current = now;
-      const elapsed = elapsedRef.current + delta;
+      // El reloj de audio manda: así la luz, el tambor y la melodía comparten el mismo tiempo.
+      // Sin audio (silencio o bloqueado) seguimos con el reloj de fotogramas.
+      const audioClock = audioRef.current;
+      const elapsed = audioClock?.state === "running" && audioOriginRef.current !== null
+        ? Math.max(elapsedRef.current, (audioClock.currentTime - audioOriginRef.current - outputLatencySeconds(audioClock)) * 1000)
+        : elapsedRef.current + delta;
       elapsedRef.current = elapsed;
+      const lookaheadMs = AUDIO_LOOKAHEAD_MS + (audioClock ? outputLatencySeconds(audioClock) * 1000 : 0);
       const round = roundRef.current;
       const beatMs = 60_000 / round.bpm;
       const musicStart = ARMONIA_COUNT_IN_BEATS * beatMs;
 
-      while (nextCountRef.current < ARMONIA_COUNT_IN_BEATS && elapsed >= nextCountRef.current * beatMs - AUDIO_LOOKAHEAD_MS) {
+      while (nextCountRef.current < ARMONIA_COUNT_IN_BEATS && elapsed >= nextCountRef.current * beatMs - lookaheadMs) {
         const countBeat = nextCountRef.current++;
         const context = audioRef.current;
         const at = audioOriginRef.current === null ? 0 : audioOriginRef.current + countBeat * beatMs / 1000;
@@ -328,7 +341,7 @@ export function ArmoniaRhythmGame({ paused, onAbandon, onWin, playSound, muted =
         setCountNumber(countBeat + 1);
       }
 
-      while (nextAudioRef.current < ARMONIA_BEAT_COUNT && elapsed >= musicStart + nextAudioRef.current * beatMs - AUDIO_LOOKAHEAD_MS) {
+      while (nextAudioRef.current < ARMONIA_BEAT_COUNT && elapsed >= musicStart + nextAudioRef.current * beatMs - lookaheadMs) {
         const beat = nextAudioRef.current++;
         const isTarget = round.melody.targetBeatIndexes.includes(beat);
         const context = audioRef.current;
@@ -339,11 +352,6 @@ export function ArmoniaRhythmGame({ paused, onAbandon, onWin, playSound, muted =
           synthesize(fundamental, Math.max(context.currentTime + 0.01, at), round.melody.audio.waveform, isTarget ? 0.055 : 0.035);
           if (isTarget) synthesize(fundamental * 1.5, Math.max(context.currentTime + 0.02, at + 0.035), "sine", 0.018);
         }
-      }
-
-      if (audioRef.current?.state === "running" && audioOriginRef.current !== null) {
-        const driftSeconds = audioRef.current.currentTime - (audioOriginRef.current + elapsed / 1000);
-        if (Math.abs(driftSeconds) > 0.045) audioOriginRef.current += driftSeconds * 0.08;
       }
 
       const musicPosition = elapsed - musicStart;
@@ -385,6 +393,13 @@ export function ArmoniaRhythmGame({ paused, onAbandon, onWin, playSound, muted =
           updatePhase(successful ? (roundIndexRef.current === ARMONIA_ROUNDS - 1 ? "won" : "round-done") : "failed");
           setMessage(successful ? "¡Las tres notas! Esta melodía está superada." : "Para pasar hacen falta las tres notas doradas. Escucha esta ronda otra vez.");
           playSound(successful ? "checkpoint" : "hurt");
+          // Cierre musical: las tres notas doradas suenan en escalera, con la misma melodía de la ronda.
+          const finale = audioRef.current;
+          if (successful && finale?.state === "running") {
+            round.melody.targetBeatIndexes.forEach((beat, step) => {
+              synthesize(round.melody.audio.notesHz[beat] * (step === 2 ? 2 : 1), finale.currentTime + 0.08 + step * beatMs / 2000, "triangle", 0.05);
+            });
+          }
         }
         lastFrameRef.current = null;
         return;
@@ -472,7 +487,7 @@ export function ArmoniaRhythmGame({ paused, onAbandon, onWin, playSound, muted =
       {phase === "practice-ready" && practiceComplete && <button className="pixel-button armonia-secondary" type="button" onClick={beginChallenge}>{friendlyReplay ? "Empezar partida amistosa" : "Empezar reto · 3 rondas"}</button>}
       {phase === "won" && !friendlyReplay && <p className="armonia-win-note">{challengePerfect ? "¡Tres melodías perfectas! Has ganado el marco especial." : "¡Tres melodías superadas! Puedes repetir para intentar ganar el marco especial."}</p>}
       {(phase === "countin" || phase === "playing" || phase === "failed" || phase === "round-done") && !friendlyReplay && <button className="text-button armonia-restart" type="button" onClick={beginRestart}>Reiniciar las tres rondas</button>}
-      {audioAttempted && !audioAvailable && !muted && <button className="text-button armonia-audio-retry" type="button" onClick={async () => { const ready = await ensureAudio(); if (ready && audioRef.current) audioOriginRef.current = audioRef.current.currentTime - elapsedRef.current / 1000; }}>Reintentar sonido</button>}
+      {audioAttempted && !audioAvailable && !muted && <button className="text-button armonia-audio-retry" type="button" onClick={async () => { const ready = await ensureAudio(); if (ready && audioRef.current) audioOriginRef.current = audioRef.current.currentTime - elapsedRef.current / 1000 - outputLatencySeconds(audioRef.current); }}>Reintentar sonido</button>}
       {(muted || !audioAvailable) && <p className="armonia-audio-note">{muted ? "Puedes seguir con las señales visuales aunque el sonido esté apagado." : "Si el sonido no funciona, sigue las luces y los dibujos."}</p>}
       <p className="armonia-input-help">Teclado: Espacio · Mando: botón A · Toca «¡Golpea!»</p>
       <button className="text-button duel-abandon" type="button" onClick={() => friendlyReplay ? onAbandon() : setShowLeave(true)}>{friendlyReplay ? "Volver a mis amigos" : "Volver al mapa"}</button>

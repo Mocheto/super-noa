@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gatitos leñadores · prototipo jugable</title>
+<style>
+  :root { --gold: #ffd76a; --ink: #2f1d33; --paper: #fff6e3; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #1d1428; color: var(--paper); font: 15px/1.4 system-ui, sans-serif; }
+  main { width: min(980px, 100%); margin: 0 auto; padding: 14px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.45rem ui-monospace, monospace; }
+  .lead { margin: 0 0 10px; color: #d8c8e8; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 4px solid #3b2647; border-radius: 12px; background: #e9a46a; }
+  .stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+  .sky { position: absolute; inset: 0; background: linear-gradient(#5e4b8b 0%, #c7739a 38%, #f2a36b 62%, #f7cf86 78%); }
+  .scenery { position: absolute; inset: 0; }
+  .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; background: linear-gradient(#6f8f45, #4d6a32 45%, #3c5328); border-top: 6px solid #8fae55; }
+  .beats { position: absolute; top: 22px; left: 50%; z-index: 5; display: flex; gap: 18px; translate: -50%; }
+  .lamp { width: 30px; height: 38px; border: 3px solid var(--ink); border-radius: 10px 10px 14px 14px; background: #6b5a3b; box-shadow: inset 0 -6px 0 #0003; }
+  .lamp.first { width: 36px; }
+  .lamp.on { background: var(--gold); box-shadow: 0 0 22px #ffd76acc, inset 0 -6px 0 #0002; transform: scale(1.12); }
+  .belt { position: absolute; left: 330px; top: 404px; width: 600px; height: 34px; border: 4px solid var(--ink); border-radius: 18px; background: repeating-linear-gradient(90deg, #7b5a3c 0 26px, #6a4b30 26px 52px); box-shadow: 0 8px 0 #0004; }
+  .rollers { position: absolute; inset: auto 10px -16px 10px; height: 18px; display: flex; justify-content: space-between; }
+  .rollers i { width: 18px; height: 18px; border: 3px solid var(--ink); border-radius: 50%; background: #9b8a74; }
+  .stump { position: absolute; left: 263px; top: 404px; width: 110px; height: 70px; }
+  .stump .top { position: absolute; top: 0; left: 0; width: 110px; height: 30px; border: 4px solid var(--ink); border-radius: 50%; background: radial-gradient(ellipse, #e2b77d 0 18%, #c99459 19% 34%, #e2b77d 35% 52%, #b98049 53%); z-index: 2; }
+  .stump .side { position: absolute; top: 14px; left: 0; width: 110px; height: 56px; border: 4px solid var(--ink); border-top: 0; border-radius: 0 0 14px 14px; background: linear-gradient(90deg, #6d4127, #8d5834 45%, #5f3820); }
+  .ring { position: absolute; z-index: 4; border: 5px solid var(--gold); border-radius: 50%; pointer-events: none; opacity: 0; box-shadow: 0 0 12px #ffd76a99; }
+  .now { position: absolute; left: 270px; top: 284px; z-index: 5; padding: 4px 10px; border: 3px solid var(--ink); border-radius: 10px; background: var(--gold); color: var(--ink); font: 900 18px ui-monospace, monospace; opacity: 0; }
+  .lumber { position: absolute; left: 96px; top: 300px; z-index: 3; width: 170px; height: 190px; }
+  .lumber img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 4px #0005); }
+  .axe { position: absolute; left: 113px; top: 18px; width: 74px; height: 120px; transform-origin: 50% 92%; transform: rotate(-22deg); transition: transform .09s ease-out; }
+  .axe.chop { transform: rotate(84deg); transition-duration: .05s; }
+  .kitten { position: absolute; z-index: 3; width: 110px; height: 110px; transition: transform .12s; }
+  .kitten img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 3px #0005); }
+  .kitten.push { transform: translateX(-16px) scale(1.04, .96); }
+  .kitten.party { animation: hop .5s ease-in-out infinite alternate; }
+  @keyframes hop { to { transform: translateY(-18px); } }
+  .bubble { position: absolute; top: -28px; left: 4px; padding: 3px 9px; border: 3px solid var(--ink); border-radius: 12px; background: var(--paper); color: var(--ink); font: 900 16px ui-monospace, monospace; white-space: nowrap; opacity: 0; }
+  .bubble.show { opacity: 1; }
+  .bubble.pink { background: #ffd0ea; }
+  .piece { position: absolute; z-index: 2; pointer-events: none; transform-origin: 50% 70%; }
+  .piece img { display: block; width: 100%; height: 100%; }
+  .marks { position: absolute; top: -20px; left: 50%; display: flex; gap: 6px; translate: -50%; }
+  .marks b { width: 16px; height: 16px; border: 3px solid var(--ink); border-radius: 50%; background: var(--gold); }
+  .marks b.done { background: #8a7a5a; }
+  .piece.cracked img { filter: brightness(1.1) contrast(1.1); clip-path: polygon(0 0, 47% 0, 52% 45%, 47% 100%, 0 100%, 0 0, 53% 0, 100% 0, 100% 100%, 53% 100%, 49% 50%); }
+  .half { position: absolute; z-index: 2; overflow: hidden; pointer-events: none; transition: transform .45s ease-out, opacity .45s; }
+  .pile { position: absolute; left: 20px; top: 410px; z-index: 4; width: 220px; height: 120px; }
+  .pile img { position: absolute; width: 74px; height: 21px; filter: drop-shadow(0 2px 2px #0006); }
+  .feedback { position: absolute; left: 383px; top: 318px; z-index: 6; padding: 4px 12px; border: 3px solid var(--ink); border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 22px ui-monospace, monospace; opacity: 0; }
+  .feedback.miss { background: #ffd2c8; color: #6a2a22; }
+  .feedback.show { opacity: 1; }
+  .caption { position: absolute; left: 50%; top: 84px; z-index: 6; max-width: 620px; padding: 8px 16px; border: 3px solid var(--ink); border-radius: 14px; background: #fff6e3ee; color: var(--ink); font: 900 20px system-ui, sans-serif; text-align: center; translate: -50%; opacity: 0; }
+  .caption.show { opacity: 1; }
+  .fire { position: absolute; left: 520px; top: 300px; width: 120px; height: 110px; }
+  .fire .flame { opacity: 0; transition: opacity 1s; transform-origin: 50% 100%; }
+  .fire.lit .flame { opacity: 1; animation: flicker .25s infinite alternate; }
+  @keyframes flicker { to { transform: scaleY(1.12) scaleX(.94); } }
+  .overlay { position: absolute; inset: 0; z-index: 10; display: grid; place-content: center; gap: 12px; padding: 20px; background: #1d1428b8; text-align: center; }
+  .overlay h2 { margin: 0; color: var(--gold); font: 900 34px ui-monospace, monospace; }
+  .overlay p { margin: 0; font-size: 18px; }
+  .overlay[hidden] { display: none; }
+  .phase { position: absolute; right: 12px; top: 12px; z-index: 5; padding: 3px 9px; border-radius: 8px; background: #2f1d33cc; font: 700 12px ui-monospace, monospace; }
+  .panel { display: grid; gap: 10px; margin-top: 12px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  button { min-height: 42px; padding: 6px 14px; border: 3px solid #3b2647; border-radius: 10px; background: #f3e6cf; color: #2f1d33; font: 800 15px system-ui, sans-serif; cursor: pointer; }
+  button.primary { background: #ffb547; }
+  button[aria-pressed="true"] { background: var(--gold); }
+  .hit { width: 100%; min-height: 70px; font-size: 24px; background: var(--gold); touch-action: manipulation; }
+  .help { margin: 0; color: #cdb9df; font-size: 13px; }
+  @media (prefers-reduced-motion: reduce) { .kitten, .axe, .half { transition: none; } .kitten.party, .fire.lit .flame { animation: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Gatitos leñadores · prototipo jugable</h1>
+  <p class="lead">Prototipo desechable que une la canción (100 pulsos por minuto, compás de 4, 28 compases), la partitura acordada y la escena aprobada. Sprites, sonidos y fondo son provisionales: la música se genera en el navegador.</p>
+
+  <div class="frame" id="frame">
+    <div class="stage" id="stage">
+      <div class="sky"></div>
+      <svg class="scenery" viewBox="0 0 960 540" aria-hidden="true">
+        <circle cx="720" cy="250" r="54" fill="#ffe2a0" opacity=".85"/>
+        <path d="M0 330 Q160 250 320 300 T640 285 T960 300 V540 H0Z" fill="#8a6a8f" opacity=".55"/>
+        <path d="M0 360 Q200 300 420 345 T960 330 V540 H0Z" fill="#5d6e4c"/>
+        <g fill="#3c4a33">
+          <path d="M60 420 L95 250 L130 420Z"/><path d="M120 420 L160 220 L200 420Z"/><path d="M790 420 L830 230 L870 420Z"/><path d="M860 420 L895 260 L930 420Z"/>
+          <path d="M700 420 L730 290 L760 420Z"/>
+        </g>
+        <path d="M0 26 Q240 76 480 30 T960 28" fill="none" stroke="#5b3620" stroke-width="3"/>
+        <g stroke="#2f1d33" stroke-width="2">
+          <path d="M40 34 l14 0 l-7 18z" fill="#ff8fa8"/><path d="M110 46 l14 0 l-7 18z" fill="#ffd76a"/><path d="M180 54 l14 0 l-7 18z" fill="#8fd3ff"/>
+          <path d="M250 56 l14 0 l-7 18z" fill="#b6f08e"/><path d="M640 46 l14 0 l-7 18z" fill="#b6f08e"/><path d="M710 48 l14 0 l-7 18z" fill="#ff8fa8"/>
+          <path d="M780 44 l14 0 l-7 18z" fill="#ffd76a"/><path d="M850 36 l14 0 l-7 18z" fill="#8fd3ff"/><path d="M910 30 l14 0 l-7 18z" fill="#b6f08e"/>
+        </g>
+      </svg>
+      <div class="ground"></div>
+      <svg class="fire" id="fire" viewBox="0 0 120 110" aria-hidden="true">
+        <g class="flame"><path d="M60 20 Q85 55 74 80 Q60 92 46 80 Q35 55 60 20Z" fill="#ff9a3c"/><path d="M60 45 Q72 65 66 80 Q60 86 54 80 Q48 65 60 45Z" fill="#ffe27a"/></g>
+        <g stroke="#2f1d33" stroke-width="3"><rect x="18" y="82" width="84" height="14" rx="7" fill="#8a5632" transform="rotate(-12 60 89)"/><rect x="18" y="82" width="84" height="14" rx="7" fill="#9a6338" transform="rotate(12 60 89)"/></g>
+      </svg>
+      <div class="beats" id="beats"><div class="lamp first"></div><div class="lamp"></div><div class="lamp"></div><div class="lamp"></div></div>
+      <div class="belt"><div class="rollers"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="pile" id="pile"></div>
+      <div class="stump"><div class="side"></div><div class="top"></div></div>
+      <div class="ring" id="ring"></div>
+      <div class="now" id="now">¡Ahora!</div>
+      <div class="lumber"><img src="../public/assets/sprites/noa-cat-yarn-v2.png" alt="Noa leñadora">
+        <svg class="axe" id="axe" viewBox="0 0 74 120" aria-hidden="true">
+          <rect x="32" y="22" width="10" height="96" rx="4" fill="#9a6338" stroke="#2f1d33" stroke-width="3"/>
+          <path d="M40 8 Q70 10 70 34 Q60 46 40 40 Z" fill="#cfd6dd" stroke="#2f1d33" stroke-width="3"/>
+          <path d="M36 12 Q12 18 14 34 Q24 38 36 34 Z" fill="#b5bec7" stroke="#2f1d33" stroke-width="3"/>
+        </svg>
+      </div>
+      <div class="kitten" id="kittenA" style="left:830px;top:300px"><img src="../public/assets/sprites/world-cat-2-v1.png" alt=""><span class="bubble" id="bubbleA"></span></div>
+      <div class="kitten" id="kittenB" style="left:735px;top:300px"><img src="../public/assets/sprites/world-cat-4-v1.png" alt=""><span class="bubble" id="bubbleB"></span></div>
+      <div id="pieces"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="caption" id="caption"></div>
+      <span class="phase" id="phase"></span>
+      <div class="overlay" id="menu">
+        <h2>Gatitos leñadores</h2>
+        <p>Ayuda a Noa a cortar leña para la fiesta. Golpea cuando el tronco llegue al tajo.</p>
+        <div class="row" style="justify-content:center">
+          <button class="primary" data-start="demo">Ver demostración</button>
+          <button data-start="practice">Ensayar</button>
+          <button class="primary" data-start="song">¡A la canción!</button>
+        </div>
+      </div>
+      <div class="overlay" id="pauseBox" hidden>
+        <h2>En pausa</h2>
+        <p>La canción espera en el mismo punto.</p>
+        <div class="row" style="justify-content:center"><button class="primary" id="resume">Continuar</button><button id="toMenu">Volver al menú</button></div>
+      </div>
+      <div class="overlay" id="endBox" hidden>
+        <h2 id="endTitle">¡Qué fiesta!</h2>
+        <p id="endText">La hoguera ya brilla. Gracias por la leña.</p>
+        <div class="row" style="justify-content:center"><button class="primary" id="again">Jugar otra vez</button><button id="endMenu">Continuar</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <button class="hit" id="hit">¡Golpea!</button>
+    <div class="row">
+      <button id="pause">Pausa</button>
+      <button id="sound" aria-pressed="true">Sonido</button>
+      <span class="help" id="clockInfo">Reloj: —</span>
+    </div>
+    <p class="help">Espacio, toque o botón A del mando. Mantener pulsado cuenta una sola vez. Al ocultar la pestaña o perder el foco, la canción se detiene y espera a «Continuar».</p>
+  </div>
+</main>
+
+<script>
+// ---------------- Partitura (decisión «Acordar las piezas, los patrones y los distractores») ----------------
+const BPM = 100, BEAT = 60 / BPM, WINDOW = 0.5, TRAVEL = 2;
+const S = "s", M = "m", Y = "y";
+const at = (bar, pulse, type) => ({ type, hit: (bar - 1) * 4 + (pulse - 1) });
+const X = (bar, last = S) => [at(bar, 1, M), at(bar, 4, last)];
+const Z = (bar) => [at(bar, 1, S), at(bar, 3, S)];
+const SCORES = {
+  song: { bars: 28, yarnFrom: 21, phases: [[1, "Cuenta"], [2, "Intro"], [5, "Solo pequeñas"], [13, "Con medianas"], [21, "Con ovillos"], [27, "Cierre"]], pieces: [
+    at(2, 3, S), at(3, 3, S), at(4, 3, S),
+    ...[5, 6, 7, 8].map((b) => at(b, 1, S)), ...[9, 10, 11, 12].flatMap(Z),
+    ...X(13), ...Z(14), ...X(15), ...Z(16), ...X(17), ...Z(18), ...X(19), ...Z(20),
+    ...X(21, Y), ...Z(22), ...X(23, Y), ...Z(24), ...X(25, Y), ...Z(26),
+  ] },
+  practice: { bars: 6, phases: [[1, "Cuenta"], [2, "Ensayo"], [6, "Fin del ensayo"]], pieces: [at(2, 3, S), at(3, 3, S), at(4, 1, M), at(5, 1, Y)] },
+  demo: { bars: 5, phases: [[1, "Cuenta"], [2, "Demostración"]], pieces: [at(2, 3, S), at(3, 3, M), at(4, 3, Y)] },
+};
+const barOfPulse = (pulse) => Math.floor(pulse / 4) + 1;
+function checkScore(score) {
+  const errors = [], busy = new Set();
+  for (const p of score.pieces) {
+    const hits = p.type === M ? [p.hit, p.hit + 1] : [p.hit];
+    if (p.hit - TRAVEL < 4) errors.push(`empuje dentro de la cuenta en el pulso ${p.hit}`);
+    for (const h of hits) { if (busy.has(h)) errors.push(`solape en el pulso ${h}`); busy.add(h); }
+    if (p.type === Y && score.phases && barOfPulse(p.hit) < (score.yarnFrom ?? 1)) errors.push(`ovillo antes de su fase en el pulso ${p.hit}`);
+  }
+  for (const p of score.pieces) if (p.type === M && score.pieces.some((q) => q.hit === p.hit + 2)) errors.push(`sin pulso libre tras la mediana del pulso ${p.hit}`);
+  return errors;
+}
+for (const [name, score] of Object.entries(SCORES)) { const e = checkScore(score); if (e.length) console.warn(name, e); }
+
+// ---------------- Sonido ----------------
+const CHORDS = [
+  { root: 130.81, tones: [523.25, 659.25, 783.99] }, // Do
+  { root: 98.0, tones: [493.88, 587.33, 783.99] },   // Sol
+  { root: 110.0, tones: [440.0, 523.25, 659.25] },   // La menor
+  { root: 87.31, tones: [440.0, 523.25, 698.46] },   // Fa
+];
+let ctx = null, master = null, noise = null;
+function ensureAudio() {
+  if (ctx) return ctx;
+  try {
+    ctx = new AudioContext();
+    master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+    noise = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+    const data = noise.getChannelData(0); for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  } catch { ctx = null; }
+  return ctx;
+}
+function voice(freq, when, dur, type = "triangle", vol = 0.08, glideTo) {
+  if (!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, when);
+  if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, when + dur);
+  g.gain.setValueAtTime(0.0001, when); g.gain.exponentialRampToValueAtTime(vol, when + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  o.connect(g).connect(master); o.start(when); o.stop(when + dur + 0.03);
+}
+function shaker(when, vol = 0.025) {
+  if (!ctx) return;
+  const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  src.buffer = noise; f.type = "highpass"; f.frequency.value = 6000;
+  g.gain.setValueAtTime(vol, when); g.gain.exponentialRampToValueAtTime(0.0001, when + 0.07);
+  src.connect(f).connect(g).connect(master); src.start(when); src.stop(when + 0.08);
+}
+const wood = (when, vol = 0.05) => { voice(1450, when, 0.05, "square", vol * 0.5); voice(720, when, 0.06, "sine", vol); };
+const meow = (when, high) => high ? voice(1250, when, 0.14, "sine", 0.07, 820) : voice(780, when, 0.2, "sine", 0.07, 470);
+const thud = () => ctx && voice(92, ctx.currentTime + 0.005, 0.16, "sine", 0.14);
+const plof = () => ctx && voice(180, ctx.currentTime + 0.005, 0.18, "triangle", 0.06, 90);
+function latency() { return ctx ? Math.min(0.25, (ctx.outputLatency || 0) + (ctx.baseLatency || 0)) : 0; }
+
+// ---------------- Estado ----------------
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), frame = $("frame"), piecesEl = $("pieces");
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const game = { mode: null, score: null, pieces: [], running: false, paused: false, clock: "frame", songStart: 0, frameStart: 0, pausedAt: 0, pausedTotal: 0, nextEighth: 0, lastPulse: -99, noteIndex: 0, broken: 0, ended: false, padDown: false };
+function fit() { stage.style.transform = `scale(${frame.clientWidth / 960})`; }
+addEventListener("resize", fit); fit();
+
+function pulseNow() {
+  if (game.clock === "audio") return (ctx.currentTime - game.songStart - latency()) / BEAT;
+  const t = (game.paused ? game.pausedAt : performance.now()) - game.frameStart - game.pausedTotal;
+  return t / 1000 / BEAT;
+}
+const barOf = (pulse) => Math.floor(pulse / 4) + 1;
+
+// Programación de la música sobre el reloj de audio, por corcheas (medios pulsos).
+function scheduleMusic() {
+  if (game.clock !== "audio" || !game.running || game.paused) return;
+  const horizon = ctx.currentTime + 0.25, total = game.score.bars * 8;
+  while (game.nextEighth < total) {
+    const e = game.nextEighth, when = game.songStart + e * BEAT / 2;
+    if (when > horizon) break;
+    game.nextEighth++;
+    if (when < ctx.currentTime - 0.02) continue;
+    const pulse = e / 2, bar = barOf(Math.floor(pulse)), onPulse = e % 2 === 0, inBar = Math.floor(pulse) % 4;
+    if (bar === 1) { if (onPulse) voice(inBar === 0 ? 880 : 660, when, 0.12, "sine", 0.08); continue; }
+    const chord = CHORDS[(bar - 2) % 4];
+    const closing = game.mode === "song" && bar >= game.score.bars - 1;
+    if (closing) {
+      const scale = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5];
+      const idx = e - (game.score.bars - 2) * 8;
+      if (idx >= 0 && idx < 8) voice(scale[idx], when, 0.25, "triangle", 0.09);
+      if (idx === 8) for (const f of [523.25, 659.25, 783.99, 1046.5]) voice(f, when, 1.4, "triangle", 0.05);
+      if (onPulse) shaker(when, 0.04);
+      continue;
+    }
+    if (onPulse && (inBar === 0 || inBar === 2)) voice(chord.root, when, 0.32, "triangle", 0.11); // pizzicato de bajo
+    if (onPulse && (inBar === 1 || inBar === 3)) wood(when, 0.04);                                 // madera
+    if (!onPulse) voice(chord.tones[(e >> 1) % 3] / 2, when, 0.14, "triangle", 0.035);            // marimba suave
+    shaker(when, onPulse ? 0.018 : 0.012);                                                         // cascabeles
+    if (onPulse) for (const p of game.pieces) {
+      if (p.push === pulse) meow(when, p.type === Y);
+      if (p.type === M && p.push + 1 === pulse) meow(when + 0.01, false);
+    }
+  }
+}
+function leadNote() {
+  if (!ctx || game.clock !== "audio") return;
+  const bar = Math.max(2, barOf(Math.round(pulseNow())));
+  const chord = CHORDS[(bar - 2) % 4];
+  voice(chord.tones[game.noteIndex++ % 3], ctx.currentTime + 0.003, 0.3, "triangle", 0.13);
+  wood(ctx.currentTime + 0.003, 0.05);
+}
+
+// ---------------- Piezas ----------------
+function buildPieces(score) {
+  return score.pieces.map((p, i) => ({ id: i, type: p.type, push: p.hit - TRAVEL, hits: p.type === M ? [p.hit, p.hit + 1] : [p.hit], done: [], missed: false, broken: false, bounced: false, el: null, gone: false }));
+}
+function makeEl(p) {
+  const el = document.createElement("div"); el.className = "piece";
+  if (p.type === Y) { el.style.width = "62px"; el.style.height = "56px"; el.innerHTML = `<img src="../public/assets/sprites/yarn-ball-v1.png" alt="Ovillo">`; }
+  else { const w = p.type === S ? 118 : 200; el.style.width = w + "px"; el.style.height = Math.round(w * 180 / 640) + "px";
+    el.innerHTML = `<img src="../public/assets/sprites/gatitos-tronco.png" alt="Tronco"><span class="marks">${p.hits.map(() => "<b></b>").join("")}</span>`; }
+  piecesEl.appendChild(el); p.el = el;
+}
+const FROM = 860, TO = 318, LINE = 404;
+function position(p, t) {
+  const q = (t - p.push) / TRAVEL;
+  if (q <= 1) return { x: FROM + (TO - FROM) * Math.max(0, q), y: LINE, rot: p.type === Y && !reduceMotion ? q * -540 : 0 };
+  const leaving = p.type === Y || p.missed;
+  if (!leaving) return { x: TO, y: LINE, rot: 0 };
+  const start = p.type === Y ? p.hits[0] : p.missedAt;
+  const r = Math.min(1, (t - start) / 0.9);
+  const hop = p.bounced ? Math.sin(Math.min(1, r * 1.4) * Math.PI) * 70 : 0;
+  return { x: TO - 280 * r, y: LINE + 60 * r * r - hop, rot: reduceMotion ? 0 : -r * 360, fade: r };
+}
+function breakPiece(p) {
+  p.broken = true; p.gone = true; game.broken++;
+  const x = parseFloat(p.el.style.left), y = parseFloat(p.el.style.top), w = p.el.offsetWidth, h = p.el.offsetHeight;
+  for (const side of [-1, 1]) {
+    const half = document.createElement("div"); half.className = "half";
+    Object.assign(half.style, { left: (x + (side > 0 ? w / 2 : 0)) + "px", top: y + "px", width: w / 2 + "px", height: h + "px" });
+    half.innerHTML = `<img src="../public/assets/sprites/gatitos-tronco.png" alt="" style="display:block;width:${w}px;height:${h}px;margin-left:${side > 0 ? -w / 2 : 0}px">`;
+    piecesEl.appendChild(half);
+    requestAnimationFrame(() => { half.style.transform = reduceMotion ? "none" : `translate(${side * 50 - 150}px, -60px) rotate(${side * 35}deg)`; half.style.opacity = "0"; });
+    setTimeout(() => half.remove(), 500);
+  }
+  p.el.remove();
+  const idx = game.broken - 1;
+  if (idx < 18) {
+    const img = document.createElement("img"); img.src = "../public/assets/sprites/gatitos-tronco.png"; img.alt = "";
+    const row = Math.floor(idx / 6), col = idx % 6; img.style.left = (col * 30 + row * 14) + "px"; img.style.top = (70 - row * 16) + "px";
+    $("pile").appendChild(img);
+  }
+}
+
+// ---------------- Golpe ----------------
+function swing() { const a = $("axe"); a.classList.add("chop"); setTimeout(() => a.classList.remove("chop"), 120); }
+let fbTimer = 0;
+function feedback(text, miss) { const f = $("feedback"); f.textContent = text; f.classList.toggle("miss", !!miss); f.classList.add("show"); clearTimeout(fbTimer); fbTimer = setTimeout(() => f.classList.remove("show"), 300); }
+function bubble(which, text, pink, ms = 420) {
+  const b = $(which === "A" ? "bubbleA" : "bubbleB"), k = $(which === "A" ? "kittenA" : "kittenB");
+  b.textContent = text; b.classList.toggle("pink", !!pink); b.classList.add("show"); k.classList.add("push");
+  setTimeout(() => k.classList.remove("push"), 160); clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove("show"), ms);
+}
+function landHit(p, h) {
+  p.done.push(h);
+  p.el.querySelectorAll(".marks b")[p.done.length - 1]?.classList.add("done");
+  leadNote(); feedback("¡Toc!");
+  if (p.done.length === p.hits.length) breakPiece(p); else p.el.classList.add("cracked");
+}
+function press() {
+  if (!game.running || game.paused || game.ended || game.mode === "demo") return;
+  swing();
+  const t = pulseNow();
+  let best = null, dist = Infinity;
+  for (const p of game.pieces) {
+    if (p.gone || p.missed || p.bounced) continue;
+    for (const h of p.hits) {
+      if (p.done.includes(h)) continue;
+      const d = Math.abs(t - h);
+      if (d <= WINDOW && d < dist) { dist = d; best = { p, h }; }
+    }
+  }
+  if (!best) { thud(); feedback("¡Uy!", true); return; }
+  if (best.p.type === Y) { best.p.bounced = true; thud(); feedback("¡Boing!", true); bubble("A", "¡Es mi ovillo!", true, 900); return; }
+  landHit(best.p, best.h);
+}
+
+// ---------------- Bucle ----------------
+const CAPTIONS = { demo: [[0, "Mira cómo lo hace Noa."], [4, "Tronco pequeño: un golpe."], [8, "Tronco mediano: dos golpes seguidos."], [12, "El ovillo no se corta: déjalo pasar."]], practice: [[0, "¡Ensayamos! Escucha la cuenta."], [4, "Golpea cuando el tronco llegue al tajo."]], song: [[0, "¡Que empiece la fiesta!"], [4, ""]] };
+let captionShown = "";
+function tick() {
+  if (!game.running) return;
+  if (!game.paused) {
+    scheduleMusic();
+    const t = pulseNow(), pulse = Math.floor(t);
+    if (pulse !== game.lastPulse && t >= 0) {
+      game.lastPulse = pulse;
+      [...$("beats").children].forEach((l, i) => l.classList.toggle("on", i === pulse % 4));
+      if (pulse < 4) bubble("B", String(pulse + 1), false, 380);
+      for (const p of game.pieces) {
+        if (p.push === pulse) bubble("A", p.type === Y ? "¡plop!" : "¡miau!", p.type === Y);
+        if (p.type === M && p.push + 1 === pulse) bubble("B", "¡miau!");
+      }
+      const phase = game.score.phases.filter(([bar]) => barOf(pulse) >= bar).at(-1);
+      $("phase").textContent = `Compás ${Math.min(game.score.bars, barOf(pulse))} de ${game.score.bars} · ${phase?.[1] ?? ""}`;
+      if (game.clock === "frame" && pulse >= 4) { /* sin audio: el latido es solo visual */ }
+    }
+    const cap = CAPTIONS[game.mode].filter(([p]) => t >= p).at(-1)?.[1] ?? "";
+    if (cap !== captionShown) { captionShown = cap; $("caption").textContent = cap; $("caption").classList.toggle("show", !!cap); }
+    let nextHit = Infinity;
+    for (const p of game.pieces) {
+      if (p.gone) continue;
+      if (!p.el && t >= p.push - 0.05) makeEl(p);
+      if (!p.el) continue;
+      if (game.mode === "demo" && p.type !== Y) for (const h of p.hits) if (t >= h && !p.done.includes(h)) { swing(); landHit(p, h); }
+      if (p.gone) continue;
+      if (p.type !== Y && !p.missed && p.hits.some((h) => !p.done.includes(h) && t > h + WINDOW)) { p.missed = true; p.missedAt = t; plof(); feedback("Se fue rodando", true); }
+      for (const h of p.hits) if (p.type !== Y && !p.done.includes(h) && !p.missed) nextHit = Math.min(nextHit, h);
+      const pos = position(p, t);
+      p.el.style.left = (pos.x - p.el.offsetWidth / 2) + "px"; p.el.style.top = (pos.y - p.el.offsetHeight) + "px";
+      p.el.style.transform = `rotate(${pos.rot}deg)`; p.el.style.opacity = pos.fade ? String(1 - pos.fade) : "1";
+      if (pos.fade >= 1) { p.el.remove(); p.gone = true; }
+    }
+    const dt = nextHit - t, ring = $("ring");
+    if (dt < TRAVEL && dt > -0.2) {
+      const r = 34 + Math.max(0, dt) * 46;
+      Object.assign(ring.style, { width: 2 * r + "px", height: 2 * r + "px", left: 318 - r + "px", top: 386 - r + "px", opacity: dt < 0.3 ? 1 : 0.6 });
+      $("now").style.opacity = Math.abs(dt) <= 0.3 ? 1 : 0;
+    } else { ring.style.opacity = 0; $("now").style.opacity = 0; }
+    const pad = navigator.getGamepads?.().find(Boolean); const down = Boolean(pad?.buttons[0]?.pressed);
+    if (down && !game.padDown) press(); game.padDown = down;
+    if (t >= game.score.bars * 4) return finish();
+  }
+  requestAnimationFrame(tick);
+}
+
+// ---------------- Ciclo ----------------
+async function start(mode) {
+  piecesEl.innerHTML = ""; $("pile").innerHTML = ""; $("fire").classList.remove("lit");
+  document.querySelectorAll(".kitten").forEach((k) => k.classList.remove("party"));
+  Object.assign(game, { mode, score: SCORES[mode], pieces: buildPieces(SCORES[mode]), running: true, paused: false, ended: false, lastPulse: -99, noteIndex: 0, broken: 0, nextEighth: 0, pausedTotal: 0 });
+  $("menu").hidden = true; $("endBox").hidden = true; $("pauseBox").hidden = true;
+  ensureAudio();
+  let audioOk = false;
+  if (ctx) { try { await Promise.race([ctx.resume(), new Promise((r) => setTimeout(r, 400))]); audioOk = ctx.state === "running"; } catch { audioOk = false; } }
+  game.clock = audioOk ? "audio" : "frame";
+  if (audioOk) { game.songStart = ctx.currentTime + 0.15; master.gain.value = $("sound").getAttribute("aria-pressed") === "true" ? 0.9 : 0; }
+  game.frameStart = performance.now() + 150;
+  $("clockInfo").textContent = audioOk ? `Reloj: audio (latencia descontada ${Math.round(latency() * 1000)} ms)` : "Reloj: fotogramas (sin audio)";
+  requestAnimationFrame(tick);
+}
+function finish() {
+  game.ended = true; game.running = false; captionShown = ""; $("caption").classList.remove("show");
+  $("ring").style.opacity = 0; $("now").style.opacity = 0;
+  if (game.mode === "song") {
+    $("fire").classList.add("lit"); document.querySelectorAll(".kitten").forEach((k) => k.classList.add("party"));
+    $("endTitle").textContent = "¡Qué fiesta!"; $("endText").textContent = "La hoguera ya brilla. Gracias por la leña.";
+    $("again").textContent = "Jugar otra vez"; $("endMenu").textContent = "Continuar";
+  } else {
+    $("endTitle").textContent = game.mode === "demo" ? "¡Ya lo has visto!" : "¡Buen ensayo!";
+    $("endText").textContent = game.mode === "demo" ? "Ahora puedes ensayar o ir a la canción." : "Puedes ensayar otra vez o empezar la canción.";
+    $("again").textContent = game.mode === "demo" ? "Ver otra vez" : "Ensayar otra vez"; $("endMenu").textContent = "Volver al menú";
+  }
+  setTimeout(() => { $("endBox").hidden = false; }, game.mode === "song" ? 900 : 300);
+}
+function pause() {
+  if (!game.running || game.paused || game.ended) return;
+  game.paused = true; game.pausedAt = performance.now();
+  if (game.clock === "audio") void ctx.suspend();
+  $("pauseBox").hidden = false;
+}
+async function resume() {
+  if (!game.paused) return;
+  if (game.clock === "audio") await ctx.resume();
+  else game.pausedTotal += performance.now() - game.pausedAt;
+  game.paused = false; $("pauseBox").hidden = true;
+  requestAnimationFrame(tick);
+}
+function toMenu() {
+  game.running = false; game.paused = false; if (ctx?.state === "suspended") void ctx.resume();
+  $("pauseBox").hidden = true; $("endBox").hidden = true; $("menu").hidden = false;
+  piecesEl.innerHTML = ""; $("caption").classList.remove("show"); captionShown = "";
+}
+
+document.querySelectorAll("[data-start]").forEach((b) => b.addEventListener("click", () => start(b.dataset.start)));
+$("again").addEventListener("click", () => start(game.mode));
+$("endMenu").addEventListener("click", toMenu);
+$("toMenu").addEventListener("click", toMenu);
+$("resume").addEventListener("click", resume);
+$("pause").addEventListener("click", pause);
+$("sound").addEventListener("click", (e) => { const on = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", String(on)); if (master) master.gain.value = on ? 0.9 : 0; });
+$("hit").addEventListener("pointerdown", (e) => { e.preventDefault(); press(); });
+addEventListener("keydown", (e) => { if (e.code !== "Space" || e.repeat) return; if (e.target instanceof HTMLButtonElement && e.target.id !== "hit") return; e.preventDefault(); press(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
+addEventListener("blur", pause);
+window.__lenadores = { game, SCORES, checkScore, pulseNow };
+</script>
+</body>
+</html>

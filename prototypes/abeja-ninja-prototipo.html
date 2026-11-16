@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abeja ninja · prototipo jugable</title>
+<style>
+  :root { --gold: #ffd76a; --honey: #f4a92a; --ink: #2f1d33; --paper: #fff6e3; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #1d1428; color: var(--paper); font: 15px/1.4 system-ui, sans-serif; }
+  main { width: min(980px, 100%); margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.5rem ui-monospace, monospace; }
+  .lead { margin: 0 0 12px; color: #d8c8e8; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 4px solid #3b2647; border-radius: 12px; background: #6aa04f; touch-action: manipulation; user-select: none; }
+  .stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+  .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.85) brightness(.9) blur(1px); }
+  .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: linear-gradient(#7fae55, #5c8a3d 45%, #456b2e); border-top: 6px solid #a3d06a; }
+  .comb { position: absolute; top: 16px; left: 50%; display: flex; gap: 6px; translate: -50%; }
+  .cell { width: 40px; height: 46px; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: var(--ink); display: grid; place-items: center; transition: transform .08s; }
+  .cell::after { content: ""; width: 32px; height: 38px; clip-path: inherit; background: #7a6338; transition: background .08s; }
+  .cell.on { transform: scale(1.14); }
+  .cell.on::after { background: var(--honey); }
+  .melisa { position: absolute; left: 26px; top: 234px; width: 210px; height: 210px; background: url("../public/assets/atlases/giant-valley-characters-v1.png") no-repeat 0% 100% / 500% 200%; filter: drop-shadow(0 6px 4px #0005); transition: transform .1s; }
+  .melisa.throwing { transform: translateY(-8px) rotate(-4deg); }
+  .hero { position: absolute; left: 640px; top: 236px; width: 216px; height: 207px; z-index: 2; background: url("./assets/noa-abeja-v0.png") no-repeat 0 0 / 400% 100%; transform: scaleX(-1); filter: drop-shadow(0 6px 4px #0005); image-rendering: pixelated; }
+  .hero[data-pose="alza"] { background-position: 33.333% 0; }
+  .hero[data-pose="corta"] { background-position: 66.666% 0; }
+  .hero[data-pose="celebra"] { background-position: 100% 0; }
+  .ring { position: absolute; border: 5px solid var(--gold); border-radius: 50%; pointer-events: none; opacity: 0; box-shadow: 0 0 12px #ffd76a99; }
+  .now { position: absolute; z-index: 4; padding: 4px 10px; border: 3px solid var(--ink); border-radius: 10px; background: var(--gold); color: var(--ink); font: 900 18px ui-monospace, monospace; opacity: 0; transition: opacity .08s; }
+  .bubble { position: absolute; z-index: 5; padding: 3px 9px; border: 3px solid var(--ink); border-radius: 12px; background: var(--paper); color: var(--ink); font: 900 16px ui-monospace, monospace; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .1s, transform .1s; }
+  .bubble.show { opacity: 1; transform: none; }
+  .bubble.pink { background: #ffd0ea; }
+  #bubbleM { left: 150px; top: 206px; }
+  #bubbleB { left: 0; top: 0; }
+  .item { position: absolute; left: 0; top: 0; width: 64px; height: 64px; pointer-events: none; }
+  .item svg, .half svg { display: block; width: 100%; height: 100%; }
+  .half { position: absolute; left: 0; top: 0; width: 64px; height: 64px; pointer-events: none; transition: transform .55s ease-in, opacity .55s; }
+  .petal { position: absolute; left: 0; top: 0; width: 12px; height: 16px; border: 2px solid var(--ink); border-radius: 50% 50% 50% 0; pointer-events: none; transition: transform .8s ease-in, opacity .8s; }
+  .jar { position: absolute; left: 830px; bottom: 22px; width: 104px; height: 120px; background: url("./assets/tarro-miel-v0.png") no-repeat 0 0 / 500% 100%; image-rendering: pixelated; filter: drop-shadow(0 4px 3px #0005); transition: transform .12s; }
+  .jar.bump { transform: scale(1.1); }
+  .jar .line { position: absolute; left: 6px; right: 6px; top: 74px; height: 5px; border: 2px solid var(--ink); border-radius: 3px; background: var(--gold); box-shadow: 0 0 8px #ffd76a; }
+  .jar.reached .line { background: #fff3a8; box-shadow: 0 0 16px #fff3a8; }
+  .feedback { position: absolute; z-index: 5; padding: 4px 12px; border: 3px solid var(--ink); border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 22px ui-monospace, monospace; opacity: 0; transition: opacity .12s, transform .12s; }
+  .feedback.miss { background: #ffd2c8; color: #6a2a22; }
+  .feedback.show { opacity: 1; transform: translateY(-10px); }
+  .caption { position: absolute; left: 50%; top: 76px; z-index: 6; max-width: 620px; padding: 8px 16px; border: 3px solid var(--ink); border-radius: 14px; background: #fff6e3ee; color: var(--ink); font: 900 20px system-ui, sans-serif; text-align: center; translate: -50%; opacity: 0; transition: opacity .15s; }
+  .caption.show { opacity: 1; }
+  .phase { position: absolute; right: 12px; top: 12px; z-index: 5; padding: 3px 9px; border-radius: 8px; background: #2f1d33cc; font: 700 12px ui-monospace, monospace; }
+  .overlay { position: absolute; inset: 0; z-index: 10; display: grid; place-content: center; gap: 12px; padding: 20px; background: #1d1428c4; text-align: center; }
+  .overlay h2 { margin: 0; color: var(--gold); font: 900 34px ui-monospace, monospace; }
+  .overlay p { margin: 0; font-size: 18px; }
+  .overlay[hidden] { display: none; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .center { justify-content: center; }
+  button { min-height: 44px; padding: 6px 16px; border: 3px solid #3b2647; border-radius: 10px; background: #f3e6cf; color: #2f1d33; font: 800 15px system-ui, sans-serif; cursor: pointer; }
+  button.primary { background: #ffb547; box-shadow: 0 0 0 3px var(--gold); }
+  button[aria-pressed="true"] { background: var(--gold); }
+  .panel { display: grid; gap: 10px; margin-top: 12px; }
+  .hit { width: 100%; min-height: 70px; font-size: 24px; background: var(--gold); }
+  .help { margin: 0; color: #cdb9df; font-size: 13px; }
+  .stats { font: 700 13px ui-monospace, monospace; color: #fff3a8; }
+  @media (prefers-reduced-motion: reduce) { .half, .petal { transition-duration: .15s; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Abeja ninja · prototipo jugable</h1>
+  <p class="lead">Duelo de la Reina Melisa: corta cada flor cuando llegue a la punta de la varita. 104 pulsos por minuto, compás de 4, vuelo de 2 pulsos, 24 compases. Partitura, música y sprites son provisionales y originales.</p>
+
+  <div class="frame" id="frame">
+    <div class="stage" id="stage">
+      <img class="bg" src="../public/assets/worlds/world-11.webp" alt="">
+      <div class="ground"></div>
+      <div class="comb" id="comb"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div>
+      <div class="melisa" id="melisa" role="img" aria-label="Reina Melisa"></div>
+      <span class="bubble" id="bubbleM"></span>
+      <div class="jar" id="jar" role="img" aria-label="Tarro de miel con raya dorada"><span class="line"></span></div>
+      <div class="ring" id="ring"></div>
+      <div class="now" id="now">¡Ya!</div>
+      <div class="hero" id="hero" data-pose="espera" role="img" aria-label="Noa vestida de abeja con la varita-aguijón"></div>
+      <div id="items"></div>
+      <span class="bubble pink" id="bubbleB">¡Hola!</span>
+      <div class="feedback" id="feedback"></div>
+      <div class="caption" id="caption"></div>
+      <span class="phase" id="phase"></span>
+
+      <div class="overlay" id="menu">
+        <h2>La abeja ninja</h2>
+        <p>La Reina Melisa te lanza flores. ¡Córtalas con tu varita al ritmo de la música!</p>
+        <div class="row center">
+          <button id="menuPractice" data-start="demo">Practicar</button>
+          <button id="menuPlay" data-start="song">¡A jugar!</button>
+        </div>
+      </div>
+      <div class="overlay" id="pauseBox" hidden>
+        <h2>En pausa</h2>
+        <p>La canción espera en el mismo punto. Al seguir, Melisa cuenta hasta cuatro.</p>
+        <div class="row center"><button class="primary" id="resume">Seguir</button><button id="pauseLeave">Volver al mapa</button></div>
+      </div>
+      <div class="overlay" id="leaveBox" hidden>
+        <h2>¿Volver al mapa?</h2>
+        <p>Podrás jugar con Melisa otra vez cuando quieras.</p>
+        <div class="row center"><button class="primary" id="leaveNo">Seguir jugando</button><button id="leaveYes">Sí, volver al mapa</button></div>
+      </div>
+      <div class="overlay" id="endBox" hidden>
+        <h2 id="endTitle"></h2>
+        <p id="endText"></p>
+        <div class="row center" id="endButtons"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <button class="hit" id="hit">¡Corta!</button>
+    <div class="row">
+      <button id="pause">Pausa</button>
+      <button id="sound" aria-pressed="true">Sonido</button>
+      <button id="leave">Volver al mapa</button>
+      <span class="help" id="clockInfo">Reloj: —</span>
+    </div>
+    <p class="stats" id="stats">Cortadas: 0 de 41 · caídas: 0</p>
+    <p class="help">Espacio, toque o botón A del mando. Mantener pulsado cuenta una sola vez. Al ocultar la pestaña o perder el foco, la canción se detiene y espera a «Seguir». La línea amarilla de arriba es solo para probar: el juego final no muestra números.</p>
+    <p class="help" id="scoreCheck"></p>
+  </div>
+</main>
+
+<script>
+// ============ Partitura (decisión «Acordar las flores, los patrones y los distractores») ============
+const BPM = 104, BEAT = 60 / BPM, WINDOW = 0.5, FLIGHT = 2, WIN_AT = 21;
+const F = "flor", D = "duo", B = "mariquita";
+const at = (bar, pulse, type) => ({ type, cut: (bar - 1) * 4 + (pulse - 1) });
+const busyBar = (bar, last = F) => [at(bar, 1, D), at(bar, 4, last)]; // dúo en 1-2 y flor (o mariquita) en 4
+const pairBar = (bar) => [at(bar, 1, F), at(bar, 3, F)];
+const SCORES = {
+  song: { bars: 24, ladybugFrom: 19, closing: 2, phases: [[1, "Cuenta"], [2, "Intro"], [3, "Tranquila"], [11, "Animada"], [19, "Final"], [23, "Cierre"]], items: [
+    at(2, 3, F),
+    ...[3, 4, 5, 6].map((b) => at(b, 1, F)), ...[7, 8, 9, 10].flatMap(pairBar),
+    ...busyBar(11), ...pairBar(12), ...busyBar(13), ...pairBar(14), ...busyBar(15), ...pairBar(16), ...busyBar(17), ...pairBar(18),
+    ...busyBar(19, B), ...pairBar(20), ...busyBar(21, B), ...pairBar(22),
+  ] },
+  demo: { bars: 5, closing: 0, phases: [[1, "Cuenta"], [2, "Demostración"]], items: [at(2, 3, F), at(3, 3, D), at(4, 3, B)] },
+  practice: { bars: 6, closing: 0, phases: [[1, "Cuenta"], [2, "Ensayo"]], items: [at(2, 3, F), at(3, 3, F), at(4, 1, D), at(5, 1, B)] },
+};
+const cutsOf = (it) => it.type === D ? [it.cut, it.cut + 1] : [it.cut];
+const throwsOf = (it) => it.type === D ? [it.cut - FLIGHT, it.cut + 1 - FLIGHT] : it.type === B ? [] : [it.cut - FLIGHT];
+const barOf = (pulse) => Math.floor(pulse / 4) + 1;
+function checkScore(score) {
+  const errors = [], cuts = new Set(), throws = new Set();
+  for (const it of score.items) {
+    for (const c of cutsOf(it)) { if (!Number.isInteger(c)) errors.push(`corte fuera de pulso entero (${c})`); if (cuts.has(c)) errors.push(`dos llegadas en el pulso ${c}`); cuts.add(c); }
+    for (const t of throwsOf(it)) { if (t < 4) errors.push(`lanzamiento dentro de la cuenta (pulso ${t})`); if (throws.has(t)) errors.push(`dos lanzamientos en el pulso ${t}`); throws.add(t); }
+    if (it.type === B && it.cut - FLIGHT < 4) errors.push(`mariquita dentro de la cuenta (pulso ${it.cut})`);
+    if (it.type === B && score.ladybugFrom && barOf(it.cut) < score.ladybugFrom) errors.push(`mariquita antes de la fase final (pulso ${it.cut})`);
+  }
+  for (const it of score.items) if (it.type === D && cuts.has(it.cut + 2)) errors.push(`sin pulso libre tras el dúo del pulso ${it.cut}`);
+  const sorted = [...cuts].sort((a, b) => a - b);
+  for (let i = 2; i < sorted.length; i++) if (sorted[i] - sorted[i - 2] === 2) errors.push(`tres llegadas seguidas hasta el pulso ${sorted[i]}`);
+  const playable = (score.bars - score.closing) * 4;
+  if (sorted.at(-1) >= playable) errors.push("flores dentro del cierre");
+  return errors;
+}
+const flowersIn = (score) => score.items.reduce((n, it) => n + (it.type === D ? 2 : it.type === F ? 1 : 0), 0);
+const scoreReport = Object.entries(SCORES).map(([name, s]) => { const e = checkScore(s); if (e.length) console.warn(name, e); return `${name}: ${flowersIn(s)} flores, ${s.items.filter((i) => i.type === B).length} mariquitas, ${e.length ? "ERRORES: " + e.join("; ") : "reglas OK"}`; });
+
+// ============ Sonido «jardín ninja» (todo sintetizado y original) ============
+// Escala pentatónica yo sobre re: re, mi, sol, la, si.
+const N = { D3: 146.83, G2: 98.0, A2: 110.0, B2: 123.47, E3: 164.81, D4: 293.66, E4: 329.63, G4: 392.0, A4: 440.0, B4: 493.88, D5: 587.33, E5: 659.25, G5: 783.99, A5: 880.0, B5: 987.77, D6: 1174.66 };
+const BASS = [[N.D3, N.A2], [N.G2, N.D3], [N.B2, N.E3], [N.A2, N.E3]]; // re · sol · si menor · la, a dos notas por compás
+const LEAD = ["A4", "B4", "D5", "E5", "D5", "B4", "A4", "G4", "A4", "D5", "E5", "G5", "E5", "D5", "B4", "A4", "B4", "D5", "E5", "A5", "G5", "E5", "D5", "E5"].map((n) => N[n]);
+const FLUTE = [[null, "A5"], [null, null, "G5", "E5"], [null, "B5"], [null, null, "A5", "G5"]];
+let ctx = null, master = null, bus = null, noiseBuf = null;
+function ensureAudio() {
+  if (ctx) return ctx;
+  try {
+    ctx = new AudioContext();
+    master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.25, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    newBus();
+  } catch { ctx = null; }
+  return ctx;
+}
+// Cada tramo de canción va por su propio bus: al pausar se corta y no suenan notas ya programadas.
+function newBus() { if (bus) { try { bus.disconnect(); } catch { /* ya desconectado */ } } bus = ctx.createGain(); bus.connect(master); }
+function voice(freq, when, dur, type = "triangle", vol = 0.08, glideTo, out = bus) {
+  if (!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, when);
+  if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, when + dur);
+  g.gain.setValueAtTime(0.0001, when); g.gain.exponentialRampToValueAtTime(vol, when + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  o.connect(g).connect(out); o.start(when); o.stop(when + dur + 0.03);
+}
+function hiss(when, dur, vol, type = "highpass", freq = 6000, out = bus) {
+  if (!ctx) return;
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = noiseBuf; f.type = type; f.frequency.value = freq;
+  g.gain.setValueAtTime(vol, when); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  s.connect(f).connect(g).connect(out); s.start(when); s.stop(when + dur + 0.02);
+}
+const koto = (f, when, vol = 0.12, out) => { voice(f, when, 0.55, "triangle", vol, f * 0.995, out); voice(f * 2, when, 0.12, "sine", vol * 0.35, undefined, out); };
+const taiko = (when, vol = 0.22) => { voice(120, when, 0.32, "sine", vol, 52); hiss(when, 0.05, vol * 0.25, "lowpass", 900); };
+const tap = (when, vol = 0.05) => { voice(660, when, 0.05, "square", vol * 0.4); hiss(when, 0.04, vol * 0.5, "bandpass", 3000); };
+function flute(f, when, dur) { if (!ctx) return; const o = ctx.createOscillator(), lfo = ctx.createOscillator(), lg = ctx.createGain(), g = ctx.createGain();
+  o.type = "sine"; o.frequency.value = f; lfo.frequency.value = 5.5; lg.gain.value = f * 0.012; lfo.connect(lg).connect(o.frequency);
+  g.gain.setValueAtTime(0.0001, when); g.gain.exponentialRampToValueAtTime(0.045, when + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  o.connect(g).connect(bus); o.start(when); lfo.start(when); o.stop(when + dur + 0.05); lfo.stop(when + dur + 0.05); }
+const buzz = (when, vol = 0.018) => { voice(170, when, 0.5, "sawtooth", vol, 190); };
+const zum = (when, double) => { voice(260, when, 0.16, "sawtooth", 0.05, 400); if (double) voice(300, when + 0.09, 0.14, "sawtooth", 0.045, 460); };
+const bzztin = (when) => { voice(420, when, 0.16, "sawtooth", 0.03, 380); voice(2093, when + 0.12, 0.25, "sine", 0.06); };
+const shing = (when) => { hiss(when, 0.09, 0.09, "highpass", 7000, master); voice(2600, when, 0.16, "sine", 0.04, 3300, master); };
+const thud = () => ctx && voice(110, ctx.currentTime + 0.005, 0.16, "sine", 0.14, 80, master);
+const plof = () => ctx && voice(200, ctx.currentTime + 0.005, 0.2, "triangle", 0.06, 90, master);
+const countClick = (when, first, out) => voice(first ? 1046.5 : 784, when, 0.1, "sine", 0.09, undefined, out);
+function latency() { return ctx ? Math.min(0.25, (ctx.outputLatency || 0) + (ctx.baseLatency || 0)) : 0; }
+
+// ============ Estado ============
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), frame = $("frame"), itemsEl = $("items"), hero = $("hero");
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SCALE = 216 / 480, CUT = { x: 640 + (480 - 436.5) * SCALE, y: 236 + 313 * SCALE }, ORIGIN = { x: 200, y: 292 };
+const game = { mode: null, score: null, items: [], running: false, paused: false, counting: 0, clock: "frame", songStart: 0, frameStart: 0, pausedAt: 0, pausedCtx: 0, pausedTotal: 0, nextEighth: 0, lastPulse: -99, noteIndex: 0, cut: 0, fallen: 0, ended: false, padDown: false, visited: false, applauded: false, jarLevel: 0 };
+function fit() { stage.style.transform = `scale(${frame.clientWidth / 960})`; }
+addEventListener("resize", fit); fit();
+Object.assign($("ring").style, { left: `${CUT.x - 50}px`, top: `${CUT.y - 50}px`, width: "100px", height: "100px" });
+Object.assign($("now").style, { left: `${CUT.x - 26}px`, top: `${CUT.y - 150}px` });
+
+function pulseNow() {
+  if (game.clock === "audio") return ((game.paused ? game.pausedCtx : ctx.currentTime) - game.songStart - latency()) / BEAT;
+  return ((game.paused ? game.pausedAt : performance.now()) - game.frameStart - game.pausedTotal) / 1000 / BEAT;
+}
+
+function scheduleMusic() {
+  if (game.clock !== "audio" || !game.running || game.paused) return;
+  const horizon = ctx.currentTime + 0.25, total = game.score.bars * 8;
+  while (game.nextEighth < total) {
+    const e = game.nextEighth, when = game.songStart + e * BEAT / 2;
+    if (when > horizon) break;
+    game.nextEighth++;
+    if (when < ctx.currentTime - 0.02) continue;
+    const pulse = e / 2, bar = barOf(Math.floor(pulse)), onPulse = e % 2 === 0, inBar = Math.floor(pulse) % 4, half = e % 8;
+    if (bar === 1) { if (onPulse) { countClick(when, inBar === 0); tap(when, 0.04); } continue; }
+    const closing = bar > game.score.bars - game.score.closing;
+    if (closing) { // fanfarria: escala yo ascendente en koto y redoble de taiko
+      const idx = e - (game.score.bars - game.score.closing) * 8;
+      const scale = [N.D4, N.E4, N.G4, N.A4, N.B4, N.D5, N.E5, N.G5, N.A5, N.B5, N.D6];
+      if (idx < scale.length) koto(scale[idx], when, 0.11);
+      if (idx === 11) { for (const f of [N.D5, N.A5, N.D6]) koto(f, when, 0.08); taiko(when, 0.3); }
+      if (idx < 11 && onPulse) taiko(when, 0.12);
+      continue;
+    }
+    const [root, fifth] = BASS[(bar - 2) % 4];
+    if (onPulse && (inBar === 0 || inBar === 2)) taiko(when, inBar === 0 ? 0.2 : 0.13);
+    if (onPulse && (inBar === 1 || inBar === 3)) tap(when);
+    if (half === 0 || half === 3 || half === 4 || half === 7) voice(half === 3 || half === 7 ? fifth : root, when, 0.24, "triangle", 0.1); // bajo saltarín
+    if (!onPulse) hiss(when, 0.03, 0.012);
+    if (half === 0 && bar % 2 === 0) buzz(when);
+    const fl = FLUTE[(bar - 2) % 4][Math.floor(half / 2)];
+    if (fl && !onPulse && bar % 4 === 1) flute(N[fl], when, 0.4);
+    if (onPulse) for (const it of game.items) {
+      const th = throwsOf(it);
+      if (th[0] === pulse) zum(when, it.type === D);
+      if (it.type === B && it.cut - FLIGHT === pulse) bzztin(when);
+    }
+  }
+}
+function leadNote() {
+  if (!ctx || game.clock !== "audio") return;
+  const now = ctx.currentTime + 0.003;
+  koto(LEAD[game.noteIndex++ % LEAD.length], now, 0.16, master); shing(now);
+}
+
+// ============ Flores y mariquitas ============
+const COLORS = ["#ef79a9", "#f2c230", "#5aa0dc", "#b98be0"];
+function flowerSVG(color) {
+  const petals = Array.from({ length: 6 }, (_, i) => `<ellipse cx="32" cy="16" rx="9" ry="14" transform="rotate(${i * 60} 32 32)" fill="${color}" stroke="#2f1d33" stroke-width="2.5"/>`).join("");
+  return `<svg viewBox="0 0 64 64">${petals}<circle cx="32" cy="32" r="9" fill="#ffd34d" stroke="#2f1d33" stroke-width="2.5"/><path d="M32 41 Q34 54 30 64" stroke="#3f7a2a" stroke-width="4" fill="none"/></svg>`;
+}
+const LADYBUG = `<svg viewBox="0 0 64 64"><ellipse cx="22" cy="20" rx="12" ry="9" fill="#e8f6ffcc" stroke="#2f1d33" stroke-width="2"/><ellipse cx="40" cy="18" rx="12" ry="9" fill="#e8f6ffcc" stroke="#2f1d33" stroke-width="2"/><circle cx="50" cy="36" r="9" fill="#2f1d33"/><circle cx="53" cy="33" r="2" fill="#fff"/><ellipse cx="32" cy="38" rx="18" ry="15" fill="#e2463f" stroke="#2f1d33" stroke-width="3"/><path d="M32 23 V53" stroke="#2f1d33" stroke-width="2.5"/><circle cx="24" cy="34" r="3.5" fill="#2f1d33"/><circle cx="40" cy="34" r="3.5" fill="#2f1d33"/><circle cx="26" cy="45" r="3" fill="#2f1d33"/><circle cx="38" cy="45" r="3" fill="#2f1d33"/></svg>`;
+function buildItems(score) {
+  const out = []; let n = 0;
+  for (const it of score.items) {
+    if (it.type === B) out.push({ kind: B, cut: it.cut, start: it.cut - FLIGHT, el: null, done: false, greeted: false });
+    else for (const c of cutsOf(it)) out.push({ kind: F, cut: c, start: c - FLIGHT, duo: it.type === D, color: COLORS[n++ % COLORS.length], el: null, done: false, fallen: false });
+  }
+  return out;
+}
+function placeAt(it, t) {
+  const p = (t - it.start) / FLIGHT;
+  if (it.kind === B) return { x: -40 + (CUT.x + 40) * p, y: CUT.y - 6 + Math.sin(p * 12) * 6, rot: 0 };
+  const q = Math.min(1.3, p), peak = 170;
+  return { x: ORIGIN.x + (CUT.x - ORIGIN.x) * q, y: ORIGIN.y + (CUT.y - ORIGIN.y) * q - 4 * peak * q * (1 - q), rot: reduceMotion ? 0 : q * 540 };
+}
+function makeEl(it) {
+  const el = document.createElement("div"); el.className = "item";
+  el.innerHTML = it.kind === B ? LADYBUG : flowerSVG(it.color);
+  itemsEl.appendChild(el); it.el = el;
+}
+function split(it) {
+  it.done = true; it.el.remove(); game.cut++;
+  for (const dir of [-1, 1]) {
+    const h = document.createElement("div"); h.className = "half";
+    Object.assign(h.style, { clipPath: dir < 0 ? "inset(0 50% 0 0)" : "inset(0 0 0 50%)", transform: `translate(${CUT.x - 32}px, ${CUT.y - 32}px)` });
+    h.innerHTML = flowerSVG(it.color); itemsEl.appendChild(h);
+    requestAnimationFrame(() => requestAnimationFrame(() => { h.style.transform = reduceMotion ? `translate(${CUT.x - 32}px, ${CUT.y - 32}px)` : `translate(${CUT.x - 32 + dir * 46}px, ${CUT.y + 120}px) rotate(${dir * 50}deg)`; h.style.opacity = 0; }));
+    setTimeout(() => h.remove(), 600);
+  }
+  for (let i = 0; i < (reduceMotion ? 0 : 5); i++) {
+    const p = document.createElement("div"); p.className = "petal";
+    Object.assign(p.style, { background: it.color, transform: `translate(${CUT.x}px, ${CUT.y}px)` }); itemsEl.appendChild(p);
+    requestAnimationFrame(() => requestAnimationFrame(() => { p.style.transform = `translate(${870 + Math.random() * 30 - 15}px, 430px) rotate(${Math.random() * 360}deg)`; p.style.opacity = .2; }));
+    setTimeout(() => p.remove(), 850);
+  }
+  updateJar();
+}
+function fall(it, t) {
+  it.fallen = true; game.fallen++; plof(); feedback("plof", true);
+  const pos = placeAt(it, t);
+  it.el.style.transition = "transform .5s ease-in, opacity .5s";
+  it.el.style.transform = `translate(${pos.x - 32}px, 470px) rotate(90deg)`; it.el.style.opacity = .4;
+  setTimeout(() => { it.done = true; it.el?.remove(); }, 520);
+}
+function updateJar() {
+  if (game.mode !== "song") return;
+  const level = game.cut >= 41 ? 4 : game.cut >= 31 ? 3 : game.cut >= WIN_AT ? 2 : game.cut >= 8 ? 1 : 0;
+  $("jar").style.backgroundPosition = `${level * 25}% 0`;
+  if (level > game.jarLevel) {
+    game.jarLevel = level; $("jar").classList.add("bump"); setTimeout(() => $("jar").classList.remove("bump"), 140);
+    setTimeout(() => game.running && !game.ended && pose("celebra", 380), 200);
+  }
+  if (game.cut >= WIN_AT && !game.applauded) { game.applauded = true; $("jar").classList.add("reached"); melisa(2, 900); bubble("bubbleM", "¡Bravo!", false, 1100); }
+  stats();
+}
+function stats() { $("stats").textContent = `Cortadas: ${game.cut} de ${flowersIn(game.score ?? SCORES.song)} · caídas: ${game.fallen} · raya dorada: ${WIN_AT}`; }
+
+// ============ Personajes y textos ============
+let poseTimer = 0, melisaTimer = 0, fbTimer = 0;
+function pose(name, ms = 0) { hero.dataset.pose = name; clearTimeout(poseTimer); if (ms) poseTimer = setTimeout(() => (hero.dataset.pose = "espera"), ms); }
+function melisa(col, ms = 0) { const m = $("melisa"); m.style.backgroundPosition = `${col * 25}% 100%`; clearTimeout(melisaTimer); if (ms) melisaTimer = setTimeout(() => (m.style.backgroundPosition = "0% 100%"), ms); }
+function bubble(id, text, pink, ms = 420) { const b = $(id); b.textContent = text; b.classList.toggle("pink", !!pink); b.classList.add("show"); clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove("show"), ms); }
+function feedback(text, miss) {
+  const f = $("feedback"); f.textContent = text; f.classList.toggle("miss", !!miss);
+  Object.assign(f.style, { left: `${CUT.x - 130}px`, top: `${CUT.y - 110}px` });
+  f.classList.add("show"); clearTimeout(fbTimer); fbTimer = setTimeout(() => f.classList.remove("show"), 320);
+}
+function throwAnim(double) { const m = $("melisa"); m.classList.add("throwing"); melisa(1); bubble("bubbleM", double ? "¡zum-zum!" : "¡zum!"); setTimeout(() => { m.classList.remove("throwing"); if (!game.applauded || game.ended) melisa(0); else melisa(0); }, 200); }
+
+// ============ Corte ============
+function press() {
+  if (!game.running || game.paused || game.counting || game.ended || game.mode === "demo") return;
+  const t = pulseNow();
+  let best = null, dist = Infinity;
+  for (const it of game.items) {
+    if (it.done || it.fallen || (it.kind === B && it.greeted)) continue;
+    const d = Math.abs(t - it.cut);
+    if (d <= WINDOW && d < dist) { dist = d; best = it; }
+  }
+  if (best?.kind === B) { // la varita se detiene antes de tocar a la mariquita
+    best.greeted = true; pose("alza", 260);
+    const pos = placeAt(best, t); Object.assign($("bubbleB").style, { left: `${pos.x - 20}px`, top: `${pos.y - 70}px` }); bubble("bubbleB", "¡Hola!", true, 800);
+    return;
+  }
+  pose("corta", 190);
+  if (!best) { thud(); feedback("¡Uy!", true); return; } // la flor sigue volando
+  leadNote(); feedback("¡Zas!"); split(best);
+}
+
+// ============ Bucle ============
+const CAPTIONS = {
+  demo: [[0, "Mira cómo lo hace Noa."], [4, "Flor: un corte cuando llega a la varita."], [8, "Dúo: dos flores, dos cortes seguidos."], [12, "La mariquita no se corta: déjala pasar."]],
+  practice: [[0, "¡Ahora tú! Escucha la cuenta de Melisa."], [4, "Corta cuando la flor llegue a la punta."], [12, "¡Zum-zum! Dos cortes seguidos."], [16, "¡A la mariquita no!"]],
+  song: [[0, "¡Que empiece el duelo!"], [4, ""]],
+};
+let captionShown = "";
+function tick() {
+  if (!game.running) return;
+  if (game.counting) { requestAnimationFrame(tick); return; }
+  if (!game.paused) {
+    scheduleMusic();
+    const t = pulseNow(), pulse = Math.floor(t);
+    if (pulse !== game.lastPulse && t >= 0) {
+      game.lastPulse = pulse;
+      [...$("comb").children].forEach((c, i) => c.classList.toggle("on", i === pulse % 4));
+      setTimeout(() => [...$("comb").children].forEach((c) => c.classList.remove("on")), BEAT * 350);
+      if (pulse < 4) { bubble("bubbleM", String(pulse + 1), false, 380); melisa(pulse % 2 ? 3 : 1, 250); }
+      for (const it of game.score.items) { const th = throwsOf(it); if (th[0] === pulse) throwAnim(it.type === D); }
+      const phase = game.score.phases.filter(([bar]) => barOf(pulse) >= bar).at(-1);
+      $("phase").textContent = `Compás ${Math.min(game.score.bars, barOf(pulse))} de ${game.score.bars} · ${phase?.[1] ?? ""}`;
+    }
+    const cap = CAPTIONS[game.mode].filter(([p]) => t >= p).at(-1)?.[1] ?? "";
+    if (cap !== captionShown) { captionShown = cap; $("caption").textContent = cap; $("caption").classList.toggle("show", !!cap); }
+    let soonest = Infinity;
+    for (const it of game.items) {
+      if (it.done || it.fallen) continue;
+      if (!it.el && t >= it.start - 0.02) makeEl(it);
+      if (!it.el) continue;
+      if (game.mode === "demo" && it.kind === F && t >= it.cut) { pose("corta", 190); leadNote(); feedback("¡Zas!"); split(it); continue; }
+      if (it.kind === F && t > it.cut + WINDOW) { fall(it, t); continue; }
+      if (it.kind === B && t > it.cut + FLIGHT) { it.done = true; it.el.remove(); continue; }
+      if (it.kind === F) soonest = Math.min(soonest, it.cut - t);
+      const pos = placeAt(it, t);
+      it.el.style.transform = `translate(${pos.x - 32}px, ${pos.y - 32}px) rotate(${pos.rot}deg)`;
+    }
+    const near = soonest <= 1 && soonest > -WINDOW;
+    $("ring").style.opacity = near ? (soonest < 0.3 ? 1 : 0.6) : 0;
+    if (near) $("ring").style.transform = `scale(${1 + Math.max(0, soonest) * 1.4})`;
+    $("now").style.opacity = Math.abs(soonest) <= 0.3 ? 1 : 0;
+    if (hero.dataset.pose === "espera" && soonest <= 1 && soonest > 0.1) hero.dataset.pose = "alza";
+    if (hero.dataset.pose === "alza" && !near) hero.dataset.pose = "espera";
+    const pad = navigator.getGamepads?.().find(Boolean), down = Boolean(pad?.buttons[0]?.pressed);
+    if (down && !game.padDown) press(); game.padDown = down;
+    if (t >= game.score.bars * 4) return finish();
+  }
+  requestAnimationFrame(tick);
+}
+
+// ============ Ciclo ============
+async function start(mode) {
+  itemsEl.innerHTML = ""; $("jar").classList.remove("reached"); $("jar").style.backgroundPosition = "0 0";
+  Object.assign(game, { mode, score: SCORES[mode], items: buildItems(SCORES[mode]), running: true, paused: false, counting: 0, ended: false, lastPulse: -99, noteIndex: 0, cut: 0, fallen: 0, nextEighth: 0, pausedTotal: 0, applauded: false, jarLevel: 0 });
+  if (mode === "song") game.visited = true;
+  for (const id of ["menu", "endBox", "pauseBox", "leaveBox"]) $(id).hidden = true;
+  pose("espera"); melisa(0); stats();
+  ensureAudio();
+  let audioOk = false;
+  if (ctx) { try { await Promise.race([ctx.resume(), new Promise((r) => setTimeout(r, 400))]); audioOk = ctx.state === "running"; } catch { audioOk = false; } }
+  game.clock = audioOk ? "audio" : "frame";
+  if (audioOk) { newBus(); game.songStart = ctx.currentTime + 0.15; master.gain.value = $("sound").getAttribute("aria-pressed") === "true" ? 0.9 : 0; }
+  game.frameStart = performance.now() + 150;
+  $("clockInfo").textContent = audioOk ? `Reloj: audio (latencia descontada ${Math.round(latency() * 1000)} ms)` : "Reloj: fotogramas (sin audio)";
+  requestAnimationFrame(tick);
+}
+function endButtons(list) {
+  const box = $("endButtons"); box.innerHTML = "";
+  list.forEach(([label, fn], i) => { const b = document.createElement("button"); b.textContent = label; if (i === 0) b.className = "primary"; b.addEventListener("click", fn); box.appendChild(b); });
+}
+function finish() {
+  game.ended = true; game.running = false; captionShown = ""; $("caption").classList.remove("show");
+  $("ring").style.opacity = 0; $("now").style.opacity = 0;
+  const total = flowersIn(game.score);
+  if (game.mode === "song") {
+    const perfect = game.cut === total, won = game.cut >= WIN_AT;
+    $("endTitle").textContent = perfect ? "¡Perfecto!" : won ? "¡Bien hecho!" : "¡Casi!";
+    $("endText").textContent = perfect ? "¡No ha caído ni una flor! Melisa te regala su marco de flores." : won ? "El tarro de miel ha pasado la raya dorada. ¡Melisa está muy contenta!" : "El tarro aún no llega a la raya dorada. Melisa quiere jugar otra vez.";
+    if (won) { pose("celebra"); melisa(4); } else melisa(3);
+    endButtons(won ? [["Continuar", toMenu], ["Jugar otra vez", () => start("song")]] : [["Intentar otra vez", () => start("song")], ["Practicar", () => start("demo")], ["Volver al mapa", askLeave]]);
+    console.info("[abeja-ninja] resultado", { cortadas: game.cut, caidas: game.fallen, victoria: won, reto: perfect });
+  } else if (game.mode === "demo") {
+    $("endTitle").textContent = "¡Ya lo has visto!"; $("endText").textContent = "Ahora ensaya tú, o empieza el duelo.";
+    endButtons([["Ensayar", () => start("practice")], ["¡A jugar!", () => start("song")]]);
+  } else {
+    $("endTitle").textContent = "¡Buen ensayo!"; $("endText").textContent = "Puedes ensayar otra vez o empezar el duelo.";
+    endButtons([["¡A jugar!", () => start("song")], ["Ensayar otra vez", () => start("practice")]]);
+  }
+  setTimeout(() => { $("endBox").hidden = false; }, game.mode === "song" ? 900 : 300);
+}
+function pause() {
+  if (!game.running || game.paused || game.ended || game.counting) return;
+  game.paused = true; game.pausedAt = performance.now();
+  if (game.clock === "audio") { game.pausedCtx = ctx.currentTime; newBus(); void ctx.suspend(); }
+  $("pauseBox").hidden = false;
+}
+// Al seguir, Melisa cuenta 4 pulsos con la escena congelada y la canción continúa en el mismo punto.
+async function resume() {
+  if (!game.paused) return;
+  $("pauseBox").hidden = true;
+  const countMs = 4 * BEAT * 1000, frozen = pulseNow();
+  game.counting = 1;
+  if (game.clock === "audio") {
+    await ctx.resume();
+    const t0 = ctx.currentTime + 0.05;
+    for (let i = 0; i < 4; i++) countClick(t0 + i * BEAT, i === 0, master);
+    game.songStart += (t0 + 4 * BEAT) - game.pausedCtx - 0.0;
+    game.nextEighth = Math.max(0, Math.ceil((frozen + latency() / BEAT) * 2));
+  } else {
+    game.pausedTotal += performance.now() - game.pausedAt + countMs;
+  }
+  game.paused = false;
+  for (let i = 0; i < 4; i++) setTimeout(() => { bubble("bubbleM", String(i + 1), false, 380); melisa(i % 2 ? 3 : 1, 250); }, 50 + i * BEAT * 1000);
+  setTimeout(() => { game.counting = 0; }, countMs + 50);
+  requestAnimationFrame(tick);
+}
+function toMenu() {
+  game.running = false; game.paused = false; game.counting = 0; if (ctx?.state === "suspended") void ctx.resume(); if (ctx) newBus();
+  for (const id of ["pauseBox", "endBox", "leaveBox"]) $(id).hidden = true;
+  $("menu").hidden = false; itemsEl.innerHTML = ""; $("caption").classList.remove("show"); captionShown = ""; pose("espera"); melisa(0);
+  // Primera vez: destaca «Practicar»; después, «¡A jugar!».
+  $("menuPractice").classList.toggle("primary", !game.visited); $("menuPlay").classList.toggle("primary", game.visited);
+}
+let leaveFrom = null;
+function askLeave() { if (game.running && !game.paused && !game.ended) pause(); leaveFrom = !$("pauseBox").hidden ? "pause" : !$("endBox").hidden ? "end" : null; for (const id of ["pauseBox", "endBox"]) $(id).hidden = true; $("leaveBox").hidden = false; }
+function cancelLeave() { $("leaveBox").hidden = true; if (leaveFrom === "end") $("endBox").hidden = false; else if (game.paused) $("pauseBox").hidden = false; else if (!game.running) $("menu").hidden = false; }
+
+document.querySelectorAll("[data-start]").forEach((b) => b.addEventListener("click", () => start(b.dataset.start)));
+$("resume").addEventListener("click", resume);
+$("pause").addEventListener("click", pause);
+$("pauseLeave").addEventListener("click", askLeave);
+$("leave").addEventListener("click", askLeave);
+$("leaveNo").addEventListener("click", cancelLeave);
+$("leaveYes").addEventListener("click", toMenu);
+$("sound").addEventListener("click", (e) => { const on = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", String(on)); if (master) master.gain.value = on ? 0.9 : 0; });
+$("hit").addEventListener("pointerdown", (e) => { e.preventDefault(); press(); });
+frame.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; press(); });
+addEventListener("keydown", (e) => { if (e.code !== "Space" || e.repeat) return; if (e.target instanceof HTMLButtonElement && e.target.id !== "hit") return; e.preventDefault(); press(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
+addEventListener("blur", pause);
+$("scoreCheck").textContent = "Partituras · " + scoreReport.join(" · ");
+toMenu(); stats();
+window.__abeja = { game, SCORES, checkScore, flowersIn, pulseNow, press, start };
+</script>
+</body>
+</html>

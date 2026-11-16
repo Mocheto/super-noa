@@ -6,6 +6,8 @@ el juego la transporta cambiando la velocidad de reproducción. Todo es original
 
 Uso: python3 prototypes/tools/gatitos-samples.py   (requiere numpy)
 """
+import base64
+import json
 import wave
 from pathlib import Path
 
@@ -172,6 +174,10 @@ def main():
     for name, make in SAMPLES.items():
         seconds = save(name, make())
         print(f"{name}.wav  {seconds:.2f} s  {(OUT / f'{name}.wav').stat().st_size // 1024} KB")
+    # Copia incrustada para que la página de audición suene también abierta como archivo (sin servidor):
+    # los navegadores bloquean fetch() sobre file://, pero sí cargan un <script>.
+    data = {name: "data:audio/wav;base64," + base64.b64encode((OUT / f"{name}.wav").read_bytes()).decode() for name in SAMPLES}
+    (OUT / "samples.js").write_text("window.GATITOS_SAMPLES = " + json.dumps(data) + ";\n")
 
 
 if __name__ == "__main__":

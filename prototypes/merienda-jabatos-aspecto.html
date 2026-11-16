@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La merienda de los jabatos · boceto de aspecto</title>
+<style>
+  :root { --gold: #ffd76a; --ink: #2f1d33; --paper: #fff6e3; --leaf: #4f8a3a; --bark: #7a4a26; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; min-height: 100vh; background: #1d2416; color: var(--paper); font: 15px/1.4 system-ui, sans-serif; }
+  main { width: min(980px, 100%); margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.5rem ui-monospace, monospace; }
+  .lead { margin: 0 0 12px; color: #d9e6c8; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 4px solid #2c3a1e; border-radius: 12px; background: #2a3a20; }
+  .stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+
+  /* Fondos */
+  .bg { position: absolute; inset: 0; }
+  .bg img { width: 100%; height: 100%; object-fit: cover; }
+  .bg-mundo img { filter: saturate(.95) brightness(.8) blur(2px); }
+  .bg-claro { background: linear-gradient(#bfe3f0 0 38%, #8cc06a 38% 100%); }
+  .bg-claro::before { content: ""; position: absolute; left: 0; right: 0; top: 120px; height: 120px; background: radial-gradient(circle at 10% 100%, #3f7a32 0 70px, transparent 71px), radial-gradient(circle at 28% 100%, #4f8a3a 0 90px, transparent 91px), radial-gradient(circle at 52% 100%, #3f7a32 0 80px, transparent 81px), radial-gradient(circle at 74% 100%, #4f8a3a 0 95px, transparent 96px), radial-gradient(circle at 94% 100%, #3f7a32 0 75px, transparent 76px); }
+  .bg-fortaleza { background: linear-gradient(#5d6b7a 0 55%, #6b5a3e 55% 100%); }
+  .bg-fortaleza::before { content: ""; position: absolute; left: 0; right: 0; top: 40px; height: 260px; background: repeating-linear-gradient(90deg, #808a96 0 78px, #6b7480 78px 82px), #808a96; clip-path: polygon(0 20%, 6% 20%, 6% 0, 12% 0, 12% 20%, 30% 20%, 30% 0, 36% 0, 36% 20%, 64% 20%, 64% 0, 70% 0, 70% 20%, 88% 20%, 88% 0, 94% 0, 94% 20%, 100% 20%, 100% 100%, 0 100%); }
+  .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 110px; background: linear-gradient(#7a5a32, #5d4224); border-top: 6px solid #9b7442; }
+  .ground::before { content: ""; position: absolute; inset: -14px 0 auto; height: 18px; background: radial-gradient(circle at 10px 18px, #5f9a40 0 10px, transparent 11px) 0 0 / 22px 18px repeat-x; }
+
+  /* Gran Jabalí (director) */
+  .boss { position: absolute; left: 560px; top: 40px; width: 150px; height: 258px; background: url("../public/assets/sprites/boss-gran-jabali-0.png") no-repeat center / contain; filter: drop-shadow(0 6px 4px #0006); transition: transform .08s; z-index: 1; }
+  .boss.call { transform: translateY(-8px) scale(1.04); }
+  .stage.tres .boss { left: 812px; top: 150px; width: 130px; height: 224px; }
+  .stage.tres .rock { left: 800px; top: 362px; width: 155px; }
+  .stage.tres .bubble { left: 690px; top: 140px; }
+  .rock { position: absolute; left: 548px; top: 270px; width: 175px; height: 40px; border: 4px solid var(--ink); border-radius: 50% 50% 14px 14px; background: linear-gradient(#a59c8c, #7b7366); z-index: 1; }
+
+  /* Noa guarda del bosque */
+  .noa { position: absolute; left: 90px; top: 196px; width: 186px; height: 257px; background: url("../public/assets/sprites/noa-rps-0.png") no-repeat center / contain; filter: drop-shadow(0 6px 4px #0006); transition: transform .08s; z-index: 3; }
+  .noa.feed { transform: translateX(10px) rotate(4deg); }
+  .noa.celebra { transform: translateY(-14px); }
+  .noa .apron { position: absolute; left: 33%; top: 52%; width: 33%; height: 30%; border: 4px solid var(--ink); border-radius: 6px 6px 40% 40%; background: repeating-linear-gradient(90deg, #f6efe0 0 8px, #e9c9a0 8px 10px); }
+  .noa .hat { position: absolute; left: 14%; top: 3%; width: 68%; height: 15%; border: 4px solid var(--ink); border-radius: 50% 50% 8px 8px / 80% 80% 8px 8px; background: #6b8a3a; }
+  .noa .hat::after { content: ""; position: absolute; left: -16%; right: -16%; bottom: -24%; height: 30%; border: 4px solid var(--ink); border-radius: 50%; background: #58762c; }
+  .basket { position: absolute; left: 34px; top: 380px; width: 96px; height: 64px; z-index: 4; }
+  .hand-food { position: absolute; left: 248px; top: 262px; width: 40px; height: 40px; z-index: 5; opacity: 0; transition: transform .1s, opacity .1s; }
+  .hand-food.show { opacity: 1; }
+  .hand-food.go { transform: translateX(var(--reach, 120px)) scale(.8); opacity: 0; }
+
+  /* Jabatos */
+  .spot { position: absolute; width: 190px; height: 170px; z-index: 2; }
+  .spot .bush { position: absolute; left: -10px; right: -10px; bottom: -6px; height: 82px; z-index: 3; }
+  .hole { position: absolute; left: -20px; right: -20px; top: -60px; bottom: 24px; overflow: hidden; z-index: 2; }
+  .jabato { position: absolute; left: 45px; bottom: 30px; width: 140px; height: 120px; transform: translateY(105%); transition: transform .16s cubic-bezier(.3, 1.4, .5, 1); z-index: 2; }
+  .jabato.big { left: 20px; width: 190px; height: 160px; }
+  .jabato.up { transform: translateY(0); }
+  .jabato.chomp { animation: chomp .25s; }
+  .jabato.sad { animation: sad .35s; }
+  @keyframes chomp { 40% { transform: scale(1.1, .9); } }
+  @keyframes sad { 30% { transform: rotate(-8deg); } 70% { transform: rotate(8deg); } }
+  .count { position: absolute; left: 50%; top: -34px; translate: -50%; display: flex; gap: 6px; z-index: 4; }
+  .count i { width: 20px; height: 20px; border: 3px solid var(--ink); border-radius: 50%; background: #fff6e380; }
+  .count i.on { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+  .count i.now { background: #ff9d3a; transform: scale(1.3); box-shadow: 0 0 12px #ff9d3a; }
+  .yum { position: absolute; left: 50%; top: -6px; translate: -50%; padding: 2px 10px; border: 3px solid var(--ink); border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 18px ui-monospace, monospace; opacity: 0; transition: opacity .1s, transform .1s; z-index: 5; white-space: nowrap; }
+  .yum.miss { background: #ffd2c8; color: #6a2a22; }
+  .yum.show { opacity: 1; transform: translateY(-14px); }
+  .bounce { position: absolute; width: 34px; height: 34px; z-index: 6; animation: bounce .6s forwards; }
+  @keyframes bounce { to { transform: translate(60px, 80px) rotate(260deg); opacity: 0; } }
+
+  /* Bocadillo del Gran Jabalí y luces de compás */
+  .bubble { position: absolute; left: 430px; top: 90px; padding: 4px 12px; border: 3px solid var(--ink); border-radius: 14px; background: var(--paper); color: var(--ink); font: 900 22px ui-monospace, monospace; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .1s, transform .1s; z-index: 6; }
+  .bubble.show { opacity: 1; transform: none; }
+  .bubble.big { background: #ffd6a0; font-size: 26px; }
+  .bulbs { position: absolute; top: 18px; left: 50%; translate: -50%; display: flex; gap: 12px; z-index: 5; }
+  .bulb { width: 24px; height: 24px; border: 3px solid var(--ink); border-radius: 50%; background: #4a5a3a; transition: transform .06s; }
+  .bulb.on { transform: scale(1.25); background: #fff4c0; box-shadow: 0 0 14px #fff4c0; }
+
+  /* Marcadores */
+  .score { position: absolute; right: 16px; top: 14px; width: 230px; padding: 6px 8px 8px; border: 4px solid var(--ink); border-radius: 10px; background: var(--paper); color: var(--ink); z-index: 6; }
+  .score b { display: block; font: 900 12px ui-monospace, monospace; text-align: center; }
+  .branch { position: relative; height: 38px; margin-top: 4px; display: flex; align-items: center; gap: 2px; padding: 0 4px; background: linear-gradient(transparent 16px, #8a5a32 16px 22px, transparent 22px); }
+  .branch i { flex: 1; height: 20px; border-radius: 50% 50% 45% 45%; background: #e8dcc6; border: 2px solid #c9b89c; transition: background .12s, transform .12s; }
+  .branch i.got { background: radial-gradient(circle at 50% 25%, #6b4423 0 30%, #c47a2c 31%); border-color: var(--ink); transform: scale(1.15); }
+  .branch .line { position: absolute; top: -2px; bottom: -2px; width: 4px; background: #e2a917; border-radius: 2px; }
+  .bellies { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .belly { width: 46px; height: 32px; border: 3px solid var(--ink); border-radius: 50%; background: #c9a27a; position: relative; overflow: hidden; }
+  .belly::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: var(--fill, 0%); background: var(--gold); transition: height .2s; }
+
+  .label { position: absolute; left: 16px; top: 14px; padding: 3px 9px; border-radius: 8px; background: #2f1d33cc; font: 700 13px ui-monospace, monospace; z-index: 6; }
+  .panel { display: grid; gap: 10px; margin-top: 12px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .row > span { min-width: 92px; color: #c8dab4; font-weight: 700; }
+  button { min-height: 40px; padding: 6px 14px; border: 3px solid #2c3a1e; border-radius: 10px; background: #f3e6cf; color: #2f1d33; font: 800 14px system-ui, sans-serif; cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--gold); box-shadow: inset 0 -4px 0 #0002; }
+  button.big { min-width: 180px; background: #ffb547; font-size: 16px; }
+  .hit-btn { width: 100%; min-height: 64px; font-size: 22px; background: var(--gold); touch-action: manipulation; }
+  .notes { margin: 12px 0 0; padding-left: 18px; color: #d9e6c8; }
+  .notes li { margin: 3px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>La merienda de los jabatos · boceto de aspecto</h1>
+  <p class="lead">El Gran Jabalí gruñe y llama a un jabato; el jabato asoma, abre la boca poco a poco y, cuando la tiene abierta del todo, Noa le da su bocado. Cambia las opciones y pulsa «Empezar». En «Juego yo», da de comer con Espacio o con el botón.</p>
+
+  <div class="frame" id="frame">
+    <div class="stage" id="stage">
+      <div class="bg bg-mundo" id="bg-mundo"><img src="../public/assets/worlds/world-4-hd-v1.webp" alt=""></div>
+      <div class="bg bg-claro" id="bg-claro" hidden></div>
+      <div class="bg bg-fortaleza" id="bg-fortaleza" hidden></div>
+      <div class="ground"></div>
+
+      <div class="rock"></div>
+      <div class="boss" id="boss" role="img" aria-label="Gran Jabalí"></div>
+      <div class="bubble" id="bubble">¡Gruuu!</div>
+
+      <div class="noa" id="noa" role="img" aria-label="Noa guarda del bosque"><div class="hat"></div><div class="apron"></div></div>
+      <svg class="basket" viewBox="0 0 96 64"><path d="M14 22 Q48 -14 82 22" fill="none" stroke="#2f1d33" stroke-width="8"/><path d="M14 22 Q48 -14 82 22" fill="none" stroke="#c48a4c" stroke-width="4"/><circle cx="32" cy="22" r="10" fill="#c47a2c" stroke="#2f1d33" stroke-width="3"/><circle cx="52" cy="18" r="10" fill="#c47a2c" stroke="#2f1d33" stroke-width="3"/><circle cx="68" cy="24" r="9" fill="#8a4a1e" stroke="#2f1d33" stroke-width="3"/><path d="M6 24 H90 L80 60 H16 Z" fill="#c48a4c" stroke="#2f1d33" stroke-width="5"/><path d="M12 36 H84 M14 48 H82" stroke="#8a5a32" stroke-width="4"/></svg>
+      <div class="hand-food" id="hand-food"></div>
+
+      <div id="spots"></div>
+
+      <div class="bulbs" id="bulbs"><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div></div>
+      <div class="score" id="score"><b>Bellotas de la merienda</b><div class="branch" id="branch"></div><div class="bellies" id="bellies" hidden></div></div>
+      <div class="label" id="label">Pulsa «Empezar»</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row"><span>Disposición</span>
+      <button data-opt="layout" data-val="uno" aria-pressed="true">A · Un arbusto junto a Noa</button>
+      <button data-opt="layout" data-val="tres">B · Tres arbustos en fila</button></div>
+    <div class="row"><span>Escenario</span>
+      <button data-opt="bg" data-val="mundo" aria-pressed="true">Bosque del mundo 4</button>
+      <button data-opt="bg" data-val="claro">Claro dibujado</button>
+      <button data-opt="bg" data-val="fortaleza">Patio de la fortaleza</button></div>
+    <div class="row"><span>Cuenta atrás</span>
+      <button data-opt="help" data-val="puntos" aria-pressed="true">Boca + puntos</button>
+      <button data-opt="help" data-val="boca">Solo la boca</button></div>
+    <div class="row"><span>Marcador</span>
+      <button data-opt="score" data-val="rama" aria-pressed="true">Rama de bellotas</button>
+      <button data-opt="score" data-val="barrigas">Barriguitas que se llenan</button></div>
+    <div class="row"><span>Quién juega</span>
+      <button data-opt="who" data-val="demo" aria-pressed="true">Demostración</button>
+      <button data-opt="who" data-val="yo">Juego yo</button></div>
+    <div class="row"><button class="big" id="play">Empezar ▶</button><button id="stop">Parar</button></div>
+    <button class="hit-btn" id="hit">¡Dale de comer!</button>
+  </div>
+
+  <ul class="notes">
+    <li>Tempo de boceto: 100 pulsos por minuto y cuenta de 4. La canción, el tempo, los avisos y los patrones definitivos se deciden en sus propios tickets.</li>
+    <li>Jabato pequeño: gruñido corto, asoma y come una bellota dos pulsos después. Jabato grande: gruñido largo, tarda cuatro pulsos y come una castaña.</li>
+    <li>Noa provisional: pose del duelo de piedra, papel o tijera con sombrero y delantal dibujados encima. Los jabatos, la cesta y la comida están dibujados con formas simples.</li>
+  </ul>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), frame = $("frame");
+function fit() { stage.style.transform = `scale(${frame.clientWidth / 960})`; }
+addEventListener("resize", fit); fit();
+
+// Dibujos simples
+const ACORN = `<svg viewBox="0 0 40 40"><path d="M8 18 Q20 44 32 18 Z" fill="#c47a2c" stroke="#2f1d33" stroke-width="3"/><path d="M6 18 Q20 4 34 18 Z" fill="#6b4423" stroke="#2f1d33" stroke-width="3"/><path d="M20 8 V2" stroke="#2f1d33" stroke-width="3"/></svg>`;
+const CHESTNUT = `<svg viewBox="0 0 40 40"><path d="M20 4 Q38 14 34 30 Q20 40 6 30 Q2 14 20 4 Z" fill="#8a4a1e" stroke="#2f1d33" stroke-width="3"/><path d="M8 28 Q20 36 32 28" fill="none" stroke="#e9c9a0" stroke-width="4"/><path d="M15 12 Q18 9 22 11" fill="none" stroke="#c47a4a" stroke-width="3"/></svg>`;
+function jabatoSvg(open) {
+  // open: 0 cerrada, 1 entreabierta, 2 abierta del todo
+  const mouth = [`<path d="M66 82 Q80 88 94 82" fill="none" stroke="#2f1d33" stroke-width="4"/>`,
+    `<ellipse cx="80" cy="86" rx="12" ry="7" fill="#7a1f2a" stroke="#2f1d33" stroke-width="4"/>`,
+    `<ellipse cx="80" cy="90" rx="20" ry="16" fill="#7a1f2a" stroke="#2f1d33" stroke-width="4"/><ellipse cx="80" cy="98" rx="11" ry="6" fill="#e86a7a"/>`][open];
+  return `<svg viewBox="0 0 160 130"><ellipse cx="80" cy="96" rx="64" ry="40" fill="#9a6236" stroke="#2f1d33" stroke-width="5"/>
+    <path d="M30 80 Q40 70 52 80 M48 72 Q60 62 72 72 M88 72 Q100 62 112 72 M108 80 Q120 70 130 80" fill="none" stroke="#f0d6a8" stroke-width="7" stroke-linecap="round"/>
+    <path d="M36 44 L30 14 L58 34 Z M124 44 L130 14 L102 34 Z" fill="#9a6236" stroke="#2f1d33" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="80" cy="56" rx="50" ry="40" fill="#a86d3c" stroke="#2f1d33" stroke-width="5"/>
+    <path d="M44 40 Q80 22 116 40" fill="none" stroke="#f0d6a8" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="62" cy="54" r="7" fill="#2f1d33"/><circle cx="98" cy="54" r="7" fill="#2f1d33"/><circle cx="64" cy="51" r="2.5" fill="#fff"/><circle cx="100" cy="51" r="2.5" fill="#fff"/>
+    <ellipse cx="80" cy="72" rx="18" ry="12" fill="#e9a0a0" stroke="#2f1d33" stroke-width="4"/><circle cx="74" cy="72" r="3" fill="#2f1d33"/><circle cx="86" cy="72" r="3" fill="#2f1d33"/>
+    ${mouth}</svg>`;
+}
+const BUSH = `<svg viewBox="0 0 210 82" preserveAspectRatio="none"><path d="M4 80 Q0 40 34 38 Q40 8 76 18 Q100 -4 128 16 Q164 4 176 36 Q210 36 206 80 Z" fill="#4f8a3a" stroke="#2f1d33" stroke-width="5"/><circle cx="60" cy="44" r="6" fill="#c47a2c" stroke="#2f1d33" stroke-width="3"/><circle cx="150" cy="40" r="6" fill="#c47a2c" stroke="#2f1d33" stroke-width="3"/><path d="M40 60 Q60 50 80 60 M120 58 Q140 48 160 58" fill="none" stroke="#3a6a2a" stroke-width="4"/></svg>`;
+
+let running = false;
+const opts = { layout: "uno", bg: "mundo", help: "puntos", score: "rama", who: "demo" };
+document.querySelectorAll("[data-opt]").forEach((b) => b.addEventListener("click", () => {
+  opts[b.dataset.opt] = b.dataset.val;
+  document.querySelectorAll(`[data-opt="${b.dataset.opt}"]`).forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+  apply();
+}));
+
+const SPOTS = { uno: [{ x: 300, y: 282 }], tres: [{ x: 280, y: 282 }, { x: 450, y: 282 }, { x: 620, y: 282 }] };
+function buildSpots() {
+  $("spots").innerHTML = SPOTS[opts.layout].map((s, i) => `<div class="spot" style="left:${s.x}px; top:${s.y}px"><div class="count" id="count-${i}"></div><div class="hole"><div class="jabato" id="jab-${i}">${jabatoSvg(0)}</div></div><div class="bush">${BUSH}</div><div class="yum" id="yum-${i}">¡Ñam!</div></div>`).join("");
+}
+function apply() {
+  stage.classList.toggle("tres", opts.layout === "tres");
+  ["mundo", "claro", "fortaleza"].forEach((n) => { $(`bg-${n}`).hidden = opts.bg !== n; });
+  $("branch").hidden = opts.score !== "rama"; $("bellies").hidden = opts.score !== "barrigas";
+  $("score").querySelector("b").textContent = opts.score === "rama" ? "Bellotas de la merienda" : "Barriguitas llenas";
+  // En la disposición B el Gran Jabalí se aparta a la izquierda del fondo para dejar sitio a los arbustos.
+  if (!running) buildSpots();
+}
+document.querySelector(".rock").id = "rock";
+apply();
+
+// Partitura del boceto: [pulso de la llamada, tamaño, arbusto]. Pequeño: bocado 2 pulsos después; grande: 4.
+const CALLS = [[0, "s", 0], [4, "s", 1], [8, "s", 2], [12, "b", 1], [20, "s", 0], [24, "s", 2], [28, "b", 0], [36, "s", 1], [40, "s", 0], [44, "s", 2]];
+const LEAD = { s: 2, b: 4 };
+const sp = (e) => e.spot % SPOTS[opts.layout].length;
+const EVENTS = CALLS.map(([at, size, spot], i) => ({ i, call: at, bite: at + LEAD[size], size, spot }));
+const TOTAL = EVENTS.length, GOAL = Math.ceil(TOTAL * 0.6);
+$("branch").innerHTML = Array.from({ length: TOTAL }, () => "<i></i>").join("") + `<div class="line" style="left:${4 + (GOAL / TOTAL) * 206}px"></div>`;
+$("bellies").innerHTML = [0, 1, 2].map((i) => `<div class="belly" id="belly-${i}"></div>`).join("");
+
+// Audio
+const BPM = 100, P = 60 / BPM, LOOK = 0.12, COUNT = 4;
+let ctx = null, t0 = 0, sched = 0, score = 0, fed = {}, judged = {};
+const END = COUNT + 50;
+function tone(t, f, d, type = "triangle", g = .15, to) {
+  if (!ctx) return; const o = ctx.createOscillator(), v = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (to) o.frequency.exponentialRampToValueAtTime(to, t + d);
+  v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.001, t + d);
+  o.connect(v).connect(ctx.destination); o.start(t); o.stop(t + d + .02);
+}
+function noise(t, d, g = .08, f = 6000) {
+  if (!ctx) return; const b = ctx.createBuffer(1, ctx.sampleRate * d, ctx.sampleRate), a = b.getChannelData(0);
+  for (let i = 0; i < a.length; i++) a[i] = Math.random() * 2 - 1;
+  const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), v = ctx.createGain();
+  s.buffer = b; fl.type = "bandpass"; fl.frequency.value = f; v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.001, t + d);
+  s.connect(fl).connect(v).connect(ctx.destination); s.start(t);
+}
+const grunt = (t, big) => { tone(t, big ? 120 : 170, big ? .42 : .2, "sawtooth", .12, big ? 70 : 110); noise(t, big ? .3 : .15, .1, 400); };
+const munch = (t, big) => { noise(t, .05, .25, 1800); noise(t + .09, .05, .2, 1500); tone(t, big ? 330 : 523, .2, "triangle", .14); };
+const CHORDS = [[262, 330, 392], [294, 349, 440], [220, 262, 330], [196, 247, 294]];
+function accomp(t, pulse) {
+  const bar = Math.floor(pulse / 4), chord = CHORDS[bar % 4];
+  if (pulse % 2 === 0) tone(t, chord[0] / 2, P * .8, "triangle", .12); else noise(t, .04, .06, 3000);
+  if (pulse % 4 === 3) chord.forEach((f) => tone(t, f, .15, "sine", .025));
+}
+
+function now() { return ctx ? ctx.currentTime - t0 : performance.now() / 1000 - t0; }
+function start() {
+  stop(); buildSpots();
+  if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { ctx = null; } }
+  if (ctx?.state === "suspended") ctx.resume();
+  t0 = (ctx ? ctx.currentTime : performance.now() / 1000) + .25;
+  running = true; sched = 0; score = 0; fed = {}; judged = {};
+  document.querySelectorAll(".branch i").forEach((i) => i.classList.remove("got"));
+  document.querySelectorAll(".belly").forEach((b) => b.style.setProperty("--fill", "0%"));
+  loop();
+}
+function stop() { running = false; $("noa").classList.remove("celebra"); $("bubble").classList.remove("show"); }
+$("play").onclick = start; $("stop").onclick = stop;
+
+function schedule() {
+  const t = now();
+  while (sched < END && sched * P < t + LOOK) {
+    const at = t0 + sched * P, rel = sched - COUNT;
+    if (ctx) {
+      accomp(at, sched);
+      if (rel < 0) tone(at, [392, 440, 494, 523][sched], .12, "sine", .12);
+      EVENTS.forEach((e) => {
+        if (e.call === rel) grunt(at, e.size === "b");
+        if (e.bite === rel && opts.who === "demo") munch(at, e.size === "b");
+      });
+      if (rel === 48) [523, 659, 784, 1047].forEach((f, k) => tone(at + k * .12, f, .3, "triangle", .12));
+    }
+    const pulse = sched; setTimeout(() => visualPulse(pulse), Math.max(0, (pulse * P - now()) * 1000));
+    sched++;
+  }
+}
+
+function flash(el, cls, ms = 120) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
+function say(i, text, miss) { const y = $(`yum-${i}`); if (!y) return; y.textContent = text; y.classList.toggle("miss", !!miss); flash(y, "show", 420); }
+function addScore(e) {
+  const i = document.querySelectorAll(".branch i")[score++]; if (i) i.classList.add("got");
+  const b = $(`belly-${score % 3}`); if (b) b.style.setProperty("--fill", `${Math.min(100, Math.ceil(score / 3) / (TOTAL / 3) * 100)}%`);
+}
+function feedVisual(e) {
+  const hf = $("hand-food"); hf.innerHTML = e.size === "b" ? CHESTNUT : ACORN;
+  const spot = SPOTS[opts.layout][sp(e)]; hf.style.setProperty("--reach", `${spot.x + 80 - 248}px`);
+  hf.classList.add("show"); flash($("noa"), "feed", 140);
+  requestAnimationFrame(() => { hf.classList.add("go"); setTimeout(() => hf.classList.remove("show", "go"), 140); });
+}
+function missVisual(e) {
+  const spot = SPOTS[opts.layout][sp(e)], b = document.createElement("div");
+  b.className = "bounce"; b.innerHTML = e.size === "b" ? CHESTNUT : ACORN; b.style.left = `${spot.x + 70}px`; b.style.top = `${spot.y + 20}px`;
+  stage.appendChild(b); setTimeout(() => b.remove(), 650);
+}
+
+function visualPulse(pulse) {
+  if (!running) return;
+  const rel = pulse - COUNT;
+  [...$("bulbs").children].forEach((b, i) => b.classList.toggle("on", i === ((pulse % 4) + 4) % 4));
+  if (rel < 0) { $("label").textContent = `Cuenta: ${pulse + 1}`; return; }
+  $("label").textContent = rel >= 48 ? (score >= GOAL ? "¡Bien hecho!" : "¡Casi!") : "¡A merendar!";
+  if (rel === 48) $("noa").classList.add("celebra");
+  // El Gran Jabalí gruñe en el pulso de la llamada.
+  const caller = EVENTS.find((e) => e.call === rel);
+  $("boss").style.backgroundImage = `url("../public/assets/sprites/boss-gran-jabali-${caller ? 3 : 0}.png")`;
+  if (caller) { flash($("boss"), "call", 160); const bb = $("bubble"); bb.textContent = caller.size === "b" ? "¡GRUUUU!" : "¡Gru!"; bb.classList.toggle("big", caller.size === "b"); bb.classList.add("show"); setTimeout(() => bb.classList.remove("show"), P * 900); }
+  // Cada jabato activo: asoma en la llamada y abre la boca hasta el pulso del bocado.
+  EVENTS.forEach((e) => {
+    const j = $(`jab-${sp(e)}`), c = $(`count-${sp(e)}`); if (!j) return;
+    const lead = e.bite - e.call;
+    if (rel >= e.call && rel <= e.bite) {
+      const step = rel - e.call, open = step === lead ? 2 : step >= lead - 1 ? 1 : 0;
+      j.classList.toggle("big", e.size === "b"); j.classList.add("up"); j.innerHTML = jabatoSvg(open);
+      c.innerHTML = opts.help === "puntos" ? Array.from({ length: lead }, (_, k) => `<i class="${k < step ? "on" : ""} ${k === step - 1 && step === lead ? "now" : ""}"></i>`).join("") : "";
+      if (rel === e.bite && opts.who === "demo") { fed[e.i] = true; judged[e.i] = true; feedVisual(e); flash(j, "chomp", 260); setTimeout(() => { j.innerHTML = jabatoSvg(0); }, 120); say(sp(e), "¡Ñam!"); addScore(e); }
+    }
+    if (rel === e.bite + 1) {
+      if (opts.who === "yo" && !fed[e.i]) { judged[e.i] = true; missVisual(e); flash(j, "sad", 360); say(sp(e), "¡Ay!", true); }
+      setTimeout(() => { if (!EVENTS.some((o) => sp(o) === sp(e) && rel >= o.call && rel <= o.bite)) { j.classList.remove("up"); c.innerHTML = ""; } }, 200);
+    }
+  });
+}
+
+function playerHit() {
+  if (!running) return;
+  const pulse = now() / P - COUNT, near = Math.round(pulse);
+  const e = EVENTS.find((x) => x.bite === near && !fed[x.i]);
+  if (e && Math.abs(pulse - near) <= .3) {
+    fed[e.i] = true; judged[e.i] = true; if (ctx) munch(ctx.currentTime, e.size === "b");
+    feedVisual(e); const j = $(`jab-${sp(e)}`); flash(j, "chomp", 260); j.innerHTML = jabatoSvg(0); say(sp(e), "¡Ñam!"); addScore(e);
+  } else {
+    // Golpe de más: Noa saca la mano, sin castigo.
+    if (ctx) tone(ctx.currentTime, 300, .08, "sine", .06); flash($("noa"), "feed", 140);
+  }
+}
+$("hit").onclick = playerHit;
+addEventListener("keydown", (e) => { if (e.code === "Space" && !e.repeat) { e.preventDefault(); playerHit(); } });
+
+function loop() { if (!running) return; schedule(); if (now() > END * P + .5) { running = false; return; } requestAnimationFrame(loop); }
+</script>
+</body>
+</html>

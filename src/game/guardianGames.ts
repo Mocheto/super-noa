@@ -1,7 +1,7 @@
 import type { BossId } from "./types";
 
 export type GuardianGameId = Extract<BossId,
-  "queen-bee" | "triceratops-queen" | "sky-captain" | "great-boar" |
+  "triceratops-queen" | "sky-captain" | "great-boar" |
   "maestra-armonia" | "aurora-celeste" | "rainbow-queen"
 >;
 
@@ -18,11 +18,6 @@ export type GuardianGame = {
 
 export const GUARDIAN_GAME_ROUNDS = 5;
 
-const flowerOptions = [
-  { id: "pink", sprite: [0, 0], label: "Flor rosa", color: "#ef79a9" },
-  { id: "yellow", sprite: [0, 1], label: "Flor amarilla", color: "#e0ad25" },
-  { id: "blue", sprite: [0, 2], label: "Flor azul", color: "#438fc9" },
-] as const;
 const laneOptions = [
   { id: "left", sprite: [1, 0], label: "Cesta izquierda", color: "#76b98c" },
   { id: "center", sprite: [1, 1], label: "Cesta del centro", color: "#e0a452" },
@@ -55,7 +50,6 @@ const rainbowOptions = [
 ] as const;
 
 export const guardianGames: Record<GuardianGameId, GuardianGame> = {
-  "queen-bee": { kind: "choice", title: "Flores para la colmena", instruction: "Melisa pide una flor. Toca la flor del mismo color.", prompt: "Melisa necesita esta flor", success: "¡Néctar para la colmena!", options: flowerOptions },
   "triceratops-queen": { kind: "choice", title: "Protege los huevos", instruction: "Mira dónde cae el huevo y coloca allí la cesta.", prompt: "El huevo cae aquí", success: "¡Huevo a salvo!", options: laneOptions },
   "sky-captain": { kind: "choice", title: "Cañones de colores", instruction: "Mira la bandera y dispara el cañón del mismo color.", prompt: "La bandera del capitán", success: "¡Nube despejada!", options: cannonOptions },
   "great-boar": { kind: "choice", title: "Esquiva la carrera", instruction: "Mira la flecha. Si viene de un lado, escóndete en el contrario. Si viene de abajo, salta.", prompt: "El Jabalí viene desde", success: "¡Bien esquivado! Has encontrado una bellota.", options: dodgeOptions },

@@ -1,0 +1,89 @@
+/* «La abeja ninja»: duelo rítmico de la Reina Melisa. Escena fija de 960 × 540 escalada al ancho disponible. */
+.bee-ninja-game { width: min(960px, 100%); background-color: #fff8e9; background-image: linear-gradient(180deg, rgba(255,248,233,.94), rgba(236,244,214,.96)); }
+.bee-ninja-header { align-items: flex-start; gap: 16px; }
+.bee-ninja-header h2 { margin-bottom: 4px; }
+.bee-ninja-header > div > p:not(.eyebrow):not(.boss-challenge) { margin: 4px 0 0; font: 800 .9rem/1.35 system-ui, sans-serif; }
+
+.bee-ninja-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 14px 0 8px;
+  overflow: hidden;
+  border: 4px solid #352044;
+  background: #6aa04f;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.bee-ninja-stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+.bee-ninja-stage > * { position: absolute; }
+.bee-ninja-background { inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.85) brightness(.9) blur(1px); }
+.bee-ninja-ground { left: 0; right: 0; bottom: 0; height: 96px; background: linear-gradient(#7fae55, #5c8a3d 45%, #456b2e); border-top: 6px solid #a3d06a; }
+
+/* Latido: cuatro celdillas de panal que se llenan de miel al compás. */
+.bee-ninja-comb { top: 16px; left: 50%; z-index: 5; display: flex; gap: 6px; translate: -50%; }
+.bee-ninja-comb span { display: grid; place-items: center; width: 40px; height: 46px; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: #2f1d33; transition: transform .08s; }
+.bee-ninja-comb span::after { content: ""; width: 32px; height: 38px; clip-path: inherit; background: #7a6338; transition: background .08s; }
+.bee-ninja-comb span.is-on { transform: scale(1.14); }
+.bee-ninja-comb span.is-on::after { background: #f4a92a; }
+
+.bee-ninja-melisa { left: 26px; top: 234px; width: 210px; height: 210px; background-repeat: no-repeat; background-size: 500% 200%; filter: drop-shadow(0 6px 4px #0005); transition: transform .1s; }
+.bee-ninja-melisa.is-throwing { transform: translateY(-8px) rotate(-4deg); }
+
+/* Noa-abeja: tira de 4 poses de 480 × 460 (espera, alza, corta, celebra), reflejada para mirar a Melisa. */
+.bee-ninja-hero { z-index: 2; background-repeat: no-repeat; background-size: 400% 100%; background-position: 0 0; transform: scaleX(-1); filter: drop-shadow(0 6px 4px #0005); image-rendering: pixelated; }
+.bee-ninja-hero[data-pose="alza"] { background-position: 33.333% 0; }
+.bee-ninja-hero[data-pose="corta"] { background-position: 66.666% 0; }
+.bee-ninja-hero[data-pose="celebra"] { background-position: 100% 0; }
+
+/* Tarro de miel pixelado: 5 niveles de 104 × 120 y la raya dorada. */
+.bee-ninja-jar { left: 830px; bottom: 22px; width: 104px; height: 120px; background-repeat: no-repeat; background-size: 500% 100%; image-rendering: pixelated; filter: drop-shadow(0 4px 3px #0005); }
+.bee-ninja-line { position: absolute; left: 6px; right: 6px; top: 74px; height: 5px; border: 2px solid #2f1d33; border-radius: 3px; background: #ffd76a; box-shadow: 0 0 8px #ffd76a; }
+.bee-ninja-jar.is-reached .bee-ninja-line { background: #fff3a8; box-shadow: 0 0 16px #fff3a8; }
+
+.bee-ninja-ring { z-index: 4; width: 100px; height: 100px; border: 5px solid #ffd76a; border-radius: 50%; opacity: .65; box-shadow: 0 0 12px #ffd76a99; pointer-events: none; }
+.bee-ninja-ring.is-ready { opacity: 1; border-color: #fff1a8; box-shadow: 0 0 22px #ffd76a; }
+.bee-ninja-now { z-index: 5; padding: 4px 10px; border: 3px solid #2f1d33; border-radius: 10px; background: #ffd76a; color: #2f1d33; font: 900 18px ui-monospace, monospace; }
+
+.bee-ninja-target { top: 0; left: 0; z-index: 3; width: 64px; height: 64px; pointer-events: none; }
+.bee-ninja-target svg, .bee-ninja-cut-flower svg { display: block; width: 100%; height: 100%; }
+.bee-ninja-cut-flower { z-index: 3; width: 64px; height: 64px; pointer-events: none; }
+.bee-ninja-cut-flower > span { position: absolute; inset: 0; animation: .55s ease-in forwards; }
+.bee-ninja-cut-flower > .is-left { clip-path: inset(0 50% 0 0); animation-name: bee-ninja-half-left; }
+.bee-ninja-cut-flower > .is-right { clip-path: inset(0 0 0 50%); animation-name: bee-ninja-half-right; }
+.bee-ninja-cut-flower > i { position: absolute; top: 26px; left: 26px; width: 12px; height: 16px; border: 2px solid #2f1d33; border-radius: 50% 50% 50% 0; background: var(--petal); animation: bee-ninja-petal .8s ease-in forwards; }
+@keyframes bee-ninja-half-left { to { transform: translate(-46px, 120px) rotate(-50deg); opacity: 0; } }
+@keyframes bee-ninja-half-right { to { transform: translate(46px, 120px) rotate(50deg); opacity: 0; } }
+@keyframes bee-ninja-petal { to { transform: translate(var(--dx), var(--dy)) rotate(300deg); opacity: .2; } }
+
+.bee-ninja-bubble { z-index: 6; padding: 3px 9px; border: 3px solid #2f1d33; border-radius: 12px; background: #fff6e3; color: #2f1d33; font: 900 16px ui-monospace, monospace; white-space: nowrap; }
+.bee-ninja-bubble.is-melisa { left: 150px; top: 206px; }
+.bee-ninja-bubble.is-pink { background: #ffd0ea; }
+.bee-ninja-feedback { z-index: 6; padding: 4px 12px; border: 3px solid #2f1d33; border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 22px ui-monospace, monospace; animation: bee-ninja-pop .3s ease-out; }
+.bee-ninja-feedback.is-miss { background: #ffd2c8; color: #6a2a22; }
+@keyframes bee-ninja-pop { from { transform: translateY(8px); opacity: .3; } }
+.bee-ninja-caption { left: 50%; top: 76px; z-index: 6; max-width: 620px; padding: 8px 16px; border: 3px solid #2f1d33; border-radius: 14px; background: #fff6e3ee; color: #2f1d33; font: 900 20px system-ui, sans-serif; text-align: center; translate: -50%; }
+.bee-ninja-phase { right: 12px; top: 12px; z-index: 5; padding: 3px 9px; border-radius: 8px; color: #fff6e3; background: #2f1d33cc; font: 700 12px ui-monospace, monospace; }
+.bee-ninja-result { left: 50%; top: 150px; z-index: 6; padding: 10px 26px; border: 4px solid #2f1d33; border-radius: 16px; background: #ffd76a; color: #2f1d33; font: 900 40px ui-monospace, monospace; translate: -50%; box-shadow: 0 0 30px #ffd76a; }
+
+.bee-ninja-progress { display: block; width: 100%; height: 10px; margin: 0 0 6px; accent-color: #f4a92a; }
+.bee-ninja-controls { display: grid; justify-items: center; gap: 8px; text-align: center; }
+.bee-ninja-message { min-height: 1.4em; margin: 3px 0 0; color: #47324f; font: 900 .98rem/1.3 system-ui, sans-serif; }
+.bee-ninja-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
+.bee-ninja-actions .pixel-button { min-width: 170px; }
+.bee-ninja-cut { width: min(480px, 100%); min-height: 68px; border: 4px solid #352044; border-bottom-width: 8px; color: #352044 !important; background: #ffe07d !important; font-size: 1.35rem; font-weight: 1000; }
+.bee-ninja-cut:active { border-bottom-width: 4px; transform: translateY(4px); }
+.bee-ninja-cut:disabled { opacity: .55; }
+.bee-ninja-note, .bee-ninja-help { margin: 0; color: #65536c; font: 750 .78rem/1.3 system-ui, sans-serif; }
+.bee-ninja-game .duel-abandon { margin: 3px auto 0; color: #47324f; }
+.bee-ninja-frame.is-still .bee-ninja-cut-flower > span, .bee-ninja-frame.is-still .bee-ninja-feedback { animation-duration: .001ms; }
+
+@media (max-width: 600px) {
+  .bee-ninja-game { max-height: calc(100dvh - 18px); padding: 12px; border-width: 4px; }
+  .bee-ninja-header h2 { font-size: 1.25rem; }
+  .bee-ninja-header > div > p:not(.eyebrow):not(.boss-challenge) { font-size: .75rem; }
+  .bee-ninja-frame { margin: 8px 0 6px; border-width: 3px; }
+  .bee-ninja-cut { min-height: 62px; font-size: 1.2rem; }
+  .bee-ninja-actions .pixel-button { min-width: 0; flex: 1 1 140px; }
+}

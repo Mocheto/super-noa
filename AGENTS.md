@@ -24,6 +24,7 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 - `src/game/starPowerVisuals.ts` y `src/game/detour*.ts` / `src/game/detours.css`: efectos visuales de protección, mecánica de desvíos y progreso.
 - `src/game/santaBattle.ts`, `src/game/santaBattleAssets.ts`, `src/game/santaBattleRendering.ts` y `src/game/SantaBossBattle.tsx`: batalla navideña contra Papá Noel, renderizado y assets.
 - `src/game/BossBattle.tsx`, `src/game/GuardianMiniGame.tsx` y `src/game/guardianGames.ts`: doce duelos de piedra, papel o tijera contra los guardianes.
+- `src/game/beeNinja.ts` y `src/game/BeeNinjaGame.tsx` / `src/game/beeNinja.css`: «La abeja ninja», duelo rítmico de la Reina Melisa (partitura en pulsos, cortes, raya dorada, pausa con cuenta y música «jardín ninja» generada sobre el reloj de audio).
 - `src/game/chainGuardians.ts` y `src/game/mechanicSprites.ts`: perritos encadenados del castillo y sprites de mecánicas.
 - `src/game/stickers.ts`: catálogo estable de 36 insignias coleccionables; `src/game/worldEnemySprites.ts`: sprites troquelados de enemigos por mundo.
 - `src/game/worldMechanics.ts`: mecánicas por mundo.
@@ -62,7 +63,7 @@ npm run build:pages
 
 Ejecuta también `npm run test:logic` cuando cambien reglas, niveles, recursos, entrada, bucle o progreso.
 
-Antes de publicar comprueba las treinta pantallas de campaña, las tres acuáticas y el reino secreto de las nubes, doble salto, natación, muelles, niebla, avisos de lobos y jabalíes, ruta secreta por las copas, barcos voladores, piratas, loros, cañones, pasillos y pinchos del castillo, la isla tropical, t-rex pequeños, terodáctilos y agua mortal, el volcán y su lava, el rebote en gotas del valle, el deslizamiento en la montaña de hielo, pájaros, unicornios, pegatinas y álbum, los doce duelos, rendirse y volver al mapa, el reintento gastando una manzana y el reinicio sin manzanas, cajas golpeadas desde abajo, pérdida de vidas y reaparición con tres vidas, checkpoints, manzana, gato, lana, rescate final del gatito, progreso, sonido, teclado, controles táctiles, mando en los duelos y pausa automática al ocultar la pestaña o perder el foco.
+Antes de publicar comprueba las treinta pantallas de campaña, las tres acuáticas y el reino secreto de las nubes, doble salto, natación, muelles, niebla, avisos de lobos y jabalíes, ruta secreta por las copas, barcos voladores, piratas, loros, cañones, pasillos y pinchos del castillo, la isla tropical, t-rex pequeños, terodáctilos y agua mortal, el volcán y su lava, el rebote en gotas del valle, el deslizamiento en la montaña de hielo, pájaros, unicornios, pegatinas y álbum, los doce duelos, la abeja ninja de la Reina Melisa (práctica, cortes al compás, mariquitas, raya dorada, pausa con cuenta de cuatro y revancha), rendirse y volver al mapa, el reintento gastando una manzana y el reinicio sin manzanas, cajas golpeadas desde abajo, pérdida de vidas y reaparición con tres vidas, checkpoints, manzana, gato, lana, rescate final del gatito, progreso, sonido, teclado, controles táctiles, mando en los duelos y pausa automática al ocultar la pestaña o perder el foco.
 
 ## Cómo añadir un mundo
 

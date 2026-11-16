@@ -1,6 +1,6 @@
 # Super Noa
 
-Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario del minijuego rítmico de los gatitos leñadores.
+Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de los minijuegos rítmicos: los gatitos leñadores y la abeja ninja. Los términos de **Ritmo** son comunes; los de **Piezas** y **Escena** son de los gatitos leñadores.
 
 ## Ritmo
 
@@ -75,3 +75,37 @@ _Avoid_: Lanzador, ayudante
 **Práctica**:
 Demostración y ensayo previos a la canción, con los gatitos enseñando cada tipo de pieza.
 _Avoid_: Tutorial, nivel de prueba
+
+## Abeja ninja
+
+**Abeja ninja**:
+Duelo rítmico de la Reina Melisa en el que Noa-abeja corta al compás las flores que la guardiana le lanza.
+_Avoid_: Flores para la colmena (el duelo anterior al que sustituye)
+
+**Noa-abeja**:
+Noa vestida de abeja, que corta con la varita-aguijón cada vez que la jugadora pulsa.
+_Avoid_: Abeja, ninja
+
+**Varita-aguijón**:
+Varita de punta dorada y redonda con la que Noa-abeja corta las flores; su punta marca el punto de corte.
+_Avoid_: Espada, aguijón
+
+**Flor**:
+Cada objeto que la Reina Melisa lanza y que pide un corte.
+_Avoid_: Pieza (reservado a los troncos), objetivo
+
+**Lanzamiento**:
+Pulso en que la Reina Melisa suelta una flor con un «¡zum!», dos pulsos antes de su corte.
+_Avoid_: Empuje (reservado a los gatitos)
+
+**Vuelo**:
+Los dos pulsos que tarda una flor desde su lanzamiento hasta la punta de la varita-aguijón.
+_Avoid_: Antelación, viaje
+
+**Corte**:
+Una pulsación de la jugadora, que Noa-abeja convierte en un barrido de la varita-aguijón.
+_Avoid_: Golpe (reservado a los gatitos), toque
+
+**Tarro de miel**:
+Recipiente que se va llenando con los pétalos de cada flor cortada.
+_Avoid_: Marcador, puntuación

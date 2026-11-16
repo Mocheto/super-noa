@@ -56,9 +56,13 @@ _Avoid_: Trampa, enemigo
 Superficie por la que los gatitos hacen llegar las piezas hasta la gata leñadora.
 _Avoid_: Cinta transportadora, carril
 
-**Gata leñadora**:
-Gatita que golpea las piezas con el hacha cada vez que la jugadora pulsa.
-_Avoid_: Oso, personaje principal
+**Leñadora**:
+Noa vestida de gata, que golpea las piezas con el hacha cada vez que la jugadora pulsa.
+_Avoid_: Gata leñadora, oso
+
+**Gatito empujador**:
+Gatito que suelta cada pieza en la cinta con un maullido en su pulso.
+_Avoid_: Lanzador, ayudante
 
 **Práctica**:
 Demostración y ensayo previos a la canción, con los gatitos enseñando cada tipo de pieza.

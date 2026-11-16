@@ -173,3 +173,7 @@ _Avoid_: Manzana (son vidas y protección en el juego), chuletón, comida a eleg
 **Noa guarda del bosque**:
 Noa vestida de guarda del bosque, con delantal y cesta de bellotas, que da un bocado cada vez que la jugadora pulsa.
 _Avoid_: Cocinera, cuidadora
+
+**Rama de bellotas**:
+Rama que se llena con una bellota por cada bocado acertado; su raya dorada marca el mínimo para ganar la merienda.
+_Avoid_: Barriguitas, marcador, puntuación

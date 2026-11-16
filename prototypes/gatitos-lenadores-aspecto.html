@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gatitos leñadores · boceto de aspecto</title>
+<style>
+  :root { --wood: #8a5632; --wood-dark: #5b3620; --gold: #ffd76a; --ink: #2f1d33; --paper: #fff6e3; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #1d1428; color: var(--paper); font: 15px/1.4 system-ui, sans-serif; }
+  main { width: min(980px, 100%); margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.5rem ui-monospace, monospace; letter-spacing: .02em; }
+  .lead { margin: 0 0 12px; color: #d8c8e8; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 4px solid #3b2647; border-radius: 12px; background: #4d7a49; }
+  .stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+  .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.9) brightness(.95); }
+  .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 118px; background: linear-gradient(#6f9a4a, #4f7536 40%, #3e5c2b); border-top: 6px solid #8dbd5a; }
+  /* Fiesta: guirnalda */
+  .garland { position: absolute; top: 0; left: 0; width: 100%; height: 70px; }
+  /* Latido: cuatro farolillos */
+  .beats { position: absolute; top: 18px; left: 50%; display: flex; gap: 18px; translate: -50%; }
+  .lamp { width: 30px; height: 38px; border: 3px solid var(--ink); border-radius: 10px 10px 14px 14px; background: #6b5a3b; box-shadow: inset 0 -6px 0 #0003; transition: background .08s, transform .08s; }
+  .lamp.first { width: 36px; }
+  .lamp.on { background: var(--gold); box-shadow: 0 0 22px #ffd76acc, inset 0 -6px 0 #0002; transform: scale(1.12); }
+  /* Cinta */
+  .belt { position: absolute; height: 34px; border: 4px solid var(--ink); border-radius: 18px; background: repeating-linear-gradient(90deg, #7b5a3c 0 26px, #6a4b30 26px 52px); box-shadow: 0 8px 0 #0004; }
+  .belt-rollers { position: absolute; inset: auto 10px -16px 10px; height: 18px; display: flex; justify-content: space-between; }
+  .belt-rollers i { width: 18px; height: 18px; border: 3px solid var(--ink); border-radius: 50%; background: #9b8a74; }
+  .ramp { position: absolute; height: 34px; border: 4px solid var(--ink); border-radius: 14px; background: repeating-linear-gradient(90deg, #8f6a44 0 30px, #7a5737 30px 60px); transform-origin: 0 50%; box-shadow: 0 8px 0 #0004; }
+  .hill { position: absolute; border-radius: 50% 50% 0 0; background: radial-gradient(circle at 50% 30%, #8cc364, #5f8c3f 70%); border: 4px solid #2f4a24; border-bottom: 0; }
+  /* Tajo */
+  .stump { position: absolute; width: 110px; height: 70px; }
+  .stump .top { position: absolute; top: 0; left: 0; width: 110px; height: 30px; border: 4px solid var(--ink); border-radius: 50%; background: radial-gradient(ellipse, #e2b77d 0 18%, #c99459 19% 34%, #e2b77d 35% 52%, #b98049 53%); z-index: 2; }
+  .stump .side { position: absolute; top: 14px; left: 0; width: 110px; height: 56px; border: 4px solid var(--ink); border-top: 0; border-radius: 0 0 14px 14px; background: linear-gradient(90deg, #6d4127, #8d5834 45%, #5f3820); }
+  .ring { position: absolute; border: 5px solid var(--gold); border-radius: 50%; pointer-events: none; opacity: 0; box-shadow: 0 0 12px #ffd76a99; }
+  .now { position: absolute; padding: 4px 10px; border: 3px solid var(--ink); border-radius: 10px; background: var(--gold); color: var(--ink); font: 900 18px ui-monospace, monospace; opacity: 0; transition: opacity .1s; }
+  /* Leñadora */
+  .lumber { position: absolute; width: 170px; height: 190px; }
+  .lumber img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 4px #0005); }
+  .axe { position: absolute; width: 74px; height: 120px; transform-origin: 50% 92%; transform: rotate(-22deg); transition: transform .09s ease-out; z-index: 3; }
+  .axe.chop { transform: rotate(84deg); transition-duration: .06s; }
+  /* Gatitos que empujan */
+  .kitten { position: absolute; width: 110px; height: 110px; transition: transform .12s; }
+  .kitten img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 3px #0005); }
+  .kitten.push { transform: translateX(-16px) scale(1.04, .96); }
+  .bubble { position: absolute; top: -26px; left: 4px; padding: 3px 9px; border: 3px solid var(--ink); border-radius: 12px; background: var(--paper); color: var(--ink); font: 900 16px ui-monospace, monospace; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .1s, transform .1s; }
+  .bubble.show { opacity: 1; transform: none; }
+  .bubble.pink { background: #ffd0ea; }
+  /* Piezas */
+  .piece { position: absolute; pointer-events: none; transform-origin: 50% 100%; }
+  .piece img { display: block; width: 100%; height: 100%; }
+  .piece .marks { position: absolute; top: -18px; left: 50%; display: flex; gap: 6px; translate: -50%; }
+  .piece .marks b { width: 16px; height: 16px; border: 3px solid var(--ink); border-radius: 50%; background: var(--gold); }
+  .piece .marks b.done { background: #8a7a5a; }
+  .piece.cracked img { filter: brightness(1.12); clip-path: polygon(0 0, 47% 0, 52% 45%, 47% 100%, 0 100%, 0 0, 53% 0, 100% 0, 100% 100%, 53% 100%, 49% 50%); }
+  .half { position: absolute; pointer-events: none; transition: transform .45s ease-out, opacity .45s; }
+  .half img { display: block; width: 100%; height: 100%; }
+  .yarn { border-radius: 50%; }
+  /* Montón de leña */
+  .pile { position: absolute; z-index: 4; width: 220px; height: 120px; }
+  .pile img { position: absolute; width: 74px; height: 21px; filter: drop-shadow(0 2px 2px #0006); }
+  .pile .count { position: absolute; top: -32px; left: 50%; padding: 2px 10px; border: 3px solid var(--ink); border-radius: 10px; background: var(--paper); color: var(--ink); font: 900 15px ui-monospace, monospace; translate: -50%; }
+  .feedback { position: absolute; padding: 4px 12px; border: 3px solid var(--ink); border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 22px ui-monospace, monospace; opacity: 0; transition: opacity .12s, transform .12s; }
+  .feedback.miss { background: #ffd2c8; color: #6a2a22; }
+  .feedback.show { opacity: 1; transform: translateY(-10px); }
+  .label { position: absolute; left: 12px; bottom: 10px; padding: 3px 9px; border-radius: 8px; background: #2f1d33cc; font: 700 12px ui-monospace, monospace; }
+  /* Controles */
+  .panel { display: grid; gap: 10px; margin-top: 12px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .row > span { min-width: 92px; color: #cdb9df; font-weight: 700; }
+  button { min-height: 40px; padding: 6px 14px; border: 3px solid #3b2647; border-radius: 10px; background: #f3e6cf; color: #2f1d33; font: 800 14px system-ui, sans-serif; cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--gold); box-shadow: inset 0 -4px 0 #0002; }
+  button.big { min-width: 180px; background: #ffb547; font-size: 16px; }
+  .hit { width: 100%; min-height: 64px; font-size: 22px; background: var(--gold); }
+  .notes { margin: 6px 0 0; padding-left: 18px; color: #d8c8e8; }
+  .notes li { margin: 3px 0; }
+  @media (prefers-reduced-motion: reduce) { .kitten, .axe, .bubble, .feedback, .lamp { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Gatitos leñadores · boceto de aspecto</h1>
+  <p class="lead">Boceto desechable para reaccionar a la escena: disposición, quién golpea, cómo se leen los troncos de uno y dos golpes y el latido. Los sprites son provisionales y salen de Super Noa. A 100 pulsos por minuto, con compás de 4.</p>
+
+  <div class="frame" id="frame">
+    <div class="stage" id="stage">
+      <img class="bg" src="../public/assets/worlds/world-1-hd-v1.webp" alt="">
+      <svg class="garland" viewBox="0 0 960 70" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 10 Q240 60 480 14 T960 12" fill="none" stroke="#5b3620" stroke-width="3"/>
+        <g stroke="#2f1d33" stroke-width="2">
+          <path d="M40 18 l14 0 l-7 18z" fill="#ff8fa8"/><path d="M110 30 l14 0 l-7 18z" fill="#ffd76a"/><path d="M180 38 l14 0 l-7 18z" fill="#8fd3ff"/>
+          <path d="M250 40 l14 0 l-7 18z" fill="#b6f08e"/><path d="M320 36 l14 0 l-7 18z" fill="#ff8fa8"/><path d="M390 28 l14 0 l-7 18z" fill="#ffd76a"/>
+          <path d="M560 22 l14 0 l-7 18z" fill="#8fd3ff"/><path d="M630 30 l14 0 l-7 18z" fill="#b6f08e"/><path d="M700 32 l14 0 l-7 18z" fill="#ff8fa8"/>
+          <path d="M770 28 l14 0 l-7 18z" fill="#ffd76a"/><path d="M840 20 l14 0 l-7 18z" fill="#8fd3ff"/><path d="M910 14 l14 0 l-7 18z" fill="#b6f08e"/>
+        </g>
+      </svg>
+      <div class="ground"></div>
+      <div class="beats" id="beats"><div class="lamp first"></div><div class="lamp"></div><div class="lamp"></div><div class="lamp"></div></div>
+      <div id="track"></div>
+      <div class="pile" id="pile"><span class="count" id="pileCount">Leña: 0</span></div>
+      <div class="stump" id="stump"><div class="side"></div><div class="top"></div></div>
+      <div class="ring" id="ring"></div>
+      <div class="now" id="now">¡Ahora!</div>
+      <div class="lumber" id="lumber">
+        <img id="lumberImg" src="../public/assets/sprites/noa-cat-yarn-v2.png" alt="Leñadora">
+        <svg class="axe" id="axe" viewBox="0 0 74 120" aria-hidden="true">
+          <rect x="32" y="22" width="10" height="96" rx="4" fill="#9a6338" stroke="#2f1d33" stroke-width="3"/>
+          <path d="M40 8 Q70 10 70 34 Q60 46 40 40 Z" fill="#cfd6dd" stroke="#2f1d33" stroke-width="3"/>
+          <path d="M36 12 Q12 18 14 34 Q24 38 36 34 Z" fill="#b5bec7" stroke="#2f1d33" stroke-width="3"/>
+        </svg>
+      </div>
+      <div class="kitten" id="kittenA"><img src="../public/assets/sprites/world-cat-2-v1.png" alt=""><span class="bubble" id="bubbleA">¡miau!</span></div>
+      <div class="kitten" id="kittenB"><img src="../public/assets/sprites/world-cat-4-v1.png" alt=""><span class="bubble" id="bubbleB">¡miau!</span></div>
+      <div class="feedback" id="feedback">¡Toc!</div>
+      <div id="pieces"></div>
+      <span class="label" id="label"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <button class="big" id="start">▶ Empezar</button>
+    <button class="hit" id="hit" hidden>¡Golpea! (Espacio)</button>
+    <div class="row" role="group" aria-label="Disposición"><span>Disposición</span>
+      <button data-layout="belt" aria-pressed="true">A · Cinta horizontal</button>
+      <button data-layout="ramp" aria-pressed="false">B · Rampa desde la colina</button>
+    </div>
+    <div class="row" role="group" aria-label="Leñadora"><span>Leñadora</span>
+      <button data-hero="noa" aria-pressed="true">Noa vestida de gata</button>
+      <button data-hero="miel" aria-pressed="false">Gatita Miel</button>
+    </div>
+    <div class="row" role="group" aria-label="Modo"><span>Modo</span>
+      <button data-mode="demo" aria-pressed="true">Demostración</button>
+      <button data-mode="play" aria-pressed="false">Probar yo</button>
+      <button id="sound" aria-pressed="true">Sonido</button>
+    </div>
+    <ul class="notes">
+      <li><b>Tronco pequeño</b>: un círculo dorado, un golpe. <b>Tronco mediano</b>: más largo, dos círculos, dos golpes en pulsos seguidos.</li>
+      <li>El gatito que empuja maúlla en el pulso en que suelta el tronco; en el mediano, el segundo gatito repite el maullido en el pulso siguiente.</li>
+      <li>El ovillo es el distractor: pasa de largo sin golpear.</li>
+      <li>El aro dorado se cierra sobre el tajo justo en el pulso del golpe. Los farolillos marcan los cuatro pulsos del compás.</li>
+    </ul>
+  </div>
+</main>
+
+<script>
+const BPM = 100, BEAT = 60 / BPM, TRAVEL = 2, WINDOW = 0.5; // ventana de ±0,5 pulsos = ±300 ms
+const LOOP = 24;
+const SEQ = [
+  { k: "s", push: 0 }, { k: "s", push: 2 }, { k: "s", push: 4 }, { k: "s", push: 6 },
+  { k: "m", push: 8 }, { k: "s", push: 12 }, { k: "d", push: 14 }, { k: "m", push: 16 },
+  { k: "s", push: 20 }, { k: "s", push: 22 },
+];
+const MELODY = [523, 587, 659, 784, 880, 784, 659, 587];
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), frame = $("frame"), piecesEl = $("pieces"), track = $("track");
+const state = { layout: "belt", hero: "noa", mode: "demo", sound: true, running: false, t0: 0, lastBeat: -1, pile: 0, note: 0, items: new Map() };
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let audio = null;
+
+function fit() { stage.style.transform = `scale(${frame.clientWidth / 960})`; }
+addEventListener("resize", fit); fit();
+
+// ---------- Disposición ----------
+const LAYOUTS = {
+  belt: {
+    label: "A · Cinta horizontal: los gatitos empujan desde la derecha",
+    from: { x: 860, y: 404 }, to: { x: 318, y: 404 }, past: { x: 40, y: 470 },
+    stump: { x: 263, y: 404 }, lumber: { x: 96, y: 300 }, axe: { x: 113, y: 18 },
+    kittenA: { x: 830, y: 300 }, kittenB: { x: 735, y: 300 }, pile: { x: 20, y: 404 },
+    draw() { track.innerHTML = `<div class="belt" style="left:330px;top:404px;width:600px"><div class="belt-rollers"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>`; },
+  },
+  ramp: {
+    label: "B · Rampa: los troncos bajan rodando desde la colina de los gatitos",
+    from: { x: 800, y: 214 }, to: { x: 318, y: 404 }, past: { x: 40, y: 470 },
+    stump: { x: 263, y: 404 }, lumber: { x: 96, y: 300 }, axe: { x: 113, y: 18 },
+    kittenA: { x: 820, y: 112 }, kittenB: { x: 712, y: 120 }, pile: { x: 20, y: 404 },
+    draw() {
+      const dx = 318 - 860, dy = 404 - 214, len = Math.hypot(dx, dy), ang = Math.atan2(dy, dx) * 180 / Math.PI;
+      track.innerHTML = `<div class="hill" style="left:640px;top:200px;width:340px;height:240px"></div>` +
+        `<div class="ramp" style="left:860px;top:228px;width:${len}px;transform:rotate(${ang}deg)"></div>`;
+    },
+  },
+};
+function place(el, p) { el.style.left = p.x + "px"; el.style.top = p.y + "px"; }
+function applyLayout() {
+  const L = LAYOUTS[state.layout];
+  L.draw();
+  place($("stump"), L.stump);
+  place($("lumber"), L.lumber); place($("axe"), L.axe);
+  place($("kittenA"), L.kittenA); place($("kittenB"), L.kittenB);
+  const pile = $("pile"); pile.style.left = L.pile.x + "px"; pile.style.top = (L.pile.y + 6) + "px";
+  $("label").textContent = L.label;
+  const ring = $("ring"); ring.dataset.cx = L.stump.x + 55; ring.dataset.cy = L.stump.y - 18;
+  place($("now"), { x: L.stump.x + 6, y: L.stump.y - 120 });
+  place($("feedback"), { x: L.stump.x + 120, y: L.stump.y - 80 });
+}
+
+// ---------- Sonido ----------
+function tone(freq, dur, type = "sine", vol = 0.08, glideTo) {
+  if (!audio || !state.sound) return;
+  const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+  o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dur + 0.02);
+}
+function woodblock() {
+  if (!audio || !state.sound) return;
+  tone(MELODY[state.note++ % MELODY.length], 0.22, "triangle", 0.12);
+  tone(1800, 0.04, "square", 0.03);
+}
+const meow = (pink) => pink ? tone(1300, 0.12, "sine", 0.06, 900) : tone(760, 0.18, "sine", 0.06, 480);
+
+// ---------- Piezas ----------
+function instances(t) {
+  const cycle = Math.floor(t / LOOP), list = [];
+  for (const c of [cycle - 1, cycle]) {
+    if (c < 0) continue;
+    SEQ.forEach((e, i) => {
+      const push = c * LOOP + e.push;
+      const hits = e.k === "s" ? [push + TRAVEL] : e.k === "m" ? [push + TRAVEL, push + TRAVEL + 1] : [];
+      list.push({ key: `${c}-${i}`, k: e.k, push, hits });
+    });
+  }
+  return list;
+}
+function itemState(inst) {
+  let s = state.items.get(inst.key);
+  if (!s) { s = { ...inst, done: [], el: null, gone: false, missed: false, broken: false }; state.items.set(inst.key, s); }
+  return s;
+}
+function makeEl(s) {
+  const el = document.createElement("div"); el.className = "piece";
+  if (s.k === "d") { el.innerHTML = `<img class="yarn" src="../public/assets/sprites/yarn-ball-v1.png" alt="Ovillo">`; el.style.width = "62px"; el.style.height = "56px"; }
+  else {
+    const w = s.k === "s" ? 118 : 200; el.style.width = w + "px"; el.style.height = Math.round(w * 180 / 640) + "px";
+    el.innerHTML = `<img src="../public/assets/sprites/gatitos-tronco.png" alt="Tronco"><span class="marks">${s.hits.map(() => "<b></b>").join("")}</span>`;
+  }
+  piecesEl.appendChild(el); s.el = el;
+}
+function lerp(a, b, p) { return a + (b - a) * p; }
+function piecePos(s, t) {
+  const L = LAYOUTS[state.layout], p = (t - s.push) / TRAVEL;
+  if (p <= 1) return { x: lerp(L.from.x, L.to.x, Math.max(0, p)), y: lerp(L.from.y, L.to.y, Math.max(0, p)), rot: state.layout === "ramp" && s.k === "d" ? p * 720 : 0 };
+  if (s.k === "d" || s.missed) { const q = Math.min(1, (p - 1) / 0.8); return { x: lerp(L.to.x, L.past.x, q), y: lerp(L.to.y, L.past.y, q), rot: q * 540, fade: q }; }
+  return { x: L.to.x, y: L.to.y, rot: 0 };
+}
+function breakPiece(s) {
+  s.broken = true;
+  const r = s.el.getBoundingClientRect(), sr = stage.getBoundingClientRect(), k = sr.width / 960;
+  const x = (r.left - sr.left) / k, y = (r.top - sr.top) / k, w = r.width / k, h = r.height / k;
+  for (const side of [-1, 1]) {
+    const half = document.createElement("div"); half.className = "half";
+    Object.assign(half.style, { left: (x + (side > 0 ? w / 2 : 0)) + "px", top: y + "px", width: w / 2 + "px", height: h + "px", overflow: "hidden" });
+    half.innerHTML = `<img src="../public/assets/sprites/gatitos-tronco.png" alt="" style="width:${w}px;margin-left:${side > 0 ? -w / 2 : 0}px">`;
+    piecesEl.appendChild(half);
+    requestAnimationFrame(() => { half.style.transform = reduceMotion ? "none" : `translate(${side * 60 - 120}px, -70px) rotate(${side * 40}deg)`; half.style.opacity = "0"; });
+    setTimeout(() => half.remove(), 500);
+  }
+  s.el.remove(); s.gone = true;
+  addToPile(s.k === "m" ? 2 : 1);
+}
+function addToPile(n) {
+  const pile = $("pile");
+  for (let i = 0; i < n; i++) {
+    state.pile++;
+    if (state.pile > 18) continue;
+    const idx = state.pile - 1, row = Math.floor(idx / 6), col = idx % 6;
+    const img = document.createElement("img"); img.src = "../public/assets/sprites/gatitos-tronco.png"; img.alt = "";
+    img.style.left = (col * 30 + row * 14) + "px"; img.style.top = (70 - row * 16) + "px";
+    pile.appendChild(img);
+  }
+  $("pileCount").textContent = `Leña: ${state.pile}`;
+}
+
+// ---------- Golpe ----------
+function swing() { const axe = $("axe"); axe.classList.add("chop"); setTimeout(() => axe.classList.remove("chop"), 120); }
+function flash(text, miss) { const f = $("feedback"); f.textContent = text; f.classList.toggle("miss", !!miss); f.classList.add("show"); clearTimeout(f._t); f._t = setTimeout(() => f.classList.remove("show"), 260); }
+function resolveHit(s, hitTime) {
+  s.done.push(hitTime);
+  const marks = s.el?.querySelectorAll(".marks b"); if (marks) marks[s.done.length - 1]?.classList.add("done");
+  woodblock(); flash("¡Toc!");
+  if (s.done.length === s.hits.length) breakPiece(s); else s.el.classList.add("cracked");
+}
+function playerHit() {
+  if (!state.running || state.mode !== "play") return;
+  swing();
+  const t = now();
+  let best = null, dist = Infinity;
+  for (const s of state.items.values()) {
+    if (s.gone || s.missed) continue;
+    for (const h of s.hits) {
+      if (s.done.includes(h)) continue;
+      const d = Math.abs(t - h);
+      if (d <= WINDOW && d < dist) { dist = d; best = { s, h }; }
+    }
+  }
+  if (best) resolveHit(best.s, best.h);
+  else { tone(95, 0.15, "sine", 0.1); flash("¡Uy!", true); }
+}
+
+// ---------- Bucle ----------
+function now() { return (performance.now() - state.t0) / 1000 / BEAT; }
+function frameTick() {
+  if (!state.running) return;
+  const t = now(), beat = Math.floor(t);
+  if (beat !== state.lastBeat) {
+    state.lastBeat = beat;
+    [...$("beats").children].forEach((lamp, i) => lamp.classList.toggle("on", i === ((beat % 4) + 4) % 4));
+    tone(beat % 4 === 0 ? 1560 : 1180, 0.04, "sine", beat % 4 === 0 ? 0.05 : 0.03);
+    for (const inst of instances(t)) {
+      if (inst.push === beat) { const k = $("kittenA"), b = $("bubbleA"); b.textContent = inst.k === "d" ? "¡plop!" : "¡miau!"; b.classList.toggle("pink", inst.k === "d"); bump(k, b); meow(inst.k === "d"); }
+      if (inst.k === "m" && inst.push + 1 === beat) { bump($("kittenB"), $("bubbleB")); meow(false); }
+    }
+  }
+  // Aro y aviso «¡Ahora!»
+  let nextHit = Infinity;
+  for (const inst of instances(t)) {
+    const s = itemState(inst);
+    if (s.gone) continue;
+    if (!s.el && t >= s.push - 0.05) makeEl(s);
+    if (!s.el) continue;
+    for (const h of s.hits) if (!s.done.includes(h) && h >= t - WINDOW) nextHit = Math.min(nextHit, h);
+    if (state.mode === "demo") for (const h of s.hits) if (t >= h && !s.done.includes(h) && !s.missed) { swing(); resolveHit(s, h); }
+    if (state.mode === "play" && !s.missed && s.hits.some((h) => !s.done.includes(h) && t > h + WINDOW)) { s.missed = true; flash("Se fue", true); }
+    if (s.gone) continue;
+    const pos = piecePos(s, t);
+    const w = s.el.offsetWidth, h = s.el.offsetHeight;
+    s.el.style.left = (pos.x - w / 2) + "px"; s.el.style.top = (pos.y - h) + "px";
+    s.el.style.transform = `rotate(${pos.rot || 0}deg)`; s.el.style.opacity = pos.fade ? 1 - pos.fade : 1;
+    if (pos.fade >= 1) { s.el.remove(); s.gone = true; }
+  }
+  const ring = $("ring"), nowEl = $("now");
+  const dt = nextHit - t;
+  if (dt < TRAVEL && dt > -0.15) {
+    const r = 34 + Math.max(0, dt) * 46;
+    Object.assign(ring.style, { width: r * 2 + "px", height: r * 2 + "px", left: ring.dataset.cx - r + "px", top: ring.dataset.cy - r + "px", opacity: dt < 0.25 ? 1 : 0.65 });
+    nowEl.style.opacity = Math.abs(dt) < 0.25 ? 1 : 0;
+  } else { ring.style.opacity = 0; nowEl.style.opacity = 0; }
+  for (const [k, s] of state.items) if (s.gone && t - s.push > LOOP) state.items.delete(k);
+  requestAnimationFrame(frameTick);
+}
+function bump(kitten, bubble) {
+  kitten.classList.add("push"); bubble.classList.add("show");
+  setTimeout(() => kitten.classList.remove("push"), 160);
+  setTimeout(() => bubble.classList.remove("show"), BEAT * 700);
+}
+
+// ---------- Controles ----------
+function reset() {
+  piecesEl.innerHTML = ""; state.items.clear(); state.lastBeat = -1; state.note = 0;
+  state.t0 = performance.now() + 4 * BEAT * 1000; // un compás de cuenta
+}
+$("start").addEventListener("click", async () => {
+  if (!audio) { try { audio = new AudioContext(); } catch { audio = null; } }
+  if (audio?.state === "suspended") await audio.resume();
+  if (state.running) { state.running = false; $("start").textContent = "▶ Empezar"; return; }
+  reset(); state.running = true; $("start").textContent = "⏸ Pausa";
+  requestAnimationFrame(frameTick);
+});
+function group(attr, key, after) {
+  document.querySelectorAll(`[data-${attr}]`).forEach((b) => b.addEventListener("click", () => {
+    state[key] = b.dataset[attr];
+    document.querySelectorAll(`[data-${attr}]`).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    after?.();
+  }));
+}
+group("layout", "layout", () => { applyLayout(); if (state.running) reset(); });
+group("hero", "hero", () => { $("lumberImg").src = state.hero === "noa" ? "../public/assets/sprites/noa-cat-yarn-v2.png" : "../public/assets/sprites/world-cat-1-v1.png"; });
+group("mode", "mode", () => { $("hit").hidden = state.mode !== "play"; if (state.running) reset(); });
+$("sound").addEventListener("click", (e) => { state.sound = !state.sound; e.currentTarget.setAttribute("aria-pressed", String(state.sound)); });
+$("hit").addEventListener("pointerdown", (e) => { e.preventDefault(); playerHit(); });
+addEventListener("keydown", (e) => { if (e.code === "Space" && !e.repeat) { e.preventDefault(); playerHit(); } });
+document.addEventListener("visibilitychange", () => { if (document.hidden && state.running) { state.running = false; $("start").textContent = "▶ Empezar"; } });
+applyLayout();
+</script>
+</body>
+</html>

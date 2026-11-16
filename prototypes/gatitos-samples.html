@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La fiesta de los gatitos · samples v0</title>
+<style>
+  :root { --gold: #ffd76a; --ink: #2f1d33; --paper: #fff6e3; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #1d1428; color: var(--paper); font: 15px/1.4 system-ui, sans-serif; }
+  main { width: min(820px, 100%); margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.4rem ui-monospace, monospace; }
+  h2 { margin: 22px 0 8px; color: var(--gold); font: 800 1rem ui-monospace, monospace; }
+  p { margin: 0 0 10px; color: #d8c8e8; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+  button { min-height: 52px; padding: 8px 12px; border: 3px solid #3b2647; border-radius: 10px; background: #f3e6cf; color: var(--ink); font: 800 14px system-ui, sans-serif; text-align: left; cursor: pointer; }
+  button small { display: block; font-weight: 600; opacity: .75; }
+  button.big { min-height: 60px; background: var(--gold); font-size: 16px; text-align: center; }
+  button[aria-pressed="true"] { background: var(--gold); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .status { color: #fff3a8; font: 700 13px ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<main>
+  <h1>La fiesta de los gatitos · samples v0</h1>
+  <p>Sonidos originales sintetizados por código con <code>prototypes/tools/gatitos-samples.py</code>. Pulsa cada uno para oírlo y luego compara un fragmento de la canción con los instrumentos nuevos y con el sonido actual del juego (osciladores). Sube el volumen del equipo: los sonidos son suaves.</p>
+
+  <h2>Los sonidos, uno a uno</h2>
+  <div class="grid" id="single"></div>
+
+  <h2>Un fragmento de la canción · 100 pulsos por minuto</h2>
+  <p>Ocho compases con los acordes del juego (Do · Sol · La menor · Fa), dos veces. Los golpes de la jugadora (marimba y hachazo) caen en los pulsos 1 y 3 de cada compás, y un gatito maúlla antes de cada tronco.</p>
+  <div class="row">
+    <button class="big" id="playNew">▶ Instrumentos nuevos</button>
+    <button class="big" id="playOld">▶ Sonido actual (osciladores)</button>
+    <button id="stop">■ Parar</button>
+    <span class="status" id="status"></span>
+  </div>
+</main>
+
+<script>
+const BASE = "./assets/gatitos-samples/";
+const SAMPLES = [
+  ["marimba-do5", "Marimba", "nota de cada acierto · base Do5", 523.25],
+  ["flauta-sol5", "Flauta", "melodía de fondo · base Sol5", 783.99],
+  ["pizzicato-do3", "Pizzicato", "bajo en los pulsos 1 y 3 · base Do3", 130.81],
+  ["cascabeles", "Cascabeles", "adorno de fondo", 0],
+  ["madera", "Madera", "pulsos 2 y 4", 0],
+  ["hachazo", "Hachazo", "golpe en el tronco", 0],
+  ["golpe-sordo", "Golpe sordo", "golpe a destiempo", 0],
+  ["plop-ovillo", "Plop", "aviso del ovillo (no se golpea)", 0],
+  ["miau-gatito-1", "Maullido 1", "gatito empujador", 0],
+  ["miau-gatito-2", "Maullido 2", "segundo gatito", 0],
+];
+const $ = (id) => document.getElementById(id);
+let ctx = null, master = null, buffers = {}, running = [];
+
+async function ensure() {
+  if (!ctx) {
+    ctx = new AudioContext(); master = ctx.createGain(); master.gain.value = 1; master.connect(ctx.destination);
+    $("status").textContent = "Cargando sonidos…";
+    await Promise.all(SAMPLES.map(async ([id]) => { buffers[id] = await ctx.decodeAudioData(await (await fetch(`${BASE}${id}.wav`)).arrayBuffer()); }));
+    $("status").textContent = "";
+  }
+  if (ctx.state !== "running") await ctx.resume();
+}
+function sample(id, when, rate = 1, gain = 1) {
+  const src = ctx.createBufferSource(), g = ctx.createGain();
+  src.buffer = buffers[id]; src.playbackRate.value = rate; g.gain.value = gain;
+  src.connect(g).connect(master); src.start(when); running.push(src);
+}
+function osc(freq, when, dur, wave, vol, glideTo) {
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = wave; o.frequency.setValueAtTime(freq, when); if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, when + dur);
+  g.gain.setValueAtTime(vol, when); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  o.connect(g).connect(master); o.start(when); o.stop(when + dur + 0.02); running.push(o);
+}
+function noise(when, dur, vol) {
+  const b = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = b; f.type = "highpass"; f.frequency.value = 6000; g.gain.setValueAtTime(vol, when); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  s.connect(f).connect(g).connect(master); s.start(when); running.push(s);
+}
+function stopAll() { for (const n of running) { try { n.stop(); } catch { /* ya parado */ } } running = []; $("playNew").setAttribute("aria-pressed", "false"); $("playOld").setAttribute("aria-pressed", "false"); }
+
+$("single").innerHTML = SAMPLES.map(([id, name, note]) => `<button data-id="${id}">${name}<small>${note}</small></button>`).join("");
+$("single").addEventListener("click", async (e) => { const b = e.target.closest("button"); if (!b) return; await ensure(); sample(b.dataset.id, ctx.currentTime + 0.02); });
+
+// Los acordes y la regla de notas son los de src/game/catParty.ts.
+const CHORDS = [{ root: 130.81, tones: [523.25, 659.25, 783.99] }, { root: 98.0, tones: [493.88, 587.33, 783.99] }, { root: 110.0, tones: [440.0, 523.25, 659.25] }, { root: 87.31, tones: [440.0, 523.25, 698.46] }];
+const P = 60 / 100;
+async function song(kind) {
+  await ensure(); stopAll(); $(kind === "new" ? "playNew" : "playOld").setAttribute("aria-pressed", "true");
+  const t0 = ctx.currentTime + 0.2; let lead = 0;
+  for (let bar = 0; bar < 8; bar++) {
+    const chord = CHORDS[bar % 4];
+    for (let beat = 0; beat < 4; beat++) {
+      const at = t0 + (bar * 4 + beat) * P, hit = beat === 0 || beat === 2, strong = beat === 0 || beat === 2;
+      const tone = chord.tones[lead % 3];
+      if (kind === "new") {
+        if (strong) sample("pizzicato-do3", at, chord.root / 130.81, 1.1);
+        else sample("madera", at, 1, 0.6);
+        sample("cascabeles", at + P / 2, 1, beat % 2 ? 0.35 : 0.2);
+        if (beat === 0 && bar % 2 === 0) sample("flauta-sol5", at, chord.tones[2] / 783.99, 0.5);
+        if (hit) { sample("hachazo", at, 1, 0.8); sample("marimba-do5", at, tone / 523.25, 0.9); lead++; }
+        if (hit) sample(bar % 2 ? "miau-gatito-2" : "miau-gatito-1", at - 2 * P, 1, 0.7);
+      } else {
+        if (strong) osc(chord.root, at, 0.32, "triangle", 0.11);
+        else { osc(1450, at, 0.05, "square", 0.02); osc(720, at, 0.06, "sine", 0.04); }
+        osc(chord.tones[(bar * 8 + beat * 2 + 1) % 3] / 2, at + P / 2, 0.14, "triangle", 0.035); noise(at, 0.07, 0.018);
+        if (hit) { osc(tone, at, 0.25, "triangle", 0.16); lead++; osc(780, at - 2 * P, 0.2, "sine", 0.07, 470); }
+      }
+    }
+  }
+  $("status").textContent = "Sonando…"; setTimeout(() => { if ($(kind === "new" ? "playNew" : "playOld").getAttribute("aria-pressed") === "true") { stopAll(); $("status").textContent = ""; } }, 8 * 4 * P * 1000 + 1800);
+}
+$("playNew").addEventListener("click", () => song("new"));
+$("playOld").addEventListener("click", () => song("old"));
+$("stop").addEventListener("click", () => { stopAll(); $("status").textContent = ""; });
+</script>
+</body>
+</html>

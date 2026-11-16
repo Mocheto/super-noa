@@ -155,3 +155,21 @@ _Avoid_: Bolita, nota (reservado a la melodía), casilla
 **Atril**:
 Pentagrama en un atril que se llena con una nota dorada por cada golpe acertado en la respuesta; su raya dorada marca el mínimo para ganar.
 _Avoid_: Partitura (reservado a la descripción de la canción), marcador
+
+## Merienda de los jabatos
+
+**Merienda de los jabatos**:
+Duelo rítmico del Gran Jabalí en el que él llama a sus jabatos al compás y Noa les da de comer cuando abren la boca.
+_Avoid_: Esquiva la carrera (el duelo anterior al que sustituye), dar de comer a la bestia
+
+**Jabato**:
+Cría a rayas del Gran Jabalí que asoma con hambre y abre la boca en su pulso para que Noa le dé la comida.
+_Avoid_: Dinosaurio, bestia, jabalí pequeño
+
+**Bocado**:
+Comida que Noa da a un jabato con un golpe al compás: una bellota para los jabatos pequeños y una castaña grande para el jabato grande.
+_Avoid_: Manzana (son vidas y protección en el juego), chuletón, comida a elegir
+
+**Noa guarda del bosque**:
+Noa vestida de guarda del bosque, con delantal y cesta de bellotas, que da un bocado cada vez que la jugadora pulsa.
+_Avoid_: Cocinera, cuidadora

@@ -140,6 +140,10 @@ _Avoid_: Demostración (reservado a la práctica), turno de Armonía
 Compás que sigue a una llamada, en que la jugadora repite el mismo patrón con sus golpes en el tambor de Noa.
 _Avoid_: Eco (era el duelo de secuencias de colores), turno de Noa
 
+**Aviso de turno**:
+Campanilla «¡tin!» en el cuarto pulso de cada llamada, junto al gesto de Armonía, que anuncia que empieza la respuesta.
+_Avoid_: Señal, cambio de turno, «¡Tú!»
+
 **Noa tamborilera**:
 Noa vestida de banda de música, que golpea su tambor con las baquetas cada vez que la jugadora pulsa.
 _Avoid_: Tamborilero, batería

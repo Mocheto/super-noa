@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Abeja ninja · boceto de aspecto</title>
+<style>
+  :root { --gold: #ffd76a; --honey: #f4a92a; --ink: #2f1d33; --paper: #fff6e3; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #1d1428; color: var(--paper); font: 15px/1.4 system-ui, sans-serif; }
+  main { width: min(980px, 100%); margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.5rem ui-monospace, monospace; }
+  .lead { margin: 0 0 12px; color: #d8c8e8; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 4px solid #3b2647; border-radius: 12px; background: #6aa04f; }
+  .stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+  .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.85) brightness(.9) blur(1px); }
+  .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: linear-gradient(#7fae55, #5c8a3d 45%, #456b2e); border-top: 6px solid #a3d06a; }
+  .comb { position: absolute; top: 16px; left: 50%; display: flex; gap: 6px; translate: -50%; }
+  .cell { width: 40px; height: 46px; clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background: var(--ink); display: grid; place-items: center; transition: transform .08s; }
+  .cell::after { content: ""; width: 32px; height: 38px; clip-path: inherit; background: #7a6338; transition: background .08s; }
+  .cell.on { transform: scale(1.14); }
+  .cell.on::after { background: var(--honey); }
+  .melisa { position: absolute; left: 26px; top: 234px; width: 210px; height: 210px; background: url("../public/assets/atlases/giant-valley-characters-v1.png") no-repeat 0% 100% / 500% 200%; filter: drop-shadow(0 6px 4px #0005); transition: transform .1s; }
+  .melisa.throwing { transform: translateY(-8px) rotate(-4deg); }
+  /* Noa-abeja: tira de 4 poses de 480×460 (espera, alza, corta, celebra), reflejada para mirar a Melisa */
+  .hero { position: absolute; left: 640px; top: 236px; width: 216px; height: 207px; z-index: 2; background: url("./assets/noa-abeja-v0.png") no-repeat 0 0 / 400% 100%; transform: scaleX(-1); filter: drop-shadow(0 6px 4px #0005); image-rendering: pixelated; }
+  .hero[data-pose="alza"] { background-position: 33.333% 0; }
+  .hero[data-pose="corta"] { background-position: 66.666% 0; }
+  .hero[data-pose="celebra"] { background-position: 100% 0; }
+  .ring { position: absolute; border: 5px solid var(--gold); border-radius: 50%; pointer-events: none; opacity: 0; box-shadow: 0 0 12px #ffd76a99; }
+  .now { position: absolute; padding: 4px 10px; border: 3px solid var(--ink); border-radius: 10px; background: var(--gold); color: var(--ink); font: 900 18px ui-monospace, monospace; opacity: 0; transition: opacity .1s; }
+  .bubble { position: absolute; left: 150px; top: 214px; padding: 3px 9px; border: 3px solid var(--ink); border-radius: 12px; background: var(--paper); color: var(--ink); font: 900 16px ui-monospace, monospace; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .1s, transform .1s; }
+  .bubble.show { opacity: 1; transform: none; }
+  .flower, .half, .petal { position: absolute; left: 0; top: 0; pointer-events: none; }
+  .flower svg, .half svg { display: block; width: 100%; height: 100%; }
+  .half { transition: transform .55s ease-in, opacity .55s; }
+  .petal { width: 12px; height: 16px; border: 2px solid var(--ink); border-radius: 50% 50% 50% 0; transition: transform .8s ease-in, opacity .8s; }
+  /* Tarro de miel pixelado: 5 niveles de 104×120 */
+  .jar { position: absolute; left: 830px; bottom: 22px; width: 104px; height: 120px; background: url("./assets/tarro-miel-v0.png") no-repeat 0 0 / 500% 100%; image-rendering: pixelated; filter: drop-shadow(0 4px 3px #0005); transition: transform .12s; }
+  .jar.bump { transform: scale(1.08); }
+  .jar .count { position: absolute; top: -30px; left: 50%; padding: 2px 10px; border: 3px solid var(--ink); border-radius: 10px; background: var(--paper); color: var(--ink); font: 900 15px ui-monospace, monospace; translate: -50%; white-space: nowrap; }
+  .feedback { position: absolute; padding: 4px 12px; border: 3px solid var(--ink); border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 22px ui-monospace, monospace; opacity: 0; transition: opacity .12s, transform .12s; }
+  .feedback.miss { background: #ffd2c8; color: #6a2a22; }
+  .feedback.show { opacity: 1; transform: translateY(-10px); }
+  .label { position: absolute; left: 12px; bottom: 10px; padding: 3px 9px; border-radius: 8px; background: #2f1d33cc; font: 700 12px ui-monospace, monospace; }
+  .poses { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; }
+  .poses figure { margin: 0; padding: 6px; border: 3px solid #3b2647; border-radius: 10px; background: #6f9a4a; text-align: center; }
+  .poses figcaption { color: var(--paper); font: 800 12px ui-monospace, monospace; }
+  .poses .pose { width: 100%; aspect-ratio: 480 / 460; background: url("./assets/noa-abeja-v0.png") no-repeat 0 0 / 400% 100%; image-rendering: pixelated; transform: scaleX(-1); }
+  .poses .tarros { width: 100%; aspect-ratio: 520 / 120; margin-top: 30%; background: url("./assets/tarro-miel-v0.png") no-repeat 0 0 / 100% 100%; image-rendering: pixelated; }
+  .panel { display: grid; gap: 10px; margin-top: 12px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .row > span { min-width: 92px; color: #cdb9df; font-weight: 700; }
+  button { min-height: 40px; padding: 6px 14px; border: 3px solid #3b2647; border-radius: 10px; background: #f3e6cf; color: #2f1d33; font: 800 14px system-ui, sans-serif; cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--gold); box-shadow: inset 0 -4px 0 #0002; }
+  button.big { min-width: 180px; background: #ffb547; font-size: 16px; }
+  .hit { width: 100%; min-height: 64px; font-size: 22px; background: var(--gold); }
+  .notes { margin: 12px 0 0; padding-left: 18px; color: #d8c8e8; }
+  .notes li { margin: 3px 0; }
+  @media (max-width: 640px) { .poses { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Abeja ninja · boceto de aspecto</h1>
+  <p class="lead">Disposición A con la varita-aguijón. Noa-abeja tiene sprites nuevos provisionales (sus poses con peto a rayas, antenas, alas y la varita en la mano) y el tarro de miel es pixel art que se llena con cada flor. A 100 pulsos por minuto, compás de 4.</p>
+
+  <div class="frame" id="frame">
+    <div class="stage" id="stage">
+      <img class="bg" src="../public/assets/worlds/world-11.webp" alt="">
+      <div class="ground"></div>
+      <div class="comb"><div class="cell"></div><div class="cell"></div><div class="cell"></div><div class="cell"></div></div>
+      <div class="melisa" id="melisa" role="img" aria-label="Reina Melisa"></div>
+      <span class="bubble" id="bubble">¡zum!</span>
+      <div class="jar" id="jar" role="img" aria-label="Tarro de miel"><span class="count" id="jarCount">Néctar: 0</span></div>
+      <div class="ring" id="ring"></div>
+      <div class="now" id="now">¡Ya!</div>
+      <div class="hero" id="hero" data-pose="espera" role="img" aria-label="Noa vestida de abeja con la varita-aguijón"></div>
+      <div class="feedback" id="feedback">¡Zas!</div>
+      <div id="fx"></div>
+      <span class="label" id="label"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <button class="big" id="start">▶ Empezar</button>
+    <button class="hit" id="hit" hidden>¡Corta! (Espacio)</button>
+    <div class="row" role="group" aria-label="Antelación"><span>Vuelo</span>
+      <button data-lead="2" aria-pressed="true">2 pulsos hasta el corte</button>
+      <button data-lead="3" aria-pressed="false">3 pulsos</button>
+    </div>
+    <div class="row" role="group" aria-label="Modo"><span>Modo</span>
+      <button data-mode="demo" aria-pressed="true">Demostración</button>
+      <button data-mode="play" aria-pressed="false">Probar yo</button>
+      <button id="sound" aria-pressed="true">Sonido</button>
+    </div>
+  </div>
+
+  <div class="poses" aria-label="Poses nuevas">
+    <figure><div class="pose" style="background-position: 0 0"></div><figcaption>Espera</figcaption></figure>
+    <figure><div class="pose" style="background-position: 33.333% 0"></div><figcaption>Alza la varita</figcaption></figure>
+    <figure><div class="pose" style="background-position: 66.666% 0"></div><figcaption>Corta</figcaption></figure>
+    <figure><div class="pose" style="background-position: 100% 0"></div><figcaption>Celebra</figcaption></figure>
+    <figure><div class="tarros"></div><figcaption>Tarro: 5 niveles</figcaption></figure>
+  </div>
+
+  <ul class="notes">
+    <li><b>Poses</b>: espera con la varita adelantada; la alza cuando una flor está a un pulso; corta con un barrido dorado justo en el pulso; celebra cada vez que el tarro sube de nivel.</li>
+    <li><b>Lanzamiento</b>: Melisa se inclina y dice «¡zum!» en el pulso en que suelta la flor; la flor vuela en arco hasta la punta de la varita.</li>
+    <li><b>Corte acertado</b>: la flor se parte en dos y los pétalos caen al tarro. <b>Fuera de tiempo</b>: la flor rebota con un «¡Uy!» amable.</li>
+    <li>Sprites y flores son provisionales; el arte final se pintará aparte con estas poses como guía.</li>
+  </ul>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), frame = $("frame"), fx = $("fx"), hero = $("hero");
+const BPM = 100, BEAT = 60 / BPM;
+// Punta del aguijón en la pose «corta»: (436.5, 313) en el fotograma de 480×460, reflejada y escalada a 216 px.
+const SCALE = 216 / 480, HERO = { left: 640, top: 236 };
+const CUT = { x: HERO.left + (480 - 436.5) * SCALE, y: HERO.top + 313 * SCALE };
+const ORIGIN = { x: 200, y: 292 };
+const state = { lead: 2, mode: "demo", sound: true, running: false, nectar: 0 };
+const colors = ["#ef79a9", "#f2c230", "#5aa0dc", "#b98be0"];
+const melody = [523.25, 587.33, 659.25, 783.99, 880, 783.99, 659.25, 587.33];
+let ctx = null, t0 = 0, raf = 0, flowers = [], noteIndex = 0, lastBeat = -1, poseTimer = 0, lastJarLevel = 0;
+
+function fit() { stage.style.transform = `scale(${frame.clientWidth / 960})`; }
+addEventListener("resize", fit); fit();
+
+function flowerSVG(color) {
+  const petals = Array.from({ length: 6 }, (_, i) => `<ellipse cx="32" cy="16" rx="9" ry="14" transform="rotate(${i * 60} 32 32)" fill="${color}" stroke="#2f1d33" stroke-width="2.5"/>`).join("");
+  return `<svg viewBox="0 0 64 64">${petals}<circle cx="32" cy="32" r="9" fill="#ffd34d" stroke="#2f1d33" stroke-width="2.5"/><path d="M32 41 Q34 54 30 64" stroke="#3f7a2a" stroke-width="4" fill="none"/></svg>`;
+}
+function layout() {
+  Object.assign($("ring").style, { left: `${CUT.x - 50}px`, top: `${CUT.y - 50}px`, width: "100px", height: "100px" });
+  Object.assign($("now").style, { left: `${CUT.x - 26}px`, top: `${CUT.y - 150}px` });
+  $("label").textContent = `A · varita-aguijón · vuelo de ${state.lead} pulsos`;
+}
+function pose(name, ms = 0) {
+  hero.dataset.pose = name; clearTimeout(poseTimer);
+  if (ms) poseTimer = setTimeout(() => (hero.dataset.pose = "espera"), ms);
+}
+
+function tone(time, freq, dur, type = "triangle", gain = .18, slideTo) {
+  if (!ctx || !state.sound) return;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, time);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, time + dur);
+  g.gain.setValueAtTime(0, time); g.gain.linearRampToValueAtTime(gain, time + .008); g.gain.exponentialRampToValueAtTime(.001, time + dur);
+  o.connect(g).connect(ctx.destination); o.start(time); o.stop(time + dur + .02);
+}
+function noise(time, dur, gain = .12, freq = 2400) {
+  if (!ctx || !state.sound) return;
+  const b = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  f.type = "bandpass"; f.frequency.value = freq; g.gain.value = gain; s.buffer = b;
+  s.connect(f).connect(g).connect(ctx.destination); s.start(time);
+}
+function beatSound(time, beat) {
+  noise(time, .04, beat % 4 === 0 ? .16 : .08, 1800);
+  if (beat % 2 === 0) tone(time, [130.81, 98, 110, 87.31][(beat / 2) % 4 | 0], .35, "sine", .2);
+}
+function throwSound(time) { tone(time, 220, .18, "sawtooth", .05, 330); }
+function cutSound(time) { tone(time, melody[noteIndex++ % melody.length], .32, "triangle", .26); noise(time, .06, .14, 5200); }
+function bonk(time) { tone(time, 180, .12, "sine", .15, 120); }
+
+const isThrowBeat = (b) => b % 2 === 0; // patrón provisional: una flor cada dos pulsos
+function now() { return ctx ? ctx.currentTime - t0 : performance.now() / 1000 - t0; }
+
+function start() {
+  if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { ctx = null; } }
+  ctx?.resume();
+  stop(); layout();
+  state.running = true; state.nectar = 0; noteIndex = 0; lastBeat = -1; lastJarLevel = 0;
+  $("jarCount").textContent = "Néctar: 0"; setJar();
+  t0 = (ctx ? ctx.currentTime : performance.now() / 1000) + .3;
+  $("start").textContent = "■ Parar"; $("hit").hidden = state.mode !== "play";
+  loop();
+}
+function stop() {
+  state.running = false; cancelAnimationFrame(raf); flowers.forEach((f) => f.el.remove()); flowers = [];
+  $("start").textContent = "▶ Empezar"; $("hit").hidden = true; $("ring").style.opacity = 0; $("now").style.opacity = 0; pose("espera");
+}
+
+function spawn(b) {
+  const el = document.createElement("div"); el.className = "flower";
+  el.style.width = el.style.height = "64px";
+  const color = colors[(b / 2) % colors.length | 0];
+  el.innerHTML = flowerSVG(color); fx.appendChild(el);
+  flowers.push({ el, color, throwBeat: b, cutBeat: b + state.lead, state: "fly" });
+  const m = $("melisa"), bub = $("bubble");
+  m.classList.add("throwing"); bub.classList.add("show"); m.style.backgroundPosition = "25% 100%";
+  setTimeout(() => { m.classList.remove("throwing"); bub.classList.remove("show"); m.style.backgroundPosition = "0% 100%"; }, 220);
+}
+function position(f, beatPos) {
+  const p = Math.min(1.25, (beatPos - f.throwBeat) / state.lead);
+  const x = ORIGIN.x + (CUT.x - ORIGIN.x) * p, peak = 170;
+  const y = ORIGIN.y + (CUT.y - ORIGIN.y) * p - 4 * peak * p * (1 - p);
+  return { x, y, rot: p * 540 };
+}
+
+function loop() {
+  if (!state.running) return;
+  const t = now(), beatPos = t / BEAT, beat = Math.floor(beatPos);
+  while (lastBeat < beat + 1) {
+    lastBeat++;
+    if (lastBeat < 0) continue;
+    const when = t0 + lastBeat * BEAT, b = lastBeat;
+    if (ctx) beatSound(when, b);
+    if (isThrowBeat(b)) {
+      if (ctx) throwSound(when);
+      setTimeout(() => state.running && spawn(b), Math.max(0, (b * BEAT - t) * 1000));
+      if (state.mode === "demo") {
+        const cutAt = b + state.lead;
+        if (ctx) cutSound(t0 + cutAt * BEAT);
+        setTimeout(() => state.running && doCut(true, cutAt), Math.max(0, (cutAt * BEAT - t) * 1000));
+      }
+    }
+  }
+  const inBeat = beatPos - beat;
+  document.querySelectorAll(".cell").forEach((c, i) => c.classList.toggle("on", beat >= 0 && beat % 4 === i && inBeat < .35));
+  let soonest = Infinity;
+  for (const f of flowers) {
+    if (f.state !== "fly") continue;
+    const pos = position(f, beatPos);
+    f.el.style.transform = `translate(${pos.x - 32}px, ${pos.y - 32}px) rotate(${pos.rot}deg)`;
+    const dt = f.cutBeat - beatPos; soonest = Math.min(soonest, dt);
+    if (dt < -.45) { f.state = "gone"; drop(f, pos); }
+  }
+  const near = soonest <= 1 && soonest > -.2;
+  $("ring").style.opacity = near ? 1 : 0;
+  if (near) $("ring").style.transform = `scale(${1 + Math.max(0, soonest) * 1.4})`;
+  $("now").style.opacity = soonest < .18 && soonest > -.2 ? 1 : 0;
+  // Alza la varita cuando la flor está a un pulso, sin pisar las poses de corte o celebración.
+  if (hero.dataset.pose === "espera" && soonest <= 1 && soonest > .1) hero.dataset.pose = "alza";
+  if (hero.dataset.pose === "alza" && !near) hero.dataset.pose = "espera";
+  flowers = flowers.filter((f) => f.state !== "done");
+  raf = requestAnimationFrame(loop);
+}
+
+function doCut(auto, cutBeat) {
+  pose("corta", 190);
+  const beatPos = now() / BEAT;
+  const targets = flowers.filter((f) => f.state === "fly" && (auto ? f.cutBeat === cutBeat : Math.abs(f.cutBeat - beatPos) * BEAT < .2));
+  if (!auto && ctx) { if (targets.length) cutSound(ctx.currentTime); else bonk(ctx.currentTime); }
+  if (!targets.length) {
+    const close = flowers.find((f) => f.state === "fly" && Math.abs(f.cutBeat - beatPos) * BEAT < .45);
+    if (close) { bounce(close); say("¡Uy!", true); }
+    return;
+  }
+  for (const f of targets) split(f);
+  say("¡Zas!");
+  state.nectar += targets.length; $("jarCount").textContent = `Néctar: ${state.nectar}`; setJar();
+}
+function split(f) {
+  f.state = "done"; f.el.remove();
+  for (const dir of [-1, 1]) {
+    const h = document.createElement("div"); h.className = "half";
+    Object.assign(h.style, { width: "64px", height: "64px", clipPath: dir < 0 ? "inset(0 50% 0 0)" : "inset(0 0 0 50%)", transform: `translate(${CUT.x - 32}px, ${CUT.y - 32}px)` });
+    h.innerHTML = flowerSVG(f.color); fx.appendChild(h);
+    requestAnimationFrame(() => requestAnimationFrame(() => { h.style.transform = `translate(${CUT.x - 32 + dir * 46}px, ${CUT.y + 120}px) rotate(${dir * 50}deg)`; h.style.opacity = 0; }));
+    setTimeout(() => h.remove(), 600);
+  }
+  for (let i = 0; i < 6; i++) {
+    const p = document.createElement("div"); p.className = "petal";
+    Object.assign(p.style, { background: f.color, transform: `translate(${CUT.x}px, ${CUT.y}px)` }); fx.appendChild(p);
+    const tx = 870 + (Math.random() * 30 - 15);
+    requestAnimationFrame(() => requestAnimationFrame(() => { p.style.transform = `translate(${tx}px, 420px) rotate(${Math.random() * 360}deg)`; p.style.opacity = .2; }));
+    setTimeout(() => p.remove(), 850);
+  }
+}
+function bounce(f) {
+  f.state = "done"; const pos = position(f, now() / BEAT);
+  f.el.style.transition = "transform .5s ease-in, opacity .5s";
+  f.el.style.transform = `translate(${pos.x - 92}px, ${pos.y + 100}px) rotate(200deg)`; f.el.style.opacity = .3;
+  setTimeout(() => f.el.remove(), 520);
+}
+function drop(f, pos) {
+  f.el.style.transition = "transform .5s ease-in, opacity .5s";
+  f.el.style.transform = `translate(${pos.x}px, 470px) rotate(90deg)`; f.el.style.opacity = .4;
+  setTimeout(() => { f.state = "done"; f.el.remove(); }, 520);
+}
+function say(text, miss = false) {
+  const fb = $("feedback");
+  fb.textContent = text; fb.classList.toggle("miss", miss);
+  Object.assign(fb.style, { left: `${CUT.x - 120}px`, top: `${CUT.y - 110}px` });
+  fb.classList.add("show"); clearTimeout(fb._t); fb._t = setTimeout(() => fb.classList.remove("show"), 380);
+}
+function setJar() {
+  const level = Math.min(4, Math.ceil(state.nectar / 3));
+  $("jar").style.backgroundPosition = `${level * 25}% 0`;
+  if (level > lastJarLevel) {
+    lastJarLevel = level; $("jar").classList.add("bump"); setTimeout(() => $("jar").classList.remove("bump"), 140);
+    setTimeout(() => state.running && pose("celebra", 380), 220);
+  }
+}
+
+function group(attr, key, parse = (v) => v) {
+  document.querySelectorAll(`[data-${attr}]`).forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll(`[data-${attr}]`).forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    state[key] = parse(b.dataset[attr]); const was = state.running; layout(); if (was) start();
+  }));
+}
+group("lead", "lead", Number); group("mode", "mode");
+$("sound").addEventListener("click", (e) => { state.sound = !state.sound; e.currentTarget.setAttribute("aria-pressed", String(state.sound)); });
+$("start").addEventListener("click", () => state.running ? stop() : start());
+$("hit").addEventListener("pointerdown", (e) => { e.preventDefault(); if (state.running) doCut(false); });
+addEventListener("keydown", (e) => { if (e.code === "Space" && state.running && state.mode === "play") { e.preventDefault(); doCut(false); } });
+document.addEventListener("visibilitychange", () => { if (document.hidden) stop(); });
+layout();
+</script>
+</body>
+</html>

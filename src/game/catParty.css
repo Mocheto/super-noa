@@ -21,44 +21,32 @@
   overflow: hidden;
   border: 3px solid #3b2647;
   border-radius: 14px;
-  background: #e9a46a;
+  background: #7b5a8e;
   box-shadow: 0 12px 32px #150d25;
 }
 .cat-party-stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
 .cat-party-stage > * { position: absolute; }
-.cat-party-sky { inset: 0; background: linear-gradient(#5e4b8b 0%, #c7739a 38%, #f2a36b 62%, #f7cf86 78%); }
-.cat-party-scenery { inset: 0; width: 100%; height: 100%; }
-.cat-party-ground { left: 0; right: 0; bottom: 0; height: 120px; background: linear-gradient(#6f8f45, #4d6a32 45%, #3c5328); border-top: 6px solid #8fae55; }
-.cat-party-fire { left: 520px; top: 300px; width: 120px; height: 110px; }
-.cat-party-flame { opacity: 0; transition: opacity 1s; transform-origin: 50% 100%; transform-box: fill-box; }
-.cat-party-fire.is-lit .cat-party-flame { opacity: 1; animation: cat-party-flicker .25s infinite alternate; }
-@keyframes cat-party-flicker { to { transform: scaleY(1.12) scaleX(.94); } }
 
 .cat-party-lamps { top: 22px; left: 50%; z-index: 5; display: flex; gap: 18px; translate: -50%; }
 .cat-party-lamps span { width: 30px; height: 38px; border: 3px solid #2f1d33; border-radius: 10px 10px 14px 14px; background: #6b5a3b; box-shadow: inset 0 -6px 0 #0003; }
 .cat-party-lamps span.is-first { width: 36px; }
 .cat-party-lamps span.is-on { background: #ffd76a; box-shadow: 0 0 22px #ffd76acc, inset 0 -6px 0 #0002; transform: scale(1.12); }
 
-.cat-party-belt { left: 330px; top: 404px; width: 600px; height: 34px; border: 4px solid #2f1d33; border-radius: 18px; background: repeating-linear-gradient(90deg, #7b5a3c 0 26px, #6a4b30 26px 52px); box-shadow: 0 8px 0 #0004; }
-.cat-party-rollers { position: absolute; inset: auto 10px -16px 10px; height: 18px; display: flex; justify-content: space-between; }
-.cat-party-rollers i { width: 18px; height: 18px; border: 3px solid #2f1d33; border-radius: 50%; background: #9b8a74; }
-.cat-party-stump { left: 263px; top: 404px; width: 110px; height: 70px; }
-.cat-party-stump-top { position: absolute; top: 0; left: 0; z-index: 1; width: 110px; height: 30px; border: 4px solid #2f1d33; border-radius: 50%; background: radial-gradient(ellipse, #e2b77d 0 18%, #c99459 19% 34%, #e2b77d 35% 52%, #b98049 53%); }
-.cat-party-stump-side { position: absolute; top: 14px; left: 0; width: 110px; height: 56px; border: 4px solid #2f1d33; border-top: 0; border-radius: 0 0 14px 14px; background: linear-gradient(90deg, #6d4127, #8d5834 45%, #5f3820); }
+.cat-party-background { inset: 0; width: 100%; height: 100%; }
+/* Hoguera: apagada de entrada; al final se encienden tres llamas que se alternan. */
+.cat-party-fire { background-repeat: no-repeat; filter: drop-shadow(0 4px 3px #0004); }
+.cat-party-fire.is-lit { animation: cat-party-flicker .66s steps(1) infinite; }
+@keyframes cat-party-flicker { 0% { background-position: 33.333% 0; } 33% { background-position: 66.667% 0; } 66% { background-position: 100% 0; } }
+/* Cinta: una tablilla repetible. */
+.cat-party-belt { background-repeat: repeat-x; background-position: 0 0; filter: drop-shadow(0 6px 3px #0004); }
+.cat-party-stump { z-index: 1; background-repeat: no-repeat; background-size: 100% 100%; filter: drop-shadow(0 6px 3px #0005); }
 .cat-party-ring { z-index: 4; border: 5px solid #ffd76a; border-radius: 50%; opacity: .7; box-shadow: 0 0 12px #ffd76a99; pointer-events: none; }
 .cat-party-ring.is-ready { opacity: 1; border-color: #fff1a8; box-shadow: 0 0 22px #ffd76a; }
 .cat-party-now { left: 270px; top: 284px; z-index: 5; padding: 4px 10px; border: 3px solid #2f1d33; border-radius: 10px; background: #ffd76a; color: #2f1d33; font: 900 18px ui-monospace, monospace; }
 
-.cat-party-lumber { left: 96px; top: 300px; z-index: 3; width: 170px; height: 190px; }
-.cat-party-lumber img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 4px #0005); }
-.cat-party-axe { position: absolute; left: 113px; top: 18px; width: 74px; height: 120px; transform-origin: 50% 92%; transform: rotate(-22deg); transition: transform .09s ease-out; }
-.cat-party-axe.is-chopping { transform: rotate(84deg); transition-duration: .05s; }
 
-.cat-party-kitten { z-index: 3; width: 110px; height: 110px; transition: transform .12s; }
-.cat-party-kitten.is-first { left: 830px; top: 300px; }
-.cat-party-kitten.is-second { left: 735px; top: 300px; }
-.cat-party-kitten img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 3px #0005); }
-.cat-party-kitten.is-pushing { transform: translateX(-16px) scale(1.04, .96); }
+.cat-party-noa { z-index: 3; background-repeat: no-repeat; filter: drop-shadow(0 6px 4px #0005); }
+.cat-party-kitten { z-index: 3; background-repeat: no-repeat; filter: drop-shadow(0 4px 3px #0005); }
 .cat-party-kitten.is-party { animation: cat-party-hop .5s ease-in-out infinite alternate; }
 .cat-party-kitten.is-second.is-party { animation-delay: .25s; }
 @keyframes cat-party-hop { to { transform: translateY(-18px); } }
@@ -66,19 +54,18 @@
 .cat-party-bubble.is-pink { background: #ffd0ea; }
 
 .cat-party-piece { z-index: 2; pointer-events: none; transform-origin: 50% 70%; }
-.cat-party-piece img { display: block; width: 100%; height: 100%; }
+.cat-party-piece img, .cat-party-log { display: block; width: 100%; height: 100%; background-repeat: no-repeat; }
 .cat-party-marks { position: absolute; top: -20px; left: 50%; display: flex; gap: 6px; translate: -50%; }
 .cat-party-marks b { width: 16px; height: 16px; border: 3px solid #2f1d33; border-radius: 50%; background: #ffd76a; }
 .cat-party-marks b.is-done { background: #8a7a5a; }
-.cat-party-piece.is-cracked img { filter: brightness(1.1) contrast(1.1); clip-path: polygon(0 0, 47% 0, 52% 45%, 47% 100%, 0 100%, 0 0, 53% 0, 100% 0, 100% 100%, 53% 100%, 49% 50%); }
-.cat-party-half { z-index: 2; overflow: hidden; pointer-events: none; animation: .45s ease-out forwards; }
-.cat-party-half img { display: block; max-width: none; }
+.cat-party-half { z-index: 2; background-repeat: no-repeat; pointer-events: none; animation: .45s ease-out forwards; }
 .cat-party-half.is-left { animation-name: cat-party-split-left; }
 .cat-party-half.is-right { animation-name: cat-party-split-right; }
 @keyframes cat-party-split-left { to { transform: translate(-200px, -60px) rotate(-35deg); opacity: 0; } }
 @keyframes cat-party-split-right { to { transform: translate(-100px, -60px) rotate(35deg); opacity: 0; } }
-.cat-party-pile { left: 20px; top: 410px; z-index: 4; width: 220px; height: 120px; }
-.cat-party-pile img { position: absolute; width: 74px; height: 21px; filter: drop-shadow(0 2px 2px #0006); }
+.cat-party-pile { left: 6px; top: 410px; z-index: 2; width: 230px; height: 120px; }
+.cat-party-pile img { position: absolute; filter: drop-shadow(0 2px 2px #0006); }
+.cat-party-pile .cat-party-woodpile { left: 0; top: 21px; }
 
 .cat-party-feedback { left: 383px; top: 318px; z-index: 6; padding: 4px 12px; border: 3px solid #2f1d33; border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 22px ui-monospace, monospace; }
 .cat-party-feedback.is-miss { background: #ffd2c8; color: #6a2a22; }
@@ -94,11 +81,13 @@
   .cat-party-options .pixel-button, .cat-party-controls .pixel-button { font-size: .8rem; padding-inline: 10px; }
   .cat-party-strike { width: 100%; }
 }
-.cat-party-still .cat-party-kitten, .cat-party-still .cat-party-axe { transition: none; }
-.cat-party-still .cat-party-kitten.is-party, .cat-party-still .cat-party-fire.is-lit .cat-party-flame { animation: none; }
+.cat-party-still .cat-party-kitten { transition: none; }
+.cat-party-still .cat-party-kitten.is-party { animation: none; }
+.cat-party-still .cat-party-fire.is-lit { animation: none; background-position: 66.667% 0 !important; }
 .cat-party-still .cat-party-half { animation-name: cat-party-fade; }
 @keyframes cat-party-fade { to { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) {
-  .cat-party-kitten.is-party, .cat-party-fire.is-lit .cat-party-flame { animation: none; }
+  .cat-party-kitten.is-party { animation: none; }
+  .cat-party-fire.is-lit { animation: none; background-position: 66.667% 0 !important; }
   .cat-party-half.is-left, .cat-party-half.is-right { animation-name: cat-party-fade; }
 }

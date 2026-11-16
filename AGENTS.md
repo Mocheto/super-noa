@@ -26,6 +26,7 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 - `src/game/BossBattle.tsx`, `src/game/GuardianMiniGame.tsx` y `src/game/guardianGames.ts`: doce duelos de piedra, papel o tijera contra los guardianes.
 - `src/game/beeNinja.ts` y `src/game/BeeNinjaGame.tsx` / `src/game/beeNinja.css`: «La abeja ninja», duelo rítmico de la Reina Melisa (partitura en pulsos, cortes, raya dorada, pausa con cuenta y música «jardín ninja» generada sobre el reloj de audio).
 - `src/game/armoniaDrum.ts` y `src/game/ArmoniaDrumGame.tsx` / `src/game/armoniaDrum.css`: «El tambor de Armonía», duelo de llamada y respuesta de la Maestra Armonía (partitura de parejas en pulsos, huellas en los parches, atril con raya dorada, pausa con cuenta y «marcha de teatro» generada sobre el reloj de audio). Su arte v0 sale de `prototypes/tools/tambor-armonia-arte.py`.
+- `src/game/CatPartyGame.tsx`, `src/game/catParty.ts` y `src/game/catPartyArt.ts`: «La fiesta de los gatitos» (partitura en pulsos, escena de 960 × 540 y medidas del arte final, que sale de `prototypes/tools/gatitos-recorte.py`).
 - `src/game/chainGuardians.ts` y `src/game/mechanicSprites.ts`: perritos encadenados del castillo y sprites de mecánicas.
 - `src/game/stickers.ts`: catálogo estable de 36 insignias coleccionables; `src/game/worldEnemySprites.ts`: sprites troquelados de enemigos por mundo.
 - `src/game/worldMechanics.ts`: mecánicas por mundo.

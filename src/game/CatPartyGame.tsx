@@ -5,6 +5,9 @@ import {
   musicForEighth, nextOpenHit, outputLatencySeconds, partyScores, pieceVisible, piecePlacement, pressAt, scoreLength,
   type PartyMode, type PartyNote, type PartyRun, type PressResult,
 } from "./catParty";
+import {
+  ART, BELT, CLEARING_BACKGROUND, FIRE_BOX, FIRE_FRAMES, KITTENS, KITTEN_POSES, LOG_CELLS, NOA_FEET, NOA_POSES, STUMP_BOX, WOODPILE_SCALE, cellStyle, halfCell, shown,
+} from "./catPartyArt";
 import "./catParty.css";
 
 const sprites = "./assets/sprites";
@@ -22,7 +25,7 @@ type Props = {
   onExit: () => void;
 };
 
-type Half = { id: number; x: number; y: number; width: number; height: number; side: -1 | 1; start: number };
+type Half = { id: number; type: "small" | "medium"; x: number; y: number; width: number; height: number; side: -1 | 1; start: number };
 type Session = {
   run: PartyRun;
   clock: "audio" | "frame";
@@ -48,13 +51,15 @@ type View = {
   lamp: number;
   bubbleA: { text: string; pink: boolean } | null;
   bubbleB: string | null;
-  chop: boolean;
+  noaPose: number;
+  kittenA: number;
+  kittenB: number;
   feedback: { text: string; miss: boolean } | null;
   caption: string;
   phase: string;
 };
 
-const emptyView: View = { pulse: -1, pieces: [], halves: [], pile: 0, ring: null, lamp: -1, bubbleA: null, bubbleB: null, chop: false, feedback: null, caption: "", phase: "" };
+const emptyView: View = { pulse: -1, pieces: [], halves: [], pile: 0, ring: null, lamp: -1, bubbleA: null, bubbleB: null, noaPose: NOA_POSES.ready, kittenA: KITTEN_POSES.ready, kittenB: KITTEN_POSES.ready, feedback: null, caption: "", phase: "" };
 
 const CAPTIONS: Record<PartyMode, readonly [number, string][]> = {
   demo: [[0, "Mira cómo lo hace Noa."], [4, "Tronco pequeño: un golpe."], [8, "Tronco mediano: dos golpes seguidos."], [12, "El ovillo no se corta: déjalo pasar."]],
@@ -62,7 +67,7 @@ const CAPTIONS: Record<PartyMode, readonly [number, string][]> = {
   song: [[0, "¡Que empiece la fiesta!"], [4, ""]],
 };
 
-const pieceSize = (type: PieceView["type"]) => type === "yarn" ? { width: 62, height: 56 } : type === "small" ? { width: 118, height: 33 } : { width: 200, height: 56 };
+const pieceSize = (type: PieceView["type"]) => type === "yarn" ? { width: 62, height: 56 } : shown(type === "small" ? ART.smallLog : ART.mediumLog);
 
 function snapshot(session: Session, pulse: number, reduceMotion: boolean): View {
   const { run } = session;
@@ -80,6 +85,10 @@ function snapshot(session: Session, pulse: number, reduceMotion: boolean): View 
   const bubbleA = session.yarnBubbleUntil > pulse ? { text: "¡Es mi ovillo!", pink: true }
     : pushed ? { text: pushed.type === "yarn" ? "¡plop!" : "¡miau!", pink: pushed.type === "yarn" } : null;
   const counting = pulse >= 0 && pulse < 4 && pulse - whole < 0.65;
+  const noaPose = session.chopUntil > pulse ? NOA_POSES.chop : untilHit < 0.9 && untilHit > 0.05 ? NOA_POSES.raise : NOA_POSES.ready;
+  const kittenA = pushed ? (pulse - pushed.push < 0.35 ? KITTEN_POSES.push : pushed.type === "yarn" ? KITTEN_POSES.ready : KITTEN_POSES.meow)
+    : session.yarnBubbleUntil > pulse ? KITTEN_POSES.meow : KITTEN_POSES.ready;
+  const kittenB = counting || echoed ? KITTEN_POSES.meow : KITTEN_POSES.ready;
   const caption = CAPTIONS[run.mode].filter(([from]) => pulse >= from).at(-1)?.[1] ?? "";
   const phase = run.score.phases.filter(({ fromBar }) => barOfPulse(Math.max(0, whole)) >= fromBar).at(-1)?.name ?? "";
   return {
@@ -89,7 +98,7 @@ function snapshot(session: Session, pulse: number, reduceMotion: boolean): View 
     lamp: pulse >= 0 ? whole % 4 : -1,
     bubbleA,
     bubbleB: counting ? String(whole + 1) : echoed ? "¡miau!" : null,
-    chop: session.chopUntil > pulse,
+    noaPose, kittenA, kittenB,
     feedback: session.feedback && session.feedback.until > pulse ? { text: session.feedback.text, miss: session.feedback.miss } : null,
   };
 }
@@ -202,8 +211,10 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
       playNow(720, 0.06, "sine", 0.05);
       session.feedback = { text: "¡Toc!", miss: false, until: pulse + 0.5 };
       if (result.broke) {
-        const { width, height } = pieceSize(result.piece.type);
-        for (const side of [-1, 1] as const) session.halves.push({ id: session.halfId++, x: STUMP_X - width / 2 + (side > 0 ? width / 2 : 0), y: BELT_Y - height, width: width / 2, height, side, start: pulse });
+        const type = result.piece.type === "small" ? "small" : "medium";
+        const { width, height } = pieceSize(type);
+        // Las mitades se juntan en el tajo: la izquierda acaba en su centro y la derecha empieza en él.
+        for (const side of [-1, 1] as const) session.halves.push({ id: session.halfId++, type, x: side < 0 ? STUMP_X - width : STUMP_X, y: BELT_Y - height, width, height, side, start: pulse });
         setMessage(result.piece.type === "small" ? "¡Toc! Un tronco más para la hoguera." : "¡Toc, toc! El tronco mediano está listo.");
       } else setMessage("¡Toc! Falta otro golpe.");
     } else if (result.kind === "yarn") {
@@ -325,6 +336,8 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
   }, [finish, mode, paused, playNote, playNow, pulseNow, react, reduceMotion, strike]);
 
   const total = mode ? scoreLength(partyScores[mode]) : 0;
+  const noaSize = shown(ART.noa), greySize = shown(ART.kittenGrey), orangeSize = shown(ART.kittenOrange);
+  const fireSize = { width: shown(ART.fire).width * FIRE_BOX.scale, height: shown(ART.fire).height * FIRE_BOX.scale };
   return <section className={`cat-party-screen${reduceMotion ? " cat-party-still" : ""}`} data-gamepad-managed={mode ? "true" : undefined} aria-labelledby="cat-party-title">
     <header className="cat-party-header">
       <div><p className="eyebrow">El Bosque de los Gatitos</p><h2 id="cat-party-title">La fiesta de los gatitos</h2></div>
@@ -336,55 +349,32 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
     </header>
     <div className="cat-party-frame" ref={frameRef}>
       <div className="cat-party-stage" style={{ transform: `scale(${scale})` }} aria-hidden="true">
-        <div className="cat-party-sky" />
-        <svg className="cat-party-scenery" viewBox="0 0 960 540">
-          <circle cx="720" cy="250" r="54" fill="#ffe2a0" opacity=".85" />
-          <path d="M0 330 Q160 250 320 300 T640 285 T960 300 V540 H0Z" fill="#8a6a8f" opacity=".55" />
-          <path d="M0 360 Q200 300 420 345 T960 330 V540 H0Z" fill="#5d6e4c" />
-          <g fill="#3c4a33"><path d="M60 420 L95 250 L130 420Z" /><path d="M120 420 L160 220 L200 420Z" /><path d="M700 420 L730 290 L760 420Z" /><path d="M790 420 L830 230 L870 420Z" /><path d="M860 420 L895 260 L930 420Z" /></g>
-          <path d="M0 26 Q240 76 480 30 T960 28" fill="none" stroke="#5b3620" strokeWidth="3" />
-          <g stroke="#2f1d33" strokeWidth="2">
-            <path d="M40 34 l14 0 l-7 18z" fill="#ff8fa8" /><path d="M110 46 l14 0 l-7 18z" fill="#ffd76a" /><path d="M180 54 l14 0 l-7 18z" fill="#8fd3ff" />
-            <path d="M250 56 l14 0 l-7 18z" fill="#b6f08e" /><path d="M640 46 l14 0 l-7 18z" fill="#b6f08e" /><path d="M710 48 l14 0 l-7 18z" fill="#ff8fa8" />
-            <path d="M780 44 l14 0 l-7 18z" fill="#ffd76a" /><path d="M850 36 l14 0 l-7 18z" fill="#8fd3ff" /><path d="M910 30 l14 0 l-7 18z" fill="#b6f08e" />
-          </g>
-        </svg>
-        <div className="cat-party-ground" />
-        <svg className={`cat-party-fire${celebrating ? " is-lit" : ""}`} viewBox="0 0 120 110">
-          <g className="cat-party-flame"><path d="M60 20 Q85 55 74 80 Q60 92 46 80 Q35 55 60 20Z" fill="#ff9a3c" /><path d="M60 45 Q72 65 66 80 Q60 86 54 80 Q48 65 60 45Z" fill="#ffe27a" /></g>
-          <g stroke="#2f1d33" strokeWidth="3"><rect x="18" y="82" width="84" height="14" rx="7" fill="#8a5632" transform="rotate(-12 60 89)" /><rect x="18" y="82" width="84" height="14" rx="7" fill="#9a6338" transform="rotate(12 60 89)" /></g>
-        </svg>
+        <img className="cat-party-background" src={CLEARING_BACKGROUND} alt="" />
+        <div className={`cat-party-fire${celebrating ? " is-lit" : ""}`} style={{ ...cellStyle(ART.fire, FIRE_FRAMES.unlit), width: fireSize.width, height: fireSize.height, left: FIRE_BOX.left, top: FIRE_BOX.bottom - fireSize.height }} />
         <div className="cat-party-lamps">{[0, 1, 2, 3].map((index) => <span key={index} className={`${index === 0 ? "is-first" : ""}${mode && view.lamp === index ? " is-on" : ""}`} />)}</div>
-        <div className="cat-party-belt"><div className="cat-party-rollers">{Array.from({ length: 7 }, (_, index) => <i key={index} />)}</div></div>
-        <div className="cat-party-pile">{Array.from({ length: Math.min(PILE_LIMIT, view.pile) }, (_, index) =>
-          <img key={index} src={`${sprites}/gatitos-tronco.png`} alt="" style={{ left: (index % 6) * 30 + Math.floor(index / 6) * 14, top: 70 - Math.floor(index / 6) * 16 }} />)}</div>
-        <div className="cat-party-stump"><div className="cat-party-stump-side" /><div className="cat-party-stump-top" /></div>
+        <div className="cat-party-belt" style={{ left: BELT.left, top: BELT.top, width: BELT.tiles * ART.belt.size[0] / 2, height: ART.belt.size[1] / 2, backgroundImage: `url("${ART.belt.src}")`, backgroundSize: `${ART.belt.size[0] / 2}px ${ART.belt.size[1] / 2}px` }} />
+        <div className="cat-party-pile">{celebrating
+          ? <img className="cat-party-woodpile" src={ART.woodpile.src} alt="" style={{ width: ART.woodpile.size[0] / 2 * WOODPILE_SCALE, height: ART.woodpile.size[1] / 2 * WOODPILE_SCALE }} />
+          : Array.from({ length: Math.min(PILE_LIMIT, view.pile) }, (_, index) =>
+            <img key={index} src={ART.stick.src} alt="" style={{ left: (index % 6) * 30 + Math.floor(index / 6) * 14, top: 78 - Math.floor(index / 6) * 16, width: ART.stick.size[0] / 2, height: ART.stick.size[1] / 2 }} />)}</div>
+        <div className="cat-party-stump" style={{ backgroundImage: `url("${ART.stump.src}")`, width: ART.stump.size[0] / 2, height: ART.stump.size[1] / 2, left: STUMP_BOX.centerX - ART.stump.size[0] / 4, top: STUMP_BOX.centerTop - 23 }} />
         {view.ring && <div className={`cat-party-ring${view.ring.ready ? " is-ready" : ""}`} style={{ width: view.ring.radius * 2, height: view.ring.radius * 2, left: STUMP_X - view.ring.radius, top: BELT_Y - 18 - view.ring.radius }} />}
         {view.ring?.ready && <div className="cat-party-now">¡Ahora!</div>}
-        <div className="cat-party-lumber">
-          <img src={`${sprites}/noa-cat-yarn-v2.webp`} alt="" />
-          <svg className={`cat-party-axe${view.chop ? " is-chopping" : ""}`} viewBox="0 0 74 120">
-            <rect x="32" y="22" width="10" height="96" rx="4" fill="#9a6338" stroke="#2f1d33" strokeWidth="3" />
-            <path d="M40 8 Q70 10 70 34 Q60 46 40 40 Z" fill="#cfd6dd" stroke="#2f1d33" strokeWidth="3" />
-            <path d="M36 12 Q12 18 14 34 Q24 38 36 34 Z" fill="#b5bec7" stroke="#2f1d33" strokeWidth="3" />
-          </svg>
+        <div className="cat-party-noa" style={{ ...cellStyle(ART.noa, celebrating ? NOA_POSES.celebrate : view.noaPose), ...noaSize, left: NOA_FEET.x - ART.noa.feetX! / 2, top: NOA_FEET.y - noaSize.height }} />
+        <div className={`cat-party-kitten is-first${celebrating ? " is-party" : ""}`} style={{ ...cellStyle(ART.kittenGrey, celebrating ? KITTEN_POSES.meow : view.kittenA), ...greySize, left: KITTENS.grey.feetX - ART.kittenGrey.feetX! / 2, top: KITTENS.grey.floor - greySize.height }}>
+          {view.bubbleA && !celebrating && <span className={`cat-party-bubble${view.bubbleA.pink ? " is-pink" : ""}`}>{view.bubbleA.text}</span>}
         </div>
-        <div className={`cat-party-kitten is-first${view.bubbleA && !celebrating ? " is-pushing" : ""}${celebrating ? " is-party" : ""}`}>
-          <img src={`${sprites}/world-cat-2-v1.png`} alt="" />
-          {view.bubbleA && <span className={`cat-party-bubble${view.bubbleA.pink ? " is-pink" : ""}`}>{view.bubbleA.text}</span>}
+        <div className={`cat-party-kitten is-second${celebrating ? " is-party" : ""}`} style={{ ...cellStyle(ART.kittenOrange, celebrating ? KITTEN_POSES.meow : view.kittenB), ...orangeSize, left: KITTENS.orange.feetX - ART.kittenOrange.feetX! / 2, top: KITTENS.orange.floor - orangeSize.height }}>
+          {view.bubbleB && !celebrating && <span className="cat-party-bubble">{view.bubbleB}</span>}
         </div>
-        <div className={`cat-party-kitten is-second${view.bubbleB && !celebrating ? " is-pushing" : ""}${celebrating ? " is-party" : ""}`}>
-          <img src={`${sprites}/world-cat-4-v1.png`} alt="" />
-          {view.bubbleB && <span className="cat-party-bubble">{view.bubbleB}</span>}
-        </div>
-        {view.pieces.map((item) => <div key={item.id} className={`cat-party-piece is-${item.type}${item.cracked && item.type === "medium" ? " is-cracked" : ""}`}
+        {view.pieces.map((item) => <div key={item.id} className={`cat-party-piece is-${item.type}`}
           style={{ left: item.x, top: item.y, width: item.width, height: item.height, opacity: item.opacity, transform: `rotate(${item.rotation}deg)` }}>
-          <img src={item.type === "yarn" ? `${sprites}/yarn-ball-v1.webp` : `${sprites}/gatitos-tronco.png`} alt="" />
+          {item.type === "yarn" ? <img src={`${sprites}/yarn-ball-v1.webp`} alt="" />
+            : <div className="cat-party-log" style={cellStyle(item.type === "small" ? ART.smallLog : ART.mediumLog, item.cracked && item.type === "medium" ? LOG_CELLS.cracked : LOG_CELLS.whole)} />}
           {item.type !== "yarn" && <span className="cat-party-marks">{item.marks.map((done, index) => <b key={index} className={done ? "is-done" : undefined} />)}</span>}
         </div>)}
-        {view.halves.map((half) => <div key={half.id} className={`cat-party-half ${half.side < 0 ? "is-left" : "is-right"}`} style={{ left: half.x, top: half.y, width: half.width, height: half.height }}>
-          <img src={`${sprites}/gatitos-tronco.png`} alt="" style={{ width: half.width * 2, height: half.height, marginLeft: half.side > 0 ? -half.width : 0 }} />
-        </div>)}
+        {view.halves.map((half) => <div key={half.id} className={`cat-party-half ${half.side < 0 ? "is-left" : "is-right"}`}
+          style={{ ...cellStyle(half.type === "small" ? ART.smallLog : ART.mediumLog, halfCell(half.type === "small" ? ART.smallLog : ART.mediumLog, half.side)), left: half.x, top: half.y, width: half.width, height: half.height }} />)}
         {view.feedback && <div className={`cat-party-feedback${view.feedback.miss ? " is-miss" : ""}`}>{view.feedback.text}</div>}
         {mode && view.caption && <div className="cat-party-caption">{view.caption}</div>}
         {mode && view.phase && <span className="cat-party-phase">{view.phase}</span>}

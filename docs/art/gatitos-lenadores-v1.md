@@ -2,6 +2,11 @@
 
 Dossier para el ticket [Producir el arte y los sonidos finales de La fiesta de los gatitos](https://github.com/Mocheto/super-noa/issues/24). El arte se genera a mano con los prompts de este documento (sin servicios de pago integrados en la sesión); los sonidos los sintetiza el repositorio.
 
+## Estado
+
+- **Arte: entregado e integrado.** Las nueve piezas se generaron con estos prompts y se recortaron con `prototypes/tools/gatitos-recorte.py`. Los archivos finales son WebP con transparencia real (los `.png` depositados eran JPEG con fondo verde): `noa-lenadora-v1`, `gatito-gris-empuja-v1`, `gatito-naranja-empuja-v1`, `tronco-pequeno-v1`, `tronco-mediano-v1`, `cinta-v1`, `tajo-v1`, `lena-v1`, `monton-lena-v1` y `hoguera-v1` en `public/assets/sprites/`, y `claro-fiesta-v1.webp` en `public/assets/worlds/`. Las medidas que usa el juego están en `src/game/catPartyArt.ts`.
+- **Sonido: v0 hecho, sin integrar** (ver más abajo).
+
 Las piezas sustituyen a las provisionales sin cambiar la lógica del minijuego (`src/game/catParty.ts` y `CatPartyGame.tsx`). El estilo y la lista de piezas salen de [Redibujar el aspecto: gata leñadora, troncos, cinta y gatitos](https://github.com/Mocheto/super-noa/issues/20).
 
 ## Cómo trabajar
@@ -137,9 +142,12 @@ Hechos por código en este repositorio, sin grabaciones ni servicios externos:
 - `prototypes/gatitos-samples.html` permite oírlos uno a uno y comparar un fragmento de la canción con los instrumentos nuevos y con el sonido actual.
 - Todavía no están en el juego: se integran cuando la persona usuaria los apruebe de oído, sustituyendo los osciladores sin tocar la partitura.
 
+## Cómo se recortó
+
+`python3 prototypes/tools/gatitos-recorte.py CARPETA_CON_LAS_LAMINAS` vuelve a generar todo desde las láminas originales (con cualquier extensión). Quita el verde conectado con el borde, conserva el verde de las hojas y el musgo, separa y alinea las poses por los pies, refleja al gatito gris para que mire a la izquierda y repara dos defectos del generador: una banda oscura en el fondo del claro y manchas de polvo en los troncos y la hoguera. El script no guarda las láminas originales; consérvalas fuera del repositorio.
+
+Las mitades de los troncos se muestran a escala 0,6 y se juntan en el tajo; el juego usa el tronco mediano con grieta tras el primer golpe. El montón completo de leña sustituye al montón de leños sueltos al terminar la canción, y la hoguera se enciende con tres llamas que se alternan.
+
 ## Integración pendiente
 
-- Recortar y alinear las piezas, y guardarlas en `public/assets/` con rutas `./assets/...`.
-- En `CatPartyGame.tsx`, sustituir las imágenes provisionales (`noa-cat-yarn-v2.webp`, `world-cat-2-v1.png`, `world-cat-4-v1.png`, `gatitos-tronco.png`) y los dibujos hechos con código (hacha, cinta, tajo, hoguera, fondo) por las piezas nuevas; el hacha deja de ser una superposición.
-- Cargar los samples con el reloj de audio existente, con respaldo a los osciladores si falla la carga, y ajustar `catParty.test.ts`.
-- Revisión visual de AGENTS.md antes de publicar.
+- Cargar los samples con el reloj de audio existente, con respaldo a los osciladores si falla la carga, y ajustar `catParty.test.ts`, cuando la persona usuaria apruebe los sonidos.

@@ -43,7 +43,7 @@ Una pulsación de la jugadora que se convierte en un golpe de percusión: un hac
 _Avoid_: Toque, tap, clic
 
 **Patrón**:
-Orden concreto de piezas y pulsos en que llegan y se golpean.
+Orden concreto de golpes y silencios, de una serie de piezas o de un compás de llamada, que la jugadora golpea o repite.
 _Avoid_: Secuencia suelta
 
 **Distractor**:

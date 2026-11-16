@@ -15,7 +15,7 @@ La pista `laguna.wav` del mundo acuático es una composición original sintetiza
 
 La pista `jurasico.wav` de la isla de los dinosaurios es una composición original sintetizada para Super Noa mediante `scripts/build-dinosaur-music.mjs`; no emplea muestras ni melodías de terceros.
 
-«La fiesta de los gatitos» (`gatitos-fiesta.mp3`) y sus cuatro efectos de cuenta, aviso, golpe y fallo se compusieron y sintetizaron para Super Noa. La melodía usa cascabeles y un acompañamiento de madera a 90 BPM, con un tramo final a 100 BPM.
+«La fiesta de los gatitos» es una composición original de Super Noa que el propio juego genera en el navegador a partir de su partitura: 100 pulsos por minuto en compás de 4, acordes de Do, Sol, La menor y Fa con bajo, madera, marimba y cascabeles sintetizados, maullidos de aviso y una escala festiva final. No emplea muestras ni melodías de terceros.
 
 La pista `noa-estelar.mp3`, «Brillo de Noa», es una composición original de 12 segundos creada con `scripts/build-star-music.mjs`: ocho compases a 160 BPM, campanas agudas entre MIDI 84 y 100 y 80 notas de corchea o semicorchea, con un bajo discreto. Se sintetiza localmente sin muestras ni melodías de terceros y se codifica con FFmpeg/libmp3lame en mono a 32 kHz y 96 kbit/s. Su tamaño es 145.025 bytes; el pico PCM original es 0,230 y el decodificado 0,218, con RMS 0,090 y sin saturación. La rapidez y el registro transmiten urgencia sin depender de un volumen elevado. `node scripts/build-star-music.mjs --check` comprueba la mezcla y compara el archivo generado en memoria sin escribirlo; requiere las mismas versiones de Node.js y FFmpeg para la igualdad binaria.
 

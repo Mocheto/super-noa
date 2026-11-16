@@ -7,6 +7,7 @@ import {
   ARMONIA_TARGET_COUNT, armoniaMelodies, beatTimeMs, findTargetWithinWindow, makeArmoniaChallenge,
   type ArmoniaRound,
 } from "./armoniaRhythm";
+import { outputLatencySeconds } from "./rhythmEngine";
 
 type Props = {
   paused: boolean;
@@ -26,13 +27,6 @@ const AUDIO_LOOKAHEAD_MS = 90;
 const DEMO_ROUND: ArmoniaRound = { melody: armoniaMelodies[0], bpm: 92 };
 const GOLD_FRAME_POSITIONS = ["0% 0%", "33.333% 0%", "66.666% 0%", "100% 0%"];
 const BLUE_FRAME_POSITIONS = ["0% 100%", "33.333% 100%", "66.666% 100%"];
-
-// Retraso entre programar una nota y oírla: el reloj de la partida lo descuenta para que
-// la luz de la polilla y el golpe de tambor caigan cuando suena la nota, no antes.
-function outputLatencySeconds(context: AudioContext) {
-  const latency = (context.outputLatency || 0) + (context.baseLatency || 0);
-  return Number.isFinite(latency) ? Math.min(0.25, Math.max(0, latency)) : 0;
-}
 
 function getAudioContext() {
   return typeof window !== "undefined" && "AudioContext" in window ? new window.AudioContext() : null;

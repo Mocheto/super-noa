@@ -14,3 +14,10 @@ export function nearestRhythmTarget<T>(targets: Iterable<T>, positionMs: number,
   }
   return nearest;
 }
+
+// Retraso entre programar un sonido y oírlo. Los minijuegos rítmicos lo descuentan del
+// reloj de audio para que lo que se ve y lo que se golpea coincida con lo que suena.
+export function outputLatencySeconds(context: { outputLatency?: number; baseLatency?: number }) {
+  const latency = (context.outputLatency || 0) + (context.baseLatency || 0);
+  return Number.isFinite(latency) ? Math.min(0.25, Math.max(0, latency)) : 0;
+}

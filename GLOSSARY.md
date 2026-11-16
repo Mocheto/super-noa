@@ -56,6 +56,14 @@ _Avoid_: Trampa, enemigo
 Superficie por la que los gatitos hacen llegar las piezas hasta la gata leñadora.
 _Avoid_: Cinta transportadora, carril
 
+**Tajo**:
+Tocón al final de la cinta donde la leñadora golpea cada pieza.
+_Avoid_: Mesa, bloque
+
+**Empuje**:
+Pulso en que un gatito empujador suelta una pieza en la cinta, dos pulsos antes de su primer golpe.
+_Avoid_: Lanzamiento, salida
+
 **Leñadora**:
 Noa vestida de gata, que golpea las piezas con el hacha cada vez que la jugadora pulsa.
 _Avoid_: Gata leñadora, oso

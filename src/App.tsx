@@ -28,7 +28,7 @@ const WorldMap = lazy(() => import("./game/WorldMap").then((module) => ({ defaul
 const GameCanvas = lazy(() => import("./game/GameCanvas").then((module) => ({ default: module.GameCanvas })));
 const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
 const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((module) => ({ default: module.GuardianMiniGame })));
-const ArmoniaRhythmGame = lazy(() => import("./game/ArmoniaRhythmGame").then((module) => ({ default: module.ArmoniaRhythmGame })));
+const ArmoniaDrumGame = lazy(() => import("./game/ArmoniaDrumGame").then((module) => ({ default: module.ArmoniaDrumGame })));
 const BeeNinjaGame = lazy(() => import("./game/BeeNinjaGame").then((module) => ({ default: module.BeeNinjaGame })));
 const CatParty = lazy(() => import("./game/CatPartyGame").then((module) => ({ default: module.CatParty })));
 const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module) => ({ default: module.SantaBossBattle })));
@@ -309,9 +309,10 @@ export default function App() {
     );
     musicRef.current ??= createPlayer();
     starMusicRef.current ??= createPlayer();
-    // El duelo de la abeja ninja trae su propia canción: la música del mundo calla mientras dura.
+    // La abeja ninja y el tambor de Armonía traen su propia canción: la música del mundo calla mientras duran.
     const beeNinjaDuel = screen === "boss" && activeLevel.boss === "queen-bee";
-    const playing = (screen === "game" || screen === "boss") && !beeNinjaDuel && !shopActive && !paused && !muted && musicVolume > 0;
+    const armoniaDrumDuel = screen === "boss" && activeLevel.boss === "maestra-armonia";
+    const playing = (screen === "game" || screen === "boss") && !beeNinjaDuel && !armoniaDrumDuel && !shopActive && !paused && !muted && musicVolume > 0;
     musicRef.current.update({
       source: musicTracks[activeLevel.world],
       volume: musicVolume,
@@ -834,10 +835,14 @@ export default function App() {
               onWin={bossReplay ? finishBossReplay : handleComplete}
               playSound={playSound}
               friendlyReplay={bossReplay}
-            /> : activeLevel.boss === "maestra-armonia" ? <ArmoniaRhythmGame
-              key={`armonia-game-${activeLevel.id}-${levelRun}`}
+            /> : activeLevel.boss === "maestra-armonia" ? <ArmoniaDrumGame
+              key={`armonia-drum-${activeLevel.id}-${levelRun}`}
               paused={paused}
               muted={muted}
+              musicVolume={musicVolume}
+              effectsVolume={effectsVolume}
+              reduceMotion={reduceMotion}
+              levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
               onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
               onWin={bossReplay ? finishBossReplay : handleComplete}
               playSound={playSound}

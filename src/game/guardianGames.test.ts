@@ -3,8 +3,8 @@ import test from "node:test";
 import { bossCatalog } from "./bosses.ts";
 import { choiceAnswer, GUARDIAN_GAME_ROUNDS, guardianGames, isGuardianGameId, makeGuardianSequence } from "./guardianGames.ts";
 
-test("los seis guardianes con juego propio tienen juegos cortos, tres opciones y reto sin azar", () => {
-  assert.equal(Object.keys(guardianGames).length, 6);
+test("los cinco guardianes con juego propio tienen juegos cortos, tres opciones y reto sin azar", () => {
+  assert.equal(Object.keys(guardianGames).length, 5);
   for (const [id, game] of Object.entries(guardianGames)) {
     assert.equal(game.options.length, 3, id);
     assert.ok(game.instruction.length > 20, id);

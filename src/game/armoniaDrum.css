@@ -1,0 +1,106 @@
+/* «El tambor de Armonía»: duelo rítmico de la Maestra Armonía. Escena fija de 960 × 540 escalada al ancho disponible. */
+.armonia-drum-game { width: min(960px, 100%); background-color: #fff6e9; background-image: linear-gradient(180deg, rgba(255,246,233,.95), rgba(238,226,246,.96)); }
+.armonia-drum-header { align-items: flex-start; gap: 16px; }
+.armonia-drum-header h2 { margin-bottom: 4px; }
+.armonia-drum-header > div > p:not(.eyebrow):not(.boss-challenge) { margin: 4px 0 0; font: 800 .9rem/1.35 system-ui, sans-serif; }
+
+.armonia-drum-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 14px 0 8px;
+  overflow: hidden;
+  border: 4px solid #352044;
+  background: #2a1534;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.armonia-drum-stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+.armonia-drum-stage > * { position: absolute; }
+.armonia-drum-background { inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+
+/* Focos de turno: Armonía en la llamada, Noa en la respuesta. */
+.armonia-drum-spot { top: 0; width: 360px; height: 480px; opacity: 0; pointer-events: none; transition: opacity .18s; background: radial-gradient(ellipse at 50% 100%, #fff4c0aa 0%, #fff4c033 40%, transparent 70%); clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); mix-blend-mode: screen; }
+.armonia-drum-spot.is-armonia { left: -20px; }
+.armonia-drum-spot.is-noa { left: 590px; }
+.armonia-drum-spot.is-on { opacity: 1; }
+
+/* Luces de compás: lilas en la llamada, doradas en la respuesta. */
+.armonia-drum-lamps { top: 58px; left: 50%; z-index: 5; display: flex; gap: 12px; translate: -50%; }
+.armonia-drum-lamps span { width: 26px; height: 26px; border: 3px solid #2f1d33; border-radius: 50%; background: #4a3a52; transition: transform .06s; }
+.armonia-drum-lamps span.is-on { transform: scale(1.25); background: #fff4c0; box-shadow: 0 0 14px #fff4c0; }
+.armonia-drum-lamps.is-call span.is-on { background: #d6b0ff; box-shadow: 0 0 14px #b98aff; }
+.armonia-drum-lamps.is-response span.is-on { background: #ffd76a; box-shadow: 0 0 14px #ffd76a; }
+
+.armonia-drum-armonia { left: 40px; top: 150px; width: 250px; height: 250px; z-index: 2; background-repeat: no-repeat; background-size: 500% 200%; filter: drop-shadow(0 6px 4px #0006); transition: transform .08s; }
+.armonia-drum-armonia.is-hit { transform: translateY(5px); }
+
+/* Noa tamborilera: tira de 4 poses (espera, golpe, escucha, celebra) mirando a Armonía. */
+.armonia-drum-noa { z-index: 2; background: var(--noa-sprite) no-repeat 0 0 / 400% 100%; image-rendering: pixelated; filter: drop-shadow(0 6px 4px #0006); }
+
+.armonia-drum-drum { z-index: 3; background-repeat: no-repeat; background-size: 100% 100%; image-rendering: pixelated; filter: drop-shadow(0 6px 4px #0006); transform-origin: 50% 100%; transition: transform .07s; }
+.armonia-drum-drum.is-hit { transform: scale(1.05, .93); }
+.armonia-drum-drum.is-glow { filter: drop-shadow(0 0 16px #ffd76a) drop-shadow(0 6px 4px #0006); }
+
+/* Huellas sobre el parche: llenas si llevan golpe, discontinuas si son silencio. */
+.armonia-drum-prints { z-index: 4; display: flex; gap: 8px; translate: -50% -50%; pointer-events: none; }
+.armonia-drum-print { display: grid; place-items: center; width: 30px; height: 30px; border: 3px dashed #2f1d3388; border-radius: 50%; background: #fff6e366; color: #2f1d3388; font: 900 13px ui-monospace, monospace; transition: transform .08s, background .1s; }
+.is-armonia .armonia-drum-print.is-beat { border: 3px solid #8e5cc8; background: #d6b0ffcc; color: #2f1d33; }
+.is-noa .armonia-drum-print.is-beat { border: 3px solid #c99a1c; background: #ffd76acc; color: #2f1d33; }
+.armonia-drum-print.is-current { transform: scale(1.2); }
+.armonia-drum-print.is-lit { transform: scale(1.35); box-shadow: 0 0 14px #fff; }
+.armonia-drum-print.is-ok { border: 3px solid #2f8a3c; background: #8fe07f; color: #123d1c; transform: scale(1.15); }
+.armonia-drum-print.is-gone { border: 3px solid #c99a1c; background: #ffd76a55; color: #2f1d3388; opacity: .55; }
+
+.armonia-drum-bubble { z-index: 6; padding: 4px 12px; border: 3px solid #2f1d33; border-radius: 14px; background: #fff6e3; color: #2f1d33; font: 900 20px ui-monospace, monospace; white-space: nowrap; }
+.armonia-drum-bubble.is-armonia { left: 120px; top: 110px; }
+.armonia-drum-bubble.is-noa { left: 700px; top: 120px; background: #ffd76a; }
+.armonia-drum-feedback { left: 560px; top: 280px; z-index: 7; padding: 3px 12px; border: 3px solid #2f1d33; border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 22px ui-monospace, monospace; animation: armonia-drum-pop .3s ease-out; }
+.armonia-drum-feedback.is-miss { background: #ffd2c8; color: #6a2a22; }
+@keyframes armonia-drum-pop { from { transform: translateY(10px); opacity: .3; } }
+
+/* Atril: una nota dorada por cada golpe acertado y la raya dorada del mínimo. */
+.armonia-drum-stand { right: 16px; top: 12px; z-index: 6; width: 360px; height: 120px; background: var(--atril) no-repeat 0 0 / 520px 150px; image-rendering: pixelated; filter: drop-shadow(0 4px 3px #0006); }
+.armonia-drum-stand.is-reached { filter: drop-shadow(0 0 14px #ffd76a); }
+.armonia-drum-staff { position: absolute; left: 18px; right: 18px; top: 18px; height: 70px; display: flex; align-items: center; justify-content: center; }
+.armonia-drum-staff i { flex: none; width: 18px; height: 26px; margin: 0 -2.25px; background: var(--atril) no-repeat -111px -6px / 156px 45px; image-rendering: pixelated; transition: transform .12s; }
+.armonia-drum-staff i:nth-of-type(odd) { margin-top: 16px; }
+.armonia-drum-staff i.is-got { background-position: -133.5px -6px; transform: scale(1.3) translateY(-2px); }
+.armonia-drum-line { position: absolute; top: -4px; bottom: -4px; width: 5px; border: 1px solid #2f1d33; background: #e2a917; }
+.armonia-drum-stand.is-reached .armonia-drum-line { background: #fff3a8; box-shadow: 0 0 10px #ffd76a; }
+
+.armonia-drum-caption { left: 50%; bottom: 18px; z-index: 6; max-width: 640px; padding: 6px 16px; border: 3px solid #2f1d33; border-radius: 12px; background: #fff6e3ee; color: #2f1d33; font: 900 19px system-ui, sans-serif; text-align: center; translate: -50%; }
+.armonia-drum-phase { left: 160px; top: 14px; z-index: 5; padding: 3px 9px; border-radius: 8px; color: #fff6e3; background: #2f1d33cc; font: 700 12px ui-monospace, monospace; }
+.armonia-drum-result { left: 50%; top: 170px; z-index: 6; padding: 10px 26px; border: 4px solid #2f1d33; border-radius: 16px; background: #ffd76a; color: #2f1d33; font: 900 40px ui-monospace, monospace; translate: -50%; box-shadow: 0 0 30px #ffd76a; }
+
+.armonia-drum-progress { display: block; width: 100%; height: 10px; margin: 0 0 6px; accent-color: #8e5cc8; }
+.armonia-drum-controls { display: grid; justify-items: center; gap: 8px; text-align: center; }
+.armonia-drum-message { min-height: 1.4em; margin: 3px 0 0; color: #47324f; font: 900 .98rem/1.3 system-ui, sans-serif; }
+.armonia-drum-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
+.armonia-drum-actions .pixel-button { min-width: 170px; }
+.armonia-drum-hit { width: min(480px, 100%); min-height: 68px; border: 4px solid #352044; border-bottom-width: 8px; color: #352044 !important; background: #ffe07d !important; font-size: 1.35rem; font-weight: 1000; }
+.armonia-drum-hit:active { border-bottom-width: 4px; transform: translateY(4px); }
+.armonia-drum-hit:disabled { opacity: .55; }
+.armonia-drum-note, .armonia-drum-help { margin: 0; color: #65536c; font: 750 .78rem/1.3 system-ui, sans-serif; }
+.armonia-drum-game .duel-abandon { margin: 3px auto 0; color: #47324f; }
+.armonia-drum-frame.is-still .armonia-drum-feedback { animation-duration: .001ms; }
+.armonia-drum-frame.is-still .armonia-drum-spot { transition: none; }
+
+/* En pantallas estrechas la escena es pequeña: las huellas se repiten en grande junto a «¡Golpea!». */
+.armonia-drum-bigprints { display: none; }
+.armonia-drum-bigprints-row { display: flex; justify-content: center; gap: 12px; min-height: 58px; }
+.armonia-drum-bigprints .armonia-drum-print { width: 54px; height: 54px; border-width: 4px; font-size: 22px; }
+.armonia-drum-bigprints.is-off .armonia-drum-bigprints-row { visibility: hidden; }
+
+@media (max-width: 700px) {
+  .armonia-drum-bigprints { display: block; }
+}
+@media (max-width: 600px) {
+  .armonia-drum-game { max-height: calc(100dvh - 18px); padding: 12px; border-width: 4px; }
+  .armonia-drum-header h2 { font-size: 1.25rem; }
+  .armonia-drum-header > div > p:not(.eyebrow):not(.boss-challenge) { font-size: .75rem; }
+  .armonia-drum-frame { margin: 8px 0 6px; border-width: 3px; }
+  .armonia-drum-hit { min-height: 62px; font-size: 1.2rem; }
+  .armonia-drum-actions .pixel-button { min-width: 0; flex: 1 1 140px; }
+}

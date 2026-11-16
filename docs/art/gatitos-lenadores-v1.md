@@ -5,7 +5,7 @@ Dossier para el ticket [Producir el arte y los sonidos finales de La fiesta de l
 ## Estado
 
 - **Arte: entregado e integrado.** Las nueve piezas se generaron con estos prompts y se recortaron con `prototypes/tools/gatitos-recorte.py`. Los archivos finales son WebP con transparencia real (los `.png` depositados eran JPEG con fondo verde): `noa-lenadora-v1`, `gatito-gris-empuja-v1`, `gatito-naranja-empuja-v1`, `tronco-pequeno-v1`, `tronco-mediano-v1`, `cinta-v1`, `tajo-v1`, `lena-v1`, `monton-lena-v1` y `hoguera-v1` en `public/assets/sprites/`, y `claro-fiesta-v1.webp` en `public/assets/worlds/`. Las medidas que usa el juego están en `src/game/catPartyArt.ts`.
-- **Sonido: v0 hecho, sin integrar** (ver más abajo).
+- **Sonido: integrado.** La persona usuaria eligió los instrumentos nuevos; el juego los toca con respaldo a los osciladores (ver más abajo).
 
 Las piezas sustituyen a las provisionales sin cambiar la lógica del minijuego (`src/game/catParty.ts` y `CatPartyGame.tsx`). El estilo y la lista de piezas salen de [Redibujar el aspecto: gata leñadora, troncos, cinta y gatitos](https://github.com/Mocheto/super-noa/issues/20).
 
@@ -138,16 +138,12 @@ Use case: illustration-story. Asset type: wide 16:9 background for a side-scroll
 
 Hechos por código en este repositorio, sin grabaciones ni servicios externos:
 
-- `prototypes/tools/gatitos-samples.py` renderiza diez WAV mono a 32 kHz en `prototypes/assets/gatitos-samples/`: marimba, flauta, pizzicato, cascabeles, madera, hachazo, golpe sordo, plop del ovillo y dos maullidos de gatito. Los instrumentos afinados se guardan en una sola nota base y el juego los transporta cambiando la velocidad de reproducción.
-- `prototypes/gatitos-samples.html` permite oírlos uno a uno y comparar un fragmento de la canción con los instrumentos nuevos y con el sonido actual.
-- Todavía no están en el juego: se integran cuando la persona usuaria los apruebe de oído, sustituyendo los osciladores sin tocar la partitura.
+- `prototypes/tools/gatitos-samples.py` renderiza diez WAV mono a 32 kHz en `public/assets/audio/gatitos/`: marimba, flauta, pizzicato, cascabeles, madera, hachazo, golpe sordo, plop del ovillo y dos maullidos de gatito. Los instrumentos afinados se guardan en una sola nota base y el juego los transporta cambiando la velocidad de reproducción. También escribe una copia incrustada en `prototypes/assets/gatitos-samples/samples.js` para la página de audición.
+- `prototypes/gatitos-samples.html` permite oírlos uno a uno y compararlos con el sonido anterior; funciona abierta como archivo y tiene un pitido de prueba y un medidor de nivel.
+- En el juego, cada nota de `musicForEighth` lleva su `sample` (pizzicato en el bajo, madera en los pulsos 2 y 4, cascabeles entre pulsos, flauta al empezar los compases pares, maullidos y plop en los empujes, marimba en la escala final); el golpe de la jugadora toca hachazo y marimba en la nota del acorde, y los fallos, el golpe sordo. Los campos del oscilador quedan como respaldo: suenan mientras se cargan los samples o si falla la carga (`src/game/catPartySamples.ts`). La cuenta de entrada conserva sus pitidos.
 
 ## Cómo se recortó
 
 `python3 prototypes/tools/gatitos-recorte.py CARPETA_CON_LAS_LAMINAS` vuelve a generar todo desde las láminas originales (con cualquier extensión). Quita el verde conectado con el borde, conserva el verde de las hojas y el musgo, separa y alinea las poses por los pies, refleja al gatito gris para que mire a la izquierda y repara dos defectos del generador: una banda oscura en el fondo del claro y manchas de polvo en los troncos y la hoguera. El script no guarda las láminas originales; consérvalas fuera del repositorio.
 
 Las mitades de los troncos se muestran a escala 0,6 y se juntan en el tajo; el juego usa el tronco mediano con grieta tras el primer golpe. El montón completo de leña sustituye al montón de leños sueltos al terminar la canción, y la hoguera se enciende con tres llamas que se alternan.
-
-## Integración pendiente
-
-- Cargar los samples con el reloj de audio existente, con respaldo a los osciladores si falla la carga, y ajustar `catParty.test.ts`, cuando la persona usuaria apruebe los sonidos.

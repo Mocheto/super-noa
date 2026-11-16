@@ -1,7 +1,8 @@
 """Samples originales v0 de «La fiesta de los gatitos»: marimba, flauta, pizzicato, cascabeles, madera y maullidos.
 
 Se sintetizan por código (sin grabaciones ni servicios externos) y se guardan como WAV mono de 16 bits a
-32 kHz en prototypes/assets/gatitos-samples/. Cada instrumento afinado se renderiza en una sola nota base y
+32 kHz en public/assets/audio/gatitos/ (los que carga el juego), con una copia incrustada en
+prototypes/assets/gatitos-samples/samples.js para la página de audición. Cada instrumento afinado se renderiza en una sola nota base y
 el juego la transporta cambiando la velocidad de reproducción. Todo es original.
 
 Uso: python3 prototypes/tools/gatitos-samples.py   (requiere numpy)
@@ -14,7 +15,8 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "prototypes/assets/gatitos-samples"
+OUT = ROOT / "public/assets/audio/gatitos"
+EMBEDDED = ROOT / "prototypes/assets/gatitos-samples/samples.js"
 SR = 32000
 RNG = np.random.default_rng(7)  # semilla fija: el mismo resultado en cada ejecución
 
@@ -177,7 +179,8 @@ def main():
     # Copia incrustada para que la página de audición suene también abierta como archivo (sin servidor):
     # los navegadores bloquean fetch() sobre file://, pero sí cargan un <script>.
     data = {name: "data:audio/wav;base64," + base64.b64encode((OUT / f"{name}.wav").read_bytes()).decode() for name in SAMPLES}
-    (OUT / "samples.js").write_text("window.GATITOS_SAMPLES = " + json.dumps(data) + ";\n")
+    EMBEDDED.parent.mkdir(parents=True, exist_ok=True)
+    EMBEDDED.write_text("window.GATITOS_SAMPLES = " + json.dumps(data) + ";\n")
 
 
 if __name__ == "__main__":

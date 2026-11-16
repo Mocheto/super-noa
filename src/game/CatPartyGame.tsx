@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { firstConnectedGamepad } from "./gamepad";
 import {
-  BELT_Y, HIT_WINDOW_PULSES, PULSE_MS, STUMP_X, TRAVEL_PULSES, audioPulse, autoHits, barOfPulse, collectMisses, createRun, leadNote,
+  BELT_Y, HIT_WINDOW_PULSES, MISS_SAMPLE, PULSE_MS, ROLL_SAMPLE, STUMP_X, TRAVEL_PULSES, audioPulse, autoHits, barOfPulse, collectMisses, createRun, hitSamples, leadNote,
   musicForEighth, nextOpenHit, outputLatencySeconds, partyScores, pieceVisible, piecePlacement, pressAt, scoreLength,
-  type PartyMode, type PartyNote, type PartyRun, type PressResult,
+  type PartyMode, type PartyNote, type PartyRun, type PartySample, type PressResult,
 } from "./catParty";
+import { loadPartySamples, type SampleBank } from "./catPartySamples";
 import {
   ART, BELT, CLEARING_BACKGROUND, FIRE_BOX, FIRE_FRAMES, KITTENS, KITTEN_POSES, LOG_CELLS, NOA_FEET, NOA_POSES, STUMP_BOX, WOODPILE_SCALE, cellStyle, halfCell, shown,
 } from "./catPartyArt";
@@ -107,6 +108,7 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
   const sessionRef = useRef<Session | null>(null);
   const audioRef = useRef<{ context: AudioContext; music: GainNode; cue: GainNode; noise: AudioBuffer } | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
+  const samplesRef = useRef<SampleBank | null>(null);
   const [scale, setScale] = useState(1);
   const [mode, setMode] = useState<PartyMode | null>(null);
   const [celebrating, setCelebrating] = useState(false);
@@ -124,6 +126,13 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
     const observer = new ResizeObserver(update);
     observer.observe(element);
     return () => observer.disconnect();
+  }, []);
+
+  // Los sonidos definitivos se cargan al entrar; hasta que estén (o si fallan) suenan los osciladores de respaldo.
+  useEffect(() => {
+    let alive = true;
+    void loadPartySamples().then((bank) => { if (alive) samplesRef.current = bank; });
+    return () => { alive = false; };
   }, []);
 
   useEffect(() => () => {
@@ -165,6 +174,20 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
     const { context } = audio;
     const bus = note.bus === "music" ? audio.music : audio.cue;
     const gain = context.createGain();
+    const bank = samplesRef.current;
+    if (bank) {
+      if (note.sample === null) return; // otro sample sustituye a esta nota
+      if (note.sample) {
+        const source = context.createBufferSource();
+        source.buffer = bank[note.sample.id];
+        source.playbackRate.value = note.sample.rate ?? 1;
+        gain.gain.value = note.sample.gain;
+        source.connect(gain).connect(bus);
+        source.start(when);
+        return;
+      }
+    }
+    if (note.volume === 0) return; // nota que solo existe como sample
     if (note.noise) {
       const source = context.createBufferSource();
       const filter = context.createBiquadFilter();
@@ -196,6 +219,14 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
     playNote({ offset: 0, frequency, duration, wave, volume, bus: "cue", glideTo }, audio.context.currentTime + 0.003);
   }, [playNote]);
 
+  /** Toca samples al instante; devuelve `false` si aún no están cargados para que suene el respaldo. */
+  const playSamplesNow = useCallback((samples: PartySample[]) => {
+    const audio = audioRef.current;
+    if (!samplesRef.current || !audio || audio.context.state !== "running") return false;
+    for (const sample of samples) playNote({ offset: 0, frequency: 0, duration: 0.1, wave: "sine", volume: 0, bus: "cue", sample }, audio.context.currentTime + 0.003);
+    return true;
+  }, [playNote]);
+
   const pulseNow = useCallback((session: Session) => {
     const audio = audioRef.current;
     if (session.clock === "audio" && audio && audio.context.state === "running") {
@@ -207,8 +238,11 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
 
   const react = useCallback((session: Session, result: PressResult, pulse: number) => {
     if (result.kind === "hit") {
-      playNow(leadNote(session.run, pulse), 0.3, "triangle", 0.13);
-      playNow(720, 0.06, "sine", 0.05);
+      const note = leadNote(session.run, pulse);
+      if (!playSamplesNow(hitSamples(note))) {
+        playNow(note, 0.3, "triangle", 0.13);
+        playNow(720, 0.06, "sine", 0.05);
+      }
       session.feedback = { text: "¡Toc!", miss: false, until: pulse + 0.5 };
       if (result.broke) {
         const type = result.piece.type === "small" ? "small" : "medium";
@@ -218,16 +252,16 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
         setMessage(result.piece.type === "small" ? "¡Toc! Un tronco más para la hoguera." : "¡Toc, toc! El tronco mediano está listo.");
       } else setMessage("¡Toc! Falta otro golpe.");
     } else if (result.kind === "yarn") {
-      playNow(92, 0.16, "sine", 0.14);
+      if (!playSamplesNow([MISS_SAMPLE])) playNow(92, 0.16, "sine", 0.14);
       session.feedback = { text: "¡Boing!", miss: true, until: pulse + 0.5 };
       session.yarnBubbleUntil = pulse + 1.5;
       setMessage("Era el ovillo. ¡Déjalo pasar sin golpear!");
     } else {
-      playNow(92, 0.16, "sine", 0.14);
+      if (!playSamplesNow([MISS_SAMPLE])) playNow(92, 0.16, "sine", 0.14);
       session.feedback = { text: "¡Uy!", miss: true, until: pulse + 0.5 };
       setMessage("Espera a que el tronco llegue al tajo.");
     }
-  }, [playNow]);
+  }, [playNow, playSamplesNow]);
 
   const finish = useCallback((session: Session) => {
     session.ended = true;
@@ -304,7 +338,7 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
         for (const result of autoHits(session.run, pulse)) { session.chopUntil = pulse + 0.2; react(session, result, pulse); }
       } else {
         for (const missed of collectMisses(session.run, pulse)) {
-          playNow(180, 0.18, "triangle", 0.06, 90);
+          if (!playSamplesNow([ROLL_SAMPLE])) playNow(180, 0.18, "triangle", 0.06, 90);
           session.feedback = { text: "Se fue rodando", miss: true, until: pulse + 0.6 };
           setMessage(missed.done.length ? "Faltó el segundo golpe. ¡No pasa nada, viene otro!" : "No pasa nada. ¡Ya viene otro tronco!");
         }
@@ -333,7 +367,7 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
       cancelAnimationFrame(frame);
       window.removeEventListener("keydown", onKey);
     };
-  }, [finish, mode, paused, playNote, playNow, pulseNow, react, reduceMotion, strike]);
+  }, [finish, mode, paused, playNote, playNow, playSamplesNow, pulseNow, react, reduceMotion, strike]);
 
   const total = mode ? scoreLength(partyScores[mode]) : 0;
   const noaSize = shown(ART.noa), greySize = shown(ART.kittenGrey), orangeSize = shown(ART.kittenOrange);

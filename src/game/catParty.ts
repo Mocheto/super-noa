@@ -195,7 +195,22 @@ export const pieceVisible = (item: LivePiece, pulse: number) =>
 
 // ---------------------------------------------------------------- música
 
-export type PartyNote = { offset: number; frequency: number; duration: number; wave: OscillatorType; volume: number; bus: "music" | "cue"; glideTo?: number; noise?: boolean };
+export type SampleId = "marimba-do5" | "flauta-sol5" | "pizzicato-do3" | "cascabeles" | "madera" | "hachazo" | "golpe-sordo" | "plop-ovillo" | "miau-gatito-1" | "miau-gatito-2";
+export const SAMPLE_IDS: readonly SampleId[] = ["marimba-do5", "flauta-sol5", "pizzicato-do3", "cascabeles", "madera", "hachazo", "golpe-sordo", "plop-ovillo", "miau-gatito-1", "miau-gatito-2"];
+export const sampleUrl = (id: SampleId) => `./assets/audio/gatitos/${id}.wav`;
+/** Nota en la que se grabó cada instrumento afinado; el juego los transporta cambiando la velocidad de reproducción. */
+const SAMPLE_PITCH = { "marimba-do5": 523.25, "flauta-sol5": 783.99, "pizzicato-do3": 130.81 } as const;
+/** Un sample y su volumen. `rate` transporta los afinados. */
+export type PartySample = { id: SampleId; gain: number; rate?: number };
+const sample = (id: SampleId, gain: number): PartySample => ({ id, gain });
+const pitched = (id: keyof typeof SAMPLE_PITCH, frequency: number, gain: number): PartySample => ({ id, gain, rate: frequency / SAMPLE_PITCH[id] });
+
+/**
+ * Nota de la partitura. Los campos del oscilador son el sonido de respaldo; `sample` es el sonido definitivo:
+ * si está cargado se toca él, y `null` significa que otro sample ya sustituye a esta nota. Una nota con
+ * volumen 0 solo suena como sample.
+ */
+export type PartyNote = { offset: number; frequency: number; duration: number; wave: OscillatorType; volume: number; bus: "music" | "cue"; glideTo?: number; noise?: boolean; sample?: PartySample | null };
 
 const CHORDS = [
   { root: 130.81, tones: [523.25, 659.25, 783.99] }, // Do
@@ -221,27 +236,33 @@ export function musicForEighth(run: PartyRun, eighth: number): PartyNote[] {
   }
   if (bar > score.bars - score.closingBars) {
     const index = eighth - (score.bars - score.closingBars) * PULSES_PER_BAR * 2;
-    if (index < CLOSING_SCALE.length) notes.push({ offset: 0, frequency: CLOSING_SCALE[index], duration: 0.25, wave: "triangle", volume: 0.09, bus: "music" });
-    if (index === CLOSING_SCALE.length) for (const frequency of [523.25, 659.25, 783.99, 1046.5]) notes.push({ offset: 0, frequency, duration: 1.4, wave: "triangle", volume: 0.05, bus: "music" });
-    if (onPulse) notes.push({ offset: 0, frequency: 0, duration: 0.07, wave: "sine", volume: 0.04, bus: "music", noise: true });
+    if (index < CLOSING_SCALE.length) notes.push({ offset: 0, frequency: CLOSING_SCALE[index], duration: 0.25, wave: "triangle", volume: 0.09, bus: "music", sample: pitched("marimba-do5", CLOSING_SCALE[index], 0.4) });
+    if (index === CLOSING_SCALE.length) for (const frequency of [523.25, 659.25, 783.99, 1046.5]) notes.push({ offset: 0, frequency, duration: 1.4, wave: "triangle", volume: 0.05, bus: "music", sample: pitched("flauta-sol5", frequency, 0.14) });
+    if (onPulse) notes.push({ offset: 0, frequency: 0, duration: 0.07, wave: "sine", volume: 0.04, bus: "music", noise: true, sample: sample("cascabeles", 0.12) });
     return notes;
   }
   const chord = chordOfBar(bar);
-  if (onPulse && (inBar === 0 || inBar === 2)) notes.push({ offset: 0, frequency: chord.root, duration: 0.32, wave: "triangle", volume: 0.11, bus: "music" });
+  if (onPulse && (inBar === 0 || inBar === 2)) notes.push({ offset: 0, frequency: chord.root, duration: 0.32, wave: "triangle", volume: 0.11, bus: "music", sample: pitched("pizzicato-do3", chord.root, 0.5) });
   if (onPulse && (inBar === 1 || inBar === 3)) {
-    notes.push({ offset: 0, frequency: 1450, duration: 0.05, wave: "square", volume: 0.02, bus: "music" });
-    notes.push({ offset: 0, frequency: 720, duration: 0.06, wave: "sine", volume: 0.04, bus: "music" });
+    notes.push({ offset: 0, frequency: 1450, duration: 0.05, wave: "square", volume: 0.02, bus: "music", sample: sample("madera", 0.27) });
+    notes.push({ offset: 0, frequency: 720, duration: 0.06, wave: "sine", volume: 0.04, bus: "music", sample: null });
   }
-  if (!onPulse) notes.push({ offset: 0, frequency: chord.tones[(eighth >> 1) % 3] / 2, duration: 0.14, wave: "triangle", volume: 0.035, bus: "music" });
-  notes.push({ offset: 0, frequency: 0, duration: 0.07, wave: "sine", volume: onPulse ? 0.018 : 0.012, bus: "music", noise: true });
+  if (!onPulse) notes.push({ offset: 0, frequency: chord.tones[(eighth >> 1) % 3] / 2, duration: 0.14, wave: "triangle", volume: 0.035, bus: "music", sample: sample("cascabeles", 0.12) });
+  notes.push({ offset: 0, frequency: 0, duration: 0.07, wave: "sine", volume: onPulse ? 0.018 : 0.012, bus: "music", noise: true, sample: null });
+  if (onPulse && inBar === 0 && bar % 2 === 0) notes.push({ offset: 0, frequency: 0, duration: 0.4, wave: "sine", volume: 0, bus: "music", sample: pitched("flauta-sol5", chord.tones[2], 0.22) });
   if (onPulse) for (const item of run.pieces) {
     if (item.push === pulse) notes.push(item.type === "yarn"
-      ? { offset: 0, frequency: 1250, duration: 0.14, wave: "sine", volume: 0.07, bus: "cue", glideTo: 820 }
-      : { offset: 0, frequency: 780, duration: 0.2, wave: "sine", volume: 0.07, bus: "cue", glideTo: 470 });
-    if (item.type === "medium" && item.push + 1 === pulse) notes.push({ offset: 0.01, frequency: 780, duration: 0.2, wave: "sine", volume: 0.07, bus: "cue", glideTo: 470 });
+      ? { offset: 0, frequency: 1250, duration: 0.14, wave: "sine", volume: 0.07, bus: "cue", glideTo: 820, sample: sample("plop-ovillo", 0.3) }
+      : { offset: 0, frequency: 780, duration: 0.2, wave: "sine", volume: 0.07, bus: "cue", glideTo: 470, sample: sample("miau-gatito-1", 0.32) });
+    if (item.type === "medium" && item.push + 1 === pulse) notes.push({ offset: 0.01, frequency: 780, duration: 0.2, wave: "sine", volume: 0.07, bus: "cue", glideTo: 470, sample: sample("miau-gatito-2", 0.32) });
   }
   return notes;
 }
+
+/** Sonidos del golpe de la jugadora. Con samples: hachazo y marimba en la nota del acorde. */
+export const hitSamples = (frequency: number): PartySample[] => [sample("hachazo", 0.36), pitched("marimba-do5", frequency, 0.4)];
+export const MISS_SAMPLE: PartySample = sample("golpe-sordo", 0.3);
+export const ROLL_SAMPLE: PartySample = sample("golpe-sordo", 0.15);
 
 /** Cada acierto toca la siguiente nota del acorde del compás en curso. */
 export function leadNote(run: PartyRun, pulse: number) {

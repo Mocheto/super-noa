@@ -123,7 +123,7 @@ Recipiente que se va llenando con los pétalos de cada flor cortada.
 _Avoid_: Marcador, puntuación
 
 **Raya dorada**:
-Marca del tarro de miel que señala cuántas flores hay que cortar para ganar el duelo.
+Marca del tarro de miel o del atril que señala cuántos aciertos hacen falta para ganar el duelo.
 _Avoid_: Meta, puntuación mínima
 
 ## Tambor de Armonía

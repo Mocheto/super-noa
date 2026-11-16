@@ -94,6 +94,18 @@ _Avoid_: Espada, aguijón
 Cada objeto que la Reina Melisa lanza y que pide un corte.
 _Avoid_: Pieza (reservado a los troncos), objetivo
 
+**Flor sencilla**:
+Flor que se parte con un corte.
+_Avoid_: Flor pequeña
+
+**Dúo**:
+Dos flores lanzadas en pulsos seguidos con un «¡zum-zum!», que se cortan en dos pulsos seguidos.
+_Avoid_: Pareja (en la referencia llega por los dos lados), flor doble
+
+**Mariquita**:
+Distractor de la abeja ninja: cruza volando en línea recta y no se corta.
+_Avoid_: Enemigo, trampa
+
 **Lanzamiento**:
 Pulso en que la Reina Melisa suelta una flor con un «¡zum!», dos pulsos antes de su corte.
 _Avoid_: Empuje (reservado a los gatitos)

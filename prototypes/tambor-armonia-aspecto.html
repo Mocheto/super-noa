@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tambor de Armonía · boceto de aspecto</title>
+<style>
+  :root { --gold: #ffd76a; --purple: #7b4fb0; --ink: #2f1d33; --paper: #fff6e3; --teal: #3fb7a8; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; min-height: 100vh; background: #1d1428; color: var(--paper); font: 15px/1.4 system-ui, sans-serif; }
+  main { width: min(980px, 100%); margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.5rem ui-monospace, monospace; }
+  .lead { margin: 0 0 12px; color: #d8c8e8; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 4px solid #3b2647; border-radius: 12px; background: #2a1830; }
+  .stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+
+  /* Fondos */
+  .bg { position: absolute; inset: 0; }
+  .bg img { width: 100%; height: 100%; object-fit: cover; }
+  .bg-mundo img { filter: saturate(.9) brightness(.75) blur(2px); }
+  .bg-teatro { background: radial-gradient(ellipse at 50% 30%, #5a2f6e 0%, #2a1534 70%); }
+  .curtain { position: absolute; top: 0; bottom: 70px; width: 150px; background: repeating-linear-gradient(90deg, #a3203a 0 18px, #7d1530 18px 30px, #b82a44 30px 40px); box-shadow: inset 0 -20px 30px #0006; }
+  .curtain.l { left: 0; border-radius: 0 0 90px 0; }
+  .curtain.r { right: 0; border-radius: 0 0 0 90px; }
+  .valance { position: absolute; top: 0; left: 0; right: 0; height: 46px; background: repeating-linear-gradient(90deg, #b82a44 0 40px, #8d1a34 40px 80px); border-bottom: 6px solid var(--gold); border-radius: 0 0 50% 50% / 0 0 20px 20px; }
+  .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: repeating-linear-gradient(90deg, #8a5a32 0 64px, #7a4d2a 64px 66px), #8a5a32; border-top: 6px solid #c48a4c; }
+  .notes-deco { position: absolute; top: 70px; left: 50%; translate: -50%; color: #ffd76a55; font: 900 34px serif; letter-spacing: 40px; white-space: nowrap; }
+
+  /* Focos de turno */
+  .spot { position: absolute; top: 0; width: 360px; height: 480px; pointer-events: none; opacity: 0; transition: opacity .18s; background: radial-gradient(ellipse at 50% 100%, #fff4c0aa 0%, #fff4c033 40%, transparent 70%); clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); mix-blend-mode: screen; }
+  .spot.on { opacity: 1; }
+
+  /* Personajes y tambores (disposición «frente a frente» por defecto) */
+  .armonia { position: absolute; left: 40px; top: 150px; width: 250px; height: 250px; background: url("../public/assets/atlases/music-characters-v1.png") no-repeat 0% 100% / 500% 200%; filter: drop-shadow(0 6px 4px #0006); transition: transform .08s; z-index: 2; }
+  .noa { position: absolute; left: 700px; top: 175px; width: 175px; height: 242px; background: url("../public/assets/sprites/noa-rps-0.png") no-repeat center / contain; transform: scaleX(-1); filter: drop-shadow(0 6px 4px #0006); transition: transform .08s; z-index: 2; }
+  .noa.hit { transform: scaleX(-1) translateY(6px) rotate(-6deg); }
+  .noa.celebra { transform: scaleX(-1) translateY(-14px); }
+  .noa .hat { position: absolute; left: 30%; top: -4%; width: 44%; height: 20%; border: 4px solid var(--ink); border-bottom-width: 7px; border-radius: 6px 6px 2px 2px; background: linear-gradient(#ffffff 0 30%, #2c8b80 30% 100%); }
+  .noa .hat::after { content: ""; position: absolute; left: 40%; top: -60%; width: 20%; height: 70%; border-radius: 50% 50% 10% 10%; background: var(--gold); border: 3px solid var(--ink); }
+  .stick { position: absolute; width: 10px; height: 120px; border: 3px solid var(--ink); border-radius: 6px; background: #f2d39a; transform-origin: 50% 0; transition: transform .07s; z-index: 3; }
+  .stick::before { content: ""; position: absolute; left: -7px; bottom: -14px; width: 18px; height: 18px; border: 3px solid var(--ink); border-radius: 50%; background: #fff3dc; }
+  .drum-a { position: absolute; left: 240px; top: 330px; width: 180px; height: 132px; z-index: 3; }
+  .drum-n { position: absolute; left: 500px; top: 340px; width: 230px; height: 128px; background: url("../public/assets/atlases/armonia-rhythm-sprites-v1.png") no-repeat 100% 100% / 400% 200%; filter: drop-shadow(0 6px 4px #0006); z-index: 3; transition: transform .07s; }
+  .drum-a.hit svg, .drum-n.hit { transform: scale(1.05, .92); }
+  .drum-a svg { width: 100%; height: 100%; transition: transform .07s; filter: drop-shadow(0 6px 4px #0006); }
+
+  /* Huellas sobre el parche */
+  .prints { position: absolute; display: flex; gap: 8px; justify-content: center; z-index: 4; pointer-events: none; }
+  .print { width: 30px; height: 30px; border: 3px solid #ffffff55; border-radius: 50%; background: #0003; display: grid; place-items: center; font: 900 13px ui-monospace, monospace; color: #fff9; transition: transform .08s, background .1s; }
+  .prints .print:not(.on) { border: 3px dashed #2f1d3388; background: #fff6e366; color: #2f1d3388; }
+  .print.on { border-color: var(--gold); background: #ffd76a55; color: var(--ink); }
+  .print.k-a.on { border-color: #d6b0ff; background: #b98aff88; }
+  .print.now { transform: scale(1.3); }
+  .print.ok { background: #b9f1b1; border-color: #4caf50; color: #1f4a2c; }
+  .print.miss { background: #ffd2c8; border-color: #e37a6b; }
+
+  /* Pista de compás (alternativa a huellas) */
+  .track { position: absolute; left: 50%; bottom: 14px; translate: -50%; display: flex; gap: 10px; padding: 8px 14px; border: 4px solid var(--ink); border-radius: 14px; background: #fff6e3ee; z-index: 5; }
+  .track .print { width: 54px; height: 54px; border-color: #c9b8d6; background: #f2e8f8; color: #8a7a96; font-size: 18px; }
+  .track .print.on { background: var(--gold); border-color: #c99a1c; color: var(--ink); }
+  .track .print.k-a.on { background: #d6b0ff; border-color: var(--purple); }
+  .track .print.ok { background: #b9f1b1; border-color: #4caf50; }
+  .track .print.miss { background: #ffd2c8; border-color: #e37a6b; }
+
+  /* Luces de compás y bocadillos */
+  .bulbs { position: absolute; top: 58px; left: 50%; translate: -50%; display: flex; gap: 12px; z-index: 5; }
+  .bulb { width: 26px; height: 26px; border: 3px solid var(--ink); border-radius: 50%; background: #4a3a52; transition: transform .06s; }
+  .bulb.on { transform: scale(1.25); background: #fff4c0; box-shadow: 0 0 14px #fff4c0; }
+  .bulbs.call .bulb.on { background: #d6b0ff; box-shadow: 0 0 14px #b98aff; }
+  .bulbs.resp .bulb.on { background: var(--gold); box-shadow: 0 0 14px var(--gold); }
+  .bubble { position: absolute; padding: 4px 12px; border: 3px solid var(--ink); border-radius: 14px; background: var(--paper); color: var(--ink); font: 900 20px ui-monospace, monospace; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .12s, transform .12s; z-index: 6; }
+  .bubble.show { opacity: 1; transform: none; }
+  .bubble.a { left: 120px; top: 110px; }
+  .bubble.n { left: 690px; top: 128px; background: var(--gold); }
+  .feedback { position: absolute; left: 560px; top: 300px; padding: 3px 12px; border: 3px solid var(--ink); border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 20px ui-monospace, monospace; opacity: 0; transition: opacity .1s, transform .1s; z-index: 7; }
+  .feedback.miss { background: #ffd2c8; color: #6a2a22; }
+  .feedback.show { opacity: 1; transform: translateY(-12px); }
+
+  /* Atril con la partitura que se llena */
+  .stand { position: absolute; right: 20px; top: 14px; width: 214px; padding: 6px 8px 8px; border: 4px solid var(--ink); border-radius: 10px; background: var(--paper); color: var(--ink); z-index: 6; }
+  .stand b { display: block; font: 900 12px ui-monospace, monospace; text-align: center; }
+  .staff { position: relative; height: 40px; margin-top: 4px; background: repeating-linear-gradient(#0000 0 7px, #9b8aa8 7px 8px); display: flex; align-items: center; gap: 2px; padding: 0 4px; }
+  .staff i { flex: 1; height: 14px; border-radius: 50%; background: #e4d8ec; border: 2px solid #c9b8d6; transition: background .12s, transform .12s; }
+  .staff i.got { background: var(--gold); border-color: var(--ink); transform: scale(1.15); }
+  .staff .line { position: absolute; top: -4px; bottom: -4px; width: 4px; background: #e2a917; border-radius: 2px; }
+
+  /* Disposición «directora arriba» */
+  .stage.podio .armonia { left: 380px; top: 34px; width: 200px; height: 200px; }
+  .stage.podio .drum-a { left: 560px; top: 150px; width: 120px; height: 88px; }
+  .stage.podio .noa { left: 395px; top: 222px; width: 150px; height: 207px; transform: none; }
+  .stage.podio .noa.hit { transform: translateY(6px) rotate(6deg); }
+  .stage.podio .noa.celebra { transform: translateY(-14px); }
+  .stage.podio .drum-n { left: 370px; top: 380px; width: 220px; height: 124px; }
+  .stage.podio .bubble.a { left: 250px; top: 50px; }
+  .stage.podio .bubble.n { left: 560px; top: 280px; }
+  .stage.podio .bulbs { top: 14px; left: 180px; translate: 0; }
+  .stage.podio .feedback { left: 600px; top: 360px; }
+  .stage.podio .podium { display: block; }
+  .podium { display: none; position: absolute; left: 360px; top: 214px; width: 240px; height: 26px; border: 4px solid var(--ink); border-radius: 8px; background: linear-gradient(#c48a4c, #8a5a32); z-index: 1; }
+
+  .label { position: absolute; left: 160px; bottom: 104px; padding: 3px 9px; border-radius: 8px; background: #2f1d33cc; font: 700 12px ui-monospace, monospace; z-index: 6; }
+  .panel { display: grid; gap: 10px; margin-top: 12px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .row > span { min-width: 92px; color: #cdb9df; font-weight: 700; }
+  button { min-height: 40px; padding: 6px 14px; border: 3px solid #3b2647; border-radius: 10px; background: #f3e6cf; color: #2f1d33; font: 800 14px system-ui, sans-serif; cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--gold); box-shadow: inset 0 -4px 0 #0002; }
+  button.big { min-width: 180px; background: #ffb547; font-size: 16px; }
+  .hit-btn { width: 100%; min-height: 64px; font-size: 22px; background: var(--gold); }
+  .notes { margin: 12px 0 0; padding-left: 18px; color: #d8c8e8; }
+  .notes li { margin: 3px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>El tambor de Armonía · boceto de aspecto</h1>
+  <p class="lead">Armonía toca un patrón (llamada) y Noa lo repite en el compás siguiente (respuesta). Cambia las opciones y pulsa «Tocar». En modo «Juego yo», golpea con Espacio o con el botón.</p>
+
+  <div class="frame" id="frame">
+    <div class="stage" id="stage">
+      <div class="bg bg-teatro" id="bg-teatro"><div class="notes-deco">♪ ♫ ♪ ♫ ♪</div><div class="curtain l"></div><div class="curtain r"></div><div class="valance"></div><div class="floor"></div></div>
+      <div class="bg bg-mundo" id="bg-mundo" hidden><img src="../public/assets/worlds/music-background-v1.webp" alt=""></div>
+      <div class="bg" id="bg-pradera" hidden><img src="../public/assets/worlds/armonia-rhythm-background-v1.png" alt=""></div>
+
+      <div class="spot" id="spot-a"></div>
+      <div class="spot" id="spot-n"></div>
+      <div class="podium"></div>
+
+      <div class="armonia" id="armonia" role="img" aria-label="Maestra Armonía"></div>
+      <div class="drum-a" id="drum-a"><svg viewBox="0 0 180 132"><ellipse cx="90" cy="106" rx="80" ry="20" fill="#3c2150" stroke="#2f1d33" stroke-width="5"/><rect x="10" y="30" width="160" height="76" fill="#6b3d9a" stroke="#2f1d33" stroke-width="5"/><path d="M10 34 L50 102 L90 34 L130 102 L170 34" fill="none" stroke="#ffd76a" stroke-width="5"/><circle cx="50" cy="100" r="6" fill="#ffd76a" stroke="#2f1d33" stroke-width="3"/><circle cx="130" cy="100" r="6" fill="#ffd76a" stroke="#2f1d33" stroke-width="3"/><ellipse cx="90" cy="30" rx="80" ry="22" fill="#f7e7c6" stroke="#2f1d33" stroke-width="5"/></svg></div>
+      
+
+      <div class="noa" id="noa" role="img" aria-label="Noa tamborilera"><div class="hat"></div></div>
+      <div class="drum-n" id="drum-n" role="img" aria-label="Tambor de Noa"></div>
+      <div class="stick" id="stick-n"></div>
+
+      <div class="prints" id="prints-a"></div>
+      <div class="prints" id="prints-n"></div>
+      <div class="track" id="track" hidden></div>
+
+      <div class="bulbs" id="bulbs"><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div></div>
+      <div class="bubble a" id="bubble-a">¡Escucha!</div>
+      <div class="bubble n" id="bubble-n">¡Tu turno!</div>
+      <div class="feedback" id="feedback">¡Bien!</div>
+
+      <div class="stand" id="stand"><b>Atril de Armonía</b><div class="staff" id="staff"></div></div>
+      <div class="label" id="label">Pulsa «Tocar»</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row"><span>Disposición</span>
+      <button data-opt="layout" data-val="frente" aria-pressed="true">A · Frente a frente</button>
+      <button data-opt="layout" data-val="podio">B · Directora arriba</button></div>
+    <div class="row"><span>Escenario</span>
+      <button data-opt="bg" data-val="teatro" aria-pressed="true">Teatro con telón</button>
+      <button data-opt="bg" data-val="mundo">Mundo de la música</button>
+      <button data-opt="bg" data-val="pradera">Pradera actual</button></div>
+    <div class="row"><span>Ayuda</span>
+      <button data-opt="help" data-val="parche" aria-pressed="true">Huellas en el parche</button>
+      <button data-opt="help" data-val="pista">Pista de compás abajo</button>
+      <button data-opt="help" data-val="nada">Sin ayuda</button></div>
+    <div class="row"><span>Turno</span>
+      <button data-opt="spot" data-val="si" aria-pressed="true">Foco de luz</button>
+      <button data-opt="spot" data-val="no">Sin foco</button></div>
+    <div class="row"><span>Quién toca</span>
+      <button data-opt="who" data-val="demo" aria-pressed="true">Demostración</button>
+      <button data-opt="who" data-val="yo">Juego yo</button></div>
+    <div class="row"><button class="big" id="play">Tocar ▶</button><button id="stop">Parar</button></div>
+    <button class="hit-btn" id="hit">¡Golpea!</button>
+  </div>
+
+  <ul class="notes">
+    <li>Tempo de boceto: 100 pulsos por minuto, compás de 4, cuenta de 4. La canción, el tempo y los patrones definitivos se deciden en sus propios tickets.</li>
+    <li>El tambor de Armonía suena grave y redondo (timbal) y el de Noa más seco y brillante (tom). Cada golpe de Noa toca además la siguiente nota de la melodía.</li>
+    <li>Noa provisional: pose del duelo de piedra, papel o tijera, con gorro de banda y baqueta dibujados encima. Las poses del disfraz final se piden aparte.</li>
+  </ul>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), frame = $("frame");
+function fit() { stage.style.transform = `scale(${frame.clientWidth / 960})`; }
+addEventListener("resize", fit); fit();
+
+const opts = { layout: "frente", bg: "teatro", help: "parche", spot: "si", who: "demo" };
+document.querySelectorAll("[data-opt]").forEach((b) => b.addEventListener("click", () => {
+  opts[b.dataset.opt] = b.dataset.val;
+  document.querySelectorAll(`[data-opt="${b.dataset.opt}"]`).forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+  apply();
+}));
+function apply() {
+  stage.classList.toggle("podio", opts.layout === "podio");
+  ["teatro", "mundo", "pradera"].forEach((n) => { $(`bg-${n}`).hidden = opts.bg !== n; });
+  $("prints-a").hidden = $("prints-n").hidden = opts.help !== "parche";
+  $("track").hidden = opts.help !== "pista";
+  const podio = opts.layout === "podio";
+  $("prints-a").style.cssText = podio ? "left:560px; top:150px; transform: scale(.75); transform-origin: left top" : "left:262px; top:340px";
+  $("prints-n").style.cssText = podio ? "left:404px; top:388px" : "left:545px; top:352px";
+  $("stick-n").style.cssText = podio ? "left:448px; top:300px; transform: rotate(-12deg); height:96px" : "left:700px; top:282px; transform: rotate(32deg)";
+  $("spot-a").style.left = podio ? "300px" : "-20px";
+  $("spot-n").style.left = podio ? "300px" : "620px";
+  $("spot-n").style.top = podio ? "60px" : "0";
+}
+apply();
+
+// Huellas
+function makePrints(el, kind) { el.innerHTML = [1, 2, 3, 4].map((n) => `<div class="print ${kind}">${n}</div>`).join(""); }
+makePrints($("prints-a"), "k-a"); makePrints($("prints-n"), "k-n"); makePrints($("track"), "");
+
+// Partitura
+const PATTERNS = [[0, 2], [0, 2], [0, 1, 2], [0, 2, 3], [0, 1, 2, 3], [0, 2, 3]];
+const TOTAL = PATTERNS.flat().length, GOAL = Math.ceil(TOTAL * 0.55);
+$("staff").innerHTML = Array.from({ length: TOTAL }, () => "<i></i>").join("") + `<div class="line" style="left:${4 + (GOAL / TOTAL) * 190}px"></div>`;
+let score = 0;
+
+// Audio
+const BPM = 100, P = 60 / BPM, LOOK = 0.12;
+const MELODY = [523, 587, 659, 784, 659, 587, 523, 659, 784, 880, 784, 659, 587, 659, 523, 784, 880, 1047];
+let ctx = null, t0 = 0, running = false, sched = 0, noteIx = 0;
+function tone(t, f, d, type = "triangle", g = .15, to) {
+  if (!ctx) return; const o = ctx.createOscillator(), v = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (to) o.frequency.exponentialRampToValueAtTime(to, t + d);
+  v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.001, t + d);
+  o.connect(v).connect(ctx.destination); o.start(t); o.stop(t + d + .02);
+}
+function noise(t, d, g = .08, f = 6000) {
+  if (!ctx) return; const b = ctx.createBuffer(1, ctx.sampleRate * d, ctx.sampleRate), a = b.getChannelData(0);
+  for (let i = 0; i < a.length; i++) a[i] = Math.random() * 2 - 1;
+  const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), v = ctx.createGain();
+  s.buffer = b; fl.type = "highpass"; fl.frequency.value = f; v.gain.setValueAtTime(g, t); v.gain.exponentialRampToValueAtTime(.001, t + d);
+  s.connect(fl).connect(v).connect(ctx.destination); s.start(t);
+}
+const drumA = (t) => { tone(t, 150, .35, "sine", .5, 70); noise(t, .05, .05, 1500); };
+const drumN = (t) => { tone(t, 230, .2, "triangle", .4, 120); noise(t, .04, .12, 3000); tone(t, MELODY[noteIx++ % MELODY.length], .3, "square", .05); };
+const CHORDS = [[262, 330, 392], [220, 262, 330], [175, 220, 262], [196, 247, 294]];
+function accomp(t, pulse) {
+  noise(t, .03, .04, 8000); noise(t + P / 2, .03, .025, 8000);
+  const bar = Math.floor(pulse / 4), chord = CHORDS[bar % 4];
+  if (pulse % 4 === 0 || pulse % 4 === 2) tone(t, chord[0] / 2, P * .9, "triangle", .14);
+  if (pulse % 2 === 1) chord.forEach((f) => tone(t, f, .18, "sine", .03));
+}
+
+// Línea temporal: compás 0 = cuenta; luego llamada y respuesta alternas; al final, fiesta.
+const COUNT = 4, END_PULSE = COUNT + PATTERNS.length * 8 + 4;
+function where(pulse) {
+  if (pulse < COUNT) return { kind: "count", beat: Math.floor(pulse) };
+  const p = pulse - COUNT, pair = Math.floor(p / 8);
+  if (pair >= PATTERNS.length) return { kind: "end", beat: Math.floor(p % 4) };
+  const inPair = p % 8;
+  return { kind: inPair < 4 ? "call" : "resp", pair, beat: Math.floor(inPair % 4), frac: inPair % 4 };
+}
+let hits = {}; // `${pair}-${beat}` -> ok
+let judged = {};
+function now() { return ctx ? ctx.currentTime - t0 : performance.now() / 1000 - t0; }
+
+function start() {
+  stop();
+  if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { ctx = null; } }
+  if (ctx?.state === "suspended") ctx.resume();
+  t0 = (ctx ? ctx.currentTime : performance.now() / 1000) + .25;
+  running = true; sched = 0; noteIx = 0; score = 0; hits = {}; judged = {};
+  document.querySelectorAll(".staff i").forEach((i) => i.classList.remove("got"));
+  loop();
+}
+function stop() { running = false; ["spot-a", "spot-n", "bubble-a", "bubble-n"].forEach((i) => $(i).classList.remove("on", "show")); $("noa").classList.remove("celebra"); }
+$("play").onclick = start; $("stop").onclick = stop;
+
+function flash(el, cls, ms = 110) { el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
+function strike(who) {
+  if (who === "a") { flash($("drum-a"), "hit"); flash($("armonia"), "hit"); }
+  else { flash($("drum-n"), "hit"); flash($("noa"), "hit"); const s = $("stick-n"); s.style.transform += opts.layout === "podio" ? " rotate(-14deg)" : " rotate(14deg)"; setTimeout(apply, 100); }
+}
+function feedback(text, miss) { const f = $("feedback"); f.textContent = text; f.classList.toggle("miss", !!miss); f.classList.add("show"); setTimeout(() => f.classList.remove("show"), 380); }
+function addScore() { const i = document.querySelectorAll(".staff i")[score++]; if (i) i.classList.add("got"); }
+
+function schedule() {
+  const t = now();
+  while (sched < END_PULSE && sched * P < t + LOOK) {
+    const at = t0 + sched * P, w = where(sched);
+    if (ctx) {
+      accomp(at, sched);
+      if (w.kind === "count") tone(at, [392, 440, 494, 523][w.beat], .12, "sine", .12);
+      if (w.kind === "call" && PATTERNS[w.pair].includes(w.beat)) drumA(at);
+      if (w.kind === "resp" && opts.who === "demo" && PATTERNS[w.pair].includes(w.beat)) drumN(at);
+      if (w.kind === "end" && w.beat === 0) [523, 659, 784, 1047].forEach((f, k) => tone(at + k * .12, f, .3, "triangle", .12));
+    }
+    const pulse = sched; setTimeout(() => visualPulse(pulse), Math.max(0, (pulse * P - now()) * 1000));
+    sched++;
+  }
+}
+
+function setPrints(el, pat, curBeat, pair, show) {
+  [...el.children].forEach((c, b) => {
+    c.classList.toggle("on", show && pat.includes(b));
+    c.classList.toggle("now", show && b === curBeat);
+    const k = `${pair}-${b}`;
+    c.classList.toggle("ok", show && hits[k] === true);
+    c.classList.toggle("miss", show && judged[k] && hits[k] !== true);
+  });
+}
+
+function visualPulse(pulse) {
+  if (!running) return;
+  const w = where(pulse);
+  const bulbs = $("bulbs"); bulbs.className = `bulbs ${w.kind === "call" ? "call" : w.kind === "resp" ? "resp" : ""}`;
+  [...bulbs.children].forEach((b, i) => b.classList.toggle("on", i === w.beat));
+  const spot = opts.spot === "si";
+  $("spot-a").classList.toggle("on", spot && w.kind === "call");
+  $("spot-n").classList.toggle("on", spot && w.kind === "resp");
+  $("bubble-a").classList.toggle("show", w.kind === "call" && w.beat < 2);
+  $("bubble-n").classList.toggle("show", w.kind === "resp" && w.beat < 2);
+  const label = { count: `Cuenta: ${w.beat + 1}`, call: "Armonía toca…", resp: "¡Ahora Noa!", end: "¡Fiesta!" }[w.kind];
+  $("label").textContent = label;
+  if (w.kind === "call" || w.kind === "resp") {
+    const pat = PATTERNS[w.pair];
+    // Armonía: su parche muestra lo que toca en la llamada; en la respuesta, el de Noa conserva las huellas.
+    setPrints($("prints-a"), pat, w.kind === "call" ? w.beat : -1, -1, w.kind === "call");
+    setPrints($("prints-n"), pat, w.kind === "resp" ? w.beat : -1, w.pair, w.kind === "resp");
+    [...$("track").children].forEach((c, b) => { c.classList.toggle("k-a", w.kind === "call"); });
+    setPrints($("track"), pat, w.beat, w.kind === "resp" ? w.pair : -1, true);
+    if (w.kind === "call" && pat.includes(w.beat)) { strike("a"); $("armonia").style.backgroundPositionX = `${(w.beat % 2 ? 25 : 50)}%`; }
+    if (w.kind === "call" && !pat.includes(w.beat)) $("armonia").style.backgroundPositionX = "0%";
+    if (w.kind === "resp") {
+      $("armonia").style.backgroundPositionX = "75%";
+      if (opts.who === "demo" && pat.includes(w.beat)) { hits[`${w.pair}-${w.beat}`] = true; judged[`${w.pair}-${w.beat}`] = true; strike("n"); addScore(); feedback("¡Bien!"); setPrints($("prints-n"), pat, w.beat, w.pair, true); }
+      // al cerrar el pulso anterior en modo juego: si no hubo golpe, se marca escapado
+      if (opts.who === "yo") { const prev = w.beat - 1; if (prev >= 0 && pat.includes(prev) && !judged[`${w.pair}-${prev}`]) judged[`${w.pair}-${prev}`] = true; }
+    }
+  } else {
+    [$("prints-a"), $("prints-n"), $("track")].forEach((el) => setPrints(el, [], -1, -1, false));
+    $("armonia").style.backgroundPositionX = w.kind === "end" ? "100%" : "0%";
+    if (w.kind === "end") { $("noa").classList.add("celebra"); $("label").textContent = score >= GOAL ? "¡Bien hecho!" : "¡Casi!"; }
+  }
+}
+
+function playerHit() {
+  if (!running) return;
+  const pulse = now() / P, near = Math.round(pulse), w = where(near);
+  if (ctx) drumN(ctx.currentTime);
+  strike("n");
+  if (w.kind !== "resp" || Math.abs(pulse - near) > .3) { feedback("¡Uy!", true); return; }
+  const k = `${w.pair}-${w.beat}`;
+  if (PATTERNS[w.pair].includes(w.beat) && !hits[k]) { hits[k] = true; judged[k] = true; addScore(); feedback("¡Bien!"); }
+  else feedback("¡Uy!", true);
+}
+$("hit").onclick = playerHit;
+addEventListener("keydown", (e) => { if (e.code === "Space" && !e.repeat) { e.preventDefault(); playerHit(); } });
+
+function loop() { if (!running) return; schedule(); if (now() > END_PULSE * P + .5) { running = false; return; } requestAnimationFrame(loop); }
+</script>
+</body>
+</html>

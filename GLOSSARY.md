@@ -1,6 +1,6 @@
 # Super Noa
 
-Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de los minijuegos rítmicos: los gatitos leñadores y la abeja ninja. Los términos de **Ritmo** son comunes; los de **Piezas** y **Escena** son de los gatitos leñadores.
+Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja y el tambor de Armonía. Los términos de **Ritmo** son comunes; los de **Piezas** y **Escena** son de los gatitos leñadores.
 
 ## Ritmo
 
@@ -39,7 +39,7 @@ Pieza que se rompe con dos golpes en pulsos seguidos.
 _Avoid_: Pieza grande, rama grande
 
 **Golpe**:
-Una pulsación de la jugadora, que la gata leñadora convierte en un hachazo sobre la pieza.
+Una pulsación de la jugadora que se convierte en un golpe de percusión: un hachazo sobre la pieza en los gatitos leñadores, un golpe de baqueta en el tambor de Armonía.
 _Avoid_: Toque, tap, clic
 
 **Patrón**:
@@ -125,3 +125,29 @@ _Avoid_: Marcador, puntuación
 **Raya dorada**:
 Marca del tarro de miel que señala cuántas flores hay que cortar para ganar el duelo.
 _Avoid_: Meta, puntuación mínima
+
+## Tambor de Armonía
+
+**Tambor de Armonía**:
+Duelo rítmico de la Maestra Armonía en el que ella toca un patrón en su tambor y Noa lo repite en el suyo al compás siguiente.
+_Avoid_: Polillas, aterrizajes (el duelo anterior al que sustituye)
+
+**Llamada**:
+Compás en que la Maestra Armonía toca un patrón en su tambor para que la jugadora lo escuche y lo vea.
+_Avoid_: Demostración (reservado a la práctica), turno de Armonía
+
+**Respuesta**:
+Compás que sigue a una llamada, en que la jugadora repite el mismo patrón con sus golpes en el tambor de Noa.
+_Avoid_: Eco (era el duelo de secuencias de colores), turno de Noa
+
+**Noa tamborilera**:
+Noa vestida de banda de música, que golpea su tambor con las baquetas cada vez que la jugadora pulsa.
+_Avoid_: Tamborilero, batería
+
+**Huella**:
+Marca luminosa sobre el parche de un tambor que señala un pulso del patrón: llena si lleva golpe, discontinua si es silencio.
+_Avoid_: Bolita, nota (reservado a la melodía), casilla
+
+**Atril**:
+Pentagrama en un atril que se llena con una nota dorada por cada golpe acertado en la respuesta; su raya dorada marca el mínimo para ganar.
+_Avoid_: Partitura (reservado a la descripción de la canción), marcador

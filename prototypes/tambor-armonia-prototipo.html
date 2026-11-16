@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tambor de Armonía · prototipo jugable</title>
+<style>
+  :root { --gold: #ffd76a; --purple: #7b4fb0; --ink: #2f1d33; --paper: #fff6e3; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; min-height: 100vh; background: #1d1428; color: var(--paper); font: 15px/1.4 system-ui, sans-serif; }
+  main { width: min(980px, 100%); margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.5rem ui-monospace, monospace; }
+  .lead { margin: 0 0 12px; color: #d8c8e8; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 4px solid #3b2647; border-radius: 12px; background: #2a1830; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  .stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+
+  /* Teatro */
+  .bg { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, #5a2f6e 0%, #2a1534 70%); }
+  .curtain { position: absolute; top: 0; bottom: 70px; width: 150px; background: repeating-linear-gradient(90deg, #a3203a 0 18px, #7d1530 18px 30px, #b82a44 30px 40px); box-shadow: inset 0 -20px 30px #0006; }
+  .curtain.l { left: 0; border-radius: 0 0 90px 0; }
+  .curtain.r { right: 0; border-radius: 0 0 0 90px; }
+  .valance { position: absolute; top: 0; left: 0; right: 0; height: 46px; background: repeating-linear-gradient(90deg, #b82a44 0 40px, #8d1a34 40px 80px); border-bottom: 6px solid var(--gold); border-radius: 0 0 50% 50% / 0 0 20px 20px; }
+  .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: repeating-linear-gradient(90deg, #8a5a32 0 64px, #7a4d2a 64px 66px), #8a5a32; border-top: 6px solid #c48a4c; }
+  .notes-deco { position: absolute; top: 120px; left: 50%; translate: -50%; color: #ffd76a33; font: 900 34px serif; letter-spacing: 40px; white-space: nowrap; }
+
+  .spot { position: absolute; top: 0; width: 360px; height: 480px; pointer-events: none; opacity: 0; transition: opacity .18s; background: radial-gradient(ellipse at 50% 100%, #fff4c0aa 0%, #fff4c033 40%, transparent 70%); clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%); mix-blend-mode: screen; }
+  .spot.on { opacity: 1; }
+  #spot-a { left: -20px; } #spot-n { left: 620px; }
+
+  /* Personajes */
+  .armonia { position: absolute; left: 40px; top: 150px; width: 250px; height: 250px; background: url("../public/assets/atlases/music-characters-v1.png") no-repeat 0% 100% / 500% 200%; filter: drop-shadow(0 6px 4px #0006); transition: transform .08s; z-index: 2; }
+  .armonia.hit { transform: translateY(5px); }
+  .noa { position: absolute; left: 700px; top: 175px; width: 175px; height: 242px; z-index: 2; transition: transform .08s; transform: scaleX(-1); }
+  .noa .body { position: absolute; inset: 0; background: url("../public/assets/sprites/noa-rps-0.png") no-repeat center / contain; filter: drop-shadow(0 6px 4px #0006); }
+  .noa .hat { position: absolute; left: 30%; top: -4%; width: 44%; height: 20%; border: 4px solid var(--ink); border-bottom-width: 7px; border-radius: 6px 6px 2px 2px; background: linear-gradient(#ffffff 0 30%, #2c8b80 30% 100%); }
+  .noa .hat::after { content: ""; position: absolute; left: 40%; top: -60%; width: 20%; height: 70%; border-radius: 50% 50% 10% 10%; background: var(--gold); border: 3px solid var(--ink); }
+  .noa .ear { position: absolute; right: 2%; top: 14%; padding: 0 6px; border: 3px solid var(--ink); border-radius: 50%; background: var(--paper); color: var(--ink); font: 900 18px serif; transform: scaleX(-1); opacity: 0; transition: opacity .12s; }
+  .noa[data-pose="escucha"] .ear { opacity: 1; }
+  .noa[data-pose="escucha"] { transform: scaleX(-1) rotate(4deg); }
+  .noa[data-pose="golpe"] { transform: scaleX(-1) translateY(6px) rotate(-6deg); }
+  .noa[data-pose="celebra"] { transform: scaleX(-1) translateY(-16px); }
+  .stick { position: absolute; left: 700px; top: 282px; width: 10px; height: 120px; border: 3px solid var(--ink); border-radius: 6px; background: #f2d39a; transform-origin: 50% 0; transform: rotate(32deg); transition: transform .07s; z-index: 3; }
+  .stick::before { content: ""; position: absolute; left: -7px; bottom: -14px; width: 18px; height: 18px; border: 3px solid var(--ink); border-radius: 50%; background: #fff3dc; }
+  .stick.b { left: 760px; top: 290px; transform: rotate(18deg); }
+  .stage[data-noa="espera"] .stick { transform: rotate(70deg); }
+  .stage[data-noa="espera"] .stick.b { transform: rotate(60deg); }
+  .stage[data-noa="golpe"] .stick { transform: rotate(14deg); }
+  .stage[data-noa="escucha"] .stick { transform: rotate(40deg); }
+  .stage[data-noa="escucha"] .stick.b { transform: rotate(150deg); }
+  .stage[data-noa="celebra"] .stick { transform: rotate(150deg); }
+  .stage[data-noa="celebra"] .stick.b { transform: rotate(170deg); }
+
+  .drum-a { position: absolute; left: 240px; top: 330px; width: 180px; height: 132px; z-index: 3; }
+  .drum-a svg { width: 100%; height: 100%; transition: transform .07s; filter: drop-shadow(0 6px 4px #0006); }
+  .drum-a.hit svg, .drum-n.hit { transform: scale(1.05, .92); }
+  .drum-n { position: absolute; left: 500px; top: 340px; width: 230px; height: 128px; background: url("../public/assets/atlases/armonia-rhythm-sprites-v1.png") no-repeat 100% 100% / 400% 200%; filter: drop-shadow(0 6px 4px #0006); z-index: 3; transition: transform .07s; }
+  .drum-n.glow { filter: drop-shadow(0 0 16px #ffd76a) drop-shadow(0 6px 4px #0006); }
+
+  /* Huellas */
+  .prints { position: absolute; display: flex; gap: 8px; justify-content: center; z-index: 4; pointer-events: none; opacity: 0; transition: opacity .15s; }
+  .prints.show { opacity: 1; }
+  #prints-a { left: 262px; top: 340px; } #prints-n { left: 545px; top: 352px; }
+  .print { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font: 900 13px ui-monospace, monospace; transition: transform .08s, background .1s; border: 3px dashed #2f1d3388; background: #fff6e366; color: #2f1d3388; }
+  .print.on { border-style: solid; }
+  .k-a .print.on { border-color: #8e5cc8; background: #d6b0ffcc; color: var(--ink); }
+  .k-n .print.on { border-color: #c99a1c; background: #ffd76acc; color: var(--ink); }
+  .print.lit { transform: scale(1.35); box-shadow: 0 0 14px #fff; }
+  .print.now { transform: scale(1.2); }
+  .print.ok { background: #8fe07f !important; border-color: #2f8a3c !important; color: #123d1c !important; transform: scale(1.15); }
+  .print.gone { opacity: .45; }
+
+  /* Luces, bocadillos y respuesta */
+  .bulbs { position: absolute; top: 58px; left: 50%; translate: -50%; display: flex; gap: 12px; z-index: 5; }
+  .bulb { width: 26px; height: 26px; border: 3px solid var(--ink); border-radius: 50%; background: #4a3a52; transition: transform .06s; }
+  .bulb.on { transform: scale(1.25); background: #fff4c0; box-shadow: 0 0 14px #fff4c0; }
+  .bulbs.call .bulb.on { background: #d6b0ff; box-shadow: 0 0 14px #b98aff; }
+  .bulbs.resp .bulb.on { background: var(--gold); box-shadow: 0 0 14px var(--gold); }
+  .bubble { position: absolute; padding: 4px 12px; border: 3px solid var(--ink); border-radius: 14px; background: var(--paper); color: var(--ink); font: 900 20px ui-monospace, monospace; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .12s, transform .12s; z-index: 6; pointer-events: none; }
+  .bubble.show { opacity: 1; transform: none; }
+  #bubble-a { left: 120px; top: 110px; }
+  #bubble-n { left: 690px; top: 128px; background: var(--gold); }
+  .feedback { position: absolute; left: 560px; top: 290px; padding: 3px 12px; border: 3px solid var(--ink); border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 20px ui-monospace, monospace; opacity: 0; transition: opacity .1s, transform .1s; z-index: 7; pointer-events: none; }
+  .feedback.miss { background: #ffd2c8; color: #6a2a22; }
+  .feedback.show { opacity: 1; transform: translateY(-12px); }
+  .sparkle { position: absolute; z-index: 7; color: var(--gold); font: 900 22px serif; pointer-events: none; transition: transform .5s ease-out, opacity .5s; text-shadow: 0 0 6px #fff; }
+
+  /* Atril */
+  .stand { position: absolute; right: 20px; top: 14px; width: 250px; padding: 6px 8px 8px; border: 4px solid var(--ink); border-radius: 10px; background: var(--paper); color: var(--ink); z-index: 6; transition: transform .12s; }
+  .stand.bump { transform: scale(1.05); }
+  .stand b { display: block; font: 900 12px ui-monospace, monospace; text-align: center; }
+  .staff { position: relative; height: 44px; margin-top: 4px; background: repeating-linear-gradient(#0000 0 8px, #9b8aa8 8px 9px); display: flex; align-items: center; gap: 1px; padding: 0 3px; }
+  .staff i { flex: 1; height: 13px; border-radius: 50%; background: #e4d8ec; border: 2px solid #c9b8d6; transition: background .12s, transform .12s; }
+  .staff i.got { background: var(--gold); border-color: var(--ink); transform: scale(1.25) translateY(-3px); }
+  .staff .line { position: absolute; top: -5px; bottom: -5px; width: 4px; background: #e2a917; border-radius: 2px; }
+  .stand.reached { box-shadow: 0 0 22px var(--gold); }
+  .stand.reached .line { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+  .caption { position: absolute; left: 50%; bottom: 18px; translate: -50%; max-width: 640px; padding: 6px 16px; border: 3px solid var(--ink); border-radius: 12px; background: #fff6e3ee; color: var(--ink); font: 800 18px system-ui, sans-serif; text-align: center; opacity: 0; transition: opacity .2s; z-index: 6; pointer-events: none; }
+  .caption.show { opacity: 1; }
+  .phase { position: absolute; left: 160px; top: 14px; padding: 3px 9px; border-radius: 8px; background: #2f1d33cc; font: 700 12px ui-monospace, monospace; z-index: 6; }
+
+  .overlay { position: absolute; inset: 0; z-index: 20; display: grid; place-content: center; gap: 14px; padding: 40px; background: #1d1428d9; text-align: center; }
+  .overlay h2 { margin: 0; color: var(--gold); font: 900 46px ui-monospace, monospace; }
+  .overlay p { margin: 0 auto; max-width: 560px; font-size: 22px; }
+  .overlay button { min-height: 60px; min-width: 200px; font-size: 22px; }
+
+  .panel { display: grid; gap: 10px; margin-top: 12px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .center { justify-content: center; }
+  button { min-height: 40px; padding: 6px 14px; border: 3px solid #3b2647; border-radius: 10px; background: #f3e6cf; color: #2f1d33; font: 800 14px system-ui, sans-serif; cursor: pointer; }
+  button.primary { background: var(--gold); box-shadow: 0 0 0 4px #ffd76a55; }
+  button[aria-pressed="false"] { opacity: .6; }
+  .hit { width: 100%; min-height: 70px; font-size: 24px; background: var(--gold); }
+  .bigprints { display: none; justify-content: center; gap: 12px; }
+  .bigprints .print { width: 58px; height: 58px; font-size: 22px; border-width: 4px; }
+  .bigprints.k-a .print.on { border-color: #8e5cc8; background: #d6b0ff; color: var(--ink); }
+  .bigprints.k-n .print.on { border-color: #c99a1c; background: var(--gold); color: var(--ink); }
+  .bigprints.off .print { visibility: hidden; }
+  @media (max-width: 700px) { .bigprints { display: flex; } }
+  .help { margin: 0; color: #cdb9df; font-size: 13px; }
+  .stats { margin: 0; font: 700 13px ui-monospace, monospace; color: #fff3a8; }
+  .notes { margin: 6px 0 0; padding-left: 18px; color: #d8c8e8; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>El tambor de Armonía · prototipo jugable</h1>
+  <p class="lead">Armonía toca un patrón en su tambor (llamada) y tú lo repites en el de Noa en el compás siguiente (respuesta). 100 pulsos por minuto, 23 compases, 24 golpes. La música, la voz de los tambores y la Noa tamborilera son provisionales y originales.</p>
+
+  <div class="frame" id="frame">
+    <div class="stage" id="stage" data-noa="espera">
+      <div class="bg"><div class="notes-deco">♪ ♫ ♪ ♫ ♪</div><div class="curtain l"></div><div class="curtain r"></div><div class="valance"></div><div class="floor"></div></div>
+      <div class="spot" id="spot-a"></div>
+      <div class="spot" id="spot-n"></div>
+
+      <div class="armonia" id="armonia" role="img" aria-label="Maestra Armonía"></div>
+      <div class="drum-a" id="drum-a"><svg viewBox="0 0 180 132"><ellipse cx="90" cy="106" rx="80" ry="20" fill="#3c2150" stroke="#2f1d33" stroke-width="5"/><rect x="10" y="30" width="160" height="76" fill="#6b3d9a" stroke="#2f1d33" stroke-width="5"/><path d="M10 34 L50 102 L90 34 L130 102 L170 34" fill="none" stroke="#ffd76a" stroke-width="5"/><circle cx="50" cy="100" r="6" fill="#ffd76a" stroke="#2f1d33" stroke-width="3"/><circle cx="130" cy="100" r="6" fill="#ffd76a" stroke="#2f1d33" stroke-width="3"/><ellipse cx="90" cy="30" rx="80" ry="22" fill="#f7e7c6" stroke="#2f1d33" stroke-width="5"/></svg></div>
+
+      <div class="noa" id="noa" data-pose="espera" role="img" aria-label="Noa tamborilera"><div class="body"></div><div class="hat"></div><div class="ear">♪</div></div>
+      <div class="drum-n" id="drum-n" role="img" aria-label="Tambor de Noa"></div>
+      <div class="stick" id="stick-1"></div>
+      <div class="stick b" id="stick-2"></div>
+
+      <div class="prints k-a" id="prints-a"></div>
+      <div class="prints k-n" id="prints-n"></div>
+
+      <div class="bulbs" id="bulbs"><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div></div>
+      <div class="bubble" id="bubble-a">¡Escucha!</div>
+      <div class="bubble" id="bubble-n">¡Tu turno!</div>
+      <div class="feedback" id="feedback">¡Bien!</div>
+      <div id="fx"></div>
+
+      <div class="stand" id="stand"><b>Atril de Armonía</b><div class="staff" id="staff"></div></div>
+      <span class="phase" id="phase"></span>
+      <div class="caption" id="caption"></div>
+
+      <div class="overlay" id="menu">
+        <h2>El tambor de Armonía</h2>
+        <p>Armonía toca su tambor. ¡Escucha y repite sus golpes en el tambor de Noa!</p>
+        <div class="row center">
+          <button id="menuPractice" data-start="demo">Practicar</button>
+          <button id="menuPlay" data-start="song">¡A jugar!</button>
+        </div>
+      </div>
+      <div class="overlay" id="pauseBox" hidden>
+        <h2>En pausa</h2>
+        <p>La canción espera en el mismo punto. Al seguir, Armonía cuenta hasta cuatro.</p>
+        <div class="row center"><button class="primary" id="resume">Seguir</button><button id="pauseLeave">Volver al mapa</button></div>
+      </div>
+      <div class="overlay" id="leaveBox" hidden>
+        <h2>¿Volver al mapa?</h2>
+        <p>Podrás tocar con Armonía otra vez cuando quieras.</p>
+        <div class="row center"><button class="primary" id="leaveNo">Seguir jugando</button><button id="leaveYes">Sí, volver al mapa</button></div>
+      </div>
+      <div class="overlay" id="endBox" hidden>
+        <h2 id="endTitle"></h2>
+        <p id="endText"></p>
+        <div class="row center" id="endButtons"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="bigprints off" id="bigprints"></div>
+    <button class="hit" id="hit">¡Golpea!</button>
+    <div class="row">
+      <button id="pause">Pausa</button>
+      <button id="sound" aria-pressed="true">Sonido</button>
+      <button id="leave">Volver al mapa</button>
+      <span class="help" id="clockInfo">Reloj: —</span>
+    </div>
+    <p class="stats" id="stats"></p>
+    <p class="help">Espacio, toque en la escena o botón A del mando. Mantener pulsado cuenta una sola vez. Al ocultar la pestaña o perder el foco, la canción se detiene y espera a «Seguir». La línea amarilla de arriba es solo para probar: el juego final no muestra números.</p>
+    <ul class="notes">
+      <li>Fase 1 «Golpes sueltos»: 1 · 1 3 · 1 3. Fase 2 «Golpes seguidos»: 1 2 · 2 3 · 1 2 3 · 1 3. Fase 3 «¡Todo el compás!»: 1 3 4 · 1 2 4 · 1 2 3 4.</li>
+      <li>Margen de medio pulso. Los «¡Uy!» no restan. Durante la llamada, los golpes suenan flojito y no cuentan.</li>
+      <li>Se gana con 12 de 24 (raya dorada). Con 24 de 24 se consigue el marco de notas.</li>
+    </ul>
+    <p class="help" id="scoreCheck"></p>
+  </div>
+</main>
+
+<script>
+// ============ Partitura (decisiones «Acordar los patrones…» y «Fijar la canción…») ============
+const BPM = 100, BEAT = 60 / BPM, WINDOW = 0.5, WIN_AT = 12;
+const pair = (phase, hits) => ({ phase, hits });
+const PHASES = { 1: "Golpes sueltos", 2: "Golpes seguidos", 3: "¡Todo el compás!" };
+const SCORES = {
+  song: { closing: 2, auto: false, pairs: [
+    pair(1, [1]), pair(1, [1, 3]), pair(1, [1, 3]),
+    pair(2, [1, 2]), pair(2, [2, 3]), pair(2, [1, 2, 3]), pair(2, [1, 3]),
+    pair(3, [1, 3, 4]), pair(3, [1, 2, 4]), pair(3, [1, 2, 3, 4]),
+  ] },
+  demo: { closing: 1, auto: true, pairs: [pair(1, [1, 3]), pair(2, [1, 2, 3])] },
+  practice: { closing: 1, auto: false, pairs: [pair(1, [1]), pair(1, [1, 3]), pair(2, [1, 2, 3])] },
+};
+const barsOf = (s) => 1 + s.pairs.length * 2 + s.closing;
+const hitsIn = (s) => s.pairs.reduce((n, p) => n + p.hits.length, 0);
+// Pulsos absolutos (0 = primer pulso de la cuenta). Par k: llamada en el compás 2+2k, respuesta en 3+2k.
+const callStart = (k) => 4 + k * 8, respStart = (k) => 8 + k * 8;
+function where(pulse, s) {
+  if (pulse < 4) return { kind: "count", beat: pulse };
+  const p = pulse - 4, k = Math.floor(p / 8);
+  if (k >= s.pairs.length) return { kind: "end", beat: ((p % 4) + 4) % 4 };
+  const inPair = p % 8;
+  return { kind: inPair < 4 ? "call" : "resp", k, beat: inPair % 4 };
+}
+function checkScore(s) {
+  const e = [];
+  s.pairs.forEach((p, k) => {
+    if (!p.hits.length) e.push(`par ${k + 1} sin golpes`);
+    if (p.hits.some((h) => !Number.isInteger(h) || h < 1 || h > 4)) e.push(`par ${k + 1} con pulso fuera del compás`);
+    if (p.phase < 3 && p.hits.includes(4)) e.push(`par ${k + 1}: el pulso 4 debe quedar libre para el aviso de turno`);
+    if (k && s.pairs[k - 1].phase > p.phase) e.push(`par ${k + 1}: fase hacia atrás`);
+  });
+  return e;
+}
+const report = () => Object.entries(SCORES).map(([n, s]) => { const e = checkScore(s); return `${n}: ${barsOf(s)} compases (~${Math.round(barsOf(s) * 4 * BEAT)} s), ${hitsIn(s)} golpes, ${e.length ? "ERRORES: " + e.join("; ") : "reglas OK"}`; }).join(" · ");
+
+// ============ Sonido «marcha de teatro» (todo sintetizado y original) ============
+const hz = (m) => 440 * 2 ** ((m - 69) / 12);
+// Do mayor: do · fa · sol · do, un acorde por compás.
+const CHORDS = [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55]];
+// Armonía deja la frase abierta (sube hacia sol) y Noa la cierra (baja hacia do).
+const CALL_NOTES = { 1: [55], 2: [52, 55], 3: [48, 52, 55], 4: [48, 52, 55, 59] };
+const RESP_NOTES = { 1: [84], 2: [79, 84], 3: [79, 76, 72], 4: [81, 79, 76, 72] };
+let ctx = null, master = null, bus = null, noiseBuf = null;
+function ensureAudio() {
+  if (ctx) return ctx;
+  try {
+    ctx = new AudioContext();
+    master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.6, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    newBus();
+  } catch { ctx = null; }
+  return ctx;
+}
+function newBus() { if (bus) { try { bus.disconnect(); } catch { /* ya desconectado */ } } bus = ctx.createGain(); bus.connect(master); }
+function voice(freq, when, dur, type = "triangle", vol = 0.08, glideTo, out = bus) {
+  if (!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, when);
+  if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, when + dur);
+  g.gain.setValueAtTime(0.0001, when); g.gain.exponentialRampToValueAtTime(vol, when + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  o.connect(g).connect(out); o.start(when); o.stop(when + dur + 0.03);
+}
+function hiss(when, dur, vol, type = "highpass", freq = 6000, out = bus) {
+  if (!ctx) return;
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = noiseBuf; f.type = type; f.frequency.value = freq;
+  g.gain.setValueAtTime(vol, when); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  s.connect(f).connect(g).connect(out); s.start(when); s.stop(when + dur + 0.02);
+}
+const tuba = (m, when, vol = 0.16) => { voice(hz(m), when, BEAT * 0.45, "triangle", vol); voice(hz(m) * 2, when, BEAT * 0.2, "sine", vol * 0.25); };
+const glock = (m, when, vol = 0.07, out) => { voice(hz(m), when, 0.6, "sine", vol, undefined, out); voice(hz(m) * 4, when, 0.12, "sine", vol * 0.3, undefined, out); };
+const xylo = (m, when, vol = 0.14, out) => { voice(hz(m), when, 0.28, "triangle", vol, undefined, out); voice(hz(m) * 3, when, 0.06, "sine", vol * 0.4, undefined, out); };
+const brush = (when, vol = 0.05) => hiss(when, 0.12, vol, "bandpass", 2500);
+const clap = (when, vol = 0.06) => { hiss(when, 0.04, vol, "bandpass", 1400); hiss(when + 0.015, 0.06, vol * 0.8, "bandpass", 1200); };
+const cymbal = (when, vol = 0.07) => hiss(when, 1.1, vol, "highpass", 5000);
+const tin = (when) => { voice(2637, when, 0.5, "sine", 0.08); voice(3951, when, 0.3, "sine", 0.04); };
+// Timbal de Armonía: grave, redondo y afinado en la nota de su frase.
+const timbal = (m, when) => { voice(hz(m), when, 0.55, "sine", 0.42, hz(m) * 0.92); hiss(when, 0.05, 0.05, "lowpass", 900); };
+// Tambor de banda de Noa: seco y brillante. «soft» para golpes que no cuentan.
+const snare = (when, soft, out = master) => { voice(240, when, 0.16, "triangle", soft ? 0.12 : 0.32, 150, out); hiss(when, 0.12, soft ? 0.04 : 0.12, "bandpass", 3200, out); };
+const baton = (when, first) => voice(first ? 1568 : 1175, when, 0.08, "square", 0.04);
+function latency() { return ctx ? Math.min(0.25, (ctx.outputLatency || 0) + (ctx.baseLatency || 0)) : 0; }
+
+// ============ Estado ============
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), frame = $("frame");
+const game = { mode: null, score: null, running: false, paused: false, counting: 0, ended: false, clock: "frame", songStart: 0, frameStart: 0, pausedAt: 0, pausedCtx: 0, pausedTotal: 0, nextEighth: 0, lastPulse: -99, got: 0, uy: 0, hits: {}, padDown: false, visited: false, applauded: false };
+function fit() { stage.style.transform = `scale(${frame.clientWidth / 960})`; }
+addEventListener("resize", fit); fit();
+function pulseNow() {
+  if (game.clock === "audio") return ((game.paused ? game.pausedCtx : ctx.currentTime) - game.songStart - latency()) / BEAT;
+  return ((game.paused ? game.pausedAt : performance.now()) - game.frameStart - game.pausedTotal) / 1000 / BEAT;
+}
+
+function scheduleMusic() {
+  if (game.clock !== "audio" || !game.running || game.paused) return;
+  const s = game.score, horizon = ctx.currentTime + 0.25, total = barsOf(s) * 8;
+  while (game.nextEighth < total) {
+    const e = game.nextEighth, when = game.songStart + e * BEAT / 2;
+    if (when > horizon) break;
+    game.nextEighth++;
+    if (when < ctx.currentTime - 0.02) continue;
+    const onPulse = e % 2 === 0, pulse = Math.floor(e / 2), w = where(pulse, s), bar = Math.floor(pulse / 4), chord = CHORDS[bar % 4];
+    if (w.kind === "count") { if (onPulse) { baton(when, w.beat === 0); brush(when, 0.03); } continue; }
+    if (w.kind === "end") { // fanfarria con platillos
+      const idx = e - (1 + s.pairs.length * 2) * 8;
+      const arp = [60, 64, 67, 72, 76, 79, 84];
+      if (idx < arp.length) glock(arp[idx], when, 0.08);
+      if (idx === 0 || idx === 8) cymbal(when, 0.09);
+      if (onPulse && idx < 8) tuba(chord[0] - 12, when, 0.14);
+      if (idx === 8) { [72, 76, 79, 84].forEach((m) => xylo(m, when, 0.09)); tuba(36, when, 0.2); }
+      continue;
+    }
+    // Acompañamiento: tuba saltarina en 1 y 3, quinta en el «y» del 2 y 4; escobillas en 2 y 4.
+    if (onPulse && (w.beat === 0 || w.beat === 2)) tuba(chord[0] - 12 + (w.beat === 2 ? 7 : 0), when, 0.13);
+    if (onPulse && (w.beat === 1 || w.beat === 3)) brush(when, w.kind === "call" ? 0.035 : 0.05);
+    if (!onPulse) hiss(when, 0.025, 0.012);
+    if (w.kind === "resp" && !onPulse && (w.beat === 1 || w.beat === 3)) clap(when, 0.03);
+    if (w.kind === "resp" && onPulse && w.beat === 0) chord.forEach((m) => glock(m + 12, when, 0.018));
+    const pat = s.pairs[w.k].hits;
+    if (w.kind === "call" && onPulse) {
+      const i = pat.indexOf(w.beat + 1);
+      if (i >= 0) timbal(CALL_NOTES[pat.length][i], when);
+      if (w.beat === 3) tin(when);
+    }
+    if (w.kind === "resp" && onPulse && s.auto) { const i = pat.indexOf(w.beat + 1); if (i >= 0) { snare(when, false, bus); xylo(RESP_NOTES[pat.length][i], when, 0.14, bus); } }
+  }
+}
+
+// ============ Escena ============
+function makePrints(el) { el.innerHTML = [1, 2, 3, 4].map((n) => `<div class="print">${n}</div>`).join(""); }
+makePrints($("prints-a")); makePrints($("prints-n")); makePrints($("bigprints"));
+function buildStaff(total) {
+  $("staff").innerHTML = Array.from({ length: total }, () => "<i></i>").join("") + (game.mode !== "demo" && game.mode !== "practice" ? `<div class="line" style="left:${3 + (WIN_AT / total) * 228}px"></div>` : "");
+}
+let poseTimer = 0, armTimer = 0, fbTimer = 0;
+function noaPose(name, ms = 0) { $("noa").dataset.pose = name; stage.dataset.noa = name; clearTimeout(poseTimer); if (ms) poseTimer = setTimeout(() => noaPose(game.restPose || "espera"), ms); }
+function armonia(col, ms = 0) { const a = $("armonia"); a.style.backgroundPosition = `${col * 25}% 100%`; clearTimeout(armTimer); if (ms) armTimer = setTimeout(() => (a.style.backgroundPosition = `${(game.restCol ?? 0) * 25}% 100%`), ms); }
+function bubble(id, text, ms) { const b = $(id); b.textContent = text; b.classList.add("show"); clearTimeout(b._t); if (ms) b._t = setTimeout(() => b.classList.remove("show"), ms); }
+function hideBubble(id) { $(id).classList.remove("show"); }
+function feedback(text, miss) { const f = $("feedback"); f.textContent = text; f.classList.toggle("miss", !!miss); f.classList.add("show"); clearTimeout(fbTimer); fbTimer = setTimeout(() => f.classList.remove("show"), 340); }
+function flash(el, cls, ms = 110) { el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
+function sparkle() {
+  for (let i = 0; i < 4; i++) {
+    const s = document.createElement("div"); s.className = "sparkle"; s.textContent = i % 2 ? "✦" : "♪";
+    Object.assign(s.style, { left: `${600 + Math.random() * 40}px`, top: `${350}px` }); $("fx").appendChild(s);
+    requestAnimationFrame(() => requestAnimationFrame(() => { s.style.transform = `translate(${(Math.random() - 0.5) * 120}px, ${-80 - Math.random() * 60}px)`; s.style.opacity = 0; }));
+    setTimeout(() => s.remove(), 560);
+  }
+}
+function setPrints(el, pat, opts) {
+  el.classList.toggle("show", !!pat);
+  [...el.children].forEach((c, b) => {
+    const pulse = b + 1;
+    c.classList.toggle("on", !!pat && pat.includes(pulse));
+    c.classList.toggle("lit", !!pat && opts.lit === pulse);
+    c.classList.toggle("now", !!pat && opts.now === pulse);
+    c.classList.toggle("ok", !!pat && !!opts.ok?.(pulse));
+    c.classList.toggle("gone", !!pat && !!opts.gone?.(pulse));
+  });
+}
+function bigPrints(kind, pat, opts) { const el = $("bigprints"); el.className = `bigprints ${pat ? kind : "off"}`; setPrints(el, pat, opts); }
+function stats() { $("stats").textContent = `Aciertos: ${game.got} de ${hitsIn(game.score ?? SCORES.song)} · «¡Uy!»: ${game.uy} · raya dorada: ${WIN_AT}`; }
+function addNote() {
+  const i = $("staff").querySelectorAll("i")[game.got - 1]; if (i) i.classList.add("got");
+  flash($("stand"), "bump", 140);
+  if (game.mode === "song" && game.got >= WIN_AT && !game.applauded) { game.applauded = true; $("stand").classList.add("reached"); armonia(4, 900); bubble("bubble-a", "¡Bravo!", 1100); }
+  stats();
+}
+
+// ============ Golpe de Noa ============
+const key = (k, pulse) => `${k}-${pulse}`;
+function noaStrike() { noaPose("golpe", 120); flash($("drum-n"), "hit"); }
+function press() {
+  if (!game.running || game.paused || game.counting || game.ended || game.score.auto) return;
+  const t = pulseNow(), near = Math.round(t), w = where(near, game.score);
+  const now = ctx && game.clock === "audio" ? ctx.currentTime + 0.003 : 0;
+  noaStrike();
+  if (w.kind !== "resp") { if (now) snare(now, true); return; } // en la llamada, la cuenta o el cierre: flojito y sin contar
+  const pat = game.score.pairs[w.k].hits, pulse = w.beat + 1, i = pat.indexOf(pulse), k = key(w.k, pulse);
+  if (i < 0 || Math.abs(t - near) > WINDOW || game.hits[k]) { if (now) snare(now, true); game.uy++; feedback("¡Uy!", true); stats(); return; }
+  game.hits[k] = true; game.got++;
+  if (now) { snare(now, false); xylo(RESP_NOTES[pat.length][i], now, 0.16, master); }
+  feedback("¡Bien!"); sparkle(); $("drum-n").classList.add("glow"); setTimeout(() => $("drum-n").classList.remove("glow"), 160);
+  addNote(); refreshPrints(t);
+}
+
+// ============ Bucle ============
+const CAPTIONS = () => ({
+  demo: [[0, "Mira: Armonía toca y Noa repite."], [callStart(0), "Escucha a Armonía… ¡tin! te avisa."], [respStart(0), "Noa repite los mismos golpes."], [callStart(1), "Ahora tres golpes seguidos."], [respStart(1), "¡Noa los repite igual!"]],
+  practice: [[0, "¡Ahora tú! Escucha la cuenta de Armonía."], [callStart(0), "Escucha y mira las huellas."], [respStart(0), "¡Tu turno! Golpea como Armonía."], [callStart(1), ""]],
+  song: [[0, "¡Que empiece el concierto!"], [4, ""]],
+});
+let captionShown = "";
+function refreshPrints(t) {
+  const s = game.score, pulse = Math.floor(t + 0.001), w = where(pulse, s), frac = t - pulse;
+  if (w.kind === "call") {
+    const pat = s.pairs[w.k].hits, litPulse = pat.includes(w.beat + 1) && frac < 0.45 ? w.beat + 1 : 0;
+    setPrints($("prints-a"), pat, { lit: litPulse, now: w.beat + 1 });
+    setPrints($("prints-n"), null, {});
+    bigPrints("k-a", pat, { lit: litPulse, now: w.beat + 1 });
+  } else if (w.kind === "resp") {
+    const pat = s.pairs[w.k].hits, opts = { now: Math.round(t) - respStart(w.k) + 1, ok: (p) => game.hits[key(w.k, p)], gone: (p) => pat.includes(p) && !game.hits[key(w.k, p)] && t > respStart(w.k) + p - 1 + WINDOW };
+    setPrints($("prints-a"), null, {}); setPrints($("prints-n"), pat, opts); bigPrints("k-n", pat, opts);
+  } else { setPrints($("prints-a"), null, {}); setPrints($("prints-n"), null, {}); bigPrints("", null, {}); }
+}
+function onPulse(pulse) {
+  const s = game.score, w = where(pulse, s);
+  $("bulbs").className = `bulbs ${w.kind === "call" ? "call" : w.kind === "resp" ? "resp" : ""}`;
+  [...$("bulbs").children].forEach((b, i) => b.classList.toggle("on", i === w.beat));
+  $("spot-a").classList.toggle("on", w.kind === "call");
+  $("spot-n").classList.toggle("on", w.kind === "resp");
+  if (w.kind === "count") { bubble("bubble-a", String(w.beat + 1), 380); armonia(w.beat % 2 ? 2 : 1, 250); game.restCol = 0; }
+  if (w.kind === "call") {
+    const pat = s.pairs[w.k].hits;
+    if (w.beat === 0) { bubble("bubble-a", "¡Escucha!", BEAT * 2000); hideBubble("bubble-n"); game.restPose = "escucha"; noaPose("escucha"); }
+    if (pat.includes(w.beat + 1)) { armonia(w.beat % 2 ? 1 : 2, 200); flash($("drum-a"), "hit"); flash($("armonia"), "hit"); }
+    if (w.beat === 3) { game.restCol = 3; armonia(3); bubble("bubble-a", "¡tin!", 500); } // gesto de «te toca»
+  }
+  if (w.kind === "resp") {
+    if (w.beat === 0) { bubble("bubble-n", "¡Tu turno!", BEAT * 2000); game.restPose = "espera"; noaPose("espera"); game.restCol = 0; armonia(0); }
+    const pat = s.pairs[w.k].hits;
+    if (s.auto && pat.includes(w.beat + 1) && !game.hits[key(w.k, w.beat + 1)]) { // demostración: Noa responde sola
+      game.hits[key(w.k, w.beat + 1)] = true; game.got++; noaStrike(); feedback("¡Bien!"); sparkle(); addNote();
+    }
+  }
+  if (w.kind === "end") {
+    hideBubble("bubble-a"); hideBubble("bubble-n");
+    if (w.beat === 0) { game.restPose = "celebra"; noaPose("celebra"); game.restCol = 4; armonia(4); }
+  }
+  const phase = w.k !== undefined ? PHASES[s.pairs[w.k].phase] : w.kind === "count" ? "Cuenta" : "Cierre";
+  $("phase").textContent = `Compás ${Math.floor(pulse / 4) + 1} de ${barsOf(s)} · ${phase}`;
+}
+let loopId = 0;
+function tick(id) {
+  if (!game.running || id !== loopId) return;
+  const next = () => requestAnimationFrame(() => tick(id));
+  if (game.counting) { next(); return; }
+  if (!game.paused) {
+    scheduleMusic();
+    const t = pulseNow(), pulse = Math.floor(t);
+    if (t >= 0 && pulse !== game.lastPulse) { for (let p = Math.max(0, game.lastPulse + 1); p <= pulse; p++) onPulse(p); game.lastPulse = pulse; }
+    if (t >= 0) refreshPrints(t);
+    const cap = CAPTIONS()[game.mode].filter(([p]) => t >= p).at(-1)?.[1] ?? "";
+    if (cap !== captionShown) { captionShown = cap; $("caption").textContent = cap; $("caption").classList.toggle("show", !!cap); }
+    const pad = navigator.getGamepads?.().find(Boolean), down = Boolean(pad?.buttons[0]?.pressed);
+    if (down && !game.padDown) press(); game.padDown = down;
+    if (t >= barsOf(game.score) * 4) return finish();
+  }
+  next();
+}
+
+// ============ Ciclo ============
+async function start(mode) {
+  Object.assign(game, { mode, score: SCORES[mode], running: true, paused: false, counting: 0, ended: false, lastPulse: -1, got: 0, uy: 0, hits: {}, nextEighth: 0, pausedTotal: 0, applauded: false, restPose: "espera", restCol: 0 });
+  if (mode === "song") game.visited = true;
+  for (const id of ["menu", "endBox", "pauseBox", "leaveBox"]) $(id).hidden = true;
+  $("stand").classList.remove("reached"); buildStaff(hitsIn(game.score)); noaPose("espera"); armonia(0); stats();
+  ensureAudio();
+  let audioOk = false;
+  if (ctx) { try { await Promise.race([ctx.resume(), new Promise((r) => setTimeout(r, 400))]); audioOk = ctx.state === "running"; } catch { audioOk = false; } }
+  game.clock = audioOk ? "audio" : "frame";
+  if (audioOk) { newBus(); game.songStart = ctx.currentTime + 0.15; master.gain.value = $("sound").getAttribute("aria-pressed") === "true" ? 0.9 : 0; }
+  game.frameStart = performance.now() + 150;
+  $("clockInfo").textContent = audioOk ? `Reloj: audio (latencia descontada ${Math.round(latency() * 1000)} ms)` : "Reloj: fotogramas (sin audio)";
+  const id = ++loopId; requestAnimationFrame(() => tick(id));
+}
+function endButtons(list) {
+  const box = $("endButtons"); box.innerHTML = "";
+  list.forEach(([label, fn], i) => { const b = document.createElement("button"); b.textContent = label; if (i === 0) b.className = "primary"; b.addEventListener("click", fn); box.appendChild(b); });
+}
+function finish() {
+  game.ended = true; game.running = false; captionShown = ""; $("caption").classList.remove("show");
+  for (const id of ["spot-a", "spot-n"]) $(id).classList.remove("on");
+  refreshPrints(-1);
+  const total = hitsIn(game.score);
+  if (game.mode === "song") {
+    const perfect = game.got === total, won = game.got >= WIN_AT;
+    $("endTitle").textContent = perfect ? "¡Perfecto!" : won ? "¡Bien hecho!" : "¡Casi!";
+    $("endText").textContent = perfect ? "¡No se ha escapado ni un golpe! Armonía te regala su marco de notas." : won ? "Las notas del atril han pasado la raya dorada. ¡Armonía está muy contenta!" : "Las notas aún no llegan a la raya dorada. Armonía quiere tocar otra vez contigo.";
+    if (won) { noaPose("celebra"); armonia(4); } else { noaPose("espera"); armonia(3); }
+    endButtons(won ? [["Continuar", toMenu], ["Jugar otra vez", () => start("song")]] : [["Intentar otra vez", () => start("song")], ["Practicar", () => start("demo")], ["Volver al mapa", askLeave]]);
+    console.info("[tambor-armonia] resultado", { aciertos: game.got, uy: game.uy, victoria: won, reto: perfect });
+  } else if (game.mode === "demo") {
+    $("endTitle").textContent = "¡Ya lo has visto!"; $("endText").textContent = "Ahora ensaya tú, o empieza el concierto.";
+    endButtons([["Ensayar", () => start("practice")], ["¡A jugar!", () => start("song")]]);
+  } else {
+    $("endTitle").textContent = "¡Buen ensayo!"; $("endText").textContent = "Puedes ensayar otra vez o empezar el concierto.";
+    endButtons([["¡A jugar!", () => start("song")], ["Ensayar otra vez", () => start("practice")]]);
+  }
+  setTimeout(() => { $("endBox").hidden = false; }, game.mode === "song" ? 900 : 300);
+}
+function pause() {
+  if (!game.running || game.paused || game.ended || game.counting) return;
+  game.paused = true; game.pausedAt = performance.now();
+  if (game.clock === "audio") { game.pausedCtx = ctx.currentTime; newBus(); void ctx.suspend(); }
+  $("pauseBox").hidden = false;
+}
+// Al seguir, Armonía cuenta 4 pulsos con la escena congelada y la canción continúa en el mismo punto.
+async function resume() {
+  if (!game.paused) return;
+  $("pauseBox").hidden = true;
+  const countMs = 4 * BEAT * 1000, frozen = pulseNow();
+  game.counting = 1;
+  if (game.clock === "audio") {
+    await ctx.resume();
+    const t0 = ctx.currentTime + 0.05;
+    for (let i = 0; i < 4; i++) baton(t0 + i * BEAT, i === 0);
+    game.songStart += (t0 + 4 * BEAT) - game.pausedCtx;
+    game.nextEighth = Math.max(0, Math.ceil((frozen + latency() / BEAT) * 2));
+  } else {
+    game.pausedTotal += performance.now() - game.pausedAt + countMs;
+  }
+  game.paused = false;
+  for (let i = 0; i < 4; i++) setTimeout(() => { bubble("bubble-a", String(i + 1), 380); armonia(i % 2 ? 2 : 1, 250); }, 50 + i * BEAT * 1000);
+  setTimeout(() => { game.counting = 0; }, countMs + 50);
+}
+function toMenu() {
+  game.running = false; game.paused = false; game.counting = 0; if (ctx?.state === "suspended") void ctx.resume(); if (ctx) newBus();
+  for (const id of ["pauseBox", "endBox", "leaveBox"]) $(id).hidden = true;
+  for (const id of ["spot-a", "spot-n"]) $(id).classList.remove("on");
+  $("menu").hidden = false; $("caption").classList.remove("show"); captionShown = ""; noaPose("espera"); armonia(0); refreshPrints(-1);
+  $("menuPractice").classList.toggle("primary", !game.visited); $("menuPlay").classList.toggle("primary", game.visited);
+}
+let leaveFrom = null;
+function askLeave() { if (game.running && !game.paused && !game.ended) pause(); leaveFrom = !$("pauseBox").hidden ? "pause" : !$("endBox").hidden ? "end" : null; for (const id of ["pauseBox", "endBox"]) $(id).hidden = true; $("leaveBox").hidden = false; }
+function cancelLeave() { $("leaveBox").hidden = true; if (leaveFrom === "end") $("endBox").hidden = false; else if (game.paused) $("pauseBox").hidden = false; else if (!game.running) $("menu").hidden = false; }
+document.querySelectorAll("[data-start]").forEach((b) => b.addEventListener("click", () => start(b.dataset.start)));
+$("resume").addEventListener("click", resume);
+$("pause").addEventListener("click", pause);
+$("pauseLeave").addEventListener("click", askLeave);
+$("leave").addEventListener("click", askLeave);
+$("leaveNo").addEventListener("click", cancelLeave);
+$("leaveYes").addEventListener("click", toMenu);
+$("sound").addEventListener("click", (e) => { const on = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", String(on)); if (master) master.gain.value = on ? 0.9 : 0; });
+$("hit").addEventListener("pointerdown", (e) => { e.preventDefault(); press(); });
+frame.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; press(); });
+addEventListener("keydown", (e) => { if (e.code !== "Space" || e.repeat) return; if (e.target instanceof HTMLButtonElement && e.target.id !== "hit") return; e.preventDefault(); press(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
+addEventListener("blur", pause);
+$("scoreCheck").textContent = "Partituras · " + report();
+game.score = SCORES.song; buildStaff(24); toMenu(); stats();
+window.__tambor = { respStart, game, SCORES, checkScore, hitsIn, pulseNow, press, start, where };
+</script>
+</body>
+</html>

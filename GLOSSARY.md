@@ -121,3 +121,7 @@ _Avoid_: Golpe (reservado a los gatitos), toque
 **Tarro de miel**:
 Recipiente que se va llenando con los pétalos de cada flor cortada.
 _Avoid_: Marcador, puntuación
+
+**Raya dorada**:
+Marca del tarro de miel que señala cuántas flores hay que cortar para ganar el duelo.
+_Avoid_: Meta, puntuación mínima

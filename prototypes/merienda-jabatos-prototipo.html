@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La merienda de los jabatos · prototipo jugable</title>
+<style>
+  :root { --gold: #ffd76a; --ink: #2f1d33; --paper: #fff6e3; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; min-height: 100vh; background: #1d2416; color: var(--paper); font: 15px/1.4 system-ui, sans-serif; }
+  main { width: min(980px, 100%); margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.5rem ui-monospace, monospace; }
+  .lead { margin: 0 0 12px; color: #d9e6c8; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 4px solid #2c3a1e; border-radius: 12px; background: #2a3a20; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+  .stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+
+  /* Bosque */
+  .bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.95) brightness(.8) blur(2px); }
+  .ground { position: absolute; left: 0; right: 0; bottom: 0; height: 110px; background: linear-gradient(#7a5a32, #5d4224); border-top: 6px solid #9b7442; }
+  .ground::before { content: ""; position: absolute; inset: -14px 0 auto; height: 18px; background: radial-gradient(circle at 10px 18px, #5f9a40 0 10px, transparent 11px) 0 0 / 22px 18px repeat-x; }
+
+  /* Gran Jabalí */
+  .boss { position: absolute; left: 560px; top: 40px; width: 150px; height: 258px; background: url("../public/assets/sprites/boss-gran-jabali-0.png") no-repeat center / contain; filter: drop-shadow(0 6px 4px #0006); transition: transform .08s; z-index: 1; }
+  .boss.call { background-image: url("../public/assets/sprites/boss-gran-jabali-3.png"); }
+  .boss.bob { transform: translateY(-8px) scale(1.04); }
+  .rock { position: absolute; left: 548px; top: 270px; width: 175px; height: 40px; border: 4px solid var(--ink); border-radius: 50% 50% 14px 14px; background: linear-gradient(#a59c8c, #7b7366); z-index: 1; }
+
+  /* Noa guarda del bosque (provisional) */
+  .noa { position: absolute; left: 90px; top: 196px; width: 186px; height: 257px; background: url("../public/assets/sprites/noa-rps-0.png") no-repeat center / contain; filter: drop-shadow(0 6px 4px #0006); transition: transform .08s; z-index: 3; }
+  .noa[data-pose="feed"] { transform: translateX(12px) rotate(4deg); }
+  .noa[data-pose="oops"] { transform: rotate(-4deg); }
+  .noa[data-pose="celebra"] { transform: translateY(-14px); }
+  .noa .apron { position: absolute; left: 33%; top: 52%; width: 33%; height: 30%; border: 4px solid var(--ink); border-radius: 6px 6px 40% 40%; background: repeating-linear-gradient(90deg, #f6efe0 0 8px, #e9c9a0 8px 10px); }
+  .noa .hat { position: absolute; left: 14%; top: 3%; width: 68%; height: 15%; border: 4px solid var(--ink); border-radius: 50% 50% 8px 8px / 80% 80% 8px 8px; background: #6b8a3a; }
+  .noa .hat::after { content: ""; position: absolute; left: -16%; right: -16%; bottom: -24%; height: 30%; border: 4px solid var(--ink); border-radius: 50%; background: #58762c; }
+  .basket { position: absolute; left: 34px; top: 380px; width: 96px; height: 64px; z-index: 4; }
+  .hand-food { position: absolute; left: 248px; top: 262px; width: 40px; height: 40px; z-index: 5; opacity: 0; pointer-events: none; }
+  .hand-food.go { animation: give .16s ease-out; }
+  @keyframes give { 0% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translate(112px, 40px) scale(.8); } }
+
+  /* Arbusto y jabato */
+  .spot { position: absolute; left: 300px; top: 282px; width: 190px; height: 170px; z-index: 2; }
+  .bush { position: absolute; left: -10px; right: -10px; bottom: -6px; height: 82px; z-index: 3; }
+  .hole { position: absolute; left: -20px; right: -20px; top: -60px; bottom: 24px; overflow: hidden; z-index: 2; }
+  .jabato { position: absolute; left: 45px; bottom: 30px; width: 140px; height: 120px; transform: translateY(105%); transition: transform .16s cubic-bezier(.3, 1.4, .5, 1); }
+  .jabato.big { left: 20px; width: 190px; height: 160px; bottom: 26px; }
+  .jabato.up { transform: translateY(0); }
+  .jabato.chomp svg { animation: chomp .22s; }
+  .jabato.sad svg { animation: sad .4s; }
+  @keyframes chomp { 40% { transform: scale(1.1, .88); } }
+  @keyframes sad { 30% { transform: rotate(-8deg); } 70% { transform: rotate(8deg); } }
+  .count { position: absolute; left: 50%; top: -84px; translate: -50%; display: flex; gap: 6px; align-items: center; z-index: 4; }
+  .dot { width: 22px; height: 22px; border: 3px solid var(--ink); border-radius: 50%; background: #fff6e380; transition: transform .08s; }
+  .dot.bite { width: 28px; height: 30px; border-radius: 50% 50% 46% 46%; background: #e8dcc6; }
+  .dot.bite.big { width: 34px; height: 34px; }
+  .dot.on { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+  .dot.bite.on { background: radial-gradient(circle at 50% 22%, #6b4423 0 32%, #c47a2c 33%); box-shadow: 0 0 12px #ff9d3a; transform: scale(1.25); }
+  .dot.bite.big.on { background: radial-gradient(circle at 50% 70%, #e9c9a0 0 22%, #8a4a1e 23%); }
+  .dot.ok { background: #8fe07f !important; border-color: #2f8a3c; transform: none; box-shadow: none; }
+  .dot.gone { opacity: .4; transform: none; box-shadow: none; }
+  .bounce { position: absolute; width: 34px; height: 34px; z-index: 6; animation: bounce .6s forwards; pointer-events: none; }
+  @keyframes bounce { to { transform: translate(60px, 80px) rotate(260deg); opacity: 0; } }
+
+  /* Bocadillos, luces y avisos */
+  .bubble { position: absolute; padding: 4px 12px; border: 3px solid var(--ink); border-radius: 14px; background: var(--paper); color: var(--ink); font: 900 22px ui-monospace, monospace; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity .1s, transform .1s; z-index: 6; pointer-events: none; }
+  .bubble.show { opacity: 1; transform: none; }
+  #bubble-boss { left: 430px; top: 90px; }
+  #bubble-boss.big { background: #ffd6a0; font-size: 26px; }
+  .yum { position: absolute; left: 470px; top: 300px; padding: 2px 10px; border: 3px solid var(--ink); border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 20px ui-monospace, monospace; opacity: 0; transition: opacity .1s, transform .1s; z-index: 7; pointer-events: none; white-space: nowrap; }
+  .yum.miss { background: #ffd2c8; color: #6a2a22; }
+  .yum.show { opacity: 1; transform: translateY(-14px); }
+  .bulbs { position: absolute; top: 18px; left: 50%; translate: -50%; display: flex; gap: 12px; z-index: 5; }
+  .bulb { width: 24px; height: 24px; border: 3px solid var(--ink); border-radius: 50%; background: #4a5a3a; transition: transform .06s; }
+  .bulb.on { transform: scale(1.25); background: #fff4c0; box-shadow: 0 0 14px #fff4c0; }
+  .sparkle { position: absolute; z-index: 7; color: var(--gold); font: 900 22px serif; pointer-events: none; transition: transform .5s ease-out, opacity .5s; text-shadow: 0 0 6px #fff; }
+
+  /* Rama de bellotas */
+  .score { position: absolute; right: 16px; top: 14px; width: 250px; padding: 6px 8px 8px; border: 4px solid var(--ink); border-radius: 10px; background: var(--paper); color: var(--ink); z-index: 6; transition: transform .12s, box-shadow .2s; }
+  .score b { display: block; font: 900 12px ui-monospace, monospace; text-align: center; }
+  .score.bump { transform: scale(1.05); }
+  .score.reached { box-shadow: 0 0 22px var(--gold); }
+  .branch { position: relative; height: 38px; margin-top: 4px; display: flex; align-items: center; justify-content: center; gap: 1px; padding: 0 4px; background: linear-gradient(transparent 16px, #8a5a32 16px 22px, transparent 22px); }
+  .branch i { flex: 0 1 18px; height: 18px; border-radius: 50% 50% 45% 45%; background: #e8dcc6; border: 2px solid #c9b89c; transition: background .12s, transform .12s; }
+  .branch i.got { background: radial-gradient(circle at 50% 25%, #6b4423 0 30%, #c47a2c 31%); border-color: var(--ink); transform: scale(1.15); }
+  .branch .line { position: absolute; top: -2px; bottom: -2px; width: 4px; background: #e2a917; border-radius: 2px; }
+  .score.reached .line { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+  .caption { position: absolute; left: 50%; bottom: 18px; translate: -50%; max-width: 640px; padding: 6px 16px; border: 3px solid var(--ink); border-radius: 12px; background: #fff6e3ee; color: var(--ink); font: 800 18px system-ui, sans-serif; text-align: center; opacity: 0; transition: opacity .2s; z-index: 6; pointer-events: none; }
+  .caption.show { opacity: 1; }
+  .phase { position: absolute; left: 16px; top: 14px; padding: 3px 9px; border-radius: 8px; background: #2f1d33cc; font: 700 12px ui-monospace, monospace; z-index: 6; }
+
+  .overlay { position: absolute; inset: 0; z-index: 20; display: grid; place-content: center; gap: 14px; padding: 40px; background: #1d2416d9; text-align: center; }
+  .overlay h2 { margin: 0; color: var(--gold); font: 900 46px ui-monospace, monospace; }
+  .overlay p { margin: 0 auto; max-width: 600px; font-size: 22px; }
+  .overlay button { min-height: 60px; min-width: 200px; font-size: 22px; }
+
+  .panel { display: grid; gap: 10px; margin-top: 12px; }
+  .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .center { justify-content: center; }
+  button { min-height: 40px; padding: 6px 14px; border: 3px solid #2c3a1e; border-radius: 10px; background: #f3e6cf; color: #2f1d33; font: 800 14px system-ui, sans-serif; cursor: pointer; }
+  button.primary { background: var(--gold); box-shadow: 0 0 0 4px #ffd76a55; }
+  button[aria-pressed="false"] { opacity: .6; }
+  .hit { width: 100%; min-height: 70px; font-size: 24px; background: var(--gold); touch-action: manipulation; }
+  .bigcount { display: none; justify-content: center; align-items: center; gap: 12px; min-height: 52px; }
+  .bigcount .dot { width: 40px; height: 40px; border-width: 4px; }
+  .bigcount .dot.bite { width: 48px; height: 52px; }
+  @media (max-width: 700px) { .bigcount { display: flex; } }
+  .help { margin: 0; color: #c8dab4; font-size: 13px; }
+  .stats { margin: 0; font: 700 13px ui-monospace, monospace; color: #fff3a8; }
+  .notes { margin: 6px 0 0; padding-left: 18px; color: #d9e6c8; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>La merienda de los jabatos · prototipo jugable</h1>
+  <p class="lead">El Gran Jabalí llama a sus jabatos con un gruñido. Cuando el jabato abre la boca del todo, ¡dale su bocado! 100 pulsos por minuto, 23 compases, 23 bocados. La música, los jabatos y la Noa guarda del bosque son provisionales y originales.</p>
+
+  <div class="frame" id="frame">
+    <div class="stage" id="stage">
+      <img class="bg" src="../public/assets/worlds/world-4-hd-v1.webp" alt="">
+      <div class="ground"></div>
+      <div class="rock"></div>
+      <div class="boss" id="boss" role="img" aria-label="Gran Jabalí"></div>
+      <div class="bubble" id="bubble-boss"></div>
+
+      <div class="noa" id="noa" data-pose="espera" role="img" aria-label="Noa guarda del bosque"><div class="hat"></div><div class="apron"></div></div>
+      <svg class="basket" viewBox="0 0 96 64"><path d="M14 22 Q48 -14 82 22" fill="none" stroke="#2f1d33" stroke-width="8"/><path d="M14 22 Q48 -14 82 22" fill="none" stroke="#c48a4c" stroke-width="4"/><circle cx="32" cy="22" r="10" fill="#c47a2c" stroke="#2f1d33" stroke-width="3"/><circle cx="52" cy="18" r="10" fill="#c47a2c" stroke="#2f1d33" stroke-width="3"/><circle cx="68" cy="24" r="9" fill="#8a4a1e" stroke="#2f1d33" stroke-width="3"/><path d="M6 24 H90 L80 60 H16 Z" fill="#c48a4c" stroke="#2f1d33" stroke-width="5"/><path d="M12 36 H84 M14 48 H82" stroke="#8a5a32" stroke-width="4"/></svg>
+      <div class="hand-food" id="handFood"></div>
+
+      <div class="spot" id="spot">
+        <div class="count" id="count"></div>
+        <div class="hole"><div class="jabato" id="jabato"></div></div>
+        <div class="bush" id="bush"></div>
+      </div>
+      <div class="yum" id="yum">¡Ñam!</div>
+      <div id="fx"></div>
+
+      <div class="bulbs" id="bulbs"><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div><div class="bulb"></div></div>
+      <div class="score" id="score" role="img" aria-label="Rama de bellotas"><b>Bellotas de la merienda</b><div class="branch" id="branch"></div></div>
+      <span class="phase" id="phase"></span>
+      <div class="caption" id="caption"></div>
+
+      <div class="overlay" id="menu">
+        <h2>La merienda de los jabatos</h2>
+        <p>Los jabatos tienen hambre. Cuando el Gran Jabalí gruña, ¡dales su bellota al compás!</p>
+        <div class="row center">
+          <button id="menuPractice" data-start="demo">Practicar</button>
+          <button id="menuPlay" data-start="song">¡A jugar!</button>
+        </div>
+      </div>
+      <div class="overlay" id="pauseBox" hidden>
+        <h2>En pausa</h2>
+        <p>La merienda espera en el mismo punto. Al seguir, el Gran Jabalí cuenta hasta cuatro.</p>
+        <div class="row center"><button class="primary" id="resume">Seguir</button><button id="pauseLeave">Volver al mapa</button></div>
+      </div>
+      <div class="overlay" id="leaveBox" hidden>
+        <h2>¿Volver al mapa?</h2>
+        <p>Podrás volver a dar de merendar a los jabatos cuando quieras.</p>
+        <div class="row center"><button class="primary" id="leaveNo">Seguir jugando</button><button id="leaveYes">Sí, volver al mapa</button></div>
+      </div>
+      <div class="overlay" id="endBox" hidden>
+        <h2 id="endTitle"></h2>
+        <p id="endText"></p>
+        <div class="row center" id="endButtons"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="bigcount" id="bigcount"></div>
+    <button class="hit" id="hit">¡Dale de comer!</button>
+    <div class="row">
+      <button id="pause">Pausa</button>
+      <button id="sound" aria-pressed="true">Sonido</button>
+      <button id="leave">Volver al mapa</button>
+      <span class="help" id="clockInfo">Reloj: —</span>
+    </div>
+    <p class="stats" id="stats"></p>
+    <p class="help">Espacio, toque en la escena o botón A del mando. Mantener pulsado cuenta una sola vez. Al ocultar la pestaña o perder el foco, la merienda se detiene y espera a «Seguir». La línea amarilla de arriba es solo para probar: el juego final no muestra números.</p>
+    <ul class="notes">
+      <li>Jabato pequeño: «¡gru!» y bellota 2 pulsos después. Grande: «¡gruuuu!» y castaña 4 pulsos después. Glotón (solo fase 3): «¡gru-gru!» y dos bellotas en pulsos seguidos.</li>
+      <li>Fase 1 «Bellotas tranquilas» (6 compases), fase 2 «¡Llega el grande!» (7) y fase 3 «¡Merienda glotona!» (7). Margen de medio pulso; pulsar de más solo hace «fsss» y no resta.</li>
+      <li>Se gana con la mitad de los bocados (raya dorada). Si ningún jabato se queda con hambre, se consigue el marco de bellotas.</li>
+    </ul>
+    <p class="help" id="scoreCheck"></p>
+  </div>
+</main>
+
+<script>
+// ============ Partitura (decisiones «Acordar los patrones…» y «Fijar la canción…») ============
+const BPM = 100, BEAT = 60 / BPM, WINDOW = 0.5, COUNT = 4;
+const TYPES = { s: { name: "pequeño", bites: [2], food: "acorn", call: "¡Gru!" }, b: { name: "grande", bites: [4], food: "chestnut", call: "¡GRUUUU!" }, g: { name: "glotón", bites: [2, 3], food: "acorn", call: "¡Gru-gru!" } };
+const PHASES = { 1: "Bellotas tranquilas", 2: "¡Llega el grande!", 3: "¡Merienda glotona!" };
+// [fase, pulso de la llamada contado desde el primer pulso de la merienda, tipo]
+const SONG = [
+  [1, 0, "s"], [1, 4, "s"], [1, 8, "s"], [1, 12, "s"], [1, 16, "s"], [1, 20, "s"],
+  [2, 24, "s"], [2, 28, "b"], [2, 34, "s"], [2, 38, "s"], [2, 42, "b"], [2, 47, "s"], [2, 50, "s"],
+  [3, 53, "s"], [3, 56, "g"], [3, 60, "b"], [3, 65, "s"], [3, 68, "g"], [3, 72, "s"], [3, 75, "g"],
+];
+const make = (list, bars, closing, auto) => {
+  const events = list.map(([phase, call, type], i) => ({ i, phase, type, call: COUNT + call, bites: TYPES[type].bites.map((d) => COUNT + call + d) }));
+  return { events, bars, closing, auto, total: events.reduce((n, e) => n + e.bites.length, 0) };
+};
+const SCORES = {
+  song: make(SONG, 20, 2, false),
+  demo: make([[1, 0, "s"], [2, 4, "b"]], 3, 1, true),
+  practice: make([[1, 0, "s"], [1, 4, "s"], [2, 8, "b"]], 4, 1, false),
+};
+const barsOf = (s) => 1 + s.bars + s.closing;
+const goalOf = (s) => Math.ceil(s.total / 2);
+function checkScore(s) {
+  const e = []; let lastBite = -1, run = 0;
+  s.events.forEach((ev, k) => {
+    if (ev.call <= lastBite) e.push(`jabato ${k + 1}: se solapa con el anterior`);
+    if (ev.type === "g" && ev.phase < 3) e.push(`jabato ${k + 1}: el glotón solo sale en la fase 3`);
+    if (ev.type === "b" && ev.phase < 2) e.push(`jabato ${k + 1}: el grande sale desde la fase 2`);
+    if (k && s.events[k - 1].phase > ev.phase) e.push(`jabato ${k + 1}: fase hacia atrás`);
+    if (ev.bites.at(-1) >= COUNT + s.bars * 4) e.push(`jabato ${k + 1}: come después de la merienda`);
+    run = ev.call === lastBite + 1 ? run : 0; lastBite = ev.bites.at(-1);
+  });
+  return e;
+}
+const report = () => Object.entries(SCORES).map(([n, s]) => { const e = checkScore(s); return `${n}: ${barsOf(s)} compases (~${Math.round(barsOf(s) * 4 * BEAT)} s), ${s.total} bocados, mínimo ${goalOf(s)}, ${e.length ? "ERRORES: " + e.join("; ") : "reglas OK"}`; }).join(" · ");
+const phaseAt = (s, pulse) => { const rel = pulse - COUNT; if (rel < 0) return "Cuenta"; if (rel >= s.bars * 4) return "Cierre"; return PHASES[s.events.filter((e) => e.call <= pulse).at(-1)?.phase ?? 1]; };
+
+// ============ Sonido «merendero del bosque» (sintetizado y original) ============
+const hz = (m) => 440 * 2 ** ((m - 69) / 12);
+// Fa mayor: Fa · Si♭ · Do · Fa, un acorde por compás.
+const CHORDS = [[53, 57, 60], [58, 62, 65], [60, 64, 67], [53, 57, 60]];
+const OCARINA = [[72, 0, 2], [69, 2, 2], [70, 4, 3], [74, 8, 2], [72, 10, 2], [67, 12, 3], [69, 16, 4]]; // [nota, octavo, octavos] en 2 compases
+let ctx = null, master = null, bus = null, noiseBuf = null;
+function ensureAudio() {
+  if (ctx) return ctx;
+  try {
+    ctx = new AudioContext();
+    master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 0.8, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    newBus();
+  } catch { ctx = null; }
+  return ctx;
+}
+function newBus() { if (bus) { try { bus.disconnect(); } catch { /* ya desconectado */ } } bus = ctx.createGain(); bus.connect(master); }
+function voice(freq, when, dur, type = "triangle", vol = 0.08, glideTo, out = bus, attack = 0.006) {
+  if (!ctx) return;
+  const o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, when);
+  if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, when + dur);
+  g.gain.setValueAtTime(0.0001, when); g.gain.exponentialRampToValueAtTime(vol, when + attack); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  o.connect(g).connect(out); o.start(when); o.stop(when + dur + 0.03);
+}
+function hiss(when, dur, vol, type = "highpass", freq = 6000, out = bus) {
+  if (!ctx) return;
+  const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  s.buffer = noiseBuf; f.type = type; f.frequency.value = freq;
+  g.gain.setValueAtTime(vol, when); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  s.connect(f).connect(g).connect(out); s.start(when); s.stop(when + dur + 0.02);
+}
+const bass = (m, when) => { voice(hz(m), when, BEAT * 0.7, "triangle", 0.18); voice(hz(m) * 2, when, 0.08, "sine", 0.04); };
+const pluck = (m, when, vol = 0.045) => { voice(hz(m), when, 0.22, "triangle", vol, undefined, bus, 0.002); voice(hz(m) * 2, when, 0.06, "square", vol * 0.15, undefined, bus, 0.002); };
+const wood = (when, vol = 0.07) => { voice(1250, when, 0.05, "sine", vol); hiss(when, 0.02, vol * 0.5, "bandpass", 2500); };
+function ocarina(m, when, dur, vol = 0.05) {
+  if (!ctx) return;
+  const o = ctx.createOscillator(), lfo = ctx.createOscillator(), lg = ctx.createGain(), g = ctx.createGain();
+  o.type = "sine"; o.frequency.value = hz(m); lfo.frequency.value = 5.2; lg.gain.value = hz(m) * 0.006;
+  lfo.connect(lg).connect(o.frequency);
+  g.gain.setValueAtTime(0.0001, when); g.gain.exponentialRampToValueAtTime(vol, when + 0.07); g.gain.setValueAtTime(vol, when + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  o.connect(g).connect(bus); o.start(when); lfo.start(when); o.stop(when + dur + 0.03); lfo.stop(when + dur + 0.03);
+}
+const kalimba = (m, when, vol = 0.16, out = master) => { voice(hz(m), when, 0.7, "sine", vol, undefined, out, 0.002); voice(hz(m) * 5.4, when, 0.08, "sine", vol * 0.25, undefined, out, 0.002); };
+const bells = (when, vol = 0.05) => { [2740, 3620, 4980].forEach((f, k) => voice(f, when + k * 0.02, 0.3, "sine", vol * (1 - k * 0.2))); };
+const flute = (m, when, dur) => ocarina(m, when, dur, 0.07);
+// Llamada del Gran Jabalí: gruñido (sierra filtrada con caída de tono) y frufrú del arbusto.
+function grunt(when, big, out = bus) {
+  if (!ctx) return;
+  const reps = big ? [[0, 0.5]] : [[0, 0.18]];
+  for (const [at, dur] of reps) {
+    const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    o.type = "sawtooth"; o.frequency.setValueAtTime(big ? 110 : 165, when + at); o.frequency.exponentialRampToValueAtTime(big ? 72 : 120, when + at + dur);
+    f.type = "lowpass"; f.frequency.value = big ? 700 : 1000;
+    g.gain.setValueAtTime(0.0001, when + at); g.gain.exponentialRampToValueAtTime(0.22, when + at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, when + at + dur);
+    o.connect(f).connect(g).connect(out); o.start(when + at); o.stop(when + at + dur + 0.03);
+  }
+  hiss(when, big ? 0.35 : 0.2, 0.06, "lowpass", 500, out);
+}
+const rustle = (when) => { hiss(when, 0.18, 0.05, "bandpass", 3500); hiss(when + 0.06, 0.14, 0.04, "bandpass", 2800); };
+const tic = (when) => voice(2100, when, 0.04, "sine", 0.05);
+const munch = (when, big, out = master) => { hiss(when, 0.05, big ? 0.32 : 0.22, "bandpass", big ? 1200 : 1800, out); hiss(when + 0.09, 0.05, big ? 0.26 : 0.18, "bandpass", big ? 1000 : 1500, out); };
+const toc = (when) => { voice(880, when, 0.06, "sine", 0.08); voice(620, when + 0.12, 0.06, "sine", 0.06); };
+const sadGrunt = (when) => voice(190, when, 0.25, "triangle", 0.07, 140);
+const fsss = (when) => hiss(when, 0.12, 0.05, "highpass", 4000, master);
+const hoof = (when, first) => { voice(first ? 300 : 220, when, 0.07, "triangle", 0.12); hiss(when, 0.03, 0.05, "lowpass", 800); };
+function latency() { return ctx ? Math.min(0.25, (ctx.outputLatency || 0) + (ctx.baseLatency || 0)) : 0; }
+// La nota de kalimba de cada bocado completa la melodía: una nota del acorde del compás, en orden.
+let leadIx = 0;
+function biteNote(pulse, big) { const chord = CHORDS[Math.floor(pulse / 4) % 4]; const m = [chord[2] + 12, chord[1] + 12, chord[0] + 24][leadIx++ % 3]; return big ? m - 12 : m; }
+
+// ============ Estado ============
+const $ = (id) => document.getElementById(id);
+const stage = $("stage"), frame = $("frame");
+const game = { mode: null, score: null, running: false, paused: false, counting: 0, ended: false, clock: "frame", songStart: 0, frameStart: 0, pausedAt: 0, pausedCtx: 0, pausedTotal: 0, nextEighth: 0, lastPulse: -99, got: 0, extra: 0, fed: {}, missed: {}, padDown: false, visited: false, cheered: false };
+function fit() { stage.style.transform = `scale(${frame.clientWidth / 960})`; }
+addEventListener("resize", fit); fit();
+function pulseNow() {
+  if (game.clock === "audio") return ((game.paused ? game.pausedCtx : ctx.currentTime) - game.songStart - latency()) / BEAT;
+  return ((game.paused ? game.pausedAt : performance.now()) - game.frameStart - game.pausedTotal) / 1000 / BEAT;
+}
+
+function scheduleMusic() {
+  if (game.clock !== "audio" || !game.running || game.paused) return;
+  const s = game.score, horizon = ctx.currentTime + 0.25, total = barsOf(s) * 8;
+  while (game.nextEighth < total) {
+    const e = game.nextEighth, when = game.songStart + e * BEAT / 2;
+    if (when > horizon) break;
+    game.nextEighth++;
+    if (when < ctx.currentTime - 0.02) continue;
+    const onPulse = e % 2 === 0, pulse = Math.floor(e / 2), beat = pulse % 4, bar = Math.floor(pulse / 4), chord = CHORDS[bar % 4];
+    if (pulse < COUNT) { if (onPulse) hoof(when, beat === 0); continue; }
+    const rel = pulse - COUNT;
+    if (rel >= s.bars * 4) { // fanfarria de cierre: flauta y cascabeles
+      const idx = e - (COUNT + s.bars * 4) * 2, arp = [65, 69, 72, 77, 81, 84];
+      if (idx < arp.length) flute(arp[idx], when, 0.25);
+      if (idx === 0 || idx === 8) bells(when, 0.06);
+      if (onPulse && idx < 8) bass(chord[0] - 12, when);
+      if (idx === 8) { [77, 81, 84].forEach((m) => kalimba(m, when, 0.08, bus)); bass(41, when); }
+      continue;
+    }
+    // Acompañamiento: contrabajo en 1 y 3, madera en 2 y 4, punteo en los «y», ocarina cada dos compases.
+    if (onPulse && (beat === 0 || beat === 2)) bass(chord[0] - 12 + (beat === 2 ? 7 : 0), when);
+    if (onPulse && (beat === 1 || beat === 3)) wood(when);
+    if (!onPulse) pluck(chord[(e >> 1) % 3], when);
+    const inTwo = e % 16; for (const [m, at, len] of OCARINA) if (at === inTwo && bar % 2 === 0) ocarina(m, when, len * BEAT / 2 * 0.95);
+    if (!onPulse) continue;
+    // Llamadas, frufrú y «tic» de la cuenta atrás.
+    for (const ev of s.events) {
+      if (ev.call === pulse) { grunt(when, ev.type === "b"); if (ev.type === "g") grunt(when + BEAT / 2, false); rustle(when + 0.05); }
+      if (pulse > ev.call && pulse < ev.bites[0]) tic(when);
+      if (s.auto && ev.bites.includes(pulse)) { munch(when, ev.type === "b", bus); kalimba(biteNote(pulse, ev.type === "b"), when, 0.15, bus); }
+    }
+  }
+}
+
+// ============ Dibujos provisionales ============
+const ACORN = `<svg viewBox="0 0 40 40"><path d="M8 18 Q20 44 32 18 Z" fill="#c47a2c" stroke="#2f1d33" stroke-width="3"/><path d="M6 18 Q20 4 34 18 Z" fill="#6b4423" stroke="#2f1d33" stroke-width="3"/><path d="M20 8 V2" stroke="#2f1d33" stroke-width="3"/></svg>`;
+const CHESTNUT = `<svg viewBox="0 0 40 40"><path d="M20 4 Q38 14 34 30 Q20 40 6 30 Q2 14 20 4 Z" fill="#8a4a1e" stroke="#2f1d33" stroke-width="3"/><path d="M8 28 Q20 36 32 28" fill="none" stroke="#e9c9a0" stroke-width="4"/><path d="M15 12 Q18 9 22 11" fill="none" stroke="#c47a4a" stroke-width="3"/></svg>`;
+function jabatoSvg(open, sad) {
+  const mouth = sad ? `<path d="M66 90 Q80 80 94 90" fill="none" stroke="#2f1d33" stroke-width="4"/>` : [`<path d="M66 82 Q80 88 94 82" fill="none" stroke="#2f1d33" stroke-width="4"/>`,
+    `<ellipse cx="80" cy="86" rx="12" ry="7" fill="#7a1f2a" stroke="#2f1d33" stroke-width="4"/>`,
+    `<ellipse cx="80" cy="90" rx="20" ry="16" fill="#7a1f2a" stroke="#2f1d33" stroke-width="4"/><ellipse cx="80" cy="98" rx="11" ry="6" fill="#e86a7a"/>`][open];
+  const eyes = sad ? `<path d="M56 52 Q62 58 68 52 M92 52 Q98 58 104 52" fill="none" stroke="#2f1d33" stroke-width="4"/>` : `<circle cx="62" cy="54" r="7" fill="#2f1d33"/><circle cx="98" cy="54" r="7" fill="#2f1d33"/><circle cx="64" cy="51" r="2.5" fill="#fff"/><circle cx="100" cy="51" r="2.5" fill="#fff"/>`;
+  return `<svg viewBox="0 0 160 130" width="100%" height="100%"><ellipse cx="80" cy="96" rx="64" ry="40" fill="#9a6236" stroke="#2f1d33" stroke-width="5"/>
+    <path d="M30 80 Q40 70 52 80 M48 72 Q60 62 72 72 M88 72 Q100 62 112 72 M108 80 Q120 70 130 80" fill="none" stroke="#f0d6a8" stroke-width="7" stroke-linecap="round"/>
+    <path d="M36 44 L30 14 L58 34 Z M124 44 L130 14 L102 34 Z" fill="#9a6236" stroke="#2f1d33" stroke-width="5" stroke-linejoin="round"/>
+    <ellipse cx="80" cy="56" rx="50" ry="40" fill="#a86d3c" stroke="#2f1d33" stroke-width="5"/>
+    <path d="M44 40 Q80 22 116 40" fill="none" stroke="#f0d6a8" stroke-width="7" stroke-linecap="round"/>
+    ${eyes}<ellipse cx="80" cy="72" rx="18" ry="12" fill="#e9a0a0" stroke="#2f1d33" stroke-width="4"/><circle cx="74" cy="72" r="3" fill="#2f1d33"/><circle cx="86" cy="72" r="3" fill="#2f1d33"/>
+    ${mouth}</svg>`;
+}
+$("bush").innerHTML = `<svg viewBox="0 0 210 82" preserveAspectRatio="none" width="100%" height="100%"><path d="M4 80 Q0 40 34 38 Q40 8 76 18 Q100 -4 128 16 Q164 4 176 36 Q210 36 206 80 Z" fill="#4f8a3a" stroke="#2f1d33" stroke-width="5"/><circle cx="60" cy="44" r="6" fill="#c47a2c" stroke="#2f1d33" stroke-width="3"/><circle cx="150" cy="40" r="6" fill="#c47a2c" stroke="#2f1d33" stroke-width="3"/><path d="M40 60 Q60 50 80 60 M120 58 Q140 48 160 58" fill="none" stroke="#3a6a2a" stroke-width="4"/></svg>`;
+
+// ============ Escena ============
+function buildBranch() {
+  const s = game.score, practice = game.mode !== "song";
+  $("branch").innerHTML = Array.from({ length: s.total }, () => "<i></i>").join("") + (practice ? "" : `<div class="line" style="left:calc(${(goalOf(s) / s.total) * 100}% - 2px)"></div>`);
+}
+let poseTimer = 0;
+function noaPose(name, ms = 0) { $("noa").dataset.pose = name; clearTimeout(poseTimer); if (ms) poseTimer = setTimeout(() => noaPose(game.restPose || "espera"), ms); }
+function bubble(text, ms, big) { const b = $("bubble-boss"); b.textContent = text; b.classList.toggle("big", !!big); b.classList.add("show"); clearTimeout(b._t); if (ms) b._t = setTimeout(() => b.classList.remove("show"), ms); }
+function bossBob(call, ms = 220) { const b = $("boss"); b.classList.toggle("call", call); b.classList.add("bob"); clearTimeout(b._t); b._t = setTimeout(() => { b.classList.remove("bob"); if (!game.cheered || game.mode !== "song") b.classList.remove("call"); }, ms); }
+function yum(text, miss) { const y = $("yum"); y.textContent = text; y.classList.toggle("miss", !!miss); y.classList.remove("show"); void y.offsetWidth; y.classList.add("show"); clearTimeout(y._t); y._t = setTimeout(() => y.classList.remove("show"), 380); }
+function flash(el, cls, ms = 220) { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); setTimeout(() => el.classList.remove(cls), ms); }
+function sparkle() {
+  for (let i = 0; i < 4; i++) {
+    const s = document.createElement("div"); s.className = "sparkle"; s.textContent = i % 2 ? "✦" : "♪";
+    Object.assign(s.style, { left: `${380 + Math.random() * 40}px`, top: "290px" }); $("fx").appendChild(s);
+    requestAnimationFrame(() => requestAnimationFrame(() => { s.style.transform = `translate(${(Math.random() - 0.5) * 120}px, ${-80 - Math.random() * 60}px)`; s.style.opacity = 0; }));
+    setTimeout(() => s.remove(), 560);
+  }
+}
+function stats() { $("stats").textContent = `Bocados: ${game.got} de ${(game.score ?? SCORES.song).total} · pulsaciones de más: ${game.extra} · raya dorada: ${goalOf(game.score ?? SCORES.song)}`; }
+function addAcorn() {
+  const i = $("branch").querySelectorAll("i")[game.got - 1]; if (i) i.classList.add("got");
+  flash($("score"), "bump", 140);
+  if (game.mode === "song" && game.got >= goalOf(game.score) && !game.cheered) { game.cheered = true; $("score").classList.add("reached"); bossBob(true, 900); bubble("¡Qué rico!", 1200); if (ctx && game.clock === "audio") grunt(ctx.currentTime, false, master); }
+  stats();
+}
+
+// Jabato visible según el tiempo: asoma en la llamada y abre la boca hasta cada bocado.
+let shownKey = "";
+function activeEvent(t) { return game.score.events.find((e) => t >= e.call - 0.05 && t < e.bites.at(-1) + 0.85); }
+function dotsFor(e, t) {
+  const pulse = Math.floor(t + 0.001), first = e.call + 1, last = e.bites.at(-1), out = [];
+  for (let p = first; p <= last; p++) {
+    const bite = e.bites.includes(p), cls = ["dot"];
+    if (bite) cls.push("bite"); if (bite && e.type === "b") cls.push("big");
+    if (game.fed[`${e.i}-${p}`]) cls.push("ok");
+    else if (game.missed[`${e.i}-${p}`]) cls.push("gone");
+    else if (pulse >= p) cls.push("on");
+    out.push(`<i class="${cls.join(" ")}"></i>`);
+  }
+  return out.join("");
+}
+function refreshScene(t) {
+  const j = $("jabato"), e = t >= 0 ? activeEvent(t) : null;
+  if (!e) { j.classList.remove("up"); $("count").innerHTML = ""; $("bigcount").innerHTML = ""; shownKey = ""; return; }
+  const pulse = Math.floor(t + 0.001), next = e.bites.find((b) => !game.fed[`${e.i}-${b}`] && !game.missed[`${e.i}-${b}`]);
+  const sad = e.bites.some((b) => game.missed[`${e.i}-${b}`]) && !next;
+  const justFed = performance.now() - (game.fedAt || 0) < 150;
+  let open = 0;
+  if (next !== undefined && !justFed) open = pulse >= next ? 2 : pulse >= next - 1 && pulse > e.call ? 1 : 0;
+  j.classList.toggle("big", e.type === "b"); j.classList.add("up");
+  const k = `${e.i}|${open}|${sad}`;
+  if (k !== shownKey) { shownKey = k; j.innerHTML = jabatoSvg(open, sad); }
+  const dots = dotsFor(e, t); if ($("count").innerHTML !== dots) { $("count").innerHTML = dots; $("bigcount").innerHTML = dots; }
+}
+
+// ============ Bocado de Noa ============
+function giveFood(e) {
+  const hf = $("handFood"); hf.innerHTML = e.type === "b" ? CHESTNUT : ACORN;
+  hf.classList.remove("go"); void hf.offsetWidth; hf.classList.add("go");
+  noaPose("feed", 160);
+}
+function fed(e, bite, when) {
+  game.fed[`${e.i}-${bite}`] = true; game.got++; game.fedAt = performance.now();
+  if (when) { munch(when, e.type === "b"); kalimba(biteNote(bite, e.type === "b"), when); }
+  giveFood(e); flash($("jabato"), "chomp"); yum(e.type === "b" ? "¡ÑAM!" : "¡Ñam!"); sparkle(); addAcorn(); shownKey = "";
+}
+function press() {
+  if (!game.running || game.paused || game.counting || game.ended || game.score.auto) return;
+  const t = pulseNow(), now = ctx && game.clock === "audio" ? ctx.currentTime + 0.003 : 0;
+  let best = null;
+  for (const e of game.score.events) for (const b of e.bites) {
+    if (game.fed[`${e.i}-${b}`] || game.missed[`${e.i}-${b}`] || Math.abs(t - b) > WINDOW) continue;
+    if (!best || Math.abs(t - b) < Math.abs(t - best.b)) best = { e, b };
+  }
+  if (!best) { if (now) fsss(now); noaPose("feed", 120); game.extra++; stats(); return; }
+  fed(best.e, best.b, now);
+}
+function checkMisses(t) {
+  if (game.score.auto) return;
+  for (const e of game.score.events) for (const b of e.bites) {
+    const k = `${e.i}-${b}`;
+    if (game.fed[k] || game.missed[k] || t <= b + WINDOW) continue;
+    game.missed[k] = true; shownKey = "";
+    if (ctx && game.clock === "audio") { toc(ctx.currentTime); sadGrunt(ctx.currentTime + 0.08); }
+    const bo = document.createElement("div"); bo.className = "bounce"; bo.innerHTML = e.type === "b" ? CHESTNUT : ACORN;
+    Object.assign(bo.style, { left: "390px", top: "300px" }); $("fx").appendChild(bo); setTimeout(() => bo.remove(), 650);
+    flash($("jabato"), "sad", 420); yum("¡Ay!", true); noaPose("oops", 300);
+  }
+}
+
+// ============ Bucle ============
+const CAPTIONS = () => ({
+  demo: [[0, "Mira: el Gran Jabalí llama a un jabato."], [COUNT, "¡Gru! El jabato abre la boca…"], [COUNT + 2, "¡Ahora! Noa le da su bellota."], [COUNT + 4, "¡GRUUUU! El grande tarda más…"], [COUNT + 8, "¡Castaña para el grande!"]],
+  practice: [[0, "¡Ahora tú! Escucha la cuenta del Gran Jabalí."], [COUNT, "Cuando la boca esté abierta del todo… ¡dale de comer!"], [COUNT + 8, "El grande espera cuatro puntos."]],
+  song: [[0, "¡A merendar!"], [COUNT, ""]],
+});
+let captionShown = "";
+function onPulse(pulse) {
+  const s = game.score, rel = pulse - COUNT;
+  [...$("bulbs").children].forEach((b, i) => b.classList.toggle("on", i === pulse % 4));
+  if (rel < 0) { bubble(String(pulse + 1), 380); bossBob(false, 200); }
+  for (const e of s.events) {
+    if (e.call === pulse) { const tp = TYPES[e.type]; bubble(tp.call, BEAT * 1400, e.type === "b"); bossBob(true, BEAT * 1000); }
+    if (s.auto && e.bites.includes(pulse) && !game.fed[`${e.i}-${pulse}`]) fed(e, pulse, 0);
+  }
+  if (rel === s.bars * 4) { game.restPose = "celebra"; noaPose("celebra"); bossBob(true, 1500); }
+  $("phase").textContent = `Compás ${Math.floor(pulse / 4) + 1} de ${barsOf(s)} · ${phaseAt(s, pulse)}`;
+}
+let loopId = 0;
+function tick(id) {
+  if (!game.running || id !== loopId) return;
+  const next = () => requestAnimationFrame(() => tick(id));
+  if (game.counting) { next(); return; }
+  if (!game.paused) {
+    scheduleMusic();
+    const t = pulseNow(), pulse = Math.floor(t);
+    if (t >= 0 && pulse !== game.lastPulse) { for (let p = Math.max(0, game.lastPulse + 1); p <= pulse; p++) onPulse(p); game.lastPulse = pulse; }
+    checkMisses(t); refreshScene(t);
+    const cap = CAPTIONS()[game.mode].filter(([p]) => t >= p).at(-1)?.[1] ?? "";
+    if (cap !== captionShown) { captionShown = cap; $("caption").textContent = cap; $("caption").classList.toggle("show", !!cap); }
+    const pad = navigator.getGamepads?.().find(Boolean), down = Boolean(pad?.buttons[0]?.pressed);
+    if (down && !game.padDown) press(); game.padDown = down;
+    if (t >= barsOf(game.score) * 4) return finish();
+  }
+  next();
+}
+
+// ============ Ciclo ============
+async function start(mode) {
+  Object.assign(game, { mode, score: SCORES[mode], running: true, paused: false, counting: 0, ended: false, lastPulse: -1, got: 0, extra: 0, fed: {}, missed: {}, nextEighth: 0, pausedTotal: 0, cheered: false, restPose: "espera" });
+  leadIx = 0; shownKey = "";
+  if (mode === "song") game.visited = true;
+  for (const id of ["menu", "endBox", "pauseBox", "leaveBox"]) $(id).hidden = true;
+  $("score").classList.remove("reached"); $("boss").classList.remove("call"); buildBranch(); noaPose("espera"); stats();
+  ensureAudio();
+  let audioOk = false;
+  if (ctx) { try { await Promise.race([ctx.resume(), new Promise((r) => setTimeout(r, 400))]); audioOk = ctx.state === "running"; } catch { audioOk = false; } }
+  game.clock = audioOk ? "audio" : "frame";
+  if (audioOk) { newBus(); game.songStart = ctx.currentTime + 0.15; master.gain.value = $("sound").getAttribute("aria-pressed") === "true" ? 0.9 : 0; }
+  game.frameStart = performance.now() + 150;
+  $("clockInfo").textContent = audioOk ? `Reloj: audio (latencia descontada ${Math.round(latency() * 1000)} ms)` : "Reloj: fotogramas (sin audio)";
+  const id = ++loopId; requestAnimationFrame(() => tick(id));
+}
+function endButtons(list) {
+  const box = $("endButtons"); box.innerHTML = "";
+  list.forEach(([label, fn], i) => { const b = document.createElement("button"); b.textContent = label; if (i === 0) b.className = "primary"; b.addEventListener("click", fn); box.appendChild(b); });
+}
+function finish() {
+  game.ended = true; game.running = false; captionShown = ""; $("caption").classList.remove("show");
+  refreshScene(-1);
+  const s = game.score;
+  if (game.mode === "song") {
+    const perfect = game.got === s.total, won = game.got >= goalOf(s);
+    $("endTitle").textContent = perfect ? "¡Perfecto!" : won ? "¡Bien hecho!" : "¡Casi!";
+    $("endText").textContent = perfect ? "¡Ningún jabato se ha quedado con hambre! El Gran Jabalí te regala su marco de bellotas." : won ? "Las bellotas de la rama han pasado la raya dorada. ¡Los jabatos están contentos!" : "Las bellotas aún no llegan a la raya dorada. Los jabatos quieren merendar otra vez contigo.";
+    noaPose(won ? "celebra" : "espera");
+    endButtons(won ? [["Continuar", toMenu], ["Jugar otra vez", () => start("song")]] : [["Intentar otra vez", () => start("song")], ["Practicar", () => start("demo")], ["Volver al mapa", askLeave]]);
+    console.info("[merienda-jabatos] resultado", { bocados: game.got, total: s.total, deMas: game.extra, victoria: won, reto: perfect });
+  } else if (game.mode === "demo") {
+    $("endTitle").textContent = "¡Ya lo has visto!"; $("endText").textContent = "Ahora ensaya tú, o empieza la merienda.";
+    endButtons([["Ensayar", () => start("practice")], ["¡A jugar!", () => start("song")]]);
+  } else {
+    $("endTitle").textContent = "¡Buen ensayo!"; $("endText").textContent = "Puedes ensayar otra vez o empezar la merienda.";
+    endButtons([["¡A jugar!", () => start("song")], ["Ensayar otra vez", () => start("practice")]]);
+  }
+  setTimeout(() => { $("endBox").hidden = false; }, game.mode === "song" ? 900 : 300);
+}
+function pause() {
+  if (!game.running || game.paused || game.ended || game.counting) return;
+  game.paused = true; game.pausedAt = performance.now();
+  if (game.clock === "audio") { game.pausedCtx = ctx.currentTime; newBus(); void ctx.suspend(); }
+  $("pauseBox").hidden = false;
+}
+// Al seguir, el Gran Jabalí cuenta 4 pulsos con la escena congelada y la merienda continúa en el mismo punto.
+async function resume() {
+  if (!game.paused) return;
+  $("pauseBox").hidden = true;
+  const countMs = 4 * BEAT * 1000, frozen = pulseNow();
+  game.counting = 1;
+  if (game.clock === "audio") {
+    await ctx.resume();
+    const t0 = ctx.currentTime + 0.05;
+    for (let i = 0; i < 4; i++) hoof(t0 + i * BEAT, i === 0);
+    game.songStart += (t0 + 4 * BEAT) - game.pausedCtx;
+    game.nextEighth = Math.max(0, Math.ceil((frozen + latency() / BEAT) * 2));
+  } else {
+    game.pausedTotal += performance.now() - game.pausedAt + countMs;
+  }
+  game.paused = false;
+  for (let i = 0; i < 4; i++) setTimeout(() => { bubble(String(i + 1), 380); bossBob(false, 200); }, 50 + i * BEAT * 1000);
+  setTimeout(() => { game.counting = 0; }, countMs + 50);
+}
+function toMenu() {
+  game.running = false; game.paused = false; game.counting = 0; if (ctx?.state === "suspended") void ctx.resume(); if (ctx) newBus();
+  for (const id of ["pauseBox", "endBox", "leaveBox"]) $(id).hidden = true;
+  $("menu").hidden = false; $("caption").classList.remove("show"); captionShown = ""; noaPose("espera"); refreshScene(-1);
+  $("menuPractice").classList.toggle("primary", !game.visited); $("menuPlay").classList.toggle("primary", game.visited);
+}
+let leaveFrom = null;
+function askLeave() { if (game.running && !game.paused && !game.ended) pause(); leaveFrom = !$("pauseBox").hidden ? "pause" : !$("endBox").hidden ? "end" : null; for (const id of ["pauseBox", "endBox"]) $(id).hidden = true; $("leaveBox").hidden = false; }
+function cancelLeave() { $("leaveBox").hidden = true; if (leaveFrom === "end") $("endBox").hidden = false; else if (game.paused) $("pauseBox").hidden = false; else if (!game.running) $("menu").hidden = false; }
+document.querySelectorAll("[data-start]").forEach((b) => b.addEventListener("click", () => start(b.dataset.start)));
+$("resume").addEventListener("click", resume);
+$("pause").addEventListener("click", pause);
+$("pauseLeave").addEventListener("click", askLeave);
+$("leave").addEventListener("click", askLeave);
+$("leaveNo").addEventListener("click", cancelLeave);
+$("leaveYes").addEventListener("click", toMenu);
+$("sound").addEventListener("click", (e) => { const on = e.currentTarget.getAttribute("aria-pressed") !== "true"; e.currentTarget.setAttribute("aria-pressed", String(on)); if (master) master.gain.value = on ? 0.9 : 0; });
+$("hit").addEventListener("pointerdown", (e) => { e.preventDefault(); press(); });
+frame.addEventListener("pointerdown", (e) => { if (e.target.closest("button")) return; press(); });
+addEventListener("keydown", (e) => { if (e.code !== "Space" || e.repeat) return; if (e.target instanceof HTMLButtonElement && e.target.id !== "hit") return; e.preventDefault(); press(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden) pause(); });
+addEventListener("blur", pause);
+$("scoreCheck").textContent = "Partituras · " + report();
+game.score = SCORES.song; buildBranch(); toMenu(); stats();
+window.__merienda = { game, SCORES, checkScore, goalOf, pulseNow, press, start, activeEvent };
+</script>
+</body>
+</html>

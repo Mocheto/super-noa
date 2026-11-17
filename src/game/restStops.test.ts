@@ -6,12 +6,16 @@ import { emptyProgress, parseProgress, serializeProgress } from "./progress.ts";
 import { greetFriend, normalizeRestStops, visitRestStop } from "./restStopProgress.ts";
 import { REST_STOP_WIDTH, guardianOf, restStopCatalog, restStopLevels, restStopUnlocked } from "./restStops.ts";
 
+test("hay un paseo por cada mundo de campaña del 1 al 16", () => {
+  assert.deepEqual(restStopCatalog.map((stop) => stop.world), [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16]);
+});
+
 test("cada paseo es de un mundo de campaña con guardián y saluda a sus propios animales", () => {
   assert.equal(new Set(restStopCatalog.map((stop) => stop.world)).size, restStopCatalog.length);
   for (const stop of restStopCatalog) {
     assert.ok(stop.world >= 1 && stop.world <= 16 && stop.world !== 7 && stop.world !== 8, `mundo ${stop.world}`);
     assert.ok(guardianOf(stop.world), `mundo ${stop.world}: sin guardián que se despida`);
-    assert.ok(stop.friends.length >= 3 && stop.friends.length <= 5);
+    assert.ok(stop.friends.length >= 2 && stop.friends.length <= 5);
     const kinds = new Set(levels.filter((level) => level.world === stop.world).flatMap((level) => level.enemies.map((enemy) => enemy.kind)));
     for (const friend of stop.friends) {
       assert.ok(kinds.has(friend.kind), `mundo ${stop.world}: ${friend.kind} no vive en este mundo`);

@@ -1175,11 +1175,19 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       if (restStop && level.goalX - cameraX > -280 && level.goalX - cameraX < VIEW_WIDTH + 100) {
         // Al final del paseo espera el guardián del mundo para despedirse.
         const boss = guardianOf(restStop.world);
-        const image = boss ? getImage(`${bossCatalog[boss].assetPrefix}-0.png`) : null;
-        if (image?.complete && image.naturalWidth) {
+        const definition = boss ? bossCatalog[boss] : undefined;
+        // Retrato suelto (-0.png) o, en los guardianes nuevos, la primera pose de su atlas (fila de abajo de una
+        // cuadrícula de 5 × 2) o de su hoja de poses (cinco en fila).
+        const image = definition ? getImage(definition.assetPrefix ? `${definition.assetPrefix}-0.png` : definition.assetAtlas ?? "") : null;
+        if (definition && image?.complete && image.naturalWidth) {
+          const atlas = !definition.assetPrefix;
+          const grid = atlas && (definition.assetAtlas ?? "").includes("characters");
+          const sw = atlas ? image.naturalWidth / 5 : image.naturalWidth;
+          const sh = grid ? image.naturalHeight / 2 : image.naturalHeight;
+          const sy = grid ? image.naturalHeight / 2 : 0;
           const height = 150;
-          const width = height * image.naturalWidth / image.naturalHeight;
-          context.drawImage(image, Math.round(level.goalX - cameraX), 456 - height, Math.round(width), height);
+          const width = height * sw / sh;
+          context.drawImage(image, 0, sy, sw, sh, Math.round(level.goalX - cameraX), 456 - height, Math.round(width), height);
         }
       } else if (!level.chase && !explore && level.goalX - cameraX > -280 && level.goalX - cameraX < VIEW_WIDTH + 100) {
         if (level.world === 8 && level.boss) {

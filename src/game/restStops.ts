@@ -9,7 +9,8 @@ export type RestStop = { world: number; friends: RestStopFriend[]; farewell: str
 export const REST_STOP_WIDTH = 2400;
 export const GREET_DISTANCE = 140;
 
-/** Catálogo declarativo: un paseo por mundo con un amigo de cada tipo de enemigo. */
+/** Catálogo declarativo: un paseo por cada mundo de campaña (1–6 y 9–16), con un amigo de cada tipo de enemigo
+ * (como mucho cinco). */
 export const restStopCatalog: RestStop[] = [
   {
     world: 1,
@@ -19,6 +20,122 @@ export const restStopCatalog: RestStop[] = [
       { kind: "cloud", line: "¡Floto como un algodón!" },
     ],
     farewell: "¡Gracias por la visita, Noa!",
+  },
+  {
+    world: 2,
+    friends: [
+      { kind: "slime", line: "¡En la cueva estoy fresquita!" },
+      { kind: "beetle", line: "¡Mis alas brillan en la niebla!" },
+      { kind: "bat", line: "¡Duermo boca abajo, ji, ji!" },
+      { kind: "cloud", line: "¡La niebla y yo somos primas!" },
+    ],
+    farewell: "¡Vuelve pronto a la gruta!",
+  },
+  {
+    world: 3,
+    friends: [
+      { kind: "wolf", line: "¡Ya me he echado la siesta!" },
+      { kind: "cloud", line: "¡Soy la nube de la luna!" },
+    ],
+    farewell: "¡Auuu! ¡Hasta pronto, Noa!",
+  },
+  {
+    world: 4,
+    friends: [
+      { kind: "boar", line: "¡Me encantan las bellotas!" },
+      { kind: "bird", line: "¡Pío, pío, qué bien saltas!" },
+    ],
+    farewell: "¡Ven a merendar otro día!",
+  },
+  {
+    world: 5,
+    friends: [
+      { kind: "pirate", line: "¡Ahoy! ¡Soy un pirata bueno!" },
+      { kind: "parrot", line: "¡Cra, cra, hola, Noa!" },
+    ],
+    farewell: "¡Buen viento, marinera!",
+  },
+  {
+    world: 6,
+    friends: [
+      { kind: "skeleton", line: "¡Mis huesos hacen clac, clac!" },
+      { kind: "ghost", line: "¡Buuu! ¿Te he asustado?" },
+      { kind: "zombie", line: "¡Solo quiero un abrazo!" },
+    ],
+    farewell: "¡Vuelve a mi castillo!",
+  },
+  {
+    world: 9,
+    friends: [
+      { kind: "baby-t-rex", line: "¡Mis bracitos son cortitos!" },
+      { kind: "pterodactyl", line: "¡Vuelo sobre la isla!" },
+    ],
+    farewell: "¡Hasta pronto, pequeña!",
+  },
+  {
+    world: 10,
+    friends: [
+      { kind: "baby-dragon", line: "¡Echo humito, no fuego!" },
+      { kind: "fire-salamander", line: "¡La lava me da calorcito!" },
+      { kind: "flying-dragon", line: "¡Me encanta volar alto!" },
+    ],
+    farewell: "¡Vuelve a mi volcán!",
+  },
+  {
+    world: 11,
+    friends: [
+      { kind: "ant", line: "¡Llevo hojas muy grandes!" },
+      { kind: "snail", line: "¡Voy despacito, despacito!" },
+      { kind: "bee", line: "¡Bzz! ¡Hago miel dulce!" },
+    ],
+    farewell: "¡Gracias por tu visita!",
+  },
+  {
+    world: 12,
+    friends: [
+      { kind: "penguin", line: "¡Me deslizo con la tripa!" },
+      { kind: "snow-fox", line: "¡Mi cola es muy calentita!" },
+      { kind: "snowy-owl", line: "¡Uh, uh! ¡Veo de noche!" },
+    ],
+    farewell: "¡Abrígate bien, Noa!",
+  },
+  {
+    world: 13,
+    friends: [
+      { kind: "snow-scout", line: "¡Hago muñecos de nieve!" },
+      { kind: "toy-reindeer", line: "¡Tiro del trineo!" },
+      { kind: "toy-elf", line: "¡Envuelvo los regalos!" },
+      { kind: "toy-robot", line: "¡Bip, bip, soy tu amigo!" },
+      { kind: "gift-gnome", line: "¡Guardo los regalos!" },
+    ],
+    farewell: "¡Feliz Navidad, Noa!",
+  },
+  {
+    world: 14,
+    friends: [
+      { kind: "desert-scarab", line: "¡Ruedo bolitas de arena!" },
+      { kind: "fennec", line: "¡Mis orejas lo oyen todo!" },
+      { kind: "tumbleweed", line: "¡Ruedo con el viento!" },
+    ],
+    farewell: "¡Que el viento te acompañe!",
+  },
+  {
+    world: 15,
+    friends: [
+      { kind: "rolling-suitcase", line: "¡Llevo calcetines dentro!" },
+      { kind: "conductor-pigeon", line: "¡Pasajeros, al tren!" },
+      { kind: "clockwork-mouse", line: "¡Cric, cric, tengo cuerda!" },
+    ],
+    farewell: "¡Buen viaje, Noa!",
+  },
+  {
+    world: 16,
+    friends: [
+      { kind: "walking-drum", line: "¡Pom, pom, pom!" },
+      { kind: "note-bird", line: "¡Canto todas las notas!" },
+      { kind: "violin-mouse", line: "¡Toco el violín!" },
+    ],
+    farewell: "¡Bravo, bravo, Noa!",
   },
 ];
 

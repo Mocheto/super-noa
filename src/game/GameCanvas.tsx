@@ -375,7 +375,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       const platforms = [...getMechanicPlatforms(level, levelAge), ...supports, ...liftPlatforms];
       if (puzzle) {
         if (slideCrates(puzzle, delta, player).length) callbacksRef.current.playSound("block");
-        platforms.push(...puzzlePlatforms(level, puzzle));
+        platforms.push(...puzzlePlatforms(level, puzzle, levelAge));
       }
       const previousStar = starRemaining;
       starRemaining = Math.max(0, starRemaining - delta);
@@ -454,7 +454,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         ? wrapHorizontalPosition(player.x, player.width, level.width)
         : Math.max(0, Math.min(level.width - player.width, player.x));
       if (puzzle && player.grounded) player.x = pushCrates(puzzle, player, previousX, player.x, delta, levelAge);
-      for (const platform of puzzle ? [...level.platforms, ...puzzlePlatforms(level, puzzle)] : level.platforms) {
+      for (const platform of puzzle ? [...level.platforms, ...puzzlePlatforms(level, puzzle, levelAge)] : level.platforms) {
         const resolvedX = resolveHorizontalWallCollision(previousX, player.x, player.y, player.width, player.height, platform);
         if (resolvedX === player.x) continue;
         player.x = resolvedX;
@@ -973,7 +973,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge, raster, level.world === 15));
       drawAdventurePrecipices(context, level, cameraX, raster.adventurePrecipices);
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
-      if (puzzle) drawPuzzleRooms(context, level, puzzle, cameraX, sparks, frame);
+      if (puzzle) drawPuzzleRooms(context, level, puzzle, cameraX, sparks, frame, levelAge);
       level.beatPlatforms?.forEach((platform) => {
         const active = beatPlatformActive(platform, levelAge);
         context.save(); context.globalAlpha = active ? 1 : .24;

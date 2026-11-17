@@ -1,5 +1,5 @@
 import { getImage } from "./assets.ts";
-import { BUTTON_STEP, CRATE_SIZE, buttonRect, plateWeighed, type PuzzleState } from "./puzzleRooms.ts";
+import { BUTTON_STEP, CRATE_SIZE, buttonRect, colorBeatProgress, plateWeighed, roomColor, type PuzzleState } from "./puzzleRooms.ts";
 import type { Level, PuzzleTrigger } from "./types";
 
 export const PUZZLE_ATLAS = "./assets/atlases/puzzle-pieces-v1.webp";
@@ -44,10 +44,10 @@ function drawPlate(context: CanvasRenderingContext2D, image: HTMLImageElement, t
   piece(context, image, pressed ? "plate-down" : "plate-up", trigger.x - cameraX, trigger.y - (pressed ? 8 : 14), trigger.width, height);
 }
 
-function drawColorPlatform(context: CanvasRenderingContext2D, image: HTMLImageElement, x: number, y: number, width: number, color: "pink" | "blue", solid: boolean) {
+function drawColorPlatform(context: CanvasRenderingContext2D, image: HTMLImageElement, x: number, y: number, width: number, color: "pink" | "blue", solid: boolean, ghostAlpha = .5) {
   const cap = 20;
   context.save();
-  context.globalAlpha = solid ? 1 : .4;
+  context.globalAlpha = solid ? 1 : ghostAlpha;
   piece(context, image, `platform-${color}-left`, x, y, cap, 24);
   const [, , mw] = PUZZLE_PIECES[`platform-${color}-middle`];
   const tile = mw / 2;
@@ -67,13 +67,16 @@ function drawColorPlatform(context: CanvasRenderingContext2D, image: HTMLImageEl
 }
 
 /** Dibuja las piezas de todas las salas visibles y las chispas que viajan de un activador a su puerta. */
-export function drawPuzzleRooms(context: CanvasRenderingContext2D, level: Level, state: PuzzleState, cameraX: number, sparks: readonly SparkTrail[], frame: number) {
+export function drawPuzzleRooms(context: CanvasRenderingContext2D, level: Level, state: PuzzleState, cameraX: number, sparks: readonly SparkTrail[], frame: number, now = 0) {
   const image = getImage(PUZZLE_ATLAS);
   if (!image.complete || !image.naturalWidth) return;
   (level.puzzleRooms ?? []).forEach((room, index) => {
     if (room.x - cameraX > 1000 || room.x - cameraX < -1000) return;
+    const active = roomColor(level, state, index, now);
+    // Al compás, las plataformas que van a aparecer se encienden poco a poco antes del cambio.
+    const warning = room.colorBeat ? Math.max(0, colorBeatProgress(room, now) - .7) / .3 : 0;
     for (const platform of room.colorPlatforms ?? []) {
-      drawColorPlatform(context, image, platform.x - cameraX, platform.y, platform.width, platform.color, platform.color === state.color[index]);
+      drawColorPlatform(context, image, platform.x - cameraX, platform.y, platform.width, platform.color, platform.color === active, .5 + warning * .35);
     }
     for (const door of room.doors) {
       const open = state.openDoors.has(door.id);
@@ -91,7 +94,7 @@ export function drawPuzzleRooms(context: CanvasRenderingContext2D, level: Level,
         const crates = state.crates.filter((crate) => crate.room === index);
         drawPlate(context, image, trigger, plateWeighed(trigger, crates, null) || state.openDoors.has(trigger.opens ?? ""), cameraX);
       } else {
-        const pressed = trigger.kind === "paw" ? state.pressedPaws.has(trigger.id) : trigger.color === state.color[index];
+        const pressed = trigger.kind === "paw" ? state.pressedPaws.has(trigger.id) : trigger.color === roomColor(level, state, index, now);
         drawButton(context, image, trigger, pressed, cameraX);
       }
       const door = room.doors.find((d) => d.id === trigger.opens);

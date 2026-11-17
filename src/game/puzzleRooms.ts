@@ -82,15 +82,27 @@ export function doorsOpen(level: Level, state: PuzzleState, player: (Rect & { gr
   return open;
 }
 
+/** Color activo de una sala. Con `colorBeat` se turna solo al compás; si no, lo eligen los botones de color. */
+export function roomColor(level: Level, state: PuzzleState, index: number, now = 0): PuzzleColor {
+  const room = level.puzzleRooms?.[index];
+  if (!room?.colorBeat) return state.color[index];
+  const first = room.startColor ?? "pink";
+  const other: PuzzleColor = first === "pink" ? "blue" : "pink";
+  return Math.floor(now / room.colorBeat) % 2 === 0 ? first : other;
+}
+
+/** Parte del compás que ya ha pasado (0–1); sirve para avisar antes del cambio. */
+export const colorBeatProgress = (room: PuzzleRoom, now: number) => room.colorBeat ? (now % room.colorBeat) / room.colorBeat : 0;
+
 /** Plataformas que añaden las salas: puertas cerradas y cajones (sólidos), pedestales de botones y plataformas
  * del color activo (se pisan). */
-export function puzzlePlatforms(level: Level, state: PuzzleState): Platform[] {
+export function puzzlePlatforms(level: Level, state: PuzzleState, now = 0): Platform[] {
   const out: Platform[] = [];
   (level.puzzleRooms ?? []).forEach((room, index) => {
     for (const door of room.doors) if (!state.openDoors.has(door.id)) out.push({ x: door.x, y: door.y, width: door.width, height: door.height, kind: "puzzle-block" });
     for (const trigger of room.triggers) if (trigger.kind !== "plate") out.push({ ...buttonRect(trigger), kind: "puzzle-block" });
     for (const platform of room.colorPlatforms ?? []) {
-      if (platform.color === state.color[index]) out.push({ x: platform.x, y: platform.y, width: platform.width, height: platform.height, kind: "puzzle-color" });
+      if (platform.color === roomColor(level, state, index, now)) out.push({ x: platform.x, y: platform.y, width: platform.width, height: platform.height, kind: "puzzle-color" });
     }
   });
   for (const crate of state.crates) out.push({ ...crateRect(crate), kind: "puzzle-block" });
@@ -217,7 +229,9 @@ export function roomReachLevel(level: Level, index: number, setup: { open: Reado
     room: index, pressedPaws: new Set(), color: level.puzzleRooms!.map((_, i) => i === index ? setup.color : "pink"),
     crates: [...(setup.crates ?? roomCrates(room, index))], openDoors: new Set(setup.open), lastProgress: 0,
   };
-  const only = { ...level, puzzleRooms: level.puzzleRooms!.map((r, i) => i === index ? r : { ...r, triggers: [], doors: [], colorPlatforms: [] }) };
+  // Con color al compás se pueden usar los dos colores, uno detrás de otro.
+  const both = room.colorBeat ? (room.colorPlatforms ?? []).map((p) => ({ ...p, color: setup.color })) : room.colorPlatforms;
+  const only = { ...level, puzzleRooms: level.puzzleRooms!.map((r, i) => i === index ? { ...r, colorBeat: undefined, colorPlatforms: both } : { ...r, triggers: [], doors: [], colorPlatforms: [] }) };
   const exit = room.doors.find((door) => door.id === room.exitDoor)!;
   const last = index === level.puzzleRooms!.length - 1;
   return {

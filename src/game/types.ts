@@ -36,6 +36,8 @@ export type PuzzleRoom = {
   doors: PuzzleDoor[];
   colorPlatforms?: ColorPlatform[];
   startColor?: PuzzleColor;
+  /** Si existe, el color activo cambia solo cada `colorBeat` segundos (al compás), empezando por `startColor`. */
+  colorBeat?: number;
   crates?: PuzzleCrate[];
 };
 

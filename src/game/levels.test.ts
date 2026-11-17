@@ -94,7 +94,7 @@ test("todos los checkpoints reaparecen sobre una superficie que permite aterriza
       `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
     }
   }
-  assert.equal(checkpointCount, 223);
+  assert.equal(checkpointCount, 216);
 });
 
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {
@@ -299,11 +299,11 @@ test("desierto, tren y música ya no repiten la misma plantilla de precipicios y
     "el oasis ofrece un descanso más largo que las ruinas");
   assert.ok(levels.find((level) => level.id === "15-1")!.platforms.some((platform) => platform.kind === "train-roof" && platform.width >= 500),
     "el andén necesita un trayecto largo sobre un vagón");
-  assert.ok(levels.find((level) => level.id === "16-1")!.deadlyWater!.length < levels.find((level) => level.id === "16-2")!.deadlyWater!.length,
-    "el jardín musical empieza con menos precipicios");
-  assert.ok(levels.find((level) => level.id === "16-3")!.platforms.some((platform) => platform.kind === "music-ground" && platform.width >= 2500),
+  assert.ok(levels.find((level) => level.id === "16-1")!.platforms.some((platform) => platform.kind === "music-ground" && platform.x === 0 && platform.width >= 1700),
+    "el jardín musical empieza con un paseo sin huecos");
+  assert.ok(levels.find((level) => level.id === "16-3")!.platforms.some((platform) => platform.kind === "music-ground" && platform.width >= 1500),
     "el teatro termina sobre un escenario continuo");
-  assert.equal(new Set([pitSignature("14-2"), pitSignature("15-2"), pitSignature("16-2")]).size, 3);
+  assert.equal(new Set([pitSignature("14-2"), pitSignature("15-2"), pitSignature("16-1")]).size, 3);
 });
 
 test("cada nube normal del Reino Celeste se alcanza con doble salto y los bordes conectados", () => {

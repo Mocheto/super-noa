@@ -959,6 +959,22 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
     context.restore();
     return;
   }
+  if (platform.kind === "puzzle-block") {
+    // Pilar de piedra de las salas-rompecabezas: hileras de sillares que cierran el paso sobre las puertas.
+    context.save();
+    context.beginPath(); context.rect(x, platform.y, platform.width, platform.height); context.clip();
+    context.fillStyle = "#3a2c4a"; context.fillRect(x, platform.y, platform.width, platform.height);
+    for (let row = 0, top = platform.y; top < platform.y + platform.height; row += 1, top += 30) {
+      for (let left = x - (row % 2 ? 16 : 0); left < x + platform.width; left += 32) {
+        context.fillStyle = row % 3 === 0 ? "#9d97ab" : "#8a849a";
+        context.fillRect(left + 2, top + 2, 28, 26);
+        context.fillStyle = "#c6c0d2"; context.fillRect(left + 4, top + 4, 22, 4);
+      }
+    }
+    context.restore();
+    context.strokeStyle = "#2f1d33"; context.lineWidth = 3; context.strokeRect(x + 1.5, platform.y + 1.5, platform.width - 3, platform.height - 3);
+    return;
+  }
   if (platform.kind === "music-ground" || platform.kind === "music-stage") {
     if (drawAdventureTerrain(context, raster.worldTerrain, 16, platform.kind === "music-ground" ? "ground" : "ledge", x, platform.y, platform.width, platform.height)) return;
     context.fillStyle = platform.kind === "music-ground" ? "#37294f" : "#684a88";

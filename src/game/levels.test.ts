@@ -13,7 +13,7 @@ test("solo cinco repisas opcionales tienen tiendas con identificadores estables"
   assert.deepEqual(shops.map((level) => [level.id, level.secretShop]), [
     ["1-2", { id: "shop-1-2", x: 1570, y: 230, width: 64, height: 80 }],
     ["3-2", { id: "shop-3-2", x: 1710, y: 260, width: 64, height: 80 }],
-    ["6-2", { id: "shop-6-2", x: 1628, y: 265, width: 64, height: 80 }],
+    ["6-3", { id: "shop-6-2", x: 1400, y: 195, width: 64, height: 80 }],
     ["10-1", { id: "shop-10-2", x: 1300, y: 230, width: 64, height: 80 }],
     ["12-1", { id: "shop-12-2", x: 1660, y: 230, width: 64, height: 80 }],
   ]);
@@ -62,8 +62,8 @@ test("solo cinco repisas opcionales tienen tiendas con identificadores estables"
       const margin = { x: hazard.x - 32, y: hazard.y - 32, width: hazard.width + 64, height: hazard.height + 64 };
       assert.ok(!overlap(clearance, margin), `${level.id}: peligro demasiado cerca de la tienda`);
     }
+    // Una tienda puede estar en la pantalla del jefe si queda lejos de él (la condición de goalX de arriba).
     assert.equal(level.route?.finale, undefined);
-    assert.equal(level.boss, undefined);
   }
 });
 
@@ -94,7 +94,7 @@ test("todos los checkpoints reaparecen sobre una superficie que permite aterriza
       `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
     }
   }
-  assert.equal(checkpointCount, 189);
+  assert.equal(checkpointCount, 185);
 });
 
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {
@@ -197,7 +197,8 @@ test("el castillo tiene tres pantallas, un jefe y una pegatina por pantalla", ()
     const sticker = level.items.find((item) => item.kind === "sticker");
     assert.equal(sticker?.id, `sticker-${level.id}`);
     assert.ok(stickerCatalog.some((entry) => entry.id === sticker?.id));
-    assert.ok(level.enemies.some((enemy) => enemy.kind === "ghost"));
+    // La sala-rompecabezas (6-2) no tiene enemigos: sus perritos son piezas de las salas.
+    if (!level.puzzleRooms) assert.ok(level.enemies.some((enemy) => enemy.kind === "ghost"));
   }
 });
 

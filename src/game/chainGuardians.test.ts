@@ -118,8 +118,6 @@ test("los seis perritos se pueden superar sin daño usando sus plataformas reale
   const routes = [
     { id: "6-1", x: 960, y: 292, jumps: [1090], finish: 1490 },
     { id: "6-1", x: 3190, y: 292, jumps: [3250, 3460], finish: 3820 },
-    { id: "6-2", x: 2200, y: 287, jumps: [2250, 2460], finish: 2700 },
-    { id: "6-2", x: 3130, y: 262, jumps: [3210], finish: 3650 },
     { id: "6-3", x: 2120, y: 267, jumps: [2420], finish: 2690 },
     { id: "6-3", x: 4550, y: 277, jumps: [4640, 4880], finish: 5080 },
   ];

@@ -202,7 +202,6 @@ export const waterLevels: Level[] = [
 ];
 
 const castleFloor1: Array<[number, number]> = [[0, 760], [900, 950], [1990, 900], [3030, 1040], [4210, 990]];
-const castleFloor2: Array<[number, number]> = [[0, 650], [800, 1000], [1940, 900], [2980, 1000], [4120, 1080]];
 const castleFloor3: Array<[number, number]> = [[0, 760], [900, 920], [1960, 950], [3050, 950], [4130, 1000], [5260, 1240]];
 const dinoFloor1: Array<[number, number]> = [[0, 1250], [1390, 820], [2350, 760], [3250, 600], [3990, 610]];
 const dinoFloor3: Array<[number, number]> = [[0, 1180], [1320, 700], [2160, 840], [3140, 680], [3960, 840], [4940, 680], [5760, 740]];
@@ -789,6 +788,9 @@ export const levels: Level[] = [
     detourEntrance: { id: "library", x: 1765, y: 265, width: 80, height: 80 },
     title: "Las puertas del castillo", subtitle: "Los perritos de cobre avisan antes de morder. ¡Busca el camino de arriba!",
     theme: "haunted-castle", width: 5200, start: { x: 80, y: 380 }, goalX: 5020,
+    // Presentación: perrito que avisa antes de morder, con la ruta alta a la vista. Giro (invertido): el camino
+    // de arriba se corta y hay que pasar por abajo mientras el perrito descansa.
+    beats: { development: 1500, twist: 2750, finale: 3950, twistKind: "invert" },
     platforms: [
       ...castleGround(castleFloor1),
       castleLedge(310, 350, 190), castleLedge(610, 280, 170), castleLedge(920, 350, 180),
@@ -807,46 +809,89 @@ export const levels: Level[] = [
   },
   {
     id: "6-2", world: 6, screen: 2,
-    secretShop: { id: "shop-6-2", x: 1628, y: 265, width: 64, height: 80 },
-    title: "El laberinto de las torres", subtitle: "Busca pasillos altos y esquiva los pinchos brillantes.",
-    theme: "haunted-castle", width: 5200, start: { x: 80, y: 380 }, goalX: 5020,
+    title: "El laberinto de las torres", subtitle: "Abre las puertas de las torres. Los perritos avisan: ¡pasa por arriba!",
+    theme: "haunted-castle", width: 3840, start: { x: 60, y: 398 }, goalX: 3790,
+    // Sala-rompecabezas: los perritos encadenados son piezas de las salas 2 y 3; siempre hay ruta por arriba.
+    beats: { development: 960, twist: 1920, finale: 2880, twistKind: "shape" },
     platforms: [
-      ...castleGround(castleFloor2),
-      castleLedge(300, 345, 180), castleLedge(560, 275, 170), castleLedge(840, 335, 190),
-      castleLedge(1250, 275, 180), castleLedge(1570, 345, 180), castleLedge(1980, 325, 185),
-      castleLedge(2330, 255, 170), castleLedge(2670, 335, 175), castleLedge(3080, 320, 190),
-      castleLedge(3520, 250, 190), castleLedge(3930, 325, 180), castleLedge(4390, 275, 190),
-      castleLedge(2190, 345, 150), castleLedge(3300, 315, 160), castleLedge(3480, 345, 190),
-      castleWall(1080, 0, 220, 195), castleWall(2150, 0, 185, 175), castleWall(3350, 0, 190, 185), castleWall(4610, 0, 160, 160),
-      castleWall(1420, 398, 36, 58), castleWall(3700, 398, 36, 58),
+      ...castleGround([[0, 3840]]),
+      castleWall(872, -400, 64, 716), castleWall(1832, -400, 64, 716), castleWall(2792, -400, 64, 716), castleWall(3592, -400, 64, 716), castleWall(3692, -400, 64, 716),
+      castleLedge(1350, 330, 420), castleLedge(2200, 350, 140), castleLedge(2560, 190, 210), castleLedge(3470, 190, 120),
     ],
-    spikePits: spikePits(castleFloor2),
-    chainGuardians: [chainGuardian("c2-hound-1", 2440, 2), chainGuardian("c2-hound-2", 3430, 2, 1.5)],
-    enemies: [enemy("zo2", "zombie", 350, 406, 230, 580, 32), enemy("gh3", "ghost", 980, 205, 830, 1220, 57), enemy("sk3", "skeleton", 1660, 420, 1500, 1770, 38), enemy("gh4", "ghost", 2480, 190, 2220, 2780, 60), enemy("zo3", "zombie", 3190, 406, 3080, 3200, 35), enemy("gh5", "ghost", 4010, 205, 3780, 4270, 62), enemy("sk4", "skeleton", 4640, 420, 4450, 4890, 40)],
-    items: [apple("c2a1", 350, 285), apple("c2a2", 1320, 220), apple("c2a3", 2360, 200), apple("c2a4", 3570, 195), apple("c2a5", 4490, 215), sticker("sticker-6-2", 3560, 205)],
-    rewardBlocks: [reward("c2r1", 900, 210), reward("c2r2", 2740, 210, "apple"), reward("c2r3", 4210, 295)], checkpoints: [840, 2030, 3120, 4190],
+    spikePits: [],
+    chainGuardians: [chainGuardian("c2-hound-1", 1560, 2), chainGuardian("c2-hound-2", 2350, 2, 1.5)],
+    enemies: [],
+    items: [apple("c2a1", 150, 300), apple("c2a2", 700, 300), apple("c2a3", 1500, 280), apple("c2a4", 2470, 220), sticker("sticker-6-2", 2572, 136), apple("c2a5", 3520, 300)],
+    rewardBlocks: [reward("c2r1", 300, 300), reward("c2r2", 1250, 300, "apple"), reward("c2r3", 3060, 300)],
+    checkpoints: [],
+    puzzleRooms: [
+      {
+        x: 0, entry: { x: 60, y: 398 }, exitDoor: "c2-d1",
+        triggers: [{ id: "c2-t1", kind: "paw", x: 450, y: 456, width: 72, opens: "c2-d1" }],
+        doors: [{ id: "c2-d1", symbol: "paw", x: 880, y: 316, width: 48, height: 140 }],
+      },
+      {
+        x: 960, entry: { x: 1000, y: 398 }, exitDoor: "c2-d2",
+        triggers: [{ id: "c2-t2", kind: "plate", x: 1150, y: 456, width: 92, opens: "c2-d2" }],
+        doors: [{ id: "c2-d2", symbol: "star", x: 1840, y: 316, width: 48, height: 140 }],
+        crates: [{ id: "c2-c2", x: 1020, y: 456, minX: 1000, maxX: 1200 }],
+      },
+      {
+        x: 1920, entry: { x: 1960, y: 398 }, exitDoor: "c2-d3", startColor: "pink",
+        triggers: [
+          { id: "c2-t3-blue", kind: "color", color: "blue", x: 2000, y: 456, width: 72 },
+          { id: "c2-t3-pink", kind: "color", color: "pink", x: 2090, y: 456, width: 72 },
+          { id: "c2-t3", kind: "paw", x: 2650, y: 190, width: 72, opens: "c2-d3" },
+        ],
+        doors: [{ id: "c2-d3", symbol: "moon", x: 2800, y: 316, width: 48, height: 140 }],
+        colorPlatforms: [
+          { id: "c2-p3-1", color: "blue", x: 2400, y: 270, width: 120, height: 24 },
+          { id: "c2-p3-2", color: "pink", x: 2330, y: 220, width: 100, height: 24 },
+        ],
+      },
+      {
+        x: 2880, entry: { x: 2920, y: 398 }, exitDoor: "c2-d4", startColor: "blue",
+        triggers: [
+          { id: "c2-t4-plate", kind: "plate", x: 3300, y: 456, width: 92, opens: "c2-d4" },
+          { id: "c2-t4-pink", kind: "color", color: "pink", x: 3480, y: 456, width: 72 },
+          { id: "c2-t4", kind: "paw", x: 3490, y: 190, width: 72, opens: "c2-d5" },
+        ],
+        doors: [
+          { id: "c2-d4", symbol: "star", x: 3600, y: 316, width: 48, height: 140 },
+          { id: "c2-d5", symbol: "paw", x: 3700, y: 316, width: 48, height: 140 },
+        ],
+        colorPlatforms: [
+          { id: "c2-p4-1", color: "pink", x: 3180, y: 350, width: 120, height: 24 },
+          { id: "c2-p4-2", color: "pink", x: 3260, y: 270, width: 100, height: 24 },
+        ],
+        crates: [{ id: "c2-c4", x: 2980, y: 456, minX: 2960, maxX: 3320 }],
+      },
+    ],
   },
   {
     id: "6-3", world: 6, screen: 3,
     route: { next: "9-1", nextLabel: "Viajar a la isla de los dinosaurios ▶" },
     title: "El salón del Conde Vampiro", subtitle: "Una última ruta entre fantasmas, pinchos y pasadizos.",
     theme: "haunted-castle", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    secretShop: { id: "shop-6-2", x: 1400, y: 195, width: 64, height: 80 },
+    // Giro (combina): perritos y fantasmas juntos en los pasadizos antes del salón del Conde.
+    beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
     platforms: [
       ...castleGround(castleFloor3),
-      castleLedge(350, 340, 190), castleLedge(640, 275, 170), castleLedge(970, 335, 180),
-      castleLedge(1350, 275, 180), castleLedge(1710, 340, 180), castleLedge(2070, 325, 190),
-      castleLedge(2520, 260, 180), castleLedge(2870, 335, 180), castleLedge(3160, 315, 190),
-      castleLedge(3610, 245, 185), castleLedge(3980, 330, 180), castleLedge(4300, 315, 190),
-      castleLedge(4720, 245, 190), castleLedge(5150, 325, 180), castleLedge(5440, 305, 190), castleLedge(5900, 250, 180),
+      castleLedge(420, 295, 190), castleLedge(720, 230, 170), castleLedge(1000, 290, 180),
+      castleLedge(1350, 275, 180), castleLedge(1680, 295, 180), castleLedge(2070, 325, 190),
+      castleLedge(2520, 260, 180), castleLedge(2870, 335, 180), castleLedge(3200, 270, 190),
+      castleLedge(3650, 200, 185), castleLedge(4000, 285, 180), castleLedge(4250, 270, 190),
+      castleLedge(4720, 245, 190), castleLedge(5150, 325, 180), castleLedge(5480, 260, 190), castleLedge(5950, 205, 180),
       castleLedge(2300, 335, 160), castleLedge(4520, 335, 160),
       castleWall(1120, 0, 190, 180), castleWall(2250, 0, 195, 175), castleWall(3410, 0, 180, 185), castleWall(4550, 0, 200, 170), castleWall(5710, 0, 170, 165),
       castleWall(1570, 396, 34, 60), castleWall(3780, 396, 34, 60), castleWall(5560, 396, 34, 60),
     ],
     spikePits: spikePits(castleFloor3),
     chainGuardians: [chainGuardian("c3-hound-1", 2480, 3), chainGuardian("c3-hound-2", 4860, 3, 1.6)],
-    enemies: [enemy("sk5", "skeleton", 390, 420, 230, 680, 40), enemy("gh6", "ghost", 1100, 215, 930, 1340, 62), enemy("zo4", "zombie", 2140, 406, 2060, 2200, 36), enemy("gh7", "ghost", 2860, 195, 2590, 3050, 65), enemy("sk6", "skeleton", 3330, 420, 3170, 3660, 43), enemy("gh8", "ghost", 4260, 205, 4030, 4500, 68), enemy("zo5", "zombie", 4370, 406, 4320, 4460, 39), enemy("gh9", "ghost", 5450, 185, 5250, 5700, 70), enemy("sk7", "skeleton", 5940, 420, 5770, 6200, 46)],
+    enemies: [enemy("sk5", "skeleton", 390, 420, 230, 680, 40), enemy("gh6", "ghost", 1000, 215, 930, 1150, 62), enemy("zo4", "zombie", 2140, 406, 2060, 2200, 36), enemy("gh7", "ghost", 2860, 195, 2590, 3050, 65), enemy("sk6", "skeleton", 3330, 420, 3170, 3660, 43), enemy("gh8", "ghost", 4260, 205, 4030, 4500, 68), enemy("zo5", "zombie", 4370, 406, 4320, 4460, 39), enemy("gh9", "ghost", 5450, 185, 5250, 5700, 70), enemy("sk7", "skeleton", 5940, 420, 5770, 6200, 46)],
     items: [apple("c3a1", 420, 285), apple("c3a2", 1450, 220), apple("c3a3", 2580, 205), apple("c3a4", 3650, 190), apple("c3a5", 4800, 195), apple("c3a6", 5960, 195), sticker("sticker-6-3", 4780, 185)],
-    rewardBlocks: [reward("c3r1", 1050, 210), reward("c3r2", 2980, 210, "apple"), reward("c3r3", 5280, 200)], checkpoints: [940, 2010, 3120, 4210, 5350, 5890], boss: "vampire-count",
+    rewardBlocks: [reward("c3r1", 1050, 170), reward("c3r2", 2980, 210, "apple"), reward("c3r3", 5280, 200)], checkpoints: [940, 2010, 3120, 4210, 5350, 5890], boss: "vampire-count",
   },
   {
     id: "9-1", world: 9, screen: 1,

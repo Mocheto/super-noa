@@ -19,6 +19,25 @@ _Avoid_: Gimmick, truco
 **Variedad**:
 Lo contrario de la repetición que nota la jugadora: que pantallas seguidas se jueguen de forma distinta, no solo que se vean distintas.
 
+**Tramo**:
+Cada una de las cuatro partes en que se ordena una pantalla: presentación, desarrollo, giro y remate.
+_Avoid_: Tiempo (choca con el ritmo de los duelos), fase, sección
+
+**Presentación**:
+Primer tramo: la mecánica aparece donde fallar no cuesta nada, sobre suelo seguro.
+_Avoid_: Tutorial
+
+**Desarrollo**:
+Segundo tramo: la mecánica ya está en el camino y se combina con peligro.
+
+**Giro**:
+Tercer tramo: algo cambia. Se combina la mecánica con otra ya vista, se invierte, se presenta por sorpresa (siluetas, gravedad baja, cámara alejada) o la pantalla cambia de forma. Aquí la mecánica hace falta para seguir.
+_Avoid_: Sorpresa (es solo uno de los tipos de giro), twist
+
+**Remate**:
+Último tramo, corto y antes de la bandera: una prueba final que junta lo aprendido y en la que la mecánica hace falta.
+_Avoid_: Final (reservado a la pantalla final de la campaña), clímax
+
 ## Ritmo
 
 **Pulso**:

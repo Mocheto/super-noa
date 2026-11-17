@@ -177,3 +177,11 @@ _Avoid_: Cocinera, cuidadora
 **Rama de bellotas**:
 Rama que se llena con una bellota por cada bocado acertado; su raya dorada marca el mínimo para ganar la merienda.
 _Avoid_: Barriguitas, marcador, puntuación
+
+**Llamada del Gran Jabalí**:
+Gruñido del Gran Jabalí en un pulso que hace asomar a un jabato: corto para el pequeño, largo y grave para el grande.
+_Avoid_: Lanzamiento, aviso de turno (reservado al tambor de Armonía)
+
+**Cuenta atrás del jabato**:
+Pulsos entre la llamada y el bocado, en que el jabato abre la boca poco a poco y se enciende un punto con un «tic» por pulso: dos para el pequeño y cuatro para el grande.
+_Avoid_: Espera, retardo

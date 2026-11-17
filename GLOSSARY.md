@@ -1,6 +1,6 @@
 # Super Noa
 
-Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de la campaña y de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja, el tambor de Armonía y la merienda de los jabatos. Los términos de **Campaña** describen la estructura del juego; los de **Ritmo** son comunes a los minijuegos; los de **Piezas** y **Escena** son de los gatitos leñadores.
+Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de la campaña y de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja, el tambor de Armonía, la merienda de los jabatos y la avioneta. Los términos de **Campaña** describen la estructura del juego; los de **Ritmo** son comunes a los minijuegos; los de **Piezas** y **Escena** son de los gatitos leñadores.
 
 ## Campaña
 
@@ -206,3 +206,25 @@ _Avoid_: Espera, retardo
 **Jabato glotón**:
 Jabato pequeño que, con un «¡gru-gru!», pide dos bellotas en pulsos seguidos; solo aparece en la última fase de la merienda.
 _Avoid_: Doble, jabato doble
+
+## Avioneta
+
+**Avioneta**:
+Minijuego aparte que sigue al reino secreto de las nubes: Noa vuelve a casa en la avioneta que le regala la Reina Arcoíris, esquivando y limpiando el cielo hasta cruzar el arcoíris final. También el vehículo, que solo se mueve a izquierda y derecha mientras el cielo avanza.
+_Avoid_: Vuelo (reservado a la abeja ninja), nave, nivel del avión
+
+**Pompa**:
+Lo que dispara la avioneta: una burbuja de arcoíris que limpia los nubarrones y atraviesa a los amigos del cielo sin hacerles nada.
+_Avoid_: Bala, disparo, proyectil
+
+**Nubarrón**:
+Nube gruñona que se acerca por el cielo; al tocarla con una pompa se vuelve una nubecita sonriente que suelta una estrella, y si no, se esquiva.
+_Avoid_: Enemigo, tormenta
+
+**Amigo del cielo**:
+Pájaro o unicornio que cruza el cielo de la avioneta; no se limpia, solo se esquiva.
+_Avoid_: Enemigo, obstáculo
+
+**Burbuja**:
+Protección de la avioneta que aguanta un choque, sin límite de tiempo.
+_Avoid_: Escudo, vida extra, pompa (reservado al disparo)

@@ -19,6 +19,10 @@ _Avoid_: Gimmick, truco
 **Variedad**:
 Lo contrario de la repetición que nota la jugadora: que pantallas seguidas se jueguen de forma distinta, no solo que se vean distintas.
 
+**Formato de pantalla**:
+Forma en que se recorre una pantalla. La horizontal clásica (avanzar hasta la bandera) es la forma por defecto; los formatos nuevos son vertical, exploración, sala-rompecabezas y persecución amable. La regla de no repetir formato seguido solo se aplica a los formatos nuevos. Un mundo cuya mecánica ya es la forma de la pantalla (subir en el cielo, nadar) no cuenta para esa regla.
+_Avoid_: Tipo de nivel, modo
+
 **Paseo de los amigos**:
 Pantalla de descanso corta y opcional tras el guardián de un mundo, sin peligros, en la que los animales y enemigos de ese mundo aparecen como amigos y se dejan saludar.
 _Avoid_: Pantalla de bonus, nivel de descanso, desvío (son los caminos secretos)

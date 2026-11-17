@@ -356,3 +356,11 @@ _Avoid_: Emoji, icono (cuando acompaña a una palabra)
 **Palabra con dibujo**:
 Pareja fija de una palabra del vocabulario y su pictograma (MANZANA con la manzana, VIDAS con el corazón), que aparece siempre igual en toda la interfaz para que se asocien.
 _Avoid_: Etiqueta, icono con texto
+
+**Catálogo de textos**:
+Lugar único donde vive cada texto visible del juego, en español, organizado para poder añadir otros idiomas. Los datos y las pantallas no escriben textos: los piden al catálogo.
+_Avoid_: Fichero de traducciones, strings, literales
+
+**Clave de texto**:
+Nombre estable con el que se pide un texto al catálogo; no cambia aunque cambie la redacción ni el idioma.
+_Avoid_: ID de texto, etiqueta

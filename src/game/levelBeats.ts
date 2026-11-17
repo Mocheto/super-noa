@@ -166,7 +166,8 @@ export function reachable(level: Level, options: { from?: number; fromTop?: numb
  * ráfagas, plataformas al compás, géiseres, cintas, rocío, perritos, lobos dormidos…), ordenadas. */
 export function mechanicXs(level: Level): number[] {
   const xs = [
-    ...level.platforms.filter((p) => p.kind === "spring" || p.kind === "gift-spring" || p.kind === "dew" || p.beltSpeed).map((p) => p.x),
+    // El muelle es la mecánica del mundo 1; en otros mundos (la plataforma secreta de 4-3) es un extra.
+    ...level.platforms.filter((p) => (p.kind === "spring" && level.world === 1) || p.kind === "gift-spring" || p.kind === "dew" || p.beltSpeed).map((p) => p.x),
     ...(level.lavaJets ?? []).map((jet) => jet.x),
     // Los saltadores viven en el agua por definición: no cuentan para «empezar sobre suelo seguro».
     ...(level.bloomBridges ?? []).map((bridge) => bridge.x),

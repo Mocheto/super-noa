@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>La avioneta de las nubes · prototipo jugable</title>
+<style>
+  :root { --gold: #ffd76a; --ink: #2f1d33; --paper: #fff6e3; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; min-height: 100vh; background: #1d2346; color: var(--paper); font: 15px/1.45 system-ui, sans-serif; }
+  main { width: min(980px, 100%); margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.5rem ui-monospace, monospace; }
+  .lead { margin: 0 0 12px; color: #d6dcf4; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 4px solid #3b4680; border-radius: 12px; background: #7cc4f0; touch-action: none; user-select: none; -webkit-user-select: none; }
+  canvas { display: block; width: 100%; height: 100%; }
+  .panel { position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; padding: 16px; background: #1d2346d9; text-align: center; }
+  .panel h2 { margin: 0; color: var(--gold); font: 900 2rem ui-monospace, monospace; }
+  .panel p { margin: 0; max-width: 560px; }
+  .panel div { display: flex; gap: 10px; justify-content: center; }
+  .panel button, .tools button { padding: 8px 16px; border: 3px solid var(--ink); border-radius: 999px; background: var(--paper); color: var(--ink); font: 800 15px system-ui; cursor: pointer; }
+  .tools { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
+  .tools button { padding: 6px 12px; font-size: 14px; }
+  .touch { position: absolute; inset: auto 0 10px; display: none; justify-content: space-between; padding: 0 14px; pointer-events: none; }
+  .touch div { display: flex; gap: 12px; }
+  .touch button { width: 66px; height: 66px; border: 3px solid var(--ink); border-radius: 50%; background: #fff6e3cc; color: var(--ink); font: 900 24px system-ui; pointer-events: auto; touch-action: none; }
+  @media (pointer: coarse) { .touch { display: flex; } }
+  .notes { margin-top: 14px; padding: 12px 16px; border-radius: 10px; background: #283066; }
+  .notes h3 { margin: 0 0 6px; color: var(--gold); }
+  .notes ul { margin: 0; padding-left: 20px; }
+  .tune { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 10px; font-size: 14px; }
+  .tune label { display: flex; gap: 6px; align-items: center; }
+</style>
+</head>
+<body>
+<main>
+  <h1>La avioneta de las nubes</h1>
+  <p class="lead">Prototipo del minijuego que sigue al reino secreto de las nubes. ← → mueven la avioneta y espacio o ↑ lanzan pompas (si lo mantienes, sale una tras otra). Si pasan unos segundos sin pulsar, la avioneta dispara sola. No hay vidas: al chocar da una voltereta y sigue volando. R vuelve a empezar.</p>
+  <div class="frame">
+    <canvas id="c" width="960" height="540"></canvas>
+    <div class="tools" id="tools" hidden><button id="restart" type="button">↺ Otra vez</button></div>
+    <div class="panel" id="intro">
+      <h2>¡A volar!</h2>
+      <p>La Reina Arcoíris le regala a Noa su avioneta para volver a casa. Limpia los nubarrones con pompas, esquiva a los amigos del cielo y cruza el gran arcoíris.</p>
+      <div><button id="go" type="button">¡Despegar!</button></div>
+    </div>
+    <div class="panel" id="end" hidden>
+      <h2 id="endTitle">¡Has llegado a casa!</h2>
+      <p id="endText"></p>
+      <div><button id="again" type="button">Otra vez</button></div>
+    </div>
+    <div class="touch"><div><button data-key="left" type="button">◀</button><button data-key="right" type="button">▶</button></div><div><button data-key="fire" type="button">◯</button></div></div>
+  </div>
+  <section class="notes">
+    <h3>Qué observar</h3>
+    <ul>
+      <li>¿Entiende sola que el botón grande lanza pompas y que los nubarrones se limpian, pero los pájaros y unicornios no?</li>
+      <li>¿Esquiva o se choca mucho? Los choques solo dan una voltereta y quitan la burbuja; cuenta cuántos hay por vuelo (aparecen al final).</li>
+      <li>Ritmo en cuatro tiempos: presentar (0–20 s), desarrollar (20–45 s), giro con unicornios y filas de nubarrones (45–70 s) y remate (70–90 s). ¿Se hace largo o se queda corto?</li>
+      <li>¿Llega a usar el disparo automático? Si nunca pulsa, ¿le sigue pareciendo divertido?</li>
+    </ul>
+    <div class="tune">
+      <label>Velocidad del cielo <input id="speed" type="range" min="0.6" max="1.4" step="0.1" value="1"> <output id="speedOut">1,0×</output></label>
+      <label><input id="auto" type="checkbox" checked> Disparo automático si no pulsa</label>
+    </div>
+  </section>
+</main>
+<script>
+"use strict";
+const A = "../public/assets/";
+const IMG = {};
+for (const [name, src] of Object.entries({
+  bird: "sprites/enemy-bird-v2.png", secret: "atlases/secret-sky-v1.png",
+  aura: "sprites/secret-star-aura-v1.png", coll: "atlases/collectibles-v1.png", noa: "sprites/noa-jump-v2.png",
+})) { IMG[name] = new Image(); IMG[name].src = A + src; }
+const ready = (img) => img.complete && img.naturalWidth > 0;
+const canvas = document.getElementById("c"), ctx = canvas.getContext("2d");
+const W = 960, H = 540, PLANE_Y = 440, DURATION = 90;
+const $ = (id) => document.getElementById(id);
+
+/* ---------- sonido ---------- */
+let audio = null;
+function tone(freq, dur = 0.12, type = "triangle", gain = 0.06, slide = 0) {
+  try {
+    audio ??= new AudioContext();
+    const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(freq * slide, t + dur);
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dur + 0.02);
+  } catch { /* sin sonido */ }
+}
+const SFX = {
+  pop: () => tone(700, 0.08, "sine", 0.05, 1.8),
+  clean: () => { tone(523, 0.1); setTimeout(() => tone(784, 0.14), 70); },
+  star: () => tone(1319, 0.12, "triangle", 0.06, 1.3),
+  bump: () => tone(200, 0.3, "sine", 0.07, 0.5),
+  bubble: () => [659, 880, 1175].forEach((f, i) => setTimeout(() => tone(f, 0.14, "sine", 0.06), i * 70)),
+  win: () => [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => setTimeout(() => tone(f, 0.22, "triangle", 0.07), i * 110)),
+};
+
+/* ---------- entrada ---------- */
+const input = { left: false, right: false, fire: false, firePressed: false };
+const KEYS = { ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right", " ": "fire", ArrowUp: "fire", w: "fire", W: "fire" };
+addEventListener("keydown", (e) => {
+  if ((e.key === "r" || e.key === "R") && game) return start();
+  const k = KEYS[e.key]; if (!k) return;
+  e.preventDefault();
+  if (k === "fire" && !input.fire) input.firePressed = true;
+  input[k] = true;
+});
+addEventListener("keyup", (e) => { const k = KEYS[e.key]; if (k) input[k] = false; });
+for (const b of document.querySelectorAll("[data-key]")) {
+  const k = b.dataset.key;
+  b.addEventListener("pointerdown", (e) => { e.preventDefault(); if (k === "fire" && !input.fire) input.firePressed = true; input[k] = true; });
+  for (const ev of ["pointerup", "pointercancel", "pointerleave"]) b.addEventListener(ev, () => { input[k] = false; });
+}
+
+/* ---------- recorrido declarativo en cuatro tiempos ----------
+   Cada entrada aparece en `t` segundos. x en px del cielo (0–960).
+   cloud: nubarrón que baja; friend: pájaro o unicornio que cruza; bubble: burbuja protectora que baja. */
+const lane = (n) => 120 + n * 180; // cinco carriles: 120, 300, 480, 660, 840
+const ROUTE = [
+  // 1. Presentar: nubarrones sueltos y lentos, uno cada vez.
+  { t: 2, kind: "cloud", x: lane(2) }, { t: 5, kind: "cloud", x: lane(1) }, { t: 8, kind: "cloud", x: lane(3) },
+  { t: 11, kind: "cloud", x: lane(2) }, { t: 14, kind: "cloud", x: lane(0) }, { t: 16, kind: "cloud", x: lane(4) },
+  { t: 18, kind: "friend", who: "bird", y: 140, dir: 1 },
+  // 2. Desarrollar: parejas de nubarrones, primera burbuja y pájaros que cruzan.
+  { t: 21, kind: "bubble", x: lane(2) },
+  { t: 23, kind: "cloud", x: lane(1) }, { t: 23, kind: "cloud", x: lane(3) },
+  { t: 26, kind: "friend", who: "bird", y: 220, dir: -1 },
+  { t: 28, kind: "cloud", x: lane(0) }, { t: 29, kind: "cloud", x: lane(2) },
+  { t: 31, kind: "friend", who: "bird", y: 120, dir: 1 },
+  { t: 33, kind: "cloud", x: lane(4) }, { t: 34, kind: "cloud", x: lane(2) },
+  { t: 37, kind: "cloud", x: lane(1) }, { t: 38, kind: "cloud", x: lane(3) },
+  { t: 40, kind: "friend", who: "bird", y: 260, dir: -1 },
+  { t: 42, kind: "cloud", x: lane(0) }, { t: 42, kind: "cloud", x: lane(4) },
+  // 3. Giro: llegan los unicornios en diagonal y filas de nubarrones con un hueco.
+  { t: 46, kind: "friend", who: "unicorn", y: 60, dir: 1, dive: 140 },
+  { t: 49, kind: "row", gap: 3 },
+  { t: 52, kind: "bubble", x: lane(1) },
+  { t: 54, kind: "friend", who: "unicorn", y: 80, dir: -1, dive: 150 },
+  { t: 57, kind: "row", gap: 0 },
+  { t: 60, kind: "friend", who: "bird", y: 200, dir: 1 },
+  { t: 62, kind: "row", gap: 2 },
+  { t: 65, kind: "friend", who: "unicorn", y: 50, dir: 1, dive: 160 },
+  { t: 67, kind: "cloud", x: lane(1) }, { t: 67, kind: "cloud", x: lane(3) },
+  // 4. Remate: mezcla final más viva y el gran arcoíris.
+  { t: 71, kind: "bubble", x: lane(3) },
+  { t: 72, kind: "cloud", x: lane(0) }, { t: 72.5, kind: "cloud", x: lane(2) }, { t: 73, kind: "cloud", x: lane(4) },
+  { t: 75, kind: "friend", who: "bird", y: 150, dir: -1 }, { t: 76, kind: "friend", who: "unicorn", y: 40, dir: 1, dive: 120 },
+  { t: 77, kind: "row", gap: 1 },
+  { t: 80, kind: "cloud", x: lane(3) }, { t: 80.5, kind: "cloud", x: lane(1) },
+  { t: 82, kind: "friend", who: "bird", y: 230, dir: 1 },
+  { t: 83, kind: "cloud", x: lane(2) }, { t: 84, kind: "cloud", x: lane(0) }, { t: 84, kind: "cloud", x: lane(4) },
+];
+const TOTAL_CLOUDS = ROUTE.reduce((n, e) => n + (e.kind === "cloud" ? 1 : e.kind === "row" ? 4 : 0), 0);
+
+/* ---------- partida ---------- */
+let game = null, paused = true, last = 0;
+function newGame() {
+  return {
+    t: 0, scroll: 0, next: 0, ended: false,
+    plane: { x: W / 2, vx: 0, flip: 0, invuln: 0, bubble: false, lastPress: 0, hold: 0, autoCd: 0 },
+    pops: [], clouds: [], friends: [], stars: [], bubbles: [], puffs: [], fx: [],
+    got: 0, cleaned: 0, bumps: 0, autoShots: 0, rainbow: null,
+  };
+}
+function start() {
+  game = newGame(); paused = false;
+  $("intro").hidden = true; $("end").hidden = true; $("tools").hidden = false;
+  for (let i = 0; i < 9; i++) game.puffs.push({ x: Math.random() * W, y: Math.random() * H, s: 0.5 + Math.random() * 0.8 });
+}
+$("go").addEventListener("click", start);
+$("again").addEventListener("click", start);
+$("restart").addEventListener("click", (e) => { e.currentTarget.blur(); start(); });
+const speedInput = $("speed");
+speedInput.addEventListener("input", () => { $("speedOut").textContent = `${Number(speedInput.value).toFixed(1).replace(".", ",")}×`; });
+
+function spawn(e) {
+  const k = speed();
+  if (e.kind === "cloud") game.clouds.push({ x: e.x, y: -60, vy: 95 * k, r: 46, happy: 0, wob: Math.random() * 6 });
+  if (e.kind === "row") for (let i = 0; i < 5; i++) if (i !== e.gap) game.clouds.push({ x: lane(i), y: -60, vy: 85 * k, r: 46, happy: 0, wob: i });
+  if (e.kind === "bubble") game.bubbles.push({ x: e.x, y: -40, vy: 80 * k });
+  if (e.kind === "friend") {
+    const vx = (e.who === "unicorn" ? 190 : 150) * e.dir;
+    game.friends.push({ who: e.who, x: e.dir > 0 ? -60 : W + 60, y: e.y, vx, vy: e.dive ? e.dive * k : 30 * k, phase: 0 });
+  }
+}
+const speed = () => Number(speedInput.value) || 1;
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+function bump(g) {
+  const p = g.plane;
+  if (p.invuln > 0) return;
+  if (p.bubble) { p.bubble = false; p.invuln = 1.0; g.fx.push({ kind: "burst", x: p.x, y: PLANE_Y, life: 0.5 }); SFX.pop(); return; }
+  p.flip = 0.7; p.invuln = 1.5; g.bumps += 1; SFX.bump();
+}
+
+function update(dt) {
+  const g = game, p = g.plane;
+  g.t += dt; g.scroll += 120 * speed() * dt;
+  while (g.next < ROUTE.length && ROUTE[g.next].t <= g.t) spawn(ROUTE[g.next++]);
+  if (g.t >= DURATION - 4 && !g.rainbow) g.rainbow = { y: -260 };
+
+  // Movimiento: solo izquierda y derecha, con un poco de inercia.
+  const target = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+  p.vx += (target * 430 - p.vx) * Math.min(1, dt * 9);
+  p.x = Math.max(70, Math.min(W - 70, p.x + p.vx * dt));
+  p.flip = Math.max(0, p.flip - dt); p.invuln = Math.max(0, p.invuln - dt);
+
+  // Pompas: un toque, una pompa; mantenido, una cada 0,4 s; sin pulsar 3 s, dispara sola cada 0,8 s.
+  const shoot = (auto) => { g.pops.push({ x: p.x, y: PLANE_Y - 50, auto }); SFX.pop(); if (auto) g.autoShots += 1; };
+  if (input.firePressed) { shoot(false); p.hold = 0; p.lastPress = g.t; }
+  else if (input.fire) { p.hold += dt; p.lastPress = g.t; if (p.hold >= 0.4) { p.hold = 0; shoot(false); } }
+  input.firePressed = false;
+  if ($("auto").checked && g.t - p.lastPress > 3 && p.flip <= 0) { p.autoCd -= dt; if (p.autoCd <= 0) { p.autoCd = 0.8; shoot(true); } }
+
+  for (const o of g.pops) o.y -= 560 * dt;
+  for (const c of g.clouds) {
+    c.y += c.vy * dt; c.wob += dt;
+    if (c.happy > 0) { c.happy += dt; c.y -= c.vy * dt * 0.6; continue; }
+    for (const o of g.pops) if (!o.done && dist(o, c) < c.r + 16) {
+      o.done = true; c.happy = 0.001; g.cleaned += 1; SFX.clean();
+      g.stars.push({ x: c.x, y: c.y + 10, vy: 60 });
+    }
+    if (c.happy === 0 && Math.abs(c.x - p.x) < c.r + 30 && Math.abs(c.y - PLANE_Y) < c.r + 18) bump(g);
+  }
+  for (const f of g.friends) {
+    f.x += f.vx * dt; f.y += f.vy * dt; f.phase += dt;
+    if (Math.abs(f.x - p.x) < 62 && Math.abs(f.y - PLANE_Y) < 40) bump(g);
+  }
+  for (const s of g.stars) {
+    s.y += s.vy * dt;
+    // Imán amable: las estrellas cercanas vuelan solas hacia la avioneta.
+    const d = dist(s, { x: p.x, y: PLANE_Y });
+    if (d < 150) { s.x += (p.x - s.x) * Math.min(1, dt * 5); s.y += (PLANE_Y - s.y) * Math.min(1, dt * 5); }
+    if (d < 40 && !s.done) { s.done = true; g.got += 1; SFX.star(); }
+  }
+  for (const b of g.bubbles) {
+    b.y += b.vy * dt;
+    if (!b.done && Math.abs(b.x - p.x) < 60 && Math.abs(b.y - PLANE_Y) < 50) { b.done = true; p.bubble = true; SFX.bubble(); }
+  }
+  for (const f of g.fx) f.life -= dt;
+  for (const u of g.puffs) { u.y += 60 * u.s * speed() * dt; if (u.y > H + 60) { u.y = -60; u.x = Math.random() * W; } }
+  g.pops = g.pops.filter((o) => !o.done && o.y > -40);
+  g.clouds = g.clouds.filter((c) => c.y < H + 80 && c.happy < 2.5);
+  g.friends = g.friends.filter((f) => f.x > -120 && f.x < W + 120 && f.y < H + 80);
+  g.stars = g.stars.filter((s) => !s.done && s.y < H + 40);
+  g.bubbles = g.bubbles.filter((b) => !b.done && b.y < H + 60);
+  g.fx = g.fx.filter((f) => f.life > 0);
+
+  if (g.rainbow) {
+    g.rainbow.y += 120 * dt;
+    if (g.rainbow.y > PLANE_Y - 60 && !g.ended) {
+      g.ended = true; paused = true; SFX.win();
+      $("endTitle").textContent = g.got === TOTAL_CLOUDS ? "¡Todas las estrellas!" : "¡Has cruzado el arcoíris!";
+      $("endText").textContent = `Has recogido ${g.got} de ${TOTAL_CLOUDS} estrellas en ${Math.round(g.t)} segundos. Choques: ${g.bumps}. Pompas automáticas: ${g.autoShots}.`;
+      $("end").hidden = false;
+    }
+  }
+}
+
+/* ---------- dibujo ---------- */
+function drawSky(g) {
+  // Cielo provisional: degradado y nubes en varias capas que bajan (el fondo vertical definitivo es arte nuevo).
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, "#7d8fe6"); grad.addColorStop(0.55, "#9fd0f6"); grad.addColorStop(1, "#ffd9ec");
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  const far = (g ? g.scroll * 0.25 : 0) % 270;
+  for (let y = -270 + far; y < H + 60; y += 270) for (const x of [90, 420, 760]) cloudShape(x + (y % 540 ? 110 : 0), y, 30, "#ffffff55", null);
+  for (const u of g?.puffs ?? []) cloudShape(u.x, u.y, 40 * u.s, "#ffffffb0", null);
+}
+function cloudShape(x, y, r, fill, stroke) {
+  ctx.beginPath();
+  ctx.arc(x - r * 0.7, y + r * 0.15, r * 0.6, 0, Math.PI * 2); ctx.arc(x, y - r * 0.2, r * 0.75, 0, Math.PI * 2); ctx.arc(x + r * 0.72, y + r * 0.15, r * 0.6, 0, Math.PI * 2);
+  ctx.fillStyle = fill; ctx.fill(); if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 3; ctx.stroke(); }
+}
+function drawCloud(c) {
+  const happy = c.happy > 0, y = c.y + Math.sin(c.wob * 3) * 3;
+  ctx.save(); if (happy) { ctx.globalAlpha = Math.max(0, 1 - c.happy / 2.5); }
+  cloudShape(c.x, y, c.r, happy ? "#ffffff" : "#8e8aa8", "#2f1d33");
+  ctx.fillStyle = "#2f1d33"; ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3;
+  if (happy) {
+    ctx.beginPath(); ctx.arc(c.x - 13, y - 6, 4, Math.PI, 0); ctx.stroke(); ctx.beginPath(); ctx.arc(c.x + 13, y - 6, 4, Math.PI, 0); ctx.stroke();
+    ctx.beginPath(); ctx.arc(c.x, y + 4, 9, 0, Math.PI); ctx.stroke();
+    ctx.fillStyle = "#ff9fb5"; ctx.beginPath(); ctx.arc(c.x - 24, y + 4, 5, 0, Math.PI * 2); ctx.arc(c.x + 24, y + 4, 5, 0, Math.PI * 2); ctx.fill();
+  } else {
+    // Cejas fruncidas y morrito gruñón: enfadado de mentira, sin dar miedo.
+    ctx.beginPath(); ctx.moveTo(c.x - 22, y - 16); ctx.lineTo(c.x - 7, y - 10); ctx.moveTo(c.x + 22, y - 16); ctx.lineTo(c.x + 7, y - 10); ctx.stroke();
+    ctx.beginPath(); ctx.arc(c.x - 13, y - 3, 4, 0, Math.PI * 2); ctx.arc(c.x + 13, y - 3, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(c.x, y + 16, 7, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawFriend(f) {
+  const w = f.who === "unicorn" ? 96 : 84, h = f.who === "unicorn" ? 80 : 70, bob = Math.sin(f.phase * 8) * 4;
+  ctx.save(); ctx.translate(f.x, f.y + bob); if (f.vx < 0) ctx.scale(-1, 1);
+  if (f.who === "unicorn" && ready(IMG.secret)) { const cw = IMG.secret.naturalWidth / 2, ch = IMG.secret.naturalHeight / 2; ctx.drawImage(IMG.secret, 0, 0, cw, ch, -w / 2, -h / 2, w, h); }
+  else if (ready(IMG.bird)) ctx.drawImage(IMG.bird, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+function drawPlane(g) {
+  const p = g.plane;
+  ctx.save(); ctx.translate(p.x, PLANE_Y);
+  if (p.invuln > 0 && Math.floor(p.invuln * 10) % 2 === 0) ctx.globalAlpha = 0.5;
+  const tilt = p.vx / 430 * 0.25;
+  ctx.rotate(p.flip > 0 ? (1 - p.flip / 0.7) * Math.PI * 2 : tilt);
+  // Avioneta provisional vista desde detrás: alas, cola, morro y hélice.
+  const ink = "#2f1d33";
+  ctx.lineWidth = 3; ctx.strokeStyle = ink;
+  ctx.fillStyle = "#d9403a"; ctx.beginPath(); ctx.roundRect(-92, -6, 184, 22, 10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#ffd76a"; ctx.fillRect(-84, 0, 18, 10); ctx.fillRect(66, 0, 18, 10);
+  ctx.fillStyle = "#d9403a"; ctx.beginPath(); ctx.roundRect(-30, -18, 60, 50, 22); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#b8302c"; ctx.beginPath(); ctx.moveTo(-8, 30); ctx.lineTo(0, 54); ctx.lineTo(8, 30); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(-36, 40, 72, 10, 5); ctx.fill(); ctx.stroke();
+  // Noa en la cabina (provisional: recorte de su pose de salto) y el gatito copiloto.
+  if (ready(IMG.noa)) { ctx.save(); ctx.beginPath(); ctx.rect(-40, -82, 80, 66); ctx.clip(); ctx.drawImage(IMG.noa, -46, -88, 92, 80); ctx.restore(); }
+  ctx.fillStyle = "#7f5a3a"; ctx.beginPath(); ctx.ellipse(0, -60, 22, 8, 0, Math.PI, 0); ctx.fill(); ctx.stroke(); // gorro de aviadora
+  ctx.fillStyle = "#f4a640"; ctx.beginPath(); ctx.arc(24, -20, 11, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(16, -28); ctx.lineTo(18, -38); ctx.lineTo(24, -30); ctx.moveTo(26, -30); ctx.lineTo(32, -38); ctx.lineTo(33, -27); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#cfd8ff99"; ctx.beginPath(); ctx.roundRect(-24, -22, 48, 10, 4); ctx.fill(); ctx.stroke();
+  // Hélice girando.
+  const spin = (performance.now() / 40) % (Math.PI * 2);
+  ctx.strokeStyle = "#ffffffcc"; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(0, 4, 26 * Math.abs(Math.cos(spin)) + 4, 4, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+  if (p.bubble) {
+    ctx.save(); ctx.globalAlpha = 0.85;
+    if (ready(IMG.aura)) ctx.drawImage(IMG.aura, (Math.floor(g.t * 4) % 3) * 128, 0, 128, 128, p.x - 120, PLANE_Y - 120, 240, 240);
+    ctx.strokeStyle = "#bfe8ff"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x, PLANE_Y - 10, 105, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+  }
+}
+function drawStar(x, y, size) { if (ready(IMG.coll)) ctx.drawImage(IMG.coll, 2 * 192, 0, 192, 192, x - size / 2, y - size / 2, size, size); }
+function drawRainbow(y) {
+  const colors = ["#ef5b5b", "#f4a640", "#ffd76a", "#7ed37a", "#5aa0dc", "#9c7be0"];
+  ctx.save(); ctx.lineWidth = 22;
+  colors.forEach((c, i) => { ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(W / 2, y + 260, 520 - i * 22, Math.PI, 0); ctx.stroke(); });
+  ctx.restore();
+  cloudShape(W / 2 - 520, y + 250, 70, "#fff", "#2f1d33"); cloudShape(W / 2 + 520, y + 250, 70, "#fff", "#2f1d33");
+}
+function drawHud(g) {
+  ctx.save(); ctx.font = "900 22px ui-monospace, monospace"; ctx.lineWidth = 5; ctx.strokeStyle = "#2f1d33"; ctx.fillStyle = "#ffd76a";
+  drawStar(30, 30, 40); ctx.strokeText(`${g.got}`, 56, 38); ctx.fillText(`${g.got}`, 56, 38);
+  // Camino hasta el arcoíris: la avioneta avanza por una línea.
+  const x0 = 300, x1 = 660, u = Math.min(1, g.t / DURATION);
+  ctx.strokeStyle = "#fff6e3"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x0, 26); ctx.lineTo(x1, 26); ctx.stroke();
+  [0.22, 0.5, 0.78].forEach((m) => { ctx.fillStyle = "#fff6e3"; ctx.beginPath(); ctx.arc(x0 + (x1 - x0) * m, 26, 5, 0, Math.PI * 2); ctx.fill(); });
+  ctx.fillStyle = "#d9403a"; ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(x0 + (x1 - x0) * u - 14, 18, 28, 16, 6); ctx.fill(); ctx.stroke();
+  ["#ef5b5b", "#ffd76a", "#5aa0dc"].forEach((c, i) => { ctx.strokeStyle = c; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x1 + 22, 34, 18 - i * 5, Math.PI, 0); ctx.stroke(); });
+  ctx.restore();
+}
+function draw() {
+  const g = game;
+  drawSky(g);
+  if (!g) return;
+  if (g.rainbow) drawRainbow(g.rainbow.y);
+  for (const b of g.bubbles) { ctx.save(); ctx.strokeStyle = "#bfe8ff"; ctx.fillStyle = "#e8f7ff66"; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(b.x, b.y, 26, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(b.x - 8, b.y - 9, 6, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+  for (const c of g.clouds) drawCloud(c);
+  for (const s of g.stars) drawStar(s.x, s.y + Math.sin(g.t * 6 + s.x) * 3, 36);
+  for (const f of g.friends) drawFriend(f);
+  for (const o of g.pops) {
+    const grad = ctx.createRadialGradient(o.x - 5, o.y - 5, 2, o.x, o.y, 16);
+    grad.addColorStop(0, "#ffffff"); grad.addColorStop(0.5, "#ffd1f0"); grad.addColorStop(1, "#9fd8ffaa");
+    ctx.fillStyle = grad; ctx.strokeStyle = "#ffffffcc"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(o.x, o.y, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  drawPlane(g);
+  for (const f of g.fx) { ctx.save(); ctx.globalAlpha = f.life * 2; ctx.strokeStyle = "#bfe8ff"; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(f.x, f.y - 10, 105 + (0.5 - f.life) * 120, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+  drawHud(g);
+  if (g.t < 4) bubbleText("¡Lanza pompas a los nubarrones!", W / 2, 300);
+}
+function bubbleText(text, x, y) {
+  ctx.save(); ctx.font = "800 20px system-ui"; const w = ctx.measureText(text).width + 26;
+  ctx.fillStyle = "#fff6e3"; ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3; ctx.beginPath(); ctx.roundRect(x - w / 2, y - 22, w, 36, 14); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#2f1d33"; ctx.textAlign = "center"; ctx.fillText(text, x, y + 3); ctx.restore();
+}
+function frame(now) {
+  const dt = Math.min(1 / 30, (now - last) / 1000 || 0); last = now;
+  if (game && !paused) { let rest = dt; while (rest > 1e-6 && !paused) { const s = Math.min(1 / 120, rest); update(s); rest -= s; } }
+  draw();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__proto = { get game() { return game; }, start, input, update, set paused(v) { paused = v; }, TOTAL_CLOUDS };
+</script>
+</body>
+</html>

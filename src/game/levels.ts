@@ -1634,6 +1634,8 @@ export const levels: Level[] = [
     id: "17-1", world: 17, screen: 1,
     title: "Las nubes del amanecer", subtitle: "Sube de nube en nube o tira de la palanca para tomar el ascensor.",
     theme: "sky-dawn", width: 960, height: 3500, orientation: "vertical", start: { x: 110, y: 3352 }, goalX: 480, goalY: 175,
+    // Subida: el ascensor de nubes y las nubes de rebote hacen falta en el giro y en el remate.
+    beats: { development: 953, twist: 1747, finale: 2542, twistKind: "invert" },
     platforms: skyLiftLevelPlatforms(3500, 0, 2385, 1950),
     enemies: [
       enemy("c17a-p1", "puffling", 700, 2875, 640, 880, 48), enemy("c17a-p2", "puffling", 767, 2295, 640, 880, 52), enemy("c17a-p3", "puffling", 834, 1425, 640, 880, 56), enemy("c17a-p4", "puffling", 721, 990, 640, 880, 60),
@@ -1647,6 +1649,8 @@ export const levels: Level[] = [
     id: "17-2", world: 17, screen: 2,
     title: "La escalera del cielo", subtitle: "El camino sigue por el centro. La palanca abre un camino más fácil en ascensor.",
     theme: "sky-blue", width: 960, height: 3900, orientation: "vertical", start: { x: 110, y: 3752 }, goalX: 480, goalY: 175,
+    // Subida: el ascensor de nubes y las nubes de rebote hacen falta en el giro y en el remate.
+    beats: { development: 429, twist: 1967, finale: 2862, twistKind: "combine" },
     platforms: skyLiftLevelPlatforms(3900, 1, 2350, 1915),
     enemies: [
       enemy("c17b-p1", "puffling", 700, 2840, 640, 880, 54), enemy("c17b-p2", "puffling", 767, 2550, 640, 880, 58), enemy("c17b-p3", "puffling", 834, 1970, 640, 880, 62), enemy("c17b-p4", "puffling", 721, 1535, 640, 880, 66), enemy("c17b-p5", "puffling", 788, 665, 640, 880, 68),
@@ -1660,6 +1664,8 @@ export const levels: Level[] = [
     id: "17-3", world: 17, screen: 3, route: { finale: true },
     title: "La puerta de las estrellas", subtitle: "Alcanza la luna o tira de la palanca para subir en ascensor y conocer a Aurora Celeste.",
     theme: "sky-stars", width: 960, height: 4300, orientation: "vertical", start: { x: 110, y: 4152 }, goalX: 480, goalY: 175,
+    // Subida: el ascensor de nubes y las nubes de rebote hacen falta en el giro y en el remate.
+    beats: { development: 477, twist: 2187, finale: 3182, twistKind: "presentation" },
     platforms: skyLiftLevelPlatforms(4300, 2, 2315, 1880),
     enemies: [
       enemy("c17c-p1", "puffling", 700, 3530, 640, 880, 58), enemy("c17c-p2", "puffling", 767, 2950, 640, 880, 62), enemy("c17c-p3", "puffling", 834, 2225, 640, 880, 66), enemy("c17c-p4", "puffling", 721, 1790, 640, 880, 70), enemy("c17c-p5", "puffling", 788, 1210, 640, 880, 74), enemy("c17c-p6", "puffling", 855, 920, 640, 880, 76),

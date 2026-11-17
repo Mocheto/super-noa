@@ -29,6 +29,7 @@ const GameCanvas = lazy(() => import("./game/GameCanvas").then((module) => ({ de
 const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
 const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((module) => ({ default: module.GuardianMiniGame })));
 const ArmoniaDrumGame = lazy(() => import("./game/ArmoniaDrumGame").then((module) => ({ default: module.ArmoniaDrumGame })));
+const MeriendaJabatosGame = lazy(() => import("./game/MeriendaJabatosGame").then((module) => ({ default: module.MeriendaJabatosGame })));
 const BeeNinjaGame = lazy(() => import("./game/BeeNinjaGame").then((module) => ({ default: module.BeeNinjaGame })));
 const CatParty = lazy(() => import("./game/CatPartyGame").then((module) => ({ default: module.CatParty })));
 const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module) => ({ default: module.SantaBossBattle })));
@@ -309,10 +310,11 @@ export default function App() {
     );
     musicRef.current ??= createPlayer();
     starMusicRef.current ??= createPlayer();
-    // La abeja ninja y el tambor de Armonía traen su propia canción: la música del mundo calla mientras duran.
+    // La abeja ninja, el tambor de Armonía y la merienda de los jabatos traen su propia canción: la música del mundo calla mientras duran.
     const beeNinjaDuel = screen === "boss" && activeLevel.boss === "queen-bee";
     const armoniaDrumDuel = screen === "boss" && activeLevel.boss === "maestra-armonia";
-    const playing = (screen === "game" || screen === "boss") && !beeNinjaDuel && !armoniaDrumDuel && !shopActive && !paused && !muted && musicVolume > 0;
+    const meriendaDuel = screen === "boss" && activeLevel.boss === "great-boar";
+    const playing = (screen === "game" || screen === "boss") && !beeNinjaDuel && !armoniaDrumDuel && !meriendaDuel && !shopActive && !paused && !muted && musicVolume > 0;
     musicRef.current.update({
       source: musicTracks[activeLevel.world],
       volume: musicVolume,
@@ -837,6 +839,18 @@ export default function App() {
               friendlyReplay={bossReplay}
             /> : activeLevel.boss === "maestra-armonia" ? <ArmoniaDrumGame
               key={`armonia-drum-${activeLevel.id}-${levelRun}`}
+              paused={paused}
+              muted={muted}
+              musicVolume={musicVolume}
+              effectsVolume={effectsVolume}
+              reduceMotion={reduceMotion}
+              levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
+              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
+              onWin={bossReplay ? finishBossReplay : handleComplete}
+              playSound={playSound}
+              friendlyReplay={bossReplay}
+            /> : activeLevel.boss === "great-boar" ? <MeriendaJabatosGame
+              key={`merienda-jabatos-${activeLevel.id}-${levelRun}`}
               paused={paused}
               muted={muted}
               musicVolume={musicVolume}

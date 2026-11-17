@@ -3,7 +3,7 @@ import type { SoundKind } from "./GameCanvas";
 import { Dialog } from "./Dialog";
 import { GameAssetIcon } from "./GameAssetIcon";
 import { bossCatalog } from "./bosses";
-import { choiceAnswer, GUARDIAN_GAME_ROUNDS, guardianGames, type GuardianGameId, makeGuardianSequence } from "./guardianGames";
+import { GUARDIAN_GAME_ROUNDS, guardianGames, type GuardianGameId, makeGuardianSequence } from "./guardianGames";
 import type { GuardianOption } from "./guardianGames";
 
 type Props = {
@@ -66,7 +66,7 @@ export function GuardianMiniGame({ bossId, paused, apples, protectedByApple, onS
   };
   const choose = (id: string) => {
     if (paused || phase !== "play") return;
-    if (game.kind === "choice") { finishRound(id === choiceAnswer(bossId, sequence[0])); return; }
+    if (game.kind === "choice") { finishRound(id === sequence[0]); return; }
     const nextInput = [...input, id]; setInput(nextInput);
     if (id !== sequence[nextInput.length - 1]) { finishRound(false); return; }
     if (nextInput.length === sequence.length) finishRound(true);
@@ -87,7 +87,7 @@ export function GuardianMiniGame({ bossId, paused, apples, protectedByApple, onS
       <GuardianPortrait bossId={bossId} won={won} />
       <div className="guardian-game-board">
         <strong>{phase === "watch" || game.kind === "choice" ? game.prompt : phase === "play" ? "Ahora repítelo" : message}</strong>
-        {game.kind === "choice" && !won && !lost && <div className="guardian-target" style={{ "--guardian-color": target.color } as CSSProperties}><GuardianGameIcon option={target} /><b>{bossId === "great-boar" ? (target.id === "left" ? "la izquierda" : target.id === "right" ? "la derecha" : "abajo") : target.label}</b></div>}
+        {game.kind === "choice" && !won && !lost && <div className="guardian-target" style={{ "--guardian-color": target.color } as CSSProperties}><GuardianGameIcon option={target} /><b>{target.label}</b></div>}
         {game.kind === "sequence" && phase === "watch" && <div className="guardian-sequence">{sequence.map((id, index) => <span role="img" aria-label={`${index + 1}: ${option(id).label}`} style={{ "--guardian-color": option(id).color } as CSSProperties} key={`${id}-${index}`}><GuardianGameIcon option={option(id)} /><small aria-hidden="true">{index + 1}</small></span>)}</div>}
         {game.kind === "sequence" && phase === "play" && <div className="guardian-progress" aria-label={`${input.length} de ${sequence.length} pasos`} >{sequence.map((_, index) => <span className={index < input.length ? "is-done" : ""} key={index}>{index < input.length ? "★" : index + 1}</span>)}</div>}
         <p aria-live="polite">{message}</p>

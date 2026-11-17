@@ -1,0 +1,115 @@
+/* «La merienda de los jabatos»: duelo rítmico del Gran Jabalí. Escena fija de 960 × 540 escalada al ancho disponible. */
+.merienda-game { width: min(960px, 100%); background-color: #fbf3df; background-image: linear-gradient(180deg, rgba(251,243,223,.96), rgba(226,238,206,.96)); }
+.merienda-header { align-items: flex-start; gap: 16px; }
+.merienda-header h2 { margin-bottom: 4px; }
+.merienda-header > div > p:not(.eyebrow):not(.boss-challenge) { margin: 4px 0 0; font: 800 .9rem/1.35 system-ui, sans-serif; }
+
+.merienda-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin: 14px 0 8px;
+  overflow: hidden;
+  border: 4px solid #2f1d33;
+  background: #24331f;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.merienda-stage { position: absolute; top: 0; left: 0; width: 960px; height: 540px; transform-origin: 0 0; }
+.merienda-stage > * { position: absolute; }
+.merienda-stage img { image-rendering: pixelated; pointer-events: none; }
+.merienda-background { inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.95) brightness(.82) blur(1.5px); }
+
+/* Gran Jabalí sobre su roca: llama con las manos abiertas y celebra con la victoria. */
+.merienda-rock { left: 548px; top: 262px; z-index: 1; width: 175px; filter: drop-shadow(0 6px 4px #0006); }
+.merienda-boss { left: 560px; top: 68px; z-index: 2; width: 150px; height: 259px; filter: drop-shadow(0 6px 4px #0006); transition: transform .08s; }
+.merienda-boss.is-call { transform: translateY(-8px) scale(1.04); }
+.merienda-bubble { left: 410px; top: 110px; z-index: 6; padding: 4px 12px; border: 3px solid #2f1d33; border-radius: 14px; background: #fff6e3; color: #2f1d33; font: 900 22px ui-monospace, monospace; white-space: nowrap; }
+.merienda-bubble.is-big { background: #ffd6a0; font-size: 28px; }
+
+/* Noa guarda del bosque: tira de 4 poses (preparada, dar, ¡uy!, celebrar) mirando a los jabatos. */
+.merienda-noa { left: 28px; top: 192px; z-index: 3; width: 295px; height: 261px; background: var(--noa-sprite) no-repeat 0 0 / 400% 100%; image-rendering: pixelated; filter: drop-shadow(0 6px 4px #0006); }
+.merienda-basket { left: 4px; top: 372px; z-index: 4; width: 96px; filter: drop-shadow(0 4px 3px #0006); }
+.merienda-thrown { left: 250px; top: 262px; z-index: 5; width: 34px; opacity: 0; animation: merienda-throw .2s ease-out; }
+.merienda-thrown.is-big { width: 43px; animation-name: merienda-throw-big; }
+.merienda-thrown.is-miss { left: 380px; top: 330px; animation: merienda-drop .6s ease-in; }
+@keyframes merienda-throw { from { opacity: 1; transform: translate(0, 0) scale(1); } 85% { opacity: 1; } to { opacity: 0; transform: translate(140px, 70px) scale(.7); } }
+@keyframes merienda-throw-big { from { opacity: 1; transform: translate(0, 0) scale(1); } 85% { opacity: 1; } to { opacity: 0; transform: translate(140px, 40px) scale(.75); } }
+@keyframes merienda-drop { from { opacity: 1; transform: translate(0, -20px) rotate(0); } 60% { opacity: 1; transform: translate(30px, 110px) rotate(160deg); } 80% { transform: translate(40px, 90px) rotate(220deg); } to { opacity: 0; transform: translate(50px, 116px) rotate(280deg); } }
+
+/* El jabato sube por detrás del arbusto; la caja con overflow oculta lo que queda por debajo. */
+.merienda-spot { left: 300px; top: 282px; z-index: 2; width: 190px; height: 170px; }
+.merienda-spot > * { position: absolute; }
+.merienda-hole { left: -20px; right: -20px; top: -110px; bottom: 24px; overflow: hidden; }
+.merienda-jabato { position: absolute; background-repeat: no-repeat; background-size: 500% 100%; image-rendering: pixelated; transform: translateY(110%); transition: transform .16s cubic-bezier(.3, 1.4, .5, 1); }
+.merienda-jabato.is-pequeno, .merienda-jabato.is-gloton { left: 43px; bottom: 36px; width: 143px; height: 120px; }
+.merienda-jabato.is-gloton { filter: saturate(1.2) hue-rotate(-8deg); }
+.merienda-jabato.is-grande { left: 22px; bottom: 46px; width: 185px; height: 160px; }
+.merienda-jabato.is-up { transform: translateY(0); }
+.merienda-bush { left: -10px; bottom: -14px; z-index: 1; width: 210px; filter: drop-shadow(0 5px 3px #0005); }
+
+/* Cuenta atrás del jabato: un punto por pulso; los del bocado llevan su bellota o castaña. */
+.merienda-dots { left: 50%; top: -128px; z-index: 4; display: flex; gap: 6px; align-items: center; translate: -50%; pointer-events: none; }
+.merienda-dot { display: block; width: 22px; height: 22px; border: 3px solid #2f1d33; border-radius: 50%; background: #fff6e399; transition: transform .08s; }
+.merienda-dot.is-on { background: #ffd76a; box-shadow: 0 0 10px #ffd76a; }
+.merienda-dot.is-bite { width: 34px; height: 38px; border: none; border-radius: 0; background: var(--food) no-repeat center / contain; image-rendering: pixelated; filter: grayscale(1) brightness(1.5) opacity(.7) drop-shadow(0 0 1px #2f1d33); }
+.merienda-dot.is-bite.is-big { width: 42px; height: 40px; }
+.merienda-dot.is-bite.is-on { background-color: transparent; box-shadow: none; filter: drop-shadow(0 0 8px #ff9d3a) drop-shadow(0 0 2px #fff); transform: scale(1.3); }
+.merienda-dot.is-ok { border-color: #2f8a3c; background-color: #8fe07f; box-shadow: none; }
+.merienda-dot.is-bite.is-ok { background-color: transparent; filter: drop-shadow(0 0 6px #8fe07f); transform: none; }
+.merienda-dot.is-gone { opacity: .35; box-shadow: none; transform: none; }
+
+.merienda-feedback { left: 470px; top: 300px; z-index: 7; padding: 2px 12px; border: 3px solid #2f1d33; border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 22px ui-monospace, monospace; white-space: nowrap; animation: merienda-pop .3s ease-out; }
+.merienda-feedback.is-miss { background: #ffd2c8; color: #6a2a22; }
+@keyframes merienda-pop { from { transform: translateY(10px); opacity: .3; } }
+
+/* Luces de compás. */
+.merienda-lamps { top: 18px; left: 50%; z-index: 5; display: flex; gap: 12px; translate: -50%; }
+.merienda-lamps span { width: 24px; height: 24px; border: 3px solid #2f1d33; border-radius: 50%; background: #4a5a3a; transition: transform .06s; }
+.merienda-lamps span.is-on { transform: scale(1.25); background: #fff4c0; box-shadow: 0 0 14px #fff4c0; }
+
+/* Rama de bellotas: una bellota por bocado y la raya dorada del mínimo. */
+.merienda-branch { right: 14px; top: 12px; z-index: 6; width: 340px; height: 85px; border: 3px solid #2f1d33; border-radius: 12px; background: #fff6e3cc var(--rama) no-repeat center / 100% 100%; image-rendering: pixelated; transition: box-shadow .2s; }
+.merienda-branch.is-reached { box-shadow: 0 0 22px #ffd76a; }
+.merienda-branch i { position: absolute; top: 39%; width: 15px; height: 18px; translate: -50% -50%; background: var(--bellota) no-repeat center / contain; image-rendering: pixelated; filter: grayscale(1) brightness(1.6) opacity(.45); transition: filter .12s, transform .12s; }
+.merienda-branch i:nth-of-type(even) { top: 29%; }
+.merienda-branch i.is-got { filter: none; transform: scale(1.25); }
+.merienda-line { position: absolute; top: 8%; bottom: 30%; width: 5px; border: 1px solid #2f1d33; border-radius: 2px; background: #e2a917; translate: -50%; }
+.merienda-branch.is-reached .merienda-line { background: #fff3a8; box-shadow: 0 0 10px #ffd76a; }
+
+.merienda-caption { left: 50%; bottom: 18px; z-index: 6; max-width: 640px; padding: 6px 16px; border: 3px solid #2f1d33; border-radius: 12px; background: #fff6e3ee; color: #2f1d33; font: 900 19px system-ui, sans-serif; text-align: center; translate: -50%; }
+.merienda-phase { left: 16px; top: 14px; z-index: 5; padding: 3px 9px; border-radius: 8px; color: #fff6e3; background: #2f1d33cc; font: 700 12px ui-monospace, monospace; }
+.merienda-result { left: 50%; top: 170px; z-index: 6; padding: 10px 26px; border: 4px solid #2f1d33; border-radius: 16px; background: #ffd76a; color: #2f1d33; font: 900 40px ui-monospace, monospace; translate: -50%; box-shadow: 0 0 30px #ffd76a; }
+
+.merienda-progress { display: block; width: 100%; height: 10px; margin: 0 0 6px; accent-color: #6b8a3a; }
+.merienda-controls { display: grid; justify-items: center; gap: 8px; text-align: center; }
+.merienda-message { min-height: 1.4em; margin: 3px 0 0; color: #3d3226; font: 900 .98rem/1.3 system-ui, sans-serif; }
+.merienda-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; }
+.merienda-actions .pixel-button { min-width: 170px; }
+.merienda-feed { width: min(480px, 100%); min-height: 68px; border: 4px solid #2f1d33; border-bottom-width: 8px; color: #2f1d33 !important; background: #ffcf7a !important; font-size: 1.35rem; font-weight: 1000; }
+.merienda-feed:active { border-bottom-width: 4px; transform: translateY(4px); }
+.merienda-feed:disabled { opacity: .55; }
+.merienda-note, .merienda-help { margin: 0; color: #5d5446; font: 750 .78rem/1.3 system-ui, sans-serif; }
+.merienda-game .duel-abandon { margin: 3px auto 0; color: #3d3226; }
+.merienda-frame.is-still .merienda-feedback, .merienda-frame.is-still .merienda-thrown { animation-duration: .001ms; }
+.merienda-frame.is-still .merienda-jabato { transition: none; }
+
+/* En pantallas estrechas la escena es pequeña: la cuenta atrás se repite en grande junto a «¡Dale de comer!». */
+.merienda-bigdots { display: none; }
+.merienda-bigdots-row { display: flex; justify-content: center; align-items: center; gap: 12px; min-height: 58px; }
+.merienda-bigdots .merienda-dot { width: 40px; height: 40px; border-width: 4px; }
+.merienda-bigdots .merienda-dot.is-bite { width: 50px; height: 56px; }
+.merienda-bigdots.is-off .merienda-bigdots-row { visibility: hidden; }
+
+@media (max-width: 700px) {
+  .merienda-bigdots { display: block; }
+}
+@media (max-width: 600px) {
+  .merienda-game { max-height: calc(100dvh - 18px); padding: 12px; border-width: 4px; }
+  .merienda-header h2 { font-size: 1.25rem; }
+  .merienda-header > div > p:not(.eyebrow):not(.boss-challenge) { font-size: .75rem; }
+  .merienda-frame { margin: 8px 0 6px; border-width: 3px; }
+  .merienda-feed { min-height: 62px; font-size: 1.2rem; }
+  .merienda-actions .pixel-button { min-width: 0; flex: 1 1 140px; }
+}

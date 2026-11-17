@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { bossCatalog } from "./bosses.ts";
-import { choiceAnswer, GUARDIAN_GAME_ROUNDS, guardianGames, isGuardianGameId, makeGuardianSequence } from "./guardianGames.ts";
+import { GUARDIAN_GAME_ROUNDS, guardianGames, isGuardianGameId, makeGuardianSequence } from "./guardianGames.ts";
 
-test("los cinco guardianes con juego propio tienen juegos cortos, tres opciones y reto sin azar", () => {
-  assert.equal(Object.keys(guardianGames).length, 5);
+test("los cuatro guardianes con juego propio tienen juegos cortos, tres opciones y reto sin azar", () => {
+  assert.equal(Object.keys(guardianGames).length, 4);
   for (const [id, game] of Object.entries(guardianGames)) {
     assert.equal(game.options.length, 3, id);
     assert.ok(game.instruction.length > 20, id);
@@ -22,11 +22,4 @@ test("las cinco rondas de secuencias progresan sin superar cinco pasos", () => {
     assert.ok(Math.max(...lengths) <= 5, id);
     assert.ok(lengths.every((length, index) => index === 0 || length >= lengths[index - 1]), id);
   }
-});
-
-test("el Gran Jabalí se esquiva hacia el lado contrario o saltando", () => {
-  assert.equal(choiceAnswer("great-boar", "left"), "right");
-  assert.equal(choiceAnswer("great-boar", "right"), "left");
-  assert.equal(choiceAnswer("great-boar", "jump"), "jump");
-  assert.equal(choiceAnswer("triceratops-queen", "left"), "left");
 });

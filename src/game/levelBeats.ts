@@ -10,7 +10,7 @@ export const DOUBLE_JUMP_RISE = (JUMP_SPEED ** 2 + (JUMP_SPEED * .94) ** 2) / (2
 export const isCampaignScreen = (level: Level) => level.world !== 7 && level.world !== 8 && !level.detour;
 
 const isGround = (platform: Platform) => platform.y === 456 && (platform.kind ?? "ground").endsWith("ground");
-const isWall = (platform: Platform) => (platform.kind ?? "").endsWith("wall");
+const isWall = (platform: Platform) => (platform.kind ?? "").endsWith("wall") || platform.kind === "puzzle-block";
 
 /** Longitud del recorrido: x hasta la meta en horizontal, altura subida hasta la meta en vertical. */
 export function routeLength(level: Level): number {
@@ -80,17 +80,47 @@ type Surface = { left: number; right: number; top: number };
 
 /** ¿Se llega de `from` a `to` (x) en una pantalla horizontal solo andando y saltando sobre plataformas fijas?
  * Cada salto cubre como mucho 310 px en horizontal y sube como mucho la altura del doble salto. `ignore` quita
- * plataformas del cálculo (por ejemplo, las de la mecánica para comprobar que hace falta). */
-export function reachable(level: Level, options: { from?: number; to?: number; ignore?: (platform: Platform) => boolean } = {}): boolean {
+ * plataformas del cálculo (por ejemplo, las de la mecánica para comprobar que hace falta); `toTop` exige llegar
+ * a una superficie a esa altura o más arriba (para alcanzar algo que flota). */
+export function reachable(level: Level, options: { from?: number; to?: number; toTop?: number; ignore?: (platform: Platform) => boolean } = {}): boolean {
   const from = options.from ?? level.start.x;
   const to = options.to ?? level.goalX;
-  const surfaces: Surface[] = level.platforms
-    .filter((platform) => !isWall(platform) && !options.ignore?.(platform))
-    .map((platform) => ({ left: platform.x, right: platform.x + platform.width, top: platform.y }));
-  const walls = level.platforms.filter(isWall);
-  const blocked = (a: Surface, b: Surface) => walls.some((wall) => {
-    const between = wall.x < Math.max(a.left, b.left) && wall.x + wall.width > Math.min(a.right, b.right);
-    return between && wall.y < Math.min(a.top, b.top) - DOUBLE_JUMP_RISE;
+  const kept = level.platforms.filter((platform) => !options.ignore?.(platform));
+  const walls = kept.filter(isWall);
+  const touching = (low: Platform, high: Platform) => high !== low && high.x < low.x + low.width && high.x + high.width > low.x
+    && Math.abs(high.y + high.height - low.y) <= 6;
+  // Paredes apiladas (una puerta con piedra encima) forman una columna: cuenta su parte más alta.
+  const columns = walls.map((wall) => {
+    let top = wall.y;
+    for (let changed = true; changed;) {
+      changed = false;
+      for (const other of walls) {
+        if (other.y < top && other.x < wall.x + wall.width && other.x + other.width > wall.x && Math.abs(other.y + other.height - top) <= 6) {
+          top = other.y;
+          changed = true;
+        }
+      }
+    }
+    return { left: wall.x, right: wall.x + wall.width, top, bottom: wall.y + wall.height };
+  });
+  const tallOver = (column: typeof columns[number], surfaceTop: number) =>
+    column.top < surfaceTop - DOUBLE_JUMP_RISE && column.bottom >= surfaceTop - 10;
+  const surfaces: Surface[] = [];
+  for (const platform of kept) {
+    if (isWall(platform) && walls.some((other) => touching(platform, other))) continue; // cubierta por otra pared
+    let pieces: Surface[] = [{ left: platform.x, right: platform.x + platform.width, top: platform.y }];
+    if (!isWall(platform)) {
+      // Una columna demasiado alta para saltarla corta el suelo en dos.
+      for (const column of columns.filter((c) => tallOver(c, platform.y))) {
+        pieces = pieces.flatMap((s) => column.left >= s.right || column.right <= s.left ? [s]
+          : [{ ...s, right: column.left }, { ...s, left: column.right }].filter((p) => p.right > p.left));
+      }
+    }
+    surfaces.push(...pieces);
+  }
+  const blocked = (a: Surface, b: Surface) => columns.some((column) => {
+    const between = column.left < Math.max(a.left, b.left) && column.right > Math.min(a.right, b.right);
+    return between && tallOver(column, Math.min(a.top, b.top));
   });
   const linked = (a: Surface, b: Surface) => {
     const gap = Math.max(0, b.left - a.right, a.left - b.right);
@@ -101,7 +131,7 @@ export function reachable(level: Level, options: { from?: number; to?: number; i
   const queue = [...startSurfaces];
   while (queue.length) {
     const current = queue.shift()!;
-    if (current.left <= to && current.right >= to) return true;
+    if (current.left <= to && current.right >= to && current.top <= (options.toTop ?? Infinity)) return true;
     for (const next of surfaces) {
       if (!seen.has(next) && linked(current, next)) {
         seen.add(next);

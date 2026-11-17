@@ -11,7 +11,31 @@ export type Platform = Rect & {
   beltSpeed?: number;
   bounceSpeed?: number;
   bounceDrift?: number;
-  kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "sky-cloud" | "sky-bounce" | "sky-lift-station" | "sky-wall" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall" | "factory-ground" | "factory-ledge" | "factory-wall" | "warehouse-ground" | "warehouse-ledge" | "warehouse-wall" | "gift-spring" | "snow-ground" | "snow-ledge" | "desert-ground" | "desert-ledge" | "train-ground" | "train-roof" | "music-ground" | "music-stage";
+  kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "sky-cloud" | "sky-bounce" | "sky-lift-station" | "sky-wall" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall" | "factory-ground" | "factory-ledge" | "factory-wall" | "warehouse-ground" | "warehouse-ledge" | "warehouse-wall" | "gift-spring" | "snow-ground" | "snow-ledge" | "desert-ground" | "desert-ledge" | "train-ground" | "train-roof" | "music-ground" | "music-stage" | "puzzle-block" | "puzzle-color";
+};
+
+/** Símbolo que comparten un activador y la puerta que abre. */
+export type PuzzleSymbol = "paw" | "star" | "moon";
+export type PuzzleColor = "pink" | "blue";
+/** Activador de una sala: el botón de huella se queda pulsado, la placa abre mientras algo pesa encima y el
+ * botón de color hace sólidas las plataformas de su color. `x`, `y` y `width` marcan dónde se pisa (y es el
+ * suelo bajo el activador). */
+export type PuzzleTrigger = { id: string; kind: "paw" | "plate" | "color"; x: number; y: number; width: number; opens?: string; color?: PuzzleColor };
+/** Puerta de una sala: columna sólida desde `y` hasta el suelo mientras está cerrada. */
+export type PuzzleDoor = Rect & { id: string; symbol: PuzzleSymbol };
+export type ColorPlatform = Rect & { id: string; color: PuzzleColor };
+/** Cajón que se empuja por el suelo `y` entre `minX` y `maxX` (borde izquierdo). */
+export type PuzzleCrate = { id: string; x: number; y: number; minX: number; maxX: number };
+/** Una sala de cámara fija de 960 px. `exitDoor` es la puerta de salida hacia la sala siguiente. */
+export type PuzzleRoom = {
+  x: number;
+  entry: { x: number; y: number };
+  exitDoor: string;
+  triggers: PuzzleTrigger[];
+  doors: PuzzleDoor[];
+  colorPlatforms?: ColorPlatform[];
+  startColor?: PuzzleColor;
+  crates?: PuzzleCrate[];
 };
 
 export type BeatPlatform = Platform & { id: string; interval: number; delay: number; activeDuration: number };
@@ -190,6 +214,8 @@ export type Level = {
   checkpoints: number[];
   verticalCheckpoints?: Array<{ x: number; y: number }>;
   beats?: LevelBeats;
+  /** Pantalla de sala-rompecabezas: cadena de salas de 960 px, una por tramo. */
+  puzzleRooms?: PuzzleRoom[];
   boss?: BossId;
   route?: {
     next?: string;

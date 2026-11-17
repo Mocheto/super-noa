@@ -9,6 +9,10 @@ import { PixelIcon } from "./game/PixelIcon";
 import type { SoundKind } from "./game/GameCanvas";
 import { levels, themeNames } from "./game/levels";
 import { campaignLevels, campaignUnlockIndex, levelIndex, nextLevelIndex } from "./game/routes";
+import { testScreens } from "./game/testScreens";
+
+/** Solo en desarrollo: `?prueba=salas` abre directamente una pantalla de prueba de los motores de formato. */
+const devTestLevel = import.meta.env.DEV ? testScreens[new URLSearchParams(window.location.search).get("prueba") ?? ""] : undefined;
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
 import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";
@@ -67,7 +71,7 @@ function rankingErrorMessage(error: unknown, fallback: string) {
 
 export default function App() {
   const [progress, setProgress] = useState<Progress>(readProgress);
-  const [screen, setScreen] = useState<Screen>("home");
+  const [screen, setScreen] = useState<Screen>(devTestLevel ? "game" : "home");
   const [activeIndex, setActiveIndex] = useState(0);
   const [levelRun, setLevelRun] = useState(0);
   const [lives, setLives] = useState(MAX_LIVES);
@@ -120,7 +124,7 @@ export default function App() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const playScreenRef = useRef<HTMLElement | null>(null);
   const screenRef = useRef(screen);
-  const activeLevel = levels[activeIndex] ?? detourLevels[activeIndex - levels.length];
+  const activeLevel = devTestLevel ?? levels[activeIndex] ?? detourLevels[activeIndex - levels.length];
   const forestComplete = Boolean(progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed);
   const displayedLevel = activeDetour ? detourLevel(activeDetour) : activeLevel;
 
@@ -816,7 +820,7 @@ export default function App() {
           {!bossReplay && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status">Preparando la aventura…</p>}>
             <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
           </Suspense>}
-          {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? "Camino opcional" : `Bandera ${snapshot.checkpoint}/${displayedLevel.checkpoints.length}`}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
+          {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? "Camino opcional" : displayedLevel.puzzleRooms ? `Sala ${snapshot.checkpoint + 1}/${displayedLevel.puzzleRooms.length}` : `Bandera ${snapshot.checkpoint}/${displayedLevel.checkpoints.length}`}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
 
           {screen === "boss" && activeLevel.boss && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status">Preparando al guardián…</p>}>
             {

@@ -24,6 +24,9 @@ import { advanceDetourClock, createDetourClock, detourSupports } from "./detourM
 import { drawDetourEntrance, drawDetourMechanisms, drawDetourScenery } from "./detourRendering";
 import type { DetourId } from "./types";
 import "./detours.css";
+import "./puzzleRooms.css";
+import { advanceRoom, createPuzzleState, pushCrates, puzzlePlatforms, resetRoom, restartHintActive, stepTriggers } from "./puzzleRooms";
+import { drawPuzzleRooms, type SparkTrail } from "./puzzleRoomsRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
@@ -107,6 +110,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
   const [doorAvailable, setDoorAvailable] = useState(false);
   const [excursion, setExcursion] = useState<DetourId | null>(null);
   const [interactionLabel, setInteractionLabel] = useState("Entrar");
+  const [roomHint, setRoomHint] = useState(false);
+  const restartRoomRef = useRef<(() => void) | null>(null);
   const interactionRef = useRef("");
   const returnFromDetourRef = useRef<(() => void) | null>(null);
   const shopOpenRef = useRef(false);
@@ -152,6 +157,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const cannonballs: Cannonball[] = [];
     const waterJumpers: LiveWaterJumper[] = (level.waterJumpers ?? []).map((jumper) => ({ ...jumper, age: 0 }));
     const chainGuardians = (level.chainGuardians ?? []).map(createChainGuardian);
+    const puzzle = level.puzzleRooms ? createPuzzleState(level) : null;
+    const sparks: SparkTrail[] = [];
+    let roomHintShown = false;
     const goalPlatforms = level.platforms.filter((platform) => level.goalX >= platform.x && level.goalX <= platform.x + platform.width);
     const goalSurfaceY = level.world === 8 || level.orientation === "vertical"
       ? Math.min(...goalPlatforms.map((platform) => platform.y))
@@ -220,7 +228,28 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       finishLevel(0.7, () => callbacksRef.current.onSecretExit());
     };
 
+    const restartRoom = (fromHazard: boolean) => {
+      if (!puzzle || !level.puzzleRooms) return;
+      const room = level.puzzleRooms[puzzle.room];
+      resetRoom(level, puzzle, puzzle.room, levelAge);
+      sparks.length = 0;
+      player.x = room.entry.x;
+      player.y = room.entry.y;
+      player.vx = 0;
+      player.vy = 0;
+      player.jumpsUsed = 0;
+      player.invincible = 1;
+      callbacksRef.current.playSound(fromHazard ? "hurt" : "checkpoint");
+      if (statusRef.current) statusRef.current.textContent = fromHazard ? "¡Uy! Noa vuelve a la entrada de la sala, sin perder vidas." : "La sala vuelve a empezar.";
+    };
+    restartRoomRef.current = () => restartRoom(false);
+
     const respawn = () => {
+      // En las salas caer o tocar un peligro no cuesta vidas: se vuelve a la entrada.
+      if (puzzle) {
+        restartRoom(true);
+        return;
+      }
       const spawn = level.orientation === "vertical"
         ? visibleSkyRespawn(level, cameraY, VIEW_HEIGHT, player.width, player.height) ?? { x: respawnX, y: respawnY }
         : mechanicRespawn(level, respawnX, player.width, player.height);
@@ -344,6 +373,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         if (index >= 0) player.y += liftPlatforms[index].y - previousLiftPlatforms[index].y;
       }
       const platforms = [...getMechanicPlatforms(level, levelAge), ...supports, ...liftPlatforms];
+      if (puzzle) platforms.push(...puzzlePlatforms(level, puzzle));
       const previousStar = starRemaining;
       starRemaining = Math.max(0, starRemaining - delta);
       if (previousStar > 0 && starRemaining === 0) callbacksRef.current.onSnapshot(currentSnapshot());
@@ -420,7 +450,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       player.x = level.orientation === "vertical"
         ? wrapHorizontalPosition(player.x, player.width, level.width)
         : Math.max(0, Math.min(level.width - player.width, player.x));
-      for (const platform of level.platforms) {
+      if (puzzle && player.grounded) player.x = pushCrates(puzzle, player, previousX, player.x, delta, levelAge);
+      for (const platform of puzzle ? [...level.platforms, ...puzzlePlatforms(level, puzzle)] : level.platforms) {
         const resolvedX = resolveHorizontalWallCollision(previousX, player.x, player.y, player.width, player.height, platform);
         if (resolvedX === player.x) continue;
         player.x = resolvedX;
@@ -479,12 +510,35 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
             const liftIndex = liftPlatforms.indexOf(platform);
             standingOnSkyLift = liftIndex >= 0 ? level.skyLifts?.[liftIndex]?.id ?? null : null;
           }
-        } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall" || platform.kind === "sea-wall" || platform.kind === "dino-wall" || platform.kind === "volcano-wall" || platform.kind === "ice-wall") && horizontal && player.vy < 0) {
+        } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall" || platform.kind === "sea-wall" || platform.kind === "dino-wall" || platform.kind === "volcano-wall" || platform.kind === "ice-wall" || platform.kind === "puzzle-block") && horizontal && player.vy < 0) {
           const platformBottom = platform.y + platform.height;
           if (previousY >= platformBottom - 10 && player.y <= platformBottom) {
             player.y = platformBottom;
             player.vy = 0;
           }
+        }
+      }
+
+      if (puzzle) {
+        for (const event of stepTriggers(level, puzzle, player, player.grounded && !wasGrounded, levelAge)) {
+          bursts.push({ x: event.from.x, y: event.from.y, life: 0.45, color: event.kind === "color" ? "#ffc4e1" : "#ffe477", kind: "stars" });
+          if (event.to) sparks.push({ from: event.from, to: event.to, life: 1 });
+          callbacksRef.current.playSound(event.kind === "door" ? "checkpoint" : "block");
+          if (statusRef.current) statusRef.current.textContent = event.kind === "door" ? "¡Clic! Se abre una puerta." : event.kind === "color" ? "Las plataformas cambian de color." : "Botón de huella pulsado.";
+        }
+        if (advanceRoom(level, puzzle, player.x, levelAge)) {
+          checkpointIndex = puzzle.room - 1;
+          callbacksRef.current.playSound("checkpoint");
+          if (statusRef.current) statusRef.current.textContent = `Sala ${puzzle.room + 1}. La puerta se cierra detrás.`;
+        }
+        for (let index = sparks.length - 1; index >= 0; index -= 1) {
+          sparks[index].life -= delta;
+          if (sparks[index].life <= 0) sparks.splice(index, 1);
+        }
+        const hint = restartHintActive(puzzle, levelAge);
+        if (hint !== roomHintShown) {
+          roomHintShown = hint;
+          setRoomHint(hint);
         }
       }
 
@@ -758,7 +812,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       player.doubleJumpFx = Math.max(0, player.doubleJumpFx - delta);
       player.shootFx = Math.max(0, player.shootFx - delta);
       walkCycleTime = player.grounded && Math.abs(player.vx) > 25 ? walkCycleTime + delta : 0;
-      cameraX += (Math.max(0, Math.min(level.width - VIEW_WIDTH, player.x - 330)) - cameraX) * Math.min(1, delta * 5);
+      // En las salas la cámara queda fija en la sala y se desliza (~0,4 s) al pasar a la siguiente.
+      const cameraTarget = puzzle && level.puzzleRooms ? level.puzzleRooms[puzzle.room].x : player.x - 330;
+      cameraX += (Math.max(0, Math.min(level.width - VIEW_WIDTH, cameraTarget)) - cameraX) * Math.min(1, delta * (puzzle ? 9 : 5));
       if (level.orientation === "vertical") {
         const targetY = Math.max(0, Math.min((level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT, player.y - 250));
         cameraY = Math.min(cameraY, cameraY + (targetY - cameraY) * Math.min(1, delta * 5));
@@ -914,6 +970,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge, raster, level.world === 15));
       drawAdventurePrecipices(context, level, cameraX, raster.adventurePrecipices);
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
+      if (puzzle) drawPuzzleRooms(context, level, puzzle, cameraX, sparks, frame);
       level.beatPlatforms?.forEach((platform) => {
         const active = beatPlatformActive(platform, levelAge);
         context.save(); context.globalAlpha = active ? 1 : .24;
@@ -1087,6 +1144,10 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     };
 
     enemies = enemies.map((enemy) => ({ ...enemy }));
+    const restartKey = (event: KeyboardEvent) => {
+      if (puzzle && runningRef.current && !completed && event.code === "KeyR" && !event.repeat) restartRoom(false);
+    };
+    if (puzzle) window.addEventListener("keydown", restartKey);
     const gameLoop = createGameLoop((delta, now) => {
       if (!runningRef.current || shopOpenRef.current) return;
       if (completed) transition.advance(delta, runningRef.current);
@@ -1095,11 +1156,13 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     gameLoopRef.current = gameLoop;
     gameLoop.setRunning(runningRef.current);
     return () => {
+      if (puzzle) window.removeEventListener("keydown", restartKey);
       gameLoop.stop();
       gameLoopRef.current = null;
       transition.cancel();
       returnFromShopRef.current = null;
       returnFromDetourRef.current = null;
+      restartRoomRef.current = null;
       shopOpenRef.current = false;
       callbacksRef.current.onShopActiveChange?.(false);
       callbacksRef.current.onDetourActiveChange?.(null);
@@ -1113,6 +1176,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={`Pantalla ${level.id}: ${level.title}`} />
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />
         {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label={interactionLabel === "Entrar" ? "Entrar en la tienda secreta" : interactionLabel === "Explorar" ? "Explorar el desvío secreto" : interactionLabel === "Subir" ? "Activar el ascensor de nubes" : "Activar mecanismo"} onClick={() => { inputRef.current.enterQueued = true; }}>↑ {interactionLabel}</button>}
+        {level.puzzleRooms && <button className={`room-restart${roomHint ? " is-hinting" : ""}`} type="button" disabled={!running} onClick={(event) => { event.currentTarget.blur(); restartRoomRef.current?.(); }}>↺ Empezar la sala</button>}
         {level.detour && onReturn && <button className="detour-return" type="button" disabled={!running} onClick={onReturn}>↩ Volver al camino</button>}
       </div>
       {shopOpen && <SecretShop world={level.world} paused={!running} reduceMotion={reduceMotion} playSound={playSound} onResult={(matches) => {

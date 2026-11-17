@@ -34,6 +34,8 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 - `src/game/ranking*.ts`: tablón mundial con alias, envío, recuperación y onboarding.
 - `src/game/levelTransition.ts`, `src/game/levelSelectCard.tsx` y `src/game/levelObjectives.ts`: transiciones entre pantallas, tarjetas del selector de niveles y objetivos/pistas.
 - `src/game/levelBeats.ts`: cuatro tramos de pantalla (`Level.beats`), huecos y salientes, anticopia entre pantallas, alcanzabilidad con 190/310 px y posición de las mecánicas; sus pruebas llevan la lista de mundos pendientes de retoque.
+- `src/game/puzzleRooms.ts`, `src/game/puzzleRoomsRendering.ts` y `src/game/puzzleRooms.css`: formato sala-rompecabezas (`Level.puzzleRooms`): salas de 960 px con cámara fija, botón de huella, placa, botones de color, cajón, puertas con emblema, «Empezar la sala» (botón y tecla R) sin perder vidas, y dibujo con el atlas `puzzle-pieces-v1`.
+- `src/game/testScreens.ts`: pantallas de prueba de los motores de formato, fuera de la campaña; en desarrollo se abren con `?prueba=<nombre>` (por ejemplo, `?prueba=salas`).
 - `src/game/touchControls.tsx`, `src/game/TouchControls.tsx` y `src/game/Dialog.tsx`: controles móviles, interfaz y diálogos.
 - `src/game/GameAssetIcon.tsx` y `src/game/PixelIcon.tsx`: iconos de assets y pixeles.
 - `server/ranking-server.mjs`: API y migraciones del tablón; `server/ranking-supervisor.mjs`: supervisor que descarga y activa automáticamente el backend del último commit de `main`, con recuperación si falla.

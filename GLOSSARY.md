@@ -1,6 +1,6 @@
 # Super Noa
 
-Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de la campaña y de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja, el tambor de Armonía, la merienda de los jabatos y la avioneta. Los términos de **Campaña** describen la estructura del juego; los de **Ritmo** son comunes a los minijuegos; los de **Piezas** y **Escena** son de los gatitos leñadores.
+Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de la campaña y de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja, el tambor de Armonía, la merienda de los jabatos y la avioneta. Los términos de **Campaña** describen la estructura del juego; los de **Sala-rompecabezas**, ese formato de pantalla; los de **Ritmo** son comunes a los minijuegos; los de **Piezas** y **Escena** son de los gatitos leñadores.
 
 ## Campaña
 
@@ -37,6 +37,35 @@ _Avoid_: Sorpresa (es solo uno de los tipos de giro), twist
 **Remate**:
 Último tramo, corto y antes de la bandera: una prueba final que junta lo aprendido y en la que la mecánica hace falta.
 _Avoid_: Final (reservado a la pantalla final de la campaña), clímax
+
+## Sala-rompecabezas
+
+**Sala**:
+Habitación de pantalla fija dentro de una pantalla de sala-rompecabezas. Se resuelve entera antes de cruzar su puerta de salida, y no se puede volver a la anterior.
+_Avoid_: Habitación, nivel, cuarto
+
+**Activador**:
+Lo que Noa pisa o carga con peso para cambiar algo de la sala: un botón de huella, una placa o un botón de color.
+_Avoid_: Pieza (reservado a los troncos), mecánica (reservado a la mecánica de mundo), interruptor
+
+**Botón de huella**:
+Activador que se pisa una vez y deja abierta su puerta.
+_Avoid_: Palanca (es la del ascensor del cielo)
+
+**Placa**:
+Activador que abre su puerta solo mientras algo pesa encima.
+_Avoid_: Baldosa, botón
+
+**Botón de color**:
+Activador rosa o azul que, al pisarlo, hace sólidas las plataformas de su color y transparentes las del otro.
+
+**Cajón**:
+Cajón de madera grande que Noa empuja andando contra él por un tramo de suelo con topes, y al que puede subirse. Pesa sobre las placas.
+_Avoid_: Caja (son las cajas sorpresa que se golpean desde abajo), bloque
+
+**Empezar la sala**:
+Salida amable que devuelve la sala y a Noa a como estaban al entrar, sin gastar vidas.
+_Avoid_: Reiniciar, reintentar (gasta una manzana)
 
 ## Ritmo
 

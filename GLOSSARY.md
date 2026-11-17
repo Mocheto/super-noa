@@ -1,6 +1,6 @@
 # Super Noa
 
-Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de la campaña y de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja, el tambor de Armonía, la merienda de los jabatos y la avioneta. Los términos de **Campaña** describen la estructura del juego; los de **Sala-rompecabezas**, ese formato de pantalla; los de **Ritmo** son comunes a los minijuegos; los de **Piezas** y **Escena** son de los gatitos leñadores.
+Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de la campaña y de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja, el tambor de Armonía, la merienda de los jabatos y la avioneta. Los términos de **Campaña** describen la estructura del juego; los de **Sala-rompecabezas** y **Exploración**, esos formatos de pantalla; los de **Ritmo** son comunes a los minijuegos; los de **Piezas** y **Escena** son de los gatitos leñadores.
 
 ## Campaña
 
@@ -78,6 +78,20 @@ _Avoid_: Caja (son las cajas sorpresa que se golpean desde abajo), bloque
 **Empezar la sala**:
 Salida amable que devuelve la sala y a Noa a como estaban al entrar, sin gastar vidas.
 _Avoid_: Reiniciar, reintentar (gasta una manzana)
+
+## Exploración
+
+**Exploración**:
+Formato de pantalla en el que Noa recorre un mundo abierto hacia arriba, hacia abajo y hacia atrás para encontrar los tres gatitos perdidos y abrir la puerta de los gatitos.
+_Avoid_: Búsqueda, laberinto
+
+**Gatito perdido**:
+Cada uno de los tres gatitos de una pantalla de exploración. Al encontrarlo, sigue a Noa y ocupa un hueco de la puerta.
+_Avoid_: Coleccionable, llave, gato (es la caja y el poder), gatito del rescate (es el del final de la campaña)
+
+**Puerta de los gatitos**:
+Meta de una pantalla de exploración. Muestra tres huecos y solo se abre cuando están los tres gatitos perdidos.
+_Avoid_: Meta, bandera, puerta del claro
 
 ## Ritmo
 

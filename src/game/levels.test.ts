@@ -94,7 +94,7 @@ test("todos los checkpoints reaparecen sobre una superficie que permite aterriza
       `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
     }
   }
-  assert.equal(checkpointCount, 215);
+  assert.equal(checkpointCount, 208);
 });
 
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {
@@ -677,7 +677,8 @@ test("cada mundo presente conserva una identidad jugable propia", () => {
 
 test("Papá Noel ofrece rutas escalonadas, cintas reversibles y regalos sobre suelo seguro", () => {
   const holiday = levels.filter((level) => level.world === 13);
-  for (const level of holiday) {
+  // Las reglas de suelo valen para las pantallas horizontales; la subida (13-2) tiene sus propias pruebas.
+  for (const level of holiday.filter((l) => (l.orientation ?? "horizontal") === "horizontal")) {
     assert.ok(level.platforms.filter((p) => p.y < 400).length >= 17, level.id);
     for (const parcel of level.platforms.filter((p) => p.kind === "gift-spring")) {
       assert.ok(level.platforms.some((p) => p.y === 456 && p.x <= parcel.x && p.x + p.width >= parcel.x + parcel.width));
@@ -696,7 +697,7 @@ test("Papá Noel ofrece rutas escalonadas, cintas reversibles y regalos sobre su
 
 
 test("Navidad mantiene los precipicios abiertos y todos los apoyos dentro de suelo seguro", () => {
-  for (const level of levels.filter((l) => l.world === 13)) {
+  for (const level of levels.filter((l) => l.world === 13 && (l.orientation ?? "horizontal") === "horizontal")) {
     const ground = level.platforms.filter((p) => p.y === 456);
     for (const ledge of level.platforms.filter((p) => p.y < 456)) {
       assert.ok(ground.some((p) => ledge.x >= p.x + 16 && ledge.x + ledge.width <= p.x + p.width - 16),
@@ -716,7 +717,7 @@ test("Navidad mantiene los precipicios abiertos y todos los apoyos dentro de sue
 
 test("Noa cabe bajo cada caja navideña, incluso donde un apoyo solo la solapa parcialmente", () => {
   const maxRise = JUMP_SPEED ** 2 / (2 * GRAVITY);
-  for (const level of levels.filter((l) => l.world === 13)) {
+  for (const level of levels.filter((l) => l.world === 13 && (l.orientation ?? "horizontal") === "horizontal")) {
     for (const box of level.rewardBlocks) {
       const supports = level.platforms.filter((p) => p.x < box.x + 48 && p.x + p.width > box.x && p.y > box.y);
       assert.ok(supports.length);

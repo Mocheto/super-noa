@@ -31,6 +31,17 @@ _Avoid_: Pantalla de bonus, nivel de descanso, desvío (son los caminos secretos
 Animal o enemigo de un mundo al que Noa se ha acercado en su paseo de los amigos; queda apuntado para el álbum.
 _Avoid_: Amigo del cielo (es de la avioneta), mascota
 
+**Visita**:
+Vista de un amigo en la pestaña Amigos de la colección, donde Noa puede acariciarlo, darle de comer o preguntarle si muerde.
+_Avoid_: Tamagochi, ficha, mascota
+
+**Corazón de amistad**:
+Lo que gana un amigo cada vez que Noa lo acaricia o le da de comer en su visita. Nunca se pierde.
+_Avoid_: Nivel de amistad, puntos
+
+**Mejor amigo**:
+Amigo que ha reunido cinco corazones de amistad.
+
 **Tramo**:
 Cada una de las cuatro partes en que se ordena una pantalla: presentación, desarrollo, giro y remate.
 _Avoid_: Tiempo (choca con el ritmo de los duelos), fase, sección

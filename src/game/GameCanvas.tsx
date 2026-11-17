@@ -278,7 +278,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       projectiles.length = 0;
       cannonballs.length = 0;
       callbacksRef.current.onLoseLife();
-      if (level.orientation === "vertical" && statusRef.current) statusRef.current.textContent = "¡Una nube cercana ha recogido a Noa!";
+      if (level.world === 17 && statusRef.current) statusRef.current.textContent = "¡Una nube cercana ha recogido a Noa!";
     };
 
     const hurt = () => {
@@ -455,7 +455,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
       const previousX = player.x;
       player.x += (player.vx + conveyorSpeed(player, level.platforms)) * delta;
-      player.x = level.orientation === "vertical"
+      // Solo en el cielo los dos bordes están conectados; en las demás subidas son paredes.
+      player.x = level.world === 17
         ? wrapHorizontalPosition(player.x, player.width, level.width)
         : Math.max(0, Math.min(level.width - player.width, player.x));
       if (puzzle && player.grounded) player.x = pushCrates(puzzle, player, previousX, player.x, delta, levelAge);
@@ -1143,7 +1144,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       if (chase && level.chase) drawChase(context, level.chase, chase, cameraX, frame, raster, chaseSay, chaseCaughtAge);
       context.restore();
       if (level.id === "1-1" && player.x >= 130 && player.x < 1120) drawDoubleJumpTip(context);
-      if (level.orientation === "vertical" && levelAge < 8) {
+      if (level.world === 17 && levelAge < 8) {
         context.fillStyle = "rgba(42,24,70,.9)"; context.fillRect(176, 12, 608, 72);
         context.fillStyle = "#fff7dd"; context.font = "bold 15px monospace"; context.textAlign = "center";
         context.fillText("¡SUBE! LOS DOS BORDES ESTÁN CONECTADOS", VIEW_WIDTH / 2, 33);

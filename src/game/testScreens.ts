@@ -101,4 +101,35 @@ export const chaseTestLevel: Level = {
   },
 };
 
-export const testScreens: Record<string, Level> = { salas: puzzleRoomsTestLevel, persecucion: chaseTestLevel };
+const rock = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 24, kind: "volcano-ledge" });
+
+/** Subida de prueba por la chimenea de un volcán: repisas en zigzag, chorros de lava al compás, cajas que se
+ * golpean desde abajo, un dragoncito y checkpoints verticales. */
+export const verticalTestLevel: Level = {
+  id: "prueba-vertical", world: 10, screen: 2,
+  title: "Prueba de subida", subtitle: "Sube por la chimenea del volcán.",
+  theme: "dragon-volcano", width: 960, height: 2400, orientation: "vertical",
+  start: { x: 120, y: 2282 }, goalX: 480, goalY: 175,
+  platforms: [
+    { x: 0, y: 2340, width: 960, height: 120, kind: "volcano-ground" },
+    rock(80, 2200, 220), rock(420, 2090, 200), rock(700, 1980, 200), rock(420, 1860, 220), rock(110, 1740, 220),
+    rock(380, 1620, 200), rock(660, 1500, 220), rock(380, 1380, 200), rock(100, 1260, 220), rock(400, 1140, 200),
+    rock(690, 1020, 210), rock(420, 900, 200), rock(140, 780, 210), rock(430, 660, 200), rock(700, 540, 200),
+    rock(430, 420, 200), rock(360, 300, 240), rock(330, 175, 300),
+  ],
+  lavaJets: [
+    { id: "pv-j1", x: 640, baseY: 2340, width: 54, height: 260, interval: 2.6, delay: 0 },
+    { id: "pv-j2", x: 260, baseY: 1740, width: 54, height: 200, interval: 2.4, delay: .8 },
+  ],
+  enemies: [{ id: "pv-d1", kind: "baby-dragon", x: 450, y: 1814, width: 42, height: 46, minX: 430, maxX: 590, speed: 40 }],
+  items: [
+    { id: "pv-a1", kind: "apple", x: 480, y: 2030 },
+    { id: "pv-a2", kind: "apple", x: 170, y: 1690 },
+    { id: "sticker-prueba-vertical", kind: "sticker", x: 470, y: 600 },
+  ],
+  rewardBlocks: [{ id: "pv-r1", x: 180, y: 2050, reward: "cat" }, { id: "pv-r2", x: 480, y: 1230, reward: "apple" }],
+  checkpoints: [],
+  verticalCheckpoints: [{ x: 460, y: 1620 }, { x: 460, y: 900 }],
+};
+
+export const testScreens: Record<string, Level> = { salas: puzzleRoomsTestLevel, persecucion: chaseTestLevel, vertical: verticalTestLevel };

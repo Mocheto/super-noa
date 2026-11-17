@@ -27,6 +27,8 @@ import "./detours.css";
 import "./puzzleRooms.css";
 import { advanceRoom, createPuzzleState, pushCrates, puzzlePlatforms, resetRoom, restartHintActive, slideCrates, stepTriggers } from "./puzzleRooms";
 import { drawPuzzleRooms, type SparkTrail } from "./puzzleRoomsRendering";
+import { createChaseState, stepChase } from "./chase";
+import { drawChase } from "./chaseRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
@@ -159,6 +161,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const chainGuardians = (level.chainGuardians ?? []).map(createChainGuardian);
     const puzzle = level.puzzleRooms ? createPuzzleState(level) : null;
     const sparks: SparkTrail[] = [];
+    const chase = level.chase ? createChaseState(level.chase) : null;
+    let chaseSay: { text: string; life: number } | null = level.chase ? { text: level.chase.stops[0].talk, life: 2.6 } : null;
+    let chaseCaughtAge = 0;
     let roomHintShown = false;
     const goalPlatforms = level.platforms.filter((platform) => level.goalX >= platform.x && level.goalX <= platform.x + platform.width);
     const goalSurfaceY = level.world === 8 || level.orientation === "vertical"
@@ -791,9 +796,23 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
       }
 
-      const reachedGoal = level.orientation === "vertical"
+      if (chase && level.chase && !completed) {
+        for (const event of stepChase(level.chase, chase, player, delta)) {
+          if (event.kind === "run") callbacksRef.current.playSound("jump");
+          if (event.text) chaseSay = { text: event.text, life: event.kind === "caught" ? 9 : 2.2 };
+          if (event.kind === "caught") {
+            callbacksRef.current.playSound("goal");
+            if (statusRef.current) statusRef.current.textContent = "¡Has pillado al animal travieso! Te devuelve el ovillo.";
+            finishLevel(1.45, (snapshot) => callbacksRef.current.onComplete(snapshot));
+          }
+        }
+      }
+      if (chaseSay) chaseSay.life -= delta;
+      if (chase?.caught) chaseCaughtAge += delta;
+
+      const reachedGoal = !level.chase && (level.orientation === "vertical"
         ? player.y <= (level.goalY ?? goalSurfaceY) && Math.abs(player.x + player.width / 2 - level.goalX) < 130
-        : hasReachedGoalFlag(player, level.goalX, goalSurfaceY);
+        : hasReachedGoalFlag(player, level.goalX, goalSurfaceY));
       if (!completed && reachedGoal) {
         goalCelebrationFrame = frame;
         player.x = level.goalX - 48;
@@ -1085,7 +1104,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
         context.restore();
       });
-      if (level.goalX - cameraX > -280 && level.goalX - cameraX < VIEW_WIDTH + 100) {
+      if (!level.chase && level.goalX - cameraX > -280 && level.goalX - cameraX < VIEW_WIDTH + 100) {
         if (level.world === 8 && level.boss) {
           const image = raster.waterTerrain;
           if (image.complete && image.naturalWidth) context.drawImage(image, 845, 500, 680, 500, level.goalX - cameraX - 10, goalSurfaceY - 200, 185, 200);
@@ -1120,6 +1139,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
       }
       drawAmbientForeground(context, level, cameraX, frame);
+      // La persecución va por encima del primer plano para que el rastro y la frase se vean siempre.
+      if (chase && level.chase) drawChase(context, level.chase, chase, cameraX, frame, raster, chaseSay, chaseCaughtAge);
       context.restore();
       if (level.id === "1-1" && player.x >= 130 && player.x < 1120) drawDoubleJumpTip(context);
       if (level.orientation === "vertical" && levelAge < 8) {

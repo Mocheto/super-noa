@@ -72,4 +72,33 @@ export const puzzleRoomsTestLevel: Level = {
   ],
 };
 
-export const testScreens: Record<string, Level> = { salas: puzzleRoomsTestLevel };
+const meadow = (x: number, width: number): Platform => ({ x, y: 456, width, height: 120, kind: "ground" });
+const branch = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 22, kind: "branch" });
+
+/** Persecución de prueba en el prado: un escarabajo con el ovillo, nueve paradas y el rincón junto al borde. */
+export const chaseTestLevel: Level = {
+  id: "prueba-persecucion", world: 1, screen: 2,
+  title: "Prueba de persecución", subtitle: "Pilla al escarabajo del ovillo.",
+  theme: "orchard-day", width: 5400, start: { x: 80, y: 398 }, goalX: 5250,
+  platforms: [meadow(0, 1800), meadow(1940, 800), meadow(2880, 1000), meadow(4020, 1380), branch(3000, 360, 170), branch(3220, 270, 170), branch(3450, 190, 200)],
+  enemies: [],
+  items: [{ id: "sticker-prueba-persecucion", kind: "sticker", x: 3520, y: 130 }],
+  rewardBlocks: [],
+  checkpoints: [1000, 2950, 4100],
+  chase: {
+    runner: "beetle", carries: "yarn",
+    stops: [
+      { x: 650, y: 456, talk: "¡Ji, ji! ¡No me pillas!", beat: "presentation" },
+      { x: 1400, y: 456, talk: "¡Por aquí!", beat: "presentation" },
+      { x: 2250, y: 456, jump: true, talk: "¡Qué salto!", beat: "development" },
+      { x: 2950, y: 456, jump: true, talk: "¡Uy, el agua!", beat: "development" },
+      { x: 3060, y: 360, jump: true, talk: "¡Sube, sube!", beat: "twist" },
+      { x: 3290, y: 270, jump: true, talk: "¡Más arriba!", beat: "twist" },
+      { x: 3540, y: 190, jump: true, talk: "¡Desde aquí lo veo todo!", beat: "twist" },
+      { x: 4300, y: 456, jump: true, talk: "¡Casi, casi!", beat: "finale" },
+      { x: 5250, y: 456, talk: "¡Ay! ¡No hay salida!", beat: "finale" },
+    ],
+  },
+};
+
+export const testScreens: Record<string, Level> = { salas: puzzleRoomsTestLevel, persecucion: chaseTestLevel };

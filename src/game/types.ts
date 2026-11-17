@@ -168,6 +168,15 @@ export type DetourMechanism = Rect & {
  * sorpresa (siluetas, gravedad baja, cámara alejada) o cambia de forma. */
 export type TwistKind = "combine" | "invert" | "presentation" | "shape";
 
+/** Animales que pueden hacer de animal travieso en una persecución amable. */
+export type ChaseRunner = "beetle" | "parrot" | "bee" | "clockwork-mouse";
+/** Parada del animal travieso: espera en (x, y) — y es la superficie bajo sus patas —, llega saltando en arco si
+ * `jump`, dice `talk` y pertenece al tramo `beat`. */
+export type ChaseStop = { x: number; y: number; jump?: boolean; talk: string; beat: "presentation" | "development" | "twist" | "finale" };
+/** Persecución amable: el animal se lleva el ovillo, corre más que Noa y la espera en cada parada. La última
+ * parada es el rincón sin salida donde se le pilla; sustituye a la bandera. */
+export type Chase = { runner: ChaseRunner; carries: "yarn"; speed?: number; waitRadius?: { x: number; y: number }; stops: ChaseStop[] };
+
 /** Cuatro tramos de una pantalla. La presentación empieza en el inicio; aquí se marca dónde empiezan el
  * desarrollo, el giro y el remate, medidos como avance desde el inicio (x en horizontal, altura subida en
  * vertical). */
@@ -219,6 +228,8 @@ export type Level = {
   beats?: LevelBeats;
   /** Pantalla de sala-rompecabezas: cadena de salas de 960 px, una por tramo. */
   puzzleRooms?: PuzzleRoom[];
+  /** Pantalla de persecución amable. */
+  chase?: Chase;
   boss?: BossId;
   route?: {
     next?: string;

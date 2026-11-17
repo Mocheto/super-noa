@@ -28,7 +28,9 @@ import "./puzzleRooms.css";
 import { advanceRoom, createPuzzleState, pushCrates, puzzlePlatforms, resetRoom, restartHintActive, slideCrates, stepTriggers } from "./puzzleRooms";
 import { drawPuzzleRooms, type SparkTrail } from "./puzzleRoomsRendering";
 import { createChaseState, stepChase } from "./chase";
-import { drawChase } from "./chaseRendering";
+import { drawChase, speech } from "./chaseRendering";
+import { GREET_DISTANCE, guardianOf, restStopFor } from "./restStops";
+import { bossCatalog } from "./bosses";
 import { createExploreState, exploreCameraTarget, hintTarget, reachedGate, shortcutWalls, stepExplore } from "./explore";
 import { drawExploreOverlay, drawExploreWorld } from "./exploreRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
@@ -58,6 +60,7 @@ type GameCanvasProps = {
   onDetourVisit?: (id: DetourId) => void;
   onDetourComplete?: (id: DetourId) => void;
   onDetourActiveChange?: (id: DetourId | null) => void;
+  onFriendGreeted?: (world: number, kind: string) => void;
   onReturn?: () => void;
   reduceMotion?: boolean;
   playSound: (kind: SoundKind) => void;
@@ -107,7 +110,7 @@ function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
   context.textAlign = "start";
 }
 
-export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourComplete, onDetourActiveChange, onReturn, reduceMotion = false, playSound }: GameCanvasProps) {
+export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourComplete, onDetourActiveChange, onFriendGreeted, onReturn, reduceMotion = false, playSound }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const [shopOpen, setShopOpen] = useState(false);
@@ -127,12 +130,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
   const { inputRef, handleTouchStart, handleTouchEnd, handleTouchCancel } = useGameInput(activeRunning);
   const runningRef = useRef(running);
   const gameLoopRef = useRef<GameLoop | null>(null);
-  const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourActiveChange, playSound });
+  const callbacksRef = useRef({ onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourActiveChange, onFriendGreeted, playSound });
 
   useEffect(() => {
-    callbacksRef.current = { onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourActiveChange, playSound };
+    callbacksRef.current = { onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourActiveChange, onFriendGreeted, playSound };
     motionRef.current = reduceMotion;
-  }, [onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourActiveChange, reduceMotion, playSound]);
+  }, [onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourActiveChange, onFriendGreeted, reduceMotion, playSound]);
 
   useEffect(() => {
     runningRef.current = activeRunning;
@@ -167,6 +170,10 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     let chaseSay: { text: string; life: number } | null = level.chase ? { text: level.chase.stops[0].talk, life: 2.6 } : null;
     let chaseCaughtAge = 0;
     const explore = level.orientation === "explore" ? createExploreState() : null;
+    const restStop = level.restStop ? restStopFor(level.restStop) : undefined;
+    const greetedFriends = new Set<string>();
+    const friendHops = new Map<string, number>();
+    let friendSay: { text: string; life: number; id: string } | null = null;
     let roomHintShown = false;
     const goalPlatforms = level.platforms.filter((platform) => level.goalX >= platform.x && level.goalX <= platform.x + platform.width);
     const goalSurfaceY = level.world === 8 || level.orientation === "vertical"
@@ -631,8 +638,28 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
       }
 
+      if (restStop) {
+        // Paseo de los amigos: nadie hace daño. Miran a Noa, saludan una vez al acercarse y saltan con ella.
+        const jumpedNow = player.vy < -500 && player.jumpsUsed > 0;
+        enemies.forEach((enemy, index) => {
+          enemy.vx = player.x + player.width / 2 >= enemy.x + enemy.width / 2 ? 1 : -1;
+          enemy.phase += delta * 2.4;
+          friendHops.set(enemy.id, Math.max(0, (friendHops.get(enemy.id) ?? 0) - delta));
+          const close = Math.abs(player.x + player.width / 2 - enemy.x - enemy.width / 2) < GREET_DISTANCE;
+          if (jumpedNow && Math.abs(player.x - enemy.x) < 320 && (friendHops.get(enemy.id) ?? 0) === 0) friendHops.set(enemy.id, .5);
+          if (!close || greetedFriends.has(enemy.id)) return;
+          greetedFriends.add(enemy.id);
+          friendHops.set(enemy.id, .5);
+          const friend = restStop.friends[index];
+          friendSay = { text: `¡Aquí no muerde! ${friend?.line ?? ""}`.trim(), life: 3.2, id: enemy.id };
+          callbacksRef.current.playSound("cat");
+          if (friend) callbacksRef.current.onFriendGreeted?.(restStop.world, friend.kind);
+          if (statusRef.current) statusRef.current.textContent = `Has saludado a un amigo: ${friend?.line ?? ""}`;
+        });
+      }
+      if (friendSay) friendSay.life -= delta;
       enemies.forEach((enemy) => {
-        if (!enemy.active) return;
+        if (!enemy.active || restStop) return;
         if (level.world === 3 && wolfSleepState(enemy, levelAge) !== "awake") return;
         enemy.phase += delta * 2.4;
         enemy.x += enemy.vx * delta;
@@ -1104,7 +1131,10 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           drawSticker(context, x, y + bob, Math.floor(frame / 12) % 2, raster.collectibles, sticker ? raster.stickerSheets[level.world] : undefined, sticker?.column);
         }
       });
-      enemies.forEach((enemy) => drawEnemy(context, enemy, cameraX, (enemy.kind === "wolf" || enemy.kind === "boar") && Math.abs(player.x - enemy.x) < 360, raster, level.world === 3 ? wolfSleepState(enemy, levelAge) : "awake", levelAge));
+      enemies.forEach((enemy) => {
+        const hop = restStop ? Math.sin(Math.min(1, (friendHops.get(enemy.id) ?? 0) / .5) * Math.PI) * 26 : 0;
+        drawEnemy(context, hop ? { ...enemy, y: enemy.y - hop } : enemy, cameraX, !restStop && (enemy.kind === "wolf" || enemy.kind === "boar") && Math.abs(player.x - enemy.x) < 360, raster, level.world === 3 && !restStop ? wolfSleepState(enemy, levelAge) : "awake", levelAge);
+      });
       chainGuardians.forEach((guardian) => drawChainGuardian(context, guardian, cameraX, raster));
       waterJumpers.forEach((jumper) => drawWaterJumper(context, jumper, cameraX, raster.jumpingFish));
       cannonballs.forEach((ball) => drawCannonball(context, ball, cameraX, raster.cannonball));
@@ -1142,7 +1172,16 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
         context.restore();
       });
-      if (!level.chase && !explore && level.goalX - cameraX > -280 && level.goalX - cameraX < VIEW_WIDTH + 100) {
+      if (restStop && level.goalX - cameraX > -280 && level.goalX - cameraX < VIEW_WIDTH + 100) {
+        // Al final del paseo espera el guardián del mundo para despedirse.
+        const boss = guardianOf(restStop.world);
+        const image = boss ? getImage(`${bossCatalog[boss].assetPrefix}-0.png`) : null;
+        if (image?.complete && image.naturalWidth) {
+          const height = 150;
+          const width = height * image.naturalWidth / image.naturalHeight;
+          context.drawImage(image, Math.round(level.goalX - cameraX), 456 - height, Math.round(width), height);
+        }
+      } else if (!level.chase && !explore && level.goalX - cameraX > -280 && level.goalX - cameraX < VIEW_WIDTH + 100) {
         if (level.world === 8 && level.boss) {
           const image = raster.waterTerrain;
           if (image.complete && image.naturalWidth) context.drawImage(image, 845, 500, 680, 500, level.goalX - cameraX - 10, goalSurfaceY - 200, 185, 200);
@@ -1177,6 +1216,14 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
       }
       drawAmbientForeground(context, level, cameraX, frame);
+      if (restStop) {
+        const talking = friendSay;
+        if (talking && talking.life > 0) {
+          const friend = enemies.find((enemy) => enemy.id === talking.id);
+          if (friend) speech(context, talking.text, Math.round(friend.x + friend.width / 2 - cameraX), friend.y - 8);
+        }
+        if (level.goalX - player.x < 420) speech(context, restStop.farewell, Math.round(level.goalX + 60 - cameraX), 300);
+      }
       // La persecución va por encima del primer plano para que el rastro y la frase se vean siempre.
       if (chase && level.chase) drawChase(context, level.chase, chase, cameraX, frame, raster, chaseSay, chaseCaughtAge);
       context.restore();

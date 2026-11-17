@@ -14,7 +14,7 @@ import { testScreens } from "./game/testScreens";
 /** Solo en desarrollo: `?prueba=salas` abre una pantalla de prueba de los motores de formato y `?prueba=12-2`, una
  * pantalla de la campaña, para revisarlas sin recorrer el mapa. */
 const devTestName = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("prueba") ?? "" : "";
-const devTestLevel = devTestName ? testScreens[devTestName] ?? levels.find((level) => level.id === devTestName) : undefined;
+const devTestLevel = devTestName ? testScreens[devTestName] ?? [...levels, ...restStopLevels].find((level) => level.id === devTestName) : undefined;
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
 import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";
@@ -28,6 +28,8 @@ import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnr
 import type { GameSnapshot } from "./game/types";
 import type { DetourId } from "./game/types";
 import { detourLevel, detourLevels } from "./game/detours";
+import { restStopFor, restStopIndex, restStopLevels, restStopUnlocked } from "./game/restStops";
+import { greetFriend, visitRestStop } from "./game/restStopProgress";
 import { visitDetour } from "./game/detourProgress";
 
 const WorldMap = lazy(() => import("./game/WorldMap").then((module) => ({ default: module.WorldMap })));
@@ -126,7 +128,7 @@ export default function App() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const playScreenRef = useRef<HTMLElement | null>(null);
   const screenRef = useRef(screen);
-  const activeLevel = devTestLevel ?? levels[activeIndex] ?? detourLevels[activeIndex - levels.length];
+  const activeLevel = devTestLevel ?? levels[activeIndex] ?? detourLevels[activeIndex - levels.length] ?? restStopLevels[activeIndex - levels.length - detourLevels.length];
   const forestComplete = Boolean(progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed);
   const displayedLevel = activeDetour ? detourLevel(activeDetour) : activeLevel;
 
@@ -323,11 +325,12 @@ export default function App() {
     const playing = (screen === "game" || screen === "boss") && !beeNinjaDuel && !armoniaDrumDuel && !meriendaDuel && !shopActive && !paused && !muted && musicVolume > 0;
     musicRef.current.update({
       source: musicTracks[activeLevel.world],
-      volume: musicVolume,
+      // En el paseo de los amigos la música del mundo suena más suave.
+      volume: activeLevel.restStop ? musicVolume * .6 : musicVolume,
       playing: playing && !starActive,
     });
     starMusicRef.current.update({ source: "./assets/music/noa-estelar.mp3", volume: musicVolume, playing: playing && starActive });
-  }, [activeLevel.boss, activeLevel.world, musicVolume, muted, paused, screen, shopActive, starActive]);
+  }, [activeLevel.boss, activeLevel.restStop, activeLevel.world, musicVolume, muted, paused, screen, shopActive, starActive]);
 
   useEffect(() => () => { musicRef.current?.pause(); starMusicRef.current?.pause(); }, []);
 
@@ -534,9 +537,10 @@ export default function App() {
   };
 
   const isLevelUnlocked = (index: number) => {
-    const level = levels[index] ?? detourLevels[index - levels.length];
+    const level = levels[index] ?? detourLevels[index - levels.length] ?? restStopLevels[index - levels.length - detourLevels.length];
     if (!level) return false;
     if (level.detour) return progress.detours?.[level.detour]?.discovered === true;
+    if (level.restStop) return restStopUnlocked(level.restStop, progress.levelStats);
     if (level.world === 7) return progress.secretUnlocked;
     if (level.world === 8) return progress.waterUnlocked && (!level.route?.required || Boolean(progress.levelStats[level.route.required]?.completed));
     return campaignLevels.findIndex((entry) => entry.id === level.id) <= progress.unlocked;
@@ -605,6 +609,7 @@ export default function App() {
   const handleShopVisit = useCallback((id: string) => setProgress((current) => visitSecretShop(current, id)), []);
   const handleShopWin = useCallback((id: string) => setProgress((current) => completeSecretShop(current, id)), []);
   const handleDetourVisit = useCallback((id: DetourId) => setProgress((current) => visitDetour(current, id)), []);
+  const handleFriendGreeted = useCallback((world: number, kind: string) => setProgress((current) => greetFriend(current, world, kind)), []);
   const handleDetourComplete = useCallback((id: DetourId) => setProgress((current) => visitDetour(current, id, true)), []);
   const handleDetourReveal = useCallback((ids: DetourId[]) => setProgress((current) => {
     const detours = { ...current.detours };
@@ -622,6 +627,11 @@ export default function App() {
     setSnapshot(finalSnapshot);
     if (activeLevel.detour) {
       setProgress((current) => visitDetour(current, activeLevel.detour!, true));
+      setScreen("map");
+      return;
+    }
+    if (activeLevel.restStop) {
+      setProgress((current) => visitRestStop(current, activeLevel.restStop!));
       setScreen("map");
       return;
     }
@@ -820,9 +830,9 @@ export default function App() {
             </div>
           </header>}
           {!bossReplay && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status">Preparando la aventura…</p>}>
-            <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
+            <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onFriendGreeted={handleFriendGreeted} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
           </Suspense>}
-          {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? "Camino opcional" : displayedLevel.puzzleRooms ? `Sala ${snapshot.checkpoint + 1}/${displayedLevel.puzzleRooms.length}` : `Bandera ${snapshot.checkpoint}/${displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length}`}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
+          {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? "Camino opcional" : displayedLevel.restStop ? "Paseo de los amigos" : displayedLevel.puzzleRooms ? `Sala ${snapshot.checkpoint + 1}/${displayedLevel.puzzleRooms.length}` : `Bandera ${snapshot.checkpoint}/${displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length}`}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
 
           {screen === "boss" && activeLevel.boss && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status">Preparando al guardián…</p>}>
             {
@@ -903,6 +913,7 @@ export default function App() {
               {snapshot.stickers.length > 0 && <p className="sticker-found"><PixelIcon kind="sparkle" /> {snapshot.stickers.length === 1 ? "Insignia guardada" : `${snapshot.stickers.length} insignias guardadas`} en el álbum.</p>}
               {showCatPartyInvite && <><p>Bruma te invita a preparar la leña para la fiesta. ¿Vamos al claro?</p><button className="pixel-button primary" type="button" data-gamepad-default onClick={openCatParty}>Ir a la fiesta</button></>}
               {!showCatPartyInvite && activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}>{activeLevel.route?.nextLabel ?? "Siguiente pantalla ▶"}</button>}
+              {activeLevel.boss && restStopFor(activeLevel.world) && <button className="pixel-button" type="button" onClick={() => beginLevel(levels.length + detourLevels.length + restStopIndex(activeLevel.world))}>🐾 Visitar a los amigos</button>}
               {activeLevel.world === 7 && <button className="pixel-button primary" type="button" data-gamepad-back onClick={() => setScreen("map")}>Volver al mapa secreto</button>}
               {activeLevel.world !== 7 && <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("map")}>Volver al mapa</button>}
             </Dialog>

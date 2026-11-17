@@ -234,6 +234,8 @@ export type Level = {
   puzzleRooms?: PuzzleRoom[];
   /** Pantalla de persecución amable. */
   chase?: Chase;
+  /** Paseo de los amigos de este mundo: pantalla de descanso sin peligros, fuera de la campaña. */
+  restStop?: number;
   /** Exploración: puerta de los gatitos (la meta), los tres gatitos perdidos y el atajo del remate, que se abre
    * al tenerlos a todos. */
   exploreGate?: Rect;

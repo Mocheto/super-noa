@@ -30,3 +30,6 @@
 @keyframes detour-cart { 50% { transform: translateX(6px); } }
 @media (prefers-reduced-motion: reduce) { .map-detour .detour-icon, .map-detour.is-new, .map-detour-path.is-new { animation: none; } }
 .reduce-motion .map-detour .detour-icon, .reduce-motion .map-detour.is-new, .reduce-motion .map-detour-path.is-new { animation: none; }
+.map-rest-stop { position: absolute; z-index: 3; transform: translate(-50%, -50%); display: grid; justify-items: center; min-width: 64px; min-height: 44px; padding: 2px 8px; border: 2px solid #ffd76a; border-radius: 14px; background: #3d294aeb; color: #fff2ce; font: inherit; font-size: 13px; cursor: pointer; }
+.map-rest-stop:focus-visible, .map-rest-stop:hover { outline: 3px solid #fff2a3; }
+.map-rest-stop.is-visited { background: #365148ed; }

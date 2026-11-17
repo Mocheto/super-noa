@@ -7,17 +7,28 @@ import type { Chase } from "./types";
 const YARN = "./assets/sprites/yarn-ball-v1.png";
 const HEART = "./assets/sprites/ui-heart-v1.png";
 
-function speech(context: CanvasRenderingContext2D, text: string, centerX: number, bottomY: number) {
+/** Bocadillo de diálogo centrado en `centerX` con la punta en `bottomY` (coordenadas de pantalla). */
+export function speech(context: CanvasRenderingContext2D, text: string, centerX: number, bottomY: number) {
   context.save();
   context.font = "bold 15px monospace";
-  const width = Math.min(320, context.measureText(text).width + 24);
+  // Las frases largas se parten en dos líneas por el espacio más cercano al centro.
+  let lines = [text];
+  if (context.measureText(text).width > 300) {
+    const middle = text.length / 2;
+    const spaces = [...text.matchAll(/ /g)].map((match) => match.index ?? 0);
+    const cut = spaces.sort((a, b) => Math.abs(a - middle) - Math.abs(b - middle))[0];
+    if (cut) lines = [text.slice(0, cut), text.slice(cut + 1)];
+  }
+  const width = Math.min(VIEW_WIDTH - 16, Math.max(...lines.map((line) => context.measureText(line).width)) + 24);
+  const height = 12 + lines.length * 19;
   const x = Math.round(Math.max(8, Math.min(VIEW_WIDTH - width - 8, centerX - width / 2)));
-  const y = Math.round(bottomY - 38);
+  const y = Math.round(bottomY - 8 - height);
   context.fillStyle = "#fff6e3"; context.strokeStyle = "#2f1d33"; context.lineWidth = 3;
-  context.beginPath(); context.roundRect(x, y, width, 30, 8); context.fill(); context.stroke();
-  context.beginPath(); context.moveTo(centerX - 7, y + 29); context.lineTo(centerX, y + 40); context.lineTo(centerX + 7, y + 29); context.closePath(); context.fill();
-  context.beginPath(); context.moveTo(centerX - 7, y + 30); context.lineTo(centerX, y + 40); context.lineTo(centerX + 7, y + 30); context.stroke();
-  context.fillStyle = "#3d294a"; context.textAlign = "center"; context.fillText(text, x + width / 2, y + 21);
+  context.beginPath(); context.roundRect(x, y, width, height, 8); context.fill(); context.stroke();
+  context.beginPath(); context.moveTo(centerX - 7, y + height - 1); context.lineTo(centerX, y + height + 10); context.lineTo(centerX + 7, y + height - 1); context.closePath(); context.fill();
+  context.beginPath(); context.moveTo(centerX - 7, y + height); context.lineTo(centerX, y + height + 10); context.lineTo(centerX + 7, y + height); context.stroke();
+  context.fillStyle = "#3d294a"; context.textAlign = "center";
+  lines.forEach((line, index) => context.fillText(line, x + width / 2, y + 21 + index * 19));
   context.restore();
 }
 

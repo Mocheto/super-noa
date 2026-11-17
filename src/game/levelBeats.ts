@@ -22,6 +22,12 @@ export function routeLength(level: Level): number {
 export function beatProblems(level: Level): string[] {
   const beats = level.beats;
   if (!beats) return ["sin tramos"];
+  if (level.chase) {
+    // En una persecución cada tramo empieza en su primera parada.
+    const first = (beat: string) => level.chase!.stops.find((stop) => stop.beat === beat)?.x;
+    return beats.development === first("development") && beats.twist === first("twist") && beats.finale === first("finale")
+      ? [] : ["cada tramo de la persecución debe empezar en su primera parada"];
+  }
   if (level.puzzleRooms) {
     // En una sala-rompecabezas cada tramo es una sala: los tramos empiezan donde empieza cada sala.
     const rooms = level.puzzleRooms.map((room) => room.x);

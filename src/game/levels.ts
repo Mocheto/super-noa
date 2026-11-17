@@ -210,9 +210,9 @@ const dinoFloor3: Array<[number, number]> = [[0, 820], [960, 900], [2010, 940], 
 const world10Floor1: Array<[number, number]> = [[0, 900], [1040, 1000], [2180, 980], [3300, 1300], [4750, 850]];
 const world10Floor2: Array<[number, number]> = [[0, 760], [900, 960], [2000, 930], [3070, 980], [4200, 1100], [5460, 1040]];
 const world10Floor3: Array<[number, number]> = [[0, 820], [960, 900], [2020, 900], [3080, 910], [4140, 920], [5220, 1280], [6660, 1140]];
-const world11Floor1: Array<[number, number]> = [[0, 930], [1060, 1030], [2220, 1010], [3360, 1240], [4750, 850]];
-const world11Floor2: Array<[number, number]> = [[0, 780], [920, 930], [1990, 950], [3080, 960], [4180, 1120], [5460, 1040]];
-const world11Floor3: Array<[number, number]> = [[0, 840], [980, 880], [2010, 930], [3090, 900], [4140, 940], [5220, 1280], [6660, 1140]];
+const world11Floor1: Array<[number, number]> = [[0, 1720], [1880, 700], [2740, 640], [3540, 620], [4320, 520], [5000, 600]];
+const world11Floor2: Array<[number, number]> = [[0, 1500], [1660, 900], [2730, 800], [3700, 700], [4570, 1230]];
+const world11Floor3: Array<[number, number]> = [[0, 860], [1020, 760], [1940, 700], [2800, 620], [3580, 640], [4380, 560], [5100, 1400]];
 const world12Floor1: Array<[number, number]> = [[0, 1880], [2020, 500], [2660, 470], [3270, 640], [4050, 520], [4710, 890]];
 const world12Floor3: Array<[number, number]> = [[0, 860], [1000, 780], [1930, 620], [2690, 700], [3540, 560], [4250, 640], [5040, 1460]];
 
@@ -967,61 +967,82 @@ export const levels: Level[] = [
     detourEntrance: { id: "garden", x: 1515, y: 165, width: 80, height: 80 },
     title: "El sendero de las flores gigantes", subtitle: "La flor abierta es un puente. Si avisa, ¡salta! También hay gotas de rocío.",
     theme: "giant-valley", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
+    // Presentación: rocío y flores sobre suelo seguro. Giro (invertido): las gotas llevan arriba, sobre el agua.
+    beats: { development: 1650, twist: 3000, finale: 4350, twistKind: "invert" },
     platforms: [
-      ...themedGround(world11Floor1, "garden-ground"), themedLedge(310, 340, 190, "garden-ledge"), themedLedge(650, 265, 180, "garden-ledge"), themedLedge(1090, 330, 190, "garden-ledge"),
-      themedLedge(1470, 245, 180, "garden-ledge"), themedLedge(1850, 340, 190, "garden-ledge"), themedLedge(2290, 285, 190, "garden-ledge"), themedLedge(2720, 210, 180, "garden-ledge"),
-      themedLedge(3000, 335, 190, "garden-ledge"), themedLedge(3560, 260, 180, "garden-ledge"), themedLedge(4020, 330, 190, "garden-ledge"),
-      dew(250), dew(1070), dew(3370), dew(4780), themedLedge(4810, 305, 190, "garden-ledge"), themedLedge(5180, 215, 180, "garden-ledge"),
+      ...themedGround(world11Floor1, "garden-ground"), themedLedge(500, 330, 180, "garden-ledge"), themedLedge(820, 250, 170, "garden-ledge"), themedLedge(1470, 245, 180, "garden-ledge"),
+      themedLedge(1950, 320, 180, "garden-ledge"), themedLedge(2300, 240, 170, "garden-ledge"), themedLedge(2850, 320, 180, "garden-ledge"), themedLedge(3150, 240, 160, "garden-ledge"), themedLedge(3800, 250, 170, "garden-ledge"),
+      themedLedge(4400, 320, 170, "garden-ledge"), themedLedge(4650, 240, 160, "garden-ledge"), themedLedge(5100, 320, 180, "garden-ledge"),
+      dew(300), dew(1200), dew(3600), dew(4500),
     ],
     deadlyWater: deadlyWaterPits(world11Floor1),
     bloomBridges: [
-      { id: "g1-flower1", x: 912, y: 430, width: 166, height: 18, interval: 12, delay: 0, openDuration: 8, warningDuration: 2 },
+      { id: "g1-flower1", x: 2570, y: 430, width: 180, height: 18, interval: 12, delay: 0, openDuration: 8, warningDuration: 2 },
     ],
-    enemies: [giantEnemy("g1-a1", "ant", 450, 420, 320, 770, 46), giantEnemy("g1-s1", "snail", 1220, 420, 1100, 1510, 30), giantEnemy("g1-b1", "bee", 2420, 190, 2240, 2820, 70), giantEnemy("g1-a2", "ant", 3620, 420, 3460, 4070, 52), giantEnemy("g1-b2", "bee", 5050, 175, 4820, 5360, 76)],
-    items: [apple("g1a1", 360, 290), apple("g1a2", 710, 215), sticker("sticker-11-1", 1520, 195), apple("g1a3", 2360, 235), apple("g1a4", 2790, 160), apple("g1a5", 4090, 280), apple("g1a6", 5240, 165)],
-    rewardBlocks: [reward("g1r1", 1140, 179), reward("g1r2", 3060, 184, "apple")], checkpoints: [1080, 2240, 3400, 4780],
+    enemies: [giantEnemy("g1-a1", "ant", 600, 420, 350, 1000, 46), giantEnemy("g1-s1", "snail", 2000, 420, 1900, 2500, 30), giantEnemy("g1-b1", "bee", 2900, 190, 2750, 3300, 70), giantEnemy("g1-a2", "ant", 3700, 420, 3560, 4100, 52), giantEnemy("g1-b2", "bee", 5100, 175, 5020, 5500, 76)],
+    items: [apple("g1a1", 550, 280), apple("g1a2", 870, 200), sticker("sticker-11-1", 1520, 195), apple("g1a3", 2000, 270), apple("g1a4", 2350, 190), apple("g1a5", 3850, 200), apple("g1a6", 4700, 190)],
+    rewardBlocks: [reward("g1r1", 1020, 300), reward("g1r2", 3300, 300, "apple")], checkpoints: [1100, 2000, 2900, 4400],
   },
   {
     id: "11-2", world: 11, screen: 2,
-    title: "El jardín de las gotas", subtitle: "Cruza las flores abiertas o salta los huecos. El rocío te lleva arriba.",
-    theme: "giant-valley", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    title: "El jardín de las gotas", subtitle: "¡Una abeja se ha llevado el ovillo! Síguela por las flores.",
+    theme: "giant-valley", width: 5800, start: { x: 80, y: 380 }, goalX: 5650,
+    // Persecución amable: la abeja vuela de flor en flor; en el giro sube por el rocío y en el remate espera en
+    // el rincón del jardín.
+    beats: { development: 1900, twist: 3100, finale: 3950, twistKind: "shape" },
     platforms: [
-      ...themedGround(world11Floor2, "garden-ground"), themedLedge(280, 340, 180, "garden-ledge"), dew(590), themedLedge(920, 245, 190, "garden-ledge"), themedLedge(1320, 175, 180, "garden-ledge"),
-      themedLedge(1660, 320, 180, "garden-ledge"), dew(2000), themedLedge(2170, 245, 190, "garden-ledge"), themedLedge(2530, 165, 180, "garden-ledge"), themedLedge(2750, 325, 180, "garden-ledge"),
-      dew(3090), themedLedge(3260, 235, 190, "garden-ledge"), themedLedge(3630, 155, 180, "garden-ledge"), themedLedge(3840, 315, 180, "garden-ledge"), dew(4190),
-      themedLedge(4410, 225, 190, "garden-ledge"), themedLedge(4780, 320, 190, "garden-ledge"), dew(5150), themedLedge(5520, 290, 185, "garden-ledge"), dew(5770), themedLedge(5960, 185, 180, "garden-ledge"), themedLedge(6260, 315, 190, "garden-ledge"),
+      ...themedGround(world11Floor2, "garden-ground"), themedLedge(400, 330, 180, "garden-ledge"), themedLedge(760, 250, 170, "garden-ledge"), themedLedge(1750, 320, 180, "garden-ledge"), themedLedge(2100, 240, 170, "garden-ledge"),
+      themedLedge(3050, 200, 190, "garden-ledge"), themedLedge(3300, 250, 170, "garden-ledge"), themedLedge(4000, 320, 180, "garden-ledge"), themedLedge(4240, 240, 140, "garden-ledge"), themedLedge(5250, 320, 180, "garden-ledge"),
+      dew(1100), dew(2900), dew(3900), dew(4800),
     ],
     deadlyWater: deadlyWaterPits(world11Floor2),
     bloomBridges: [
-      { id: "g2-flower1", x: 762, y: 430, width: 166, height: 18, interval: 11, delay: 0, openDuration: 7, warningDuration: 1.8 },
-      { id: "g2-flower2", x: 2922, y: 430, width: 176, height: 18, interval: 12, delay: 2, openDuration: 8, warningDuration: 2 },
-      { id: "g2-flower3", x: 5282, y: 430, width: 196, height: 18, interval: 11, delay: 1, openDuration: 7, warningDuration: 1.8 },
+      { id: "g2-flower1", x: 2550, y: 430, width: 186, height: 18, interval: 11, delay: 0, openDuration: 7, warningDuration: 1.8 },
+      { id: "g2-flower2", x: 3520, y: 430, width: 186, height: 18, interval: 12, delay: 2, openDuration: 8, warningDuration: 2 },
+      { id: "g2-flower3", x: 4390, y: 430, width: 186, height: 18, interval: 11, delay: 1, openDuration: 7, warningDuration: 1.8 },
     ],
-    enemies: [giantEnemy("g2-b1", "bee", 680, 190, 520, 980, 74), giantEnemy("g2-a1", "ant", 1110, 420, 1010, 1500, 50), giantEnemy("g2-s1", "snail", 2240, 420, 2100, 2760, 34), giantEnemy("g2-b2", "bee", 3540, 145, 3330, 3890, 80), giantEnemy("g2-a2", "ant", 4550, 420, 4370, 4880, 56), giantEnemy("g2-b3", "bee", 5850, 155, 5530, 6220, 86)],
-    items: [apple("g2a1", 330, 290), apple("g2a2", 960, 195), apple("g2a3", 1390, 125), apple("g2a4", 2590, 115), sticker("sticker-11-2", 3690, 105), apple("g2a5", 4470, 175), apple("g2a6", 4840, 270), apple("g2a7", 6020, 135)],
-    rewardBlocks: [reward("g2r1", 1060, 94), reward("g2r2", 3200, 305, "apple"), reward("g2r3", 4640, 305)], checkpoints: [930, 2020, 3100, 4230, 5500],
+    chase: {
+      runner: "bee", carries: "yarn",
+      stops: [
+        { x: 700, y: 456, talk: "¡Bzz! ¡Mi ovillo!", beat: "presentation" },
+        { x: 1300, y: 456, talk: "¡Ven, ven!", beat: "presentation" },
+        { x: 1900, y: 456, jump: true, talk: "¡Salta el agua!", beat: "development" },
+        { x: 2800, y: 456, jump: true, talk: "¡Por la flor!", beat: "development" },
+        { x: 3100, y: 200, jump: true, talk: "¡Bota en el rocío!", beat: "twist" },
+        { x: 3350, y: 250, jump: true, talk: "¡Qué alto vuelo!", beat: "twist" },
+        { x: 3950, y: 456, jump: true, talk: "¡Uy, otra flor!", beat: "finale" },
+        { x: 4700, y: 456, jump: true, talk: "¡Casi, casi!", beat: "finale" },
+        { x: 5650, y: 456, talk: "¡Ay! ¡No hay salida!", beat: "finale" },
+      ],
+    },
+    // Las patrullas quedan entre paradas para no tapar a la abeja mientras espera.
+    enemies: [giantEnemy("g2-a1", "ant", 1000, 420, 880, 1150, 50), giantEnemy("g2-s1", "snail", 2200, 420, 2050, 2500, 34), giantEnemy("g2-a2", "ant", 3100, 420, 2950, 3450, 56), giantEnemy("g2-s2", "snail", 5000, 420, 4850, 5400, 38)],
+    items: [apple("g2a1", 450, 280), apple("g2a2", 800, 200), apple("g2a3", 1800, 270), apple("g2a4", 2150, 190), sticker("sticker-11-2", 3080, 130), apple("g2a5", 3360, 200), apple("g2a6", 4050, 270), apple("g2a7", 5300, 270)],
+    rewardBlocks: [reward("g2r1", 1000, 300), reward("g2r2", 2450, 300, "apple"), reward("g2r3", 4200, 300)], checkpoints: [1200, 1800, 2780, 3750, 4650],
   },
   {
     id: "11-3", world: 11, screen: 3,
     route: { next: "12-1", nextLabel: "Subir a la montaña de hielo ▶" },
     title: "La colmena de Melisa", subtitle: "Flores y gotas te ayudan. Salta cuando la flor avise y busca a Melisa.",
-    theme: "giant-valley", width: 7800, start: { x: 80, y: 380 }, goalX: 7620,
+    theme: "giant-valley", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    // Giro (combina): rocío y flores seguidas sobre el agua; remate con dos flores antes de la colmena.
+    beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
     platforms: [
-      ...themedGround(world11Floor3, "garden-ground"), themedLedge(300, 335, 190, "garden-ledge"), dew(650), themedLedge(1010, 285, 190, "garden-ledge"), themedLedge(1370, 205, 180, "garden-ledge"),
-      themedLedge(1670, 325, 180, "garden-ledge"), dew(2020), themedLedge(2110, 240, 190, "garden-ledge"), themedLedge(2480, 155, 180, "garden-ledge"), themedLedge(2740, 315, 180, "garden-ledge"),
-      dew(3100), themedLedge(3190, 225, 190, "garden-ledge"), themedLedge(3560, 145, 180, "garden-ledge"), themedLedge(3800, 310, 180, "garden-ledge"), dew(4150),
-      themedLedge(4290, 210, 190, "garden-ledge"), themedLedge(4670, 145, 180, "garden-ledge"), themedLedge(4890, 305, 180, "garden-ledge"), dew(5260), themedLedge(5480, 205, 180, "garden-ledge"), themedLedge(5900, 305, 200, "garden-ledge"), dew(6380), themedLedge(6710, 285, 190, "garden-ledge"), dew(6960), themedLedge(7150, 175, 180, "garden-ledge"), themedLedge(7490, 300, 200, "garden-ledge"),
+      ...themedGround(world11Floor3, "garden-ground"), themedLedge(480, 275, 180, "garden-ledge"), themedLedge(680, 185, 160, "garden-ledge"), themedLedge(1100, 275, 180, "garden-ledge"), themedLedge(1480, 185, 170, "garden-ledge"),
+      themedLedge(2000, 275, 170, "garden-ledge"), themedLedge(2400, 185, 160, "garden-ledge"), themedLedge(2850, 275, 180, "garden-ledge"), themedLedge(3200, 185, 170, "garden-ledge"), themedLedge(3650, 275, 170, "garden-ledge"), themedLedge(4000, 185, 160, "garden-ledge"),
+      themedLedge(4450, 275, 170, "garden-ledge"), themedLedge(4750, 185, 160, "garden-ledge"), themedLedge(5250, 275, 180, "garden-ledge"), themedLedge(5700, 185, 170, "garden-ledge"),
+      dew(300), dew(1300), dew(2200), dew(3000), dew(3800), dew(4600), dew(5500),
     ],
     deadlyWater: deadlyWaterPits(world11Floor3),
     bloomBridges: [
-      { id: "g3-flower1", x: 822, y: 430, width: 158, height: 18, interval: 11, delay: 0, openDuration: 7, warningDuration: 1.8 },
-      { id: "g3-flower2", x: 1842, y: 430, width: 186, height: 18, interval: 12, delay: 1.5, openDuration: 8, warningDuration: 2 },
-      { id: "g3-flower3", x: 3972, y: 430, width: 186, height: 18, interval: 11, delay: 2.5, openDuration: 7, warningDuration: 1.8 },
-      { id: "g3-flower4", x: 6482, y: 430, width: 196, height: 18, interval: 12, delay: 0.5, openDuration: 8, warningDuration: 2 },
+      { id: "g3-flower1", x: 1770, y: 430, width: 180, height: 18, interval: 11, delay: 0, openDuration: 7, warningDuration: 1.8 },
+      { id: "g3-flower2", x: 2630, y: 430, width: 180, height: 18, interval: 12, delay: 1.5, openDuration: 8, warningDuration: 2 },
+      { id: "g3-flower3", x: 4210, y: 430, width: 180, height: 18, interval: 11, delay: 2.5, openDuration: 7, warningDuration: 1.8 },
+      { id: "g3-flower4", x: 4930, y: 430, width: 180, height: 18, interval: 12, delay: 0.5, openDuration: 8, warningDuration: 2 },
     ],
-    enemies: [giantEnemy("g3-a1", "ant", 450, 420, 320, 730, 54), giantEnemy("g3-b1", "bee", 1150, 175, 980, 1450, 82), giantEnemy("g3-s1", "snail", 2250, 420, 2100, 2730, 38), giantEnemy("g3-b2", "bee", 3310, 135, 3160, 3650, 88), giantEnemy("g3-a2", "ant", 4350, 420, 4200, 4640, 60), giantEnemy("g3-b3", "bee", 5480, 145, 5300, 5820, 94), giantEnemy("g3-a3", "ant", 7040, 420, 6730, 7460, 66)],
-    items: [apple("g3a1", 360, 285), apple("g3a2", 1050, 235), apple("g3a3", 1430, 155), apple("g3a4", 2530, 105), apple("g3a5", 3620, 95), sticker("sticker-11-3", 4730, 95), apple("g3a6", 5530, 155), apple("g3a7", 6000, 255), apple("g3a8", 7220, 125)],
-    rewardBlocks: [reward("g3r1", 1080, 134), reward("g3r2", 3220, 74, "apple"), reward("g3r3", 4950, 154)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890, 6690], boss: "queen-bee",
+    enemies: [giantEnemy("g3-a1", "ant", 500, 420, 350, 830, 54), giantEnemy("g3-b1", "bee", 1200, 175, 1050, 1600, 82), giantEnemy("g3-s1", "snail", 2100, 420, 1960, 2600, 38), giantEnemy("g3-b2", "bee", 3300, 135, 2850, 3400, 88), giantEnemy("g3-a2", "ant", 3700, 420, 3600, 4180, 60), giantEnemy("g3-b3", "bee", 4800, 145, 4400, 4900, 94), giantEnemy("g3-a3", "ant", 5600, 420, 5150, 6100, 66)],
+    items: [apple("g3a1", 530, 225), apple("g3a2", 720, 135), apple("g3a3", 1150, 225), apple("g3a4", 2050, 225), apple("g3a5", 2900, 225), sticker("sticker-11-3", 4790, 135), apple("g3a6", 3250, 135), apple("g3a7", 4500, 225), apple("g3a8", 5300, 225)],
+    rewardBlocks: [reward("g3r1", 1650, 300), reward("g3r2", 3100, 300, "apple"), reward("g3r3", 4650, 300)], checkpoints: [1050, 1960, 2830, 3600, 4400, 5150], boss: "queen-bee",
   },
   {
     id: "12-1", world: 12, screen: 1,

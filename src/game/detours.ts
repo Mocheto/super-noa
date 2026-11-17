@@ -9,7 +9,7 @@ export const detourCatalog: Array<{
   { id: "fireflies", title: "El sendero de las luciérnagas", shortName: "Luciérnagas", source: "2-1", world: 2, x: 29, y: 95,
     path: "M 900 1560 Q 870 1560 870 1900", icon: 0,
     shortcut: { from: 1, to: 3, path: "M 300 1520 C 600 1600 600 1850 870 1900 C 1080 1810 1350 1800 1500 1620" } },
-  { id: "mine", title: "El túnel del gatito minero", shortName: "Túnel minero", source: "2-2", world: 2, x: 30, y: 58,
+  { id: "mine", title: "El túnel del gatito minero", shortName: "Túnel minero", source: "2-3", world: 2, x: 30, y: 58,
     path: "M 900 1560 Q 900 1560 900 1160", icon: 1,
     shortcut: { from: 2, to: 6, path: "M 900 1560 L 900 1160 C 1350 1080 2400 1080 2700 1040" } },
   { id: "mill", title: "El molino de las manzanas", shortName: "Molino", source: "1-1", world: 1, x: 10, y: 94,

@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Formatos de pantalla · prototipo jugable</title>
+<style>
+  :root { --gold: #ffd76a; --ink: #2f1d33; --paper: #fff6e3; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; min-height: 100vh; background: #1b1830; color: var(--paper); font: 15px/1.45 system-ui, sans-serif; }
+  main { width: min(980px, 100%); margin: 0 auto; padding: 16px; }
+  h1 { margin: 0 0 4px; color: var(--gold); font: 900 1.5rem ui-monospace, monospace; }
+  .lead { margin: 0 0 12px; color: #d8d2ee; }
+  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border: 4px solid #3b3460; border-radius: 12px; background: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
+  canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+  .menu { position: absolute; inset: 0; display: grid; place-content: center; gap: 14px; padding: 16px; background: #1b1830e6; text-align: center; }
+  .menu h2 { margin: 0; color: var(--gold); font: 900 1.6rem ui-monospace, monospace; }
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 220px)); gap: 12px; }
+  .cards button { display: grid; gap: 6px; padding: 14px; border: 3px solid var(--ink); border-radius: 12px; background: var(--paper); color: var(--ink); font: inherit; text-align: left; cursor: pointer; box-shadow: 0 5px 0 var(--ink); }
+  .cards button:hover, .cards button:focus-visible { background: #fff; outline: 3px solid var(--gold); }
+  .cards b { font: 900 1.1rem ui-monospace, monospace; }
+  .cards small { color: #5a4b62; }
+  .tools { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; }
+  .tools button, .end button { padding: 6px 12px; border: 3px solid var(--ink); border-radius: 999px; background: var(--paper); color: var(--ink); font: 800 14px system-ui; cursor: pointer; }
+  .end { position: absolute; inset: 0; display: grid; place-content: center; gap: 12px; background: #1b1830cc; text-align: center; }
+  .end h2 { margin: 0; color: var(--gold); font: 900 2rem ui-monospace, monospace; }
+  .end div { display: flex; gap: 10px; justify-content: center; }
+  .touch { position: absolute; inset: auto 0 10px; display: none; justify-content: space-between; padding: 0 14px; pointer-events: none; }
+  .touch div { display: flex; gap: 12px; }
+  .touch button { width: 64px; height: 64px; border: 3px solid var(--ink); border-radius: 50%; background: #fff6e3cc; color: var(--ink); font: 900 24px system-ui; pointer-events: auto; touch-action: none; }
+  @media (pointer: coarse) { .touch { display: flex; } }
+  .notes { margin-top: 14px; padding: 12px 16px; border-radius: 10px; background: #2a2448; }
+  .notes h3 { margin: 0 0 6px; color: var(--gold); }
+  .notes ul { margin: 0; padding-left: 20px; }
+  @media (max-width: 700px) { .cards { grid-template-columns: 1fr; } .cards small { display: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Formatos de pantalla</h1>
+  <p class="lead">Prototipo de tres formas nuevas de jugar una pantalla: exploración, sala-rompecabezas y persecución amable. Se mueve igual que el juego: ← → para andar y espacio o ↑ para saltar, con doble salto en el aire. R vuelve a empezar y Esc vuelve al menú. Si caes, apareces en el último sitio seguro, sin perder vidas.</p>
+  <div class="frame" id="frame">
+    <canvas id="c" width="960" height="540"></canvas>
+    <div class="tools" id="tools" hidden><button id="reset" type="button">↺ Empezar otra vez</button><button id="back" type="button">Menú</button></div>
+    <div class="menu" id="menu">
+      <h2>¿A qué jugamos?</h2>
+      <div class="cards">
+        <button type="button" data-mode="explore"><b>🐾 Exploración</b><span>Busca los tres gatitos perdidos para abrir la puerta del claro.</span><small>Mundo grande en todas direcciones: arriba, abajo y vuelta atrás.</small></button>
+        <button type="button" data-mode="rooms"><b>🔔 Salas</b><span>Pisa botones, empuja la caja y cambia los colores para salir.</span><small>Tres salas de una sola pantalla, sin cámara que avance.</small></button>
+        <button type="button" data-mode="chase"><b>🧶 Persecución</b><span>¡Un gatito se ha llevado tu ovillo! Síguelo hasta pillarlo.</span><small>Lo que huye siempre te espera: nunca se escapa del todo.</small></button>
+      </div>
+    </div>
+    <div class="end" id="end" hidden><h2 id="endTitle">¡Lo has conseguido!</h2><p id="endText"></p><div><button id="again" type="button">Otra vez</button><button id="endMenu" type="button">Menú</button></div></div>
+    <div class="touch" id="touch"><div><button data-key="left" type="button">◀</button><button data-key="right" type="button">▶</button></div><div><button data-key="jump" type="button">⤒</button></div></div>
+  </div>
+  <section class="notes" id="notes"></section>
+</main>
+<script>
+"use strict";
+const A = "../public/assets/";
+const IMG = {};
+for (const [name, src] of Object.entries({
+  noa: "sprites/noa-sprite-sheet.png", noaJump: "sprites/noa-jump-v2.png", tiles: "atlases/world-1-tiles-v1.png",
+  coll: "atlases/collectibles-v1.png", switches: "atlases/detour-switches-v1.png", cat: "sprites/world-cat-1-v1.png",
+  yarn: "sprites/yarn-ball-v1.png", forest: "worlds/world-1-hd-v1.webp", castle: "worlds/castle-interior-background-v1.webp",
+  meadow: "worlds/world-2-hd-v1.webp",
+})) { IMG[name] = new Image(); IMG[name].src = A + src; }
+const ready = (img) => img.complete && img.naturalWidth > 0;
+
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+const W = 960, H = 540;
+const GRAVITY = 1650, JUMP = 625, MOVE = 250;
+
+/* ---------- sonido ---------- */
+let audio = null;
+function tone(freq, dur = 0.12, type = "square", gain = 0.07, slide = 0) {
+  try {
+    audio ??= new AudioContext();
+    const t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(freq * slide, t + dur);
+    g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(audio.destination); o.start(t); o.stop(t + dur + 0.02);
+  } catch { /* sin sonido */ }
+}
+const SFX = {
+  jump: () => tone(520, 0.1, "square", 0.04, 1.6),
+  find: () => [784, 988, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.16, "triangle", 0.08), i * 90)),
+  click: () => tone(330, 0.08, "square", 0.06, 0.7),
+  door: () => tone(180, 0.35, "sawtooth", 0.04, 2.2),
+  meow: () => { tone(900, 0.18, "sine", 0.05, 1.3); setTimeout(() => tone(1100, 0.22, "sine", 0.05, 0.6), 160); },
+  hop: () => tone(300, 0.15, "sine", 0.06, 1.8),
+  win: () => [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.22, "triangle", 0.08), i * 110)),
+};
+
+/* ---------- entrada ---------- */
+const input = { left: false, right: false, jump: false, jumpPressed: false };
+const KEYS = { ArrowLeft: "left", a: "left", A: "left", ArrowRight: "right", d: "right", D: "right", " ": "jump", ArrowUp: "jump", w: "jump", W: "jump" };
+addEventListener("keydown", (e) => {
+  if (e.key === "Escape") return showMenu();
+  if ((e.key === "r" || e.key === "R") && scene) return restart();
+  const k = KEYS[e.key]; if (!k) return;
+  e.preventDefault();
+  if (k === "jump" && !input.jump) input.jumpPressed = true;
+  input[k] = true;
+});
+addEventListener("keyup", (e) => { const k = KEYS[e.key]; if (k) input[k] = false; });
+for (const b of document.querySelectorAll("[data-key]")) {
+  const k = b.dataset.key;
+  b.addEventListener("pointerdown", (e) => { e.preventDefault(); if (k === "jump" && !input.jump) input.jumpPressed = true; input[k] = true; });
+  for (const ev of ["pointerup", "pointercancel", "pointerleave"]) b.addEventListener(ev, () => { input[k] = false; });
+}
+
+/* ---------- física compartida ---------- */
+const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+
+function makePlayer(x, y) {
+  return { x, y, w: 42, h: 58, vx: 0, vy: 0, grounded: false, ground: null, facing: 1, coyote: 0, buffer: 0, jumps: 0, safe: { x, y }, walk: 0, fx: 0 };
+}
+
+/** Mueve un cuerpo por ejes separados. `onHitX` permite empujar (devuelve true si el obstáculo se apartó). */
+function moveBody(b, dx, dy, solids, onHitX) {
+  b.x += dx;
+  for (const s of solids) {
+    if (s.oneway || !overlap(b, s)) continue;
+    if (onHitX && onHitX(s, dx) && !overlap(b, s)) continue;
+    if (dx > 0) b.x = s.x - b.w; else if (dx < 0) b.x = s.x + s.w;
+  }
+  const prevBottom = b.y + b.h;
+  b.y += dy; b.grounded = false; b.ground = null;
+  for (const s of solids) {
+    if (s.oneway) {
+      if (dy >= 0 && prevBottom <= s.y + 2 && b.y + b.h >= s.y && b.x + b.w > s.x && b.x < s.x + s.w) { b.y = s.y - b.h; b.vy = 0; b.grounded = true; b.ground = s; }
+      continue;
+    }
+    if (!overlap(b, s)) continue;
+    if (dy > 0) { b.y = s.y - b.h; b.vy = 0; b.grounded = true; b.ground = s; }
+    else if (dy < 0) { b.y = s.y + s.h; b.vy = 0; }
+  }
+}
+
+function stepPlayer(p, dt, solids, world, onHitX) {
+  const { left, right } = input;
+  if (left === right) p.vx *= Math.pow(0.0008, dt);
+  else { p.vx = (left ? -1 : 1) * MOVE; p.facing = left ? -1 : 1; }
+  if (input.jumpPressed) p.buffer = 0.12;
+  input.jumpPressed = false;
+  p.buffer = Math.max(0, p.buffer - dt);
+  p.coyote = p.grounded ? 0.12 : Math.max(0, p.coyote - dt);
+  if (p.grounded) p.jumps = 0;
+  if (p.buffer > 0 && p.coyote > 0 && p.jumps === 0) { p.vy = -JUMP; p.jumps = 1; p.buffer = 0; p.coyote = 0; SFX.jump(); }
+  else if (p.buffer > 0 && !p.grounded && p.jumps < 2) { p.vy = -JUMP * 0.94; p.jumps = 2; p.buffer = 0; p.fx = 0.35; SFX.jump(); }
+  if (!input.jump && p.vy < -220) p.vy += GRAVITY * 1.4 * dt;
+  p.vy = Math.min(900, p.vy + GRAVITY * dt);
+  moveBody(p, p.vx * dt, p.vy * dt, solids, onHitX);
+  p.x = Math.max(world.minX ?? 0, Math.min((world.maxX ?? world.w) - p.w, p.x));
+  p.walk = p.grounded && Math.abs(p.vx) > 25 ? p.walk + dt : 0;
+  p.fx = Math.max(0, p.fx - dt);
+  if (p.grounded && p.ground && !p.ground.moving && !p.ground.unsafe) {
+    const s = p.ground;
+    p.safe = { x: Math.max(s.x + 8, Math.min(s.x + s.w - p.w - 8, p.x)), y: s.y - p.h };
+  }
+  if (p.y > world.h + 120) { p.x = p.safe.x; p.y = p.safe.y - 4; p.vx = 0; p.vy = 0; p.fx = 0.6; SFX.hop(); return "fell"; }
+  return null;
+}
+
+/* ---------- dibujo compartido ---------- */
+function drawBg(img, camX, camY, factor = 0.25, dim = 0) {
+  ctx.fillStyle = "#6fb3e0"; ctx.fillRect(0, 0, W, H);
+  if (!ready(img)) return;
+  const scale = (H * 1.12) / img.naturalHeight, bw = img.naturalWidth * scale;
+  const ox = -((camX * factor) % bw), oy = -Math.min(H * 0.12, camY * 0.04);
+  for (let x = ox; x < W; x += bw) ctx.drawImage(img, x, oy, bw, H * 1.12);
+  if (dim) { ctx.fillStyle = `rgba(20,14,36,${dim})`; ctx.fillRect(0, 0, W, H); }
+}
+
+function drawGround(s, cx, cy) {
+  const x = Math.round(s.x - cx), y = Math.round(s.y - cy);
+  if (x > W || x + s.w < 0 || y > H || y + s.h < 0) return;
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y - 10, s.w, s.h + 10); ctx.clip();
+  if (ready(IMG.tiles)) {
+    for (let tx = x; tx < x + s.w; tx += 64) {
+      for (let ty = y + 54; ty < y + s.h; ty += 64) ctx.drawImage(IMG.tiles, 256, 0, 256, 256, tx, ty, 64, 64);
+      ctx.drawImage(IMG.tiles, 0, 0, 256, 256, tx, y - 8, 64, 64);
+    }
+  } else { ctx.fillStyle = "#7a5230"; ctx.fillRect(x, y, s.w, s.h); }
+  ctx.restore();
+  ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3; ctx.strokeRect(x + 1.5, y - 6, s.w - 3, s.h + 6);
+}
+
+function drawBranch(s, cx, cy, color = "#8b5a2b") {
+  const x = Math.round(s.x - cx), y = Math.round(s.y - cy);
+  if (x > W || x + s.w < 0 || y > H + 20 || y < -40) return;
+  ctx.fillStyle = color; ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.roundRect(x, y, s.w, 18, 9); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#4f9a3a";
+  for (let i = 10; i < s.w - 6; i += 26) { ctx.beginPath(); ctx.ellipse(x + i, y + 1, 12, 6, -0.3, 0, Math.PI * 2); ctx.fill(); }
+}
+
+function drawStone(s, cx, cy, fill = "#5b5670") {
+  const x = Math.round(s.x - cx), y = Math.round(s.y - cy);
+  ctx.fillStyle = fill; ctx.fillRect(x, y, s.w, s.h);
+  ctx.fillStyle = "#ffffff22"; ctx.fillRect(x, y, s.w, 6);
+  ctx.strokeStyle = "#00000033"; ctx.lineWidth = 2;
+  for (let by = y + 30; by < y + s.h; by += 30) { ctx.beginPath(); ctx.moveTo(x, by); ctx.lineTo(x + s.w, by); ctx.stroke(); }
+  ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3; ctx.strokeRect(x + 1.5, y + 1.5, s.w - 3, s.h - 3);
+}
+
+function drawNoa(p, cx, cy) {
+  const x = Math.round(p.x - cx), y = Math.round(p.y - cy);
+  ctx.save();
+  if (p.facing === -1) { ctx.translate(x + p.w / 2, 0); ctx.scale(-1, 1); ctx.translate(-(x + p.w / 2), 0); }
+  if (!p.grounded && ready(IMG.noaJump)) ctx.drawImage(IMG.noaJump, x - 50, y - 37, 145, 125);
+  else if (ready(IMG.noa)) {
+    const running = Math.abs(p.vx) > 25;
+    const cell = IMG.noa.naturalWidth / 4, col = running ? Math.floor(p.walk / 0.095) % 4 : 0;
+    ctx.drawImage(IMG.noa, col * cell + 14, running ? 360 : 0, cell - 28, running ? 300 : 342, x - 29, y + p.h - 110, 100, 110);
+  } else { ctx.fillStyle = "#e5553d"; ctx.fillRect(x, y, p.w, p.h); }
+  ctx.restore();
+  if (p.fx > 0) {
+    ctx.save(); ctx.globalAlpha = Math.min(1, p.fx * 3); ctx.strokeStyle = "#fff2ae"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(x + p.w / 2, y + p.h + 2, 30 + (0.35 - p.fx) * 60, 8, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+  }
+}
+
+function drawCollectible(col, row, x, y, size) { if (ready(IMG.coll)) ctx.drawImage(IMG.coll, col * 192, row * 192, 192, 192, x, y, size, size); }
+
+function bubble(text, x, y) {
+  ctx.save(); ctx.font = "800 18px system-ui"; const w = ctx.measureText(text).width + 22;
+  const tip = x; x = Math.max(w / 2 + 6, Math.min(W - w / 2 - 6, x));
+  ctx.fillStyle = "#fff6e3"; ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.roundRect(x - w / 2, y - 34, w, 30, 12); ctx.fill(); ctx.stroke();
+  const tx = Math.max(x - w / 2 + 14, Math.min(x + w / 2 - 14, tip)); ctx.beginPath(); ctx.moveTo(tx - 7, y - 5); ctx.lineTo(tx, y + 6); ctx.lineTo(tx + 7, y - 5); ctx.fill();
+  ctx.fillStyle = "#2f1d33"; ctx.textAlign = "center"; ctx.fillText(text, x, y - 12); ctx.restore();
+}
+
+function hudText(text, x = 18, y = 34) {
+  ctx.save(); ctx.font = "900 20px ui-monospace, monospace"; ctx.lineWidth = 5; ctx.strokeStyle = "#2f1d33"; ctx.fillStyle = "#ffd76a";
+  ctx.strokeText(text, x, y); ctx.fillText(text, x, y); ctx.restore();
+}
+
+function follow(cam, p, world, lead = 0) {
+  const tx = Math.max(0, Math.min(world.w - W, p.x + p.w / 2 - W / 2 + lead));
+  const ty = Math.max(0, Math.min(world.h - H, p.y + p.h / 2 - H * 0.58));
+  cam.x += (tx - cam.x) * 0.15; cam.y += (ty - cam.y) * 0.12;
+}
+
+/* =====================================================================
+   1. EXPLORACIÓN: encontrar tres gatitos para abrir la puerta del claro
+   ===================================================================== */
+function createExplore() {
+  const world = { w: 2600, h: 1400 };
+  const solids = [
+    { x: 0, y: 1000, w: 1700, h: 400, kind: "ground" },
+    { x: 1820, y: 1000, w: 650, h: 120, kind: "ground", unsafe: false },
+    { x: 1700, y: 1300, w: 900, h: 100, kind: "ground" },
+  ];
+  const br = (x, y, w) => solids.push({ x, y, w, h: 18, oneway: true, kind: "branch" });
+  // Árbol de la izquierda: subida en zigzag hasta la copa.
+  br(400, 900, 160); br(200, 800, 160); br(420, 700, 160); br(200, 600, 160); br(420, 500, 160); br(180, 400, 200);
+  // Pozo del túnel: escalones para volver a la superficie.
+  br(2480, 1210, 110); br(2480, 1110, 110);
+  // Subida de la derecha y puente alto que vuelve por encima del inicio.
+  br(2250, 900, 150); br(2050, 800, 150); br(2250, 700, 150); br(2050, 600, 150);
+  br(1300, 520, 720);
+  const kittens = [
+    { x: 250, y: 400, col: 1, row: 0, name: "lila", found: false },
+    { x: 2380, y: 1300, col: 3, row: 0, name: "crema", found: false },
+    { x: 1330, y: 520, col: 1, row: 1, name: "luna", found: false },
+  ];
+  const gate = { x: 1120, y: 1000 - 170, w: 120, h: 170 };
+  const p = makePlayer(880, 1000 - 58);
+  const cam = { x: 400, y: 600 };
+  const trail = [];
+  let t = 0, sinceFind = 0, meowCd = 2, meowAt = null, done = false, hello = 4;
+  return {
+    get player() { return p; },
+    kittens,
+    world, notes: [
+      "¿Se entiende el objetivo sin leer? La puerta enseña tres huecos y cada gatito encontrado ocupa uno.",
+      "¿Apetece volver atrás? Hay tres caminos: arriba a la izquierda, abajo por el agujero y arriba a la derecha con un puente que vuelve por encima del inicio.",
+      "Ayuda amable: el gatito más cercano maúlla, y si pasan 20 s sin encontrar ninguno aparece una flecha que lo señala.",
+      "Medir: tiempo hasta el primer gatito y si la niña descubre sola el agujero del túnel.",
+    ],
+    update(dt) {
+      t += dt; sinceFind += dt; hello = Math.max(0, hello - dt);
+      stepPlayer(p, dt, solids, world);
+      follow(cam, p, world, p.facing * 60);
+      trail.unshift({ x: p.x + p.w / 2, y: p.y + p.h }); trail.length = Math.min(trail.length, 80);
+      for (const k of kittens) {
+        if (k.found) continue;
+        if (Math.abs(p.x + p.w / 2 - k.x) < 44 && Math.abs(p.y + p.h - k.y) < 60) { k.found = true; sinceFind = 0; SFX.find(); }
+      }
+      meowCd -= dt;
+      const left = kittens.filter((k) => !k.found);
+      const near = left.map((k) => ({ k, d: Math.hypot(k.x - p.x, k.y - p.y) })).sort((a, b) => a.d - b.d)[0];
+      if (near && near.d < 520 && meowCd <= 0) { meowCd = 3.2; meowAt = { k: near.k, life: 1.2 }; SFX.meow(); }
+      if (meowAt) { meowAt.life -= dt; if (meowAt.life <= 0) meowAt = null; }
+      const open = left.length === 0;
+      if (open && overlap(p, gate) && !done) { done = true; SFX.win(); finish("¡Has encontrado a los tres gatitos!", `Lo has conseguido en ${Math.round(t)} segundos.`); }
+      this.hint = !open && sinceFind > 20 && near ? near.k : (open ? gate : null);
+    },
+    draw() {
+      drawBg(IMG.forest, cam.x, cam.y, 0.25);
+      if (cam.y > 700) { ctx.fillStyle = `rgba(40,24,18,${Math.min(0.6, (cam.y - 700) / 300)})`; ctx.fillRect(0, 0, W, H); }
+      for (const s of solids) s.oneway ? drawBranch(s, cam.x, cam.y) : drawGround(s, cam.x, cam.y);
+      // Puerta del claro con tres huecos.
+      const gx = gate.x - cam.x, gy = gate.y - cam.y, open = kittens.every((k) => k.found);
+      ctx.fillStyle = "#6b4423"; ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.roundRect(gx, gy, gate.w, gate.h, [60, 60, 0, 0]); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = open ? "#fff2ae" : "#3a2414"; ctx.beginPath(); ctx.roundRect(gx + 16, gy + 20, gate.w - 32, gate.h - 20, [44, 44, 0, 0]); ctx.fill();
+      kittens.forEach((k, i) => {
+        const sx = gx + 14 + i * 34, sy = gy - 40;
+        ctx.fillStyle = "#fff6e380"; ctx.beginPath(); ctx.arc(sx + 16, sy + 16, 17, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        if (k.found) drawCollectible(k.col, k.row, sx - 2, sy - 2, 36);
+      });
+      if (open) bubble("¡Abierta!", gx + gate.w / 2, gy - 48);
+      for (const k of kittens) {
+        if (k.found) continue;
+        const bob = Math.sin(t * 3 + k.x) * 3;
+        drawCollectible(k.col, k.row, k.x - 28 - cam.x, k.y - 58 - cam.y + bob, 56);
+      }
+      if (meowAt) bubble("¡Miau!", meowAt.k.x - cam.x, meowAt.k.y - 64 - cam.y);
+      // Los gatitos encontrados siguen a Noa.
+      kittens.filter((k) => k.found).forEach((k, i) => {
+        const pt = trail[Math.min(trail.length - 1, 18 + i * 16)];
+        if (pt) drawCollectible(k.col, k.row, pt.x - 20 - cam.x, pt.y - 40 - cam.y, 40);
+      });
+      drawNoa(p, cam.x, cam.y);
+      if (hello > 0) bubble("¿Dónde están los gatitos?", p.x + p.w / 2 - cam.x, p.y - 30 - cam.y);
+      if (this.hint) {
+        const hx = this.hint.x + (this.hint.w ?? 0) / 2, hy = this.hint.y - 30;
+        const a = Math.atan2(hy - (p.y + 20), hx - (p.x + p.w / 2));
+        const cxp = p.x + p.w / 2 - cam.x + Math.cos(a) * 70, cyp = p.y + 10 - cam.y + Math.sin(a) * 70;
+        ctx.save(); ctx.translate(cxp, cyp); ctx.rotate(a); ctx.globalAlpha = 0.6 + Math.sin(t * 6) * 0.3;
+        ctx.fillStyle = "#ffd76a"; ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(18, 0); ctx.lineTo(-8, -13); ctx.lineTo(-8, 13); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+      }
+      hudText("Gatitos:");
+      kittens.forEach((k, i) => {
+        ctx.fillStyle = "#fff6e355"; ctx.beginPath(); ctx.arc(138 + i * 44, 27, 19, 0, Math.PI * 2); ctx.fill();
+        if (k.found) drawCollectible(k.col, k.row, 118 + i * 44, 7, 40);
+      });
+    },
+  };
+}
+
+/* =====================================================================
+   2. SALA-ROMPECABEZAS: tres salas de una pantalla con botones
+   ===================================================================== */
+const FLOOR = { x: -40, y: 480, w: 1040, h: 80 };
+const ROOMS = [
+  {
+    title: "Sala 1 · El botón de la huella",
+    start: { x: 60, y: 422 },
+    solids: [FLOOR, { x: 860, y: -40, w: 140, h: 340 }, { x: 90, y: 300, w: 170, h: 24 }, { x: 320, y: 390, w: 130, h: 18, oneway: true }],
+    door: { x: 880, y: 300, w: 40, h: 180 },
+    toggles: [{ x: 140, y: 300, w: 70, action: "open" }],
+  },
+  {
+    title: "Sala 2 · Algo que pese",
+    start: { x: 60, y: 422 },
+    solids: [FLOOR, { x: 860, y: -40, w: 140, h: 340 }, { x: 690, y: 450, w: 40, h: 30, kind: "curb" }],
+    door: { x: 880, y: 300, w: 40, h: 180 },
+    plate: { x: 600, y: 480, w: 80 },
+    box: { x: 260, y: 420, w: 60, h: 60 },
+  },
+  {
+    title: "Sala 3 · Rosa y azul",
+    start: { x: 140, y: 422 },
+    solids: [FLOOR, { x: 800, y: 100, w: 200, h: 380 }, { x: 520, y: 230, w: 100, h: 20 }],
+    colored: [
+      { x: 300, y: 390, w: 110, h: 20, color: "pink" }, { x: 400, y: 300, w: 100, h: 20, color: "pink" },
+      { x: 500, y: 140, w: 300, h: 18, color: "pink" }, { x: 660, y: 170, w: 90, h: 20, color: "blue" },
+    ],
+    active: "blue",
+    toggles: [{ x: 30, y: 480, w: 70, action: "pink" }, { x: 535, y: 230, w: 70, action: "blue" }],
+    exitX: 900,
+  },
+];
+const COLORS = { pink: "#ef79a9", blue: "#5aa0dc" };
+
+function createRooms() {
+  let index = 0, room, p, box, door, active, ghosts, t = 0, total = 0, banner = 0, done = false;
+  const world = { w: W, h: H, minX: 0, maxX: W };
+  function load(i) {
+    index = i; room = ROOMS[i]; t = 0; banner = 2.2;
+    p = makePlayer(room.start.x, room.start.y);
+    box = room.box ? { ...room.box, vx: 0, vy: 0, grounded: false } : null;
+    door = room.door ? { ...room.door, open: 0 } : null;
+    active = room.active ?? null; ghosts = new Set();
+    for (const tg of room.toggles ?? []) tg.on = false, tg.inside = false;
+  }
+  load(0);
+  const coloredSolids = () => (room.colored ?? []).filter((c) => c.color === active && !ghosts.has(c));
+  const doorSolid = () => door && door.open < 1 ? [{ x: door.x, y: door.y, w: door.w, h: door.h * (1 - door.open) }] : [];
+  const baseSolids = () => [...room.solids, ...coloredSolids(), ...doorSolid()];
+  const pressing = (b, plate) => b && b.grounded && b.x + b.w / 2 > plate.x && b.x + b.w / 2 < plate.x + plate.w && Math.abs(b.y + b.h - plate.y) < 3;
+  return {
+    get player() { return p; },
+    world, notes: [
+      "¿Entiende la niña que el botón de la huella abre la puerta con la misma huella? La sala 1 enseña la idea sin texto.",
+      "Sala 2: el botón solo abre mientras algo pesa encima. ¿Descubre que la caja se empuja andando contra ella?",
+      "Sala 3 (el giro): pisar un color hace aparecer sus plataformas y esconde las del otro. ¿Se atasca? ¿Pide ayuda?",
+      "Salida amable: no hay forma de perder; «↺ Empezar otra vez» (o R) recoloca la sala. Medir cuántas veces se usa.",
+    ],
+    restartRoom() { load(index); },
+    get debug() { return { box, door, active, index, load }; },
+    update(dt) {
+      t += dt; total += dt; banner = Math.max(0, banner - dt);
+      // La caja cae y se apoya; la jugadora la empuja al chocar de lado.
+      if (box) {
+        box.vy = Math.min(900, box.vy + GRAVITY * dt);
+        moveBody(box, 0, box.vy * dt, baseSolids());
+      }
+      const solids = baseSolids();
+      const playerSolids = box ? [...solids, box] : solids;
+      stepPlayer(p, dt, playerSolids, world, (s, dx) => {
+        if (s !== box) return false;
+        const before = box.x;
+        moveBody(box, dx * 0.6, 0, solids);
+        box.x = Math.max(0, Math.min(W - box.w, box.x));
+        return box.x !== before;
+      });
+      for (const g of [...ghosts]) if (!overlap(p, g)) ghosts.delete(g);
+      // Botones que se pisan: actúan al entrar, no mientras se está encima.
+      for (const tg of room.toggles ?? []) {
+        const on = p.grounded && p.x + p.w > tg.x + 6 && p.x < tg.x + tg.w - 6 && Math.abs(p.y + p.h - tg.y) < 3;
+        if (on && !tg.inside) {
+          if (tg.action === "open" && door && !tg.on) { tg.on = true; SFX.click(); setTimeout(SFX.door, 150); }
+          if ((tg.action === "pink" || tg.action === "blue") && active !== tg.action) {
+            active = tg.action; SFX.click();
+            for (const c of room.colored) if (c.color === active && overlap(p, c)) ghosts.add(c);
+          }
+        }
+        tg.inside = on;
+      }
+      if (door) {
+        const want = room.plate ? pressing(p, room.plate) || pressing(box, room.plate) : room.toggles.some((tg) => tg.on);
+        const wasClosed = door.open < 0.05;
+        door.open = Math.max(0, Math.min(1, door.open + (want ? 3 : -2.4) * dt));
+        if (want && wasClosed && door.open > 0) SFX.door();
+      }
+      const exitX = room.exitX ?? 905;
+      const canLeave = door ? door.open > 0.7 : p.y < 120;
+      if (canLeave && p.x > exitX && !done) {
+        if (index < ROOMS.length - 1) { SFX.find(); load(index + 1); }
+        else { done = true; SFX.win(); finish("¡Has salido del castillo!", `Tres salas en ${Math.round(total)} segundos.`); }
+      }
+    },
+    draw() {
+      drawBg(IMG.castle, 0, 0, 0, 0.35);
+      for (const s of room.solids) {
+        if (s.oneway) drawBranch(s, 0, 0, "#8a6a52");
+        else drawStone(s, 0, 0, s.kind === "curb" ? "#7a7090" : "#5b5670");
+      }
+      for (const c of room.colored ?? []) {
+        const solid = c.color === active;
+        ctx.save();
+        if (solid) { ctx.fillStyle = COLORS[c.color]; ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3; ctx.fillRect(c.x, c.y, c.w, c.h); ctx.strokeRect(c.x + 1.5, c.y + 1.5, c.w - 3, c.h - 3); }
+        else { ctx.setLineDash([8, 6]); ctx.strokeStyle = COLORS[c.color]; ctx.globalAlpha = 0.65; ctx.lineWidth = 3; ctx.strokeRect(c.x + 1.5, c.y + 1.5, c.w - 3, c.h - 3); }
+        ctx.restore();
+      }
+      if (door) {
+        const h = door.h * (1 - door.open);
+        ctx.fillStyle = "#7b4a26"; ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3;
+        ctx.fillRect(door.x, door.y, door.w, h); ctx.strokeRect(door.x + 1.5, door.y + 1.5, door.w - 3, Math.max(0, h - 3));
+        if (ready(IMG.switches) && h > 40) ctx.drawImage(IMG.switches, 256, 0, 256, 192, door.x - 6, door.y + h / 2 - 20, 52, 39);
+        ctx.fillStyle = "#fff2ae33"; ctx.fillRect(door.x + door.w, door.y, 80, door.h);
+      }
+      for (const tg of room.toggles ?? []) {
+        const pressed = tg.inside, col = tg.action === "open" ? null : COLORS[tg.action];
+        if (col) { ctx.fillStyle = col; ctx.fillRect(tg.x - 4, tg.y - 10, tg.w + 8, 10); }
+        if (ready(IMG.switches)) ctx.drawImage(IMG.switches, 256, 0, 256, 192, tg.x, tg.y - (pressed ? 40 : 50), tg.w, tg.w * 0.75 - (pressed ? 10 : 0));
+        if (tg.action === "open" && tg.on) bubble("¡Clic!", tg.x + tg.w / 2, tg.y - 54);
+      }
+      if (room.plate) {
+        const pl = room.plate, pressed = pressing(p, pl) || pressing(box, pl);
+        ctx.fillStyle = pressed ? "#ffd76a" : "#c9a86a"; ctx.strokeStyle = "#2f1d33"; ctx.lineWidth = 3;
+        ctx.fillRect(pl.x, pl.y - (pressed ? 4 : 10), pl.w, pressed ? 4 : 10); ctx.strokeRect(pl.x, pl.y - (pressed ? 4 : 10), pl.w, pressed ? 4 : 10);
+        if (ready(IMG.switches)) ctx.drawImage(IMG.switches, 256, 0, 256, 192, pl.x + 20, pl.y - 44, 40, 30);
+      }
+      if (box) drawCollectible(2, 1, box.x - 6, box.y - 8, 72);
+      if (room.exitX) { ctx.fillStyle = "#fff2ae"; ctx.font = "900 34px system-ui"; ctx.fillText("➜", 905, 80); }
+      drawNoa(p, 0, 0);
+      hudText(room.title);
+      if (banner > 0) bubble(["¡Abre la puerta!", "¿Qué pesa lo suficiente?", "¡Mira los colores!"][index], p.x + p.w / 2, p.y - 30);
+    },
+  };
+}
+
+/* =====================================================================
+   3. PERSECUCIÓN AMABLE: el gatito huye con el ovillo y siempre espera
+   ===================================================================== */
+function createChase() {
+  const world = { w: 5400, h: 540 };
+  const solids = [
+    ...[[0, 1000], [1130, 700], [1960, 560], [2680, 1000], [3820, 1580]].map(([x, w]) => ({ x, y: 456, w, h: 120, kind: "ground" })),
+    { x: 2800, y: 360, w: 170, h: 18, oneway: true }, { x: 3020, y: 270, w: 170, h: 18, oneway: true },
+    { x: 3250, y: 190, w: 200, h: 18, oneway: true }, { x: 3500, y: 300, w: 160, h: 18, oneway: true },
+    { x: 5150, y: 250, w: 250, h: 206, kind: "rock" },
+  ];
+  // Paradas del gatito. `jump` dibuja un arco; `talk` es lo que dice al esperar.
+  const stops = [
+    { x: 650, y: 456, talk: "¡Ji, ji! ¡No me pillas!" },
+    { x: 1500, y: 456, jump: true, talk: "¡Por aquí!" },
+    { x: 2250, y: 456, jump: true, talk: "¡Miau!" },
+    { x: 2880, y: 360, jump: true, talk: "¡Sube, sube!" },
+    { x: 3110, y: 270, jump: true, talk: "¡Más arriba!" },
+    { x: 3360, y: 190, jump: true, talk: "¡Desde aquí lo veo todo!" },
+    { x: 4200, y: 456, jump: true, talk: "¡Uy, qué salto!" },
+    { x: 4700, y: 456, talk: "¡Casi, casi!" },
+    { x: 5080, y: 456, talk: "¡Ay! ¡No hay salida!" },
+  ];
+  const cat = { x: stops[0].x, y: 456, i: 0, from: null, prog: 0, waiting: 0, caught: false };
+  const p = makePlayer(120, 398);
+  const cam = { x: 0, y: 0 };
+  let t = 0, done = false, sayLife = 2.5, say = stops[0].talk;
+  return {
+    get player() { return p; },
+    get cat() { return cat; },
+    world, notes: [
+      "¿Se siente como perseguir? El gatito corre más que Noa (330 frente a 250), pero se para en cada parada hasta que Noa se acerca.",
+      "Nunca se escapa del todo: si Noa se cae, reaparece y el gatito la espera mirando hacia atrás.",
+      "El giro: a mitad de camino sube por las ramas y obliga a trepar; el remate es el rincón final, sin salida.",
+      "Medir: si la niña se ríe o se agobia con un perseguido que se escapa, y si entiende que tiene que tocarlo.",
+    ],
+    update(dt) {
+      t += dt; sayLife = Math.max(0, sayLife - dt);
+      stepPlayer(p, dt, solids, world);
+      follow(cam, p, world, 140);
+      const pcx = p.x + p.w / 2;
+      if (cat.from) {
+        const a = cat.from, b = stops[cat.i], dist = Math.hypot(b.x - a.x, b.y - a.y);
+        cat.prog = Math.min(1, cat.prog + (330 * dt) / dist);
+        cat.x = a.x + (b.x - a.x) * cat.prog;
+        const peak = Math.min(a.y, b.y) - 90;
+        cat.y = b.jump ? (1 - cat.prog) ** 2 * a.y + 2 * (1 - cat.prog) * cat.prog * peak + cat.prog ** 2 * b.y : a.y + (b.y - a.y) * cat.prog;
+        if (cat.prog >= 1) { cat.from = null; cat.waiting = 0; say = b.talk; sayLife = 2.2; }
+      } else {
+        cat.waiting += dt;
+        const here = stops[cat.i];
+        const close = Math.abs(pcx - cat.x) < 230 && Math.abs(p.y + p.h - cat.y) < 150;
+        if (cat.i === stops.length - 1) {
+          if (!done && Math.abs(pcx - cat.x) < 50 && Math.abs(p.y + p.h - cat.y) < 70) {
+            done = true; cat.caught = true; say = "¡Toma tu ovillo!"; sayLife = 9; SFX.win();
+            setTimeout(() => finish("¡Has pillado al gatito!", `Te ha devuelto el ovillo en ${Math.round(t)} segundos.`), 1200);
+          }
+        } else if (close) {
+          cat.from = { x: cat.x, y: cat.y }; cat.prog = 0; cat.i += 1; SFX.meow();
+        } else if (cat.waiting > 6 && sayLife <= 0) { say = here.talk; sayLife = 2; cat.waiting = 2; }
+      }
+    },
+    draw() {
+      drawBg(IMG.meadow, cam.x, 0, 0.3);
+      for (const s of solids) {
+        if (s.oneway) drawBranch(s, cam.x, 0);
+        else if (s.kind === "rock") drawStone(s, cam.x, 0, "#8d8478");
+        else drawGround(s, cam.x, 0);
+      }
+      // Rastro de huellas desde el gatito hasta su siguiente parada.
+      const next = stops[Math.min(stops.length - 1, cat.i + (cat.from ? 0 : 1))];
+      if (!cat.caught && next && !cat.from && cat.i < stops.length - 1) {
+        for (let k = 1; k <= 4; k++) {
+          const u = k / 5, x = cat.x + (next.x - cat.x) * u - cam.x, y = cat.y + (next.y - cat.y) * u - (next.jump ? Math.sin(u * Math.PI) * 60 : 0) - 8;
+          ctx.fillStyle = "#fff6e399"; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      const cx = cat.x - cam.x, bob = cat.from ? Math.abs(Math.sin(t * 14)) * 6 : Math.sin(t * 3) * 2;
+      if (ready(IMG.cat)) {
+        ctx.save(); ctx.translate(cx, cat.y - 4 - bob);
+        if (cat.from && stops[cat.i].x > cat.from.x) ctx.scale(-1, 1);
+        ctx.drawImage(IMG.cat, -38, -82, 76, 82); ctx.restore();
+      }
+      if (ready(IMG.yarn) && !cat.caught) ctx.drawImage(IMG.yarn, cx + 14, cat.y - 34 - bob, 30, 30);
+      drawNoa(p, cam.x, 0);
+      if (cat.caught && ready(IMG.yarn)) ctx.drawImage(IMG.yarn, p.x - cam.x + 6, p.y - 40, 30, 30);
+      if (sayLife > 0) bubble(say, cx, cat.y - 92);
+      hudText("¡Pilla al gatito del ovillo!");
+      // Distancia en el borde si el gatito no se ve.
+      if (cx > W - 20) { ctx.fillStyle = "#ffd76a"; ctx.font = "900 30px system-ui"; ctx.fillText("➜", W - 40, cat.y - 30); }
+    },
+  };
+}
+
+/* ---------- bucle, menú y finales ---------- */
+const MODES = { explore: createExplore, rooms: createRooms, chase: createChase };
+const $ = (id) => document.getElementById(id);
+let scene = null, mode = null, last = 0, paused = true;
+
+function start(m) {
+  mode = m; scene = MODES[m](); paused = false;
+  $("menu").hidden = true; $("end").hidden = true; $("tools").hidden = false;
+  $("reset").textContent = m === "rooms" ? "↺ Empezar la sala" : "↺ Empezar otra vez";
+  $("notes").innerHTML = `<h3>Qué observar</h3><ul>${scene.notes.map((n) => `<li>${n}</li>`).join("")}</ul>`;
+  canvas.focus?.();
+}
+function restart() { if (mode === "rooms" && scene?.restartRoom && $("end").hidden) scene.restartRoom(); else if (mode) start(mode); }
+function showMenu() { scene = null; paused = true; $("menu").hidden = false; $("end").hidden = true; $("tools").hidden = true; $("notes").innerHTML = ""; drawIdle(); }
+function finish(title, text) { paused = true; $("endTitle").textContent = title; $("endText").textContent = text; $("end").hidden = false; }
+for (const b of document.querySelectorAll("[data-mode]")) b.addEventListener("click", () => start(b.dataset.mode));
+$("reset").addEventListener("click", (e) => { e.currentTarget.blur(); restart(); });
+$("back").addEventListener("click", showMenu);
+$("again").addEventListener("click", () => start(mode));
+$("endMenu").addEventListener("click", showMenu);
+
+function drawIdle() { drawBg(IMG.forest, 0, 0); }
+function frame(now) {
+  const dt = Math.min(1 / 30, (now - last) / 1000 || 0); last = now;
+  if (scene) {
+    if (!paused) {
+      // Pasos fijos de 1/120 s, como el juego.
+      let rest = dt; while (rest > 1e-6) { const step = Math.min(1 / 120, rest); scene.update(step); rest -= step; if (paused) break; }
+    }
+    scene.draw();
+  } else drawIdle();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__proto = { get scene() { return scene; }, start, input, set paused(v) { paused = v; } };
+</script>
+</body>
+</html>

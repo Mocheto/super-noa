@@ -185,3 +185,7 @@ _Avoid_: Lanzamiento, aviso de turno (reservado al tambor de Armonía)
 **Cuenta atrás del jabato**:
 Pulsos entre la llamada y el bocado, en que el jabato abre la boca poco a poco y se enciende un punto con un «tic» por pulso: dos para el pequeño y cuatro para el grande.
 _Avoid_: Espera, retardo
+
+**Jabato glotón**:
+Jabato pequeño que, con un «¡gru-gru!», pide dos bellotas en pulsos seguidos; solo aparece en la última fase de la merienda.
+_Avoid_: Doble, jabato doble

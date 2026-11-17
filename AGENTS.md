@@ -33,6 +33,7 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 - `src/game/worldMechanics.ts`: mecánicas por mundo.
 - `src/game/ranking*.ts`: tablón mundial con alias, envío, recuperación y onboarding.
 - `src/game/levelTransition.ts`, `src/game/levelSelectCard.tsx` y `src/game/levelObjectives.ts`: transiciones entre pantallas, tarjetas del selector de niveles y objetivos/pistas.
+- `src/game/levelBeats.ts`: cuatro tramos de pantalla (`Level.beats`), huecos y salientes, anticopia entre pantallas, alcanzabilidad con 190/310 px y posición de las mecánicas; sus pruebas llevan la lista de mundos pendientes de retoque.
 - `src/game/touchControls.tsx`, `src/game/TouchControls.tsx` y `src/game/Dialog.tsx`: controles móviles, interfaz y diálogos.
 - `src/game/GameAssetIcon.tsx` y `src/game/PixelIcon.tsx`: iconos de assets y pixeles.
 - `server/ranking-server.mjs`: API y migraciones del tablón; `server/ranking-supervisor.mjs`: supervisor que descarga y activa automáticamente el backend del último commit de `main`, con recuperación si falla.

@@ -137,6 +137,20 @@ export type DetourMechanism = Rect & {
   phase: number;
 };
 
+/** Cómo cambia la pantalla en su giro: combina la mecánica con otra ya vista, la invierte, presenta algo por
+ * sorpresa (siluetas, gravedad baja, cámara alejada) o cambia de forma. */
+export type TwistKind = "combine" | "invert" | "presentation" | "shape";
+
+/** Cuatro tramos de una pantalla. La presentación empieza en el inicio; aquí se marca dónde empiezan el
+ * desarrollo, el giro y el remate, medidos como avance desde el inicio (x en horizontal, altura subida en
+ * vertical). */
+export type LevelBeats = {
+  development: number;
+  twist: number;
+  finale: number;
+  twistKind: TwistKind;
+};
+
 export type Level = {
   id: string;
   world: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17;
@@ -175,6 +189,7 @@ export type Level = {
   detourSwitches?: Array<Rect & { id: "bell" | "books" | "water" }>;
   checkpoints: number[];
   verticalCheckpoints?: Array<{ x: number; y: number }>;
+  beats?: LevelBeats;
   boss?: BossId;
   route?: {
     next?: string;

@@ -1198,7 +1198,7 @@ export const levels: Level[] = [
     theme: "desert-oasis", width: 6500, start: { x: 80, y: 380 }, goalX: 6310,
     platforms: [
       ...themedGround([[0, 760], [900, 780], [1810, 2640], [4580, 850], [5560, 940]], "desert-ground"),
-      ...[280, 1050, 1940, 2840, 3760, 4700, 5660].flatMap((x, i) => [themedLedge(x, 315, 185, "desert-ledge"), themedLedge(x + 280, i % 2 ? 175 : 205, 170, "desert-ledge")]),
+      themedLedge(280, 315, 185, "desert-ledge"), themedLedge(560, 205, 170, "desert-ledge"), themedLedge(1050, 315, 185, "desert-ledge"), themedLedge(1330, 175, 170, "desert-ledge"), themedLedge(1940, 315, 185, "desert-ledge"), themedLedge(2220, 205, 170, "desert-ledge"), themedLedge(2840, 315, 185, "desert-ledge"), themedLedge(3120, 175, 170, "desert-ledge"), themedLedge(3760, 315, 185, "desert-ledge"), themedLedge(4040, 205, 170, "desert-ledge"), themedLedge(4700, 315, 185, "desert-ledge"), themedLedge(4980, 175, 170, "desert-ledge"), themedLedge(5660, 315, 185, "desert-ledge"), themedLedge(5940, 205, 170, "desert-ledge"),
     ],
     deadlyWater: deadlyWaterPits([[0, 760], [900, 780], [1810, 2640], [4580, 850], [5560, 940]]),
     sandGeysers: [{ id: "oasis-1", x: 540, y: 90, width: 145, height: 366, strength: 1950, maxRiseSpeed: 155 }, { id: "oasis-2", x: 3100, y: 80, width: 150, height: 376, strength: 2050, maxRiseSpeed: 160 }, { id: "oasis-3", x: 5900, y: 80, width: 150, height: 376, strength: 2100, maxRiseSpeed: 165 }],
@@ -1213,7 +1213,7 @@ export const levels: Level[] = [
     theme: "desert-ruins", width: 7200, start: { x: 80, y: 380 }, goalX: 7000,
     platforms: [
       ...themedGround([[0, 780], [920, 800], [1850, 780], [2760, 830], [3720, 790], [4640, 820], [5590, 760], [6480, 720]], "desert-ground"),
-      ...[290, 1060, 1980, 2900, 3840, 4770, 5710, 6590].flatMap((x, i) => [themedLedge(x, 310, 190, "desert-ledge"), themedLedge(x + 290, i % 2 ? 185 : 205, 175, "desert-ledge")]),
+      themedLedge(290, 310, 190, "desert-ledge"), themedLedge(580, 205, 175, "desert-ledge"), themedLedge(1060, 310, 190, "desert-ledge"), themedLedge(1350, 185, 175, "desert-ledge"), themedLedge(1980, 310, 190, "desert-ledge"), themedLedge(2270, 205, 175, "desert-ledge"), themedLedge(2900, 310, 190, "desert-ledge"), themedLedge(3190, 185, 175, "desert-ledge"), themedLedge(3840, 310, 190, "desert-ledge"), themedLedge(4130, 205, 175, "desert-ledge"), themedLedge(4770, 310, 190, "desert-ledge"), themedLedge(5060, 185, 175, "desert-ledge"), themedLedge(5710, 310, 190, "desert-ledge"), themedLedge(6000, 205, 175, "desert-ledge"), themedLedge(6590, 310, 190, "desert-ledge"), themedLedge(6880, 185, 175, "desert-ledge"),
     ],
     deadlyWater: deadlyWaterPits([[0, 780], [920, 800], [1850, 780], [2760, 830], [3720, 790], [4640, 820], [5590, 760], [6480, 720]]),
     sandGeysers: [{ id: "ruins-1", x: 560, y: 80, width: 150, height: 376, strength: 2000, maxRiseSpeed: 160 }, { id: "ruins-2", x: 3220, y: 70, width: 160, height: 386, strength: 2100, maxRiseSpeed: 165 }, { id: "ruins-3", x: 6010, y: 70, width: 160, height: 386, strength: 2150, maxRiseSpeed: 170 }],
@@ -1246,7 +1246,7 @@ export const levels: Level[] = [
     theme: "train-valley", width: 6700, start: { x: 80, y: 380 }, goalX: 6510,
     platforms: [
       ...themedGround([[0, 760], [890, 770], [1790, 790], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]], "train-ground"),
-      ...[280, 1030, 1930, 2850, 3760, 4690, 5600].flatMap((x, i) => [{ ...themedLedge(x, 305, 210, "train-roof"), beltSpeed: i % 2 ? 110 : -105 }, themedLedge(x + 300, i % 2 ? 175 : 200, 180, "train-roof")]),
+      { ...themedLedge(280, 305, 210, "train-roof"), beltSpeed: -105 }, themedLedge(580, 200, 180, "train-roof"), { ...themedLedge(1030, 305, 210, "train-roof"), beltSpeed: 110 }, themedLedge(1330, 175, 180, "train-roof"), { ...themedLedge(1930, 305, 210, "train-roof"), beltSpeed: -105 }, themedLedge(2230, 200, 180, "train-roof"), { ...themedLedge(2850, 305, 210, "train-roof"), beltSpeed: 110 }, themedLedge(3150, 175, 180, "train-roof"), { ...themedLedge(3760, 305, 210, "train-roof"), beltSpeed: -105 }, themedLedge(4060, 200, 180, "train-roof"), { ...themedLedge(4690, 305, 210, "train-roof"), beltSpeed: 110 }, themedLedge(4990, 175, 180, "train-roof"), { ...themedLedge(5600, 305, 210, "train-roof"), beltSpeed: -105 }, themedLedge(5900, 200, 180, "train-roof"),
     ],
     deadlyWater: deadlyWaterPits([[0, 760], [890, 770], [1790, 790], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]]),
     lavaJets: [lavaJet("steam-1", 840, 4.2, 0, 250), lavaJet("steam-2", 1740, 4.4, 1.2, 290), lavaJet("steam-3", 3570, 4.1, 2.1, 270), lavaJet("steam-4", 5410, 4.5, .8, 300)],
@@ -1260,7 +1260,7 @@ export const levels: Level[] = [
     theme: "train-engine", width: 7400, start: { x: 80, y: 380 }, goalX: 7200,
     platforms: [
       ...themedGround([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 800], [5520, 800], [6450, 950]], "train-ground"),
-      ...[290, 1050, 1960, 2880, 3810, 4730, 5660, 6580].flatMap((x, i) => [{ ...themedLedge(x, 300, 215, "train-roof"), beltSpeed: i % 2 ? -120 : 120 }, themedLedge(x + 310, i % 2 ? 180 : 205, 180, "train-roof")]),
+      { ...themedLedge(290, 300, 215, "train-roof"), beltSpeed: 120 }, themedLedge(600, 205, 180, "train-roof"), { ...themedLedge(1050, 300, 215, "train-roof"), beltSpeed: -120 }, themedLedge(1360, 180, 180, "train-roof"), { ...themedLedge(1960, 300, 215, "train-roof"), beltSpeed: 120 }, themedLedge(2270, 205, 180, "train-roof"), { ...themedLedge(2880, 300, 215, "train-roof"), beltSpeed: -120 }, themedLedge(3190, 180, 180, "train-roof"), { ...themedLedge(3810, 300, 215, "train-roof"), beltSpeed: 120 }, themedLedge(4120, 205, 180, "train-roof"), { ...themedLedge(4730, 300, 215, "train-roof"), beltSpeed: -120 }, themedLedge(5040, 180, 180, "train-roof"), { ...themedLedge(5660, 300, 215, "train-roof"), beltSpeed: 120 }, themedLedge(5970, 205, 180, "train-roof"), { ...themedLedge(6580, 300, 215, "train-roof"), beltSpeed: -120 }, themedLedge(6890, 180, 180, "train-roof"),
     ],
     deadlyWater: deadlyWaterPits([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 800], [5520, 800], [6450, 950]]),
     lavaJets: [lavaJet("engine-steam-1", 860, 4, 0, 270), lavaJet("engine-steam-2", 1770, 4.3, 1.1, 300), lavaJet("engine-steam-3", 3620, 4.1, 2, 290), lavaJet("engine-steam-4", 5470, 4.4, .6, 310), lavaJet("engine-steam-5", 6400, 4.2, 1.7, 280)],
@@ -1274,7 +1274,7 @@ export const levels: Level[] = [
     theme: "music-garden", width: 6000, start: { x: 80, y: 380 }, goalX: 5810,
     platforms: [
       ...themedGround([[0, 1780], [1910, 820], [2860, 840], [3830, 2070]], "music-ground"),
-      ...[300, 1080, 2010, 2960, 3930, 4880].flatMap((x, i) => [themedLedge(x, 305, 205, "music-stage"), themedLedge(x + 300, i % 2 ? 180 : 205, 175, "music-stage")]),
+      themedLedge(300, 305, 205, "music-stage"), themedLedge(600, 205, 175, "music-stage"), themedLedge(1080, 305, 205, "music-stage"), themedLedge(1380, 180, 175, "music-stage"), themedLedge(2010, 305, 205, "music-stage"), themedLedge(2310, 205, 175, "music-stage"), themedLedge(2960, 305, 205, "music-stage"), themedLedge(3260, 180, 175, "music-stage"), themedLedge(3930, 305, 205, "music-stage"), themedLedge(4230, 205, 175, "music-stage"), themedLedge(4880, 305, 205, "music-stage"), themedLedge(5180, 180, 175, "music-stage"),
     ],
     deadlyWater: deadlyWaterPits([[0, 1780], [1910, 820], [2860, 840], [3830, 2070]]),
     windZones: [iceWind("beat-1", 980, 620, 1, 175), iceWind("beat-2", 2860, 650, -1, 185), iceWind("beat-3", 4780, 650, 1, 195)],
@@ -1293,7 +1293,7 @@ export const levels: Level[] = [
     theme: "music-bells", width: 6700, start: { x: 80, y: 380 }, goalX: 6510,
     platforms: [
       ...themedGround([[0, 760], [890, 1690], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]], "music-ground"),
-      ...[280, 1030, 1930, 2850, 3760, 4690, 5600].flatMap((x, i) => [themedLedge(x, 305, 205, "music-stage"), themedLedge(x + 300, i % 2 ? 175 : 200, 180, "music-stage")]),
+      themedLedge(280, 305, 205, "music-stage"), themedLedge(580, 200, 180, "music-stage"), themedLedge(1030, 305, 205, "music-stage"), themedLedge(1330, 175, 180, "music-stage"), themedLedge(1930, 305, 205, "music-stage"), themedLedge(2230, 200, 180, "music-stage"), themedLedge(2850, 305, 205, "music-stage"), themedLedge(3150, 175, 180, "music-stage"), themedLedge(3760, 305, 205, "music-stage"), themedLedge(4060, 200, 180, "music-stage"), themedLedge(4690, 305, 205, "music-stage"), themedLedge(4990, 175, 180, "music-stage"), themedLedge(5600, 305, 205, "music-stage"), themedLedge(5900, 200, 180, "music-stage"),
     ],
     deadlyWater: deadlyWaterPits([[0, 760], [890, 1690], [2710, 780], [3620, 800], [4550, 780], [5460, 1240]]),
     windZones: [iceWind("bell-1", 890, 700, 1, 190), iceWind("bell-2", 2710, 720, -1, 205), iceWind("bell-3", 4550, 730, 1, 215)],
@@ -1313,7 +1313,7 @@ export const levels: Level[] = [
     theme: "music-theater", width: 7400, start: { x: 80, y: 380 }, goalX: 7200,
     platforms: [
       ...themedGround([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 2810]], "music-ground"),
-      ...[290, 1050, 1960, 2880, 3810, 4730, 5660, 6580].flatMap((x, i) => [themedLedge(x, 300, 215, "music-stage"), themedLedge(x + 310, i % 2 ? 180 : 205, 180, "music-stage")]),
+      themedLedge(290, 300, 215, "music-stage"), themedLedge(600, 205, 180, "music-stage"), themedLedge(1050, 300, 215, "music-stage"), themedLedge(1360, 180, 180, "music-stage"), themedLedge(1960, 300, 215, "music-stage"), themedLedge(2270, 205, 180, "music-stage"), themedLedge(2880, 300, 215, "music-stage"), themedLedge(3190, 180, 180, "music-stage"), themedLedge(3810, 300, 215, "music-stage"), themedLedge(4120, 205, 180, "music-stage"), themedLedge(4730, 300, 215, "music-stage"), themedLedge(5040, 180, 180, "music-stage"), themedLedge(5660, 300, 215, "music-stage"), themedLedge(5970, 205, 180, "music-stage"), themedLedge(6580, 300, 215, "music-stage"), themedLedge(6890, 180, 180, "music-stage"),
     ],
     deadlyWater: deadlyWaterPits([[0, 780], [910, 780], [1820, 790], [2740, 800], [3670, 790], [4590, 2810]]),
     windZones: [iceWind("show-1", 910, 760, 1, 205), iceWind("show-2", 2740, 760, -1, 220), iceWind("show-3", 4590, 770, 1, 230), iceWind("show-4", 6450, 700, -1, 240)],

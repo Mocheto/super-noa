@@ -43,3 +43,5 @@ yarn-error.log*
 # herramientas locales
 /.claude/
 /.codex-attachments/
+
+__pycache__/

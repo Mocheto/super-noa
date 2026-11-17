@@ -30,6 +30,8 @@ import type { DetourId } from "./game/types";
 import { detourLevel, detourLevels } from "./game/detours";
 import { restStopFor, restStopIndex, restStopLevels, restStopUnlocked } from "./game/restStops";
 import { greetFriend, visitRestStop } from "./game/restStopProgress";
+import { addHeart } from "./game/friendProgress";
+import { FriendsTab } from "./game/FriendsTab";
 import { visitDetour } from "./game/detourProgress";
 
 const WorldMap = lazy(() => import("./game/WorldMap").then((module) => ({ default: module.WorldMap })));
@@ -48,7 +50,7 @@ const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
 type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition" | "cat-party";
 const isTimedScreen = (screen: Screen) => screen === "game" || screen === "boss" || screen === "secret-transition" || screen === "cat-party";
 
-type CollectionTab = "stickers" | "bosses" | "memories";
+type CollectionTab = "stickers" | "bosses" | "memories" | "friends";
 type TouchControlsMode = "auto" | "always";
 
 const emptySnapshot: GameSnapshot = { apples: 0, stickers: [], power: "normal", checkpoint: 0, paused: false };
@@ -1012,13 +1014,14 @@ export default function App() {
       {showAlbum && (
         <Dialog labelledBy="album-title" className="game-modal album-modal" onClose={() => setShowAlbum(false)}>
           <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowAlbum(false)} aria-label="Cerrar">×</button>
-          <p className="eyebrow">Colección de Noa</p><h2 id="album-title">{collectionTab === "stickers" ? "Álbum de pegatinas" : collectionTab === "bosses" ? "Jefes amigos" : "Postales de viaje"}</h2>
+          <p className="eyebrow">Colección de Noa</p><h2 id="album-title">{collectionTab === "stickers" ? "Álbum de pegatinas" : collectionTab === "bosses" ? "Jefes amigos" : collectionTab === "friends" ? "Amigos" : "Postales de viaje"}</h2>
           <div className="collection-tabs" aria-label="Ver colección">
             <button className={collectionTab === "stickers" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "stickers"} onClick={() => setCollectionTab("stickers")}>Pegatinas</button>
             <button className={collectionTab === "bosses" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "bosses"} onClick={() => setCollectionTab("bosses")}>Jefes amigos</button>
+            <button className={collectionTab === "friends" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "friends"} onClick={() => setCollectionTab("friends")}>Amigos</button>
             <button className={collectionTab === "memories" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "memories"} onClick={() => setCollectionTab("memories")}>Recuerdos</button>
           </div>
-          {collectionTab === "stickers" ? <>
+          {collectionTab === "friends" ? <FriendsTab progress={progress} onHeart={(kind) => setProgress((current) => addHeart(current, kind))} /> : collectionTab === "stickers" ? <>
             <p>{progress.secretUnlocked ? "Hay una pegatina por pantalla y tres insignias en el reino secreto." : "Hay una pegatina escondida en la ruta elevada de cada pantalla."}</p>
             <div className="sticker-grid">
               {albumStickers.map((sticker) => {

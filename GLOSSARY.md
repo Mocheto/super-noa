@@ -335,3 +335,24 @@ _Avoid_: Enemigo, obstáculo
 **Burbuja**:
 Protección de la avioneta que aguanta un choque, sin límite de tiempo.
 _Avoid_: Escudo, vida extra, pompa (reservado al disparo)
+
+## Interfaz
+
+**Interfaz**:
+Todo lo que rodea al juego sin ser escenario: inicio, mapa, HUD, ventanas, transición entre pantallas, marco exterior y tarjetas de pantalla, también en los minijuegos. El arte del escenario (fondos, terreno, enemigos) no forma parte de ella.
+_Avoid_: UI, menús (solo es una parte)
+
+**Texto para Noa**:
+Texto de la interfaz pensado para que lo lea una niña que está aprendiendo a leer: en MAYÚSCULAS DE IMPRENTA sin tildes ni diéresis (la Ñ y los signos ¡ ¿ se mantienen), de una a cuatro palabras y acompañado de pictogramas.
+_Avoid_: Texto infantil, copy
+
+**Texto para adultos**:
+Texto de la interfaz que lee una persona adulta: ajustes, créditos, alias del tablón, avisos de guardado o conexión y ayuda de teclado y mando. Mantiene la redacción normal y se muestra discreto.
+
+**Pictograma**:
+Dibujo pixel art propio que acompaña a una palabra. Los emoji solo se usan como relleno provisional hasta que existe el pictograma.
+_Avoid_: Emoji, icono (cuando acompaña a una palabra)
+
+**Palabra con dibujo**:
+Pareja fija de una palabra del vocabulario y su pictograma (MANZANA con la manzana, VIDAS con el corazón), que aparece siempre igual en toda la interfaz para que se asocien.
+_Avoid_: Etiqueta, icono con texto

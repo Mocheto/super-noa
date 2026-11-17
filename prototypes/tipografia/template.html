@@ -1,0 +1,194 @@
+<title>Tipografía de Super Noa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400..700&family=Silkscreen:wght@400;700&display=swap">
+<style>
+/* Una sola estética: la del juego (noche lila). Tres columnas, una por fuente; todo el texto para Noa en MAYÚSCULAS. */
+:root {
+  color-scheme: dark;
+  --night: #25183f;
+  --ink: #352044;
+  --cream: #fff8e9;
+  --lilac: #b979dc;
+  --plum: #623879;
+  --apple: #e74755;
+  --gold: #ffd45f;
+  --leaf: #68aa5c;
+  --heart: #ff99aa;
+  --adult: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { background: var(--night); color: var(--cream); font-family: var(--adult); margin: 0; }
+.wrap { max-width: 1500px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header.top { display: grid; gap: 8px; margin-bottom: 20px; }
+header.top h1 { margin: 0; font-family: "Pixelify Sans", var(--adult); font-weight: 700; font-size: clamp(1.4rem, 3vw, 2rem); color: var(--gold); text-wrap: balance; }
+header.top p { margin: 0; max-width: 70ch; color: #e9dcf0; line-height: 1.5; font-size: .95rem; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin: 14px 0 22px; padding: 12px 14px; background: rgba(0,0,0,.25); border: 2px solid var(--plum); }
+.controls label { display: flex; gap: 8px; align-items: center; font-size: .9rem; }
+.controls input[type=text] { font: inherit; padding: 6px 8px; border: 2px solid var(--lilac); background: var(--ink); color: var(--cream); min-width: 0; width: 15ch; text-transform: uppercase; }
+.controls select { font: inherit; padding: 5px; background: var(--ink); color: var(--cream); border: 2px solid var(--lilac); }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 1100px) { .cols { grid-template-columns: 1fr; } }
+body.phone .cols { grid-template-columns: repeat(3, minmax(0, 390px)); justify-content: center; }
+@media (max-width: 1300px) { body.phone .cols { grid-template-columns: minmax(0, 390px); } }
+
+.col { min-width: 0; display: grid; gap: 16px; align-content: start; padding: 14px; border: 4px solid #2e1a3b; background: #2c1d47; box-shadow: 0 6px 0 #150c22; }
+.col > h2 { margin: 0; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; font-family: var(--adult); font-size: 1rem; color: var(--gold); }
+.col > h2 small { color: #cdb8dc; font-weight: 400; font-size: .78rem; }
+.label { font-family: var(--adult); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: #bfa6d3; margin: 0 0 6px; }
+.noa { font-family: var(--f); font-weight: var(--w); text-transform: uppercase; letter-spacing: var(--ls, .02em); line-height: 1.25; }
+
+/* escena: fondo del mundo 1 con HUD encima */
+.scene { position: relative; aspect-ratio: 16 / 9; max-width: 100%; background: #6aa0c8 url("__BG__") center / cover; image-rendering: pixelated; border: 4px solid #2e1a3b; overflow: hidden; }
+.hud { position: absolute; inset: 8px 8px auto 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: space-between; }
+.hud .pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 9px; background: rgba(37,24,63,.88); border: 3px solid var(--ink); color: var(--cream); font-size: var(--hud, 18px); }
+.hud .lvl { background: var(--gold); color: var(--ink); }
+.hud .stats { display: flex; gap: 6px; flex-wrap: wrap; }
+.hud .btns { display: flex; gap: 6px; }
+.hud .btns span { width: 40px; height: 40px; display: grid; place-items: center; background: rgba(37,24,63,.88); border: 3px solid var(--ink); font-size: 18px; }
+.scene .caption { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 6px 12px; background: var(--cream); color: var(--ink); border: 3px solid var(--ink); font-size: var(--hud, 18px); white-space: nowrap; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 64px; padding: 14px 22px; border: 4px solid #2e1a3b; background: var(--apple); color: #fff; box-shadow: 0 6px 0 #2e1a3b; font-size: var(--btn, 26px); cursor: pointer; }
+.btn.alt { background: #f9eafc; color: var(--ink); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
+
+.modal { background: var(--cream); color: var(--ink); border: 6px solid #2d183a; box-shadow: 8px 8px 0 rgba(16,8,25,.65); padding: 18px; text-align: center; display: grid; gap: 12px; justify-items: center; }
+.modal .big { font-size: var(--title, 34px); color: var(--apple); }
+.medals { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.medals span { padding: 6px 10px; border: 3px solid var(--ink); background: var(--gold); font-size: var(--small, 16px); }
+.medals span.off { background: #e8dcea; color: #8b7a92; }
+.modal .adult { font-family: var(--adult); font-size: .82rem; color: #6f5c78; margin: 0; }
+
+.sizes { display: grid; gap: 10px; background: var(--cream); color: var(--ink); padding: 12px; border: 4px solid #2e1a3b; }
+.sizes div { overflow-wrap: anywhere; }
+.sizes small { font-family: var(--adult); font-size: .72rem; color: #8b7a92; display: block; }
+.pairs { display: grid; gap: 6px; background: #fff; color: #1b1026; padding: 12px; border: 4px solid #2e1a3b; font-size: 40px; }
+.pairs div { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.pairs small { font-family: var(--adult); font-size: .72rem; color: #8b7a92; }
+.vote { font: inherit; font-family: var(--adult); padding: 10px 14px; border: 3px solid var(--gold); background: transparent; color: var(--gold); cursor: pointer; font-weight: 700; }
+.vote[aria-pressed="true"] { background: var(--gold); color: var(--ink); }
+.col.chosen { border-color: var(--gold); }
+footer { margin-top: 24px; color: #cdb8dc; font-size: .85rem; line-height: 1.5; max-width: 80ch; }
+@media (prefers-reduced-motion: no-preference) { .btn { transition: transform .1s; } .btn:active { transform: translateY(4px); } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Tipografía de Super Noa</h1>
+    <p>Prototipo del ticket «La tipografía de la interfaz». Cada columna muestra la misma interfaz con una de las tres fuentes candidatas: el botón de jugar, el HUD sobre el bosque, la ventana de pantalla completada, la frase de prueba en tres tamaños y las letras que más se confunden. Los emoji son provisionales hasta que existan los pictogramas.</p>
+  </header>
+
+  <div class="controls">
+    <label for="word">Prueba una palabra <input id="word" type="text" value="MARIPOSA" maxlength="20"></label>
+    <label for="bg">Fondo de las letras
+      <select id="bg"><option value="light">Claro</option><option value="dark">Oscuro</option></select>
+    </label>
+    <label for="phone"><input id="phone" type="checkbox"> Ver a ancho de móvil (390 px)</label>
+  </div>
+
+  <div class="cols" id="cols"></div>
+
+  <footer>
+    El texto para adultos de las ventanas usa la letra del sistema; si la elegida tiene minúsculas legibles (Pixelify Sans), también podría servir para adultos. Las tres fuentes son OFL 1.1 y se cargan aquí desde Google Fonts; en el juego se servirían desde <code>./assets/</code>, recortadas a latín.
+  </footer>
+</div>
+
+<template id="col-tpl">
+  <section class="col">
+    <h2><span class="name"></span><small class="meta"></small></h2>
+
+    <div>
+      <p class="label">Inicio</p>
+      <div class="btn-row noa">
+        <span class="btn">▶ ¡A JUGAR!</span>
+        <span class="btn alt">❓ ¿CÓMO SE JUEGA?</span>
+      </div>
+    </div>
+
+    <div>
+      <p class="label">HUD en la partida</p>
+      <div class="scene">
+        <div class="hud noa">
+          <div class="stats">
+            <span class="pill lvl">🌲 1-2</span>
+            <span class="pill">❤ 3</span>
+            <span class="pill">🍎 1</span>
+            <span class="pill">⭐ 2</span>
+          </div>
+          <div class="btns"><span aria-label="Sonido">🔊</span><span aria-label="Pausa">⏸</span></div>
+        </div>
+        <div class="caption noa">🚩 BANDERA 2/3</div>
+      </div>
+    </div>
+
+    <div>
+      <p class="label">Ventana: pantalla completada</p>
+      <div class="modal">
+        <div class="big noa">¡MUY BIEN!</div>
+        <div class="medals noa"><span>⭐ META</span><span>⭐ PEGATINA</span><span class="off">⭐ SIN CAÍDAS</span></div>
+        <div class="btn-row noa" style="justify-content:center"><span class="btn">▶ SEGUIR</span><span class="btn alt">🗺 MAPA</span></div>
+        <p class="adult">Texto para adultos: has completado la pantalla 1-2 del Bosque de los lobos dormidos.</p>
+      </div>
+    </div>
+
+    <div>
+      <p class="label">Frase de prueba</p>
+      <div class="sizes noa">
+        <div style="font-size:24px">¡A JUGAR! MANZANA 3 VIDAS<small>24 px</small></div>
+        <div style="font-size:32px">¡A JUGAR! MANZANA 3 VIDAS<small>32 px</small></div>
+        <div style="font-size:48px"><span class="custom">MARIPOSA</span><small>48 px · la palabra de arriba</small></div>
+      </div>
+    </div>
+
+    <div>
+      <p class="label">Letras que se confunden (40 px)</p>
+      <div class="pairs noa">
+        <div><span>A G O Q 0</span></div>
+        <div><span>I 1 L</span><span>M N W</span><span>B 8</span><span>S 5</span></div>
+        <div><span>Á É Í Ó Ú Ü Ñ ¡ ¿</span></div>
+      </div>
+    </div>
+
+    <button class="vote" type="button" aria-pressed="false">Me gusta esta</button>
+  </section>
+</template>
+
+<script>
+const fonts = [
+  { name: "Press Start 2P", meta: "rejilla de 8 px · 118 KB", f: '"Press Start 2P", monospace', w: 400, scale: .78, ls: "0" },
+  { name: "Pixelify Sans", meta: "peso 700 · 79 KB", f: '"Pixelify Sans", system-ui, sans-serif', w: 700, scale: 1, ls: ".03em" },
+  { name: "Silkscreen Bold", meta: "solo mayúsculas · 31 KB", f: '"Silkscreen", monospace', w: 700, scale: .9, ls: ".02em" },
+];
+const cols = document.getElementById("cols");
+const tpl = document.getElementById("col-tpl");
+fonts.forEach((font, i) => {
+  const node = tpl.content.firstElementChild.cloneNode(true);
+  node.querySelector(".name").textContent = font.name;
+  node.querySelector(".meta").textContent = font.meta;
+  node.style.setProperty("--f", font.f);
+  node.style.setProperty("--w", font.w);
+  node.style.setProperty("--ls", font.ls);
+  const s = font.scale;
+  node.style.setProperty("--hud", Math.round(18 * s) + "px");
+  node.style.setProperty("--btn", Math.round(26 * s) + "px");
+  node.style.setProperty("--title", Math.round(36 * s) + "px");
+  node.style.setProperty("--small", Math.round(16 * s) + "px");
+  // las muestras de tamaño y pares usan px fijos sin escalar, para comparar a igual tamaño
+  const vote = node.querySelector(".vote");
+  vote.addEventListener("click", () => {
+    document.querySelectorAll(".col").forEach((c) => { c.classList.remove("chosen"); c.querySelector(".vote").setAttribute("aria-pressed", "false"); c.querySelector(".vote").textContent = "Me gusta esta"; });
+    node.classList.add("chosen"); vote.setAttribute("aria-pressed", "true"); vote.textContent = "★ Elegida";
+  });
+  cols.appendChild(node);
+});
+const word = document.getElementById("word");
+const sync = () => document.querySelectorAll(".custom").forEach((el) => { el.textContent = (word.value || "MARIPOSA").toUpperCase(); });
+word.addEventListener("input", sync); sync();
+document.getElementById("bg").addEventListener("change", (e) => {
+  const dark = e.target.value === "dark";
+  document.querySelectorAll(".sizes, .pairs").forEach((el) => { el.style.background = dark ? "#352044" : ""; el.style.color = dark ? "#fff8e9" : ""; });
+});
+document.getElementById("phone").addEventListener("change", (e) => document.body.classList.toggle("phone", e.target.checked));
+</script>

@@ -19,6 +19,14 @@ _Avoid_: Gimmick, truco
 **Variedad**:
 Lo contrario de la repetición que nota la jugadora: que pantallas seguidas se jueguen de forma distinta, no solo que se vean distintas.
 
+**Paseo de los amigos**:
+Pantalla de descanso corta y opcional tras el guardián de un mundo, sin peligros, en la que los animales y enemigos de ese mundo aparecen como amigos y se dejan saludar.
+_Avoid_: Pantalla de bonus, nivel de descanso, desvío (son los caminos secretos)
+
+**Amigo saludado**:
+Animal o enemigo de un mundo al que Noa se ha acercado en su paseo de los amigos; queda apuntado para el álbum.
+_Avoid_: Amigo del cielo (es de la avioneta), mascota
+
 **Tramo**:
 Cada una de las cuatro partes en que se ordena una pantalla: presentación, desarrollo, giro y remate.
 _Avoid_: Tiempo (choca con el ritmo de los duelos), fase, sección

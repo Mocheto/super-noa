@@ -35,7 +35,7 @@ test("los distintivos del mapa solo aparecen en mundos abiertos y en la pantalla
     return badge ? [[world.id, badge.id, badge.levelId, badge.state]] : [];
   });
   assert.deepEqual(badges, [
-    [1, "shop-1-2", "1-2", "available"], [3, "shop-3-2", "3-2", "available"],
+    [1, "shop-1-2", "1-3", "available"], [3, "shop-3-2", "3-2", "available"],
     [6, "shop-6-2", "6-3", "available"], [10, "shop-10-2", "10-1", "available"],
     [12, "shop-12-2", "12-1", "available"],
   ]);
@@ -43,7 +43,7 @@ test("los distintivos del mapa solo aparecen en mundos abiertos y en la pantalla
     assert.equal(Boolean(getWorldSecretShopBadge(world.id, emptyProgress)), world.id === 1);
   }
   assert.deepEqual(levels.filter((level) => getSecretShopBadge(level, allOpen)).map((level) => level.id),
-    ["1-2", "3-2", "6-3", "10-1", "12-1"]);
+    ["1-3", "3-2", "6-3", "10-1", "12-1"]);
   const visited = visitSecretShop(allOpen, "shop-1-2");
   assert.equal(getWorldSecretShopBadge(1, visited)?.state, "visited");
   assert.match(getWorldSecretShopBadge(1, visited)!.label, /visitada/);

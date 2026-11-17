@@ -182,14 +182,14 @@ test("las pantallas cerradas no tienen estrellas interactivas ni pistas", () => 
 });
 
 test("las puertas muestran tres estados accesibles sin añadir botones ni medallas", () => {
-  const progress = { ...emptyProgress, unlocked: 1 };
+  const progress = { ...emptyProgress, unlocked: 2 };
   const states = [
     { progress, state: "available", label: "Tienda secreta: por descubrir" },
     { progress: visitSecretShop(progress, "shop-1-2"), state: "visited", label: "Tienda secreta: visitada" },
     { progress: completeSecretShop(progress, "shop-1-2"), state: "completed", label: "Tienda secreta: reto conseguido" },
   ];
   for (const state of states) {
-    const card = mount({ level: levels[1], index: 1, progress: state.progress });
+    const card = mount({ level: levels[2], index: 2, progress: state.progress });
     const badge = card.find("level-shop-badge");
     assert.equal(badge?.type, "span");
     assert.equal(badge.props.role, "img");
@@ -200,13 +200,13 @@ test("las puertas muestran tres estados accesibles sin añadir botones ni medall
     assert.equal(card.find("level-objectives-trigger")?.props["aria-expanded"], false);
     assert.equal(card.find("level-objectives")?.props.hidden, true);
     card.find("level-card")?.props.onClick?.();
-    assert.deepEqual(card.started, [1]);
+    assert.deepEqual(card.started, [2]);
     assert.deepEqual(card.opened, []);
   }
 });
 
 test("la ayuda de la tienda queda dentro de las pistas ocultas y usa la espera habitual", () => {
-  const props = { level: levels[1], index: 1, progress: { ...emptyProgress, unlocked: 1 } };
+  const props = { level: levels[2], index: 2, progress: { ...emptyProgress, unlocked: 2 } };
   const card = mount(props);
   const help = card.find("level-shop-hint");
   assert.ok(help);
@@ -232,7 +232,7 @@ test("las puertas solo aparecen en sus cinco tarjetas abiertas, nunca en pantall
     const card = mount({ level, index, progress });
     return card.find("level-shop-badge") ? [level.id] : [];
   });
-  assert.deepEqual(withDoors, ["1-2", "3-2", "6-3", "10-1", "12-1"]);
+  assert.deepEqual(withDoors, ["1-3", "3-2", "6-3", "10-1", "12-1"]);
   const closedLevel = mount({ level: levels[1], index: 1, unlocked: false, progress });
   assert.equal(closedLevel.find("level-shop-badge"), undefined);
   assert.equal(closedLevel.find("level-shop-hint"), undefined);

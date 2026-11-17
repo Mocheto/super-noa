@@ -11,7 +11,7 @@ const castle = levels.filter((level) => level.world === 6);
 test("solo cinco repisas opcionales tienen tiendas con identificadores estables", () => {
   const shops = levels.filter((level) => level.secretShop);
   assert.deepEqual(shops.map((level) => [level.id, level.secretShop]), [
-    ["1-2", { id: "shop-1-2", x: 1570, y: 230, width: 64, height: 80 }],
+    ["1-3", { id: "shop-1-2", x: 2240, y: 200, width: 64, height: 80 }],
     ["3-2", { id: "shop-3-2", x: 1710, y: 260, width: 64, height: 80 }],
     ["6-3", { id: "shop-6-2", x: 1400, y: 195, width: 64, height: 80 }],
     ["10-1", { id: "shop-10-2", x: 1300, y: 230, width: 64, height: 80 }],
@@ -94,7 +94,7 @@ test("todos los checkpoints reaparecen sobre una superficie que permite aterriza
       `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
     }
   }
-  assert.equal(checkpointCount, 185);
+  assert.equal(checkpointCount, 186);
 });
 
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {

@@ -8,7 +8,7 @@ import type { Level } from "./types";
 
 /** Mundos cuyas pantallas aún no tienen los cuatro tramos. Cada issue de retoque quita su mundo de aquí; al
  * quitarlo, sus tres pantallas deben pasar todas las pruebas de este archivo. */
-const PENDING_RETOUCH = new Set([1, 2, 3, 4, 5, 17]);
+const PENDING_RETOUCH = new Set([2, 3, 4, 5, 17]);
 
 const campaign = levels.filter(isCampaignScreen);
 const horizontal = campaign.filter((level) => (level.orientation ?? "horizontal") === "horizontal");

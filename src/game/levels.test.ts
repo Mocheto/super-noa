@@ -325,6 +325,21 @@ test("cada nube normal del Reino Celeste se alcanza con doble salto y los bordes
       const gap = Math.min(intervalGap(from, to), intervalGap(from, { ...to, x: to.x + level.width }), intervalGap(from, { ...to, x: to.x - level.width }));
       assert.ok(rise <= maxRise, `${level.id}: nube demasiado alta, ${rise}px`);
       assert.ok(gap <= 250 * maxFlightTime, `${level.id}: nube demasiado lejos, ${gap}px`);
+      // Margen amplio para una niña de cinco años: el doble salto no tiene que ser perfecto.
+      assert.ok(gap <= 80, `${level.id}: salto demasiado justo entre nubes, ${gap}px`);
+    }
+  }
+});
+
+test("los pajaritos del Reino Celeste vuelan junto a la ruta, no encima de ella", () => {
+  for (const level of levels.filter((entry) => entry.world === 17)) {
+    const clouds = level.platforms.filter((platform) => platform.kind === "sky-cloud");
+    const routeRight = Math.max(...clouds.filter((cloud) => cloud.y > 120 && cloud.y < (level.height ?? 0) - 100).map((cloud) => cloud.x + cloud.width));
+    for (const bird of level.enemies) {
+      assert.ok(bird.maxX - bird.minX >= 200 && bird.minX >= routeRight - 60, `${level.id}: ${bird.id} invade la ruta de nubes`);
+      assert.ok(bird.maxX + bird.width <= level.width - 30, `${level.id}: ${bird.id} se sale por el borde`);
+      assert.ok(bird.speed <= 80, `${level.id}: ${bird.id} vuela demasiado deprisa`);
+      assert.ok(clouds.every((cloud) => bird.y + bird.height < cloud.y - 40 || bird.y > cloud.y + cloud.height), `${level.id}: ${bird.id} vuela pegado a una nube`);
     }
   }
 });

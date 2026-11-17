@@ -141,8 +141,9 @@ const skyLevelPlatforms = (height: number, offset = 0): Platform[] => {
   const platforms: Platform[] = [skyCloud(40, height - 90, 880)];
   for (let index = 0, y = height - 245; y > 105; index += 1, y -= 145) {
     const pattern = (index + offset) % 4;
-    const x = pattern === 0 ? 120 : pattern === 1 ? 520 : pattern === 2 ? 260 : 650;
-    platforms.push(skyCloud(x, y, pattern === 2 ? 220 : 190));
+    // Zigzag corto: entre una nube y la siguiente nunca hay más de 80 px en horizontal.
+    const x = pattern === 0 ? 100 : pattern === 1 ? 470 : pattern === 2 ? 260 : 450;
+    platforms.push(skyCloud(x, y, pattern === 0 ? 290 : pattern === 1 ? 220 : 240));
     if (index >= 3 && index % 7 === 3) platforms.push({
       x: x < 400 ? 740 : 45, y, width: 145, height: 34, kind: "sky-bounce",
       bounceSpeed: 1450, bounceDrift: 330,
@@ -154,8 +155,8 @@ const skyLevelPlatforms = (height: number, offset = 0): Platform[] => {
 
 const skyLiftLevelPlatforms = (height: number, offset: number, bottomY: number, topY: number): Platform[] => [
   ...skyLevelPlatforms(height, offset).map((platform) =>
-    platform.kind === "sky-cloud" && platform.x === 120 && platform.y > topY && platform.y < bottomY
-      ? { ...platform, x: 400 }
+    platform.kind === "sky-cloud" && platform.x === 100 && platform.y > topY && platform.y < bottomY
+      ? { ...platform, x: 240 }
       : platform),
   { x: 210, y: topY, width: 250, height: 30, kind: "sky-lift-station" },
 ];
@@ -1333,11 +1334,10 @@ export const levels: Level[] = [
     theme: "sky-dawn", width: 960, height: 3500, orientation: "vertical", start: { x: 110, y: 3352 }, goalX: 480, goalY: 175,
     platforms: skyLiftLevelPlatforms(3500, 0, 2385, 1950),
     enemies: [
-      enemy("c17a-p1", "puffling", 520, 2850, 470, 720, 58), enemy("c17a-p2", "puffling", 180, 2260, 120, 390, 62),
-      enemy("c17a-p3", "puffling", 610, 1680, 540, 820, 66), enemy("c17a-p4", "puffling", 250, 950, 180, 470, 70),
+      enemy("c17a-p1", "puffling", 700, 2875, 640, 880, 48), enemy("c17a-p2", "puffling", 767, 2295, 640, 880, 52), enemy("c17a-p3", "puffling", 834, 1425, 640, 880, 56), enemy("c17a-p4", "puffling", 721, 990, 640, 880, 60),
     ],
-    items: [apple("c17a1", 570, 2780), apple("c17a2", 310, 2200), sticker("sticker-17-1", 680, 1600), apple("c17a3", 280, 880)],
-    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 280, y: 2460 }, { x: 650, y: 1450 }, { x: 350, y: 580 }],
+    items: [apple("c17a1", 555, 2770), apple("c17a2", 555, 2190), sticker("sticker-17-1", 555, 1610), apple("c17a3", 230, 885)],
+    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 559, y: 2530 }, { x: 224, y: 1515 }, { x: 359, y: 645 }],
     skyLifts: [{ id: "sky-lift-17-1", x: 40, bottomY: 2385, topY: 1950, width: 170, height: 30, speed: 92, waitDuration: 1.6,
       lever: { id: "sky-lever-17-1", x: 300, y: 2305, width: 68, height: 80 } }],
   },
@@ -1347,11 +1347,10 @@ export const levels: Level[] = [
     theme: "sky-blue", width: 960, height: 3900, orientation: "vertical", start: { x: 110, y: 3752 }, goalX: 480, goalY: 175,
     platforms: skyLiftLevelPlatforms(3900, 1, 2350, 1915),
     enemies: [
-      enemy("c17b-p1", "puffling", 170, 3180, 120, 400, 64), enemy("c17b-p2", "puffling", 590, 2600, 520, 820, 68),
-      enemy("c17b-p3", "puffling", 250, 2010, 170, 470, 72), enemy("c17b-p4", "puffling", 620, 1420, 540, 830, 76), enemy("c17b-p5", "puffling", 220, 700, 150, 440, 78),
+      enemy("c17b-p1", "puffling", 700, 2840, 640, 880, 54), enemy("c17b-p2", "puffling", 767, 2550, 640, 880, 58), enemy("c17b-p3", "puffling", 834, 1970, 640, 880, 62), enemy("c17b-p4", "puffling", 721, 1535, 640, 880, 66), enemy("c17b-p5", "puffling", 788, 665, 640, 880, 68),
     ],
-    items: [apple("c17b1", 200, 3120), apple("c17b2", 650, 2530), sticker("sticker-17-2", 310, 1940), apple("c17b3", 690, 1350), apple("c17b4", 280, 630)],
-    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 520, y: 2860 }, { x: 270, y: 1880 }, { x: 620, y: 900 }],
+    items: [apple("c17b1", 230, 3170), apple("c17b2", 230, 2590), sticker("sticker-17-2", 370, 2010), apple("c17b3", 230, 1430), apple("c17b4", 565, 705)],
+    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 359, y: 2930 }, { x: 559, y: 1915 }, { x: 224, y: 900 }],
     skyLifts: [{ id: "sky-lift-17-2", x: 40, bottomY: 2350, topY: 1915, width: 170, height: 30, speed: 88, waitDuration: 1.8,
       lever: { id: "sky-lever-17-2", x: 300, y: 2270, width: 68, height: 80 } }],
   },
@@ -1361,12 +1360,10 @@ export const levels: Level[] = [
     theme: "sky-stars", width: 960, height: 4300, orientation: "vertical", start: { x: 110, y: 4152 }, goalX: 480, goalY: 175,
     platforms: skyLiftLevelPlatforms(4300, 2, 2315, 1880),
     enemies: [
-      enemy("c17c-p1", "puffling", 610, 3600, 530, 830, 68), enemy("c17c-p2", "puffling", 220, 3010, 140, 450, 72),
-      enemy("c17c-p3", "puffling", 600, 2420, 520, 820, 76), enemy("c17c-p4", "puffling", 230, 1830, 150, 470, 80),
-      enemy("c17c-p5", "puffling", 610, 1240, 530, 830, 84), enemy("c17c-p6", "puffling", 240, 650, 160, 470, 86),
+      enemy("c17c-p1", "puffling", 700, 3530, 640, 880, 58), enemy("c17c-p2", "puffling", 767, 2950, 640, 880, 62), enemy("c17c-p3", "puffling", 834, 2225, 640, 880, 66), enemy("c17c-p4", "puffling", 721, 1790, 640, 880, 70), enemy("c17c-p5", "puffling", 788, 1210, 640, 880, 74), enemy("c17c-p6", "puffling", 855, 920, 640, 880, 76),
     ],
-    items: [apple("c17c1", 660, 3530), apple("c17c2", 280, 2940), sticker("sticker-17-3", 650, 2350), apple("c17c3", 290, 1760), apple("c17c4", 670, 1170)],
-    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 260, y: 3260 }, { x: 620, y: 2260 }, { x: 270, y: 1260 }, { x: 560, y: 520 }],
+    items: [apple("c17c1", 565, 3570), apple("c17c2", 565, 2990), sticker("sticker-17-3", 565, 2410), apple("c17c3", 565, 1830), apple("c17c4", 565, 1250)],
+    rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 549, y: 3330 }, { x: 359, y: 2315 }, { x: 559, y: 1300 }, { x: 359, y: 575 }],
     skyLifts: [{ id: "sky-lift-17-3", x: 40, bottomY: 2315, topY: 1880, width: 170, height: 30, speed: 84, waitDuration: 2,
       lever: { id: "sky-lever-17-3", x: 300, y: 2235, width: 68, height: 80 } }], boss: "aurora-celeste",
   },

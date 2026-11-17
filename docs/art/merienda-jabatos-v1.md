@@ -4,7 +4,7 @@ Dossier del arte de **La merienda de los jabatos**, el duelo rítmico del Gran J
 
 ## Estado
 
-- **Pendiente:** la persona usuaria genera las piezas. Después se recortan, se alinean y se colocan en `public/assets/`.
+- **Hecho:** las cinco láminas están generadas, recortadas a transparente y exportadas como WebP en `public/assets/sprites/` (ver [Archivos finales](#archivos-finales)).
 - **Se reutilizan:**
   - el Gran Jabalí, con sus cinco poses `public/assets/sprites/boss-gran-jabali-0..4.png`;
   - el fondo del bosque, `public/assets/worlds/world-4-hd-v1.webp`.
@@ -49,8 +49,8 @@ Las hojas verdes del arbusto chocan con el fondo `#00FF00`. Para esa lámina se 
 | Noa guarda del bosque, 4 poses | `escena-composicion.png` | `public/assets/sprites/noa-rps-0.png` y `noa-lenadora-v1.webp` | `sprites/noa-guarda-v1.webp` | 186 × 257 por pose |
 | Jabato pequeño, 5 poses | `jabato-poses-base.png` | `public/assets/sprites/enemy-boar-v2.png` | `sprites/jabato-pequeno-v1.webp` | 140 × 120 por pose |
 | Jabato grande, 5 poses | `jabato-poses-base.png` | `public/assets/sprites/enemy-boar-v2.png` | `sprites/jabato-grande-v1.webp` | 190 × 160 por pose |
-| Comida y cesta | `objetos-base.png` | `public/assets/sprites/boss-gran-jabali-0.png` (bellotas de su traje) | `sprites/merienda-objetos-v1.webp` | bellota 40 × 40, castaña 40 × 40, cesta 96 × 64 |
-| Arbusto, roca y rama | `objetos-base.png` y `escena-composicion.png` | `public/assets/worlds/world-4-hd-v1.webp` | `sprites/merienda-escenario-v1.webp` | arbusto 210 × 82, roca 175 × 40, rama 230 × 40 |
+| Comida y cesta | `objetos-base.png` | `public/assets/sprites/boss-gran-jabali-0.png` (bellotas de su traje) | `bellota-v1`, `castana-v1`, `cesta-v1`, `bellota-brillo-v1` (`.webp`) | bellota 40 × 40, castaña 40 × 40, cesta 96 × 64 |
+| Arbusto, roca y rama | `objetos-base.png` y `escena-composicion.png` | `public/assets/worlds/world-4-hd-v1.webp` | `arbusto-merienda-v1`, `roca-merienda-v1`, `rama-bellotas-vacia-v1`, `rama-bellotas-llena-v1` (`.webp`) | arbusto 210 × 82, roca 175 × 40, rama 230 × 40 |
 
 ### 1. Noa guarda del bosque
 
@@ -125,6 +125,26 @@ A pixel-art prop sheet with exactly four props in one horizontal row, evenly spa
 ```
 
 La rama tiene que coincidir con el número de bocados de la canción final. Si cambia al afinar la partitura, se pide de nuevo, o bien se usa la rama vacía y se colocan las bellotas sueltas de la lámina 4.
+
+## Archivos finales
+
+`python3 prototypes/tools/merienda-recorte.py CARPETA_CON_LAS_LAMINAS` vuelve a generar todo desde las láminas originales (fondo magenta, cualquier extensión). Quita el magenta conectado con el borde, conserva el rosa de los hocicos y el lila de las zapatillas, separa y alinea las poses por la base y exporta a escala 2 × (el juego muestra cada archivo a la mitad). El script no guarda las láminas originales; consérvalas fuera del repositorio.
+
+| Archivo | Contenido | Medidas del archivo | En pantalla |
+|---|---|---|---|
+| `sprites/noa-guarda-v1.webp` | Tira de 4 celdas: preparada, dar, ¡uy!, celebrar. Los destellos y bellotas al vuelo van con «celebrar». | 4 × 590 × 522; pies en x = 310 de cada celda | 295 × 261 por celda |
+| `sprites/jabato-pequeno-v1.webp` | Tira de 5 celdas: cerrada, entreabierta, abierta, masticando, triste. Base plana abajo. | 5 × 286 × 240; centro de la base en x = 162 | 143 × 120 por celda |
+| `sprites/jabato-grande-v1.webp` | Las mismas 5 poses del jabato grande. | 5 × 370 × 320; centro de la base en x = 196 | 185 × 160 por celda |
+| `sprites/bellota-v1.webp` | Bellota. | 67 × 80 | 34 × 40 |
+| `sprites/castana-v1.webp` | Castaña. | 85 × 80 | 43 × 40 |
+| `sprites/cesta-v1.webp` | Cesta llena. | 192 × 191 | 96 × 96 |
+| `sprites/bellota-brillo-v1.webp` | Bellota con destellos (premio). | 82 × 82 | 41 × 41 |
+| `sprites/arbusto-merienda-v1.webp` | Arbusto con hueco oscuro. | 420 × 210 | 210 × 105 |
+| `sprites/roca-merienda-v1.webp` | Roca con musgo para el Gran Jabalí. | 350 × 146 | 175 × 73 |
+| `sprites/rama-bellotas-vacia-v1.webp` | Rama con 12 cazoletas vacías. | 460 × 115 | 230 × 58 |
+| `sprites/rama-bellotas-llena-v1.webp` | Rama con 12 bellotas y la marca dorada. | 460 × 120 | 230 × 60 |
+
+La rama salió con **12 cazoletas**, no con 23. El marcador del juego usa la rama vacía como soporte y coloca encima las 23 bellotas pequeñas (`bellota-v1.webp` reducida) y la raya dorada de victoria. La rama llena queda como adorno para la pantalla de victoria.
 
 ## Sonido
 

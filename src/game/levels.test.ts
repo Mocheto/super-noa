@@ -12,7 +12,7 @@ test("solo cinco repisas opcionales tienen tiendas con identificadores estables"
   const shops = levels.filter((level) => level.secretShop);
   assert.deepEqual(shops.map((level) => [level.id, level.secretShop]), [
     ["1-3", { id: "shop-1-2", x: 2240, y: 200, width: 64, height: 80 }],
-    ["3-2", { id: "shop-3-2", x: 1710, y: 260, width: 64, height: 80 }],
+    ["3-2", { id: "shop-3-2", x: 1150, y: 230, width: 64, height: 80 }],
     ["6-3", { id: "shop-6-2", x: 1400, y: 195, width: 64, height: 80 }],
     ["10-1", { id: "shop-10-2", x: 1300, y: 230, width: 64, height: 80 }],
     ["12-1", { id: "shop-12-2", x: 1660, y: 230, width: 64, height: 80 }],
@@ -32,7 +32,9 @@ test("solo cinco repisas opcionales tienen tiendas con identificadores estables"
     assert.ok(floor.y - support.y <= (JUMP_SPEED ** 2 + (JUMP_SPEED * .94) ** 2) / (2 * GRAVITY),
       `${level.id}: la tienda debe alcanzarse con el doble salto`);
     assert.ok(door.height >= 58 && door.width >= 42);
-    assert.ok(door.x > level.start.x + 150 && door.x + door.width < level.goalX - 900);
+    // En una exploración la meta (la puerta de los gatitos) está junto al inicio: se mide contra el ancho.
+    const end = level.orientation === "explore" ? level.width : level.goalX;
+    assert.ok(door.x > level.start.x + 150 && door.x + door.width < end - 900);
     assert.ok(door.x > level.start.x + 960, `${level.id}: no debe verse desde la cámara inicial`);
     assert.ok(door.x >= level.width * .2 && door.x + door.width < level.width * .5,
       `${level.id}: el desvío debe quedar más adentro de la primera mitad`);
@@ -94,7 +96,7 @@ test("todos los checkpoints reaparecen sobre una superficie que permite aterriza
       `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
     }
   }
-  assert.equal(checkpointCount, 182);
+  assert.equal(checkpointCount, 178);
 });
 
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {

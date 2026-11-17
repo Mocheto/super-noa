@@ -213,9 +213,8 @@ const world10Floor3: Array<[number, number]> = [[0, 820], [960, 900], [2020, 900
 const world11Floor1: Array<[number, number]> = [[0, 930], [1060, 1030], [2220, 1010], [3360, 1240], [4750, 850]];
 const world11Floor2: Array<[number, number]> = [[0, 780], [920, 930], [1990, 950], [3080, 960], [4180, 1120], [5460, 1040]];
 const world11Floor3: Array<[number, number]> = [[0, 840], [980, 880], [2010, 930], [3090, 900], [4140, 940], [5220, 1280], [6660, 1140]];
-const world12Floor1: Array<[number, number]> = [[0, 920], [1060, 1040], [2240, 990], [3370, 1230], [4750, 850]];
-const world12Floor2: Array<[number, number]> = [[0, 760], [900, 960], [2010, 900], [3050, 1010], [4200, 1100], [5460, 1040]];
-const world12Floor3: Array<[number, number]> = [[0, 820], [960, 900], [2010, 940], [3090, 900], [4140, 930], [5200, 1300], [6660, 1140]];
+const world12Floor1: Array<[number, number]> = [[0, 1880], [2020, 500], [2660, 470], [3270, 640], [4050, 520], [4710, 890]];
+const world12Floor3: Array<[number, number]> = [[0, 860], [1000, 780], [1930, 620], [2690, 700], [3540, 560], [4250, 640], [5040, 1460]];
 
 export const levels: Level[] = [
   {
@@ -1026,52 +1025,108 @@ export const levels: Level[] = [
   },
   {
     id: "12-1", world: 12, screen: 1,
+    secretShop: { id: "shop-12-2", x: 1660, y: 230, width: 64, height: 80 },
     title: "La senda de la nieve", subtitle: "El hielo resbala y las ráfagas empujan: avanza mirando el viento.",
     theme: "ice-mountain", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
+    // Presentación: el viento empuja sobre suelo seguro. Desarrollo: ráfaga a favor hacia los huecos.
+    // Giro (invertido): viento de cara sobre los huecos. Remate: ráfaga fuerte a favor hasta la bandera.
+    beats: { development: 1650, twist: 3000, finale: 4350, twistKind: "invert" },
     platforms: [
-      ...themedGround(world12Floor1, "ice-ground"), themedLedge(310, 340, 190, "ice-ledge"), themedLedge(650, 265, 180, "ice-ledge"), themedLedge(1090, 330, 190, "ice-ledge"), themedLedge(1470, 245, 180, "ice-ledge"),
-      themedLedge(1850, 340, 190, "ice-ledge"), themedLedge(2290, 285, 190, "ice-ledge"), themedLedge(2720, 210, 180, "ice-ledge"), themedLedge(3190, 335, 190, "ice-ledge"), themedLedge(3560, 260, 180, "ice-ledge"),
-      themedLedge(4020, 330, 190, "ice-ledge"), themedLedge(4810, 305, 190, "ice-ledge"), themedLedge(5180, 215, 180, "ice-ledge"), themedWall(1680, 350, 70, 106, "ice-wall"),
+      ...themedGround(world12Floor1, "ice-ground"), themedLedge(430, 335, 180, "ice-ledge"), themedLedge(780, 262, 170, "ice-ledge"), themedWall(1250, 350, 70, 106, "ice-wall"),
+      themedLedge(1610, 310, 190, "ice-ledge"), themedLedge(2240, 250, 170, "ice-ledge"), themedLedge(2600, 300, 170, "ice-ledge"), themedLedge(2780, 215, 160, "ice-ledge"),
+      themedLedge(3080, 330, 170, "ice-ledge"), themedLedge(3420, 262, 170, "ice-ledge"), themedLedge(3700, 330, 170, "ice-ledge"), themedLedge(3960, 250, 160, "ice-ledge"),
+      themedLedge(4480, 320, 180, "ice-ledge"), themedLedge(4900, 240, 170, "ice-ledge"), themedLedge(5150, 330, 180, "ice-ledge"),
     ],
     deadlyWater: deadlyWaterPits(world12Floor1),
-    windZones: [iceWind("i1-w1", 720, 980, 1, 260), iceWind("i1-w2", 2400, 1050, -1, 285), iceWind("i1-w3", 4400, 950, 1, 310)],
-    enemies: [enemy("i1-p1", "penguin", 450, 420, 320, 770, 54), enemy("i1-f1", "snow-fox", 1220, 420, 1100, 1510, 52), enemy("i1-o1", "snowy-owl", 2420, 180, 2240, 2820, 74), enemy("i1-p2", "penguin", 3620, 420, 3460, 4070, 60), enemy("i1-f2", "snow-fox", 5050, 420, 4820, 5360, 58)],
-    items: [apple("i1a1", 360, 290), apple("i1a2", 710, 215), sticker("sticker-12-1", 1520, 195), apple("i1a3", 2360, 235), apple("i1a4", 2790, 160), apple("i1a5", 4090, 280), apple("i1a6", 5240, 165)],
-    rewardBlocks: [reward("i1r1", 1140, 179), reward("i1r2", 3280, 184, "apple")], checkpoints: [1080, 2240, 3400, 4780],
+    windZones: [iceWind("i1-w1", 620, 900, 1, 240), iceWind("i1-w2", 1950, 1000, 1, 285), iceWind("i1-w3", 3000, 1050, -1, 320), iceWind("i1-w4", 4350, 950, 1, 330)],
+    enemies: [enemy("i1-p1", "penguin", 520, 420, 300, 1100, 54), enemy("i1-f1", "snow-fox", 2100, 420, 2030, 2500, 52), enemy("i1-o1", "snowy-owl", 2900, 180, 2700, 3200, 74), enemy("i1-p2", "penguin", 3400, 420, 3290, 3880, 60), enemy("i1-f2", "snow-fox", 4900, 420, 4720, 5300, 58)],
+    items: [apple("i1a1", 480, 285), apple("i1a2", 830, 212), apple("i1a3", 2290, 200), sticker("sticker-12-1", 2820, 165), apple("i1a4", 3470, 212), apple("i1a5", 4010, 200), apple("i1a6", 4950, 190)],
+    rewardBlocks: [reward("i1r1", 1080, 300), reward("i1r2", 3330, 300, "apple")], checkpoints: [1150, 2700, 3300, 4760],
   },
   {
     id: "12-2", world: 12, screen: 2,
-    secretShop: { id: "shop-12-2", x: 1738, y: 240, width: 64, height: 80 },
-    title: "Las cuevas de hielo", subtitle: "Deslízate y usa las ráfagas para cruzar las cuevas azules.",
-    theme: "ice-mountain", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    title: "Las cuevas de hielo", subtitle: "Empuja los cajones: en el hielo resbalan hasta chocar.",
+    theme: "ice-mountain", width: 3840, start: { x: 60, y: 398 }, goalX: 3790,
+    // Sala-rompecabezas: una sala por tramo. Los cajones resbalan sobre el hielo hasta un tope u otro cajón.
+    beats: { development: 960, twist: 1920, finale: 2880, twistKind: "shape" },
     platforms: [
-      ...themedGround(world12Floor2, "ice-ground"), themedLedge(280, 340, 180, "ice-ledge"), themedLedge(570, 260, 180, "ice-ledge"), themedLedge(950, 330, 190, "ice-ledge"), themedLedge(1320, 225, 180, "ice-ledge"),
-      themedLedge(1680, 320, 180, "ice-ledge"), themedLedge(2070, 275, 190, "ice-ledge"), themedLedge(2450, 190, 180, "ice-ledge"), themedLedge(2810, 325, 180, "ice-ledge"), themedLedge(3150, 250, 190, "ice-ledge"),
-      themedLedge(3520, 180, 180, "ice-ledge"), themedLedge(3900, 320, 180, "ice-ledge"), themedLedge(4290, 240, 190, "ice-ledge"), themedLedge(4760, 325, 190, "ice-ledge"),
-      themedLedge(5520, 290, 185, "ice-ledge"), themedLedge(5880, 195, 180, "ice-ledge"), themedLedge(6210, 315, 190, "ice-ledge"), themedWall(1510, 330, 76, 126, "ice-wall"), themedWall(3660, 315, 80, 141, "ice-wall"),
+      ...themedGround([[0, 3840]], "ice-ground"),
+      ...[880, 1840, 2800, 3600, 3700].map((doorX) => themedWall(doorX - 8, -60, 64, 376, "ice-wall")),
+      themedLedge(2560, 190, 210, "ice-ledge"), themedLedge(3380, 190, 150, "ice-ledge"),
     ],
-    deadlyWater: deadlyWaterPits(world12Floor2),
-    windZones: [iceWind("i2-w1", 520, 1080, 1, 300), iceWind("i2-w2", 2050, 1200, -1, 330), iceWind("i2-w3", 3600, 1200, 1, 350), iceWind("i2-w4", 5300, 900, -1, 360)],
-    enemies: [enemy("i2-o1", "snowy-owl", 680, 180, 520, 980, 80), enemy("i2-f1", "snow-fox", 1110, 420, 1010, 1500, 56), enemy("i2-p1", "penguin", 2240, 420, 2100, 2760, 62), enemy("i2-o2", "snowy-owl", 3540, 135, 3330, 3890, 86), enemy("i2-f2", "snow-fox", 4550, 420, 4370, 4880, 60), enemy("i2-o3", "snowy-owl", 5800, 145, 5520, 6200, 92)],
-    items: [apple("i2a1", 330, 290), apple("i2a2", 630, 210), apple("i2a3", 1390, 175), apple("i2a4", 2510, 140), sticker("sticker-12-2", 3580, 130), apple("i2a5", 4350, 190), apple("i2a6", 4820, 275), apple("i2a7", 5960, 145)],
-    rewardBlocks: [reward("i2r1", 1040, 179), reward("i2r2", 3160, 99, "apple"), reward("i2r3", 4620, 305)], checkpoints: [930, 2030, 3090, 4230, 5500],
+    windZones: [iceWind("i2-w1", 200, 600, 1, 220), iceWind("i2-w2", 1500, 300, -1, 260), iceWind("i2-w3", 2250, 450, 1, 240), iceWind("i2-w4", 3000, 250, 1, 220)],
+    enemies: [],
+    items: [apple("i2a1", 150, 300), apple("i2a2", 760, 300), apple("i2a3", 1200, 280), apple("i2a4", 1650, 300), apple("i2a5", 2200, 300), apple("i2a6", 2480, 215), sticker("sticker-12-2", 2572, 136), apple("i2a7", 3520, 300)],
+    rewardBlocks: [reward("i2r1", 420, 300), reward("i2r2", 1750, 300, "apple"), reward("i2r3", 3060, 300)],
+    checkpoints: [],
+    puzzleRooms: [
+      {
+        x: 0, entry: { x: 60, y: 398 }, exitDoor: "i2-d1",
+        triggers: [{ id: "i2-t1", kind: "plate", x: 600, y: 456, width: 92, opens: "i2-d1" }],
+        doors: [{ id: "i2-d1", symbol: "paw", x: 880, y: 316, width: 48, height: 140 }],
+        crates: [{ id: "i2-c1", x: 240, y: 456, minX: 200, maxX: 600, slides: true }],
+      },
+      {
+        x: 960, entry: { x: 1000, y: 398 }, exitDoor: "i2-d2",
+        triggers: [{ id: "i2-t2", kind: "plate", x: 1400, y: 456, width: 92, opens: "i2-d2" }],
+        doors: [{ id: "i2-d2", symbol: "star", x: 1840, y: 316, width: 48, height: 140 }],
+        crates: [
+          { id: "i2-c2", x: 1060, y: 456, minX: 1000, maxX: 1700, slides: true },
+          { id: "i2-c3", x: 1464, y: 456, minX: 1464, maxX: 1700, slides: true },
+        ],
+      },
+      {
+        x: 1920, entry: { x: 1960, y: 398 }, exitDoor: "i2-d3", startColor: "pink",
+        triggers: [
+          { id: "i2-t3-blue", kind: "color", color: "blue", x: 2060, y: 456, width: 72 },
+          { id: "i2-t3-pink", kind: "color", color: "pink", x: 2160, y: 456, width: 72 },
+          { id: "i2-t3", kind: "paw", x: 2650, y: 190, width: 72, opens: "i2-d3" },
+        ],
+        doors: [{ id: "i2-d3", symbol: "moon", x: 2800, y: 316, width: 48, height: 140 }],
+        colorPlatforms: [
+          { id: "i2-p3-1", color: "blue", x: 2280, y: 360, width: 140, height: 24 },
+          { id: "i2-p3-2", color: "blue", x: 2450, y: 270, width: 120, height: 24 },
+          { id: "i2-p3-3", color: "pink", x: 2330, y: 250, width: 120, height: 24 },
+        ],
+      },
+      {
+        x: 2880, entry: { x: 2920, y: 398 }, exitDoor: "i2-d4", startColor: "blue",
+        triggers: [
+          { id: "i2-t4-plate", kind: "plate", x: 3300, y: 456, width: 92, opens: "i2-d4" },
+          { id: "i2-t4-pink", kind: "color", color: "pink", x: 3480, y: 456, width: 72 },
+          { id: "i2-t4", kind: "paw", x: 3420, y: 190, width: 72, opens: "i2-d5" },
+        ],
+        doors: [
+          { id: "i2-d4", symbol: "star", x: 3600, y: 316, width: 48, height: 140 },
+          { id: "i2-d5", symbol: "paw", x: 3700, y: 316, width: 48, height: 140 },
+        ],
+        colorPlatforms: [
+          { id: "i2-p4-1", color: "pink", x: 3180, y: 350, width: 120, height: 24 },
+          { id: "i2-p4-2", color: "pink", x: 3260, y: 270, width: 100, height: 24 },
+        ],
+        crates: [{ id: "i2-c4", x: 2980, y: 456, minX: 2960, maxX: 3300, slides: true }],
+      },
+    ],
   },
   {
     id: "12-3", world: 12, screen: 3,
     route: { next: "13-1", nextLabel: "Seguir a Papá Noel ▶" },
     title: "La cima de la aurora", subtitle: "Domina el hielo y el viento para llegar hasta la gran Osa Boreal.",
-    theme: "ice-mountain", width: 7800, start: { x: 80, y: 380 }, goalX: 7620,
+    theme: "ice-mountain", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    // Giro (combina): ráfagas que cambian de sentido entre paredes de hielo. Remate: ráfaga fuerte hasta la Osa.
+    beats: { development: 700, twist: 3450, finale: 5000, twistKind: "combine" },
     platforms: [
-      ...themedGround(world12Floor3, "ice-ground"), themedLedge(300, 335, 190, "ice-ledge"), themedLedge(650, 250, 180, "ice-ledge"), themedLedge(1010, 330, 190, "ice-ledge"), themedLedge(1370, 225, 180, "ice-ledge"),
-      themedLedge(1760, 325, 180, "ice-ledge"), themedLedge(2100, 250, 190, "ice-ledge"), themedLedge(2470, 175, 180, "ice-ledge"), themedLedge(2840, 320, 180, "ice-ledge"), themedLedge(3180, 240, 190, "ice-ledge"),
-      themedLedge(3550, 165, 180, "ice-ledge"), themedLedge(3940, 315, 180, "ice-ledge"), themedLedge(4270, 225, 190, "ice-ledge"), themedLedge(4660, 160, 180, "ice-ledge"), themedLedge(5080, 310, 190, "ice-ledge"),
-      themedLedge(5460, 220, 180, "ice-ledge"), themedLedge(5900, 310, 200, "ice-ledge"), themedLedge(6710, 285, 190, "ice-ledge"), themedLedge(7070, 190, 180, "ice-ledge"), themedLedge(7450, 300, 200, "ice-ledge"), themedWall(1560, 338, 76, 118, "ice-wall"), themedWall(3710, 320, 78, 136, "ice-wall"), themedWall(5700, 330, 74, 126, "ice-wall"),
+      ...themedGround(world12Floor3, "ice-ground"), themedLedge(420, 335, 180, "ice-ledge"), themedLedge(760, 255, 170, "ice-ledge"), themedLedge(1180, 325, 180, "ice-ledge"),
+      themedLedge(1560, 240, 170, "ice-ledge"), themedLedge(2050, 320, 180, "ice-ledge"), themedLedge(2420, 245, 170, "ice-ledge"), themedLedge(2760, 320, 170, "ice-ledge"),
+      themedLedge(3100, 240, 170, "ice-ledge"), themedLedge(3600, 330, 180, "ice-ledge"), themedLedge(3980, 250, 170, "ice-ledge"), themedLedge(4350, 320, 180, "ice-ledge"),
+      themedLedge(4700, 240, 170, "ice-ledge"), themedLedge(5150, 320, 190, "ice-ledge"), themedLedge(5560, 235, 170, "ice-ledge"),
+      themedWall(1500, 338, 76, 118, "ice-wall"), themedWall(3800, 320, 78, 136, "ice-wall"),
     ],
     deadlyWater: deadlyWaterPits(world12Floor3),
-    windZones: [iceWind("i3-w1", 650, 1150, 1, 330), iceWind("i3-w2", 2050, 1200, -1, 360), iceWind("i3-w3", 3500, 1250, 1, 380), iceWind("i3-w4", 5050, 1200, -1, 400), iceWind("i3-w5", 6500, 1100, 1, 420)],
-    enemies: [enemy("i3-p1", "penguin", 440, 420, 310, 720, 62), enemy("i3-o1", "snowy-owl", 1130, 165, 990, 1450, 86), enemy("i3-f1", "snow-fox", 2250, 420, 2100, 2720, 62), enemy("i3-o2", "snowy-owl", 3300, 125, 3160, 3650, 92), enemy("i3-p2", "penguin", 4340, 420, 4200, 4630, 68), enemy("i3-o3", "snowy-owl", 5450, 135, 5310, 5810, 98), enemy("i3-f2", "snow-fox", 7020, 420, 6740, 7440, 72)],
-    items: [apple("i3a1", 360, 285), apple("i3a2", 700, 200), apple("i3a3", 1430, 175), apple("i3a4", 2520, 125), apple("i3a5", 3610, 115), sticker("sticker-12-3", 4710, 110), apple("i3a6", 5510, 170), apple("i3a7", 6000, 260), apple("i3a8", 7140, 140)],
-    rewardBlocks: [reward("i3r1", 1080, 179), reward("i3r2", 3220, 89, "apple"), reward("i3r3", 5160, 159)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890, 6690], boss: "polar-bear",
+    windZones: [iceWind("i3-w1", 300, 500, 1, 300), iceWind("i3-w2", 1100, 1300, -1, 350), iceWind("i3-w3", 3450, 900, 1, 380), iceWind("i3-w4", 4400, 500, -1, 380), iceWind("i3-w5", 5000, 1000, 1, 400)],
+    enemies: [enemy("i3-p1", "penguin", 500, 420, 300, 820, 62), enemy("i3-o1", "snowy-owl", 1150, 165, 1000, 1450, 86), enemy("i3-f1", "snow-fox", 2200, 420, 1950, 2530, 62), enemy("i3-o2", "snowy-owl", 3200, 125, 3000, 3380, 92), enemy("i3-p2", "penguin", 3700, 420, 3560, 4080, 68), enemy("i3-o3", "snowy-owl", 4800, 135, 4300, 4880, 98), enemy("i3-f2", "snow-fox", 5600, 420, 5100, 6000, 72)],
+    items: [apple("i3a1", 470, 285), apple("i3a2", 810, 205), apple("i3a3", 1230, 275), apple("i3a4", 2100, 270), apple("i3a5", 2810, 270), sticker("sticker-12-3", 4750, 190), apple("i3a6", 3650, 280), apple("i3a7", 4400, 270), apple("i3a8", 5200, 270)],
+    rewardBlocks: [reward("i3r1", 1400, 300), reward("i3r2", 3000, 300, "apple"), reward("i3r3", 4600, 300)], checkpoints: [1050, 2000, 2750, 3600, 4300, 5100], boss: "polar-bear",
   },
   {
     id: "13-1", world: 13, screen: 1,

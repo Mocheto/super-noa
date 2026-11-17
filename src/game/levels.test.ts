@@ -15,7 +15,7 @@ test("solo cinco repisas opcionales tienen tiendas con identificadores estables"
     ["3-2", { id: "shop-3-2", x: 1710, y: 260, width: 64, height: 80 }],
     ["6-2", { id: "shop-6-2", x: 1628, y: 265, width: 64, height: 80 }],
     ["10-2", { id: "shop-10-2", x: 1738, y: 240, width: 64, height: 80 }],
-    ["12-2", { id: "shop-12-2", x: 1738, y: 240, width: 64, height: 80 }],
+    ["12-1", { id: "shop-12-2", x: 1660, y: 230, width: 64, height: 80 }],
   ]);
   assert.equal(new Set(shops.map((level) => level.secretShop!.id)).size, 5);
   const overlap = (a: { x: number; y: number; width: number; height: number }, b: typeof a) =>
@@ -94,7 +94,7 @@ test("todos los checkpoints reaparecen sobre una superficie que permite aterriza
       `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
     }
   }
-  assert.equal(checkpointCount, 229);
+  assert.equal(checkpointCount, 223);
 });
 
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {
@@ -244,9 +244,11 @@ test("los mundos recientes forman una aventura completa con mecánicas propias",
     assert.deepEqual(world.map((level) => level.id), [...expected.ids]);
     assert.equal(world[2].boss, expected.boss);
     for (const level of world) {
-      assert.ok(level.width >= 5600, `${level.id} debe ser más largo que los mundos iniciales`);
       assert.equal(level.items.find((item) => item.kind === "sticker")?.id, `sticker-${level.id}`);
       assert.ok(level.platforms.some((platform) => expected.platforms.includes(platform.kind as never)));
+      // Las pantallas con formato propio (salas, persecución, exploración, vertical) no siguen la plantilla horizontal.
+      if (level.puzzleRooms || (level.orientation ?? "horizontal") !== "horizontal") continue;
+      assert.ok(level.width >= 5600, `${level.id} debe ser más largo que los mundos iniciales`);
       assert.ok(level.deadlyWater?.length);
     }
     for (const kind of expected.enemies) assert.ok(world.some((level) => level.enemies.some((enemy) => enemy.kind === kind)));

@@ -24,8 +24,9 @@ export type PuzzleTrigger = { id: string; kind: "paw" | "plate" | "color"; x: nu
 /** Puerta de una sala: columna sólida desde `y` hasta el suelo mientras está cerrada. */
 export type PuzzleDoor = Rect & { id: string; symbol: PuzzleSymbol };
 export type ColorPlatform = Rect & { id: string; color: PuzzleColor };
-/** Cajón que se empuja por el suelo `y` entre `minX` y `maxX` (borde izquierdo). */
-export type PuzzleCrate = { id: string; x: number; y: number; minX: number; maxX: number };
+/** Cajón que se empuja por el suelo `y` entre `minX` y `maxX` (borde izquierdo). Con `slides` (hielo), un
+ * empujón lo lanza y resbala hasta un tope, otro cajón o Noa. */
+export type PuzzleCrate = { id: string; x: number; y: number; minX: number; maxX: number; slides?: boolean };
 /** Una sala de cámara fija de 960 px. `exitDoor` es la puerta de salida hacia la sala siguiente. */
 export type PuzzleRoom = {
   x: number;

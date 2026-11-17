@@ -3,12 +3,14 @@ import type { Level, Platform, PuzzleColor, PuzzleCrate, PuzzleRoom, PuzzleTrigg
 export const ROOM_WIDTH = 960;
 export const CRATE_SIZE = 64;
 export const CRATE_PUSH_SPEED = 120;
+/** Velocidad del cajón que resbala sobre el hielo tras un empujón. */
+export const CRATE_SLIDE_SPEED = 260;
 /** Altura del pedestal de los botones: hay que subirse de un salto para pisarlos. */
 export const BUTTON_STEP = 24;
 /** Segundos sin avanzar tras los que «Empezar la sala» late para recordarse. */
 export const RESTART_HINT_SECONDS = 45;
 
-export type CrateState = PuzzleCrate & { room: number };
+export type CrateState = PuzzleCrate & { room: number; vx: number };
 
 /** Estado de las salas durante una partida. No se guarda en el progreso: cada sala es su propio punto de control. */
 export type PuzzleState = {
@@ -20,7 +22,7 @@ export type PuzzleState = {
   lastProgress: number;
 };
 
-const roomCrates = (room: PuzzleRoom, index: number): CrateState[] => (room.crates ?? []).map((crate) => ({ ...crate, room: index }));
+const roomCrates = (room: PuzzleRoom, index: number): CrateState[] => (room.crates ?? []).map((crate) => ({ ...crate, room: index, vx: 0 }));
 
 export function createPuzzleState(level: Level): PuzzleState {
   const rooms = level.puzzleRooms ?? [];
@@ -108,6 +110,15 @@ export function pushCrates(state: PuzzleState, player: Rect, previousX: number, 
       ? previousX + player.width <= box.x + 1 && nextX + player.width > box.x
       : previousX >= box.x + box.width - 1 && nextX < box.x + box.width;
     if (!touching) continue;
+    if (crate.slides) {
+      // En el hielo basta un empujón: el cajón sale resbalando y Noa se queda donde estaba.
+      const at = crate.x;
+      if ((moving > 0 && crate.x < crate.maxX) || (moving < 0 && crate.x > crate.minX)) {
+        crate.vx = Math.sign(moving) * CRATE_SLIDE_SPEED;
+        state.lastProgress = now;
+      }
+      return moving > 0 ? at - player.width : at + CRATE_SIZE;
+    }
     const step = Math.sign(moving) * Math.min(Math.abs(moving), CRATE_PUSH_SPEED * delta);
     const before = crate.x;
     crate.x = Math.max(crate.minX, Math.min(crate.maxX, crate.x + step));
@@ -115,6 +126,34 @@ export function pushCrates(state: PuzzleState, player: Rect, previousX: number, 
     return moving > 0 ? crate.x - player.width : crate.x + CRATE_SIZE;
   }
   return nextX;
+}
+
+/** Mueve los cajones que resbalan. Se paran en sus topes, contra otro cajón de la misma sala o contra Noa.
+ * Devuelve los que se acaban de parar (para el sonido). */
+export function slideCrates(state: PuzzleState, delta: number, player: Rect | null): CrateState[] {
+  const stopped: CrateState[] = [];
+  for (const crate of state.crates) {
+    if (!crate.vx) continue;
+    let next = Math.max(crate.minX, Math.min(crate.maxX, crate.x + crate.vx * delta));
+    let stop = next === crate.minX || next === crate.maxX;
+    const obstacles: Rect[] = state.crates.filter((other) => other !== crate && other.room === crate.room && other.y === crate.y).map(crateRect);
+    if (player && Math.abs(player.y + player.height - crate.y) < CRATE_SIZE) obstacles.push(player);
+    for (const box of obstacles) {
+      if (crate.vx > 0 && box.x >= crate.x + CRATE_SIZE - 1 && next + CRATE_SIZE > box.x) {
+        next = box.x - CRATE_SIZE;
+        stop = true;
+      } else if (crate.vx < 0 && box.x + box.width <= crate.x + 1 && next < box.x + box.width) {
+        next = box.x + box.width;
+        stop = true;
+      }
+    }
+    crate.x = next;
+    if (stop) {
+      crate.vx = 0;
+      stopped.push(crate);
+    }
+  }
+  return stopped;
 }
 
 export type PuzzleEvent = { kind: "paw" | "color" | "door"; id: string; from: { x: number; y: number }; to?: { x: number; y: number } };

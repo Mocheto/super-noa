@@ -22,6 +22,12 @@ export function routeLength(level: Level): number {
 export function beatProblems(level: Level): string[] {
   const beats = level.beats;
   if (!beats) return ["sin tramos"];
+  if (level.puzzleRooms) {
+    // En una sala-rompecabezas cada tramo es una sala: los tramos empiezan donde empieza cada sala.
+    const rooms = level.puzzleRooms.map((room) => room.x);
+    return rooms.length === 4 && beats.development === rooms[1] && beats.twist === rooms[2] && beats.finale === rooms[3]
+      ? [] : ["cada tramo de la sala-rompecabezas debe empezar en su sala (cuatro salas)"];
+  }
   const length = routeLength(level);
   const share = (value: number) => value / length;
   const problems: string[] = [];

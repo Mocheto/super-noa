@@ -11,8 +11,10 @@ import { levels, themeNames } from "./game/levels";
 import { campaignLevels, campaignUnlockIndex, levelIndex, nextLevelIndex } from "./game/routes";
 import { testScreens } from "./game/testScreens";
 
-/** Solo en desarrollo: `?prueba=salas` abre directamente una pantalla de prueba de los motores de formato. */
-const devTestLevel = import.meta.env.DEV ? testScreens[new URLSearchParams(window.location.search).get("prueba") ?? ""] : undefined;
+/** Solo en desarrollo: `?prueba=salas` abre una pantalla de prueba de los motores de formato y `?prueba=12-2`, una
+ * pantalla de la campaña, para revisarlas sin recorrer el mapa. */
+const devTestName = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("prueba") ?? "" : "";
+const devTestLevel = devTestName ? testScreens[devTestName] ?? levels.find((level) => level.id === devTestName) : undefined;
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
 import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";

@@ -5,7 +5,7 @@ import { levels } from "./levels.ts";
 import { reachable } from "./levelBeats.ts";
 import {
   CRATE_SIZE, RESTART_HINT_SECONDS, advanceRoom, buttonRect, createPuzzleState, doorsOpen, puzzlePlatforms, pushCrates, resetRoom,
-  restartHintActive, roomReachLevel, stepTriggers,
+  restartHintActive, roomReachLevel, slideCrates, stepTriggers,
 } from "./puzzleRooms.ts";
 import { PUZZLE_PIECES } from "./puzzleRoomsRendering.ts";
 import { puzzleRoomsTestLevel } from "./testScreens.ts";
@@ -179,4 +179,23 @@ test("empezar la sala la deja como al entrar sin tocar las demás", () => {
 test("los recortes del atlas coinciden con las medidas del recorte del arte", () => {
   const json = JSON.parse(readFileSync(new URL("../../docs/art/variedad-v1-recortes.json", import.meta.url), "utf8"));
   assert.deepEqual(PUZZLE_PIECES, json["puzzle-pieces-v1"]);
+});
+
+test("en el hielo un empujón lanza el cajón hasta el tope o el siguiente cajón", () => {
+  const level = levels.find((l) => l.id === "12-2")!;
+  const state = createPuzzleState(level);
+  const [first, second] = state.crates.filter((crate) => crate.room === 1);
+  const noa = player(first.x - 42, 456);
+  const x = pushCrates(state, noa, noa.x, noa.x + 4, 1 / 60, 3);
+  assert.equal(x, first.x - 42, "Noa no se mete en el cajón");
+  assert.ok(first.vx > 0);
+  for (let i = 0; i < 240 && first.vx; i += 1) slideCrates(state, 1 / 60, null);
+  assert.equal(first.vx, 0);
+  assert.equal(first.x, second.x - CRATE_SIZE, "se para contra el otro cajón");
+  stepTriggers(level, { ...state, room: 1 }, player(1000, 456), true, 4);
+  assert.ok(doorsOpen(level, { ...state, room: 1 }, null).has("i2-d2"), "y queda sobre la placa");
+  const lone = state.crates.find((crate) => crate.room === 0)!;
+  pushCrates(state, player(lone.x - 42, 456), lone.x - 42, lone.x - 38, 1 / 60, 5);
+  for (let i = 0; i < 240 && lone.vx; i += 1) slideCrates(state, 1 / 60, null);
+  assert.equal(lone.x, lone.maxX, "sin obstáculos llega al tope");
 });

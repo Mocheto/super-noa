@@ -25,7 +25,7 @@ import { drawDetourEntrance, drawDetourMechanisms, drawDetourScenery } from "./d
 import type { DetourId } from "./types";
 import "./detours.css";
 import "./puzzleRooms.css";
-import { advanceRoom, createPuzzleState, pushCrates, puzzlePlatforms, resetRoom, restartHintActive, stepTriggers } from "./puzzleRooms";
+import { advanceRoom, createPuzzleState, pushCrates, puzzlePlatforms, resetRoom, restartHintActive, slideCrates, stepTriggers } from "./puzzleRooms";
 import { drawPuzzleRooms, type SparkTrail } from "./puzzleRoomsRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
@@ -373,7 +373,10 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         if (index >= 0) player.y += liftPlatforms[index].y - previousLiftPlatforms[index].y;
       }
       const platforms = [...getMechanicPlatforms(level, levelAge), ...supports, ...liftPlatforms];
-      if (puzzle) platforms.push(...puzzlePlatforms(level, puzzle));
+      if (puzzle) {
+        if (slideCrates(puzzle, delta, player).length) callbacksRef.current.playSound("block");
+        platforms.push(...puzzlePlatforms(level, puzzle));
+      }
       const previousStar = starRemaining;
       starRemaining = Math.max(0, starRemaining - delta);
       if (previousStar > 0 && starRemaining === 0) callbacksRef.current.onSnapshot(currentSnapshot());

@@ -1,0 +1,9 @@
+.avioneta { position: relative; width: min(100%, 960px); margin: 0 auto; }
+.avioneta canvas { display: block; width: 100%; height: auto; border: 4px solid #3b4680; border-radius: 12px; background: #7cc4f0; touch-action: none; }
+.avioneta-leave { position: absolute; top: 10px; right: 10px; min-height: 44px; padding: 8px 12px; border: 3px solid #624659; border-radius: 12px; background: #fff2d2; color: #3d294a; font: inherit; font-weight: 800; cursor: pointer; }
+.avioneta-controls { display: flex; justify-content: center; gap: 16px; margin-top: 10px; }
+.avioneta-touch { display: grid; place-items: center; width: 72px; height: 72px; border: 3px solid #624659; border-radius: 50%; background: #fff2d2; color: #3d294a; font-size: 28px; touch-action: none; user-select: none; cursor: pointer; }
+.avioneta-touch.is-fire { width: 92px; height: 92px; }
+.avioneta-pop-icon { width: 56px; height: 56px; background-position: 0 0; background-size: 300% 100%; background-repeat: no-repeat; }
+.avioneta-end { position: absolute; inset: 20% 15% auto; display: grid; justify-items: center; gap: 10px; padding: 20px; border: 4px solid #624659; border-radius: 16px; background: #fff6e3; color: #3d294a; text-align: center; }
+.avioneta-end h2 { margin: 0; }

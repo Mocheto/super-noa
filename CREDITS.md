@@ -61,6 +61,8 @@ node scripts/build-adventure-music.mjs --check --only=musica
 
 El primer comando genera las once pistas y las verifica; el segundo solo verifica los archivos existentes. `--only=nombre` permite generar o comprobar únicamente una de ellas, sin escribir las demás. Se comprueban formato, duración musical exacta tras compensar el retardo MP3, tamaño, metadatos de título, nivel medio, margen de pico, clipping y continuidad de la unión; el bosque incluye también la comparación espectral con el archivo anterior. Los errores terminan con código distinto de cero. Todo el PCM se procesa en memoria: no se guardan WAV ni archivos intermedios. Con las mismas versiones de Node.js, FFmpeg y `libmp3lame`, la generación es determinista.
 
+- **«Vals de la avioneta»** (La avioneta de las nubes): composición original de Super Noa en compás de tres, generada por código en el navegador con Web Audio (`src/game/AvionetaGame.tsx`, melodía de ocho compases en do mayor con bajo y acompañamiento). No usa samples ni grabaciones de terceros.
+
 ## Recursos originales del proyecto
 
 - Diseño de Noa: interpretación pixelada original creada para Super Noa a partir de referencias privadas. Las fotografías no se distribuyen ni forman parte del repositorio.

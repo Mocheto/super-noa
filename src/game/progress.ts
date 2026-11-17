@@ -5,6 +5,7 @@ import { normalizeSecretShops, type SecretShopVisits } from "./secretShopProgres
 import { normalizeDetours, type DetourProgress } from "./detourProgress.ts";
 import { normalizeRestStops, type RestStopProgress } from "./restStopProgress.ts";
 import { normalizeFriends, type FriendProgress } from "./friendProgress.ts";
+import { normalizeAvioneta, type AvionetaProgress } from "./avioneta.ts";
 
 export { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
 
@@ -14,7 +15,7 @@ const campaignLevelCount = campaignLevels.length;
 const knownLevelIds = new Set(levels.map((level) => level.id));
 
 export type LevelStats = Record<string, { completed: boolean; bestApples: number; flawless?: boolean }>;
-export type Progress = { unlocked: number; levelStats: LevelStats; stickers: string[]; secretUnlocked: boolean; waterUnlocked: boolean; bossChallenges: Record<string, boolean>; totalApples?: number; achievedAt?: string | null; secretShops?: SecretShopVisits; detours?: DetourProgress; restStops?: RestStopProgress; friends?: FriendProgress };
+export type Progress = { unlocked: number; levelStats: LevelStats; stickers: string[]; secretUnlocked: boolean; waterUnlocked: boolean; bossChallenges: Record<string, boolean>; totalApples?: number; achievedAt?: string | null; secretShops?: SecretShopVisits; detours?: DetourProgress; restStops?: RestStopProgress; friends?: FriendProgress; avioneta?: AvionetaProgress };
 
 export const emptyProgress: Progress = { unlocked: 0, levelStats: {}, stickers: [], secretUnlocked: false, waterUnlocked: false, bossChallenges: {}, totalApples: 0, achievedAt: null, secretShops: {}, detours: {}, restStops: {}, friends: {} };
 
@@ -109,6 +110,7 @@ export function parseProgress(raw: string | null): Progress {
       detours: normalizeDetours(saved.detours),
       restStops: normalizeRestStops(saved.restStops),
       friends: normalizeFriends(saved.friends),
+      ...(normalizeAvioneta(saved.avioneta) ? { avioneta: normalizeAvioneta(saved.avioneta) } : {}),
     };
   } catch {
     return emptyProgress;

@@ -10,6 +10,7 @@ import { getWorldSecretShopBadge } from "./secretShopProgress";
 import { findMapJourney, MAP_HEIGHT, MAP_WIDTH, mapLandscape, mapRoutes, mapRouteState, shortcutRoutes, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
 import { detourArtwork, detourCatalog, detourLevels } from "./detours";
 import { restStopCatalog, restStopUnlocked } from "./restStops";
+import { TOTAL_STARS } from "./avioneta";
 import type { DetourId } from "./types";
 import { useMapCamera } from "./useMapCamera";
 import "./detours.css";
@@ -28,9 +29,10 @@ type WorldMapProps = {
   onOpenCatParty: () => void;
   reduceMotion: boolean;
   onDetourReveal: (ids: DetourId[]) => void;
+  onOpenAvioneta?: () => void;
 };
 
-export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal }: WorldMapProps) {
+export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal, onOpenAvioneta }: WorldMapProps) {
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedWorld, setSelectedWorld] = useState<WorldId | null>(null);
   const [openObjectives, setOpenObjectives] = useState<{ levelId: string; pinned: boolean } | null>(null);
@@ -243,12 +245,23 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
             aria-label={`${entry.title}: ${progress.detours?.[entry.id]?.completed ? "completado, volver a visitar" : "descubierto, explorar"}`}>
             {detourIcon(entry.icon)}<span>{entry.shortName}{progress.detours?.[entry.id]?.completed ? " ✓" : ""}</span>
           </button>)}
+          {onOpenAvioneta && progress.levelStats["S-1"]?.completed && (() => {
+            // La avioneta de las nubes: marcador junto al reino secreto, con la mejor marca de estrellas.
+            const sky = worldCatalog.find((entry) => entry.id === 7);
+            if (!sky) return null;
+            const spot = { ...sky, x: Math.min(95, sky.x + 9) };
+            const best = progress.avioneta?.bestStars ?? 0;
+            const all = best >= TOTAL_STARS;
+            return <button type="button" className={`map-rest-stop map-avioneta ${all ? "is-golden" : ""}`} style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
+              disabled={moving} onFocus={() => camera.ensureVisible(spot)} onClick={() => camera.overview ? camera.showNear(spot) : onOpenAvioneta()}
+              aria-label={`La avioneta de las nubes: mejor marca ${best} de ${TOTAL_STARS} estrellas`}>✈<span>★ {best}</span></button>;
+          })()}
           {restStopCatalog.map((stop, index) => {
             // Marcador pequeño del paseo de los amigos, junto al mundo, en cuanto se completa su pantalla 3.
             const world = worldCatalog.find((entry) => entry.id === stop.world);
             if (!world || !restStopUnlocked(stop.world, progress.levelStats)) return null;
             const visited = progress.restStops?.[stop.world]?.visited;
-            const spot = { ...world, y: world.y + 7 };
+            const spot = { ...world, y: world.y > 85 ? world.y - 8 : world.y + 7 };
             return <button key={`paseo-${stop.world}`} type="button" className={`map-rest-stop ${visited ? "is-visited" : ""}`}
               style={{ left: `${spot.x}%`, top: `${spot.y}%` }} disabled={moving} onFocus={() => camera.ensureVisible(spot)}
               onClick={() => camera.overview ? camera.showNear(spot) : onBeginLevel(levels.length + detourLevels.length + index)}

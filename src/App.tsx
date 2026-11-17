@@ -32,6 +32,8 @@ import { restStopFor, restStopIndex, restStopLevels, restStopUnlocked } from "./
 import { greetFriend, visitRestStop } from "./game/restStopProgress";
 import { addHeart } from "./game/friendProgress";
 import { FriendsTab } from "./game/FriendsTab";
+import { recordFlight } from "./game/avioneta";
+const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
 import { visitDetour } from "./game/detourProgress";
 
 const WorldMap = lazy(() => import("./game/WorldMap").then((module) => ({ default: module.WorldMap })));
@@ -47,8 +49,8 @@ const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
 const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
 
-type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition" | "cat-party";
-const isTimedScreen = (screen: Screen) => screen === "game" || screen === "boss" || screen === "secret-transition" || screen === "cat-party";
+type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition" | "cat-party" | "avioneta";
+const isTimedScreen = (screen: Screen) => screen === "game" || screen === "boss" || screen === "secret-transition" || screen === "cat-party" || screen === "avioneta";
 
 type CollectionTab = "stickers" | "bosses" | "memories" | "friends";
 type TouchControlsMode = "auto" | "always";
@@ -80,6 +82,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>(devTestLevel ? "game" : "home");
   const [activeIndex, setActiveIndex] = useState(0);
   const [levelRun, setLevelRun] = useState(0);
+  const [avionetaGift, setAvionetaGift] = useState(false);
   const [lives, setLives] = useState(MAX_LIVES);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => readStorage("super-noa-muted") === "true");
@@ -651,8 +654,14 @@ export default function App() {
         bossChallenges: activeLevel.boss && challengeCompleted ? { ...current.bossChallenges, [activeLevel.boss]: true } : current.bossChallenges,
       });
     });
+    // La primera vez que se vence a la Reina Arcoíris, ella regala la avioneta y el vuelo empieza solo.
+    if (activeLevel.world === 7 && activeLevel.boss && !progress.avioneta?.flown) {
+      setAvionetaGift(true);
+      setScreen("avioneta");
+      return;
+    }
     setScreen(activeLevel.route?.finale ? "finished" : "complete");
-  }, [activeLevel, forestComplete, lives, snapshot]);
+  }, [activeLevel, forestComplete, lives, snapshot, progress.avioneta?.flown]);
 
   const handleCanvasComplete = useCallback((finalSnapshot: GameSnapshot) => handleComplete(false, finalSnapshot), [handleComplete]);
 
@@ -794,12 +803,24 @@ export default function App() {
             </div>
           </header>
           <Suspense fallback={<p className="lazy-loading" role="status">Preparando el mapa…</p>}>
-            <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
+            <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} onOpenAvioneta={() => void requestAdventure(() => { setAvionetaGift(false); setPaused(false); setScreen("avioneta"); })} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
           </Suspense>
           <button className="text-button reset-button" type="button" onClick={resetProgress}>Borrar progreso</button>
         </section>
       )}
 
+      {screen === "avioneta" && <Suspense fallback={<p className="lazy-loading" role="status">Preparando la avioneta…</p>}>
+        <AvionetaGame paused={paused} muted={muted} musicVolume={musicVolume / 100} reduceMotion={reduceMotion} gift={avionetaGift}
+          bestStars={progress.avioneta?.bestStars ?? 0} playSound={playSound}
+          onExit={(stars) => {
+            // Rendirse no pierde nada; al cruzar el arcoíris se guarda la mejor marca. El marcador queda abierto en
+            // cuanto se vence a la Reina Arcoíris, aunque no se complete el vuelo.
+            setProgress((current) => stars === null ? { ...current, avioneta: { bestStars: current.avioneta?.bestStars ?? 0, flown: true } } : recordFlight(current, stars));
+            setAvionetaGift(false);
+            setPaused(false);
+            setScreen("map");
+          }} />
+      </Suspense>}
       {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status">Preparando la fiesta…</p>}>
         <CatParty paused={paused} muted={muted} musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotion}
           onPause={() => setPaused(true)} onExit={leaveCatParty} />

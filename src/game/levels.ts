@@ -206,9 +206,8 @@ const castleFloor2: Array<[number, number]> = [[0, 650], [800, 1000], [1940, 900
 const castleFloor3: Array<[number, number]> = [[0, 760], [900, 920], [1960, 950], [3050, 950], [4130, 1000], [5260, 1240]];
 const dinoFloor1: Array<[number, number]> = [[0, 1250], [1390, 820], [2350, 760], [3250, 600], [3990, 610]];
 const dinoFloor3: Array<[number, number]> = [[0, 1180], [1320, 700], [2160, 840], [3140, 680], [3960, 840], [4940, 680], [5760, 740]];
-const world10Floor1: Array<[number, number]> = [[0, 900], [1040, 1000], [2180, 980], [3300, 1300], [4750, 850]];
-const world10Floor2: Array<[number, number]> = [[0, 760], [900, 960], [2000, 930], [3070, 980], [4200, 1100], [5460, 1040]];
-const world10Floor3: Array<[number, number]> = [[0, 820], [960, 900], [2020, 900], [3080, 910], [4140, 920], [5220, 1280], [6660, 1140]];
+const world10Floor1: Array<[number, number]> = [[0, 1720], [1860, 640], [2640, 720], [3500, 660], [4300, 700], [5140, 460]];
+const world10Floor3: Array<[number, number]> = [[0, 1300], [1440, 700], [2280, 760], [3180, 820], [4140, 660], [4940, 760], [5840, 660]];
 const world11Floor1: Array<[number, number]> = [[0, 1720], [1880, 700], [2740, 640], [3540, 620], [4320, 520], [5000, 600]];
 const world11Floor2: Array<[number, number]> = [[0, 1500], [1660, 900], [2730, 800], [3700, 700], [4570, 1230]];
 const world11Floor3: Array<[number, number]> = [[0, 860], [1020, 760], [1940, 700], [2800, 620], [3580, 640], [4380, 560], [5100, 1400]];
@@ -920,61 +919,70 @@ export const levels: Level[] = [
   },
   {
     id: "10-1", world: 10, screen: 1,
+    secretShop: { id: "shop-10-2", x: 1300, y: 230, width: 64, height: 80 },
     title: "Las laderas humeantes", subtitle: "Observa el ritmo de los chorros de lava y salta cuando bajen.",
     theme: "dragon-volcano", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
+    // Presentación: un chorro sobre suelo seguro. Giro (invertido): los chorros salen de los huecos a contratiempo.
+    beats: { development: 1650, twist: 3000, finale: 4350, twistKind: "invert" },
     platforms: [
       ...themedGround(world10Floor1, "volcano-ground"),
-      themedLedge(300, 340, 190, "volcano-ledge"), themedLedge(620, 265, 180, "volcano-ledge"), themedLedge(1080, 330, 190, "volcano-ledge"),
-      themedLedge(1460, 245, 180, "volcano-ledge"), themedLedge(1830, 335, 190, "volcano-ledge"), themedLedge(2250, 290, 190, "volcano-ledge"),
-      themedLedge(2670, 220, 180, "volcano-ledge"), themedLedge(3160, 340, 190, "volcano-ledge"), themedLedge(3540, 265, 180, "volcano-ledge"),
-      themedLedge(3990, 330, 190, "volcano-ledge"), themedLedge(4810, 310, 190, "volcano-ledge"), themedLedge(5160, 225, 180, "volcano-ledge"), themedWall(1680, 350, 70, 106, "volcano-wall"),
+      themedLedge(300, 330, 180, "volcano-ledge"), themedLedge(560, 250, 170, "volcano-ledge"), themedLedge(900, 330, 170, "volcano-ledge"), themedLedge(1250, 310, 200, "volcano-ledge"),
+      themedLedge(1600, 250, 160, "volcano-ledge"), themedLedge(1950, 330, 170, "volcano-ledge"), themedLedge(2250, 250, 160, "volcano-ledge"), themedLedge(2700, 330, 170, "volcano-ledge"),
+      themedLedge(3000, 250, 160, "volcano-ledge"), themedLedge(3550, 330, 170, "volcano-ledge"), themedLedge(3850, 250, 160, "volcano-ledge"), themedLedge(4350, 330, 170, "volcano-ledge"),
+      themedLedge(4650, 250, 160, "volcano-ledge"), themedLedge(5200, 330, 170, "volcano-ledge"),
+      themedWall(1100, 350, 70, 106, "volcano-wall"),
     ],
     deadlyWater: deadlyWaterPits(world10Floor1),
-    lavaJets: [lavaJet("v1-j1", 943, 2.5, 0), lavaJet("v1-j2", 2083, 2.8, .8, 320), lavaJet("v1-j3", 3203, 2.35, 1.4), lavaJet("v1-j4", 4648, 2.65, .45, 335)],
-    enemies: [enemy("v1-d1", "baby-dragon", 450, 410, 320, 760, 44), enemy("v1-s1", "fire-salamander", 1200, 416, 1090, 1510, 48), enemy("v1-d2", "baby-dragon", 2380, 410, 2250, 2860, 50), enemy("v1-s2", "fire-salamander", 3600, 416, 3450, 4050, 52), enemy("v1-d3", "baby-dragon", 5050, 410, 4820, 5350, 56),
-      enemy("v1-f1", "flying-dragon", 650, 155, 540, 820, 44), enemy("v1-f2", "flying-dragon", 3570, 145, 3400, 3840, 52)],
-    items: [apple("v1a1", 350, 290), apple("v1a2", 680, 215), sticker("sticker-10-1", 1510, 195), apple("v1a3", 2320, 240), apple("v1a4", 2740, 170), apple("v1a5", 4060, 280), apple("v1a6", 5220, 175)],
-    rewardBlocks: [reward("v1r1", 1120, 179), reward("v1r2", 3250, 189, "apple")], checkpoints: [1060, 2200, 3380, 4780],
+    lavaJets: [lavaJet("v1-j1", 700, 2.6, 0, 260), lavaJet("v1-j2", 1763, 2.8, .8, 320), lavaJet("v1-j3", 2543, 2.4, 1.4), lavaJet("v1-j4", 3403, 2.2, .45, 335), lavaJet("v1-j5", 4203, 2.3, 1.1), lavaJet("v1-j6", 5043, 2.25, .3, 330)],
+    enemies: [enemy("v1-d1", "baby-dragon", 450, 410, 320, 650, 44), enemy("v1-s1", "fire-salamander", 1550, 416, 1480, 1700, 48), enemy("v1-d2", "baby-dragon", 2300, 410, 1900, 2480, 50), enemy("v1-s2", "fire-salamander", 3700, 416, 3550, 4100, 52), enemy("v1-d3", "baby-dragon", 5300, 410, 5150, 5400, 56),
+      enemy("v1-f1", "flying-dragon", 650, 155, 540, 820, 44), enemy("v1-f2", "flying-dragon", 3600, 145, 3500, 3900, 52)],
+    items: [apple("v1a1", 350, 280), apple("v1a2", 610, 200), sticker("sticker-10-1", 1650, 200), apple("v1a3", 2300, 200), apple("v1a4", 3050, 200), apple("v1a5", 4700, 200), apple("v1a6", 5250, 280)],
+    rewardBlocks: [reward("v1r1", 800, 300), reward("v1r2", 3200, 300, "apple")], checkpoints: [1000, 2000, 2700, 4400],
   },
   {
     id: "10-2", world: 10, screen: 2,
-    secretShop: { id: "shop-10-2", x: 1738, y: 240, width: 64, height: 80 },
-    title: "La cueva de los cristales", subtitle: "Busca el camino entre cristales rojos y charcos de lava brillante.",
-    theme: "dragon-volcano", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    title: "La chimenea del volcán", subtitle: "Sube por la chimenea: los chorros de lava suben y bajan al compás.",
+    theme: "dragon-volcano", width: 960, height: 2600, orientation: "vertical",
+    start: { x: 120, y: 2482 }, goalX: 480, goalY: 175,
+    // Subida: chorros de lava al compás que salen de las repisas, cada vez más seguidos.
+    beats: { development: 250, twist: 1270, finale: 1850, twistKind: "shape" },
     platforms: [
-      ...themedGround(world10Floor2, "volcano-ground"),
-      themedLedge(280, 340, 180, "volcano-ledge"), themedLedge(570, 260, 180, "volcano-ledge"), themedLedge(950, 330, 190, "volcano-ledge"),
-      themedLedge(1320, 225, 180, "volcano-ledge"), themedLedge(1680, 320, 180, "volcano-ledge"), themedLedge(2070, 275, 190, "volcano-ledge"),
-      themedLedge(2450, 190, 180, "volcano-ledge"), themedLedge(2810, 325, 180, "volcano-ledge"), themedLedge(3150, 250, 190, "volcano-ledge"),
-      themedLedge(3520, 180, 180, "volcano-ledge"), themedLedge(3900, 320, 180, "volcano-ledge"), themedLedge(4290, 240, 190, "volcano-ledge"), themedLedge(4760, 325, 190, "volcano-ledge"),
-      themedLedge(5520, 300, 185, "volcano-ledge"), themedLedge(5880, 205, 180, "volcano-ledge"), themedLedge(6210, 320, 190, "volcano-ledge"), themedWall(1510, 330, 76, 126, "volcano-wall"), themedWall(3660, 315, 80, 141, "volcano-wall"),
+      { x: 0, y: 2540, width: 960, height: 120, kind: "volcano-ground" },
+      themedLedge(80, 2430, 220, "volcano-ledge"), themedLedge(420, 2320, 200, "volcano-ledge"), themedLedge(700, 2210, 200, "volcano-ledge"), themedLedge(380, 2100, 220, "volcano-ledge"),
+      themedLedge(100, 1990, 200, "volcano-ledge"), themedLedge(400, 1880, 200, "volcano-ledge"), themedLedge(680, 1770, 220, "volcano-ledge"), themedLedge(380, 1660, 200, "volcano-ledge"),
+      themedLedge(110, 1550, 220, "volcano-ledge"), themedLedge(420, 1440, 200, "volcano-ledge"), themedLedge(700, 1330, 200, "volcano-ledge"), themedLedge(400, 1220, 200, "volcano-ledge"),
+      themedLedge(120, 1110, 220, "volcano-ledge"), themedLedge(420, 1000, 200, "volcano-ledge"), themedLedge(700, 890, 200, "volcano-ledge"), themedLedge(400, 780, 200, "volcano-ledge"),
+      themedLedge(100, 670, 220, "volcano-ledge"), themedLedge(400, 560, 200, "volcano-ledge"), themedLedge(690, 450, 200, "volcano-ledge"), themedLedge(400, 340, 200, "volcano-ledge"),
+      themedLedge(330, 230, 300, "volcano-ledge"),
     ],
-    deadlyWater: deadlyWaterPits(world10Floor2),
-    lavaJets: [lavaJet("v2-j1", 803, 2.4, .2), lavaJet("v2-j2", 1903, 2.75, 1), lavaJet("v2-j3", 2973, 2.25, 1.55, 330), lavaJet("v2-j4", 4098, 2.6, .65), lavaJet("v2-j5", 5353, 2.35, 1.8, 350)],
-    enemies: [enemy("v2-s1", "fire-salamander", 520, 416, 330, 720, 50), enemy("v2-d1", "baby-dragon", 1110, 410, 990, 1460, 49), enemy("v2-s2", "fire-salamander", 2240, 416, 2080, 2740, 54), enemy("v2-d2", "baby-dragon", 3270, 410, 3140, 3550, 54), enemy("v2-s3", "fire-salamander", 4530, 416, 4360, 4870, 58), enemy("v2-d3", "baby-dragon", 5750, 410, 5520, 6160, 60),
-      enemy("v2-f1", "flying-dragon", 600, 155, 500, 700, 46), enemy("v2-f2", "flying-dragon", 2660, 100, 2460, 2770, 54), enemy("v2-f3", "flying-dragon", 5860, 110, 5600, 6090, 58)],
-    items: [apple("v2a1", 330, 290), apple("v2a2", 630, 210), apple("v2a3", 1390, 175), apple("v2a4", 2510, 140), sticker("sticker-10-2", 3580, 130), apple("v2a5", 4350, 190), apple("v2a6", 4820, 275), apple("v2a7", 5940, 155)],
-    rewardBlocks: [reward("v2r1", 1040, 179), reward("v2r2", 3160, 99, "apple"), reward("v2r3", 4620, 305)], checkpoints: [930, 2030, 3090, 4230, 5500],
+    lavaJets: [{ id: "v2-j1", x: 640, baseY: 2540, width: 54, height: 240, interval: 2.6, delay: 0 }, { id: "v2-j2", x: 470, baseY: 2100, width: 54, height: 200, interval: 2.6, delay: 0.8 }, { id: "v2-j3", x: 470, baseY: 1440, width: 54, height: 200, interval: 2.3, delay: 0.3 }, { id: "v2-j4", x: 450, baseY: 1220, width: 54, height: 190, interval: 2.3, delay: 1.4 }, { id: "v2-j5", x: 450, baseY: 560, width: 54, height: 190, interval: 2.1, delay: 0.6 }, { id: "v2-j6", x: 450, baseY: 340, width: 54, height: 180, interval: 2.0, delay: 1.5 }],
+    enemies: [enemy("v2-d1", "baby-dragon", 440, 1834, 410, 560, 46), enemy("v2-s1", "fire-salamander", 460, 960, 430, 580, 50), enemy("v2-f1", "flying-dragon", 500, 1500, 200, 800, 50), enemy("v2-f2", "flying-dragon", 500, 700, 250, 750, 56)],
+    items: [apple("v2a1", 480, 2270), apple("v2a2", 160, 1940), apple("v2a3", 720, 1720), apple("v2a4", 470, 1390), apple("v2a5", 180, 1060), apple("v2a6", 740, 840), apple("v2a7", 180, 620), sticker("sticker-10-2", 740, 400)],
+    rewardBlocks: [reward("v2r1", 470, 2164), reward("v2r2", 470, 1284, "apple"), reward("v2r3", 470, 404)],
+    checkpoints: [],
+    verticalCheckpoints: [{ x: 440, y: 1880 }, { x: 460, y: 1000 }, { x: 440, y: 560 }],
   },
   {
     id: "10-3", world: 10, screen: 3,
     route: { next: "11-1", nextLabel: "Bajar al valle de los gigantes ▶" },
     title: "El corazón del volcán", subtitle: "Llega hasta Dragona Rubí y demuéstrale lo valiente que eres.",
-    theme: "dragon-volcano", width: 7800, start: { x: 80, y: 380 }, goalX: 7620,
+    theme: "dragon-volcano", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    // Giro (combina): chorros en cada hueco con dragones voladores encima.
+    beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
     platforms: [
       ...themedGround(world10Floor3, "volcano-ground"),
-      themedLedge(300, 335, 190, "volcano-ledge"), themedLedge(650, 250, 180, "volcano-ledge"), themedLedge(1010, 330, 190, "volcano-ledge"), themedLedge(1370, 225, 180, "volcano-ledge"),
-      themedLedge(1760, 325, 180, "volcano-ledge"), themedLedge(2100, 250, 190, "volcano-ledge"), themedLedge(2470, 175, 180, "volcano-ledge"), themedLedge(2840, 320, 180, "volcano-ledge"),
-      themedLedge(3180, 240, 190, "volcano-ledge"), themedLedge(3550, 165, 180, "volcano-ledge"), themedLedge(3940, 315, 180, "volcano-ledge"), themedLedge(4270, 225, 190, "volcano-ledge"),
-      themedLedge(4660, 160, 180, "volcano-ledge"), themedLedge(5080, 310, 190, "volcano-ledge"), themedLedge(5460, 220, 180, "volcano-ledge"), themedLedge(5900, 310, 200, "volcano-ledge"),
-      themedLedge(6710, 300, 190, "volcano-ledge"), themedLedge(7070, 205, 180, "volcano-ledge"), themedLedge(7450, 305, 200, "volcano-ledge"), themedWall(1560, 338, 76, 118, "volcano-wall"), themedWall(3710, 320, 78, 136, "volcano-wall"), themedWall(5700, 330, 74, 126, "volcano-wall"),
+      themedLedge(350, 285, 170, "volcano-ledge"), themedLedge(700, 195, 160, "volcano-ledge"), themedLedge(1050, 285, 170, "volcano-ledge"), themedLedge(1500, 195, 160, "volcano-ledge"),
+      themedLedge(1850, 285, 170, "volcano-ledge"), themedLedge(2350, 195, 160, "volcano-ledge"), themedLedge(2700, 285, 170, "volcano-ledge"), themedLedge(3250, 195, 160, "volcano-ledge"),
+      themedLedge(3600, 285, 170, "volcano-ledge"), themedLedge(4200, 195, 160, "volcano-ledge"), themedLedge(4500, 285, 170, "volcano-ledge"), themedLedge(5000, 195, 160, "volcano-ledge"),
+      themedLedge(5350, 285, 170, "volcano-ledge"), themedLedge(5900, 195, 160, "volcano-ledge"),
+      themedWall(1150, 338, 76, 118, "volcano-wall"), themedWall(4300, 320, 78, 136, "volcano-wall"),
     ],
     deadlyWater: deadlyWaterPits(world10Floor3),
-    lavaJets: [lavaJet("v3-j1", 863, 2.3, .1), lavaJet("v3-j2", 1913, 2.6, .8, 320), lavaJet("v3-j3", 2973, 2.2, 1.4, 340), lavaJet("v3-j4", 4038, 2.5, .45), lavaJet("v3-j5", 5113, 2.15, 1.75, 355), lavaJet("v3-j6", 6553, 2.45, 1.05, 340)],
-    enemies: [enemy("v3-d1", "baby-dragon", 440, 410, 310, 720, 52), enemy("v3-s1", "fire-salamander", 1130, 416, 990, 1450, 56), enemy("v3-d2", "baby-dragon", 2250, 410, 2100, 2720, 56), enemy("v3-s2", "fire-salamander", 3300, 416, 3160, 3650, 60), enemy("v3-d3", "baby-dragon", 4340, 410, 4200, 4630, 62), enemy("v3-s3", "fire-salamander", 5450, 416, 5310, 5810, 64), enemy("v3-d4", "baby-dragon", 7000, 410, 6740, 7440, 68),
-      enemy("v3-f1", "flying-dragon", 650, 130, 520, 780, 48), enemy("v3-f2", "flying-dragon", 2460, 80, 2240, 2720, 56), enemy("v3-f3", "flying-dragon", 4390, 125, 4180, 4560, 60), enemy("v3-f4", "flying-dragon", 7100, 110, 6900, 7370, 64)],
-    items: [apple("v3a1", 360, 285), apple("v3a2", 700, 200), apple("v3a3", 1430, 175), apple("v3a4", 2520, 125), apple("v3a5", 3610, 115), sticker("sticker-10-3", 4710, 110), apple("v3a6", 5510, 170), apple("v3a7", 6000, 260), apple("v3a8", 7130, 155)],
-    rewardBlocks: [reward("v3r1", 1080, 179), reward("v3r2", 3220, 89, "apple"), reward("v3r3", 5160, 159)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890, 6690], boss: "ruby-dragon",
+    lavaJets: [lavaJet("v3-j0", 600, 2.6, 0, 260), lavaJet("v3-j1", 1343, 2.3, .1), lavaJet("v3-j2", 2183, 2.6, .8, 320), lavaJet("v3-j3", 3083, 2.2, 1.4, 340), lavaJet("v3-j4", 4043, 2.5, .45), lavaJet("v3-j5", 4843, 2.15, 1.75, 355), lavaJet("v3-j6", 5743, 2.45, 1.05, 340)],
+    enemies: [enemy("v3-d1", "baby-dragon", 500, 410, 300, 900, 52), enemy("v3-s1", "fire-salamander", 1600, 416, 1450, 1900, 56), enemy("v3-d2", "baby-dragon", 2500, 410, 2300, 2950, 56), enemy("v3-s2", "fire-salamander", 3400, 416, 3200, 3900, 60), enemy("v3-d3", "baby-dragon", 4500, 410, 4400, 4750, 62), enemy("v3-s3", "fire-salamander", 5200, 416, 4950, 5650, 64), enemy("v3-d4", "baby-dragon", 6000, 410, 5850, 6200, 66),
+      enemy("v3-f1", "flying-dragon", 700, 100, 550, 900, 48), enemy("v3-f2", "flying-dragon", 2600, 80, 2400, 2900, 56), enemy("v3-f3", "flying-dragon", 4500, 100, 4200, 4700, 60), enemy("v3-f4", "flying-dragon", 6000, 110, 5850, 6150, 64)],
+    items: [apple("v3a1", 400, 235), apple("v3a2", 750, 145), apple("v3a3", 1100, 235), apple("v3a4", 1550, 145), apple("v3a5", 2400, 145), sticker("sticker-10-3", 5950, 145), apple("v3a6", 3300, 145), apple("v3a7", 4250, 145), apple("v3a8", 5050, 145)],
+    rewardBlocks: [reward("v3r1", 900, 300), reward("v3r2", 2900, 300, "apple"), reward("v3r3", 5550, 300)], checkpoints: [1000, 1500, 2300, 3200, 4150, 5000], boss: "ruby-dragon",
   },
   {
     id: "11-1", world: 11, screen: 1,

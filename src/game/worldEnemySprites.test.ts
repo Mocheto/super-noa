@@ -65,8 +65,9 @@ test("hormigas, caracoles, dragones y salamandras apoyan el sprite en su base en
 
 test("cada pantalla del volcán conserva suelo seguro y añade patrullas aéreas sin atravesar plataformas", () => {
   const volcano = levels.filter((level) => level.world === 10);
-  assert.deepEqual(volcano.map((level) => level.enemies.filter((enemy) => enemy.kind === "flying-dragon").length), [2, 3, 4]);
-  for (const level of volcano) {
+  assert.deepEqual(volcano.map((level) => level.enemies.filter((enemy) => enemy.kind === "flying-dragon").length), [2, 2, 4]);
+  // La chimenea (10-2) es una subida: sus reglas de suelo y vuelo están en verticalScreens.test.ts.
+  for (const level of volcano.filter((l) => (l.orientation ?? "horizontal") === "horizontal")) {
     for (const enemy of level.enemies) {
       if (enemy.kind === "baby-dragon" || enemy.kind === "fire-salamander") {
         assert.equal(enemy.y + enemy.height, 456, `${level.id}/${enemy.id}: pies sobre el suelo`);

@@ -232,7 +232,7 @@ test("las puertas solo aparecen en sus cinco tarjetas abiertas, nunca en pantall
     const card = mount({ level, index, progress });
     return card.find("level-shop-badge") ? [level.id] : [];
   });
-  assert.deepEqual(withDoors, ["1-2", "3-2", "6-2", "10-2", "12-1"]);
+  assert.deepEqual(withDoors, ["1-2", "3-2", "6-2", "10-1", "12-1"]);
   const closedLevel = mount({ level: levels[1], index: 1, unlocked: false, progress });
   assert.equal(closedLevel.find("level-shop-badge"), undefined);
   assert.equal(closedLevel.find("level-shop-hint"), undefined);

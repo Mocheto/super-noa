@@ -14,7 +14,7 @@ test("solo cinco repisas opcionales tienen tiendas con identificadores estables"
     ["1-2", { id: "shop-1-2", x: 1570, y: 230, width: 64, height: 80 }],
     ["3-2", { id: "shop-3-2", x: 1710, y: 260, width: 64, height: 80 }],
     ["6-2", { id: "shop-6-2", x: 1628, y: 265, width: 64, height: 80 }],
-    ["10-2", { id: "shop-10-2", x: 1738, y: 240, width: 64, height: 80 }],
+    ["10-1", { id: "shop-10-2", x: 1300, y: 230, width: 64, height: 80 }],
     ["12-1", { id: "shop-12-2", x: 1660, y: 230, width: 64, height: 80 }],
   ]);
   assert.equal(new Set(shops.map((level) => level.secretShop!.id)).size, 5);
@@ -94,7 +94,7 @@ test("todos los checkpoints reaparecen sobre una superficie que permite aterriza
       `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
     }
   }
-  assert.equal(checkpointCount, 195);
+  assert.equal(checkpointCount, 189);
 });
 
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {

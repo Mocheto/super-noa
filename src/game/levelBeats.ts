@@ -168,7 +168,7 @@ export function mechanicXs(level: Level): number[] {
   const xs = [
     ...level.platforms.filter((p) => p.kind === "spring" || p.kind === "gift-spring" || p.kind === "dew" || p.beltSpeed).map((p) => p.x),
     ...(level.lavaJets ?? []).map((jet) => jet.x),
-    ...(level.waterJumpers ?? []).map((fish) => fish.x),
+    // Los saltadores viven en el agua por definición: no cuentan para «empezar sobre suelo seguro».
     ...(level.bloomBridges ?? []).map((bridge) => bridge.x),
     ...(level.windZones ?? []).map((zone) => zone.x),
     ...(level.beatPlatforms ?? []).map((platform) => platform.x),

@@ -204,9 +204,8 @@ export const waterLevels: Level[] = [
 const castleFloor1: Array<[number, number]> = [[0, 760], [900, 950], [1990, 900], [3030, 1040], [4210, 990]];
 const castleFloor2: Array<[number, number]> = [[0, 650], [800, 1000], [1940, 900], [2980, 1000], [4120, 1080]];
 const castleFloor3: Array<[number, number]> = [[0, 760], [900, 920], [1960, 950], [3050, 950], [4130, 1000], [5260, 1240]];
-const dinoFloor1: Array<[number, number]> = [[0, 920], [1040, 1080], [2250, 1050], [3440, 1160]];
-const dinoFloor2: Array<[number, number]> = [[0, 760], [900, 960], [2000, 900], [3040, 1010], [4200, 1100]];
-const dinoFloor3: Array<[number, number]> = [[0, 820], [960, 900], [2010, 940], [3090, 900], [4140, 930], [5200, 1300]];
+const dinoFloor1: Array<[number, number]> = [[0, 1250], [1390, 820], [2350, 760], [3250, 600], [3990, 610]];
+const dinoFloor3: Array<[number, number]> = [[0, 1180], [1320, 700], [2160, 840], [3140, 680], [3960, 840], [4940, 680], [5760, 740]];
 const world10Floor1: Array<[number, number]> = [[0, 900], [1040, 1000], [2180, 980], [3300, 1300], [4750, 850]];
 const world10Floor2: Array<[number, number]> = [[0, 760], [900, 960], [2000, 930], [3070, 980], [4200, 1100], [5460, 1040]];
 const world10Floor3: Array<[number, number]> = [[0, 820], [960, 900], [2020, 900], [3080, 910], [4140, 920], [5220, 1280], [6660, 1140]];
@@ -854,55 +853,70 @@ export const levels: Level[] = [
     id: "9-1", world: 9, screen: 1,
     title: "La costa de las huellas", subtitle: "Salta sobre el agua y conoce a los pequeños t-rex de la isla.",
     theme: "dinosaur-island", width: 4600, start: { x: 80, y: 380 }, goalX: 4420,
+    // Presentación: una playa larga sin huecos. Giro (invertido): los saltadores salen justo donde hay que caer.
+    beats: { development: 1300, twist: 2390, finale: 3470, twistKind: "invert" },
     platforms: [
       ...dinoGround(dinoFloor1),
-      dinoLedge(310, 350, 190), dinoLedge(620, 285, 180), dinoLedge(1080, 340, 190),
-      dinoLedge(1460, 285, 180), dinoLedge(1870, 350, 190), dinoLedge(2300, 315, 190),
-      dinoLedge(2710, 255, 180), dinoLedge(3180, 345, 190), dinoLedge(3540, 285, 180),
-      dinoLedge(4010, 335, 190), dinoWall(1670, 350, 70, 106),
+      dinoLedge(330, 330, 170), dinoLedge(700, 255, 160), dinoLedge(1450, 320, 170), dinoLedge(1800, 250, 160),
+      dinoLedge(2420, 330, 170), dinoLedge(2750, 250, 160), dinoLedge(3300, 320, 170), dinoLedge(3600, 250, 160),
+      dinoLedge(4050, 330, 170), dinoLedge(4250, 250, 150),
+      dinoWall(900, 350, 70, 106),
     ],
     deadlyWater: deadlyWaterPits(dinoFloor1),
-    enemies: [enemy("d1-t1", "baby-t-rex", 480, 408, 350, 760, 37), enemy("d1-p1", "pterodactyl", 1190, 205, 1070, 1510, 62), enemy("d1-t2", "baby-t-rex", 1770, 408, 1640, 2040, 41), enemy("d1-p2", "pterodactyl", 2670, 175, 2460, 2940, 68), enemy("d1-t3", "baby-t-rex", 3690, 408, 3500, 4010, 44)],
-    items: [apple("d1a1", 360, 300), apple("d1a2", 680, 235), sticker("sticker-9-1", 1515, 235), apple("d1a3", 2370, 265), apple("d1a4", 2760, 205), apple("d1a5", 4080, 285)],
-    rewardBlocks: [reward("d1r1", 1320, 285), reward("d1r2", 3260, 300, "apple")], checkpoints: [1070, 2280, 3470],
+    waterJumpers: [jumpingFish("d1-f1", 1292, 2.9, 0.4), jumpingFish("d1-f2", 2252, 2.6, 1.1), jumpingFish("d1-f3", 3152, 2.5, 0.7), jumpingFish("d1-f4", 3892, 2.7, 1.5)],
+    enemies: [enemy("d1-t1", "baby-t-rex", 500, 408, 350, 800, 37), enemy("d1-p1", "pterodactyl", 1500, 205, 1400, 1900, 62), enemy("d1-t2", "baby-t-rex", 2600, 408, 2400, 3000, 41), enemy("d1-p2", "pterodactyl", 3400, 175, 3270, 3800, 68), enemy("d1-t3", "baby-t-rex", 4200, 408, 4050, 4400, 44)],
+    items: [apple("d1a1", 380, 280), apple("d1a2", 750, 205), sticker("sticker-9-1", 1850, 200), apple("d1a3", 2800, 200), apple("d1a4", 3650, 200), apple("d1a5", 4100, 280)],
+    rewardBlocks: [reward("d1r1", 1200, 285), reward("d1r2", 3460, 300, "apple")], checkpoints: [1000, 2400, 3300],
   },
   {
     id: "9-2", world: 9, screen: 2,
-    title: "El vuelo de los terodáctilos", subtitle: "Sube por las rocas y cruza cada bahía sin tocar el agua.",
-    theme: "dinosaur-island", width: 5300, start: { x: 80, y: 380 }, goalX: 5120,
+    title: "El vuelo de los terodáctilos", subtitle: "¡Tres gatitos se han perdido en la isla! Búscalos en los acantilados y la laguna.",
+    theme: "dinosaur-island", width: 3200, height: 1300, orientation: "explore",
+    start: { x: 80, y: 942 }, goalX: 1070, goalY: 1000,
+    // Exploración: un gatito en la playa, otro en lo alto del acantilado y el tercero tras la laguna de los
+    // saltadores; el puente alto de vuelta se abre con los tres.
+    beats: { development: 480, twist: 2800, finale: 1000, twistKind: "shape" },
     platforms: [
-      ...dinoGround(dinoFloor2),
-      dinoLedge(280, 345, 180), dinoLedge(560, 275, 180), dinoLedge(940, 335, 190),
-      dinoLedge(1290, 245, 180), dinoLedge(1690, 330, 180), dinoLedge(2050, 285, 190),
-      dinoLedge(2430, 205, 180), dinoLedge(2780, 330, 180), dinoLedge(3100, 270, 190),
-      dinoLedge(3510, 195, 180), dinoLedge(3890, 325, 180), dinoLedge(4270, 250, 190),
-      dinoLedge(4740, 330, 190), dinoWall(1510, 330, 76, 126), dinoWall(3650, 315, 80, 141),
+      { x: 0, y: 1000, width: 1300, height: 300, kind: "dino-ground" }, { x: 1500, y: 1000, width: 700, height: 300, kind: "dino-ground" }, { x: 2600, y: 1000, width: 600, height: 300, kind: "dino-ground" },
+      dinoLedge(200, 880, 160), dinoLedge(400, 770, 160), dinoLedge(200, 660, 160), dinoLedge(420, 550, 160),
+      dinoLedge(2280, 930, 90), dinoLedge(2430, 930, 90),
+      dinoLedge(3000, 880, 150), dinoLedge(2800, 770, 150), dinoLedge(3000, 660, 150), dinoLedge(2650, 620, 150), dinoLedge(1600, 600, 1000),
     ],
-    deadlyWater: deadlyWaterPits(dinoFloor2),
-    waterJumpers: [jumpingFish("d2-f1", 802, 2.35, 0.35), jumpingFish("d2-f2", 1902, 2.8, 1.1), jumpingFish("d2-f3", 2942, 2.55, 0.7), jumpingFish("d2-f4", 4097, 2.7, 1.5)],
-    enemies: [enemy("d2-p1", "pterodactyl", 700, 190, 520, 930, 68), enemy("d2-t1", "baby-t-rex", 1110, 408, 1000, 1460, 43), enemy("d2-p2", "pterodactyl", 2290, 155, 2080, 2630, 74), enemy("d2-t2", "baby-t-rex", 2720, 408, 2530, 2860, 47), enemy("d2-p3", "pterodactyl", 3650, 145, 3400, 3970, 78), enemy("d2-t3", "baby-t-rex", 4550, 408, 4370, 4860, 50)],
-    items: [apple("d2a1", 340, 295), apple("d2a2", 620, 225), apple("d2a3", 1350, 195), apple("d2a4", 2490, 155), sticker("sticker-9-2", 3560, 145), apple("d2a5", 4320, 200), apple("d2a6", 4800, 280)],
-    rewardBlocks: [reward("d2r1", 1030, 210), reward("d2r2", 3150, 145, "apple"), reward("d2r3", 4610, 300)], checkpoints: [930, 2030, 3070, 4230],
+    deadlyWater: [{ x: 1300, y: 1008, width: 200, height: 292 }, { x: 2200, y: 1008, width: 400, height: 292 }],
+    waterJumpers: [{ id: "d2-f1", x: 1372, surfaceY: 1008, width: 56, height: 52, interval: 2.6, delay: 0.4, jumpHeight: 300 }, { id: "d2-f2", x: 2360, surfaceY: 1008, width: 56, height: 52, interval: 2.4, delay: 1.0, jumpHeight: 300 }, { id: "d2-f3", x: 2510, surfaceY: 1008, width: 56, height: 52, interval: 2.8, delay: 0.2, jumpHeight: 300 }],
+    enemies: [enemy("d2-t1", "baby-t-rex", 800, 952, 650, 950, 43), enemy("d2-p1", "pterodactyl", 1800, 820, 1550, 2150, 68), enemy("d2-t2", "baby-t-rex", 2900, 952, 2650, 3150, 47), enemy("d2-p2", "pterodactyl", 2400, 700, 2200, 2600, 74)],
+    items: [apple("d2a1", 240, 830), apple("d2a2", 440, 720), apple("d2a3", 250, 610), apple("d2a4", 1650, 550), apple("d2a5", 2000, 550), sticker("sticker-9-2", 2200, 550), apple("d2a6", 3050, 830)],
+    rewardBlocks: [reward("d2r1", 700, 844), reward("d2r2", 1800, 844, "apple"), reward("d2r3", 2850, 844)],
+    checkpoints: [],
+    verticalCheckpoints: [{ x: 1600, y: 1000 }, { x: 2700, y: 1000 }, { x: 2050, y: 600 }],
+    exploreGate: { x: 1000, y: 840, width: 140, height: 160 },
+    lostKittens: [
+      { id: "d2-k1", x: 520, y: 1000, cat: 9, beat: "presentation" },
+      { id: "d2-k2", x: 480, y: 550, cat: 10, beat: "development" },
+      { id: "d2-k3", x: 2800, y: 1000, cat: 8, beat: "twist" },
+    ],
+    exploreShortcut: [{ x: 1560, y: 320, width: 40, height: 280, kind: "puzzle-block" }],
   },
   {
     id: "9-3", world: 9, screen: 3,
     route: { next: "10-1", nextLabel: "Viajar al volcán de los dragones ▶" },
     title: "El nido de la Reina Tricera", subtitle: "Cruza la gran isla y juega con su guardiana de tres cuernos.",
     theme: "dinosaur-island", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
+    // Giro (combina): saltadores en cada bahía con terodáctilos encima y rocas que cortan el paso.
+    beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
     platforms: [
       ...dinoGround(dinoFloor3),
-      dinoLedge(300, 340, 190), dinoLedge(650, 260, 180), dinoLedge(1010, 335, 190),
-      dinoLedge(1370, 245, 180), dinoLedge(1770, 330, 180), dinoLedge(2070, 270, 190),
-      dinoLedge(2460, 190, 180), dinoLedge(2840, 325, 180), dinoLedge(3160, 255, 190),
-      dinoLedge(3550, 180, 180), dinoLedge(3940, 320, 180), dinoLedge(4230, 245, 190),
-      dinoLedge(4660, 175, 180), dinoLedge(5080, 315, 190), dinoLedge(5450, 235, 180), dinoLedge(5900, 315, 200),
-      dinoWall(1560, 338, 76, 118), dinoWall(3710, 320, 78, 136), dinoWall(5700, 330, 74, 126),
+      dinoLedge(350, 330, 170), dinoLedge(680, 250, 160), dinoLedge(1150, 330, 170), dinoLedge(1500, 250, 160),
+      dinoLedge(2100, 330, 170), dinoLedge(2450, 250, 160), dinoLedge(3000, 330, 170), dinoLedge(3350, 250, 160),
+      dinoLedge(3950, 330, 170), dinoLedge(4250, 250, 160), dinoLedge(4800, 330, 170), dinoLedge(5150, 250, 160),
+      dinoLedge(5700, 330, 170), dinoLedge(6000, 250, 160),
+      dinoWall(1700, 338, 76, 118), dinoWall(4400, 320, 78, 136),
     ],
     deadlyWater: deadlyWaterPits(dinoFloor3),
-    waterJumpers: [jumpingFish("d3-f1", 862, 2.4, 0.5), jumpingFish("d3-f2", 1902, 2.75, 1.35), jumpingFish("d3-f3", 2972, 2.3, 0.8), jumpingFish("d3-f4", 4022, 2.85, 1.7), jumpingFish("d3-f5", 5107, 2.5, 1.05)],
-    enemies: [enemy("d3-t1", "baby-t-rex", 450, 408, 320, 720, 46), enemy("d3-p1", "pterodactyl", 1150, 175, 980, 1430, 76), enemy("d3-t2", "baby-t-rex", 1730, 408, 1640, 1840, 50), enemy("d3-p2", "pterodactyl", 2480, 135, 2220, 2780, 82), enemy("d3-t3", "baby-t-rex", 3300, 408, 3180, 3650, 53), enemy("d3-p3", "pterodactyl", 4310, 125, 4070, 4610, 86), enemy("d3-t4", "baby-t-rex", 4870, 408, 4720, 5130, 56), enemy("d3-p4", "pterodactyl", 5520, 155, 5350, 5850, 90)],
-    items: [apple("d3a1", 360, 290), apple("d3a2", 700, 210), apple("d3a3", 1430, 195), apple("d3a4", 2500, 140), apple("d3a5", 3620, 130), sticker("sticker-9-3", 4700, 125), apple("d3a6", 5500, 185), apple("d3a7", 6000, 265)],
-    rewardBlocks: [reward("d3r1", 1080, 210), reward("d3r2", 3220, 130, "apple"), reward("d3r3", 5160, 190)], checkpoints: [980, 2040, 3120, 4180, 5260, 5890], boss: "triceratops-queen",
+    waterJumpers: [jumpingFish("d3-f1", 1222, 2.4, 0.5), jumpingFish("d3-f2", 2062, 2.75, 1.35), jumpingFish("d3-f3", 3042, 2.3, 0.8), jumpingFish("d3-f4", 3862, 2.85, 1.7), jumpingFish("d3-f5", 4842, 2.5, 1.05), jumpingFish("d3-f6", 5662, 2.6, 0.3)],
+    enemies: [enemy("d3-t1", "baby-t-rex", 500, 408, 300, 900, 46), enemy("d3-p1", "pterodactyl", 1300, 175, 1100, 1700, 76), enemy("d3-t2", "baby-t-rex", 2300, 408, 2050, 2700, 50), enemy("d3-p2", "pterodactyl", 3200, 135, 2950, 3600, 82), enemy("d3-t3", "baby-t-rex", 4100, 408, 3900, 4350, 53), enemy("d3-p3", "pterodactyl", 5000, 145, 4750, 5400, 86), enemy("d3-t4", "baby-t-rex", 6000, 408, 5700, 6200, 56)],
+    items: [apple("d3a1", 400, 280), apple("d3a2", 730, 200), apple("d3a3", 1200, 280), apple("d3a4", 2150, 280), apple("d3a5", 2500, 200), sticker("sticker-9-3", 5200, 200), apple("d3a6", 3050, 280), apple("d3a7", 4300, 200)],
+    rewardBlocks: [reward("d3r1", 1400, 300), reward("d3r2", 2700, 300, "apple"), reward("d3r3", 5400, 300)], checkpoints: [1100, 1900, 2900, 3700, 4600, 5500], boss: "triceratops-queen",
   },
   {
     id: "10-1", world: 10, screen: 1,

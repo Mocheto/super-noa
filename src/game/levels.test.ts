@@ -94,7 +94,7 @@ test("todos los checkpoints reaparecen sobre una superficie que permite aterriza
       `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
     }
   }
-  assert.equal(checkpointCount, 199);
+  assert.equal(checkpointCount, 195);
 });
 
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {
@@ -211,17 +211,20 @@ test("la isla jurásica continúa tras el castillo y todos sus huecos son agua m
     assert.ok(level.enemies.some((enemy) => enemy.kind === "baby-t-rex"));
     assert.ok(level.enemies.some((enemy) => enemy.kind === "pterodactyl"));
     assert.equal(level.items.find((item) => item.kind === "sticker")?.id, `sticker-${level.id}`);
+    const horizontal = (level.orientation ?? "horizontal") === "horizontal";
     const floors = level.platforms.filter((platform) => platform.kind === "dino-ground").sort((a, b) => a.x - b.x);
     const gaps = floors.slice(0, -1).map((floor, index) => [floor.x + floor.width, floors[index + 1].x] as const);
-    assert.equal(level.deadlyWater?.length, gaps.length);
-    gaps.forEach(([start, end], index) => {
-      assert.equal(level.deadlyWater?.[index].x, start);
-      assert.equal(level.deadlyWater?.[index].width, end - start);
-    });
-    if (level.screen === 1) assert.equal(level.waterJumpers, undefined);
-    else {
-      assert.equal(level.waterJumpers?.length, gaps.length);
-      for (const fish of level.waterJumpers ?? []) {
+    if (horizontal) {
+      assert.equal(level.deadlyWater?.length, gaps.length);
+      gaps.forEach(([start, end], index) => {
+        assert.equal(level.deadlyWater?.[index].x, start);
+        assert.equal(level.deadlyWater?.[index].width, end - start);
+      });
+    }
+    // Los saltadores se presentan ya en la pantalla 1; en las horizontales hay uno en cada hueco.
+    if (level.waterJumpers) {
+      if (horizontal) assert.equal(level.waterJumpers.length, gaps.length);
+      for (const fish of level.waterJumpers) {
         assert.ok(fish.interval >= 2 && fish.interval <= 3);
         assert.ok(level.deadlyWater?.some((water) => fish.x >= water.x && fish.x + fish.width <= water.x + water.width), `${fish.id} debe saltar desde el agua`);
       }

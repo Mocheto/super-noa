@@ -1,6 +1,23 @@
 # Super Noa
 
-Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja y el tambor de Armonía. Los términos de **Ritmo** son comunes; los de **Piezas** y **Escena** son de los gatitos leñadores.
+Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de la campaña y de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja, el tambor de Armonía y la merienda de los jabatos. Los términos de **Campaña** describen la estructura del juego; los de **Ritmo** son comunes a los minijuegos; los de **Piezas** y **Escena** son de los gatitos leñadores.
+
+## Campaña
+
+**Mundo**:
+Bioma de la campaña con su propia mecánica, su música y su guardián. Cada mundo tiene tres pantallas.
+_Avoid_: Nivel (ambiguo entre mundo y pantalla), zona
+
+**Pantalla**:
+Cada uno de los recorridos jugables de un mundo, del inicio a la meta. La tercera pantalla de cada mundo termina con el guardián.
+_Avoid_: Nivel, fase, escena
+
+**Mecánica de mundo**:
+Regla de juego propia de un mundo que cambia cómo se recorren sus pantallas: los lobos que duermen, los puentes de flores o las corrientes de aire, por ejemplo.
+_Avoid_: Gimmick, truco
+
+**Variedad**:
+Lo contrario de la repetición que nota la jugadora: que pantallas seguidas se jueguen de forma distinta, no solo que se vean distintas.
 
 ## Ritmo
 

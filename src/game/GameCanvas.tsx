@@ -998,9 +998,6 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const render = () => {
       drawBackground(context, level, cameraX, frame, raster, cameraY);
       drawDetourScenery(context, level, cameraX);
-      level.windZones?.forEach((zone) => drawWindZone(context, zone, cameraX, levelAge, raster));
-      if (level.world === 7) level.updrafts?.forEach((zone) => drawUpdraft(context, zone, cameraX, levelAge, raster));
-      if (level.world === 14) level.sandGeysers?.forEach((zone) => drawUpdraft(context, zone, cameraX, levelAge, raster));
       if (level.orientation !== "vertical" && !level.detour && level.screen === 1 && cameraX < 520 && level.world >= 10 && !(level.world === 11 && level.bloomBridges?.length)) {
         const hint = level.world === 10 ? "¡MIRA EL RITMO DE LA LAVA!" : level.world === 11 ? "¡CAE SOBRE EL ROCÍO PARA REBOTAR!" : level.world === 13 ? "¡SALTA SOBRE EL REGALO DE LA FLECHA!" : level.world === 14 ? "¡LA ARENA TE AYUDA A SUBIR!" : level.world === 15 ? "¡LOS VAGONES TE LLEVAN!" : level.world === 16 ? "¡SIGUE LAS ONDAS DE LA MÚSICA!" : "¡EL HIELO RESBALA Y EL VIENTO EMPUJA!";
         context.save(); context.fillStyle = "rgba(42,24,55,.88)"; context.fillRect(205 - cameraX * .22, 82, 550, 42);
@@ -1024,6 +1021,10 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       }
       context.save();
       if (level.orientation === "vertical" || explore) context.translate(0, -cameraY);
+      // Ráfagas y géiseres van con el mundo: en subidas y exploraciones se mueven con la cámara vertical.
+      level.windZones?.forEach((zone) => drawWindZone(context, zone, cameraX, levelAge, raster));
+      if (level.world === 7) level.updrafts?.forEach((zone) => drawUpdraft(context, zone, cameraX, levelAge, raster));
+      if (level.world === 14) level.sandGeysers?.forEach((zone) => drawUpdraft(context, zone, cameraX, levelAge, raster));
       level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster, level.theme));
       level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge, raster, level.world === 15));
       drawAdventurePrecipices(context, level, cameraX, raster.adventurePrecipices);

@@ -8,10 +8,10 @@ import type { Level } from "./types";
 
 /** Mundos cuyas pantallas aún no tienen los cuatro tramos. Cada issue de retoque quita su mundo de aquí; al
  * quitarlo, sus tres pantallas deben pasar todas las pruebas de este archivo. */
-const PENDING_RETOUCH = new Set([1, 2, 3, 4, 5, 6, 9, 10, 14, 15, 17]);
+const PENDING_RETOUCH = new Set([1, 2, 3, 4, 5, 6, 9, 10, 15, 17]);
 
 const campaign = levels.filter(isCampaignScreen);
-const horizontal = campaign.filter((level) => level.orientation !== "vertical");
+const horizontal = campaign.filter((level) => (level.orientation ?? "horizontal") === "horizontal");
 const retouched = campaign.filter((level) => !PENDING_RETOUCH.has(level.world));
 
 const flat = (overrides: Partial<Level>): Level => ({
@@ -46,7 +46,7 @@ test("las tres pantallas de un mundo retocado usan giros distintos", () => {
 });
 
 test("una pantalla retocada no copia a ninguna otra de la campaña", () => {
-  for (const level of retouched.filter((l) => l.orientation !== "vertical")) {
+  for (const level of retouched.filter((l) => (l.orientation ?? "horizontal") === "horizontal")) {
     for (const other of horizontal) {
       if (other !== level) assert.ok(!isCopy(level, other), `${level.id} copia a ${other.id}: ${JSON.stringify(similarity(level, other))}`);
     }
@@ -63,7 +63,7 @@ test("las copias que quedan son solo entre pantallas pendientes de retoque", () 
 });
 
 test("la meta de cada pantalla retocada horizontal se alcanza saltando, y la mecánica empieza sobre suelo seguro", () => {
-  for (const level of retouched.filter((l) => l.orientation !== "vertical")) {
+  for (const level of retouched.filter((l) => (l.orientation ?? "horizontal") === "horizontal")) {
     assert.ok(reachable(level), `${level.id}: la meta no se alcanza`);
     const first = mechanicXs(level)[0];
     if (first !== undefined) assert.ok(safeGroundAround(level, first), `${level.id}: la mecánica aparece por primera vez sin suelo seguro`);

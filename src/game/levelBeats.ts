@@ -22,6 +22,12 @@ export function routeLength(level: Level): number {
 export function beatProblems(level: Level): string[] {
   const beats = level.beats;
   if (!beats) return ["sin tramos"];
+  if (level.orientation === "explore") {
+    // En una exploración el desarrollo y el giro están en sus gatitos y el remate es la vuelta a la puerta.
+    const kitten = (beat: string) => level.lostKittens?.find((k) => k.beat === beat)?.x;
+    return beats.development === kitten("development") && beats.twist === kitten("twist") && beats.finale === level.exploreGate?.x
+      ? [] : ["los tramos de la exploración son sus gatitos y la puerta"];
+  }
   if (level.chase) {
     // En una persecución cada tramo empieza en su primera parada.
     const first = (beat: string) => level.chase!.stops.find((stop) => stop.beat === beat)?.x;

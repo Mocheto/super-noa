@@ -168,6 +168,9 @@ export type DetourMechanism = Rect & {
  * sorpresa (siluetas, gravedad baja, cámara alejada) o cambia de forma. */
 export type TwistKind = "combine" | "invert" | "presentation" | "shape";
 
+/** Gatito perdido de una exploración: `cat` es el gatito de mundo (1–17) cuyo dibujo se usa y `beat`, su tramo. */
+export type LostKitten = { id: string; x: number; y: number; cat: number; beat: "presentation" | "development" | "twist" };
+
 /** Animales que pueden hacer de animal travieso en una persecución amable. */
 export type ChaseRunner = "beetle" | "parrot" | "bee" | "clockwork-mouse";
 /** Parada del animal travieso: espera en (x, y) — y es la superficie bajo sus patas —, llega saltando en arco si
@@ -196,7 +199,8 @@ export type Level = {
   theme: Theme;
   width: number;
   height?: number;
-  orientation?: "horizontal" | "vertical";
+  /** `explore`: mundo abierto en los dos ejes (formato exploración), con `width` y `height`. */
+  orientation?: "horizontal" | "vertical" | "explore";
   start: { x: number; y: number };
   goalX: number;
   goalY?: number;
@@ -230,6 +234,11 @@ export type Level = {
   puzzleRooms?: PuzzleRoom[];
   /** Pantalla de persecución amable. */
   chase?: Chase;
+  /** Exploración: puerta de los gatitos (la meta), los tres gatitos perdidos y el atajo del remate, que se abre
+   * al tenerlos a todos. */
+  exploreGate?: Rect;
+  lostKittens?: LostKitten[];
+  exploreShortcut?: Platform[];
   boss?: BossId;
   route?: {
     next?: string;

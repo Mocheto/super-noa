@@ -132,4 +132,35 @@ export const verticalTestLevel: Level = {
   verticalCheckpoints: [{ x: 460, y: 1620 }, { x: 460, y: 900 }],
 };
 
-export const testScreens: Record<string, Level> = { salas: puzzleRoomsTestLevel, persecucion: chaseTestLevel, vertical: verticalTestLevel };
+const slab = (x: number, y: number, width: number, height = 60): Platform => ({ x, y, width, height, kind: "ground" });
+
+/** Exploración de prueba en el bosque: el primer gatito casi a la vista, el segundo en la copa del árbol, el tercero
+ * en el túnel; la puerta de los gatitos junto al inicio y un atajo que se abre con los tres. */
+export const exploreTestLevel: Level = {
+  id: "prueba-exploracion", world: 3, screen: 2,
+  title: "Prueba de exploración", subtitle: "Busca los tres gatitos perdidos.",
+  theme: "wolf-pines", width: 3000, height: 1200, orientation: "explore",
+  start: { x: 80, y: 902 }, goalX: 1170, goalY: 960,
+  platforms: [
+    slab(0, 960, 1700), slab(1840, 960, 1160), slab(1560, 1140, 1100),
+    branch(400, 860, 160), branch(200, 760, 160), branch(420, 660, 160), branch(200, 560, 160), branch(420, 460, 160), branch(180, 360, 200),
+    branch(2400, 1050, 120),
+    branch(2250, 860, 150), branch(2050, 760, 150), branch(2250, 660, 150), branch(2050, 560, 150), branch(1300, 480, 720),
+  ],
+  enemies: [],
+  items: [{ id: "sticker-prueba-exploracion", kind: "sticker", x: 1600, y: 420 }],
+  rewardBlocks: [],
+  checkpoints: [],
+  verticalCheckpoints: [{ x: 1900, y: 960 }, { x: 2100, y: 1140 }],
+  exploreGate: { x: 1100, y: 800, width: 140, height: 160 },
+  lostKittens: [
+    { id: "pe-k1", x: 480, y: 860, cat: 3, beat: "presentation" },
+    { id: "pe-k2", x: 260, y: 360, cat: 4, beat: "development" },
+    { id: "pe-k3", x: 2300, y: 1140, cat: 8, beat: "twist" },
+  ],
+  exploreShortcut: [{ x: 1500, y: 700, width: 40, height: 260, kind: "puzzle-block" }],
+};
+
+export const testScreens: Record<string, Level> = {
+  salas: puzzleRoomsTestLevel, persecucion: chaseTestLevel, vertical: verticalTestLevel, exploracion: exploreTestLevel,
+};

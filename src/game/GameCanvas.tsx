@@ -29,6 +29,8 @@ import { advanceRoom, createPuzzleState, pushCrates, puzzlePlatforms, resetRoom,
 import { drawPuzzleRooms, type SparkTrail } from "./puzzleRoomsRendering";
 import { createChaseState, stepChase } from "./chase";
 import { drawChase } from "./chaseRendering";
+import { createExploreState, exploreCameraTarget, hintTarget, reachedGate, shortcutWalls, stepExplore } from "./explore";
+import { drawExploreOverlay, drawExploreWorld } from "./exploreRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
@@ -164,13 +166,15 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     const chase = level.chase ? createChaseState(level.chase) : null;
     let chaseSay: { text: string; life: number } | null = level.chase ? { text: level.chase.stops[0].talk, life: 2.6 } : null;
     let chaseCaughtAge = 0;
+    const explore = level.orientation === "explore" ? createExploreState() : null;
     let roomHintShown = false;
     const goalPlatforms = level.platforms.filter((platform) => level.goalX >= platform.x && level.goalX <= platform.x + platform.width);
     const goalSurfaceY = level.world === 8 || level.orientation === "vertical"
       ? Math.min(...goalPlatforms.map((platform) => platform.y))
       : goalPlatforms[0]?.y ?? 456;
     let cameraX = 0;
-    let cameraY = level.orientation === "vertical" ? Math.max(0, (level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT) : 0;
+    let cameraY = level.orientation === "vertical" ? Math.max(0, (level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT)
+      : level.orientation === "explore" ? exploreCameraTarget(level, player, { width: VIEW_WIDTH, height: VIEW_HEIGHT }).y : 0;
     let apples = 0;
     let checkpointIndex = -1;
     let respawnX = level.start.x;
@@ -257,6 +261,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       }
       const spawn = level.orientation === "vertical"
         ? visibleSkyRespawn(level, cameraY, VIEW_HEIGHT, player.width, player.height) ?? { x: respawnX, y: respawnY }
+        : explore ? { x: respawnX, y: respawnY }
         : mechanicRespawn(level, respawnX, player.width, player.height);
       player.x = spawn.x;
       player.y = spawn.y;
@@ -378,6 +383,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         if (index >= 0) player.y += liftPlatforms[index].y - previousLiftPlatforms[index].y;
       }
       const platforms = [...getMechanicPlatforms(level, levelAge), ...supports, ...liftPlatforms];
+      if (explore) platforms.push(...shortcutWalls(level, explore));
       if (puzzle) {
         if (slideCrates(puzzle, delta, player).length) callbacksRef.current.playSound("block");
         platforms.push(...puzzlePlatforms(level, puzzle, levelAge));
@@ -460,7 +466,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         ? wrapHorizontalPosition(player.x, player.width, level.width)
         : Math.max(0, Math.min(level.width - player.width, player.x));
       if (puzzle && player.grounded) player.x = pushCrates(puzzle, player, previousX, player.x, delta, levelAge);
-      for (const platform of puzzle ? [...level.platforms, ...puzzlePlatforms(level, puzzle, levelAge)] : level.platforms) {
+      for (const platform of puzzle ? [...level.platforms, ...puzzlePlatforms(level, puzzle, levelAge)] : explore ? [...level.platforms, ...shortcutWalls(level, explore)] : level.platforms) {
         const resolvedX = resolveHorizontalWallCollision(previousX, player.x, player.y, player.width, player.height, platform);
         if (resolvedX === player.x) continue;
         player.x = resolvedX;
@@ -590,7 +596,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       })) {
         hurt();
       }
-      if (player.y > (level.orientation === "vertical" ? cameraY + VIEW_HEIGHT + 100 : VIEW_HEIGHT + 120)) {
+      if (player.y > (level.orientation === "vertical" ? cameraY + VIEW_HEIGHT + 100 : explore ? (level.height ?? VIEW_HEIGHT) + 80 : VIEW_HEIGHT + 120)) {
         callbacksRef.current.playSound("hurt");
         respawn();
       }
@@ -771,7 +777,11 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
       });
       level.verticalCheckpoints?.forEach((checkpoint, index) => {
-        if (index > checkpointIndex && player.y <= checkpoint.y) {
+        // En la exploración el punto seguro se toma al pasar por él; en las subidas, al llegar a su altura.
+        const reached = explore
+          ? player.grounded && Math.abs(player.x + player.width / 2 - checkpoint.x - 21) < 70 && Math.abs(player.y + player.height - checkpoint.y) < 8
+          : player.y <= checkpoint.y;
+        if (index > checkpointIndex && reached) {
           checkpointIndex = index;
           respawnX = checkpoint.x;
           respawnY = checkpoint.y - player.height;
@@ -811,7 +821,27 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       if (chaseSay) chaseSay.life -= delta;
       if (chase?.caught) chaseCaughtAge += delta;
 
-      const reachedGoal = !level.chase && (level.orientation === "vertical"
+      if (explore && !completed) {
+        for (const event of stepExplore(level, explore, player, delta)) {
+          if (event.kind === "meow") callbacksRef.current.playSound("yarn");
+          if (event.kind === "found") {
+            callbacksRef.current.playSound("cat");
+            bursts.push({ x: event.kitten!.x, y: event.kitten!.y - 30, life: .5, color: "#ffe477", kind: "stars" });
+            if (statusRef.current) statusRef.current.textContent = `¡Gatito encontrado! Llevas ${explore.found.length} de ${level.lostKittens?.length ?? 3}.`;
+          }
+          if (event.kind === "open") {
+            callbacksRef.current.playSound("checkpoint");
+            if (statusRef.current) statusRef.current.textContent = "¡Los tres gatitos! La puerta de los gatitos está abierta.";
+          }
+        }
+        if (reachedGate(level, explore, player)) {
+          callbacksRef.current.playSound("goal");
+          if (statusRef.current) statusRef.current.textContent = "¡Los gatitos vuelven a casa! Pantalla superada.";
+          finishLevel(1.2, (snapshot) => callbacksRef.current.onComplete(snapshot));
+        }
+      }
+
+      const reachedGoal = !level.chase && !explore && (level.orientation === "vertical"
         ? player.y <= (level.goalY ?? goalSurfaceY) && Math.abs(player.x + player.width / 2 - level.goalX) < 130
         : hasReachedGoalFlag(player, level.goalX, goalSurfaceY));
       if (!completed && reachedGoal) {
@@ -837,7 +867,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       walkCycleTime = player.grounded && Math.abs(player.vx) > 25 ? walkCycleTime + delta : 0;
       // En las salas la cámara queda fija en la sala y se desliza (~0,4 s) al pasar a la siguiente.
       const cameraTarget = puzzle && level.puzzleRooms ? level.puzzleRooms[puzzle.room].x : player.x - 330;
-      cameraX += (Math.max(0, Math.min(level.width - VIEW_WIDTH, cameraTarget)) - cameraX) * Math.min(1, delta * (puzzle ? 9 : 5));
+      if (explore) {
+        // Exploración: la cámara sigue a Noa en los dos ejes, con adelanto hacia donde mira.
+        const target = exploreCameraTarget(level, player, { width: VIEW_WIDTH, height: VIEW_HEIGHT });
+        cameraX += (target.x - cameraX) * Math.min(1, delta * 9);
+        cameraY += (target.y - cameraY) * Math.min(1, delta * 7);
+      } else cameraX += (Math.max(0, Math.min(level.width - VIEW_WIDTH, cameraTarget)) - cameraX) * Math.min(1, delta * (puzzle ? 9 : 5));
       if (level.orientation === "vertical") {
         const targetY = Math.max(0, Math.min((level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT, player.y - 250));
         cameraY = Math.min(cameraY, cameraY + (targetY - cameraY) * Math.min(1, delta * 5));
@@ -988,12 +1023,13 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         context.restore();
       }
       context.save();
-      if (level.orientation === "vertical") context.translate(0, -cameraY);
+      if (level.orientation === "vertical" || explore) context.translate(0, -cameraY);
       level.deadlyWater?.forEach((zone) => drawDeadlyWater(context, zone, cameraX, frame, raster, level.theme));
       level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge, raster, level.world === 15));
       drawAdventurePrecipices(context, level, cameraX, raster.adventurePrecipices);
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
       if (puzzle) drawPuzzleRooms(context, level, puzzle, cameraX, sparks, frame, levelAge);
+      if (explore) drawExploreWorld(context, level, explore, cameraX, frame);
       level.beatPlatforms?.forEach((platform) => {
         const active = beatPlatformActive(platform, levelAge);
         context.save(); context.globalAlpha = active ? 1 : .24;
@@ -1105,7 +1141,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         }
         context.restore();
       });
-      if (!level.chase && level.goalX - cameraX > -280 && level.goalX - cameraX < VIEW_WIDTH + 100) {
+      if (!level.chase && !explore && level.goalX - cameraX > -280 && level.goalX - cameraX < VIEW_WIDTH + 100) {
         if (level.world === 8 && level.boss) {
           const image = raster.waterTerrain;
           if (image.complete && image.naturalWidth) context.drawImage(image, 845, 500, 680, 500, level.goalX - cameraX - 10, goalSurfaceY - 200, 185, 200);
@@ -1143,6 +1179,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       // La persecución va por encima del primer plano para que el rastro y la frase se vean siempre.
       if (chase && level.chase) drawChase(context, level.chase, chase, cameraX, frame, raster, chaseSay, chaseCaughtAge);
       context.restore();
+      if (explore) {
+        // Más abajo, la cueva se oscurece un poco.
+        const depth = Math.max(0, Math.min(.35, (cameraY - ((level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT) * .6) / 600));
+        if (depth > 0) { context.fillStyle = `rgba(40,24,18,${depth})`; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT); }
+        drawExploreOverlay(context, level, explore, player, hintTarget(level, explore, player), { x: cameraX, y: cameraY }, frame);
+      }
       if (level.id === "1-1" && player.x >= 130 && player.x < 1120) drawDoubleJumpTip(context);
       if (level.world === 17 && levelAge < 8) {
         context.fillStyle = "rgba(42,24,70,.9)"; context.fillRect(176, 12, 608, 72);

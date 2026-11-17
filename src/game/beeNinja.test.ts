@@ -2,7 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import {
-  BEE_BPM, BEE_NINJA_LEVEL_ID, COUNT_PULSES, CUT_POINT, FLIGHT_PULSES, HIT_WINDOW_PULSES, PULSE_MS, RESUME_COUNT_PULSES, WIN_AT,
+  BEE_BPM, BEE_NINJA_LEVEL_ID, COUNT_PULSES, CUT_POINT, FLIGHT_PULSES, HERO, HERO_FRAME, HERO_SCALE, HIT_WINDOW_PULSES, PLOF_SOUND, PULSE_MS, RESUME_COUNT_PULSES,
+  SAMPLE_IDS, UY_SOUND, WIN_AT, cutSound, sampleUrl,
   advanceFrameClock, audioPulse, autoCuts, beeScores, collectFalls, createRun, cutPulses, firstCutPulse, flowersIn, jarLevel,
   musicForEighth, nextOpenCut, outcomeOf, practiceFirst, pressAt, risingEdge, scoreLength, songStartAfterPause, targetPlacement,
   targetVisible, throwPulses, validateScore, type Score, type ScoreItem,
@@ -29,7 +30,50 @@ test("la abeja ninja es el duelo de la Reina Melisa y sus recursos existen", () 
   const final = levels.find((level) => level.id === BEE_NINJA_LEVEL_ID);
   assert.equal(final?.world, 11);
   assert.equal(final?.boss, "queen-bee");
-  for (const path of ["sprites/noa-abeja-v0.png", "sprites/tarro-miel-v0.png", "atlases/giant-valley-characters-v1.png", "worlds/world-11.webp"]) assert.ok(asset(path), path);
+  for (const path of ["sprites/noa-abeja-v1.webp", "sprites/tarro-miel-v1.webp", "sprites/flores-abeja-v1.webp", "sprites/mariquita-v1.webp", "atlases/giant-valley-characters-v1.png", "worlds/world-11.webp"]) assert.ok(asset(path), path);
+  const component = readFileSync(new URL("./BeeNinjaGame.tsx", import.meta.url), "utf8") + readFileSync(new URL("./beeNinja.css", import.meta.url), "utf8");
+  for (const match of component.matchAll(/\.\/assets\/([\w/.-]+\.(?:webp|png))/g)) assert.ok(asset(match[1]), match[1]);
+  assert.doesNotMatch(component, /-v0\.png|<svg/, "el arte provisional se ha sustituido");
+});
+
+test("el punto de corte es la punta del aguijón de Noa-abeja, reflejada para mirar a Melisa", () => {
+  assert.ok(Math.abs(HERO.width - HERO_FRAME.width * HERO_SCALE) < 1e-9);
+  assert.ok(Math.abs(HERO.height - HERO_FRAME.height * HERO_SCALE) < 1e-9);
+  assert.ok(Math.abs(CUT_POINT.x - (HERO.left + (HERO_FRAME.width - HERO_FRAME.tipX) * HERO_SCALE)) < 1e-9);
+  assert.ok(Math.abs(CUT_POINT.y - (HERO.top + HERO_FRAME.tipY * HERO_SCALE)) < 1e-9);
+  assert.ok(CUT_POINT.x > HERO.left && CUT_POINT.x < HERO.left + 20, "la punta queda por delante de Noa, mirando a la izquierda");
+  assert.ok(Math.abs(HERO.top + HERO.height - 455) < 1, "los pies apoyan en la hierba");
+});
+
+const wav = (id: string) => readFileSync(new URL(`../../public/assets/audio/abeja-ninja/${id}.wav`, import.meta.url));
+
+test("cada sample del jardín ninja existe como WAV mono de 16 bits a 32 kHz y la ruta es relativa", () => {
+  assert.equal(SAMPLE_IDS.length, 12);
+  for (const id of SAMPLE_IDS) {
+    const bytes = wav(id);
+    assert.equal(bytes.toString("ascii", 0, 4), "RIFF", id);
+    assert.deepEqual([bytes.readUInt16LE(20), bytes.readUInt16LE(22), bytes.readUInt32LE(24), bytes.readUInt16LE(34)], [1, 1, 32000, 16], id);
+    assert.match(sampleUrl(id), /^\.\/assets\/audio\/abeja-ninja\/[a-z0-9-]+\.wav$/);
+  }
+});
+
+test("la canción y los efectos usan todos los samples y conservan el sonido de respaldo", () => {
+  const run = createRun("song");
+  const notes = [
+    ...Array.from({ length: scoreLength(run.score) * 2 }, (_, eighth) => musicForEighth(run, eighth)).flat(),
+    ...cutSound(587.33), ...UY_SOUND, ...PLOF_SOUND,
+  ];
+  const used = new Set<string>();
+  for (const note of notes) {
+    if (note.sample) {
+      used.add(note.sample.id);
+      assert.ok(note.sample.gain > 0 && note.sample.gain <= 0.6, `volumen ${note.sample.gain}`);
+      const rate = note.sample.rate ?? 1;
+      assert.ok(rate >= 0.49 && rate <= 2.1, `velocidad ${rate}`);
+    } else if (note.sample === undefined) assert.ok(note.volume > 0, "una nota sin sample necesita su oscilador");
+  }
+  assert.deepEqual([...used].sort(), [...SAMPLE_IDS].sort());
+  for (const note of cutSound(587.33)) if (note.sample !== null) assert.ok(note.volume > 0, "el corte suena también sin samples");
 });
 
 test("Flores para la colmena se retira y el reto pide no dejar caer ninguna flor", () => {

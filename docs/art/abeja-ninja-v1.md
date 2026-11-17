@@ -4,11 +4,11 @@ Dossier del arte de **La abeja ninja**, el duelo rítmico de la Reina Melisa. El
 
 ## Estado
 
-- **Pendiente:** la persona usuaria genera las piezas. Después se recortan, se alinean y se colocan en `public/assets/`.
+- **Hecho:** las cuatro láminas están generadas, recortadas a transparente y exportadas como WebP en `public/assets/sprites/` (ver [Archivos finales](#archivos-finales)). Los samples del «jardín ninja» están en `public/assets/audio/abeja-ninja/`.
 - **Se reutilizan:**
   - la Reina Melisa, con sus poses de `public/assets/atlases/giant-valley-characters-v1.png`;
   - el fondo del valle gigante, `public/assets/worlds/world-11.webp`.
-- **Sonido:** no hace falta arte sonoro manual; se sintetiza por código (ver [Sonido](#sonido)).
+- El arte provisional (`noa-abeja-v0.png`, `tarro-miel-v0.png`) se conserva solo para los prototipos.
 
 ## Cómo trabajar
 
@@ -100,10 +100,23 @@ A pixel-art sprite sheet with exactly five versions of the same small round glas
 The only difference between the five versions is the golden honey level inside: 1 empty, 2 a thin layer at the bottom, 3 exactly up to the golden ribbon, 4 three quarters full, 5 full to the top with a little honey drip on the rim.
 ```
 
+## Archivos finales
+
+`python3 prototypes/tools/abeja-ninja-recorte.py CARPETA_CON_LAS_LAMINAS` vuelve a generar todo desde las láminas originales (fondo verde, cualquier extensión). Quita el verde conectado con el borde, separa y alinea las piezas y calcula la punta del aguijón. El script no guarda las láminas originales; consérvalas fuera del repositorio.
+
+| Archivo | Contenido | Medidas del archivo | En pantalla |
+|---|---|---|---|
+| `sprites/noa-abeja-v1.webp` | Tira de 4 celdas mirando a la derecha: espera, alza, corta, celebra. El juego la refleja para mirar a Melisa. | 4 × 206 × 372; punta del aguijón en «corta» en (199,6; 216,1) | 0,6 × (124 × 223) |
+| `sprites/flores-abeja-v1.webp` | Rejilla 4 × 4 de 128 × 128. Columnas: rosa, amarillo, azul, lila. Filas: entera, mitad izquierda, mitad derecha, pétalo. Las mitades juntas forman la flor. | 512 × 512 | 64 × 64 por celda |
+| `sprites/mariquita-v1.webp` | Tira de 2 celdas mirando a la derecha: volando y saludando. | 2 × 146 × 125 | 73 × 62 |
+| `sprites/tarro-miel-v1.webp` | Tira de 5 niveles; la cinta dorada pintada es la raya del mínimo. De la lámina se usó la fila de abajo, la completa. | 5 × 188 × 240 | 94 × 120 |
+
 ## Sonido
 
-No hace falta arte sonoro manual. Los samples del «jardín ninja» se sintetizan por código en un script de `prototypes/tools/`, como los de los gatitos, y se guardan en `public/assets/audio/abeja-ninja/`:
-- instrumentos: koto, flauta de bambú, taiko, bajo y zumbido;
-- efectos: «¡zum!», «¡zum-zum!», «¡bzz-tin!», «¡shing!», el toque sordo, el «plof» y la fanfarria.
+No hace falta arte sonoro manual. `python3 prototypes/tools/abeja-ninja-samples.py` sintetiza por código doce samples originales y los guarda como WAV mono de 16 bits a 32 kHz en `public/assets/audio/abeja-ninja/`:
+- instrumentos: `koto-re5`, `flauta-bambu-la5`, `taiko`, `bajo-re3` y `zumbido` (los afinados se transportan cambiando la velocidad);
+- efectos: `zum`, `zum-zum`, `bzz-tin`, `shing`, `toque-sordo`, `plof` y `fanfarria`.
+
+El juego los carga al abrir el duelo. Si no cargan, suenan los osciladores de respaldo de la partitura.
 
 Todo es original: nada se copia de Rhythm Heaven ni de otros juegos comerciales.

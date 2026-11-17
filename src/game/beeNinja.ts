@@ -235,9 +235,20 @@ export function advanceFrameClock(clock: { frameMs: number; countMs: number }, d
 
 // ---------------------------------------------------------------- escena (coordenadas de 960 × 540)
 
-export const HERO = { left: 640, top: 236, width: 216, height: 207 };
-/** Punta del aguijón en la pose «corta»: (436.5, 313) en un fotograma de 480 × 460, reflejado para mirar a Melisa. */
-export const CUT_POINT = { x: HERO.left + (480 - 436.5) * HERO.width / 480, y: HERO.top + 313 * HERO.width / 480 };
+/**
+ * Fotograma de `noa-abeja-v1.webp` (tira de 4 celdas mirando a la derecha) y punta del aguijón en la pose
+ * «corta», en píxeles del archivo. Salen de `prototypes/tools/abeja-ninja-recorte.py`.
+ */
+export const HERO_FRAME = { width: 206, height: 372, tipX: 199.6, tipY: 216.1 };
+/** Escala del archivo en escena: la pose de espera mide unos 190 píxeles, como la Reina Melisa de pie. */
+export const HERO_SCALE = 0.6;
+/** Noa-abeja en escena, reflejada para mirar a Melisa; los pies apoyan en la hierba (y = 455). */
+export const HERO = { left: 679, top: 232, width: HERO_FRAME.width * HERO_SCALE, height: HERO_FRAME.height * HERO_SCALE };
+/** Punta del aguijón en la pose «corta», reflejada: el punto de corte. */
+export const CUT_POINT = {
+  x: HERO.left + (HERO_FRAME.width - HERO_FRAME.tipX) * HERO.width / HERO_FRAME.width,
+  y: HERO.top + HERO_FRAME.tipY * HERO.height / HERO_FRAME.height,
+};
 export const THROW_ORIGIN = { x: 200, y: 292 };
 const ARC_PEAK = 170;
 
@@ -268,7 +279,22 @@ export const targetVisible = (target: Target, pulse: number) => pulse >= target.
 
 // ---------------------------------------------------------------- música «jardín ninja» (original)
 
+// Samples originales del «jardín ninja» (prototypes/tools/abeja-ninja-samples.py).
+export type SampleId = "koto-re5" | "flauta-bambu-la5" | "taiko" | "bajo-re3" | "zumbido" | "zum" | "zum-zum" | "bzz-tin" | "shing" | "toque-sordo" | "plof" | "fanfarria";
+export const SAMPLE_IDS: readonly SampleId[] = ["koto-re5", "flauta-bambu-la5", "taiko", "bajo-re3", "zumbido", "zum", "zum-zum", "bzz-tin", "shing", "toque-sordo", "plof", "fanfarria"];
+export const sampleUrl = (id: SampleId) => `./assets/audio/abeja-ninja/${id}.wav`;
+const SAMPLE_PITCH = { "koto-re5": 587.33, "flauta-bambu-la5": 880, "bajo-re3": 146.83, "zumbido": 170 } as const;
+/** Un sample y su volumen. `rate` transporta los afinados. */
+export type BeeSample = { id: SampleId; gain: number; rate?: number };
+const sample = (id: SampleId, gain: number): BeeSample => ({ id, gain });
+const pitched = (id: keyof typeof SAMPLE_PITCH, frequency: number, gain: number): BeeSample => ({ id, gain, rate: frequency / SAMPLE_PITCH[id] });
+
+/**
+ * Nota de la partitura. Los campos del oscilador son el sonido de respaldo (si los samples no han cargado);
+ * `sample` es el sonido definitivo, y `null` indica que, con samples, esta nota no suena (otro la sustituye).
+ */
 export type BeeNote = {
+  sample?: BeeSample | null;
   offset: number;
   frequency: number;
   duration: number;
@@ -289,26 +315,36 @@ const FLUTE: readonly (readonly (NoteName | null)[])[] = [[null, "A5"], [null, n
 export const FANFARE = [HZ.D4, HZ.E4, HZ.G4, HZ.A4, HZ.B4, HZ.D5, HZ.E5, HZ.G5, HZ.A5, HZ.B5, HZ.D6];
 const bassOfBar = (bar: number) => BASS[((bar - 2) % BASS.length + BASS.length) % BASS.length];
 
-const koto = (frequency: number, volume = 0.11): BeeNote[] => [
-  { offset: 0, frequency, duration: 0.55, wave: "triangle", volume, bus: "music", glideTo: frequency * 0.995 },
-  { offset: 0, frequency: frequency * 2, duration: 0.12, wave: "sine", volume: volume * 0.35, bus: "music" },
+const koto = (frequency: number, volume = 0.11, bus: BeeNote["bus"] = "music"): BeeNote[] => [
+  { offset: 0, frequency, duration: 0.55, wave: "triangle", volume, bus, glideTo: frequency * 0.995, sample: pitched("koto-re5", frequency, Math.min(0.6, volume * 3.2)) },
+  { offset: 0, frequency: frequency * 2, duration: 0.12, wave: "sine", volume: volume * 0.35, bus, sample: null },
 ];
 const taiko = (volume: number): BeeNote[] => [
-  { offset: 0, frequency: 120, duration: 0.32, wave: "sine", volume, bus: "music", glideTo: 52 },
-  { offset: 0, frequency: 0, duration: 0.05, wave: "sine", volume: volume * 0.25, bus: "music", noise: "low" },
+  { offset: 0, frequency: 120, duration: 0.32, wave: "sine", volume, bus: "music", glideTo: 52, sample: sample("taiko", Math.min(0.6, volume * 2.4)) },
+  { offset: 0, frequency: 0, duration: 0.05, wave: "sine", volume: volume * 0.25, bus: "music", noise: "low", sample: null },
 ];
 const tap = (): BeeNote[] => [
   { offset: 0, frequency: 660, duration: 0.05, wave: "square", volume: 0.02, bus: "music" },
   { offset: 0, frequency: 0, duration: 0.04, wave: "sine", volume: 0.025, bus: "music", noise: "band" },
 ];
 export const ZUM = (double: boolean): BeeNote[] => [
-  { offset: 0, frequency: 260, duration: 0.16, wave: "sawtooth", volume: 0.05, bus: "cue", glideTo: 400 },
-  ...(double ? [{ offset: 0.09, frequency: 300, duration: 0.14, wave: "sawtooth" as const, volume: 0.045, bus: "cue" as const, glideTo: 460 }] : []),
+  { offset: 0, frequency: 260, duration: 0.16, wave: "sawtooth", volume: 0.05, bus: "cue", glideTo: 400, sample: sample(double ? "zum-zum" : "zum", 0.3) },
+  ...(double ? [{ offset: 0.09, frequency: 300, duration: 0.14, wave: "sawtooth" as const, volume: 0.045, bus: "cue" as const, glideTo: 460, sample: null }] : []),
 ];
 export const BZZ_TIN: BeeNote[] = [
-  { offset: 0, frequency: 420, duration: 0.16, wave: "sawtooth", volume: 0.03, bus: "cue", glideTo: 380 },
-  { offset: 0.12, frequency: 2093, duration: 0.25, wave: "sine", volume: 0.06, bus: "cue" },
+  { offset: 0, frequency: 420, duration: 0.16, wave: "sawtooth", volume: 0.03, bus: "cue", glideTo: 380, sample: sample("bzz-tin", 0.32) },
+  { offset: 0.12, frequency: 2093, duration: 0.25, wave: "sine", volume: 0.06, bus: "cue", sample: null },
 ];
+/** Corte acertado: la siguiente nota de la melodía en koto y el «¡shing!» del aguijón. */
+export const cutSound = (frequency: number): BeeNote[] => [
+  ...koto(frequency, 0.16, "cue"),
+  { offset: 0, frequency: 0, duration: 0.09, wave: "sine", volume: 0.09, bus: "cue", noise: "high", sample: sample("shing", 0.26) },
+  { offset: 0, frequency: 2600, duration: 0.16, wave: "sine", volume: 0.04, bus: "cue", glideTo: 3300, sample: null },
+];
+/** «¡Uy!»: el toque sordo de un corte a destiempo, que no resta. */
+export const UY_SOUND: BeeNote[] = [{ offset: 0, frequency: 110, duration: 0.16, wave: "sine", volume: 0.14, bus: "cue", glideTo: 80, sample: sample("toque-sordo", 0.4) }];
+/** «plof»: una flor cae a la hierba. */
+export const PLOF_SOUND: BeeNote[] = [{ offset: 0, frequency: 200, duration: 0.2, wave: "triangle", volume: 0.06, bus: "cue", glideTo: 90, sample: sample("plof", 0.32) }];
 export const COUNT_TICK = (first: boolean): BeeNote[] => [{ offset: 0, frequency: first ? 1046.5 : 784, duration: 0.1, wave: "sine", volume: 0.09, bus: "cue" }];
 
 /** Notas de una corchea (medio pulso) de la canción, según la partitura. */
@@ -328,18 +364,25 @@ export function musicForEighth(run: BeeRun, eighth: number): BeeNote[] {
   if (bar > score.bars - score.closingBars) {
     const index = eighth - (score.bars - score.closingBars) * PULSES_PER_BAR * 2;
     if (index < FANFARE.length) notes.push(...koto(FANFARE[index]));
-    if (index === FANFARE.length) { for (const frequency of [HZ.D5, HZ.A5, HZ.D6]) notes.push(...koto(frequency, 0.08)); notes.push(...taiko(0.3)); }
+    if (index === FANFARE.length) {
+      notes.push({ offset: 0, frequency: 0, duration: 0.1, wave: "sine", volume: 0, bus: "music", sample: sample("fanfarria", 0.5) });
+      for (const frequency of [HZ.D5, HZ.A5, HZ.D6]) notes.push(...koto(frequency, 0.08).map((note) => ({ ...note, sample: null })));
+      notes.push(...taiko(0.3).map((note) => ({ ...note, sample: null })));
+    }
     if (index < FANFARE.length && onPulse) notes.push(...taiko(0.12));
     return notes;
   }
   const [root, fifth] = bassOfBar(bar);
   if (onPulse && (inBar === 0 || inBar === 2)) notes.push(...taiko(inBar === 0 ? 0.2 : 0.13));
   if (onPulse && (inBar === 1 || inBar === 3)) notes.push(...tap());
-  if (half === 0 || half === 3 || half === 4 || half === 7) notes.push({ offset: 0, frequency: half === 3 || half === 7 ? fifth : root, duration: 0.24, wave: "triangle", volume: 0.1, bus: "music" });
+  if (half === 0 || half === 3 || half === 4 || half === 7) {
+    const frequency = half === 3 || half === 7 ? fifth : root;
+    notes.push({ offset: 0, frequency, duration: 0.24, wave: "triangle", volume: 0.1, bus: "music", sample: pitched("bajo-re3", frequency, 0.34) });
+  }
   if (!onPulse) notes.push({ offset: 0, frequency: 0, duration: 0.03, wave: "sine", volume: 0.012, bus: "music", noise: "high" });
-  if (half === 0 && bar % 2 === 0) notes.push({ offset: 0, frequency: 170, duration: 0.5, wave: "sawtooth", volume: 0.018, bus: "music", glideTo: 190 });
+  if (half === 0 && bar % 2 === 0) notes.push({ offset: 0, frequency: 170, duration: 0.5, wave: "sawtooth", volume: 0.018, bus: "music", glideTo: 190, sample: sample("zumbido", 0.08) });
   const flute = FLUTE[(bar - 2) % FLUTE.length][Math.floor(half / 2)];
-  if (flute && !onPulse && bar % 4 === 1) notes.push({ offset: 0, frequency: HZ[flute], duration: 0.4, wave: "sine", volume: 0.045, bus: "music", vibrato: true });
+  if (flute && !onPulse && bar % 4 === 1) notes.push({ offset: 0, frequency: HZ[flute], duration: 0.4, wave: "sine", volume: 0.045, bus: "music", vibrato: true, sample: pitched("flauta-bambu-la5", HZ[flute], 0.16) });
   if (onPulse) {
     for (const item of score.items) {
       const throws = throwPulses(item);

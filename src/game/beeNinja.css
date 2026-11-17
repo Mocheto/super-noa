@@ -31,28 +31,30 @@
 .bee-ninja-melisa { left: 26px; top: 234px; width: 210px; height: 210px; background-repeat: no-repeat; background-size: 500% 200%; filter: drop-shadow(0 6px 4px #0005); transition: transform .1s; }
 .bee-ninja-melisa.is-throwing { transform: translateY(-8px) rotate(-4deg); }
 
-/* Noa-abeja: tira de 4 poses de 480 × 460 (espera, alza, corta, celebra), reflejada para mirar a Melisa. */
+/* Noa-abeja: tira de 4 poses (espera, alza, corta, celebra) mirando a la derecha, reflejada para mirar a Melisa. */
 .bee-ninja-hero { z-index: 2; background-repeat: no-repeat; background-size: 400% 100%; background-position: 0 0; transform: scaleX(-1); filter: drop-shadow(0 6px 4px #0005); image-rendering: pixelated; }
 .bee-ninja-hero[data-pose="alza"] { background-position: 33.333% 0; }
 .bee-ninja-hero[data-pose="corta"] { background-position: 66.666% 0; }
 .bee-ninja-hero[data-pose="celebra"] { background-position: 100% 0; }
 
-/* Tarro de miel pixelado: 5 niveles de 104 × 120 y la raya dorada. */
-.bee-ninja-jar { left: 830px; bottom: 22px; width: 104px; height: 120px; background-repeat: no-repeat; background-size: 500% 100%; image-rendering: pixelated; filter: drop-shadow(0 4px 3px #0005); }
-.bee-ninja-line { position: absolute; left: 6px; right: 6px; top: 74px; height: 5px; border: 2px solid #2f1d33; border-radius: 3px; background: #ffd76a; box-shadow: 0 0 8px #ffd76a; }
-.bee-ninja-jar.is-reached .bee-ninja-line { background: #fff3a8; box-shadow: 0 0 16px #fff3a8; }
+/* Tarro de miel: 5 niveles de 94 × 120; la cinta dorada pintada en el tarro es la raya del mínimo. */
+.bee-ninja-jar { left: 836px; bottom: 22px; width: 94px; height: 120px; background-repeat: no-repeat; background-size: 500% 100%; image-rendering: pixelated; filter: drop-shadow(0 4px 3px #0005); transition: filter .2s; }
+.bee-ninja-jar.is-reached { filter: drop-shadow(0 0 12px #ffd76a) drop-shadow(0 4px 3px #0005); }
 
 .bee-ninja-ring { z-index: 4; width: 100px; height: 100px; border: 5px solid #ffd76a; border-radius: 50%; opacity: .65; box-shadow: 0 0 12px #ffd76a99; pointer-events: none; }
 .bee-ninja-ring.is-ready { opacity: 1; border-color: #fff1a8; box-shadow: 0 0 22px #ffd76a; }
 .bee-ninja-now { z-index: 5; padding: 4px 10px; border: 3px solid #2f1d33; border-radius: 10px; background: #ffd76a; color: #2f1d33; font: 900 18px ui-monospace, monospace; }
 
+/* Flores y mariquita: rejilla de flores-abeja-v1 (color × entera, mitades y pétalo) y tira de mariquita-v1. */
+.bee-ninja-target, .bee-ninja-cut-flower > span, .bee-ninja-cut-flower > i { background: var(--flores) no-repeat 0 0 / 400% 400%; image-rendering: pixelated; }
 .bee-ninja-target { top: 0; left: 0; z-index: 3; width: 64px; height: 64px; pointer-events: none; }
-.bee-ninja-target svg, .bee-ninja-cut-flower svg { display: block; width: 100%; height: 100%; }
+.bee-ninja-target.is-ladybug { width: 73px; height: 62px; background-image: var(--mariquita); background-size: 200% 100%; background-position: 0 0; }
+.bee-ninja-target.is-ladybug.is-greeting { background-position: 100% 0; }
 .bee-ninja-cut-flower { z-index: 3; width: 64px; height: 64px; pointer-events: none; }
 .bee-ninja-cut-flower > span { position: absolute; inset: 0; animation: .55s ease-in forwards; }
-.bee-ninja-cut-flower > .is-left { clip-path: inset(0 50% 0 0); animation-name: bee-ninja-half-left; }
-.bee-ninja-cut-flower > .is-right { clip-path: inset(0 0 0 50%); animation-name: bee-ninja-half-right; }
-.bee-ninja-cut-flower > i { position: absolute; top: 26px; left: 26px; width: 12px; height: 16px; border: 2px solid #2f1d33; border-radius: 50% 50% 50% 0; background: var(--petal); animation: bee-ninja-petal .8s ease-in forwards; }
+.bee-ninja-cut-flower > .is-left { animation-name: bee-ninja-half-left; }
+.bee-ninja-cut-flower > .is-right { animation-name: bee-ninja-half-right; }
+.bee-ninja-cut-flower > i { position: absolute; top: 20px; left: 20px; width: 24px; height: 24px; animation: bee-ninja-petal .8s ease-in forwards; }
 @keyframes bee-ninja-half-left { to { transform: translate(-46px, 120px) rotate(-50deg); opacity: 0; } }
 @keyframes bee-ninja-half-right { to { transform: translate(46px, 120px) rotate(50deg); opacity: 0; } }
 @keyframes bee-ninja-petal { to { transform: translate(var(--dx), var(--dy)) rotate(300deg); opacity: .2; } }

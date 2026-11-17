@@ -4,11 +4,12 @@ import { Dialog } from "./Dialog";
 import type { SoundKind } from "./GameCanvas";
 import { firstConnectedGamepad } from "./gamepad";
 import {
-  COUNT_PULSES, CUT_POINT, HERO, PULSE_MS, RESUME_COUNT_PULSES, WIN_AT, advanceFrameClock, audioPulse, autoCuts, barOfPulse, beeScores,
+  COUNT_PULSES, CUT_POINT, HERO, PLOF_SOUND, PULSE_MS, UY_SOUND, cutSound, RESUME_COUNT_PULSES, WIN_AT, advanceFrameClock, audioPulse, autoCuts, barOfPulse, beeScores,
   collectFalls, COUNT_TICK, createRun, jarLevel, leadNote, musicForEighth, nextOpenCut, outcomeOf, outputLatencySeconds,
   practiceFirst, pressAt, risingEdge, scoreLength, songStartAfterPause, targetPlacement, targetVisible, throwPulses,
   type BeeMode, type BeeNote, type BeeRun, type Outcome, type PressResult,
 } from "./beeNinja";
+import { loadBeeSamples, type SampleBank } from "./beeNinjaSamples";
 import "./beeNinja.css";
 
 type Props = {
@@ -66,7 +67,6 @@ type View = {
   counting: number;
 };
 
-const COLORS = ["#ef79a9", "#f2c230", "#5aa0dc", "#b98be0"];
 const START_DELAY_S = 0.15;
 const STAGE_WIDTH = 960;
 const emptyView: View = { pulse: -1, targets: [], halves: [], jar: 0, ring: null, lamp: -1, heroPose: "espera", melisaPose: 0, melisaThrowing: false, melisaBubble: null, greet: null, feedback: null, caption: "", phase: "", counting: 0 };
@@ -83,25 +83,13 @@ const RESULT_TEXT: Record<Outcome["result"], { title: string; text: string }> = 
   casi: { title: "¡Casi!", text: "El tarro aún no llega a la raya dorada. Melisa quiere jugar otra vez." },
 };
 
-function Flower({ color }: { color: string }) {
-  return <svg viewBox="0 0 64 64" aria-hidden="true">
-    {Array.from({ length: 6 }, (_, index) => <ellipse key={index} cx="32" cy="16" rx="9" ry="14" transform={`rotate(${index * 60} 32 32)`} fill={color} stroke="#2f1d33" strokeWidth="2.5" />)}
-    <circle cx="32" cy="32" r="9" fill="#ffd34d" stroke="#2f1d33" strokeWidth="2.5" />
-    <path d="M32 41 Q34 54 30 64" stroke="#3f7a2a" strokeWidth="4" fill="none" />
-  </svg>;
-}
-
-function Ladybug() {
-  return <svg viewBox="0 0 64 64" aria-hidden="true">
-    <ellipse cx="22" cy="20" rx="12" ry="9" fill="#e8f6ffcc" stroke="#2f1d33" strokeWidth="2" />
-    <ellipse cx="40" cy="18" rx="12" ry="9" fill="#e8f6ffcc" stroke="#2f1d33" strokeWidth="2" />
-    <circle cx="50" cy="36" r="9" fill="#2f1d33" /><circle cx="53" cy="33" r="2" fill="#fff" />
-    <ellipse cx="32" cy="38" rx="18" ry="15" fill="#e2463f" stroke="#2f1d33" strokeWidth="3" />
-    <path d="M32 23 V53" stroke="#2f1d33" strokeWidth="2.5" />
-    <circle cx="24" cy="34" r="3.5" fill="#2f1d33" /><circle cx="40" cy="34" r="3.5" fill="#2f1d33" />
-    <circle cx="26" cy="45" r="3" fill="#2f1d33" /><circle cx="38" cy="45" r="3" fill="#2f1d33" />
-  </svg>;
-}
+/** Arte que usa la hoja de estilos, con rutas relativas al sitio publicado. */
+const STAGE_ART = {
+  "--flores": 'url("./assets/sprites/flores-abeja-v1.webp")',
+  "--mariquita": 'url("./assets/sprites/mariquita-v1.webp")',
+} as CSSProperties;
+/** Rejilla de `flores-abeja-v1.webp`: columna = color; filas = entera, mitad izquierda, mitad derecha y pétalo. */
+const flowerSprite = (color: number, row: 0 | 1 | 2 | 3): CSSProperties => ({ backgroundPosition: `${(color % 4) * 100 / 3}% ${row * 100 / 3}%` });
 
 function snapshot(session: Session, pulse: number, counting: number, reduceMotion: boolean): View {
   const { run } = session;
@@ -136,6 +124,7 @@ function snapshot(session: Session, pulse: number, counting: number, reduceMotio
 export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduceMotion, levelCompleted, onAbandon, onWin, playSound, friendlyReplay = false }: Props) {
   const sessionRef = useRef<Session | null>(null);
   const audioRef = useRef<AudioRig | null>(null);
+  const samplesRef = useRef<SampleBank | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [mode, setMode] = useState<BeeMode | null>(null);
@@ -157,6 +146,13 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
     const observer = new ResizeObserver(update);
     observer.observe(element);
     return () => observer.disconnect();
+  }, []);
+
+  // Los sonidos definitivos se cargan al entrar; hasta que estén (o si fallan) suenan los osciladores de respaldo.
+  useEffect(() => {
+    let alive = true;
+    void loadBeeSamples().then((bank) => { if (alive) samplesRef.current = bank; });
+    return () => { alive = false; };
   }, []);
 
   useEffect(() => () => {
@@ -213,6 +209,20 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
     const bus = note.bus === "music" ? audio.segment : audio.cue;
     const start = when + note.offset;
     const gain = context.createGain();
+    const bank = samplesRef.current;
+    if (bank) {
+      if (note.sample === null) return; // otro sample sustituye a esta nota
+      if (note.sample) {
+        const source = context.createBufferSource();
+        source.buffer = bank[note.sample.id];
+        source.playbackRate.value = note.sample.rate ?? 1;
+        gain.gain.value = note.sample.gain;
+        source.connect(gain).connect(bus);
+        source.start(start);
+        return;
+      }
+    }
+    if (note.volume === 0) return; // nota que solo existe como sample
     if (note.noise) {
       const source = context.createBufferSource();
       const filter = context.createBiquadFilter();
@@ -266,13 +276,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
   const react = useCallback((session: Session, result: PressResult, pulse: number) => {
     session.cutUntil = pulse + 0.3;
     if (result.kind === "cut") {
-      const note = leadNote(session.run);
-      playCue([
-        { offset: 0, frequency: note, duration: 0.55, wave: "triangle", volume: 0.16, bus: "cue", glideTo: note * 0.995 },
-        { offset: 0, frequency: note * 2, duration: 0.12, wave: "sine", volume: 0.05, bus: "cue" },
-        { offset: 0, frequency: 0, duration: 0.09, wave: "sine", volume: 0.09, bus: "cue", noise: "high" },
-        { offset: 0, frequency: 2600, duration: 0.16, wave: "sine", volume: 0.04, bus: "cue", glideTo: 3300 },
-      ]);
+      playCue(cutSound(leadNote(session.run)));
       session.feedback = { text: "¡Zas!", miss: false, until: pulse + 0.5 };
       session.halves.push({ id: session.halfId++, color: result.target.color, start: pulse });
       if (session.run.mode === "song") {
@@ -286,7 +290,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
       session.greet = { x: place.x, y: place.y, until: pulse + 1.2 };
       setMessage("¡A la mariquita no se la corta! Déjala pasar.");
     } else {
-      playCue([{ offset: 0, frequency: 110, duration: 0.16, wave: "sine", volume: 0.14, bus: "cue", glideTo: 80 }]);
+      playCue(UY_SOUND);
       session.feedback = { text: "¡Uy!", miss: true, until: pulse + 0.5 };
       setMessage("Espera a que la flor llegue a la punta de la varita.");
     }
@@ -402,7 +406,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
       if (!counting) {
         if (session.run.mode === "demo") for (const result of autoCuts(session.run, pulse)) react(session, result, pulse);
         else if (collectFalls(session.run, pulse).length) {
-          playCue([{ offset: 0, frequency: 200, duration: 0.2, wave: "triangle", volume: 0.06, bus: "cue", glideTo: 90 }]);
+          playCue(PLOF_SOUND);
           session.feedback = { text: "plof", miss: true, until: pulse + 0.6 };
           setMessage("No pasa nada. ¡Ya viene otra flor!");
         }
@@ -456,23 +460,22 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
     </header>
 
     <div className={`bee-ninja-frame${reduceMotion ? " is-still" : ""}`} ref={frameRef} onPointerDown={(event) => { if (event.button === 0 && mode && mode !== "demo") strike(); }}>
-      <div className="bee-ninja-stage" style={{ transform: `scale(${scale})` }} aria-hidden="true">
+      <div className="bee-ninja-stage" style={{ transform: `scale(${scale})`, ...STAGE_ART }} aria-hidden="true">
         <img className="bee-ninja-background" src="./assets/worlds/world-11.webp" alt="" />
         <div className="bee-ninja-ground" />
         <div className="bee-ninja-comb">{[0, 1, 2, 3].map((index) => <span key={index} className={mode && view.lamp === index ? "is-on" : undefined} />)}</div>
         <div className={`bee-ninja-melisa${view.melisaThrowing && mode ? " is-throwing" : ""}`} style={{ backgroundImage: `url("${boss.assetAtlas}")`, backgroundPosition: `${melisaPose * 25}% 100%` }} />
         {mode && view.melisaBubble && <span className="bee-ninja-bubble is-melisa">{view.melisaBubble}</span>}
-        <div className={`bee-ninja-jar${view.jar >= 2 ? " is-reached" : ""}`} style={{ backgroundImage: 'url("./assets/sprites/tarro-miel-v0.png")', backgroundPosition: `${(mode || ended ? view.jar : 0) * 25}% 0` }}><span className="bee-ninja-line" /></div>
+        <div className={`bee-ninja-jar${view.jar >= 2 ? " is-reached" : ""}`} style={{ backgroundImage: 'url("./assets/sprites/tarro-miel-v1.webp")', backgroundPosition: `${(mode || ended ? view.jar : 0) * 25}% 0` }} />
         {view.ring && mode && <div className={`bee-ninja-ring${view.ring.ready ? " is-ready" : ""}`} style={{ left: CUT_POINT.x - 50, top: CUT_POINT.y - 50, transform: `scale(${view.ring.scale})` }} />}
         {view.ring?.ready && mode && <div className="bee-ninja-now" style={{ left: CUT_POINT.x - 26, top: CUT_POINT.y - 150 }}>¡Ya!</div>}
-        <div className="bee-ninja-hero" data-pose={heroPose} style={{ backgroundImage: 'url("./assets/sprites/noa-abeja-v0.png")', left: HERO.left, top: HERO.top, width: HERO.width, height: HERO.height }} />
-        {view.targets.map((target) => <div key={target.id} className={`bee-ninja-target is-${target.kind}`} style={{ transform: `translate(${target.x - 32}px, ${target.y - 32}px) rotate(${target.rotation}deg)`, opacity: target.opacity }}>
-          {target.kind === "ladybug" ? <Ladybug /> : <Flower color={COLORS[target.color % COLORS.length]} />}
-        </div>)}
-        {view.halves.map((half) => <div key={half.id} className="bee-ninja-cut-flower" style={{ left: CUT_POINT.x - 32, top: CUT_POINT.y - 32, "--petal": COLORS[half.color % COLORS.length] } as CSSProperties}>
-          <span className="is-left"><Flower color={COLORS[half.color % COLORS.length]} /></span>
-          <span className="is-right"><Flower color={COLORS[half.color % COLORS.length]} /></span>
-          {!reduceMotion && [0, 1, 2, 3].map((petal) => <i key={petal} style={{ "--dx": `${870 - CUT_POINT.x + (petal - 1.5) * 12}px`, "--dy": `${430 - CUT_POINT.y}px` } as CSSProperties} />)}
+        <div className="bee-ninja-hero" data-pose={heroPose} style={{ backgroundImage: 'url("./assets/sprites/noa-abeja-v1.webp")', left: HERO.left, top: HERO.top, width: HERO.width, height: HERO.height }} />
+        {view.targets.map((target) => <div key={target.id} className={`bee-ninja-target is-${target.kind}${target.kind === "ladybug" && view.greet ? " is-greeting" : ""}`}
+          style={{ transform: `translate(${target.x - 32}px, ${target.y - 32}px) rotate(${target.rotation}deg)`, opacity: target.opacity, ...(target.kind === "ladybug" ? {} : flowerSprite(target.color, 0)) }} />)}
+        {view.halves.map((half) => <div key={half.id} className="bee-ninja-cut-flower" style={{ left: CUT_POINT.x - 32, top: CUT_POINT.y - 32 }}>
+          <span className="is-left" style={flowerSprite(half.color, 1)} />
+          <span className="is-right" style={flowerSprite(half.color, 2)} />
+          {!reduceMotion && [0, 1, 2, 3].map((petal) => <i key={petal} style={{ ...flowerSprite(half.color, 3), "--dx": `${870 - CUT_POINT.x + (petal - 1.5) * 12}px`, "--dy": `${430 - CUT_POINT.y}px` } as CSSProperties} />)}
         </div>)}
         {view.greet && <span className="bee-ninja-bubble is-pink" style={{ left: view.greet.x - 24, top: view.greet.y - 70 }}>¡Hola!</span>}
         {view.feedback && <div className={`bee-ninja-feedback${view.feedback.miss ? " is-miss" : ""}`} style={{ left: CUT_POINT.x - 130, top: CUT_POINT.y - 110 }}>{view.feedback.text}</div>}

@@ -1,6 +1,6 @@
 # Super Noa
 
-Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de la campaña y de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja, el tambor de Armonía, la merienda de los jabatos y la avioneta. Los términos de **Campaña** describen la estructura del juego; los de **Sala-rompecabezas** y **Exploración**, esos formatos de pantalla; los de **Ritmo** son comunes a los minijuegos; los de **Piezas** y **Escena** son de los gatitos leñadores.
+Juego de plataformas para una niña de cinco años, con minijuegos finales por mundo. Este glosario recoge el vocabulario de la campaña y de los minijuegos rítmicos: los gatitos leñadores, la abeja ninja, el tambor de Armonía, la merienda de los jabatos y la avioneta. Los términos de **Campaña** describen la estructura del juego; los de **Sala-rompecabezas**, **Exploración** y **Persecución amable**, esos formatos de pantalla; los de **Ritmo** son comunes a los minijuegos; los de **Piezas** y **Escena** son de los gatitos leñadores.
 
 ## Campaña
 
@@ -92,6 +92,28 @@ _Avoid_: Coleccionable, llave, gato (es la caja y el poder), gatito del rescate 
 **Puerta de los gatitos**:
 Meta de una pantalla de exploración. Muestra tres huecos y solo se abre cuando están los tres gatitos perdidos.
 _Avoid_: Meta, bandera, puerta del claro
+
+## Persecución amable
+
+**Persecución amable**:
+Formato de pantalla en el que Noa persigue a un animal travieso que se ha llevado el ovillo. El animal corre más que ella, pero siempre la espera.
+_Avoid_: Carrera, huida, contrarreloj
+
+**Animal travieso**:
+Animal del mundo que huye con el ovillo de parada en parada y se deja pillar en el rincón. En su pantalla no hace daño ni aparece como enemigo.
+_Avoid_: Enemigo, fugitivo, ladrón
+
+**Parada**:
+Sitio donde el animal travieso espera a que Noa se acerque antes de correr a la siguiente.
+_Avoid_: Checkpoint (es donde reaparece Noa), punto de control
+
+**Rastro**:
+Marcas que salen del animal travieso hacia su siguiente parada.
+_Avoid_: Huella (es la del tambor de Armonía), camino
+
+**Rincón**:
+Última parada, sin salida, donde Noa pilla al animal travieso. Sustituye a la bandera.
+_Avoid_: Meta, bandera, final (reservado a la pantalla final de la campaña)
 
 ## Ritmo
 

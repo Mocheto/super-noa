@@ -1,0 +1,186 @@
+{
+  "puzzle-pieces-v1": {
+    "paw-button-up": [
+      4,
+      4,
+      144,
+      133
+    ],
+    "plate-up": [
+      152,
+      4,
+      144,
+      120
+    ],
+    "pink-button-up": [
+      300,
+      4,
+      144,
+      133
+    ],
+    "blue-button-up": [
+      448,
+      4,
+      144,
+      133
+    ],
+    "paw-button-down": [
+      596,
+      4,
+      162,
+      141
+    ],
+    "plate-down": [
+      762,
+      4,
+      179,
+      154
+    ],
+    "pink-button-down": [
+      4,
+      166,
+      158,
+      141
+    ],
+    "blue-button-down": [
+      166,
+      166,
+      157,
+      141
+    ],
+    "door-closed": [
+      327,
+      166,
+      212,
+      280
+    ],
+    "door-open": [
+      543,
+      166,
+      205,
+      280
+    ],
+    "emblem-paw": [
+      752,
+      166,
+      64,
+      65
+    ],
+    "emblem-star": [
+      820,
+      166,
+      64,
+      64
+    ],
+    "emblem-moon": [
+      888,
+      166,
+      64,
+      65
+    ],
+    "crate": [
+      4,
+      454,
+      192,
+      195
+    ],
+    "platform-pink-left": [
+      200,
+      454,
+      40,
+      48
+    ],
+    "platform-pink-middle": [
+      244,
+      454,
+      188,
+      48
+    ],
+    "platform-pink-right": [
+      436,
+      454,
+      40,
+      48
+    ],
+    "platform-blue-left": [
+      480,
+      454,
+      41,
+      48
+    ],
+    "platform-blue-middle": [
+      525,
+      454,
+      135,
+      48
+    ],
+    "platform-blue-right": [
+      664,
+      454,
+      41,
+      48
+    ]
+  },
+  "kitten-gate-v1": {
+    "cell": [
+      355,
+      408
+    ],
+    "frames": 2
+  },
+  "avioneta-v1": {
+    "size": [
+      348,
+      360
+    ]
+  },
+  "pompa-v1": {
+    "cell": [
+      90,
+      90
+    ],
+    "frames": 3
+  },
+  "nubarron-v1": {
+    "cell": [
+      266,
+      190
+    ],
+    "frames": 2
+  },
+  "arcoiris-final-v1": {
+    "size": [
+      2080,
+      1132
+    ]
+  },
+  "bocadillo-v1": {
+    "cell": [
+      248,
+      198
+    ],
+    "frames": 2,
+    "slice": {
+      "corner": 23,
+      "bodyBottom": 160
+    }
+  },
+  "cielo-avioneta-v1": {
+    "size": [
+      960,
+      1004
+    ],
+    "repeat": "vertical",
+    "layer": "nubes sobre degradado",
+    "skyTop": [
+      96,
+      172,
+      252
+    ],
+    "skyBottom": [
+      140,
+      207,
+      251
+    ]
+  }
+}

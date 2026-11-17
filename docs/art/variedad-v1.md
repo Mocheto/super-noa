@@ -2,6 +2,14 @@
 
 Dossier del arte nuevo del plan de variedad: la sala-rompecabezas, la exploración, la avioneta de las nubes y el paseo de los amigos. El arte se genera a mano con los prompts de este documento, sin servicios de pago integrados en la sesión. Ticket: [Preparar los dossiers del arte nuevo](https://github.com/Mocheto/super-noa/issues/70), del mapa [Variedad en la campaña](https://github.com/Mocheto/super-noa/issues/55).
 
+## Estado
+
+- **Hecho (17-11-2026):** las diez láminas están generadas, recortadas y exportadas (ver [Archivos finales](#archivos-finales)). Las originales están fuera del repositorio, en `../super-noa-arte-original/variedad-v1/`.
+- **Cambios respecto al plan:**
+  - las plataformas «fantasma» las pinta el juego con las sólidas a media opacidad (la fila generada no valía);
+  - el extremo derecho de la plataforma rosa sale de reflejar el izquierdo;
+  - el cielo es una **capa de nubes transparente** que se repite sobre un degradado pintado por el juego, porque el degradado de la lámina impedía un empalme sin salto.
+
 ## Qué hace falta y qué no
 
 | Cambio | Arte nuevo | Se reutiliza |
@@ -221,17 +229,23 @@ Plain flat solid pure green background (#00FF00) behind and between all elements
 
 ## Archivos finales
 
-Cuando tenga las láminas, las paso a estos archivos (ancho y alto en píxeles del archivo; el juego los escala al tamaño en escena):
+`python3 prototypes/tools/variedad-recorte.py ../super-noa-arte-original/variedad-v1` vuelve a generar todo desde las láminas originales (requiere Pillow, numpy y scipy). El script:
+- quita el verde del fondo y desmezcla el halo del JPEG y la hélice translúcida;
+- deja fuera las líneas de rejilla que dibujó el generador;
+- monta las tiras y el atlas;
+- escribe las medidas en [`variedad-v1-recortes.json`](variedad-v1-recortes.json): los recortes del atlas como `[x, y, ancho, alto]`.
 
-| Archivo | Contenido | Celdas |
+Medidas en píxeles del archivo; el juego dibuja a la mitad (2 × para pantallas nítidas).
+
+| Archivo | Contenido | Medidas |
 |---|---|---|
-| `atlases/puzzle-pieces-v1.webp` | Fila 1: botón de huella, placa, botón rosa y botón azul, arriba. Fila 2: lo mismo, abajo. Fila 3: puerta cerrada, puerta abierta y emblemas de huella, estrella y luna. Fila 4: cajón y piezas izquierda, centro y derecha de las plataformas rosa y azul, sólidas y transparentes. | rejilla de 128 × 128 (las puertas, 128 × 256) |
-| `sprites/kitten-gate-v1.webp` | Tira de 2: cerrada, abierta, con la posición de los tres huecos medida para dibujar los gatitos. | 2 × 280 × 400 |
-| `sprites/avioneta-v1.webp` | La avioneta recta, con el morro arriba. El juego la gira para inclinarla y la voltea para la voltereta. | 1 × 360 × 360 |
-| `sprites/pompa-v1.webp` | Tira de 3: pompa, pompa aplastada y estallido. | 3 × 80 × 80 |
-| `sprites/nubarron-v1.webp` | Tira de 2: gruñón y sonriente. | 2 × 256 × 192 |
-| `sprites/arcoiris-final-v1.webp` | El arcoíris entero. | 1 × 2080 × 600 |
-| `worlds/cielo-avioneta-v1.webp` | El cielo, con borde de arriba y de abajo empalmados. | 1 × 960 × 1080 |
-| `sprites/bocadillo-v1.webp` | Tira de 2: cola centrada y cola a la izquierda, con los márgenes del 9-slice medidos. | 2 × 240 × 120 |
+| `atlases/puzzle-pieces-v1.webp` | Atlas empaquetado (1024 de ancho):<ul><li>activadores `*-up` y `*-down`: `paw-button`, `plate`, `pink-button` y `blue-button`;</li><li>`door-closed` y `door-open`;</li><li>`emblem-paw`, `emblem-star` y `emblem-moon`;</li><li>`crate`;</li><li>`platform-{pink,blue}-{left,middle,right}`.</li></ul>El centro de las plataformas se repite en horizontal. Las plataformas transparentes son las sólidas a ~40 % de opacidad. El emblema va dentro del ventanuco redondo de la puerta cerrada. | ver JSON |
+| `sprites/kitten-gate-v1.webp` | Tira de 2 celdas: cerrada y abierta. Los tres huecos con cojín, en el arco, son donde el juego sienta a los gatitos. | 2 × 355 × 408 |
+| `sprites/avioneta-v1.webp` | La avioneta recta, con el morro arriba y la hélice translúcida. El juego la gira ±12° para inclinarla y la voltea para la voltereta. | 348 × 360 |
+| `sprites/pompa-v1.webp` | Tira de 3 celdas centradas: pompa, aplastada y estallido. | 3 × 90 × 90 |
+| `sprites/nubarron-v1.webp` | Tira de 2 celdas: gruñón (con bufidos) y sonriente (con destellos). | 2 × 266 × 190 |
+| `sprites/arcoiris-final-v1.webp` | El arcoíris con sus nubes y estrellas. | 2080 × 1132 |
+| `worlds/cielo-avioneta-v1.webp` | Capa de nubes transparente que se repite en vertical sin costura. Debajo, el juego pinta un degradado de `rgb(96,172,252)` arriba a `rgb(140,207,251)` abajo. | 960 × 1004 |
+| `sprites/bocadillo-v1.webp` | Tira de 2 celdas: cola centrada y cola a la izquierda. Para estirar se usa un 9-slice con esquinas de unos 24 px; la franja de la cola se estira por los lados, no por el centro. | 2 × 248 × 198 |
 
 Las rutas en el código usan siempre `./assets/...`.

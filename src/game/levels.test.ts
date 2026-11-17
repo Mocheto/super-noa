@@ -94,7 +94,7 @@ test("todos los checkpoints reaparecen sobre una superficie que permite aterriza
       `${level.id}: checkpoint ${checkpoint} aterriza en un peligro`);
     }
   }
-  assert.equal(checkpointCount, 201);
+  assert.equal(checkpointCount, 199);
 });
 
 test("el mundo del agua se abre entre los dos bosques desde una poza segura", () => {

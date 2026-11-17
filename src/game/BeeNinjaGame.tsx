@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { bossCatalog } from "./bosses";
+import { cssAssetUrl } from "./assets";
 import { Dialog } from "./Dialog";
 import type { SoundKind } from "./GameCanvas";
 import { firstConnectedGamepad } from "./gamepad";
@@ -85,8 +86,8 @@ const RESULT_TEXT: Record<Outcome["result"], { title: string; text: string }> = 
 
 /** Arte que usa la hoja de estilos, con rutas relativas al sitio publicado. */
 const STAGE_ART = {
-  "--flores": 'url("./assets/sprites/flores-abeja-v1.webp")',
-  "--mariquita": 'url("./assets/sprites/mariquita-v1.webp")',
+  "--flores": cssAssetUrl("./assets/sprites/flores-abeja-v1.webp"),
+  "--mariquita": cssAssetUrl("./assets/sprites/mariquita-v1.webp"),
 } as CSSProperties;
 /** Rejilla de `flores-abeja-v1.webp`: columna = color; filas = entera, mitad izquierda, mitad derecha y pétalo. */
 const flowerSprite = (color: number, row: 0 | 1 | 2 | 3): CSSProperties => ({ backgroundPosition: `${(color % 4) * 100 / 3}% ${row * 100 / 3}%` });

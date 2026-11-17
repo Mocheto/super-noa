@@ -37,6 +37,16 @@ const optimizedImages = new Set([
   "sprites/noa-cat-run-v2", "sprites/yarn-ball-v1",
 ].map((name) => `./assets/${name}.png`));
 
+/**
+ * `url()` para pasar arte a una hoja de estilos mediante variables CSS. Una ruta relativa dentro de una variable se
+ * resuelve contra la hoja compilada (que vive en `assets/`), no contra la página; por eso se resuelve aquí contra la
+ * página y se conserva el funcionamiento en el dominio propio y bajo una subruta de GitHub Pages.
+ */
+export function cssAssetUrl(src: string): string {
+  const resolved = typeof document === "undefined" ? src : new URL(src, document.baseURI).href;
+  return `url("${resolved}")`;
+}
+
 export function optimizedAssetSource(src: string): string {
   return optimizedImages.has(src) ? src.replace(/\.png$/, ".webp") : src;
 }

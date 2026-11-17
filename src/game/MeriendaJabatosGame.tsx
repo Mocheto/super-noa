@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { bossCatalog } from "./bosses";
+import { cssAssetUrl } from "./assets";
 import { Dialog } from "./Dialog";
 import type { SoundKind } from "./GameCanvas";
 import { firstConnectedGamepad } from "./gamepad";
@@ -72,9 +73,9 @@ const JABATO_SPRITES: Record<JabatoKind, string> = {
 };
 /** Arte que usa la hoja de estilos, con rutas relativas al sitio publicado. */
 const STAGE_ART = {
-  "--noa-sprite": 'url("./assets/sprites/noa-guarda-v1.webp")',
-  "--rama": 'url("./assets/sprites/rama-bellotas-vacia-v1.webp")',
-  "--bellota": 'url("./assets/sprites/bellota-v1.webp")',
+  "--noa-sprite": cssAssetUrl("./assets/sprites/noa-guarda-v1.webp"),
+  "--rama": cssAssetUrl("./assets/sprites/rama-bellotas-vacia-v1.webp"),
+  "--bellota": cssAssetUrl("./assets/sprites/bellota-v1.webp"),
 } as CSSProperties;
 const FOOD_SPRITES: Record<Food, string> ={ bellota: "./assets/sprites/bellota-v1.webp", castana: "./assets/sprites/castana-v1.webp" };
 
@@ -120,7 +121,7 @@ function snapshot(session: Session, pulse: number, counting: number): View {
 function Dots({ dots, className }: { dots: Dot[]; className: string }) {
   return <div className={className}>
     {dots.map((dot) => <i key={dot.pulse} className={`merienda-dot${dot.bite ? " is-bite" : ""}${dot.big ? " is-big" : ""} is-${dot.state}`}
-      style={dot.bite ? { "--food": `url("${FOOD_SPRITES[dot.big ? "castana" : "bellota"]}")` } as CSSProperties : undefined} />)}
+      style={dot.bite ? { "--food": cssAssetUrl(FOOD_SPRITES[dot.big ? "castana" : "bellota"]) } as CSSProperties : undefined} />)}
   </div>;
 }
 

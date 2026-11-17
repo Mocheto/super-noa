@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
-import { getImage, getLevelAssets, optimizedAssetSource } from "./assets.ts";
+import { cssAssetUrl, getImage, getLevelAssets, optimizedAssetSource } from "./assets.ts";
 import { levels } from "./levels.ts";
 import { mechanicSpriteSheets, type MechanicSprite } from "./mechanicSprites.ts";
 import { readRgbaPng } from "./pngTestUtils.ts";
@@ -162,4 +162,13 @@ test("la interfaz y el motor comparten una fuente optimizada y la misma imagen",
   } finally {
     globalThis.Image = originalImage;
   }
+});
+
+test("el arte que llega a la hoja de estilos por variables CSS se resuelve contra la página", () => {
+  // Una ruta relativa dentro de una variable se resolvería contra la hoja compilada (assets/assets/...).
+  for (const file of readdirSync("src/game").filter((name) => name.endsWith(".tsx"))) {
+    const source = readFileSync(`src/game/${file}`, "utf8");
+    assert.doesNotMatch(source, /"--[a-z-]+":\s*['`]url\(/, `${file} pasa una url() relativa por una variable CSS`);
+  }
+  assert.equal(cssAssetUrl("./assets/sprites/noa-guarda-v1.webp"), 'url("./assets/sprites/noa-guarda-v1.webp")');
 });

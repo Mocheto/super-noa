@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { bossCatalog } from "./bosses";
+import { cssAssetUrl } from "./assets";
 import { Dialog } from "./Dialog";
 import type { SoundKind } from "./GameCanvas";
 import { firstConnectedGamepad } from "./gamepad";
@@ -427,13 +428,13 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
         <div className={`armonia-drum-lamps${view.turn ? ` is-${view.turn}` : ""}`}>{[0, 1, 2, 3].map((index) => <span key={index} className={mode && view.lamp === index ? "is-on" : undefined} />)}</div>
         <div className={`armonia-drum-armonia${view.armoniaHit && mode ? " is-hit" : ""}`} style={{ backgroundImage: `url("${boss.assetAtlas}")`, backgroundPosition: `${armoniaPose * 25}% 100%` }} />
         <div className={`armonia-drum-drum${view.armoniaHit && mode ? " is-hit" : ""}`} style={{ ...ARMONIA_DRUM, backgroundImage: 'url("./assets/sprites/tambor-armonia-v0.png")' }} />
-        <div className="armonia-drum-noa" style={{ ...NOA, "--noa-sprite": 'url("./assets/sprites/noa-tambor-v0.png")', backgroundPosition: `${NOA_POSES[noaPose]} 0` } as CSSProperties} />
+        <div className="armonia-drum-noa" style={{ ...NOA, "--noa-sprite": cssAssetUrl("./assets/sprites/noa-tambor-v0.png"), backgroundPosition: `${NOA_POSES[noaPose]} 0` } as CSSProperties} />
         <div className={`armonia-drum-drum${view.noaHit && mode ? " is-hit" : ""}${view.noaGlow && mode ? " is-glow" : ""}`} style={{ ...NOA_DRUM, backgroundImage: 'url("./assets/sprites/tambor-noa-v0.png")' }} />
         {prints && <Prints view={prints} className="armonia-drum-prints" style={prints.drum === "armonia" ? { left: armoniaPrints.x, top: armoniaPrints.y } : { left: noaPrints.x, top: noaPrints.y }} />}
         {mode && view.armoniaBubble && <span className="armonia-drum-bubble is-armonia">{view.armoniaBubble}</span>}
         {mode && view.noaBubble && <span className="armonia-drum-bubble is-noa">{view.noaBubble}</span>}
         {view.feedback && mode && <div className={`armonia-drum-feedback${view.feedback.miss ? " is-miss" : ""}`}>{view.feedback.text}</div>}
-        <div className={`armonia-drum-stand${showGoal && got >= WIN_AT ? " is-reached" : ""}`} style={{ "--atril": 'url("./assets/sprites/atril-armonia-v0.png")' } as CSSProperties}>
+        <div className={`armonia-drum-stand${showGoal && got >= WIN_AT ? " is-reached" : ""}`} style={{ "--atril": cssAssetUrl("./assets/sprites/atril-armonia-v0.png") } as CSSProperties}>
           <div className="armonia-drum-staff">
             {Array.from({ length: total }, (_, index) => <i key={index} className={index < got ? "is-got" : undefined} />)}
             {showGoal && <b className="armonia-drum-line" style={{ left: `calc(${WIN_AT / total * 100}% - 3px)` }} />}

@@ -1,0 +1,238 @@
+<meta charset="utf-8">
+<title>Palabras al recoger</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+/* Estética del juego (un solo aspecto, oscuro). Una pantalla del mundo 1 con el arte real; Noa corre sola y recoge objetos. */
+:root {
+  color-scheme: dark;
+  --night: #25183f;
+  --room: #1b1129;
+  --plum: #3d1430;
+  --cream: #fff8e9;
+  --gold: #ffd45f;
+  --lilac: #b979dc;
+  --noa: "Press Start 2P", ui-monospace, monospace;
+  --adult: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--night); color: var(--cream); font-family: var(--adult); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+h1 { margin: 0; font-family: var(--noa); font-size: clamp(16px, 3vw, 24px); color: var(--gold); }
+.lead { margin: 0; max-width: 78ch; color: #e9dcf0; line-height: 1.5; }
+.controls { display: grid; gap: 10px; padding: 12px 14px; background: rgba(0,0,0,.25); border: 2px solid #623879; font-size: .9rem; }
+.controls > span { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.controls > span > b { min-width: 10ch; font-weight: 600; color: #e9dcf0; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 2px solid var(--lilac); }
+.seg button, .act { font: inherit; padding: 6px 12px; background: transparent; color: var(--cream); border: 0; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--lilac); color: var(--night); font-weight: 700; }
+.act { border: 2px solid var(--gold); color: var(--gold); }
+.seg button:focus-visible, .act:focus-visible { outline: 4px solid var(--gold); outline-offset: 2px; }
+.stage { background: var(--room); border: 4px solid #120b1d; padding: 12px; }
+canvas#c { display: block; width: 100%; max-width: 960px; margin: 0 auto; aspect-ratio: 16 / 9; image-rendering: pixelated; box-shadow: 0 0 0 4px var(--plum), 0 0 0 8px var(--gold), 0 0 0 12px var(--plum); }
+.log { margin: 10px auto 0; max-width: 960px; font-size: .85rem; color: #cdb8dc; min-height: 1.4em; }
+.desc { padding: 12px 14px; background: #2c1d47; border: 4px solid #2e1a3b; line-height: 1.55; font-size: .92rem; display: grid; gap: 8px; }
+.desc p { margin: 0; max-width: 90ch; }
+.desc b { color: var(--gold); }
+.desc ul { margin: 0; padding-left: 1.2em; }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <h1>PALABRAS AL RECOGER</h1>
+    <p class="lead">Prototipo del ticket «Palabras al recoger objetos». Noa corre sola por una pantalla del mundo 1 y recoge tres manzanas, el gato, una bandera, la pegatina y otra manzana. Al recoger algo aparece el dibujo del propio objeto con su palabra. Cambia dónde sale, cuándo, cuánto dura y el movimiento, y mira cómo convive con los carteles de la pantalla. El recorrido se repite solo.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Opciones del prototipo">
+    <span><b>Dónde</b> <span class="seg" data-k="where"><button type="button" data-v="A" aria-pressed="true">A · Sobre Noa</button><button type="button" data-v="B">B · Junto al contador</button><button type="button" data-v="C">C · Donde estaba el objeto</button></span></span>
+    <span><b>Cuándo</b> <span class="seg" data-k="when"><button type="button" data-v="first" aria-pressed="true">La primera vez en cada pantalla</button><button type="button" data-v="always">Siempre</button></span></span>
+    <span><b>Duración</b> <span class="seg" data-k="dur"><button type="button" data-v="1">1 s</button><button type="button" data-v="1.5" aria-pressed="true">1,5 s</button><button type="button" data-v="2.5">2,5 s</button></span></span>
+    <span><b>Movimiento</b> <span class="seg" data-k="motion"><button type="button" data-v="normal" aria-pressed="true">Normal</button><button type="button" data-v="calm">Tranquilo</button></span></span>
+    <span><b>Carteles</b> <span class="seg" data-k="signs"><button type="button" data-v="on" aria-pressed="true">Con carteles</button><button type="button" data-v="off">Sin carteles</button></span>
+      <button type="button" class="act" id="restart">Empezar otra vez</button> <button type="button" class="act" id="pause" aria-pressed="false">Pausa</button></span>
+  </div>
+
+  <div class="stage">
+    <canvas id="c" width="960" height="540" role="img" aria-label="Noa corre por el prado de las manzanas y recoge objetos; al recogerlos aparece su palabra."></canvas>
+    <p class="log" id="log" aria-live="polite"></p>
+  </div>
+  <div class="desc" id="desc"></div>
+</div>
+
+<script>
+const IMG = { bg: "__BG__", noa: "__NOA__", col: "__COL__", flag: "__FLAG__" };
+const img = {}; const loads = Object.entries(IMG).map(([k, src]) => new Promise((r) => { const i = new Image(); i.onload = r; i.onerror = r; i.src = src; img[k] = i; }));
+const state = { where: "A", when: "first", dur: "1.5", motion: "normal", signs: "on", paused: false };
+const cv = document.getElementById("c"), ctx = cv.getContext("2d"); ctx.imageSmoothingEnabled = false;
+const W = 960, H = 540, GROUND = 456, PLUM = "#3d1430", CREAM = "#fff8e9";
+
+/* Palabras: el dibujo es el propio objeto del juego. */
+const WORDS = { apple: "MANZANA", cat: "GATO", flag: "BANDERA", sticker: "PEGATINA" };
+const itemsDef = [
+  { kind: "apple", x: 520, y: GROUND - 34 }, { kind: "apple", x: 640, y: GROUND - 34 },
+  { kind: "apple", x: 1180, y: GROUND - 150 },
+  { kind: "cat", x: 1540, y: GROUND - 36 },
+  { kind: "flag", x: 1920, y: GROUND - 60 },
+  { kind: "sticker", x: 2330, y: GROUND - 250 },
+  { kind: "apple", x: 2720, y: GROUND - 34 },
+];
+const jumps = [{ x: 1090 }, { x: 2210, double: true }];
+const blockSign = { x: 960, y: 300, text: "¿QUE HAY?" };
+const END = 3150;
+
+let noa, items, words, flyers, counts, seen, t0, hintT, lastLog;
+function reset() {
+  noa = { x: 200, y: GROUND, vy: 0, cat: false, onGround: true, jumpsDone: new Set(), doubleArmed: false };
+  items = itemsDef.map((d) => ({ ...d, taken: false }));
+  words = []; flyers = []; counts = { apple: 0, sticker: 0, flag: 0 }; seen = new Set(); t0 = performance.now(); hintT = 0; lastLog = "";
+}
+reset();
+
+const calm = () => state.motion === "calm";
+const dur = () => +state.dur;
+
+function collect(it) {
+  it.taken = true;
+  if (it.kind === "cat") noa.cat = true; else counts[it.kind]++;
+  const show = state.when === "always" || !seen.has(it.kind); seen.add(it.kind);
+  const target = hudSlot(it.kind);
+  if (state.where === "B" && target && !calm()) flyers.push({ kind: it.kind, sx: it.x - camX(), sy: it.y, tx: target.x, ty: target.y, t: 0 });
+  if (!show) { log(`${WORDS[it.kind]}: ya salió en esta pantalla, no se repite.`); return; }
+  // Solo una palabra a la vez: la nueva sustituye a la anterior.
+  words = [{ kind: it.kind, wx: it.x, wy: it.y, t: 0, delay: state.where === "B" && !calm() ? .45 : 0 }];
+  log(`Sale «${WORDS[it.kind]}».`);
+}
+function log(s) { if (s !== lastLog) { document.getElementById("log").textContent = s; lastLog = s; } }
+
+function camX() { return Math.max(0, Math.min(noa.x - 320, END + 200 - W)); }
+
+function update(dt) {
+  hintT += dt;
+  noa.x += 230 * dt;
+  for (const j of jumps) if (!noa.jumpsDone.has(j.x) && noa.x >= j.x && noa.onGround) { noa.jumpsDone.add(j.x); noa.vy = -625; noa.onGround = false; noa.doubleArmed = !!j.double; }
+  if (!noa.onGround) {
+    noa.vy += 1650 * dt; noa.y += noa.vy * dt;
+    if (noa.doubleArmed && noa.vy >= -40) { noa.vy = -625; noa.doubleArmed = false; }
+    if (noa.y >= GROUND) { noa.y = GROUND; noa.vy = 0; noa.onGround = true; }
+  }
+  for (const it of items) if (!it.taken && Math.abs(it.x - noa.x) < 40 && it.y > noa.y - 90 && it.y < noa.y + 10) collect(it);
+  for (const w of words) w.t += dt;
+  words = words.filter((w) => w.t < w.delay + dur() + .3);
+  for (const f of flyers) f.t += dt; flyers = flyers.filter((f) => f.t < .45);
+  if (noa.x > END) reset();
+}
+
+/* ---------- dibujo ---------- */
+function sprite(kind, x, y, s) {
+  const cells = { apple: [0, 0], cat: [1, 0], sticker: [2, 0], sun: [0, 1], block: [2, 1] };
+  if (kind === "flag") { ctx.drawImage(img.flag, x - s / 2, y - s / 2, s, s); return; }
+  const [c, r] = cells[kind]; const cs = img.col.naturalWidth / 4; ctx.drawImage(img.col, c * cs, r * cs, cs, cs, x - s / 2, y - s / 2, s, s);
+}
+function drawNoa(x, y, frame) {
+  const cw = img.noa.naturalWidth / 4, ch = img.noa.naturalHeight / 4;
+  let col, row;
+  if (noa.cat) { row = 3; col = noa.onGround ? 1 : 2; } else if (!noa.onGround) { row = 2; col = 0; } else { row = 1; col = frame % 4; }
+  const w = 84, h = 95; ctx.drawImage(img.noa, col * cw, row * ch, cw, ch, x - w / 2, y - h + 6, w, h);
+}
+function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+/* La palabra: dibujo del objeto a 32 px y palabra en Press Start 2P a 24 px, en una etiqueta crema con contorno ciruela. */
+function tag(kind, cx, cy, alpha, scale = 1) {
+  const text = WORDS[kind]; ctx.save(); ctx.globalAlpha = alpha; ctx.font = `${24 * scale}px "Press Start 2P", monospace`;
+  const tw = ctx.measureText(text).width, ic = 36 * scale, pad = 12 * scale, gap = 8 * scale;
+  const w = pad * 2 + ic + gap + tw, h = 52 * scale, x = cx - w / 2, y = cy - h / 2;
+  ctx.fillStyle = "rgba(0,0,0,.35)"; roundRect(x + 4, y + 5, w, h, 10); ctx.fill();
+  ctx.fillStyle = CREAM; ctx.strokeStyle = PLUM; ctx.lineWidth = 4; roundRect(x, y, w, h, 10); ctx.fill(); ctx.stroke();
+  sprite(kind, x + pad + ic / 2, cy, ic * 1.15);
+  ctx.fillStyle = PLUM; ctx.textBaseline = "middle"; ctx.fillText(text, x + pad + ic + gap, cy + 2);
+  ctx.restore(); return { x, y, w, h };
+}
+function sign(text, cx, cy, alpha = 1) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.font = `16px "Press Start 2P", monospace`; const tw = ctx.measureText(text).width;
+  ctx.fillStyle = "rgba(37,24,63,.88)"; roundRect(cx - tw / 2 - 12, cy - 18, tw + 24, 36, 6); ctx.fill(); ctx.strokeStyle = CREAM; ctx.lineWidth = 3; ctx.stroke();
+  ctx.fillStyle = "#ffe46b"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(text, cx, cy + 1); ctx.restore();
+}
+function hudSlot(kind) { return { apple: { x: 170, y: 34 }, sticker: { x: 264, y: 34 }, flag: { x: W / 2, y: 34 }, cat: { x: 404, y: 34 } }[kind]; }
+const bump = { apple: 0, sticker: 0, flag: 0, cat: 0 };
+
+function drawHud() {
+  ctx.save(); ctx.font = `16px "Press Start 2P", monospace`; ctx.textBaseline = "middle";
+  const pill = (x, w) => { ctx.fillStyle = "rgba(37,24,63,.85)"; roundRect(x, 12, w, 44, 6); ctx.fill(); ctx.strokeStyle = "#352044"; ctx.lineWidth = 3; ctx.stroke(); };
+  pill(12, 126); ctx.fillStyle = "#f2264b"; ctx.font = `22px system-ui`; ctx.fillText("❤ ❤ ❤", 26, 35);
+  ctx.font = `16px "Press Start 2P", monospace`;
+  const b = (k) => 1 + Math.max(0, bump[k]) * .5;
+  pill(148, 84); sprite("apple", 170, 34, 32 * b("apple")); ctx.fillStyle = CREAM; ctx.fillText(String(counts.apple), 192, 35);
+  pill(240, 108); sprite("sticker", 264, 34, 32 * b("sticker")); ctx.fillText(counts.sticker + "/1", 284, 35);
+  if (noa.cat) { pill(356, 56); sprite("cat", 384, 34, 34 * b("cat")); }
+  // centro: mundo y banderas con puntos
+  ctx.fillStyle = "#ffd45f"; roundRect(W / 2 - 92, 12, 184, 44, 6); ctx.fill(); ctx.strokeStyle = PLUM; ctx.stroke();
+  ctx.fillStyle = "#352044"; ctx.textAlign = "center"; ctx.fillText("1-1 " + (counts.flag ? "●" : "○") + "○", W / 2 + 6, 35);
+  // pausa
+  ctx.fillStyle = "#5b386c"; roundRect(W - 76, 12, 62, 62, 14); ctx.fill(); ctx.strokeStyle = CREAM; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = CREAM; ctx.fillText("II", W - 45, 44);
+  ctx.restore();
+}
+
+let frameN = 0, last = 0, acc = 0;
+function draw(now) {
+  const cam = camX();
+  // fondo con paralaje
+  const bw = img.bg.naturalWidth ? H * img.bg.naturalWidth / img.bg.naturalHeight : W; const off = -(cam * .35) % bw;
+  for (let x = off; x < W; x += bw) ctx.drawImage(img.bg, x, 0, bw, H);
+  // suelo
+  ctx.fillStyle = "#6fbf4a"; ctx.fillRect(0, GROUND, W, 14); ctx.fillStyle = "#8a5a34"; ctx.fillRect(0, GROUND + 14, W, H - GROUND); ctx.fillStyle = PLUM; ctx.fillRect(0, GROUND - 3, W, 3);
+  for (let x = -(cam % 48); x < W; x += 48) { ctx.fillStyle = "#5aa83c"; ctx.fillRect(x, GROUND + 4, 24, 6); }
+  // caja con cartel del lienzo
+  sprite("block", blockSign.x - cam, blockSign.y, 56);
+  const wordActive = words.some((w) => w.t >= w.delay && w.t < w.delay + dur());
+  if (state.signs === "on") sign("📦 " + blockSign.text, blockSign.x - cam, blockSign.y - 52, wordActive && state.where !== "B" ? .35 : 1);
+  // objetos
+  const bob = calm() ? 0 : Math.sin(now / 250) * 4;
+  for (const it of items) if (!it.taken) sprite(it.kind, it.x - cam, it.y + bob, it.kind === "flag" ? 96 : 46);
+  drawNoa(noa.x - cam, noa.y, Math.floor(now / 110));
+  // cartel de la mecánica, los primeros segundos (como «ayudaInicio»)
+  if (state.signs === "on" && hintT < 5) sign("📦 SALTA Y ABRE", W / 2, 92, hintT > 4.4 ? (5 - hintT) / .6 : 1);
+  // palabras
+  for (const w of words) {
+    if (w.t < w.delay) continue; const t = w.t - w.delay, D = dur();
+    const fadeIn = calm() ? Math.min(1, t / .25) : Math.min(1, t / .12);
+    const fadeOut = t > D ? Math.max(0, 1 - (t - D) / .3) : 1; const a = fadeIn * fadeOut;
+    const pop = calm() ? 1 : t < .15 ? .8 + t / .15 * .2 : 1;
+    if (state.where === "A") { const rise = calm() ? 0 : Math.min(t, D) * 14; tag(w.kind, Math.max(130, Math.min(W - 130, noa.x - cam)), noa.y - 130 - rise, a, pop); }
+    if (state.where === "C") { const rise = calm() ? 0 : Math.min(t, D) * 14; tag(w.kind, Math.max(130, Math.min(W - 130, w.wx - cam)), Math.max(110, w.wy - 60 - rise), a, pop); }
+    if (state.where === "B") { const s = hudSlot(w.kind); ctx.save(); tag(w.kind, s.x + 50 + (w.kind === "flag" ? 0 : 120), 96, a, pop); ctx.restore(); }
+  }
+  // objetos que vuelan al contador (B)
+  for (const f of flyers) { const k = f.t / .45, e = 1 - (1 - k) ** 2; const x = f.sx + (f.tx - f.sx) * e, y = f.sy + (f.ty - f.sy) * e - Math.sin(k * Math.PI) * 80; sprite(f.kind, x, y, 46 - 14 * k); if (k > .9) bump[f.kind] = 1; }
+  for (const k in bump) bump[k] = Math.max(0, bump[k] - .06);
+  drawHud();
+}
+function loop(now) {
+  const dt = Math.min(.05, (now - (last || now)) / 1000); last = now;
+  if (!state.paused) update(dt);
+  draw(now); requestAnimationFrame(loop);
+}
+
+const notes = {
+  A: `<b>A · Sobre Noa.</b> La etiqueta sale encima de la cabeza de Noa y la sigue mientras corre. La mirada ya está en Noa, así que se ve seguro. Puede tapar un poco lo que viene por arriba (plataformas, enemigos que vuelan).`,
+  B: `<b>B · Junto al contador.</b> El objeto vuela hasta su contador del HUD, el contador da un saltito y la palabra aparece debajo. Une objeto, dibujo y número, y no tapa el camino. Pero la etiqueta queda lejos de donde mira Noa, y la bandera y el gato no tienen contador propio.`,
+  C: `<b>C · Donde estaba el objeto.</b> La etiqueta sale en el sitio del objeto y se queda ahí mientras Noa sigue. Se entiende qué objeto era, pero al correr la etiqueta se queda atrás y a veces se sale de la pantalla antes de leerla.`,
+};
+function render() {
+  document.querySelectorAll(".seg").forEach((sg) => sg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(state[sg.dataset.k] === b.dataset.v))));
+  document.getElementById("desc").innerHTML = `<p>${notes[state.where]}</p>
+  <p><b>Cuándo.</b> ${state.when === "first" ? "Ahora sale solo la primera manzana, la primera pegatina, el gato y la primera bandera de cada pantalla. Las manzanas segunda y tercera no la repiten." : "Ahora sale cada vez: las tres manzanas seguidas repiten «MANZANA» y cada una sustituye a la anterior."}</p>
+  <p><b>Reglas comunes del prototipo.</b></p><ul>
+  <li>El dibujo es el propio objeto del juego (manzana, gato, bandera, pegatina) y la palabra va en Press Start 2P a 24 px, sobre una etiqueta crema con contorno ciruela.</li>
+  <li>Solo hay una palabra a la vez: si Noa recoge otra cosa, la nueva sustituye a la anterior.</li>
+  <li>Si hay un cartel de la pantalla cerca («¿QUE HAY?» sobre la caja), se aclara mientras está la palabra. El cartel de arriba de los primeros segundos no se mueve.</li>
+  <li>Con movimiento tranquilo la etiqueta no sube ni da un saltito: aparece y se funde. En B el objeto no vuela, y la palabra sale directamente junto al contador.</li>
+  <li>Llevan palabra la manzana, la pegatina, el gato y la bandera. La lana ya es un rótulo propio («¡TU LANA!») y los gatitos perdidos tienen el suyo.</li></ul>`;
+}
+document.querySelectorAll(".seg").forEach((sg) => sg.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; state[sg.dataset.k] = b.dataset.v; if (sg.dataset.k === "when" || sg.dataset.k === "where") reset(); render(); }));
+document.getElementById("restart").addEventListener("click", reset);
+document.getElementById("pause").addEventListener("click", (e) => { state.paused = !state.paused; e.currentTarget.setAttribute("aria-pressed", String(state.paused)); e.currentTarget.textContent = state.paused ? "Seguir" : "Pausa"; });
+if (matchMedia("(prefers-reduced-motion: reduce)").matches) state.motion = "calm";
+render();
+Promise.all([...loads, document.fonts?.load('24px "Press Start 2P"')]).then(() => requestAnimationFrame(loop));
+</script>

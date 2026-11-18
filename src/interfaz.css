@@ -87,6 +87,8 @@
   image-rendering: pixelated;
 }
 .pictograma-doble .pictograma, .pictograma.pictograma-doble { font-size: 2em; vertical-align: middle; }
+/* Pictograma dibujado: la celda del atlas, cuadrada y sin suavizar. */
+.pictograma-atlas { width: 1em; min-width: 1em; background-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; image-rendering: pixelated; }
 /* El espacio tras el pictograma lo pone el margen, no la letra: en Press Start 2P un espacio mide una letra entera. */
 .pictograma { margin-inline-end: .3em; }
 .pictograma-doble .pictograma { margin-inline-end: .2em; }

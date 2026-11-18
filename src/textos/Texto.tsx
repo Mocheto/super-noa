@@ -1,10 +1,23 @@
 import type { ButtonHTMLAttributes } from "react";
 import { partes, t, type ClaveTexto, type Variables } from "./index.ts";
-import { pictogramas, type Pictograma as NombrePictograma } from "./pictogramas.ts";
+import { ATLAS_PICTOGRAMAS, celdaPictograma, pictogramas, type Pictograma as NombrePictograma } from "./pictogramas.ts";
+import { pictogramasDibujados } from "./pictogramasDibujados.ts";
+
+const dibujados = new Set<string>(pictogramasDibujados);
 
 /** Un pictograma suelto. Es decorativo: la palabra o la etiqueta oculta ya lo dicen. */
 export function Pictograma({ nombre, doble = false }: { nombre: NombrePictograma; doble?: boolean }) {
-  return <span className={`pictograma pictograma-${nombre}${doble ? " pictograma-doble" : ""}`} aria-hidden="true">{pictogramas[nombre]}</span>;
+  const clase = `pictograma pictograma-${nombre}${doble ? " pictograma-doble" : ""}`;
+  if (!dibujados.has(nombre)) return <span className={clase} aria-hidden="true">{pictogramas[nombre]}</span>;
+  // Con dibujo: la celda del atlas. Los controles son una máscara blanca que toma el color del texto.
+  const celda = celdaPictograma(nombre);
+  const posicion = `${celda.columna * 100 / (celda.columnas - 1)}% ${celda.fila * 100 / (celda.filas - 1)}%`;
+  const tamano = `${celda.columnas * 100}% ${celda.filas * 100}%`;
+  const imagen = `url("${ATLAS_PICTOGRAMAS[celda.atlas]}")`;
+  const estilo = celda.atlas === "color"
+    ? { backgroundImage: imagen, backgroundPosition: posicion, backgroundSize: tamano }
+    : { maskImage: imagen, WebkitMaskImage: imagen, maskPosition: posicion, WebkitMaskPosition: posicion, maskSize: tamano, WebkitMaskSize: tamano, backgroundColor: "currentColor" };
+  return <span className={`${clase} pictograma-atlas`} style={estilo} aria-hidden="true" />;
 }
 
 /** Pinta un texto ya resuelto con sus pictogramas. */

@@ -91,6 +91,13 @@ En los controles, el fondo negro se elimina después para dejar el blanco sobre 
 
 ## Al ejecutar
 
-- Mientras no exista el atlas, los emoji de la guía sirven de relleno.
+- El atlas se completa poco a poco. `prototypes/tools/pictogramas-recorte.py` recorta cada lámina que sale del generador (una fila de dibujos, fondo blanco para los de color y negro para los controles), reduce cada dibujo a la rejilla de 24, lo amplía × 4 sin suavizar y lo pega en su celda; las demás celdas no se tocan. También escribe `src/textos/pictogramasDibujados.ts` con los nombres que ya tienen dibujo:
+
+  ```bash
+  uv run --with pillow --with numpy --with scipy python3 prototypes/tools/pictogramas-recorte.py --color LAMINA.jpg vidas,estrella,reto,flor,-,- --controles LAMINA.jpg salta,-,-,-,pausa
+  ```
+
+  Los nombres van en el orden de los dibujos de la lámina, y «-» salta un dibujo que no tiene casilla.
+- `<Pictograma>` pinta la celda del atlas si el pictograma ya tiene dibujo y su emoji si todavía no. Los controles son una máscara blanca que toma el color del texto. En el lienzo (`textoLienzo`) siguen los emoji.
 - El catálogo de textos expresa la palabra con dibujo como `{pictograma:manzana} MANZANA`. El nombre del pictograma coincide con la palabra de la lista, en minúsculas, sin tildes y con guiones (`no-muerde`, `sin-sonido`).
 - Cada atlas nuevo lleva una prueba de recursos: tamaño 576 × 576 y 480 × 288, fondo transparente y celdas no vacías, como las de los demás atlas.

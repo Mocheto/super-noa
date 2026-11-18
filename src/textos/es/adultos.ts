@@ -5,6 +5,10 @@
 export const adultos = {
   /** Ayuda de teclado, mando y sin sonido de los minijuegos: solo en su pantalla previa. */
   minijuegos: {
+    tambor: {
+      controles: "Teclado: Espacio. Mando: botón A. También puedes tocar la escena o el botón de golpear.",
+      sinSonido: "Sin sonido, sigue las huellas, el foco y las luces: el foco ilumina a quien toca.",
+    },
     abeja: {
       controles: "Teclado: Espacio. Mando: botón A. También puedes tocar la escena o el botón de cortar.",
       sinSonido: "Sin sonido, sigue el aro dorado y el panal: la flor está lista cuando el aro se ilumina.",

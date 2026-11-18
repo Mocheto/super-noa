@@ -21,7 +21,8 @@ export type Phase = 1 | 2 | 3;
 export type CallPair = { phase: Phase; hits: readonly number[] };
 export type DrumScore = { pairs: readonly CallPair[]; closingBars: number; auto: boolean };
 
-export const PHASE_NAMES: Record<Phase, string> = { 1: t("minijuegos.tambor.golpes-sueltos.rotulo"), 2: t("minijuegos.tambor.golpes-seguidos.rotulo"), 3: t("minijuegos.tambor.todo-el-compas.rotulo") };
+/** Cartel de fase: solo cuando cambia la forma de los golpes (la primera fase no lleva cartel). */
+export const PHASE_NAMES: Record<Phase, string | null> = { 1: null, 2: t("minijuegos.tambor.fase.seguidos.rotulo"), 3: t("minijuegos.tambor.fase.cuatro.rotulo") };
 
 const pair = (phase: Phase, ...hits: number[]): CallPair => ({ phase, hits });
 

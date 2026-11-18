@@ -104,3 +104,29 @@
   .armonia-drum-hit { min-height: 62px; font-size: 1.2rem; }
   .armonia-drum-actions .pixel-button { min-width: 0; flex: 1 1 140px; }
 }
+
+/* Guía de minijuegos (issue 150): pausa sobre el escenario, retrato de Armonía en la pantalla previa, atril en el
+   resultado y escenario que cabe en el alto del móvil, con el atril (el marcador del juego) siempre a la vista. */
+.armonia-drum-game { position: relative; }
+.armonia-drum-game > .sr-only { position: absolute; }
+.armonia-drum-pausa { position: absolute; z-index: 8; top: 10px; right: 10px; --control: 44px; color: #fff8e9; background: #5b386c; border-color: #fff8e9; opacity: .85; }
+.armonia-drum-phase { left: 50%; top: 110px; padding: 8px 16px; border: 4px solid #3d1430; border-radius: 10px; color: #3d1430; background: #fff8e9; font: 24px/1 "Press Start 2P", ui-monospace, monospace; translate: -50%; }
+.armonia-drum-caption { bottom: auto; top: 110px; font: 32px "Press Start 2P", ui-monospace, monospace; }
+.armonia-drum-feedback, .armonia-drum-bubble { font-family: "Press Start 2P", ui-monospace, monospace; }
+.armonia-drum-mute { position: absolute; z-index: 6; display: grid; place-items: center; width: 44px; height: 44px; border: 3px solid #3d1430; border-radius: 50%; background: #fff8e9; font-size: 22px; }
+.armonia-drum-retrato { width: 120px; height: 120px; background-size: 500% 200%; background-position: 0 100%; background-repeat: no-repeat; image-rendering: pixelated; }
+.armonia-drum-staff-resultado { position: relative; inset: auto; width: min(320px, 70vw); height: 60px; }
+.armonia-drum-controls { display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap; }
+@media (orientation: landscape) and (max-height: 540px) {
+  .armonia-drum-game { width: min(calc(100vw - 8px), calc((100dvh - 22px) * 16 / 9 + 14px)); max-height: calc(100dvh - 8px); padding: 4px; border-width: 3px; overflow: hidden; }
+  .armonia-drum-game.boss-battle { box-shadow: none; }
+  .armonia-drum-frame { width: 100%; margin: 0; }
+  .armonia-drum-progress { position: absolute; left: 8px; right: 8px; bottom: 6px; z-index: 7; width: auto; height: 6px; margin: 0; }
+  .armonia-drum-controls { position: absolute; z-index: 7; left: 14px; bottom: 16px; opacity: .85; }
+  .armonia-drum-controls .boton { --boton-alto: 40px; padding: 0 12px; }
+  .armonia-drum-pausa { top: 8px; right: 8px; --control: 36px; }
+  .armonia-drum-retrato { width: 72px; height: 72px; }
+}
+@media (orientation: portrait) { .armonia-drum-pausa { --control: 36px; } }
+/* El atril está arriba a la derecha: la pausa va a la izquierda para no taparlo. */
+.armonia-drum-pausa, .armonia-drum-game .armonia-drum-pausa { left: 10px; right: auto; }

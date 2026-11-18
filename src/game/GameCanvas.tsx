@@ -38,6 +38,7 @@ import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
+import { textoLienzo } from "../textos";
 import { conveyorSpeed, boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SKY_BOUNCE_SPEED, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
 
 const MOVE_SPEED = 250;
@@ -103,10 +104,10 @@ function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
   context.fillStyle = "#6f3c86";
   context.font = "bold 17px monospace";
   context.textAlign = "center";
-  context.fillText("¡PRUEBA EL DOBLE SALTO!", x + width / 2, y + 29);
+  context.fillText(textoLienzo("partida.lienzo.dobleSalto.rotulo"), x + width / 2, y + 29);
   context.fillStyle = "#352044";
   context.font = "bold 14px monospace";
-  context.fillText("TOCA SALTAR  ↑   Y EN EL AIRE  ↑  OTRA VEZ", x + width / 2, y + 58);
+  context.fillText(textoLienzo("partida.lienzo.dobleSaltoComo.rotulo"), x + width / 2, y + 58);
   context.textAlign = "start";
 }
 

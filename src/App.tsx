@@ -33,6 +33,8 @@ import { greetFriend, visitRestStop } from "./game/restStopProgress";
 import { addHeart } from "./game/friendProgress";
 import { FriendsTab } from "./game/FriendsTab";
 import { recordFlight } from "./game/avioneta";
+import { t } from "./textos";
+import { Texto } from "./textos/Texto";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
 import { visitDetour } from "./game/detourProgress";
 
@@ -841,15 +843,15 @@ export default function App() {
           {!bossReplay && <header className="game-hud">
             <div className="hud-level"><span>{displayedLevel.detour ? "✦" : displayedLevel.id}</span><strong>{displayedLevel.title}</strong></div>
             <div className="hud-stats">
-              <span aria-label={`${lives} vidas`}><GameAssetIcon kind="heart" /> × {lives}</span>
-              <span aria-label={`${snapshot.apples} manzanas`}><GameAssetIcon kind="apple" /> × {snapshot.apples}</span>
-              <span aria-label={`${snapshot.stickers.length} pegatinas encontradas`}><PixelIcon kind="sparkle" /> × {snapshot.stickers.length}</span>
-              <span className={`power-chip power-${snapshot.power} ${starActive ? "star-power-chip" : ""}`}>{starActive ? <>★ Estelar</> : snapshot.power === "cat" ? <><PixelIcon kind="yarn" /> Gato</> : snapshot.power === "apple" ? <><GameAssetIcon kind="apple" /> Protegida</> : "Noa"}</span>
+              <span aria-label={t("partida.hud.vidas.oculto", { n: lives })}><GameAssetIcon kind="heart" /> {lives}</span>
+              <span aria-label={t("partida.hud.manzanas.oculto", { n: snapshot.apples })}><GameAssetIcon kind="apple" /> {snapshot.apples}</span>
+              <span aria-label={t("partida.hud.pegatinas.oculto", { n: snapshot.stickers.length })}><PixelIcon kind="sparkle" /> {snapshot.stickers.length}</span>
+              {(starActive || snapshot.power === "cat" || snapshot.power === "apple") && <span className={`power-chip power-${snapshot.power} ${starActive ? "star-power-chip" : ""}`} aria-label={t(starActive ? "partida.hud.poder.estrella.oculto" : snapshot.power === "cat" ? "partida.hud.poder.gata.oculto" : "partida.hud.poder.manzana.oculto")}><Texto clave={starActive ? "partida.hud.poder.estrella.rotulo" : snapshot.power === "cat" ? "partida.hud.poder.gata.rotulo" : "partida.hud.poder.manzana.rotulo"} /></span>}
             </div>
             <div className="hud-actions">
-              <button type="button" onClick={() => setMuted((value) => !value)} aria-label={muted ? "Activar sonido" : "Silenciar"}><PixelIcon kind={muted ? "mute" : "sound"} /></button>
-              <button type="button" onClick={toggleFullscreen} aria-label="Pantalla completa">⛶</button>
-              {(screen === "game" || screen === "boss") && <button type="button" onClick={() => setPaused((value) => !value)} aria-label="Pausa">Ⅱ</button>}
+              <button type="button" onClick={() => setMuted((value) => !value)} aria-label={t(muted ? "partida.hud.sonido.oculto" : "partida.hud.silencio.oculto")}><PixelIcon kind={muted ? "mute" : "sound"} /></button>
+              <button type="button" onClick={toggleFullscreen} aria-label={t("partida.hud.pantallaGrande.oculto")}>⛶</button>
+              {(screen === "game" || screen === "boss") && <button type="button" onClick={() => setPaused((value) => !value)} aria-label={t("partida.hud.pausa.oculto")}>Ⅱ</button>}
             </div>
           </header>}
           {!bossReplay && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status">Preparando la aventura…</p>}>
@@ -970,10 +972,10 @@ export default function App() {
 
       {paused && isTimedScreen(screen) && (
         <Dialog labelledBy="pause-title" className="game-modal compact" onClose={() => setPaused(false)}>
-          <p className="eyebrow">Descanso</p><h2 id="pause-title">Juego en pausa</h2>
-          <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => setPaused(false)}>{screen === "cat-party" ? "Continuar" : "Seguir jugando"}</button>
-          {screen !== "cat-party" && <button className="pause-restart" type="button" onClick={restartCurrentLevel}>Reiniciar pantalla</button>}
-          <button className="pixel-button" type="button" data-gamepad-back onClick={screen === "cat-party" ? leaveCatParty : () => { setPaused(false); setScreen("map"); }}>Volver al mapa</button>
+          <h2 id="pause-title" className="rotulo"><Texto clave="partida.pausa.titulo.rotulo" /></h2>
+          <button className="pixel-button primary rotulo" type="button" data-gamepad-default onClick={() => setPaused(false)}><Texto clave="partida.pausa.seguir.rotulo" /></button>
+          {screen !== "cat-party" && <button className="pause-restart rotulo" type="button" onClick={restartCurrentLevel}><Texto clave="partida.pausa.otraVez.rotulo" /></button>}
+          <button className="pixel-button rotulo" type="button" data-gamepad-back onClick={screen === "cat-party" ? leaveCatParty : () => { setPaused(false); setScreen("map"); }}><Texto clave="partida.pausa.mapa.rotulo" /></button>
         </Dialog>
       )}
 

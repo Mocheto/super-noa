@@ -3,6 +3,7 @@ import { getImage } from "./assets";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createFlight, FLIGHT_SECONDS, PLANE_Y, SKY_HEIGHT, SKY_WIDTH, stepFlight, TOTAL_STARS, type Flight, type FlightEvent } from "./avioneta";
 import "./avioneta.css";
+import { variablesTactiles } from "./TouchControls";
 import { t, textoLienzo } from "../textos/index.ts";
 import { Boton } from "../textos/Texto";
 import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
@@ -237,7 +238,7 @@ export function AvionetaGame({ paused, muted, musicVolume, reduceMotion, gift, b
     <section className={`avioneta ${reduceMotion ? "is-calm" : ""}`} aria-label={t("minijuegos.avioneta.escena.oculto")}>
       <canvas ref={canvasRef} width={SKY_WIDTH} height={SKY_HEIGHT} aria-label={t("minijuegos.avioneta.cielo.oculto")} />
       <Boton className="avioneta-leave boton-pequeno" clave="minijuegos.avioneta.mapa.rotulo" data-gamepad-back onClick={() => onExit(null)} />
-      <div className="avioneta-controls">
+      <div className="avioneta-controls" style={variablesTactiles}>
         {pad("left", t("partida.controles.izquierda.oculto"), "is-left")}
         {pad("fire", t("minijuegos.avioneta.pompa.oculto"), "is-fire")}
         {pad("right", t("partida.controles.derecha.oculto"), "is-right")}

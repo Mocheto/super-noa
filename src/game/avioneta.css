@@ -1,10 +1,26 @@
 .avioneta { position: relative; width: min(100%, 960px); margin: 0 auto; }
 .avioneta canvas { display: block; width: 100%; height: auto; border: 4px solid #3b4680; border-radius: 12px; background: #7cc4f0; touch-action: none; }
 .avioneta-leave { position: absolute; top: 10px; right: 10px; min-height: 44px; padding: 8px 12px; border: 3px solid #624659; border-radius: 12px; background: #fff2d2; color: #3d294a; font: inherit; font-weight: 800; cursor: pointer; }
-.avioneta-controls { display: flex; justify-content: center; gap: 16px; margin-top: 10px; }
-.avioneta-touch { display: grid; place-items: center; width: 72px; height: 72px; border: 3px solid #624659; border-radius: 50%; background: #fff2d2; color: #3d294a; font-size: 28px; touch-action: none; user-select: none; cursor: pointer; }
-.avioneta-touch.is-fire { width: 92px; height: 92px; }
-.avioneta-pop-icon { width: 56px; height: 56px; background-position: 0 0; background-size: 300% 100%; background-repeat: no-repeat; }
+/* Como Noa en la partida: flechas abajo a la izquierda (mano izquierda) y pompa abajo a la derecha (mano derecha), con
+   las medidas de MEDIDAS_TACTILES (TouchControls.tsx): grandes en tableta, pequeñas en móvil apaisado y debajo en vertical. */
+.avioneta-controls {
+  --avioneta-flecha: var(--tactil-flecha-grande); --avioneta-pompa: var(--tactil-salta-grande); --avioneta-borde: var(--tactil-borde-grande);
+  display: flex; align-items: flex-end; gap: var(--tactil-separacion-grande); margin-top: 10px; padding: 0 var(--avioneta-borde);
+}
+.avioneta-controls .is-left { order: 0; }
+.avioneta-controls .is-right { order: 1; }
+.avioneta-controls .is-fire { order: 2; margin-left: auto; }
+.avioneta-touch { display: grid; place-items: center; width: var(--avioneta-flecha); height: var(--avioneta-flecha); padding: 0; border: 3px solid #624659; border-radius: 50%; background: #fff2d2; color: #3d294a; font-size: calc(var(--avioneta-flecha) * .38); touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
+.avioneta-touch.is-fire { width: var(--avioneta-pompa); height: var(--avioneta-pompa); }
+.avioneta-pop-icon { width: 64%; height: 64%; background-position: 0 0; background-size: 300% 100%; background-repeat: no-repeat; pointer-events: none; }
+/* En pantallas táctiles apaisadas (tableta y móvil) los botones van sobre el cielo, translúcidos. */
+@media (orientation: landscape) and (hover: none), (orientation: landscape) and (pointer: coarse), (orientation: landscape) and (max-height: 540px) {
+  .avioneta-controls { position: absolute; left: 0; right: 0; bottom: calc(var(--avioneta-borde) + 4px); margin: 0; padding: 0 calc(var(--avioneta-borde) + 4px); pointer-events: none; opacity: var(--tactil-opacidad); }
+  .avioneta-controls .avioneta-touch { pointer-events: auto; }
+}
+@media (orientation: portrait) {
+  .avioneta-controls { --avioneta-flecha: var(--tactil-flecha-vertical); --avioneta-pompa: var(--tactil-salta-vertical); --avioneta-borde: var(--tactil-borde-vertical); gap: var(--tactil-separacion-vertical); }
+}
 .avioneta-end { position: absolute; inset: 20% 15% auto; display: grid; justify-items: center; gap: 10px; padding: 20px; border: 4px solid #624659; border-radius: 16px; background: #fff6e3; color: #3d294a; text-align: center; }
 .avioneta-end h2 { margin: 0; }
 
@@ -13,11 +29,6 @@
 .avioneta-retrato { max-height: 120px; image-rendering: pixelated; }
 @media (orientation: landscape) and (max-height: 540px) {
   .avioneta { width: min(100%, calc((100dvh - 16px) * 16 / 9)); }
-  .avioneta-controls { position: absolute; left: 0; right: 0; bottom: 10px; margin: 0; gap: 10px; padding: 0 14px; justify-content: flex-start; pointer-events: none; opacity: .75; }
-  .avioneta-controls .is-left { order: 0; }
-  .avioneta-controls .is-right { order: 1; }
-  .avioneta-controls .is-fire { order: 2; margin-left: auto; }
-  .avioneta-controls .avioneta-touch { pointer-events: auto; width: 56px; height: 56px; }
-  .avioneta-controls .avioneta-touch.is-fire { width: 68px; height: 68px; }
+  .avioneta-controls { --avioneta-flecha: var(--tactil-flecha-apaisado); --avioneta-pompa: var(--tactil-salta-apaisado); --avioneta-borde: var(--tactil-borde-apaisado); gap: var(--tactil-separacion-apaisado); }
   .avioneta-retrato { max-height: 72px; }
 }

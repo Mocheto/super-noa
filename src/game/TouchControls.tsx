@@ -26,7 +26,7 @@ export const MEDIDAS_TACTILES = {
   opacidad: 0.6,
 } as const;
 
-const variablesTactiles = Object.fromEntries([
+export const variablesTactiles = Object.fromEntries([
   ...(["grande", "apaisado", "vertical"] as const).flatMap((tamano) => Object.entries(MEDIDAS_TACTILES[tamano])
     .map(([medida, valor]) => [`--tactil-${medida}-${tamano}`, `${valor}px`])),
   ["--tactil-opacidad", String(MEDIDAS_TACTILES.opacidad)],

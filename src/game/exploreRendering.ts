@@ -1,4 +1,5 @@
 import { getImage } from "./assets.ts";
+import { letraLienzo } from "./cartelLienzo";
 import { allFound, followerPositions, type ExploreState } from "./explore.ts";
 import type { Level, LostKitten } from "./types";
 import { textoLienzo } from "../textos/index.ts";
@@ -34,7 +35,7 @@ function drawCat(context: CanvasRenderingContext2D, kitten: LostKitten, x: numbe
 
 function bubble(context: CanvasRenderingContext2D, text: string, x: number, y: number) {
   context.save();
-  context.font = "bold 14px monospace";
+  context.font = letraLienzo(12);
   const width = context.measureText(text).width + 18;
   context.fillStyle = "#fff6e3"; context.strokeStyle = "#2f1d33"; context.lineWidth = 3;
   context.beginPath(); context.roundRect(Math.round(x - width / 2), Math.round(y - 26), width, 24, 7); context.fill(); context.stroke();
@@ -78,7 +79,7 @@ export function drawExploreOverlay(context: CanvasRenderingContext2D, level: Lev
   context.save();
   context.fillStyle = "rgba(42,24,55,.82)";
   context.beginPath(); context.roundRect(12, 12, 190, 46, 10); context.fill();
-  context.fillStyle = "#fff6e3"; context.font = "bold 14px monospace"; context.fillText(textoLienzo("partida.lienzo.gatitos.rotulo"), 24, 40);
+  context.fillStyle = "#fff6e3"; context.font = letraLienzo(14); context.fillText(textoLienzo("partida.lienzo.gatitos.rotulo"), 24, 40);
   (level.lostKittens ?? []).forEach((kitten, index) => {
     const x = 118 + index * 28;
     context.fillStyle = "rgba(255,246,227,.35)";

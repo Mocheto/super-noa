@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { cajaRedondeada, drawCartel, medirTexto } from "./cartelLienzo";
 import { acentoMundo, emblemaMundo } from "./worldMapData";
 import { SecretShop } from "./SecretShop";
 import "./secretDoors.css";
@@ -95,39 +96,8 @@ function createInitialPlayer(level: Level): Player {
   };
 }
 
-/** Ancho de un texto en el lienzo; en los lienzos de prueba, que no miden, se estima por letras (Press Start 2P es cuadrada). */
-const medirTexto = (context: CanvasRenderingContext2D, texto: string, tamano: number) => context.measureText?.(texto)?.width ?? texto.length * tamano;
-/** Rectángulo redondeado, o recto si el lienzo no sabe redondear. */
-const cajaRedondeada = (context: CanvasRenderingContext2D, x: number, y: number, ancho: number, alto: number, radio: number) => {
-  context.beginPath();
-  if (typeof context.roundRect === "function") context.roundRect(x, y, ancho, alto, radio);
-  else context.rect?.(x, y, ancho, alto);
-};
-
 /** Primera fila libre bajo el HUD de esquinas, en unidades del lienzo. */
 const CARTEL_ARRIBA = 66;
-
-/**
- * Cartel del lienzo con el estilo de la interfaz: Press Start 2P a 16 px, caja crema con contorno ciruela a la medida
- * del texto. Cada línea es un rótulo de hasta dos palabras con su dibujo.
- */
-function drawCartel(context: CanvasRenderingContext2D, lineas: string[], centroX: number, arriba: number, { alfa = 1, color = "#3d1430" } = {}) {
-  context.save();
-  context.globalAlpha = alfa;
-  context.font = '16px "Press Start 2P", monospace';
-  const ancho = Math.max(...lineas.map((linea) => medirTexto(context, linea, 16))) + 28;
-  const alto = lineas.length * 26 + 14;
-  const x = centroX - ancho / 2;
-  context.fillStyle = "#3d1430";
-  cajaRedondeada(context, x - 4, arriba - 4, ancho + 8, alto + 8, 10); context.fill();
-  context.fillStyle = "#fff8e9";
-  cajaRedondeada(context, x, arriba, ancho, alto, 7); context.fill();
-  context.fillStyle = color;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  lineas.forEach((linea, indice) => context.fillText(linea, centroX, arriba + 20 + indice * 26));
-  context.restore();
-}
 
 function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
   drawCartel(context, [textoLienzo("partida.lienzo.dobleSalto.rotulo"), textoLienzo("partida.lienzo.dobleSaltoComo.rotulo")], VIEW_WIDTH / 2, CARTEL_ARRIBA);

@@ -86,7 +86,7 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
   ctx.restore();
   ctx.restore();
   if (boss.x > cameraX + viewWidth - 30) {
-    ctx.fillStyle = "#fff1a2"; ctx.font = "bold 20px sans-serif"; ctx.textAlign = "right";
+    ctx.fillStyle = "#fff1a2"; ctx.font = '16px "Press Start 2P", monospace'; ctx.textAlign = "right";
     ctx.fillText(`${tClave(`guardianes.${bossId}.nombre.rotulo`)} →`, viewWidth - 18, 190); ctx.textAlign = "left";
   }
 }

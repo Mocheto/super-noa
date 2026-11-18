@@ -1,4 +1,5 @@
 import type { BloomBridge, Level, Rect, SecretShop, SkyLift, Updraft } from "./types";
+import { drawCartel, letraLienzo } from "./cartelLienzo";
 import type { RasterAssets } from "./assets";
 import type { LiveEnemy, LiveCannon, Cannonball, LiveWaterJumper } from "./gameState";
 import { enemyY, lavaJetState, positiveModulo, waterJumperState } from "./gameState";
@@ -1438,13 +1439,7 @@ export function drawSecretVine(context: CanvasRenderingContext2D, x: number, blo
 }
 
 function drawEnemyWarning(context: CanvasRenderingContext2D, x: number, y: number, kind: "wolf" | "boar") {
-  context.fillStyle = kind === "boar" ? "#fff0bd" : "#fff3c4";
-  context.fillRect(x - (kind === "boar" ? 5 : 9), y - 35, kind === "boar" ? 72 : 77, 24);
-  context.fillStyle = kind === "boar" ? "#4a2b2e" : "#3c294a";
-  context.font = "bold 12px monospace";
-  context.textAlign = "center";
-  context.fillText(textoLienzo(kind === "boar" ? "partida.lienzo.oink.rotulo" : "partida.lienzo.auuu.rotulo"), x + 30, y - 19);
-  context.textAlign = "start";
+  drawCartel(context, [textoLienzo(kind === "boar" ? "partida.lienzo.oink.rotulo" : "partida.lienzo.auuu.rotulo")], x + 30, y - 40, { tamano: 12, fondo: kind === "boar" ? "#fff0bd" : "#fff3c4" });
 }
 
 function drawEnemyFallback(context: CanvasRenderingContext2D, enemy: LiveEnemy, x: number, y: number) {
@@ -1502,14 +1497,7 @@ function drawSleepingWolf(context: CanvasRenderingContext2D, enemy: LiveEnemy, x
   }
   context.restore();
   context.save();
-  context.textAlign = "center";
-  context.font = "bold 14px monospace";
-  const center = x + width / 2;
-  const labelWidth = warning ? 136 : 54;
-  context.fillStyle = warning ? "#ffe79a" : "#f5ecff";
-  context.fillRect(center - labelWidth / 2, y - 31, labelWidth, 23);
-  context.fillStyle = "#3a2c50";
-  context.fillText(textoLienzo(warning ? "partida.lienzo.despierta.rotulo" : "partida.lienzo.zzz.rotulo"), center, y - 14);
+  drawCartel(context, [textoLienzo(warning ? "partida.lienzo.despierta.rotulo" : "partida.lienzo.zzz.rotulo")], x + width / 2, y - 36, { tamano: 12, fondo: warning ? "#ffe79a" : "#f5ecff" });
   if (warning) {
     context.fillStyle = "#ffe79a";
     context.fillRect(x + width + 6, y + 3, 22, 26);
@@ -1884,15 +1872,7 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
     context.fillRect(x + 42, y + 35, 7, 4);
     context.fillRect(x + 47, y + 31, 4, 8);
   } else if (enemy.kind === "boar") {
-    if (nearby) {
-      context.fillStyle = "#fff0bd";
-      context.fillRect(x - 5, y - 34, 72, 23);
-      context.fillStyle = "#4a2b2e";
-      context.font = "bold 12px monospace";
-      context.textAlign = "center";
-      context.fillText(textoLienzo("partida.lienzo.oink.rotulo"), x + 30, y - 18);
-      context.textAlign = "start";
-    }
+    if (nearby) drawEnemyWarning(context, x, y, "boar");
     context.fillStyle = "#2d1d24";
     context.fillRect(x + 2, y + 8, 57, 33);
     context.fillRect(x + 12, y, 42, 31);
@@ -1917,15 +1897,7 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
     context.fillRect(x, y + 36, 18, 6);
     context.fillRect(x + 44, y + 36, 18, 6);
   } else {
-    if (nearby) {
-      context.fillStyle = "#fff3c4";
-      context.fillRect(x - 9, y - 35, 77, 24);
-      context.fillStyle = "#3c294a";
-      context.font = "bold 12px monospace";
-      context.textAlign = "center";
-      context.fillText(textoLienzo("partida.lienzo.auuu.rotulo"), x + 29, y - 19);
-      context.textAlign = "start";
-    }
+    if (nearby) drawEnemyWarning(context, x, y, "wolf");
     context.fillStyle = "#201a2b";
     context.fillRect(x + 2, y + 8, 53, 32);
     context.fillRect(x + 9, y, 38, 31);
@@ -2093,12 +2065,7 @@ export function drawBloomBridge(context: CanvasRenderingContext2D, bridge: Bloom
   }
   const label = textoLienzo(warning ? "partida.lienzo.puente.cierra.rotulo" : state === "open" ? "partida.lienzo.puente.pasa.rotulo" : opening > 0 ? "partida.lienzo.puente.abre.rotulo" : "partida.lienzo.puente.espera.rotulo");
   const center = x + bridge.width / 2;
-  context.fillStyle = warning ? "#fff0a3" : "#fff7e5";
-  context.fillRect(center - 68, bridge.y - 42, 136, 23);
-  context.fillStyle = "#543654";
-  context.font = "bold 13px monospace";
-  context.textAlign = "center";
-  context.fillText(label, center, bridge.y - 26);
+  drawCartel(context, [label], center, bridge.y - 44, { tamano: 12, fondo: warning ? "#fff0a3" : "#fff7e5" });
   if (warning || opening > 0) {
     context.fillStyle = "#5d475d";
     context.fillRect(center - 50, bridge.y - 15, 100, 6);
@@ -2138,7 +2105,7 @@ export function drawUpdraft(context: CanvasRenderingContext2D, zone: Updraft, ca
     }
   }
   context.fillStyle = "#fff8df";
-  context.font = "bold 12px monospace";
+  context.font = letraLienzo(12);
   context.textAlign = "center";
   context.fillText(textoLienzo("partida.lienzo.aire.rotulo"), x + zone.width / 2, zone.y + 17);
   context.restore();
@@ -2163,7 +2130,7 @@ export function drawWaterEntrance(context: CanvasRenderingContext2D, entrance: N
   }
   context.save();
   context.fillStyle = "#e7fff8";
-  context.font = "bold 13px monospace";
+  context.font = letraLienzo(12);
   context.textAlign = "center";
   context.fillText(textoLienzo("partida.lienzo.agua.rotulo"), x + entrance.width / 2, entrance.y - 28);
   context.restore();
@@ -2324,11 +2291,11 @@ export function drawGoalCat(context: CanvasRenderingContext2D, worldX: number, c
   context.fillStyle = "#f1d7f7";
   context.fillRect(panelX + 6, 66, 378, 52);
   context.fillStyle = "#6d3e82";
-  context.font = "bold 21px monospace";
+  context.font = letraLienzo(20);
   context.textAlign = "center";
   context.fillText(textoLienzo("partida.lienzo.gatitoRescatado.rotulo"), VIEW_WIDTH / 2, 91);
   context.fillStyle = "#473052";
-  context.font = "bold 13px monospace";
+  context.font = letraLienzo(12);
   context.fillText(textoLienzo("partida.lienzo.amigoEncontrado.rotulo"), VIEW_WIDTH / 2, 111);
   context.textAlign = "start";
   context.restore();
@@ -2349,7 +2316,7 @@ export function drawBossGate(context: CanvasRenderingContext2D, worldX: number, 
   context.fillStyle = "#c78bea";
   context.fillRect(x + 16, 302, 100, 30);
   context.fillStyle = "#fff1a3";
-  context.font = "bold 15px monospace";
+  context.font = letraLienzo(12);
   context.textAlign = "center";
   context.fillText(textoLienzo("partida.lienzo.duelo.rotulo"), x + 66, 323);
   context.fillStyle = "#fff3d2";

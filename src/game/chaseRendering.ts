@@ -1,4 +1,5 @@
 import { getImage, type RasterAssets } from "./assets.ts";
+import { letraLienzo } from "./cartelLienzo";
 import { chaseTrail, runnerRect, type ChaseState } from "./chase.ts";
 import { VIEW_WIDTH } from "./constants.ts";
 import { drawEnemy } from "./rendering.ts";
@@ -10,7 +11,7 @@ const HEART = "./assets/sprites/ui-heart-v1.png";
 /** Bocadillo de diálogo centrado en `centerX` con la punta en `bottomY` (coordenadas de pantalla). */
 export function speech(context: CanvasRenderingContext2D, text: string, centerX: number, bottomY: number) {
   context.save();
-  context.font = "bold 15px monospace";
+  context.font = letraLienzo(13);
   // Las frases largas se parten en dos líneas por el espacio más cercano al centro.
   let lines = [text];
   if (context.measureText(text).width > 300) {

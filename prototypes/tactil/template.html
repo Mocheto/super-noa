@@ -1,0 +1,240 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Botones táctiles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+/* Estética del juego (un solo aspecto, oscuro). Arriba, la partida a pantalla completa para probar con el dedo en un móvil apaisado; debajo, las opciones y el recuento de toques. */
+:root {
+  color-scheme: dark;
+  --night: #25183f;
+  --plum: #3d1430;
+  --cream: #fff8e9;
+  --gold: #ffd45f;
+  --lilac: #b979dc;
+  --jump: #e8526d;
+  --jump-d: #8f2a44;
+  --btn: #7e4f96;
+  --btn-d: #3a2150;
+  --noa: "Press Start 2P", ui-monospace, monospace;
+  --adult: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --op: .85;
+  --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px); --sb: env(safe-area-inset-bottom, 0px); --st: env(safe-area-inset-top, 0px);
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--night); color: var(--cream); font-family: var(--adult); }
+.game { position: relative; height: 100dvh; min-height: 300px; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; background: #6aa0c8; }
+canvas#c { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+
+/* HUD de esquinas (decisión «El HUD de la partida») */
+.hud { position: absolute; top: calc(10px + var(--st)); left: calc(12px + var(--sl)); right: calc(12px + var(--sr)); display: flex; justify-content: space-between; align-items: start; pointer-events: none; font-family: var(--noa); font-size: 14px; }
+.hud .chip { padding: 8px 10px; background: rgba(37,24,63,.85); border: 3px solid #352044; color: var(--cream); }
+.hud .world { background: var(--gold); color: #352044; border-color: var(--plum); }
+.hud .pause { width: 56px; height: 56px; display: grid; place-items: center; background: #5b386c; border: 3px solid var(--cream); border-radius: 14px; color: var(--cream); pointer-events: auto; font-size: 16px; }
+.hearts { color: #ff5a78; letter-spacing: 4px; }
+
+/* Controles */
+.pad { position: absolute; display: flex; align-items: end; gap: var(--gap); pointer-events: none; opacity: var(--op); }
+.pad.left { left: calc(var(--edge) + var(--sl)); bottom: calc(var(--edge) + var(--sb)); }
+.pad.right { right: calc(var(--edge) + var(--sr)); bottom: calc(var(--edge) + var(--sb)); }
+.tb { position: relative; pointer-events: auto; touch-action: none; display: grid; place-items: center; align-content: center; gap: 4px; border: 4px solid var(--cream); color: #fff; background: linear-gradient(145deg, var(--btn), var(--btn-d)); box-shadow: 0 6px 0 #1b1129; font-family: var(--noa); padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* Área táctil más grande que el dibujo, sin verse */
+.tb::before { content: ""; position: absolute; inset: calc(var(--hit) * -1); border-radius: inherit; }
+.tb.on { transform: translateY(5px); box-shadow: 0 1px 0 #1b1129; filter: brightness(1.25); }
+.tb.jump { background: linear-gradient(145deg, var(--jump), var(--jump-d)); }
+.tb.yarn { background: linear-gradient(145deg, #a477c8, #5b3f75); }
+.tb .ic { display: block; line-height: 1; }
+.tb .wd { font-size: 12px; color: #fff4c7; }
+.tray { background: rgba(38,22,57,.78); border: 3px solid rgba(255,248,233,.82); border-radius: 22px; padding: 7px; }
+.zones .tb::before { outline: 2px dashed #7dffb0; }
+.zones .safe { display: block; }
+.safe { display: none; position: absolute; pointer-events: none; border: 2px dashed #ffd45f; inset: var(--st) var(--sr) var(--sb) var(--sl); }
+.safe span { position: absolute; left: 6px; bottom: 4px; font: 700 11px var(--adult); color: #ffd45f; }
+.zones .hud > * { outline: 2px dashed #ff6bd1; outline-offset: 3px; }
+.miss { position: absolute; width: 28px; height: 28px; margin: -14px 0 0 -14px; border: 3px solid #ff4f6d; border-radius: 50%; pointer-events: none; animation: miss .6s ease-out forwards; }
+@keyframes miss { to { transform: scale(2); opacity: 0; } }
+.scrollhint { position: absolute; left: 50%; bottom: calc(4px + var(--sb)); transform: translateX(-50%); font: 600 11px var(--adult); color: rgba(255,248,233,.7); pointer-events: none; }
+
+/* Panel */
+.panel { max-width: 1000px; margin: 0 auto; padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 14px; }
+h1 { margin: 0; font-family: var(--noa); font-size: clamp(14px, 3vw, 22px); color: var(--gold); }
+.lead { margin: 0; max-width: 78ch; line-height: 1.5; color: #e9dcf0; }
+.controls { display: grid; gap: 10px; padding: 12px 14px; background: rgba(0,0,0,.25); border: 2px solid #623879; font-size: .9rem; }
+.controls > span { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.controls > span > b { min-width: 9ch; font-weight: 600; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 2px solid var(--lilac); }
+.seg button, .act { font: inherit; padding: 8px 12px; background: transparent; color: var(--cream); border: 0; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--lilac); color: var(--night); font-weight: 700; }
+.act { border: 2px solid var(--gold); color: var(--gold); }
+button:focus-visible, input:focus-visible { outline: 4px solid var(--gold); outline-offset: 2px; }
+.stats { overflow-x: auto; }
+table { border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 6px 12px; border-bottom: 1px solid #4a3166; text-align: left; }
+th { color: var(--gold); font-weight: 600; }
+.desc { padding: 12px 14px; background: #2c1d47; border: 4px solid #2e1a3b; line-height: 1.55; font-size: .92rem; display: grid; gap: 8px; }
+.desc p { margin: 0; max-width: 90ch; }
+.desc b { color: var(--gold); }
+.desc ul { margin: 0; padding-left: 1.2em; }
+</style>
+
+<section class="game" id="game" aria-label="Partida de prueba">
+  <canvas id="c" aria-label="Noa en el prado de las manzanas"></canvas>
+  <div class="hud" aria-hidden="true"><span class="chip hearts">♥♥♥</span><span class="chip world">1-1 ●○○</span><span class="pause">II</span></div>
+  <div class="safe"><span>zona segura</span></div>
+  <div class="pad left" id="padL"></div>
+  <div class="pad right" id="padR"></div>
+  <span class="scrollhint">desliza abajo para las opciones ↓</span>
+</section>
+
+<div class="panel">
+  <header style="display:grid;gap:8px">
+    <h1>BOTONES TACTILES</h1>
+    <p class="lead">Prototipo del ticket «Botones táctiles para dedos pequeños». Ábrelo en el móvil, gíralo en apaisado y deja que Noa juegue con la pantalla de arriba: camina, salta dos veces y lanza lana. Prueba las tres disposiciones. El recuento de abajo cuenta los toques de cada botón y los que caen cerca sin acertar, que son los que hay que evitar.</p>
+  </header>
+  <div class="controls" role="group" aria-label="Opciones del prototipo">
+    <span><b>Disposición</b> <span class="seg" data-k="layout"><button type="button" data-v="A">A · Como ahora</button><button type="button" data-v="B" aria-pressed="true">B · Grandes y separados</button><button type="button" data-v="C">C · Barra para deslizar</button></span></span>
+    <span><b>Palabra</b> <span class="seg" data-k="words"><button type="button" data-v="no" aria-pressed="true">Solo dibujo</button><button type="button" data-v="yes">Dibujo y palabra</button></span></span>
+    <span><b>Opacidad</b> <span class="seg" data-k="op"><button type="button" data-v=".55">55 %</button><button type="button" data-v=".85" aria-pressed="true">85 %</button><button type="button" data-v="1">100 %</button></span></span>
+    <span><b>Zonas</b> <span class="seg" data-k="zones"><button type="button" data-v="off" aria-pressed="true">Ocultas</button><button type="button" data-v="on">Ver áreas táctiles, HUD y zona segura</button></span></span>
+    <span><button type="button" class="act" id="resetStats">Borrar recuento</button> <button type="button" class="act" id="up">Volver a la partida ↑</button></span>
+  </div>
+  <div class="stats"><table><thead><tr><th>Botón</th><th>Toques</th><th>Casi (a menos de 40 px)</th><th>Tamaño del dibujo</th><th>Área táctil</th></tr></thead><tbody id="stats"></tbody></table></div>
+  <div class="desc" id="desc"></div>
+</div>
+
+<script>
+const IMG = { bg: "__BG__", noa: "__NOA__", col: "__COL__" };
+const img = {}; const loads = Object.entries(IMG).map(([k, src]) => new Promise((r) => { const i = new Image(); i.onload = r; i.onerror = r; i.src = src; img[k] = i; }));
+const state = { layout: "B", words: "no", op: ".85", zones: "off" };
+/* Medidas en px CSS. hit = margen invisible alrededor del dibujo. */
+const LAYOUTS = {
+  A: { dir: [70, 70], jump: 88, yarn: 66, gap: 9, edge: 12, hit: 0, tray: true, name: "A · Como ahora" },
+  B: { dir: [88, 88], jump: 116, yarn: 80, gap: 18, edge: 16, hit: 10, tray: false, name: "B · Grandes y separados" },
+  C: { dir: [200, 92], jump: 116, yarn: 80, gap: 18, edge: 16, hit: 10, tray: false, slide: true, name: "C · Barra para deslizar" },
+};
+const held = { left: false, right: false }; const stats = {}; const btns = {};
+const game = document.getElementById("game"), padL = document.getElementById("padL"), padR = document.getElementById("padR");
+const ICON = { left: "◀", right: "▶", jump: "⇈", yarn: "🧶" }, WORD = { left: "", right: "", jump: "SALTA", yarn: "LANA" }, NAME = { left: "◀ Izquierda", right: "▶ Derecha", jump: "Salta", yarn: "Lana" };
+
+function mk(id, w, h, cls, round) {
+  const b = document.createElement("button"); b.type = "button"; b.className = "tb " + cls; b.dataset.id = id;
+  b.style.width = w + "px"; b.style.height = h + "px"; b.style.borderRadius = round ? "50%" : "22px";
+  b.setAttribute("aria-label", { left: "Mover a la izquierda", right: "Mover a la derecha", jump: "Saltar; vuelve a tocar para hacer doble salto", yarn: "Lanzar bola de lana" }[id]);
+  const ic = document.createElement("span"); ic.className = "ic"; ic.textContent = ICON[id]; ic.style.fontSize = Math.round(Math.min(w, h) * (id === "yarn" ? .36 : .4)) + "px"; b.append(ic);
+  if (state.words === "yes" && WORD[id]) { const wd = document.createElement("span"); wd.className = "wd"; wd.textContent = WORD[id]; b.append(wd); }
+  btns[id] = b; return b;
+}
+function build() {
+  const L = LAYOUTS[state.layout]; padL.textContent = ""; padR.textContent = "";
+  for (const p of [padL, padR]) { p.style.setProperty("--gap", L.gap + "px"); p.style.setProperty("--edge", L.edge + "px"); p.classList.toggle("tray", !!L.tray); }
+  game.style.setProperty("--hit", L.hit + "px");
+  if (L.slide) {
+    const bar = mk("bar", L.dir[0], L.dir[1], "", false); bar.setAttribute("aria-label", "Barra para caminar: toca o desliza a la izquierda o a la derecha"); bar.querySelector(".ic").textContent = "◀   ▶"; bar.querySelector(".ic").style.whiteSpace = "pre"; bar.style.borderRadius = "46px"; padL.append(bar); delete btns.bar; btns.left = btns.right = bar;
+  } else { padL.append(mk("left", L.dir[0], L.dir[1], "", false), mk("right", L.dir[0], L.dir[1], "", false)); }
+  const yarn = mk("yarn", L.yarn, L.yarn, "yarn", true), jump = mk("jump", L.jump, L.jump, "jump", true);
+  if (state.layout === "A") padR.append(yarn, jump); else { yarn.style.marginBottom = (L.jump * .55) + "px"; padR.append(yarn, jump); }
+  for (const b of new Set(Object.values(btns))) wire(b);
+  for (const k of ["left", "right", "jump", "yarn"]) stats[k] ??= { hits: 0, near: 0 };
+  renderStats();
+}
+
+const active = new Map(); // pointerId -> control
+function dirFromBar(b, x) { const r = b.getBoundingClientRect(); return x < r.left + r.width / 2 ? "left" : "right"; }
+function press(id, on) { if (id === "left" || id === "right") held[id] = on; for (const b of new Set(Object.values(btns))) b.classList.toggle("on", [...active.values()].some((c) => btns[c] === b)); }
+function wire(b) {
+  b.addEventListener("pointerdown", (e) => {
+    e.preventDefault(); b.setPointerCapture(e.pointerId);
+    let id = b.dataset.id; if (id === "bar") id = dirFromBar(b, e.clientX);
+    active.set(e.pointerId, id); stats[id].hits++; renderStats(); press(id, true);
+    if (id === "jump") jumpPress(); if (id === "yarn") throwYarn();
+  });
+  b.addEventListener("pointermove", (e) => {
+    if (b.dataset.id !== "bar" || !active.has(e.pointerId)) return; const id = dirFromBar(b, e.clientX), prev = active.get(e.pointerId);
+    if (id !== prev) { press(prev, false); active.set(e.pointerId, id); press(id, true); }
+  });
+  const up = (e) => { const id = active.get(e.pointerId); if (!id) return; active.delete(e.pointerId); press(id, false); };
+  b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("lostpointercapture", up);
+  b.addEventListener("contextmenu", (e) => e.preventDefault());
+}
+/* Toques fuera de los botones pero cerca: «casi». */
+game.addEventListener("pointerdown", (e) => {
+  if (e.target.closest(".tb, .pause")) return;
+  let best = null, bd = 41;
+  for (const [id, b] of Object.entries(btns)) { const r = b.getBoundingClientRect(); const dx = Math.max(r.left - e.clientX, 0, e.clientX - r.right), dy = Math.max(r.top - e.clientY, 0, e.clientY - r.bottom); const d = Math.hypot(dx, dy); if (d < bd) { bd = d; best = b.dataset.id === "bar" ? dirFromBar(b, e.clientX) : id; } }
+  if (!best) return; stats[best].near++; renderStats();
+  const g = game.getBoundingClientRect(), m = document.createElement("span"); m.className = "miss"; m.style.left = e.clientX - g.left + "px"; m.style.top = e.clientY - g.top + "px"; game.append(m); setTimeout(() => m.remove(), 650);
+});
+function renderStats() {
+  const L = LAYOUTS[state.layout];
+  const size = (k) => k === "jump" ? `${L.jump} × ${L.jump}` : k === "yarn" ? `${L.yarn} × ${L.yarn}` : L.slide ? `barra ${L.dir[0]} × ${L.dir[1]}` : `${L.dir[0]} × ${L.dir[1]}`;
+  const area = (k) => { const [w, h] = k === "jump" ? [L.jump, L.jump] : k === "yarn" ? [L.yarn, L.yarn] : L.slide ? [L.dir[0] / 2, L.dir[1]] : L.dir; return `${w + 2 * L.hit} × ${h + 2 * L.hit}`; };
+  document.getElementById("stats").innerHTML = ["left", "right", "jump", "yarn"].map((k) => `<tr><td>${NAME[k]}</td><td>${stats[k].hits}</td><td>${stats[k].near}</td><td>${size(k)}</td><td>${area(k)}${L.slide && (k === "left" || k === "right") ? " (media barra)" : ""}</td></tr>`).join("");
+}
+
+/* ---------- partida sencilla: caminar, doble salto y lana ---------- */
+const cv = document.getElementById("c"), ctx = cv.getContext("2d");
+const GROUND = 456, WORLD = 2600;
+const plats = [{ x: 520, y: 340, w: 200 }, { x: 860, y: 250, w: 180 }, { x: 1250, y: 330, w: 220 }, { x: 1620, y: 220, w: 200 }, { x: 2050, y: 320, w: 240 }];
+let apples, noa, yarns, scale = 1, viewW = 960;
+function reset() { noa = { x: 420, y: GROUND, vy: 0, face: 1, ground: true, jumps: 0 }; yarns = []; apples = plats.map((p) => ({ x: p.x + p.w / 2, y: p.y - 40, got: false })).concat([{ x: 1450, y: GROUND - 40, got: false }]); }
+reset();
+function jumpPress() { if (noa.ground) { noa.vy = -625; noa.ground = false; noa.jumps = 1; } else if (noa.jumps < 2) { noa.vy = -625; noa.jumps = 2; } }
+function throwYarn() { yarns.push({ x: noa.x + noa.face * 30, y: noa.y - 50, vx: 620 * noa.face, life: .9 }); }
+function resize() { const r = game.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); cv.width = r.width * dpr; cv.height = r.height * dpr; scale = r.height * dpr / 540; viewW = cv.width / scale; ctx.imageSmoothingEnabled = false; }
+addEventListener("resize", resize);
+function update(dt) {
+  const dir = (held.right ? 1 : 0) - (held.left ? 1 : 0); if (dir) noa.face = dir;
+  noa.x = Math.max(40, Math.min(WORLD - 40, noa.x + dir * 230 * dt));
+  const prevY = noa.y; noa.vy += 1650 * dt; noa.y += noa.vy * dt; noa.ground = false;
+  if (noa.y >= GROUND) { noa.y = GROUND; noa.vy = 0; noa.ground = true; }
+  for (const p of plats) if (noa.vy >= 0 && prevY <= p.y && noa.y >= p.y && noa.x > p.x - 10 && noa.x < p.x + p.w + 10) { noa.y = p.y; noa.vy = 0; noa.ground = true; }
+  if (noa.ground) noa.jumps = 0;
+  for (const a of apples) if (!a.got && Math.abs(a.x - noa.x) < 40 && a.y > noa.y - 100 && a.y < noa.y + 10) a.got = true;
+  for (const y of yarns) { y.x += y.vx * dt; y.life -= dt; } yarns = yarns.filter((y) => y.life > 0);
+  if (apples.every((a) => a.got)) reset();
+}
+function draw(now) {
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  const cam = Math.max(0, Math.min(noa.x - viewW * .4, WORLD - viewW));
+  const bw = img.bg.naturalWidth ? 540 * img.bg.naturalWidth / img.bg.naturalHeight : viewW, off = -(cam * .35) % bw;
+  for (let x = off; x < viewW; x += bw) ctx.drawImage(img.bg, x, 0, bw, 540);
+  ctx.fillStyle = "#6fbf4a"; ctx.fillRect(0, GROUND, viewW, 14); ctx.fillStyle = "#8a5a34"; ctx.fillRect(0, GROUND + 14, viewW, 100); ctx.fillStyle = "#3d1430"; ctx.fillRect(0, GROUND - 3, viewW, 3);
+  for (const p of plats) { const x = p.x - cam; ctx.fillStyle = "#3d1430"; ctx.fillRect(x - 3, p.y - 3, p.w + 6, 26); ctx.fillStyle = "#7cc35a"; ctx.fillRect(x, p.y, p.w, 8); ctx.fillStyle = "#9b6a3f"; ctx.fillRect(x, p.y + 8, p.w, 12); }
+  const cs = img.col.naturalWidth / 4, bob = Math.sin(now / 250) * 4;
+  for (const a of apples) if (!a.got) ctx.drawImage(img.col, 0, 0, cs, cs, a.x - cam - 23, a.y - 23 + bob, 46, 46);
+  for (const y of yarns) { ctx.fillStyle = "#c58be6"; ctx.beginPath(); ctx.arc(y.x - cam, y.y, 11, 0, 7); ctx.fill(); ctx.strokeStyle = "#3d1430"; ctx.lineWidth = 3; ctx.stroke(); }
+  const cw = img.noa.naturalWidth / 4, ch = img.noa.naturalHeight / 4; let col, row;
+  if (!noa.ground) { row = 3; col = 2; } else if (held.left || held.right) { row = 3; col = 1; } else { row = 3; col = 0; }
+  ctx.save(); ctx.translate(noa.x - cam, 0); ctx.scale(noa.face, 1); ctx.drawImage(img.noa, col * cw, row * ch, cw, ch, -42, noa.y - 89, 84, 95); ctx.restore();
+}
+let last = 0;
+function loop(now) { const dt = Math.min(.05, (now - (last || now)) / 1000); last = now; update(dt); draw(now); requestAnimationFrame(loop); }
+
+const notes = {
+  A: `<b>A · Como ahora.</b> Flechas de 70 px juntas dentro de una bandeja, SALTA redondo de 88 px y LANA de 66 px al lado. El área táctil es el propio dibujo y entre botones hay 9 px: un dedo de cinco años mide unos 10–12 mm (40–45 px) y un toque torcido cae fácil en el botón de al lado.`,
+  B: `<b>B · Grandes y separados.</b> Flechas de 88 px separadas 18 px, SALTA de 116 px en la esquina y LANA de 80 px más arriba, en diagonal, para que el pulgar no la pise al saltar. Sin bandeja: cada botón flota solo. El área táctil tiene 10 px más por cada lado, sin verse.`,
+  C: `<b>C · Barra para deslizar.</b> Las dos flechas son una sola barra de 200 × 92 px: tocar la mitad izquierda camina a la izquierda y, sin levantar el dedo, al deslizarlo a la otra mitad Noa se da la vuelta. No hay hueco entre flechas donde fallar. SALTA y LANA, como en B.`,
+};
+function render() {
+  document.querySelectorAll(".seg").forEach((sg) => sg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(state[sg.dataset.k] === b.dataset.v))));
+  document.documentElement.style.setProperty("--op", state.op); game.classList.toggle("zones", state.zones === "on");
+  build();
+  document.getElementById("desc").innerHTML = `<p>${notes[state.layout]}</p>
+  <p><b>Qué mirar.</b></p><ul>
+  <li>Si el recuento de «casi» sube, el dedo busca el botón y no lo encuentra: el botón es pequeño o está donde no cae el pulgar.</li>
+  <li>Si al saltar sale lana, LANA está demasiado cerca de SALTA.</li>
+  <li>Si cuesta ver a Noa o los enemigos detrás de los botones, baja la opacidad.</li>
+  <li>Con «Ver áreas» se ven las áreas táctiles (verde), el HUD de esquinas (rosa) y la zona segura del móvil (amarillo). Los botones no deben tocar ni el HUD ni el borde redondeado o la muesca.</li>
+  <li>Las flechas, SALTA y LANA son dibujos de un solo color. «Dibujo y palabra» añade SALTA y LANA debajo, a 12 px, para comparar; a ese tamaño el texto para Noa queda por debajo del mínimo de 16 px.</li></ul>`;
+}
+document.querySelectorAll(".seg").forEach((sg) => sg.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; state[sg.dataset.k] = b.dataset.v; render(); }));
+document.getElementById("resetStats").addEventListener("click", () => { for (const k in stats) stats[k] = { hits: 0, near: 0 }; renderStats(); });
+document.getElementById("up").addEventListener("click", () => game.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
+addEventListener("keydown", (e) => { if (e.repeat) return; if (e.key === "ArrowLeft") held.left = true; if (e.key === "ArrowRight") held.right = true; if (e.key === " " || e.key === "ArrowUp") { e.preventDefault(); jumpPress(); } if (e.key === "x") throwYarn(); });
+addEventListener("keyup", (e) => { if (e.key === "ArrowLeft") held.left = false; if (e.key === "ArrowRight") held.right = false; });
+render(); resize();
+Promise.all(loads).then(() => requestAnimationFrame(loop));
+</script>

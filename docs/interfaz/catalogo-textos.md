@@ -96,6 +96,6 @@ Genera `dist-textos/es.json`, un objeto plano `clave → mensaje`, sin guardarlo
 
 - Hay un solo idioma (`es`). `usarIdioma()` existe, pero los textos de nivel de módulo (leyendas y resultados de los minijuegos, nombres de fase) se leen al cargar el módulo, así que cambiar de idioma en caliente no los refrescaría; los datos declarativos sí se resuelven al leerlos. Eso queda para el mapa del idioma.
 - El catálogo entero va en el paquete principal: unos 15 kB más comprimidos (158 kB frente a 144 kB). Si importa, se puede partir por zona con `import()` dinámico, que de todos modos hará falta para cargar un idioma bajo demanda.
-- Las claves de `minijuegos` salen del propio texto, no de un identificador.
+- Las claves antiguas de `minijuegos` salen del propio texto. Las nuevas siguen `minijuegos.<juego>.<momento>.<elemento>.<capa>`, con el momento `previa`, `practica`, `compas` (una palabra, dura un pulso), `fase` (hasta dos palabras con dibujo, dura un compás) o `resultado`; `textos.test.ts` vigila las reglas de compás y fase. Las piezas comunes están en `minijuegos.comun`. Cada minijuego pasa a las claves nuevas al adoptar la guía en su propia issue.
 - Algunas frases de los ajustes y los créditos están partidas en varios fragmentos; conviene unirlas antes de traducir.
 - Los rótulos de los minijuegos, los ajustes y algunas ventanas van sin pictograma hasta que se ejecute el rediseño visual de la interfaz.

@@ -4,6 +4,21 @@
  * Las claves salen del propio texto (`minijuegos.abeja.practica.rotulo`). Hojas reservadas: `rotulo` (texto para Noa), `juntos` (para leer juntos) y `oculto` (lector de pantalla).
  */
 export const minijuegos = {
+  /**
+   * Piezas comunes a todos los minijuegos. Las claves nuevas siguen `minijuegos.<juego>.<momento>.<elemento>.<capa>`,
+   * con el momento `previa`, `practica`, `compas` (una palabra, dura un pulso), `fase` (hasta dos palabras con dibujo,
+   * dura un compás) o `resultado`.
+   */
+  comun: {
+    previa: {
+      practica: { rotulo: "{pictograma:otra-vez} PRACTICA" },
+      jugar: { rotulo: "{pictograma:jugar} ¡A JUGAR!" },
+    },
+    salir: {
+      mapa: { oculto: "Volver al mapa" },
+      amigos: { oculto: "Volver a mis amigos" },
+    },
+  },
   abeja: {
     "mira-como-lo-hace": { juntos: "Mira cómo lo hace Noa." },
     "flor-un-corte-cuando": { juntos: "Flor: un corte cuando llega a la varita." },

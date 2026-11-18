@@ -1,12 +1,17 @@
 import { t } from "../textos";
 import { Boton, BotonControl, Texto } from "../textos/Texto";
 import { Medalla, Ventana } from "./Ventana";
+import { PantallaPrevia } from "./minijuegoComun";
 
 /** Solo en desarrollo (`?prueba=interfaz`): muestra los cimientos de la interfaz para revisarlos en escritorio y móvil. */
 export function MuestraInterfaz() {
-  // `?prueba=interfaz&ventana=resultado` abre además la pantalla de resultado común.
+  // `?prueba=interfaz&ventana=resultado` abre además la pantalla de resultado común; `&ventana=previa`, la pantalla previa de los minijuegos.
   const ventana = new URLSearchParams(window.location.search).get("ventana");
+  const nada = () => undefined;
   return <main className="muestra-interfaz">
+    {ventana === "previa" && <PantallaPrevia id="muestra-previa" nombre="minijuegos.abeja.la-abeja-ninja.rotulo"
+      guardian={<img src="./assets/sprites/boss-gran-jabali-0.png" alt="" />} regla={t("minijuegos.abeja.melisa-lanza-flores-cortalas.juntos")}
+      ayudaAdultos={[t("minijuegos.abeja.teclado-espacio-mando-boton.juntos")]} practicaPrimero onPracticar={nada} onJugar={nada} onSalir={nada} />}
     {ventana === "resultado" && <Ventana id="muestra-resultado" titulo="ventanas.completada.titulo.rotulo" celebracion
       botones={<><Boton tipo="seguir" clave="ventanas.completada.siguiente.rotulo" /><Boton clave="ventanas.completada.mapa.rotulo" /></>}>
       <div className="ventana-dibujo"><img className="completion-cat" src="./assets/sprites/world-cat-1-v1.png" alt={t("ventanas.completada.gatito.oculto")} /></div>

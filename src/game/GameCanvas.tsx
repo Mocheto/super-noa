@@ -1383,7 +1383,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         shopResultRef.current = matches;
         if (matches === 3 && level.secretShop) callbacksRef.current.onShopWin?.(level.secretShop.id);
       }} onLeave={() => {
-        if (shopResultRef.current === null) return;
+        // También se puede salir desde la pantalla previa, sin jugar: entonces no hay estrellas.
         returnFromShopRef.current?.();
       }} />}
       <TouchControls onPress={handleTouchStart} onRelease={handleTouchEnd} onCancel={handleTouchCancel} />

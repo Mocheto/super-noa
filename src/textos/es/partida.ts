@@ -27,7 +27,7 @@ export const partida = {
   },
   pausa: {
     titulo: { rotulo: "{pictograma:pausa} PAUSA" },
-    seguir: { rotulo: "{pictograma:jugar} SEGUIR" },
+    seguir: { rotulo: "{pictograma:jugar} SEGUIR", oculto: "Seguir jugando" },
     otraVez: { rotulo: "{pictograma:otra-vez} OTRA VEZ" },
     mapa: { rotulo: "{pictograma:mapa} MAPA" },
   },

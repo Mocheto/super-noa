@@ -3,7 +3,9 @@ import { getImage } from "./assets";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createFlight, FLIGHT_SECONDS, PLANE_Y, SKY_HEIGHT, SKY_WIDTH, stepFlight, TOTAL_STARS, type Flight, type FlightEvent } from "./avioneta";
 import "./avioneta.css";
-import { t } from "../textos/index.ts";
+import { t, textoLienzo } from "../textos/index.ts";
+import { Boton } from "../textos/Texto";
+import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
 
 type SoundKind = "apple" | "block" | "cat" | "jump" | "hurt" | "stomp" | "yarn" | "checkpoint" | "goal" | "sticker" | "howl" | "snort" | "cannon" | "countdown";
 type Props = {
@@ -77,7 +79,7 @@ function useWaltz(playing: boolean, volume: number) {
   }, [playing, volume]);
 }
 
-function drawFlight(context: CanvasRenderingContext2D, flight: Flight, scroll: number, gift: boolean) {
+function drawFlight(context: CanvasRenderingContext2D, flight: Flight, scroll: number) {
   const sky = context.createLinearGradient(0, 0, 0, SKY_HEIGHT);
   sky.addColorStop(0, "rgb(96,172,252)");
   sky.addColorStop(1, "rgb(140,207,251)");
@@ -146,17 +148,19 @@ function drawFlight(context: CanvasRenderingContext2D, flight: Flight, scroll: n
   }
   context.fillStyle = "rgba(42,24,55,.82)";
   context.beginPath(); context.roundRect(12, 12, 170, 40, 10); context.fill();
-  context.fillStyle = "#ffd76a"; context.font = "bold 18px monospace";
-  context.fillText(`★ ${flight.got} / ${TOTAL_STARS}`, 26, 39);
+  context.fillStyle = "#ffd76a"; context.font = '16px "Press Start 2P", monospace';
+  context.fillText(`★ ${flight.got}/${TOTAL_STARS}`, 26, 40);
   const progress = Math.min(1, flight.t / FLIGHT_SECONDS);
   context.fillStyle = "rgba(255,246,227,.55)"; context.fillRect(220, 26, 520, 10);
   context.fillStyle = "#d9403a"; context.fillRect(220 + 520 * progress - 12, 22, 24, 18);
-  if (flight.t < 4.5) {
+  // Cartel de los primeros segundos: dos palabras con dibujo (la frase completa está en la pantalla previa).
+  if (flight.t < 3) {
     context.save();
-    context.font = "bold 18px monospace"; context.textAlign = "center";
-    const text = gift && flight.t < 2.2 ? t("minijuegos.avioneta.la-reina-arcoiris-te.juntos") : t("minijuegos.avioneta.lanza-pompas-a-los.juntos");
-    context.fillStyle = "rgba(42,24,55,.88)"; context.fillRect(180, 250, 600, 46);
-    context.fillStyle = "#fff6e3"; context.fillText(text, SKY_WIDTH / 2, 280);
+    context.font = '24px "Press Start 2P", monospace'; context.textAlign = "center"; context.textBaseline = "middle";
+    const text = textoLienzo("minijuegos.avioneta.cartel.rotulo");
+    context.fillStyle = "#3d1430"; context.beginPath(); context.roundRect(SKY_WIDTH / 2 - 160, 246, 320, 56, 10); context.fill();
+    context.fillStyle = "#fff8e9"; context.beginPath(); context.roundRect(SKY_WIDTH / 2 - 156, 250, 312, 48, 8); context.fill();
+    context.fillStyle = "#3d1430"; context.fillText(text, SKY_WIDTH / 2, 276);
     context.restore();
   }
 }
@@ -168,8 +172,9 @@ export function AvionetaGame({ paused, muted, musicVolume, reduceMotion, gift, b
   const pausedRef = useRef(paused);
   const soundRef = useRef(playSound);
   const [result, setResult] = useState<number | null>(null);
-  useEffect(() => { pausedRef.current = paused; soundRef.current = playSound; }, [paused, playSound]);
-  useWaltz(!paused && !muted && result === null, musicVolume);
+  const [empezado, setEmpezado] = useState(false);
+  useEffect(() => { pausedRef.current = paused || !empezado; soundRef.current = playSound; }, [paused, empezado, playSound]);
+  useWaltz(empezado && !paused && !muted && result === null, musicVolume);
 
   useEffect(() => {
     const keys: Record<string, "left" | "right" | "fire"> = { ArrowLeft: "left", KeyA: "left", ArrowRight: "right", KeyD: "right", Space: "fire", ArrowUp: "fire", KeyW: "fire" };
@@ -208,12 +213,12 @@ export function AvionetaGame({ paused, muted, musicVolume, reduceMotion, gift, b
         for (const event of events) { const sound = SOUNDS[event]; if (sound) soundRef.current(sound); }
         if (flight.ended) setResult(flight.got);
       }
-      drawFlight(context, flight, scroll, gift);
+      drawFlight(context, flight, scroll);
       frame = requestAnimationFrame(loop);
     };
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
-  }, [gift]);
+  }, []);
 
   const hold = (key: "left" | "right" | "fire", pressed: boolean) => {
     if (key === "fire" && pressed && !input.current.fire) input.current.firePressed = true;
@@ -227,22 +232,23 @@ export function AvionetaGame({ paused, muted, musicVolume, reduceMotion, gift, b
     </button>
   );
 
+  const avioneta = <img className="avioneta-retrato" src={ART.plane} alt={t("minijuegos.avioneta.resultado.avioneta.oculto")} />;
   return (
-    <section className={`avioneta ${reduceMotion ? "is-calm" : ""}`} aria-label={t("minijuegos.avioneta.la-avioneta-de-las.oculto")}>
-      <canvas ref={canvasRef} width={SKY_WIDTH} height={SKY_HEIGHT} aria-label={t("minijuegos.avioneta.cielo-de-la-avioneta.oculto")} />
-      <button className="avioneta-leave" type="button" data-gamepad-back onClick={() => onExit(null)}>{t("minijuegos.avioneta.volver-al-mapa.rotulo")}</button>
+    <section className={`avioneta ${reduceMotion ? "is-calm" : ""}`} aria-label={t("minijuegos.avioneta.escena.oculto")}>
+      <canvas ref={canvasRef} width={SKY_WIDTH} height={SKY_HEIGHT} aria-label={t("minijuegos.avioneta.cielo.oculto")} />
+      <Boton className="avioneta-leave boton-pequeno" clave="minijuegos.avioneta.mapa.rotulo" data-gamepad-back onClick={() => onExit(null)} />
       <div className="avioneta-controls">
-        {pad("left", t("minijuegos.avioneta.mover-a-la-izquierda.rotulo"), "is-left")}
-        {pad("fire", t("minijuegos.avioneta.lanzar-pompa.rotulo"), "is-fire")}
-        {pad("right", t("minijuegos.avioneta.mover-a-la-derecha.rotulo"), "is-right")}
+        {pad("left", t("partida.controles.izquierda.oculto"), "is-left")}
+        {pad("fire", t("minijuegos.avioneta.pompa.oculto"), "is-fire")}
+        {pad("right", t("partida.controles.derecha.oculto"), "is-right")}
       </div>
-      {result !== null && (
-        <div className="avioneta-end" role="dialog" aria-labelledby="avioneta-end-title">
-          <h2 id="avioneta-end-title">{result === TOTAL_STARS ? t("minijuegos.avioneta.todas-las-estrellas.rotulo") : t("minijuegos.avioneta.has-cruzado-el-arcoiris.rotulo")}</h2>
-          <p>{t("minijuegos.avioneta.recogidas.juntos", { n: result, total: TOTAL_STARS })}{result > bestStars ? <> <b>{t("minijuegos.avioneta.nueva-marca.rotulo")}</b></> : ""}</p>
-          <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => onExit(result)}>{t("minijuegos.avioneta.volver-al-mapa.rotulo")}</button>
-        </div>
-      )}
+      {!empezado && !paused && <PantallaPrevia id="avioneta-previa" nombre="minijuegos.avioneta.previa.nombre.rotulo" guardian={avioneta}
+        regla={`${gift ? `${t("minijuegos.avioneta.previa.regalo.juntos")} ` : ""}${t("minijuegos.avioneta.previa.regla.juntos")}`}
+        ayudaAdultos={[t("adultos.minijuegos.avioneta.controles")]} practicaPrimero={false} onJugar={() => setEmpezado(true)} onSalir={() => onExit(null)} />}
+      {result !== null && !paused && <ResultadoMinijuego id="avioneta-resultado" titulo={result === TOTAL_STARS ? "minijuegos.avioneta.resultado.todas.rotulo" : "minijuegos.avioneta.resultado.arcoiris.rotulo"}
+        gano onSalir={() => onExit(result)} dibujo={avioneta}
+        frase={`${result === TOTAL_STARS ? t("minijuegos.avioneta.resultado.todas.juntos") : t("minijuegos.avioneta.resultado.arcoiris.juntos", { n: result, total: TOTAL_STARS })}${result > bestStars ? ` ${t("minijuegos.avioneta.resultado.marca.juntos")}` : ""}`}
+        botones={<Boton tipo="seguir" clave="minijuegos.avioneta.resultado.mapa.rotulo" data-gamepad-default onClick={() => onExit(result)} />} />}
     </section>
   );
 }

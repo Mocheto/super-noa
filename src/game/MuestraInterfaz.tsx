@@ -9,6 +9,8 @@ import { CatParty } from "./CatPartyGame";
 import { BossBattle } from "./BossBattle";
 import { GuardianMiniGame } from "./GuardianMiniGame";
 import { SantaBossBattle } from "./SantaBossBattle";
+import { AvionetaGame } from "./AvionetaGame";
+import { SecretShop } from "./SecretShop";
 
 /** Solo en desarrollo (`?prueba=interfaz`): muestra los cimientos de la interfaz para revisarlos en escritorio y móvil. */
 export function MuestraInterfaz() {
@@ -16,6 +18,8 @@ export function MuestraInterfaz() {
   const ventana = new URLSearchParams(window.location.search).get("ventana");
   const nada = () => undefined;
   // `&ventana=abeja` abre la abeja ninja tal como sale tras el guardián, para revisar su pantalla previa y su práctica.
+  if (ventana === "avioneta") return <AvionetaGame paused={false} muted musicVolume={0} reduceMotion={false} gift bestStars={0} onExit={nada} playSound={nada} />;
+  if (ventana === "tienda") return <SecretShop world={1} paused={false} reduceMotion={false} onResult={nada} onLeave={nada} playSound={nada} />;
   if (ventana === "saltos") return <SantaBossBattle bossId="siroco" paused={false} apples={2} onSpendApple={nada} onRestartLevel={nada} onAbandon={nada} onWin={nada} playSound={nada} />;
   if (ventana === "duelo") return <BossBattle bossId="bramble-king" paused={false} apples={2} protectedByApple={false} onSpendApple={nada} onRestartLevel={nada} onAbandon={nada} onWin={nada} playSound={nada} />;
   if (ventana === "guardian") return <GuardianMiniGame bossId="triceratops-queen" paused={false} apples={2} protectedByApple={false} onSpendApple={nada} onRestartLevel={nada} onAbandon={nada} onWin={nada} playSound={nada} />;

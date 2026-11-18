@@ -5,6 +5,9 @@
 export const adultos = {
   /** Ayuda de teclado, mando y sin sonido de los minijuegos: solo en su pantalla previa. */
   minijuegos: {
+    avioneta: {
+      controles: "Teclado: flechas o A/D para mover la avioneta y espacio para lanzar pompas. Mando: cruceta o palanca, y botón A.",
+    },
     saltos: {
       controles: "Teclado: flechas o A/D para moverte y espacio para saltar. Mando: cruceta o palanca, y botón A para saltar.",
     },

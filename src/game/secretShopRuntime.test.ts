@@ -114,10 +114,9 @@ test("la oportunidad no vuelve al salir ni al morir; reiniciar la pantalla sí l
   try {
     let now = enter(engine);
     const room = engine.shopProps!;
+    // Desde la pantalla previa se puede salir sin jugar: no hay estrellas y la oportunidad se gasta igual.
     room.onLeave();
-    assert.ok(engine.shopProps, "no se abandona antes de terminar");
-    room.onResult(1);
-    room.onLeave();
+    assert.equal(engine.shopProps, undefined, "se puede salir desde la pantalla previa");
     engine.tick(now += 10_000);
     engine.input.enterQueued = true;
     now = advance(engine, 2, now);

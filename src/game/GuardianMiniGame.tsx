@@ -5,8 +5,10 @@ import { GameAssetIcon } from "./GameAssetIcon";
 import { bossCatalog } from "./bosses";
 import { GUARDIAN_GAME_ROUNDS, guardianGames, type GuardianGameId, makeGuardianSequence } from "./guardianGames";
 import type { GuardianOption } from "./guardianGames";
-import { t } from "../textos";
-import { Texto } from "../textos/Texto";
+import { t, type ClaveTexto } from "../textos";
+import { Boton, Pictogramas, Texto } from "../textos/Texto";
+import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
+import { Ventana } from "./Ventana";
 
 type Props = {
   bossId: GuardianGameId; paused: boolean; apples: number; protectedByApple: boolean;
@@ -46,6 +48,8 @@ export function GuardianMiniGame({ bossId, paused, apples, protectedByApple, onS
   const [input, setInput] = useState<string[]>([]);
   const [message, setMessage] = useState(game.instruction);
   const [showAbandon, setShowAbandon] = useState(false);
+  const [empezado, setEmpezado] = useState(false);
+  const detenido = paused || !empezado;
 
   const option = (id: string) => game.options.find((item) => item.id === id)!;
   const reset = (spendApple: boolean) => {
@@ -67,7 +71,7 @@ export function GuardianMiniGame({ bossId, paused, apples, protectedByApple, onS
     else setPhase("feedback");
   };
   const choose = (id: string) => {
-    if (paused || phase !== "play") return;
+    if (detenido || phase !== "play") return;
     if (game.kind === "choice") { finishRound(id === sequence[0]); return; }
     const nextInput = [...input, id]; setInput(nextInput);
     if (id !== sequence[nextInput.length - 1]) { finishRound(false); return; }
@@ -82,30 +86,46 @@ export function GuardianMiniGame({ bossId, paused, apples, protectedByApple, onS
 
   return <><Dialog labelledBy="guardian-game-title" backdropClassName="boss-backdrop" className={`boss-battle guardian-game boss-theme-${bossId}`} gamepad>
     <header className="boss-header">
-      <div><p className="eyebrow rotulo"><Texto clave="duelos.guardian.ronda.rotulo" variables={{ n: Math.min(round + 1, GUARDIAN_GAME_ROUNDS), total: GUARDIAN_GAME_ROUNDS }} /></p><h2 id="guardian-game-title" className="rotulo">{game.title}</h2><p className="juntos">{game.instruction}</p><p className="boss-challenge"><Texto clave="duelos.guardian.reto.rotulo" /> <span className="juntos">{t("duelos.guardian.reto.juntos")}</span></p></div>
+      <div><p className="eyebrow rotulo"><Texto clave="duelos.guardian.ronda.rotulo" variables={{ n: Math.min(round + 1, GUARDIAN_GAME_ROUNDS), total: GUARDIAN_GAME_ROUNDS }} /></p><h2 id="guardian-game-title" className="rotulo">{game.title}</h2></div>
       <div className="guardian-game-status"><span aria-label={t("duelos.guardian.oportunidades.oculto", { n: 3 - mistakes })}>{"♥".repeat(3 - mistakes)}{"♡".repeat(mistakes)}</span><b>{round + (won ? 1 : 0)}/{GUARDIAN_GAME_ROUNDS}</b>{!friendlyReplay && <small><GameAssetIcon kind="apple" /> × {apples}</small>}</div>
     </header>
     <div className="guardian-game-stage">
       <GuardianPortrait bossId={bossId} won={won} />
       <div className="guardian-game-board">
-        <strong>{phase === "watch" || game.kind === "choice" ? game.prompt : phase === "play" ? <Texto clave="duelos.guardian.repite.rotulo" /> : message}</strong>
+        <strong className="texto-noa">{phase === "watch" || game.kind === "choice" ? <Pictogramas texto={game.prompt} /> : phase === "play" ? <Texto clave="duelos.guardian.repite.rotulo" /> : <Pictogramas texto={game.success} />}</strong>
         {game.kind === "choice" && !won && !lost && <div className="guardian-target" style={{ "--guardian-color": target.color } as CSSProperties}><GuardianGameIcon option={target} /><b>{target.label}</b></div>}
         {game.kind === "sequence" && phase === "watch" && <div className="guardian-sequence">{sequence.map((id, index) => <span role="img" aria-label={`${index + 1}: ${option(id).label}`} style={{ "--guardian-color": option(id).color } as CSSProperties} key={`${id}-${index}`}><GuardianGameIcon option={option(id)} /><small aria-hidden="true">{index + 1}</small></span>)}</div>}
         {game.kind === "sequence" && phase === "play" && <div className="guardian-progress" aria-label={t("duelos.guardian.pasos.oculto", { n: input.length, total: sequence.length })} >{sequence.map((_, index) => <span className={index < input.length ? "is-done" : ""} key={index}>{index < input.length ? "★" : index + 1}</span>)}</div>}
-        <p aria-live="polite">{message}</p>
+        <p className="sr-only" aria-live="polite">{message}</p>
       </div>
     </div>
-    {phase === "watch" && <button className="pixel-button primary guardian-ready" type="button" disabled={paused} data-gamepad-default onClick={() => { setPhase("play"); setMessage(t("duelos.guardian.mismoOrden.juntos")); }}><Texto clave="duelos.guardian.listo.rotulo" /></button>}
-    {phase === "play" && <div className="guardian-options">{game.options.map((item) => <button type="button" disabled={paused} onClick={() => choose(item.id)} style={{ "--guardian-color": item.color } as CSSProperties} key={item.id}><GuardianGameIcon option={item} /><strong>{item.label}</strong></button>)}</div>}
-    {phase === "feedback" && <button className="pixel-button primary guardian-ready" type="button" disabled={paused} data-gamepad-default onClick={nextRound}><Texto clave="duelos.boton.siguiente.rotulo" /></button>}
-    {won && <div className="guardian-result"><h3 className="rotulo"><Texto clave="duelos.guardian.completado.rotulo" /></h3><p className="juntos">{t(mistakes === 0 ? "duelos.detalle.reto.juntos" : "duelos.detalle.libre.juntos", { nombre: boss.name })}</p><button className="pixel-button primary" data-gamepad-default onClick={() => { playSound("goal"); onWin(mistakes === 0); }}><Texto clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.continuar.rotulo"} /></button></div>}
-    {lost && <div className="guardian-result"><h3 className="rotulo"><Texto clave="duelos.guardian.otraVez.rotulo" /></h3><p>{message}</p>{friendlyReplay ? <button className="pixel-button primary" data-gamepad-default onClick={() => reset(false)}><Texto clave="duelos.boton.otraVez.rotulo" /></button> : apples > 0 ? <button className="pixel-button primary" data-gamepad-default onClick={() => reset(true)}><Texto clave="duelos.boton.manzana.rotulo" /></button> : <button className="pixel-button primary" data-gamepad-default onClick={onRestartLevel}><Texto clave="duelos.boton.empezar.rotulo" /></button>}</div>}
-    {!won && <button className="text-button duel-abandon" type="button" onClick={() => friendlyReplay ? onAbandon() : setShowAbandon(true)}><Texto clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.rendirse.rotulo"} /></button>}
-    {protectedByApple && <p className="guardian-armor-note juntos">{t("duelos.guardian.armadura.juntos")}</p>}
-  </Dialog>{showAbandon && <Dialog labelledBy="guardian-abandon-title" className="game-modal compact" onClose={() => setShowAbandon(false)} gamepad>
-    <h2 id="guardian-abandon-title" className="rotulo"><Texto clave="duelos.abandonar.titulo.rotulo" /></h2>
+    {phase === "watch" && <button className="pixel-button primary guardian-ready" type="button" disabled={detenido} data-gamepad-default onClick={() => { setPhase("play"); setMessage(t("duelos.guardian.mismoOrden.juntos")); }}><Texto clave="duelos.guardian.listo.rotulo" /></button>}
+    {phase === "play" && <div className="guardian-options">{game.options.map((item) => <button type="button" disabled={detenido} onClick={() => choose(item.id)} style={{ "--guardian-color": item.color } as CSSProperties} key={item.id}><GuardianGameIcon option={item} /><strong>{item.label}</strong></button>)}</div>}
+    {phase === "feedback" && <button className="pixel-button primary guardian-ready" type="button" disabled={detenido} data-gamepad-default onClick={nextRound}><Texto clave="duelos.boton.siguiente.rotulo" /></button>}
+    {!won && !lost && <Boton className="duel-abandon boton-pequeno" clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.rendirse.rotulo"} onClick={() => friendlyReplay ? onAbandon() : setShowAbandon(true)} />}
+
+  </Dialog>
+  {!empezado && !paused && <PantallaPrevia id="guardian-previa" nombre={`juegos.${bossId}.titulo.rotulo` as ClaveTexto} guardian={<GuardianPortrait bossId={bossId} won={false} />}
+    regla={`${game.instruction} ${t("duelos.guardian.reto.juntos")}${protectedByApple ? ` ${t("duelos.guardian.armadura.juntos")}` : ""}`}
+    practicaPrimero={false} onJugar={() => setEmpezado(true)} onSalir={onAbandon} />}
+  {won && !paused && <ResultadoMinijuego id="guardian-resultado" titulo="duelos.guardian.completado.rotulo" gano onSalir={() => { playSound("goal"); onWin(mistakes === 0); }}
+    dibujo={<GuardianPortrait bossId={bossId} won />}
+    frase={t(mistakes === 0 ? "duelos.detalle.reto.juntos" : "duelos.detalle.libre.juntos", { nombre: boss.name })}
+    botones={<Boton tipo="seguir" clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.continuar.rotulo"} data-gamepad-default onClick={() => { playSound("goal"); onWin(mistakes === 0); }} />} />}
+  {lost && !paused && !showAbandon && <ResultadoMinijuego id="guardian-resultado" titulo="duelos.guardian.otraVez.rotulo" gano={false} onSalir={() => friendlyReplay ? onAbandon() : setShowAbandon(true)}
+    dibujo={<GuardianPortrait bossId={bossId} won={false} />}
+    frase={t("duelos.guardian.perdido.juntos")}
+    botones={<>
+      {friendlyReplay ? <Boton tipo="seguir" clave="duelos.boton.otraVez.rotulo" data-gamepad-default onClick={() => reset(false)} />
+        : apples > 0 ? <Boton tipo="seguir" clave="duelos.boton.manzana.rotulo" data-gamepad-default onClick={() => reset(true)} />
+          : <Boton tipo="seguir" clave="duelos.boton.empezar.rotulo" data-gamepad-default onClick={onRestartLevel} />}
+      <Boton clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.rendirse.rotulo"} data-gamepad-back onClick={() => friendlyReplay ? onAbandon() : setShowAbandon(true)} />
+    </>} />}
+  {showAbandon && <Ventana id="guardian-abandon-title" titulo="duelos.abandonar.titulo.rotulo" onClose={() => setShowAbandon(false)}
+    botones={<>
+      <Boton tipo="seguir" clave="duelos.abandonar.seguir.rotulo" data-gamepad-default data-gamepad-back onClick={() => setShowAbandon(false)} />
+      <Boton clave="duelos.abandonar.salir.rotulo" onClick={onAbandon} />
+    </>}>
     <p className="juntos">{t("duelos.abandonar.juego.juntos")}</p>
-    <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowAbandon(false)}><Texto clave="duelos.abandonar.seguir.rotulo" /></button>
-    <button className="pixel-button" type="button" onClick={onAbandon}><Texto clave="duelos.abandonar.salir.rotulo" /></button>
-  </Dialog>}</>;
+  </Ventana>}</>;
 }

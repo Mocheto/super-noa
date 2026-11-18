@@ -492,6 +492,7 @@
 /* Minijuegos (issue 148): pantalla previa común. */
 .previa-guardian img { max-height: 140px; }
 .pantalla-previa .texto-adultos { margin: 0; }
+.pantalla-previa .ventana-cinta, .ventana-ayuda .ventana-cinta { padding-inline: 58px; }
 @media (orientation: landscape) and (max-height: 540px) { .previa-guardian img { max-height: 72px; } }
 
 /* Muestra de desarrollo (`?prueba=interfaz`) */
@@ -504,4 +505,42 @@
 @media (prefers-reduced-motion: reduce) {
   .boton, .boton-control { transition: none; }
   .boton:active, .boton-control:active { transform: none; }
+}
+
+/* Duelo de piedra, papel o tijera y juegos de guardián en móvil apaisado (issue 153): todo en una vista, sin el
+   historial ni la chuleta de reglas (están en la pantalla previa) y con los luchadores más pequeños. */
+.duel-countdown-gesto { display: inline-flex; align-items: center; gap: 12px; font-family: var(--letra-noa); }
+@media (orientation: landscape) and (max-height: 540px) {
+  .boss-battle[class*=" battle-"], .boss-battle.guardian-game { max-height: calc(100dvh - 8px); padding: 8px 12px; }
+  .boss-battle[class*=" battle-"] .boss-header, .boss-battle.guardian-game .boss-header { gap: 6px; padding: 0; }
+  .boss-battle[class*=" battle-"] .boss-header h2, .boss-battle.guardian-game .boss-header h2 { margin: 0; font-size: 14px; }
+  .boss-battle[class*=" battle-"] .round-history, .boss-battle[class*=" battle-"] .duel-rules, .boss-battle[class*=" battle-"] .round-choice-spotlight { display: none; }
+  .boss-battle[class*=" battle-"] .duel-arena { gap: 8px; margin: 4px 0; }
+  .boss-battle[class*=" battle-"] .gesture-card { min-height: 0; padding: 2px 4px; }
+  .boss-battle[class*=" battle-"] .duel-fighter > strong { font-size: 11px; }
+  .boss-battle[class*=" battle-"] .round-message { margin: 4px 0; padding: 6px; }
+  .boss-battle[class*=" battle-"] .duel-choices { gap: 8px; margin: 4px 0; }
+  .boss-battle.guardian-game .guardian-game-stage { min-height: 0; margin: 4px 0; grid-template-columns: 100px minmax(0, 1fr); gap: 10px; }
+  .boss-battle.guardian-game .guardian-game-portrait { height: 110px; }
+  .boss-battle.guardian-game .guardian-game-board { min-height: 0; gap: 4px; padding: 6px 10px; }
+  .boss-battle.guardian-game .guardian-target { min-width: 0; padding: 4px 12px; gap: 2px; }
+  .boss-battle.guardian-game .guardian-target .guardian-game-icon { width: 44px; }
+  .boss-battle.guardian-game .guardian-options { gap: 8px; }
+  .boss-battle.guardian-game .guardian-options button { min-height: 0; padding: 4px; }
+  .boss-battle.guardian-game .guardian-options .guardian-game-icon { width: 40px; }
+  .boss-battle.guardian-game .boss-header { display: flex; align-items: center; justify-content: space-between; padding-right: 110px; }
+  .boss-battle.guardian-game .guardian-game-status { display: flex; gap: 8px; align-items: center; padding: 2px 8px; }
+  .boss-battle[class*=" battle-"] .boss-header { display: flex; align-items: center; justify-content: space-between; padding-right: 110px; }
+  .boss-battle[class*=" battle-"] .duel-arena { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; min-height: 0; }
+  .boss-battle[class*=" battle-"] .boss-header { min-height: 0; }
+  .boss-battle[class*=" battle-"] .duel-status-panel { display: flex; gap: 6px; align-items: center; }
+  .boss-battle[class*=" battle-"] .duel-score, .boss-battle[class*=" battle-"] .duel-attempts { padding: 2px 6px; }
+  .boss-battle[class*=" battle-"] .duel-fighter { display: grid; justify-items: center; gap: 2px; }
+  .boss-battle[class*=" battle-"] .boss-sprite-window { width: 70px; height: 104px; }
+  .boss-battle[class*=" battle-"] .boss-sprite-window.is-atlas-sprite { width: 100px; height: 100px; }
+  .boss-battle[class*=" battle-"] .boss-sprite-window.is-wide-sprite { width: 130px; height: 96px; }
+  .boss-battle[class*=" battle-"] .duel-noa-sprite { width: 72px; }
+  .boss-battle.battle-choosing .round-message { display: none; }
+  .boss-battle[class*=" battle-"] .duel-choices button { min-height: 0; padding: 4px; }
+  .boss-battle[class*=" battle-"] .duel-abandon, .boss-battle.guardian-game .duel-abandon { position: absolute; top: 8px; right: 12px; margin: 0; }
 }

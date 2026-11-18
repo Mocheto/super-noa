@@ -8,7 +8,9 @@ import { justPressed, readDuelPad, type DuelPadButtons } from "./duelGamepad";
 import { firstConnectedGamepad } from "./gamepad";
 import type { BossId } from "./types";
 import { conTextos, t, tClave } from "../textos/index.ts";
-import { Texto } from "../textos/Texto";
+import { Boton, Texto } from "../textos/Texto";
+import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
+import { Ventana } from "./Ventana";
 
 type Choice = "rock" | "paper" | "scissors";
 type RoundWinner = "noa" | "boss" | "tie";
@@ -103,7 +105,8 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
   const [selectedChoiceIndex, setSelectedChoiceIndex] = useState(0);
   const [gamepadConnected, setGamepadConnected] = useState(false);
   const [showAbandon, setShowAbandon] = useState(false);
-  const battlePaused = paused || showAbandon;
+  const [empezado, setEmpezado] = useState(false);
+  const battlePaused = paused || showAbandon || !empezado;
   const previousPadRef = useRef<DuelPadButtons | null>(null);
   const previousBackRef = useRef(false);
 
@@ -221,8 +224,6 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
           <div>
             <p className="eyebrow rotulo"><Texto clave="duelos.ronda.rotulo" variables={{ n: roundNumber }} /></p>
             <h2 id="boss-title" className="rotulo"><Texto clave={friendlyReplay ? "duelos.titulo.amistoso.rotulo" : "duelos.titulo.final.rotulo"} variables={{ nombre: boss.name }} /></h2>
-            <p className="juntos">{boss.intro}</p>
-            <p className="boss-challenge"><Texto clave="duelos.reto.rotulo" /> <span className="juntos">{boss.challenge.label}</span></p>
           </div>
           <div className="duel-status-panel">
             <div className="duel-score" aria-label={t("duelos.marcador.oculto", { noa: battle.noaScore, nombre: boss.name, jefe: battle.bossScore })}>
@@ -245,7 +246,8 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
         )}
 
         <div className={`duel-arena ${battle.status === "countdown" ? "is-countdown" : ""} ${choicesRevealed ? "is-revealed" : ""}`}>
-          {battle.status === "countdown" && <div className="duel-countdown" aria-live="assertive">{countdown === 0 ? <Texto clave="duelos.cuenta.ya.rotulo" /> : countdown}</div>}
+          {battle.status === "countdown" && <div className="duel-countdown" aria-live="assertive">{countdown === 0 ? <Texto clave="duelos.cuenta.ya.rotulo" />
+            : <span className="duel-countdown-gesto"><RpsIcon choice={countdown === 3 ? "rock" : countdown === 2 ? "paper" : "scissors"} /><b>{choiceById[countdown === 3 ? "rock" : countdown === 2 ? "paper" : "scissors"].label}</b></span>}</div>}
           <div className={`duel-fighter noa-fighter ${visibleWinner === "noa" ? "round-winner" : visibleWinner === "boss" ? "round-loser" : ""}`}>
             <NoaDuelSprite frame={noaFrame} protectedByApple={protectedByApple} />
             <strong><Texto clave="duelos.noa.rotulo" /></strong>
@@ -266,7 +268,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
         </div>
 
         <div className={`round-message result-${visibleWinner ?? "none"}`} aria-live="polite">
-          <strong><Texto variables={{ nombre: boss.name }} clave={battle.status === "countdown" ? "duelos.mensaje.cuenta.rotulo" : battle.status === "won" ? "duelos.mensaje.gana.rotulo" : battle.status === "lost" ? "duelos.mensaje.pierde.rotulo" : visibleWinner === "noa" ? "duelos.mensaje.rondaNoa.rotulo" : visibleWinner === "boss" ? "duelos.mensaje.rondaJefe.rotulo" : visibleWinner === "tie" ? "duelos.mensaje.empate.rotulo" : "duelos.mensaje.elige.rotulo"} /></strong>
+          {battle.status !== "countdown" && <strong><Texto variables={{ nombre: boss.name }} clave={battle.status === "won" ? "duelos.mensaje.gana.rotulo" : battle.status === "lost" ? "duelos.mensaje.pierde.rotulo" : visibleWinner === "noa" ? "duelos.mensaje.rondaNoa.rotulo" : visibleWinner === "boss" ? "duelos.mensaje.rondaJefe.rotulo" : visibleWinner === "tie" ? "duelos.mensaje.empate.rotulo" : "duelos.mensaje.elige.rotulo"} /></strong>}
           {choicesRevealed && battle.noaChoice && battle.bossChoice && (
             <div className="round-choice-spotlight" aria-label={t("duelos.mensaje.eleccion.oculto", { noa: choiceById[battle.noaChoice].label, nombre: boss.name, jefe: choiceById[battle.bossChoice].label })}>
               <span><small><Texto clave="duelos.noa.rotulo" /></small><RpsIcon choice={battle.noaChoice} /><b>{choiceById[battle.noaChoice].label}</b></span>
@@ -274,7 +276,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
               <span><small>{boss.name.toUpperCase()}</small><RpsIcon choice={battle.bossChoice} /><b>{choiceById[battle.bossChoice].label}</b></span>
             </div>
           )}
-          <span className="juntos">{battle.status === "countdown" ? t("duelos.detalle.cuenta.juntos") : battle.status === "won" ? friendlyReplay ? t("duelos.detalle.amistad.juntos", { nombre: boss.name }) : wonChallenge ? t("duelos.detalle.reto.juntos", { nombre: boss.name }) : t("duelos.detalle.libre.juntos", { nombre: boss.name }) : battle.status === "lost" ? friendlyReplay ? t("duelos.detalle.otraVez.juntos") : apples > 0 ? t("duelos.detalle.manzana.juntos") : t("duelos.detalle.sinManzanas.juntos") : roundText}</span>
+          {battle.status === "revealed" && <span className="juntos">{roundText}</span>}
         </div>
 
         {battle.status === "choosing" && (
@@ -287,23 +289,38 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
             {gamepadConnected && <p className="duel-pad-tip">{t("duelos.regla.mando")}</p>}
           </div>
         )}
-        {battle.status === "revealed" && <button className="pixel-button primary duel-next" type="button" onClick={nextRound}><Texto clave="duelos.boton.siguiente.rotulo" /></button>}
-        {battle.status === "lost" && friendlyReplay && <button className="pixel-button primary duel-next" type="button" onClick={retryFriendly}><Texto clave="duelos.boton.otraVez.rotulo" /></button>}
-        {battle.status === "lost" && !friendlyReplay && apples > 0 && <button className="pixel-button primary duel-next apple-retry" type="button" onClick={retryWithApple}><Texto clave="duelos.boton.manzana.rotulo" /></button>}
-        {battle.status === "lost" && !friendlyReplay && apples === 0 && <button className="pixel-button primary duel-next restart-level" type="button" onClick={onRestartLevel}><Texto clave="duelos.boton.empezar.rotulo" /></button>}
-        {battle.status === "won" && <button className="pixel-button primary duel-next" type="button" onClick={() => { playSound("goal"); onWin(wonChallenge); }}><Texto clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.continuar.rotulo"} /></button>}
-        {battle.status !== "won" && <button className="text-button duel-abandon" type="button" onClick={abandonBattle}><Texto clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.rendirse.rotulo"} /></button>}
+        {battle.status === "revealed" && <Boton tipo="seguir" className="duel-next" clave="duelos.boton.siguiente.rotulo" onClick={nextRound} />}
+        {battle.status !== "won" && battle.status !== "lost" && <Boton className="duel-abandon boton-pequeno" clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.rendirse.rotulo"} onClick={abandonBattle} />}
 
         <p className="duel-rules"><span><RpsIcon choice="rock" small /> <Texto clave="duelos.regla.gana.rotulo" /> <RpsIcon choice="scissors" small /></span><span><RpsIcon choice="scissors" small /> <Texto clave="duelos.regla.gana.rotulo" /> <RpsIcon choice="paper" small /></span><span><RpsIcon choice="paper" small /> <Texto clave="duelos.regla.gana.rotulo" /> <RpsIcon choice="rock" small /></span></p>
       </Dialog>
-      {showAbandon && (
-        <Dialog labelledBy="abandon-title" className="game-modal compact" onClose={() => setShowAbandon(false)} gamepad>
-          <h2 id="abandon-title" className="rotulo"><Texto clave="duelos.abandonar.titulo.rotulo" /></h2>
-          <p className="juntos">{t("duelos.abandonar.duelo.juntos")}</p>
-          <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowAbandon(false)}><Texto clave="duelos.abandonar.seguir.rotulo" /></button>
-          <button className="pixel-button" type="button" onClick={onAbandon}><Texto clave="duelos.abandonar.salir.rotulo" /></button>
-        </Dialog>
-      )}
+      {!empezado && !paused && <PantallaPrevia id="boss-previa" nombre={friendlyReplay ? "duelos.titulo.amistoso.rotulo" : "duelos.titulo.final.rotulo"} nombreVariables={{ nombre: boss.name }}
+        guardian={<BossSprite assetPrefix={boss.assetPrefix} assetAtlas={boss.assetAtlas} frame={0} name={boss.name} />}
+        regla={`${boss.intro} ${t("duelos.regla.elige.juntos")} ${boss.challenge.label}`}
+        ayudaAdultos={[t("duelos.regla.mando")]} practicaPrimero={false} onJugar={() => setEmpezado(true)} onSalir={onAbandon} />}
+
+      {battle.status === "won" && !paused && <ResultadoMinijuego id="boss-resultado" titulo="duelos.mensaje.gana.rotulo" tituloVariables={{ nombre: boss.name }} gano onSalir={() => { playSound("goal"); onWin(wonChallenge); }}
+        dibujo={<BossSprite assetPrefix={boss.assetPrefix} assetAtlas={boss.assetAtlas} frame={4} name={boss.name} />}
+        frase={friendlyReplay ? t("duelos.detalle.amistad.juntos", { nombre: boss.name }) : wonChallenge ? t("duelos.detalle.reto.juntos", { nombre: boss.name }) : t("duelos.detalle.libre.juntos", { nombre: boss.name })}
+        botones={<Boton tipo="seguir" clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.continuar.rotulo"} data-gamepad-default onClick={() => { playSound("goal"); onWin(wonChallenge); }} />} />}
+
+      {battle.status === "lost" && !paused && !showAbandon && <ResultadoMinijuego id="boss-resultado" titulo="duelos.mensaje.pierde.rotulo" tituloVariables={{ nombre: boss.name }} gano={false} onSalir={abandonBattle}
+        dibujo={<BossSprite assetPrefix={boss.assetPrefix} assetAtlas={boss.assetAtlas} frame={0} name={boss.name} />}
+        frase={friendlyReplay ? t("duelos.detalle.otraVez.juntos") : apples > 0 ? t("duelos.detalle.manzana.juntos") : t("duelos.detalle.sinManzanas.juntos")}
+        botones={<>
+          {friendlyReplay ? <Boton tipo="seguir" clave="duelos.boton.otraVez.rotulo" data-gamepad-default onClick={retryFriendly} />
+            : apples > 0 ? <Boton tipo="seguir" className="apple-retry" clave="duelos.boton.manzana.rotulo" data-gamepad-default onClick={retryWithApple} />
+              : <Boton tipo="seguir" className="restart-level" clave="duelos.boton.empezar.rotulo" data-gamepad-default onClick={onRestartLevel} />}
+          <Boton clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.rendirse.rotulo"} data-gamepad-back onClick={abandonBattle} />
+        </>} />}
+
+      {showAbandon && <Ventana id="abandon-title" titulo="duelos.abandonar.titulo.rotulo" onClose={() => setShowAbandon(false)}
+        botones={<>
+          <Boton tipo="seguir" clave="duelos.abandonar.seguir.rotulo" data-gamepad-default data-gamepad-back onClick={() => setShowAbandon(false)} />
+          <Boton clave="duelos.abandonar.salir.rotulo" onClick={onAbandon} />
+        </>}>
+        <p className="juntos">{t("duelos.abandonar.duelo.juntos")}</p>
+      </Ventana>}
     </>
   );
 }

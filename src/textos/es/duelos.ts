@@ -37,7 +37,6 @@ export const duelos = {
   historial: { oculto: "Historial de rondas", ronda: { rotulo: "R{n}" } },
   cuenta: { ya: { rotulo: "¡YA!" }, piensa: { rotulo: "PIENSA" }, lista: { rotulo: "LISTA" }, espera: { rotulo: "ESPERA" } },
   mensaje: {
-    cuenta: { rotulo: "PIEDRA, PAPEL" },
     gana: { rotulo: "{pictograma:estrella} ¡NOA GANA!" },
     pierde: { rotulo: "GANA {nombre}" },
     rondaNoa: { rotulo: "¡PUNTO PARA NOA!" },
@@ -47,7 +46,6 @@ export const duelos = {
     eleccion: { oculto: "Noa elige {noa} y {nombre} elige {jefe}" },
   },
   detalle: {
-    cuenta: { juntos: "Los dos gestos aparecerán a la vez." },
     amistad: { juntos: "La amistad con {nombre} sigue creciendo." },
     reto: { juntos: "¡Reto logrado! {nombre} te regala un marco especial." },
     libre: { juntos: "{nombre} sonríe y deja libre el camino." },

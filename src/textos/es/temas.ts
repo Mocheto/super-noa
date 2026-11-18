@@ -1,0 +1,40 @@
+/**
+ * Nombre de cada decorado (tema) de las pantallas, por identificador de tema.
+ * Hojas reservadas: `rotulo` (texto para Noa), `juntos` (para leer juntos) y `oculto` (lector de pantalla).
+ */
+
+export const temas = {
+  "orchard-day": { rotulo: "MANZANOS", juntos: "Mañana entre manzanos" },
+  "orchard-sunset": { rotulo: "ATARDECER", juntos: "Tarde de manzanas" },
+  "forest-dusk": { rotulo: "BIGOTES", juntos: "Bosque de los bigotes" },
+  "forest-night": { rotulo: "LUNA", juntos: "Claro de la luna" },
+  "crystal-cave": { rotulo: "CRISTALES", juntos: "Grutas de cristal y lava" },
+  "wolf-pines": { rotulo: "PINAR", juntos: "Pinar de las huellas" },
+  "wolf-moon": { rotulo: "LOBOS", juntos: "Bosque de los lobos" },
+  "boar-canopy": { rotulo: "COPAS", juntos: "Copas de los jabalíes" },
+  "boar-storm": { rotulo: "BELLOTAS", juntos: "Tormenta de bellotas" },
+  "sky-pirates": { rotulo: "FLOTA", juntos: "La flota de las nubes" },
+  "sky-storm": { rotulo: "CAPITAN", juntos: "La tormenta del Capitán Celeste" },
+  "haunted-castle": { rotulo: "CASTILLO", juntos: "El castillo de los sustos divertidos" },
+  "secret-sky": { rotulo: "NUBES", juntos: "El reino secreto de las nubes" },
+  "water-lagoon": { rotulo: "CORALES", juntos: "La laguna de los corales" },
+  "dinosaur-island": { rotulo: "ISLA", juntos: "La isla tropical de los dinosaurios" },
+  "dragon-volcano": { rotulo: "VOLCAN", juntos: "El volcán de los dragones" },
+  "giant-valley": { rotulo: "VALLE", juntos: "El valle de los gigantes" },
+  "ice-mountain": { rotulo: "MONTANA", juntos: "La montaña de hielo" },
+  "winter-snow": { rotulo: "NIEVE", juntos: "La senda de la nieve" },
+  "toy-factory": { rotulo: "JUGUETES", juntos: "La fábrica de juguetes" },
+  "gift-warehouse": { rotulo: "ALMACEN", juntos: "El almacén de regalos" },
+  "desert-dunes": { rotulo: "DUNAS", juntos: "Las dunas que cantan" },
+  "desert-oasis": { rotulo: "OASIS", juntos: "El oasis de los espejos" },
+  "desert-ruins": { rotulo: "RUINAS", juntos: "Las ruinas de Siroco" },
+  "train-station": { rotulo: "ANDEN", juntos: "El andén de las maletas" },
+  "train-valley": { rotulo: "PUENTE", juntos: "El puente del silbido" },
+  "train-engine": { rotulo: "LOCOMOTORA", juntos: "La locomotora de Don Silbato" },
+  "music-garden": { rotulo: "TAMBORES", juntos: "El jardín de los tambores" },
+  "music-bells": { rotulo: "CAMPANAS", juntos: "El bosque de las campanas" },
+  "music-theater": { rotulo: "TEATRO", juntos: "El gran teatro de Armonía" },
+  "sky-dawn": { rotulo: "AMANECER", juntos: "Las nubes del amanecer" },
+  "sky-blue": { rotulo: "ESCALERA", juntos: "La escalera del cielo" },
+  "sky-stars": { rotulo: "ESTRELLAS", juntos: "La puerta de las estrellas" },
+} as const;

@@ -3,6 +3,7 @@ import type { Level } from "./types.ts";
 import { campaignLevels } from "./routes.ts";
 import { detourCatalog } from "./detours.ts";
 import type { DetourId } from "./types.ts";
+import { conTextos } from "../textos/index.ts";
 
 export const MAP_WIDTH = 3000;
 export const MAP_HEIGHT = 2000;
@@ -15,28 +16,34 @@ export const worldArtwork = (world: WorldId) => world === 14
     : world === 16 ? "./assets/worlds/music-background-v1.webp"
       : world === 17 ? "./assets/worlds/sky-kingdom-background-v1.webp" : `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.webp`;
 
-export const worldCatalog: Array<{
-  id: WorldId; name: string; shortName: string; description: string; cat: string; catAsset: string;
-  x: number; y: number;
-}> = [
-  { id: 1, name: "El Prado de las Manzanas", shortName: "Manzanos", description: "Sol, ramas anchas y manzanas crujientes.", cat: "Miel", catAsset: "./assets/sprites/world-cat-1-v1.png", x: 10, y: 76 },
-  { id: 2, name: "El Bosque de los Gatitos", shortName: "Gatitos", description: "Luciérnagas, cristales, murciélagos y una cueva de lava.", cat: "Bruma", catAsset: "./assets/sprites/world-cat-2-v1.png", x: 30, y: 78 },
-  { id: 3, name: "El Bosque de los Lobos", shortName: "Lobos", description: "Pinos, luna llena y lobos dormilones que avisan antes de despertar.", cat: "Pino", catAsset: "./assets/sprites/world-cat-3-v1.png", x: 50, y: 81 },
-  { id: 8, name: "La Laguna de los Corales", shortName: "Laguna", description: "Una poza entre los bosques: peces traviesos, erizos y el palacio de Don Aleta.", cat: "Perla", catAsset: "./assets/sprites/world-cat-8-v1.png", x: 60, y: 58 },
-  { id: 4, name: "El Bosque de los Jabalíes", shortName: "Jabalíes", description: "Bellotas, copas altas y jabalíes salvajes.", cat: "Bellota", catAsset: "./assets/sprites/world-cat-4-v1.png", x: 70, y: 79 },
-  { id: 5, name: "La Flota de las Nubes", shortName: "Barcos", description: "Barcos voladores, piratas, loros y cañones.", cat: "Nube", catAsset: "./assets/sprites/world-cat-5-v1.png", x: 90, y: 79 },
-  { id: 6, name: "El Castillo Encantado", shortName: "Castillo", description: "Perritos de cobre encadenados, trampas con pinchos y fantasmas traviesos.", cat: "Luna", catAsset: "./assets/sprites/world-cat-6-v1.png", x: 90, y: 52 },
-  { id: 9, name: "La Isla de los Dinosaurios", shortName: "Dinosaurios", description: "Selva tropical, agua peligrosa, pequeños t-rex y terodáctilos juguetones.", cat: "Ámbar", catAsset: "./assets/sprites/world-cat-9-v1.png", x: 71, y: 48 },
-  { id: 10, name: "El Volcán de los Dragones", shortName: "Dragones", description: "Lava brillante, cristales rojos y pequeños dragones valientes.", cat: "Chispa", catAsset: "./assets/sprites/world-cat-10-v1.png", x: 50, y: 47 },
-  { id: 11, name: "El Valle de los Gigantes", shortName: "Gigantes", description: "Flores que abren puentes de pétalos, gotas de rocío y bichitos gigantes.", cat: "Botón", catAsset: "./assets/sprites/world-cat-11-v1.png", x: 29, y: 49 },
-  { id: 12, name: "La Montaña de Hielo", shortName: "Hielo", description: "Nieve suave, cuevas azules y caminos muy resbaladizos.", cat: "Copito", catAsset: "./assets/sprites/world-cat-12-v1.png", x: 10, y: 49 },
-  { id: 13, name: "El Mundo de Papá Noel", shortName: "Navidad", description: "Nieve, duendes, juguetes y regalos para repartir.", cat: "Estrella", catAsset: "./assets/sprites/world-cat-13-v1.png", x: 11, y: 20 },
-  { id: 14, name: "El Desierto de los Espejismos", shortName: "Desierto", description: "Dunas, oasis, géiseres de arena y ruinas doradas.", cat: "Duna", catAsset: "./assets/sprites/world-cat-14-v1.png", x: 30, y: 20 },
-  { id: 15, name: "El Tren de las Estaciones", shortName: "Tren", description: "Andenes, vagones veloces, vapor y una locomotora alegre.", cat: "Vía", catAsset: "./assets/sprites/world-cat-15-v1.png", x: 51, y: 20 },
-  { id: 16, name: "El Reino de la Música", shortName: "Música", description: "Tambores, campanas, ondas musicales y un gran teatro brillante.", cat: "Tempo", catAsset: "./assets/sprites/world-cat-16-v1.png", x: 70, y: 21 },
-  { id: 17, name: "El Reino Celeste", shortName: "Celeste", description: "Un ascenso vertical por nubes mágicas hasta la puerta de las estrellas.", cat: "Celeste", catAsset: "./assets/sprites/world-cat-17-v1.png", x: 89, y: 20 },
-  { id: 7, name: "El Reino Secreto", shortName: "Secreto", description: "Nubes mágicas y columnas de aire para subir junto a pájaros y unicornios.", cat: "Iris", catAsset: "./assets/sprites/world-cat-7-v1.png", x: 78, y: 93 },
+type MundoDatos = { id: WorldId; catAsset: string; x: number; y: number };
+export type Mundo = MundoDatos & { name: string; shortName: string; description: string; cat: string };
+
+/** Mundos tal como se declaran: sin textos. Nombre, descripción y gatito salen del catálogo (`mundos.<id>.nombre.rotulo`). */
+const datosMundos: MundoDatos[] = [
+  { id: 1, catAsset: "./assets/sprites/world-cat-1-v1.png", x: 10, y: 76 },
+  { id: 2, catAsset: "./assets/sprites/world-cat-2-v1.png", x: 30, y: 78 },
+  { id: 3, catAsset: "./assets/sprites/world-cat-3-v1.png", x: 50, y: 81 },
+  { id: 8, catAsset: "./assets/sprites/world-cat-8-v1.png", x: 60, y: 58 },
+  { id: 4, catAsset: "./assets/sprites/world-cat-4-v1.png", x: 70, y: 79 },
+  { id: 5, catAsset: "./assets/sprites/world-cat-5-v1.png", x: 90, y: 79 },
+  { id: 6, catAsset: "./assets/sprites/world-cat-6-v1.png", x: 90, y: 52 },
+  { id: 9, catAsset: "./assets/sprites/world-cat-9-v1.png", x: 71, y: 48 },
+  { id: 10, catAsset: "./assets/sprites/world-cat-10-v1.png", x: 50, y: 47 },
+  { id: 11, catAsset: "./assets/sprites/world-cat-11-v1.png", x: 29, y: 49 },
+  { id: 12, catAsset: "./assets/sprites/world-cat-12-v1.png", x: 10, y: 49 },
+  { id: 13, catAsset: "./assets/sprites/world-cat-13-v1.png", x: 11, y: 20 },
+  { id: 14, catAsset: "./assets/sprites/world-cat-14-v1.png", x: 30, y: 20 },
+  { id: 15, catAsset: "./assets/sprites/world-cat-15-v1.png", x: 51, y: 20 },
+  { id: 16, catAsset: "./assets/sprites/world-cat-16-v1.png", x: 70, y: 21 },
+  { id: 17, catAsset: "./assets/sprites/world-cat-17-v1.png", x: 89, y: 20 },
+  { id: 7, catAsset: "./assets/sprites/world-cat-7-v1.png", x: 78, y: 93 },
 ];
+
+export const worldCatalog: Mundo[] = datosMundos.map((mundo) => conTextos(mundo, {
+  name: `mundos.${mundo.id}.nombre.rotulo`, shortName: `mundos.${mundo.id}.nombre.rotulo`,
+  description: `mundos.${mundo.id}.nombre.juntos`, cat: `mundos.${mundo.id}.gato.rotulo`,
+}) as Mundo);
 
 export type MapRoute = { from: WorldId; to: WorldId; path: string; branch?: "water" | "secret"; requiresCompletion?: string; detour?: DetourId };
 

@@ -1,3 +1,8 @@
+import { caminos } from "./caminos.ts";
+import { mundos } from "./mundos.ts";
+import { pantallas } from "./pantallas.ts";
+import { paseos } from "./paseos.ts";
+import { temas } from "./temas.ts";
 import { coleccion } from "./coleccion.ts";
 import { inicio } from "./inicio.ts";
 import { mapa } from "./mapa.ts";
@@ -10,5 +15,10 @@ export const es = {
   inicio,
   mapa,
   partida,
+  caminos,
+  mundos,
+  pantallas,
+  paseos,
+  temas,
   ventanas,
 } as const;

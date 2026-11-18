@@ -1,33 +1,42 @@
 import type { DetourId, Level, Platform } from "./types.ts";
+import { conTextos } from "../textos/index.ts";
 
 export const detourArtwork = "./assets/atlases/secret-detours-v1.png";
-export const detourCatalog: Array<{
-  id: DetourId; title: string; shortName: string; source: string; world: Level["world"];
+type CaminoDatos = {
+  id: DetourId; source: string; world: Level["world"];
   x: number; y: number; path: string; icon: number;
   shortcut?: { from: Level["world"]; to: Level["world"]; path: string };
-}> = [
-  { id: "fireflies", title: "El sendero de las luciérnagas", shortName: "Luciérnagas", source: "2-1", world: 2, x: 29, y: 95,
+};
+export type Camino = CaminoDatos & { title: string; shortName: string };
+
+/** Caminos secretos tal como se declaran: sin textos. Título y pista salen del catálogo (`caminos.<id>.titulo.rotulo`). */
+const datosCaminos: CaminoDatos[] = [
+  { id: "fireflies", source: "2-1", world: 2, x: 29, y: 95,
     path: "M 900 1560 Q 870 1560 870 1900", icon: 0,
     shortcut: { from: 1, to: 3, path: "M 300 1520 C 600 1600 600 1850 870 1900 C 1080 1810 1350 1800 1500 1620" } },
-  { id: "mine", title: "El túnel del gatito minero", shortName: "Túnel minero", source: "2-3", world: 2, x: 30, y: 58,
+  { id: "mine", source: "2-3", world: 2, x: 30, y: 58,
     path: "M 900 1560 Q 900 1560 900 1160", icon: 1,
     shortcut: { from: 2, to: 6, path: "M 900 1560 L 900 1160 C 1350 1080 2400 1080 2700 1040" } },
-  { id: "mill", title: "El molino de las manzanas", shortName: "Molino", source: "1-1", world: 1, x: 10, y: 94,
+  { id: "mill", source: "1-1", world: 1, x: 10, y: 94,
     path: "M 300 1520 Q 300 1520 300 1880", icon: 2 },
-  { id: "library", title: "La biblioteca de las patitas", shortName: "Biblioteca", source: "6-1", world: 6, x: 94, y: 60,
+  { id: "library", source: "6-1", world: 6, x: 94, y: 60,
     path: "M 2700 1040 Q 2820 1040 2820 1200", icon: 3 },
-  { id: "garden", title: "El jardín de los gigantes", shortName: "Jardín", source: "11-1", world: 11, x: 26, y: 33,
+  { id: "garden", source: "11-1", world: 11, x: 26, y: 33,
     path: "M 870 980 Q 780 980 780 660", icon: 4 },
 ];
+
+export const detourCatalog: Camino[] = datosCaminos.map((camino) => conTextos(camino, {
+  title: `caminos.${camino.id}.titulo.rotulo`, shortName: `caminos.${camino.id}.titulo.rotulo`,
+}) as Camino);
 
 const floor = (kind: Platform["kind"], width: number): Platform => ({ x: 0, y: 456, width, height: 120, kind });
 const ledge = (x: number, y: number, width: number, kind: Platform["kind"]): Platform => ({ x, y, width, height: 22, kind });
 
 // Separate from campaign ordering, medals, stickers and guardian unlocks.
-export const detourLevels: Level[] = [
+/** Pantallas de los caminos secretos, sin textos: título y pista salen del catálogo por identificador. */
+const datosCaminosNivel: Array<Omit<Level, "title" | "subtitle">> = [
   {
     id: "D-fireflies", detour: "fireflies", world: 2, screen: 1,
-    title: "El sendero de las luciérnagas", subtitle: "Sigue las luces. Siempre puedes volver por donde has venido.",
     theme: "forest-night", width: 2400, start: { x: 90, y: 398 }, goalX: 2260,
     platforms: [floor("ground", 2400), ledge(380, 370, 180, "stone"), ledge(680, 300, 180, "stone"),
       ledge(980, 240, 180, "stone"), ledge(1280, 300, 180, "stone"), ledge(1580, 365, 180, "stone"), ledge(1910, 330, 180, "stone")],
@@ -37,7 +46,6 @@ export const detourLevels: Level[] = [
   },
   {
     id: "D-mine", detour: "mine", world: 2, screen: 1,
-    title: "El túnel del gatito minero", subtitle: "Sube a la vagoneta y salta entre los cristales.",
     theme: "crystal-cave", width: 2700, start: { x: 90, y: 398 }, goalX: 2540,
     platforms: [floor("cave-ground", 2700), ledge(310, 380, 160, "cave-ledge"), ledge(950, 280, 190, "cave-ledge"),
       ledge(1580, 265, 190, "cave-ledge"), ledge(2260, 345, 180, "cave-ledge")],
@@ -47,7 +55,6 @@ export const detourLevels: Level[] = [
   },
   {
     id: "D-mill", detour: "mill", world: 1, screen: 1,
-    title: "El molino de las manzanas", subtitle: "La campana cambia el giro de las ruedas.",
     theme: "orchard-day", width: 2500, start: { x: 90, y: 398 }, goalX: 2340,
     platforms: [floor("ground", 2500), ledge(340, 355, 170, "branch"), ledge(1250, 235, 220, "branch"), ledge(2070, 340, 190, "branch")],
     mechanisms: [0, 1, 2, 3].flatMap((phase) => [
@@ -60,7 +67,6 @@ export const detourLevels: Level[] = [
   },
   {
     id: "D-library", detour: "library", world: 6, screen: 1,
-    title: "La biblioteca de las patitas", subtitle: "Las patitas abren los libros y dibujan un puente.",
     theme: "haunted-castle", width: 2400, start: { x: 90, y: 398 }, goalX: 2240,
     platforms: [floor("castle-ground", 2400), ledge(330, 350, 190, "castle-ledge"), ledge(1690, 230, 220, "castle-ledge"),
       ledge(2010, 345, 180, "castle-ledge")],
@@ -72,7 +78,6 @@ export const detourLevels: Level[] = [
   },
   {
     id: "D-garden", detour: "garden", world: 11, screen: 1,
-    title: "El jardín de los gigantes", subtitle: "Las hojas bajan con tu peso. El agua despierta la planta.",
     theme: "giant-valley", width: 2600, start: { x: 90, y: 398 }, goalX: 2440,
     platforms: [floor("garden-ground", 2600), ledge(300, 355, 180, "garden-ledge"),
       ledge(1730, 195, 230, "garden-ledge"), ledge(2150, 335, 180, "garden-ledge")],
@@ -86,6 +91,10 @@ export const detourLevels: Level[] = [
     enemies: [], rewardBlocks: [], checkpoints: [],
   },
 ];
+
+export const detourLevels: Level[] = datosCaminosNivel.map((nivel) => conTextos(nivel, {
+  title: `caminos.${nivel.detour}.titulo.rotulo`, subtitle: `caminos.${nivel.detour}.pista.juntos`,
+}) as Level);
 
 export function detourLevel(id: DetourId): Level {
   return detourLevels.find((level) => level.detour === id)!;

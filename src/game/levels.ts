@@ -1,4 +1,16 @@
-import type { Cannon, ChainGuardian, Enemy, Level, LevelItem, Platform, RewardBlock, Theme } from "./types";
+import { conTextos, existeClave } from "../textos/index.ts";
+import type { Cannon, ChainGuardian, Chase, ChaseStop, Enemy, Level, LevelItem, Platform, RewardBlock, Theme } from "./types";
+
+/** Pantalla tal como se declara: sin textos. Su título, pista, botón «siguiente» y frases de persecución salen del catálogo por identificador. */
+type PantallaDatos = Omit<Level, "title" | "subtitle" | "chase"> & { chase?: Omit<Chase, "stops"> & { stops: Array<Omit<ChaseStop, "talk">> } };
+
+/** Conecta una pantalla con su texto: `pantallas.<id>.titulo.rotulo`, `.pista.rotulo`, `.siguiente.juntos` y `.habla.paradaN.rotulo`. */
+function conTextosDePantalla(datos: PantallaDatos): Level {
+  const pantalla = conTextos(datos, { title: `pantallas.${datos.id}.titulo.rotulo`, subtitle: `pantallas.${datos.id}.pista.rotulo` }) as unknown as Level;
+  if (pantalla.route && existeClave(`pantallas.${datos.id}.siguiente.juntos`)) conTextos(pantalla.route, { nextLabel: `pantallas.${datos.id}.siguiente.juntos` });
+  pantalla.chase?.stops.forEach((parada, indice) => conTextos(parada, { talk: `pantallas.${datos.id}.habla.parada${indice + 1}.rotulo` }));
+  return pantalla;
+}
 
 const ground = (segments: Array<[number, number]>): Platform[] =>
   segments.map(([x, width]) => ({ x, y: 456, width, height: 120, kind: "ground" }));
@@ -100,41 +112,42 @@ const jumpingFish = (id: string, x: number, interval: number, delay: number, jum
 const lavaJet = (id: string, x: number, interval: number, delay: number, height = 285) => ({ id, x, baseY: 456, width: 54, height, interval, delay });
 const iceWind = (id: string, x: number, width: number, direction: -1 | 1, strength = 310) => ({ id, x, y: 70, width, height: 386, direction, strength });
 
-export const themeNames: Record<Theme, string> = {
-  "orchard-day": "Mañana entre manzanos",
-  "orchard-sunset": "Tarde de manzanas",
-  "forest-dusk": "Bosque de los bigotes",
-  "forest-night": "Claro de la luna",
-  "crystal-cave": "Grutas de cristal y lava",
-  "wolf-pines": "Pinar de las huellas",
-  "wolf-moon": "Bosque de los lobos",
-  "boar-canopy": "Copas de los jabalíes",
-  "boar-storm": "Tormenta de bellotas",
-  "sky-pirates": "La flota de las nubes",
-  "sky-storm": "La tormenta del Capitán Celeste",
-  "haunted-castle": "El castillo de los sustos divertidos",
-  "secret-sky": "El reino secreto de las nubes",
-  "water-lagoon": "La laguna de los corales",
-  "dinosaur-island": "La isla tropical de los dinosaurios",
-  "dragon-volcano": "El volcán de los dragones",
-  "giant-valley": "El valle de los gigantes",
-  "ice-mountain": "La montaña de hielo",
-  "winter-snow": "La senda de la nieve",
-  "toy-factory": "La fábrica de juguetes",
-  "gift-warehouse": "El almacén de regalos",
-  "desert-dunes": "Las dunas que cantan",
-  "desert-oasis": "El oasis de los espejos",
-  "desert-ruins": "Las ruinas de Siroco",
-  "train-station": "El andén de las maletas",
-  "train-valley": "El puente del silbido",
-  "train-engine": "La locomotora de Don Silbato",
-  "music-garden": "El jardín de los tambores",
-  "music-bells": "El bosque de las campanas",
-  "music-theater": "El gran teatro de Armonía",
-  "sky-dawn": "Las nubes del amanecer",
-  "sky-blue": "La escalera del cielo",
-  "sky-stars": "La puerta de las estrellas",
-};
+/** Nombre de cada decorado, leído del catálogo (`temas.<tema>.rotulo`). */
+export const themeNames = conTextos({} as Record<Theme, string>, {
+  "orchard-day": "temas.orchard-day.rotulo",
+  "orchard-sunset": "temas.orchard-sunset.rotulo",
+  "forest-dusk": "temas.forest-dusk.rotulo",
+  "forest-night": "temas.forest-night.rotulo",
+  "crystal-cave": "temas.crystal-cave.rotulo",
+  "wolf-pines": "temas.wolf-pines.rotulo",
+  "wolf-moon": "temas.wolf-moon.rotulo",
+  "boar-canopy": "temas.boar-canopy.rotulo",
+  "boar-storm": "temas.boar-storm.rotulo",
+  "sky-pirates": "temas.sky-pirates.rotulo",
+  "sky-storm": "temas.sky-storm.rotulo",
+  "haunted-castle": "temas.haunted-castle.rotulo",
+  "secret-sky": "temas.secret-sky.rotulo",
+  "water-lagoon": "temas.water-lagoon.rotulo",
+  "dinosaur-island": "temas.dinosaur-island.rotulo",
+  "dragon-volcano": "temas.dragon-volcano.rotulo",
+  "giant-valley": "temas.giant-valley.rotulo",
+  "ice-mountain": "temas.ice-mountain.rotulo",
+  "winter-snow": "temas.winter-snow.rotulo",
+  "toy-factory": "temas.toy-factory.rotulo",
+  "gift-warehouse": "temas.gift-warehouse.rotulo",
+  "desert-dunes": "temas.desert-dunes.rotulo",
+  "desert-oasis": "temas.desert-oasis.rotulo",
+  "desert-ruins": "temas.desert-ruins.rotulo",
+  "train-station": "temas.train-station.rotulo",
+  "train-valley": "temas.train-valley.rotulo",
+  "train-engine": "temas.train-engine.rotulo",
+  "music-garden": "temas.music-garden.rotulo",
+  "music-bells": "temas.music-bells.rotulo",
+  "music-theater": "temas.music-theater.rotulo",
+  "sky-dawn": "temas.sky-dawn.rotulo",
+  "sky-blue": "temas.sky-blue.rotulo",
+  "sky-stars": "temas.sky-stars.rotulo",
+});
 
 const skyCloud = (x: number, y: number, width = 190): Platform => ({ x, y, width, height: 30, kind: "sky-cloud" });
 const skyLevelPlatforms = (height: number, offset = 0): Platform[] => {
@@ -167,10 +180,9 @@ const reef = (x: number, y: number, width: number, height: number): Platform => 
 const seaLedge = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 24, kind: "sea-ledge" });
 const water = (width: number) => [{ x: 0, y: 120, width, height: 430 }];
 
-export const waterLevels: Level[] = [
+const datosAgua: PantallaDatos[] = [
   {
-    id: "A-1", world: 8, screen: 1, title: "La laguna de Perla",
-    subtitle: "Toca SALTAR para nadar hacia arriba. Suelta para bajar despacito.",
+    id: "A-1", world: 8, screen: 1,
     theme: "water-lagoon", width: 3300, start: { x: 80, y: 70 }, goalX: 3080,
     waterZones: water(3300),
     platforms: [seaFloor(3300), seaLedge(0, 110, 280), seaLedge(630, 285, 230), seaLedge(1180, 165, 220), reef(1550, 365, 150, 125), seaLedge(2040, 255, 230), seaLedge(2600, 165, 200), seaLedge(2990, 250, 310)],
@@ -179,8 +191,7 @@ export const waterLevels: Level[] = [
     rewardBlocks: [reward("a1-cat", 510, 320), reward("a1-armor", 1900, 360, "apple")], checkpoints: [400, 1450, 2400],
   },
   {
-    id: "A-2", world: 8, screen: 2, title: "El jardín de los erizos",
-    subtitle: "Nada entre los corales o camina por la arena. ¡Cuidado con los erizos!",
+    id: "A-2", world: 8, screen: 2,
     theme: "water-lagoon", width: 4200, start: { x: 80, y: 70 }, goalX: 3980,
     waterZones: water(4200),
     platforms: [seaFloor(4200), seaLedge(0, 110, 260), reef(750, 330, 160, 160), reef(1250, 120, 180, 170), seaLedge(1660, 240, 260), reef(2220, 330, 170, 160), reef(2740, 120, 180, 170), seaLedge(3200, 245, 230), seaLedge(3880, 250, 320)],
@@ -189,15 +200,14 @@ export const waterLevels: Level[] = [
     rewardBlocks: [reward("a2-cat", 530, 325), reward("a2-armor", 2540, 365, "apple")], checkpoints: [520, 1630, 2580, 3540], route: { required: "A-1" },
   },
   {
-    id: "A-3", world: 8, screen: 3, title: "El palacio de Don Aleta",
-    subtitle: "Cruza las grutas del arrecife y conoce al guardián del mar.",
+    id: "A-3", world: 8, screen: 3,
     theme: "water-lagoon", width: 5100, start: { x: 80, y: 70 }, goalX: 4880,
     waterZones: water(5100),
     platforms: [seaFloor(5100), seaLedge(0, 110, 260), reef(700, 310, 180, 180), reef(1130, 90, 180, 200), seaLedge(1550, 285, 220), reef(2090, 320, 180, 170), reef(2590, 100, 180, 200), seaLedge(3120, 250, 250), reef(3640, 310, 180, 180), reef(4100, 105, 170, 190), seaLedge(4770, 250, 330)],
     enemies: [enemy("a3-f1", "fish", 460, 240, 320, 610, 62), enemy("a3-f2", "fish", 1430, 365, 1350, 1900, 65), enemy("a3-f3", "fish", 2400, 200, 2300, 2510, 68), enemy("a3-f4", "fish", 2900, 370, 2820, 3080, 65), enemy("a3-f5", "fish", 4390, 330, 4320, 4670, 72), enemy("a3-u1", "urchin", 990, 454, 990, 990, 0), enemy("a3-u2", "urchin", 1950, 454, 1950, 1950, 0), enemy("a3-u3", "urchin", 3470, 454, 3470, 3470, 0), enemy("a3-u4", "urchin", 4540, 454, 4540, 4540, 0)],
     items: [apple("a3-apple1", 790, 255), apple("a3-apple2", 1670, 230), apple("a3-apple3", 2180, 265), apple("a3-apple4", 3230, 195), apple("a3-apple5", 4630, 180), sticker("sticker-a-3", 4160, 375)],
     rewardBlocks: [reward("a3-cat", 500, 330), reward("a3-armor", 2990, 350, "apple")], checkpoints: [510, 1600, 2870, 3920, 4630], boss: "shark-captain",
-    route: { required: "A-2", next: "4-1", nextLabel: "Seguir con los jabalíes ▶" },
+    route: { required: "A-2", next: "4-1" },
   },
 ];
 
@@ -213,14 +223,15 @@ const world11Floor3: Array<[number, number]> = [[0, 860], [1020, 760], [1940, 70
 const world12Floor1: Array<[number, number]> = [[0, 1880], [2020, 500], [2660, 470], [3270, 640], [4050, 520], [4710, 890]];
 const world12Floor3: Array<[number, number]> = [[0, 860], [1000, 780], [1930, 620], [2690, 700], [3540, 560], [4250, 640], [5040, 1460]];
 
-export const levels: Level[] = [
+export const waterLevels: Level[] = datosAgua.map(conTextosDePantalla);
+
+/** Todas las pantallas de campaña y secretas, con sus textos leídos del catálogo. */
+const datosPantallas: PantallaDatos[] = [
   {
     id: "1-1",
     detourEntrance: { id: "mill", x: 1545, y: 220, width: 80, height: 80 },
     world: 1,
     screen: 1,
-    title: "El sendero de las manzanas",
-    subtitle: "Aprende a saltar y descubre la caja con huella.",
     theme: "orchard-day",
     width: 3600,
     start: { x: 80, y: 380 },
@@ -256,8 +267,6 @@ export const levels: Level[] = [
     id: "1-2",
     world: 1,
     screen: 2,
-    title: "La gran fiesta de las copas",
-    subtitle: "¡Un escarabajo se ha llevado el ovillo! Síguelo por el huerto.",
     theme: "orchard-sunset",
     width: 5200,
     start: { x: 80, y: 380 },
@@ -274,14 +283,14 @@ export const levels: Level[] = [
     chase: {
       runner: "beetle", carries: "yarn",
       stops: [
-        { x: 700, y: 456, talk: "¡Ji, ji! ¡No me pillas!", beat: "presentation" },
-        { x: 1250, y: 456, talk: "¡Por aquí!", beat: "presentation" },
-        { x: 1900, y: 456, jump: true, talk: "¡Salta el hueco!", beat: "development" },
-        { x: 2490, y: 370, jump: true, talk: "¡Arriba!", beat: "development" },
-        { x: 3150, y: 330, jump: true, talk: "¡Bota en el muelle!", beat: "twist" },
-        { x: 3620, y: 250, jump: true, talk: "¡Qué alto!", beat: "twist" },
-        { x: 4400, y: 456, jump: true, talk: "¡Casi, casi!", beat: "finale" },
-        { x: 5050, y: 456, talk: "¡Ay! ¡No hay salida!", beat: "finale" },
+        { x: 700, y: 456,beat: "presentation" },
+        { x: 1250, y: 456,beat: "presentation" },
+        { x: 1900, y: 456, jump: true,beat: "development" },
+        { x: 2490, y: 370, jump: true,beat: "development" },
+        { x: 3150, y: 330, jump: true,beat: "twist" },
+        { x: 3620, y: 250, jump: true,beat: "twist" },
+        { x: 4400, y: 456, jump: true,beat: "finale" },
+        { x: 5050, y: 456,beat: "finale" },
       ],
     },
     enemies: [
@@ -303,8 +312,6 @@ export const levels: Level[] = [
     secretShop: { id: "shop-1-2", x: 2240, y: 200, width: 64, height: 80 },
     world: 1,
     screen: 3,
-    title: "La fortaleza de las raíces",
-    subtitle: "Un camino largo con tres saltos antes del duelo del Rey Zarzal.",
     theme: "orchard-sunset",
     width: 6500,
     start: { x: 80, y: 380 },
@@ -346,8 +353,6 @@ export const levels: Level[] = [
     detourEntrance: { id: "fireflies", x: 1365, y: 225, width: 80, height: 80 },
     world: 2,
     screen: 1,
-    title: "El bosque de los bigotes",
-    subtitle: "Las luciérnagas marcan un camino algo más largo.",
     theme: "forest-dusk",
     width: 4000,
     start: { x: 80, y: 380 },
@@ -380,8 +385,6 @@ export const levels: Level[] = [
     id: "2-2",
     world: 2,
     screen: 2,
-    title: "La gruta de los murciélagos",
-    subtitle: "Abre las puertas de cristal. En la niebla, las repisas casi no se ven.",
     theme: "crystal-cave",
     width: 3840,
     start: { x: 60, y: 398 },
@@ -442,8 +445,6 @@ export const levels: Level[] = [
     detourEntrance: { id: "mine", x: 2900, y: 290, width: 80, height: 80 },
     world: 2,
     screen: 3,
-    title: "El corazón de la cueva",
-    subtitle: "Busca la salida entre la lava y reta a la Condesa Niebla.",
     theme: "crystal-cave",
     width: 6800,
     start: { x: 80, y: 380 },
@@ -494,8 +495,6 @@ export const levels: Level[] = [
     id: "3-1",
     world: 3,
     screen: 1,
-    title: "El pinar de las huellas",
-    subtitle: "Los lobos duermen: pasa al ver ZZZ. ¡Avisan antes de despertar!",
     theme: "wolf-pines",
     width: 4500,
     start: { x: 80, y: 380 },
@@ -526,8 +525,6 @@ export const levels: Level[] = [
     secretShop: { id: "shop-3-2", x: 1150, y: 230, width: 64, height: 80 },
     world: 3,
     screen: 2,
-    title: "El corazón del bosque de los lobos",
-    subtitle: "¡Tres gatitos perdidos! Búscalos en el árbol y en el túnel sin despertar a los lobos.",
     theme: "wolf-moon",
     width: 3200, height: 1000, orientation: "explore",
     start: { x: 80, y: 398 },
@@ -568,8 +565,6 @@ export const levels: Level[] = [
     route: { next: "4-1", waterExit: "A-1" },
     world: 3,
     screen: 3,
-    title: "La guarida del Gran Lobo",
-    subtitle: "Pasa junto a los lobos dormidos y salta hasta el Gran Lobo.",
     theme: "wolf-moon",
     width: 7200,
     start: { x: 80, y: 380 },
@@ -610,8 +605,6 @@ export const levels: Level[] = [
     id: "4-1",
     world: 4,
     screen: 1,
-    title: "Las copas de las bellotas",
-    subtitle: "Arriba hay un camino seguro; abajo, manzanas entre los jabalíes.",
     theme: "boar-canopy",
     width: 5000,
     start: { x: 80, y: 380 },
@@ -641,8 +634,6 @@ export const levels: Level[] = [
     id: "4-2",
     world: 4,
     screen: 2,
-    title: "El gran árbol de las copas",
-    subtitle: "¡Sube por las copas hasta lo más alto! Los jabalíes pasean por las ramas.",
     theme: "boar-canopy",
     width: 960, height: 2600, orientation: "vertical",
     start: { x: 120, y: 2482 },
@@ -676,8 +667,6 @@ export const levels: Level[] = [
     route: { secretExit: "S-1" },
     world: 4,
     screen: 3,
-    title: "La fortaleza del Gran Jabalí",
-    subtitle: "Busca la gran plataforma de madera para alcanzar la enredadera secreta.",
     theme: "boar-storm",
     width: 7600,
     start: { x: 80, y: 380 },
@@ -723,8 +712,6 @@ export const levels: Level[] = [
     id: "5-1",
     world: 5,
     screen: 1,
-    title: "La flota de las nubes",
-    subtitle: "Salta entre barcos voladores y vigila a los primeros piratas.",
     theme: "sky-pirates",
     width: 5200,
     start: { x: 80, y: 350 },
@@ -755,8 +742,6 @@ export const levels: Level[] = [
     id: "5-2",
     world: 5,
     screen: 2,
-    title: "El baile de las velas",
-    subtitle: "¡Un loro se ha llevado el ovillo! Síguelo de barco en barco.",
     theme: "sky-pirates",
     width: 5600,
     start: { x: 80, y: 300 },
@@ -774,15 +759,15 @@ export const levels: Level[] = [
     chase: {
       runner: "parrot", carries: "yarn",
       stops: [
-        { x: 400, y: 440, talk: "¡Cra, cra! ¡Mi ovillo!", beat: "presentation" },
-        { x: 850, y: 420, jump: true, talk: "¡Al otro barco!", beat: "presentation" },
-        { x: 1500, y: 380, jump: true, talk: "¡Vuela, vuela!", beat: "development" },
-        { x: 2150, y: 420, jump: true, talk: "¡Cuidado, pirata!", beat: "development" },
-        { x: 2470, y: 330, jump: true, talk: "¡Por la tabla!", beat: "twist" },
-        { x: 2800, y: 360, jump: true, talk: "¡Qué viento!", beat: "twist" },
-        { x: 3450, y: 400, jump: true, talk: "¡Casi, casi!", beat: "finale" },
-        { x: 4700, y: 410, jump: true, talk: "¡Uf, qué lejos!", beat: "finale" },
-        { x: 5450, y: 420, talk: "¡Ay! ¡No hay salida!", beat: "finale" },
+        { x: 400, y: 440,beat: "presentation" },
+        { x: 850, y: 420, jump: true,beat: "presentation" },
+        { x: 1500, y: 380, jump: true,beat: "development" },
+        { x: 2150, y: 420, jump: true,beat: "development" },
+        { x: 2470, y: 330, jump: true,beat: "twist" },
+        { x: 2800, y: 360, jump: true,beat: "twist" },
+        { x: 3450, y: 400, jump: true,beat: "finale" },
+        { x: 4700, y: 410, jump: true,beat: "finale" },
+        { x: 5450, y: 420,beat: "finale" },
       ],
     },
     enemies: [
@@ -800,8 +785,6 @@ export const levels: Level[] = [
     id: "5-3",
     world: 5,
     screen: 3,
-    title: "La tormenta del Capitán Celeste",
-    subtitle: "Cruza la gran flota, salta los cañonazos y reta al capitán pirata.",
     theme: "sky-storm",
     width: 8000,
     start: { x: 80, y: 330 },
@@ -842,7 +825,6 @@ export const levels: Level[] = [
   {
     id: "6-1", world: 6, screen: 1,
     detourEntrance: { id: "library", x: 1765, y: 265, width: 80, height: 80 },
-    title: "Las puertas del castillo", subtitle: "Los perritos de cobre avisan antes de morder. ¡Busca el camino de arriba!",
     theme: "haunted-castle", width: 5200, start: { x: 80, y: 380 }, goalX: 5020,
     // Presentación: perrito que avisa antes de morder, con la ruta alta a la vista. Giro (invertido): el camino
     // de arriba se corta y hay que pasar por abajo mientras el perrito descansa.
@@ -865,7 +847,6 @@ export const levels: Level[] = [
   },
   {
     id: "6-2", world: 6, screen: 2,
-    title: "El laberinto de las torres", subtitle: "Abre las puertas de las torres. Los perritos avisan: ¡pasa por arriba!",
     theme: "haunted-castle", width: 3840, start: { x: 60, y: 398 }, goalX: 3790,
     // Sala-rompecabezas: los perritos encadenados son piezas de las salas 2 y 3; siempre hay ruta por arriba.
     beats: { development: 960, twist: 1920, finale: 2880, twistKind: "shape" },
@@ -926,8 +907,7 @@ export const levels: Level[] = [
   },
   {
     id: "6-3", world: 6, screen: 3,
-    route: { next: "9-1", nextLabel: "Viajar a la isla de los dinosaurios ▶" },
-    title: "El salón del Conde Vampiro", subtitle: "Una última ruta entre fantasmas, pinchos y pasadizos.",
+    route: { next: "9-1" },
     theme: "haunted-castle", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     secretShop: { id: "shop-6-2", x: 1400, y: 195, width: 64, height: 80 },
     // Giro (combina): perritos y fantasmas juntos en los pasadizos antes del salón del Conde.
@@ -951,7 +931,6 @@ export const levels: Level[] = [
   },
   {
     id: "9-1", world: 9, screen: 1,
-    title: "La costa de las huellas", subtitle: "Salta sobre el agua y conoce a los pequeños t-rex de la isla.",
     theme: "dinosaur-island", width: 4600, start: { x: 80, y: 380 }, goalX: 4420,
     // Presentación: una playa larga sin huecos. Giro (invertido): los saltadores salen justo donde hay que caer.
     beats: { development: 1300, twist: 2390, finale: 3470, twistKind: "invert" },
@@ -970,7 +949,6 @@ export const levels: Level[] = [
   },
   {
     id: "9-2", world: 9, screen: 2,
-    title: "El vuelo de los terodáctilos", subtitle: "¡Tres gatitos se han perdido en la isla! Búscalos en los acantilados y la laguna.",
     theme: "dinosaur-island", width: 3200, height: 1300, orientation: "explore",
     start: { x: 80, y: 942 }, goalX: 1070, goalY: 1000,
     // Exploración: un gatito en la playa, otro en lo alto del acantilado y el tercero tras la laguna de los
@@ -999,8 +977,7 @@ export const levels: Level[] = [
   },
   {
     id: "9-3", world: 9, screen: 3,
-    route: { next: "10-1", nextLabel: "Viajar al volcán de los dragones ▶" },
-    title: "El nido de la Reina Tricera", subtitle: "Cruza la gran isla y juega con su guardiana de tres cuernos.",
+    route: { next: "10-1" },
     theme: "dinosaur-island", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     // Giro (combina): saltadores en cada bahía con terodáctilos encima y rocas que cortan el paso.
     beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
@@ -1021,7 +998,6 @@ export const levels: Level[] = [
   {
     id: "10-1", world: 10, screen: 1,
     secretShop: { id: "shop-10-2", x: 1300, y: 230, width: 64, height: 80 },
-    title: "Las laderas humeantes", subtitle: "Observa el ritmo de los chorros de lava y salta cuando bajen.",
     theme: "dragon-volcano", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     // Presentación: un chorro sobre suelo seguro. Giro (invertido): los chorros salen de los huecos a contratiempo.
     beats: { development: 1650, twist: 3000, finale: 4350, twistKind: "invert" },
@@ -1042,7 +1018,6 @@ export const levels: Level[] = [
   },
   {
     id: "10-2", world: 10, screen: 2,
-    title: "La chimenea del volcán", subtitle: "Sube por la chimenea: los chorros de lava suben y bajan al compás.",
     theme: "dragon-volcano", width: 960, height: 2600, orientation: "vertical",
     start: { x: 120, y: 2482 }, goalX: 480, goalY: 175,
     // Subida: chorros de lava al compás que salen de las repisas, cada vez más seguidos.
@@ -1065,8 +1040,7 @@ export const levels: Level[] = [
   },
   {
     id: "10-3", world: 10, screen: 3,
-    route: { next: "11-1", nextLabel: "Bajar al valle de los gigantes ▶" },
-    title: "El corazón del volcán", subtitle: "Llega hasta Dragona Rubí y demuéstrale lo valiente que eres.",
+    route: { next: "11-1" },
     theme: "dragon-volcano", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     // Giro (combina): chorros en cada hueco con dragones voladores encima.
     beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
@@ -1088,7 +1062,6 @@ export const levels: Level[] = [
   {
     id: "11-1", world: 11, screen: 1,
     detourEntrance: { id: "garden", x: 1515, y: 165, width: 80, height: 80 },
-    title: "El sendero de las flores gigantes", subtitle: "La flor abierta es un puente. Si avisa, ¡salta! También hay gotas de rocío.",
     theme: "giant-valley", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     // Presentación: rocío y flores sobre suelo seguro. Giro (invertido): las gotas llevan arriba, sobre el agua.
     beats: { development: 1650, twist: 3000, finale: 4350, twistKind: "invert" },
@@ -1108,7 +1081,6 @@ export const levels: Level[] = [
   },
   {
     id: "11-2", world: 11, screen: 2,
-    title: "El jardín de las gotas", subtitle: "¡Una abeja se ha llevado el ovillo! Síguela por las flores.",
     theme: "giant-valley", width: 5800, start: { x: 80, y: 380 }, goalX: 5650,
     // Persecución amable: la abeja vuela de flor en flor; en el giro sube por el rocío y en el remate espera en
     // el rincón del jardín.
@@ -1127,15 +1099,15 @@ export const levels: Level[] = [
     chase: {
       runner: "bee", carries: "yarn",
       stops: [
-        { x: 700, y: 456, talk: "¡Bzz! ¡Mi ovillo!", beat: "presentation" },
-        { x: 1300, y: 456, talk: "¡Ven, ven!", beat: "presentation" },
-        { x: 1900, y: 456, jump: true, talk: "¡Salta el agua!", beat: "development" },
-        { x: 2800, y: 456, jump: true, talk: "¡Por la flor!", beat: "development" },
-        { x: 3100, y: 200, jump: true, talk: "¡Bota en el rocío!", beat: "twist" },
-        { x: 3350, y: 250, jump: true, talk: "¡Qué alto vuelo!", beat: "twist" },
-        { x: 3950, y: 456, jump: true, talk: "¡Uy, otra flor!", beat: "finale" },
-        { x: 4700, y: 456, jump: true, talk: "¡Casi, casi!", beat: "finale" },
-        { x: 5650, y: 456, talk: "¡Ay! ¡No hay salida!", beat: "finale" },
+        { x: 700, y: 456,beat: "presentation" },
+        { x: 1300, y: 456,beat: "presentation" },
+        { x: 1900, y: 456, jump: true,beat: "development" },
+        { x: 2800, y: 456, jump: true,beat: "development" },
+        { x: 3100, y: 200, jump: true,beat: "twist" },
+        { x: 3350, y: 250, jump: true,beat: "twist" },
+        { x: 3950, y: 456, jump: true,beat: "finale" },
+        { x: 4700, y: 456, jump: true,beat: "finale" },
+        { x: 5650, y: 456,beat: "finale" },
       ],
     },
     // Las patrullas quedan entre paradas para no tapar a la abeja mientras espera.
@@ -1145,8 +1117,7 @@ export const levels: Level[] = [
   },
   {
     id: "11-3", world: 11, screen: 3,
-    route: { next: "12-1", nextLabel: "Subir a la montaña de hielo ▶" },
-    title: "La colmena de Melisa", subtitle: "Flores y gotas te ayudan. Salta cuando la flor avise y busca a Melisa.",
+    route: { next: "12-1" },
     theme: "giant-valley", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     // Giro (combina): rocío y flores seguidas sobre el agua; remate con dos flores antes de la colmena.
     beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
@@ -1170,7 +1141,6 @@ export const levels: Level[] = [
   {
     id: "12-1", world: 12, screen: 1,
     secretShop: { id: "shop-12-2", x: 1660, y: 230, width: 64, height: 80 },
-    title: "La senda de la nieve", subtitle: "El hielo resbala y las ráfagas empujan: avanza mirando el viento.",
     theme: "ice-mountain", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     // Presentación: el viento empuja sobre suelo seguro. Desarrollo: ráfaga a favor hacia los huecos.
     // Giro (invertido): viento de cara sobre los huecos. Remate: ráfaga fuerte a favor hasta la bandera.
@@ -1189,7 +1159,6 @@ export const levels: Level[] = [
   },
   {
     id: "12-2", world: 12, screen: 2,
-    title: "Las cuevas de hielo", subtitle: "Empuja los cajones: en el hielo resbalan hasta chocar.",
     theme: "ice-mountain", width: 3840, start: { x: 60, y: 398 }, goalX: 3790,
     // Sala-rompecabezas: una sala por tramo. Los cajones resbalan sobre el hielo hasta un tope u otro cajón.
     beats: { development: 960, twist: 1920, finale: 2880, twistKind: "shape" },
@@ -1254,8 +1223,7 @@ export const levels: Level[] = [
   },
   {
     id: "12-3", world: 12, screen: 3,
-    route: { next: "13-1", nextLabel: "Seguir a Papá Noel ▶" },
-    title: "La cima de la aurora", subtitle: "Domina el hielo y el viento para llegar hasta la gran Osa Boreal.",
+    route: { next: "13-1" },
     theme: "ice-mountain", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     // Giro (combina): ráfagas que cambian de sentido entre paredes de hielo. Remate: ráfaga fuerte hasta la Osa.
     beats: { development: 700, twist: 3450, finale: 5000, twistKind: "combine" },
@@ -1274,7 +1242,6 @@ export const levels: Level[] = [
   },
   {
     id: "13-1", world: 13, screen: 1,
-    title: "El camino de los regalos", subtitle: "¡Salta sobre el regalo saltarín para subir hasta los pinos!",
     theme: "winter-snow", width: 5600, start: { x: 80, y: 380 }, goalX: 5420,
     // Presentación: el regalo saltarín y una nevada suave sobre suelo seguro. Giro (invertido): la nevada
     // empuja en contra sobre los huecos.
@@ -1308,7 +1275,6 @@ export const levels: Level[] = [
   },
   {
     id: "13-2", world: 13, screen: 2,
-    title: "El gran árbol de la fábrica", subtitle: "¡Sube hasta la estrella! Las cintas te llevan y los regalos saltarines te impulsan.",
     theme: "toy-factory", width: 960, height: 2600, orientation: "vertical",
     start: { x: 120, y: 2482 }, goalX: 480, goalY: 175,
     // Subida: cintas en los dos sentidos y regalos saltarines. Tramos medidos en altura subida.
@@ -1346,8 +1312,7 @@ export const levels: Level[] = [
     verticalCheckpoints: [{ x: 440, y: 1880 }, { x: 460, y: 1000 }],
   },
   {
-    id: "13-3", world: 13, screen: 3, route: { next: "14-1", nextLabel: "Seguir hacia el desierto ▶" },
-    title: "El almacén de regalos", subtitle: "¡Combina las cintas y el regalo saltarín para llegar hasta Papá Noel!",
+    id: "13-3", world: 13, screen: 3, route: { next: "14-1" },
     theme: "gift-warehouse", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     // Giro (combina): cintas en sentidos contrarios y el regalo saltarín antes de Papá Noel.
     beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
@@ -1379,7 +1344,6 @@ export const levels: Level[] = [
   },
   {
     id: "14-1", world: 14, screen: 1,
-    title: "Las dunas que cantan", subtitle: "Entra en el géiser de arena para subir. Los remolinos empujan despacito.",
     theme: "desert-dunes", width: 5900, start: { x: 80, y: 380 }, goalX: 5710,
     // Presentación: géiser sobre suelo seguro. Giro (invertido): el remolino sopla en contra sobre los huecos.
     beats: { development: 1650, twist: 3000, finale: 4350, twistKind: "invert" },
@@ -1400,7 +1364,6 @@ export const levels: Level[] = [
   },
   {
     id: "14-2", world: 14, screen: 2,
-    title: "El oasis de los espejos", subtitle: "¡Tres gatitos se han perdido en el oasis! Búscalos arriba, abajo y lejos.",
     theme: "desert-oasis", width: 3200, height: 1300, orientation: "explore",
     start: { x: 80, y: 942 }, goalX: 1070, goalY: 1000,
     // Exploración: un gatito casi a la vista, otro en la cueva bajo las dunas y el tercero en las ruinas altas,
@@ -1427,8 +1390,7 @@ export const levels: Level[] = [
     exploreShortcut: [{ x: 1400, y: 240, width: 40, height: 280, kind: "puzzle-block" }],
   },
   {
-    id: "14-3", world: 14, screen: 3, route: { next: "15-1", nextLabel: "Subir al tren ▶" },
-    title: "Las ruinas de Siroco", subtitle: "Cruza las columnas de arena y visita al guardián del desierto.",
+    id: "14-3", world: 14, screen: 3, route: { next: "15-1" },
     theme: "desert-ruins", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     // Giro (combina): géiser y remolinos seguidos entre las columnas.
     beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
@@ -1449,7 +1411,6 @@ export const levels: Level[] = [
   },
   {
     id: "15-1", world: 15, screen: 1,
-    title: "El andén de las maletas", subtitle: "Monta en los techos largos del tren: puedes caminar o dejar que te lleven.",
     theme: "train-station", width: 6000, start: { x: 80, y: 380 }, goalX: 5810,
     // Presentación: un vagón largo a favor sobre suelo seguro. Giro (invertido): las cintas van hacia atrás.
     beats: { development: 1720, twist: 3150, finale: 4600, twistKind: "invert" },
@@ -1467,7 +1428,6 @@ export const levels: Level[] = [
   },
   {
     id: "15-2", world: 15, screen: 2,
-    title: "El puente del silbido", subtitle: "¡El ratón de cuerda se ha llevado el ovillo! Síguelo por los vagones.",
     theme: "train-valley", width: 5800, start: { x: 80, y: 380 }, goalX: 5650,
     // Persecución amable: el ratón corre de vagón en vagón entre el vapor y espera en el rincón del puente.
     beats: { development: 1800, twist: 2850, finale: 4000, twistKind: "shape" },
@@ -1481,15 +1441,15 @@ export const levels: Level[] = [
     chase: {
       runner: "clockwork-mouse", carries: "yarn",
       stops: [
-        { x: 700, y: 456, talk: "¡Cric, cric! ¡Mi ovillo!", beat: "presentation" },
-        { x: 1300, y: 456, talk: "¡Al tren!", beat: "presentation" },
-        { x: 1800, y: 300, jump: true, talk: "¡Sube al vagón!", beat: "development" },
-        { x: 2400, y: 456, jump: true, talk: "¡Cuidado, vapor!", beat: "development" },
-        { x: 2850, y: 320, jump: true, talk: "¡La cinta me lleva!", beat: "twist" },
-        { x: 3250, y: 200, jump: true, talk: "¡Qué alto!", beat: "twist" },
-        { x: 4000, y: 456, jump: true, talk: "¡Casi, casi!", beat: "finale" },
-        { x: 4900, y: 456, jump: true, talk: "¡Ya no corro más!", beat: "finale" },
-        { x: 5650, y: 456, talk: "¡Ay! ¡No hay salida!", beat: "finale" },
+        { x: 700, y: 456,beat: "presentation" },
+        { x: 1300, y: 456,beat: "presentation" },
+        { x: 1800, y: 300, jump: true,beat: "development" },
+        { x: 2400, y: 456, jump: true,beat: "development" },
+        { x: 2850, y: 320, jump: true,beat: "twist" },
+        { x: 3250, y: 200, jump: true,beat: "twist" },
+        { x: 4000, y: 456, jump: true,beat: "finale" },
+        { x: 4900, y: 456, jump: true,beat: "finale" },
+        { x: 5650, y: 456,beat: "finale" },
       ],
     },
     enemies: [enemy("t15b-s", "rolling-suitcase", 950, 420, 850, 1150, 62), enemy("t15b-p", "conductor-pigeon", 2000, 150, 1700, 2300, 82), enemy("t15b-s2", "rolling-suitcase", 4200, 420, 4100, 4380, 72), enemy("t15b-p2", "conductor-pigeon", 5100, 150, 4700, 5400, 88)],
@@ -1497,8 +1457,7 @@ export const levels: Level[] = [
     rewardBlocks: [reward("t15rb1", 1100, 300), reward("t15rb2", 3800, 300, "apple")], checkpoints: [1000, 1700, 2750, 3700, 4600],
   },
   {
-    id: "15-3", world: 15, screen: 3, route: { next: "16-1", nextLabel: "Seguir la melodía ▶" },
-    title: "La locomotora de Don Silbato", subtitle: "Combina los vagones y el vapor para llegar hasta el maquinista.",
+    id: "15-3", world: 15, screen: 3, route: { next: "16-1" },
     theme: "train-engine", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     // Giro (combina): cintas en sentidos alternos con el vapor en cada hueco.
     beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
@@ -1517,7 +1476,6 @@ export const levels: Level[] = [
   },
   {
     id: "16-1", world: 16, screen: 1,
-    title: "El jardín de los tambores", subtitle: "Empieza con un paseo tranquilo y cruza los puentes siguiendo la música.",
     theme: "music-garden", width: 6000, start: { x: 80, y: 380 }, goalX: 5810,
     // Presentación: paseo sin huecos con una onda suave. Giro (invertido): las ondas soplan en contra sobre los
     // huecos y el compás se acelera. Remate: onda fuerte a favor hasta la bandera.
@@ -1544,7 +1502,6 @@ export const levels: Level[] = [
   },
   {
     id: "16-2", world: 16, screen: 2,
-    title: "El bosque de las campanas", subtitle: "Las plataformas cambian de color al compás: salta cuando se enciendan.",
     theme: "music-bells", width: 3840, start: { x: 60, y: 398 }, goalX: 3790,
     // Sala-rompecabezas: el color de las plataformas cambia al compás en vez de con botones.
     beats: { development: 960, twist: 1920, finale: 2880, twistKind: "shape" },
@@ -1604,8 +1561,7 @@ export const levels: Level[] = [
     ],
   },
   {
-    id: "16-3", world: 16, screen: 3, route: { next: "17-1", nextLabel: "Subir al Reino Celeste" },
-    title: "El gran teatro de Armonía", subtitle: "Sigue la música entre los tambores y llega al gran escenario para saludar a Armonía.",
+    id: "16-3", world: 16, screen: 3, route: { next: "17-1" },
     theme: "music-theater", width: 6500, start: { x: 80, y: 380 }, goalX: 6320,
     // Giro (combina): ondas que cambian de sentido sobre puentes al compás cada vez más rápidos.
     beats: { development: 650, twist: 3450, finale: 5000, twistKind: "combine" },
@@ -1632,7 +1588,6 @@ export const levels: Level[] = [
   },
   {
     id: "17-1", world: 17, screen: 1,
-    title: "Las nubes del amanecer", subtitle: "Sube de nube en nube o tira de la palanca para tomar el ascensor.",
     theme: "sky-dawn", width: 960, height: 3500, orientation: "vertical", start: { x: 110, y: 3352 }, goalX: 480, goalY: 175,
     // Subida: el ascensor de nubes y las nubes de rebote hacen falta en el giro y en el remate.
     beats: { development: 953, twist: 1747, finale: 2542, twistKind: "invert" },
@@ -1647,7 +1602,6 @@ export const levels: Level[] = [
   },
   {
     id: "17-2", world: 17, screen: 2,
-    title: "La escalera del cielo", subtitle: "El camino sigue por el centro. La palanca abre un camino más fácil en ascensor.",
     theme: "sky-blue", width: 960, height: 3900, orientation: "vertical", start: { x: 110, y: 3752 }, goalX: 480, goalY: 175,
     // Subida: el ascensor de nubes y las nubes de rebote hacen falta en el giro y en el remate.
     beats: { development: 429, twist: 1967, finale: 2862, twistKind: "combine" },
@@ -1662,7 +1616,6 @@ export const levels: Level[] = [
   },
   {
     id: "17-3", world: 17, screen: 3, route: { finale: true },
-    title: "La puerta de las estrellas", subtitle: "Alcanza la luna o tira de la palanca para subir en ascensor y conocer a Aurora Celeste.",
     theme: "sky-stars", width: 960, height: 4300, orientation: "vertical", start: { x: 110, y: 4152 }, goalX: 480, goalY: 175,
     // Subida: el ascensor de nubes y las nubes de rebote hacen falta en el giro y en el remate.
     beats: { development: 477, twist: 2187, finale: 3182, twistKind: "presentation" },
@@ -1679,8 +1632,6 @@ export const levels: Level[] = [
     id: "S-1",
     world: 7,
     screen: 1,
-    title: "El reino secreto de las nubes",
-    subtitle: "Entra en las columnas de aire: suben suave. Sal a un lado para bajar.",
     theme: "secret-sky",
     width: 5900,
     start: { x: 80, y: 340 },
@@ -1720,5 +1671,7 @@ export const levels: Level[] = [
     boss: "rainbow-queen",
   },
 ];
+
+export const levels: Level[] = datosPantallas.map(conTextosDePantalla);
 
 export const getLevel = (id: string) => levels.find((level) => level.id === id) ?? levels[0];

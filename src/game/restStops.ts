@@ -1,9 +1,12 @@
 import { levels } from "./levels.ts";
 import type { Enemy, Level, Platform } from "./types";
+import { conTextos } from "../textos/index.ts";
 
 /** Paseo de los amigos: pantalla de descanso corta y opcional tras el guardián de un mundo. Sin peligros ni
  * contador: los animales y enemigos del mundo aparecen como amigos que se dejan saludar. */
-export type RestStopFriend = { kind: Enemy["kind"]; line: string };
+type RestStopFriendDatos = { kind: Enemy["kind"] };
+type RestStopDatos = { world: number; friends: RestStopFriendDatos[] };
+export type RestStopFriend = RestStopFriendDatos & { line: string };
 export type RestStop = { world: number; friends: RestStopFriend[]; farewell: string };
 
 export const REST_STOP_WIDTH = 2400;
@@ -11,133 +14,125 @@ export const GREET_DISTANCE = 140;
 
 /** Catálogo declarativo: un paseo por cada mundo de campaña (1–6 y 9–16), con un amigo de cada tipo de enemigo
  * (como mucho cinco). */
-export const restStopCatalog: RestStop[] = [
+const datosPaseos: RestStopDatos[] = [
   {
     world: 1,
     friends: [
-      { kind: "slime", line: "¡Soy blandita y saltarina!" },
-      { kind: "beetle", line: "¡Me encanta brillar al sol!" },
-      { kind: "cloud", line: "¡Floto como un algodón!" },
+      { kind: "slime" },
+      { kind: "beetle" },
+      { kind: "cloud" },
     ],
-    farewell: "¡Gracias por la visita, Noa!",
   },
   {
     world: 2,
     friends: [
-      { kind: "slime", line: "¡En la cueva estoy fresquita!" },
-      { kind: "beetle", line: "¡Mis alas brillan en la niebla!" },
-      { kind: "bat", line: "¡Duermo boca abajo, ji, ji!" },
-      { kind: "cloud", line: "¡La niebla y yo somos primas!" },
+      { kind: "slime" },
+      { kind: "beetle" },
+      { kind: "bat" },
+      { kind: "cloud" },
     ],
-    farewell: "¡Vuelve pronto a la gruta!",
   },
   {
     world: 3,
     friends: [
-      { kind: "wolf", line: "¡Ya me he echado la siesta!" },
-      { kind: "cloud", line: "¡Soy la nube de la luna!" },
+      { kind: "wolf" },
+      { kind: "cloud" },
     ],
-    farewell: "¡Auuu! ¡Hasta pronto, Noa!",
   },
   {
     world: 4,
     friends: [
-      { kind: "boar", line: "¡Me encantan las bellotas!" },
-      { kind: "bird", line: "¡Pío, pío, qué bien saltas!" },
+      { kind: "boar" },
+      { kind: "bird" },
     ],
-    farewell: "¡Ven a merendar otro día!",
   },
   {
     world: 5,
     friends: [
-      { kind: "pirate", line: "¡Ahoy! ¡Soy un pirata bueno!" },
-      { kind: "parrot", line: "¡Cra, cra, hola, Noa!" },
+      { kind: "pirate" },
+      { kind: "parrot" },
     ],
-    farewell: "¡Buen viento, marinera!",
   },
   {
     world: 6,
     friends: [
-      { kind: "skeleton", line: "¡Mis huesos hacen clac, clac!" },
-      { kind: "ghost", line: "¡Buuu! ¿Te he asustado?" },
-      { kind: "zombie", line: "¡Solo quiero un abrazo!" },
+      { kind: "skeleton" },
+      { kind: "ghost" },
+      { kind: "zombie" },
     ],
-    farewell: "¡Vuelve a mi castillo!",
   },
   {
     world: 9,
     friends: [
-      { kind: "baby-t-rex", line: "¡Mis bracitos son cortitos!" },
-      { kind: "pterodactyl", line: "¡Vuelo sobre la isla!" },
+      { kind: "baby-t-rex" },
+      { kind: "pterodactyl" },
     ],
-    farewell: "¡Hasta pronto, pequeña!",
   },
   {
     world: 10,
     friends: [
-      { kind: "baby-dragon", line: "¡Echo humito, no fuego!" },
-      { kind: "fire-salamander", line: "¡La lava me da calorcito!" },
-      { kind: "flying-dragon", line: "¡Me encanta volar alto!" },
+      { kind: "baby-dragon" },
+      { kind: "fire-salamander" },
+      { kind: "flying-dragon" },
     ],
-    farewell: "¡Vuelve a mi volcán!",
   },
   {
     world: 11,
     friends: [
-      { kind: "ant", line: "¡Llevo hojas muy grandes!" },
-      { kind: "snail", line: "¡Voy despacito, despacito!" },
-      { kind: "bee", line: "¡Bzz! ¡Hago miel dulce!" },
+      { kind: "ant" },
+      { kind: "snail" },
+      { kind: "bee" },
     ],
-    farewell: "¡Gracias por tu visita!",
   },
   {
     world: 12,
     friends: [
-      { kind: "penguin", line: "¡Me deslizo con la tripa!" },
-      { kind: "snow-fox", line: "¡Mi cola es muy calentita!" },
-      { kind: "snowy-owl", line: "¡Uh, uh! ¡Veo de noche!" },
+      { kind: "penguin" },
+      { kind: "snow-fox" },
+      { kind: "snowy-owl" },
     ],
-    farewell: "¡Abrígate bien, Noa!",
   },
   {
     world: 13,
     friends: [
-      { kind: "snow-scout", line: "¡Hago muñecos de nieve!" },
-      { kind: "toy-reindeer", line: "¡Tiro del trineo!" },
-      { kind: "toy-elf", line: "¡Envuelvo los regalos!" },
-      { kind: "toy-robot", line: "¡Bip, bip, soy tu amigo!" },
-      { kind: "gift-gnome", line: "¡Guardo los regalos!" },
+      { kind: "snow-scout" },
+      { kind: "toy-reindeer" },
+      { kind: "toy-elf" },
+      { kind: "toy-robot" },
+      { kind: "gift-gnome" },
     ],
-    farewell: "¡Feliz Navidad, Noa!",
   },
   {
     world: 14,
     friends: [
-      { kind: "desert-scarab", line: "¡Ruedo bolitas de arena!" },
-      { kind: "fennec", line: "¡Mis orejas lo oyen todo!" },
-      { kind: "tumbleweed", line: "¡Ruedo con el viento!" },
+      { kind: "desert-scarab" },
+      { kind: "fennec" },
+      { kind: "tumbleweed" },
     ],
-    farewell: "¡Que el viento te acompañe!",
   },
   {
     world: 15,
     friends: [
-      { kind: "rolling-suitcase", line: "¡Llevo calcetines dentro!" },
-      { kind: "conductor-pigeon", line: "¡Pasajeros, al tren!" },
-      { kind: "clockwork-mouse", line: "¡Cric, cric, tengo cuerda!" },
+      { kind: "rolling-suitcase" },
+      { kind: "conductor-pigeon" },
+      { kind: "clockwork-mouse" },
     ],
-    farewell: "¡Buen viaje, Noa!",
   },
   {
     world: 16,
     friends: [
-      { kind: "walking-drum", line: "¡Pom, pom, pom!" },
-      { kind: "note-bird", line: "¡Canto todas las notas!" },
-      { kind: "violin-mouse", line: "¡Toco el violín!" },
+      { kind: "walking-drum" },
+      { kind: "note-bird" },
+      { kind: "violin-mouse" },
     ],
-    farewell: "¡Bravo, bravo, Noa!",
   },
 ];
+
+/** Paseos de los amigos. Lo que dicen los amigos y el guardián sale del catálogo (`paseos.<mundo>.amigos.<tipo>.rotulo`, `paseos.<mundo>.despedida.rotulo`). */
+export const restStopCatalog: RestStop[] = datosPaseos.map((paseo) => {
+  const amigos = paseo.friends.map((amigo) => conTextos(amigo, { line: `paseos.${paseo.world}.amigos.${amigo.kind}.rotulo` }) as RestStopFriend);
+  return conTextos({ world: paseo.world, friends: amigos } as RestStop, { farewell: `paseos.${paseo.world}.despedida.rotulo` });
+});
 
 /** Plantilla de cada amigo: sus medidas y su altura salen de un enemigo de ese tipo en la campaña. */
 function template(world: number, kind: Enemy["kind"]): Enemy | undefined {
@@ -158,13 +153,12 @@ export function restStopLevel(stop: RestStop): Level {
     const y = base && base.y + base.height < 456 && base.y < 300 ? base.y : 456 - height;
     return { id: `amigo-${stop.world}-${index}`, kind: friend.kind, x, y, width, height, minX: x, maxX: x, speed: 0 };
   });
-  return {
+  return conTextos({
     id: `P-${stop.world}`, world: first.world, screen: 1,
-    title: "El paseo de los amigos", subtitle: "Saluda a los amigos del mundo: aquí nadie muerde.",
     theme: first.theme, width: REST_STOP_WIDTH, start: { x: 80, y: 398 }, goalX: REST_STOP_WIDTH - 200,
     platforms: [floor], enemies, items: [], rewardBlocks: [], checkpoints: [],
     restStop: stop.world,
-  };
+  } as unknown as Level, { title: "paseos.titulo.rotulo", subtitle: "paseos.pista.rotulo" });
 }
 
 export const restStopLevels: Level[] = restStopCatalog.map(restStopLevel);

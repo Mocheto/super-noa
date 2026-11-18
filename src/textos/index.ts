@@ -81,3 +81,30 @@ export function puntos(logrados: number, total: number): string {
 export function sinPictogramas(texto: string): string {
   return texto.replace(/\{pictograma:[\w-]+\}/g, "").replace(/\s+/g, " ").trim();
 }
+
+/**
+ * Como `t`, pero con una clave construida en tiempo de ejecución a partir de un identificador
+ * (`pantallas.${level.id}.titulo.rotulo`). La prueba de completitud garantiza que existe para cada dato.
+ */
+export function tClave(clave: string, variables: Variables = {}): string {
+  return t(clave as ClaveTexto, variables);
+}
+
+/** Indica si una clave construida en tiempo de ejecución tiene hoja en el catálogo activo. */
+export function existeClave(clave: string): boolean {
+  try {
+    buscar(clave);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Hace que un dato declarativo lea sus textos del catálogo por identificador: cada campo se resuelve al leerlo,
+ * así que cambiar de idioma no obliga a reconstruir los datos.
+ */
+export function conTextos<T extends object>(dato: T, campos: Readonly<Record<string, string>>): T {
+  for (const [campo, clave] of Object.entries(campos)) Object.defineProperty(dato, campo, { get: () => tClave(clave), enumerable: true, configurable: true });
+  return dato;
+}

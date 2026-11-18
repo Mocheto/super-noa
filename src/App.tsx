@@ -34,7 +34,7 @@ import { addHeart } from "./game/friendProgress";
 import { FriendsTab } from "./game/FriendsTab";
 import { recordFlight } from "./game/avioneta";
 import { puntos, t } from "./textos";
-import { Texto } from "./textos/Texto";
+import { Pictogramas, Texto } from "./textos/Texto";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
 import { visitDetour } from "./game/detourProgress";
 
@@ -855,7 +855,7 @@ export default function App() {
           {!bossReplay && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
             <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onFriendGreeted={handleFriendGreeted} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
           </Suspense>}
-          {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? <Texto clave="partida.hud.secreto.rotulo" /> : displayedLevel.restStop ? <Texto clave="partida.hud.paseo.rotulo" /> : displayedLevel.puzzleRooms ? <Texto clave="partida.hud.sala.rotulo" variables={{ puntos: puntos(snapshot.checkpoint + 1, displayedLevel.puzzleRooms.length) }} /> : <Texto clave="partida.hud.bandera.rotulo" variables={{ puntos: puntos(snapshot.checkpoint, displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length) }} />}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
+          {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? <Texto clave="partida.hud.secreto.rotulo" /> : displayedLevel.restStop ? <Texto clave="partida.hud.paseo.rotulo" /> : displayedLevel.puzzleRooms ? <Texto clave="partida.hud.sala.rotulo" variables={{ puntos: puntos(snapshot.checkpoint + 1, displayedLevel.puzzleRooms.length) }} /> : <Texto clave="partida.hud.bandera.rotulo" variables={{ puntos: puntos(snapshot.checkpoint, displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length) }} />}</span>{!displayedLevel.detour && <small><Pictogramas texto={displayedLevel.subtitle} /></small>}</div>}
 
           {screen === "boss" && activeLevel.boss && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
             {

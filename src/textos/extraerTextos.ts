@@ -29,6 +29,9 @@ function esTextoVisible(texto: string, esTextoJsx = false): boolean {
   if (/^[a-z][\w-]*( [a-z][\w-]*)*$/.test(limpio)) return false;
   if (/^(bold |italic )*\d+px /.test(limpio) || /^\(/.test(limpio)) return false;
   if (/:not\(|a\[href|`/.test(limpio)) return false;
+  // Un solo trozo sin espacios con cifras, puntos, guiones o plantillas es un identificador o una clave («A-1», «pantallas.${id}.titulo»).
+  const sinExpresiones = limpio.replace(/\$\{[^}]*\}/g, "$");
+  if (!/\s/.test(sinExpresiones) && /[0-9._$-]/.test(sinExpresiones)) return false;
   const sinVariables = limpio.replace(/\$\{[^}]*\}/g, "").trim();
   // Varias palabras en minúscula sin guiones ni cifras («pantallas completadas») son texto; «level-card is-complete» son clases.
   const soloLetras = /[-_()]/.test(sinVariables) ? sinVariables : sinVariables.replace(/[^A-Za-záéíóúñüÁÉÍÓÚÑ ]+/g, " ").replace(/\s+/g, " ").trim();

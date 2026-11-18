@@ -9,6 +9,7 @@
 
 Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 
+- `src/textos/`: catálogo de textos en español (`es/<zona>.ts`, una zona por archivo), `t()`, `<Texto>` y `textoLienzo()` para pedirlos por clave, y `pictogramas.ts` con los nombres de los pictogramas. La guía de escritura del texto para Noa está en `docs/interfaz/guia-texto-noa.md` y los pictogramas en `docs/interfaz/pictogramas.md`.
 - `src/App.tsx`: navegación, HUD, música, modales y pausa automática al perder visibilidad o foco; `src/game/music.ts`: motor de audio y gestión de pistas.
 - `src/game/progress.ts`: lectura, validación, migración y escritura del progreso local; `src/game/storage.ts`: acceso seguro al almacenamiento local, incluso si el navegador lo bloquea.
 - `src/game/GameCanvas.tsx`: coordinación de la partida, física y estado de cada pantalla.
@@ -52,6 +53,7 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 ## Reglas
 
 - Mantén los textos visibles en español y adecuados para una niña de cinco años.
+- **Ningún texto visible escrito en el código.** Todo texto va a `src/textos/es/` con su clave y se pide con `t()`, `<Texto>` o `textoLienzo()`; los datos declarativos usan su identificador como clave (`pantallas.1-2.titulo.rotulo`) y dejan de llevar texto. Los textos para Noa son **rótulos** (MAYÚSCULAS sin tildes, de una a cuatro palabras, con pictograma) y, si aporta algo, **para leer juntos**, según [la guía de escritura](docs/interfaz/guia-texto-noa.md). Mientras dura la migración, `src/textos/pendientes.ts` lista los archivos que aún tienen texto suelto: la lista solo encoge y `npm run test:logic` falla si un archivo migrado vuelve a tener texto suelto.
 - No copies recursos, niveles, música, sonidos o personajes de Nintendo ni de otros juegos comerciales.
 - Conserva rutas relativas (`./assets/...`) para que funcione tanto en el dominio propio como bajo una subruta de GitHub Pages.
 - El progreso usa la clave `super-noa-progress-v1`. El formato actual declara `version: 2`; amplíalo de forma tolerante a campos ausentes y conserva la migración de guardados anteriores.
@@ -104,3 +106,4 @@ Antes de publicar comprueba las cuarenta y cinco pantallas de campaña, las tres
 
    Ejecuta la verificación completa indicada arriba y revisa visualmente las tres pantallas antes de publicar.
 7. Añade el paseo de los amigos del mundo en `restStops.ts`, con un amigo de cada tipo de enemigo y sin peligros. Añade también una ficha en `friends.ts` por cada tipo de enemigo nuevo, con nombre, frase, consejo y comida favorita.
+8. Escribe todos los textos del mundo en `src/textos/es/` (pantallas, pegatinas, amigos, guardián, mundo, caminos y paseo) con las claves de sus identificadores y siguiendo la guía de escritura.

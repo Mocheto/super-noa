@@ -14,7 +14,7 @@ import { testScreens } from "./game/testScreens";
 /** Solo en desarrollo: `?prueba=salas` abre una pantalla de prueba de los motores de formato y `?prueba=12-2`, una
  * pantalla de la campaña, para revisarlas sin recorrer el mapa. */
 const devTestName = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("prueba") ?? "" : "";
-/** En desarrollo, `?prueba=<pantalla>&duelo` abre directamente el duelo del guardián de esa pantalla. */
+/** En desarrollo, `?prueba=<pantalla>&duelo` abre directamente el duelo del guardián de esa pantalla y `?prueba=fiesta`, la fiesta de los gatitos. */
 const devDuel = import.meta.env.DEV && new URLSearchParams(window.location.search).has("duelo");
 const devTestLevel = devTestName ? testScreens[devTestName] ?? [...levels, ...detourLevels, ...restStopLevels].find((level) => level.id === devTestName) : undefined;
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
@@ -85,7 +85,7 @@ function rankingErrorMessage(error: unknown, fallback: string) {
 
 export default function App() {
   const [progress, setProgress] = useState<Progress>(readProgress);
-  const [screen, setScreen] = useState<Screen>(devTestLevel ? (devDuel && devTestLevel.boss ? "boss" : "game") : "home");
+  const [screen, setScreen] = useState<Screen>(devTestLevel ? (devDuel && devTestLevel.boss ? "boss" : "game") : devTestName === "fiesta" ? "cat-party" : "home");
   const [activeIndex, setActiveIndex] = useState(0);
   const [levelRun, setLevelRun] = useState(0);
   const [avionetaGift, setAvionetaGift] = useState(false);

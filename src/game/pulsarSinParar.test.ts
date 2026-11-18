@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as abeja from "./beeNinja.ts";
+import * as fiesta from "./catParty.ts";
 import * as tambor from "./armoniaDrum.ts";
 import * as merienda from "./meriendaJabatos.ts";
 import { pulsacionesSinParar, REBOTE_PULSOS } from "./pulsacionVacia.ts";
@@ -52,6 +53,17 @@ const juegos: Juego[] = [
       const run = merienda.createRun("song");
       for (const pulso of pulsaciones) { merienda.missesAt(run, pulso); merienda.pressAt(run, pulso); }
       return merienda.outcomeOf(run);
+    },
+  },
+  {
+    nombre: "fiesta de los gatitos",
+    pulsoMs: fiesta.PULSE_MS,
+    largo: fiesta.scoreLength(fiesta.partyScores.song),
+    objetivos: () => fiesta.createRun("song").pieces.filter((item) => item.type !== "yarn").flatMap((item) => [...item.hits]).sort((a, b) => a - b),
+    jugar: (pulsaciones) => {
+      const run = fiesta.createRun("song");
+      for (const pulso of pulsaciones) { fiesta.collectMisses(run, pulso); fiesta.pressAt(run, pulso); }
+      return fiesta.outcomeOf(run);
     },
   },
 ];

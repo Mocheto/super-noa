@@ -66,6 +66,11 @@
 .cat-party-pile { left: 6px; top: 410px; z-index: 2; width: 230px; height: 120px; }
 .cat-party-pile img { position: absolute; filter: drop-shadow(0 2px 2px #0006); }
 .cat-party-pile .cat-party-woodpile { left: 0; top: 21px; }
+/* Raya dorada del montón: sombras doradas de los leños que faltan; el montón brilla al pasarla. */
+.cat-party-pile img.is-sombra { opacity: .35; filter: sepia(1) saturate(3) hue-rotate(-10deg) drop-shadow(0 0 3px #ffd76a); }
+.cat-party-pile.is-reached img:not(.is-sombra) { filter: drop-shadow(0 0 6px #ffd76a) drop-shadow(0 2px 2px #0006); }
+.cat-party-pile img.gota-cae.is-leno { left: 90px; top: 40px; width: 40px; height: auto; border: 0; border-radius: 0; background: none; }
+.cat-party-hoguera-resultado.is-apagada { filter: grayscale(.6) brightness(.85); }
 
 .cat-party-feedback { left: 383px; top: 318px; z-index: 6; padding: 4px 12px; border: 3px solid #2f1d33; border-radius: 12px; background: #b9f1b1; color: #1f4a2c; font: 900 22px ui-monospace, monospace; }
 .cat-party-feedback.is-miss { background: #ffd2c8; color: #6a2a22; }

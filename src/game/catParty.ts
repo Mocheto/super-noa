@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import { anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
 
 export { outputLatencySeconds };
@@ -104,17 +105,19 @@ export type LivePiece = {
   brokenAt: number | null;
 };
 
-export type PartyRun = { mode: PartyMode; score: Score; pieces: LivePiece[]; broken: number; noteIndex: number };
+/** `broken` cuenta las piezas partidas; el montón de leña y su raya dorada miran `cuenta.raya`: un golpe acertado suma un leño y una pulsación vacía de la canción lo quita. */
+export type PartyRun = { mode: PartyMode; score: Score; pieces: LivePiece[]; broken: number; noteIndex: number; cuenta: Raya };
 
 export type PressResult =
   | { kind: "hit"; piece: LivePiece; broke: boolean }
-  | { kind: "yarn"; piece: LivePiece }
-  | { kind: "empty" };
+  | { kind: "yarn"; piece: LivePiece; resta: boolean }
+  | { kind: "empty"; resta: boolean }
+  | { kind: "rebote" };
 
 export function createRun(mode: PartyMode): PartyRun {
   const score = partyScores[mode];
   return {
-    mode, score, broken: 0, noteIndex: 0,
+    mode, score, broken: 0, noteIndex: 0, cuenta: nuevaRaya(),
     pieces: score.pieces.map((item, id) => ({ id, type: item.type, push: pushPulse(item), hits: hitPulses(item), done: [], missedAt: null, bouncedAt: null, brokenAt: null })),
   };
 }
@@ -123,13 +126,19 @@ const pending = (item: LivePiece) => item.type !== "yarn" && item.brokenAt === n
 
 function land(run: PartyRun, item: LivePiece, hit: number, pulse: number): PressResult {
   item.done.push(hit);
+  anotarAcierto(run.cuenta, pulse);
   const broke = item.done.length === item.hits.length;
   if (broke) { item.brokenAt = pulse; run.broken += 1; }
   return { kind: "hit", piece: item, broke };
 }
 
-/** Golpe de la jugadora en el pulso dado: acierta la pieza más cercana dentro del margen. */
+/**
+ * Golpe de la jugadora en el pulso dado: acierta la pieza más cercana dentro del margen. Golpear sin pieza o golpear
+ * un ovillo es una pulsación vacía: en la canción, pasada la cuenta, quita un leño del montón. El rebote no cuenta.
+ */
 export function pressAt(run: PartyRun, pulse: number): PressResult {
+  if (esRebote(run.cuenta, pulse)) return { kind: "rebote" };
+  const cuesta = run.mode === "song" && pulse >= COUNT_PULSES;
   let best: { item: LivePiece; hit: number } | null = null;
   let bestDistance = Infinity;
   for (const item of run.pieces) {
@@ -141,8 +150,8 @@ export function pressAt(run: PartyRun, pulse: number): PressResult {
       if (distance <= HIT_WINDOW_PULSES && distance < bestDistance) { bestDistance = distance; best = { item, hit }; }
     }
   }
-  if (!best) return { kind: "empty" };
-  if (best.item.type === "yarn") { best.item.bouncedAt = pulse; return { kind: "yarn", piece: best.item }; }
+  if (!best) return { kind: "empty", resta: anotarVacia(run.cuenta, cuesta) };
+  if (best.item.type === "yarn") { best.item.bouncedAt = pulse; return { kind: "yarn", piece: best.item, resta: anotarVacia(run.cuenta, cuesta) }; }
   return land(run, best.item, best.hit, pulse);
 }
 
@@ -166,6 +175,20 @@ export function collectMisses(run: PartyRun, pulse: number): LivePiece[] {
     }
   }
   return missed;
+}
+
+export const hitsIn = (score: Score) => score.pieces.reduce((total, item) => total + (item.type === "yarn" ? 0 : hitPulses(item).length), 0);
+/** Raya dorada del montón de leña: la mitad de los golpes de la canción. */
+export const goalOf = (score: Score) => Math.ceil(hitsIn(score) / 2);
+
+export type Outcome = { result: "casi" | "bien" | "perfecto"; won: boolean };
+
+/** La hoguera se enciende si el montón pasa la raya dorada; «perfecto» pide todos los golpes y ninguna pulsación vacía. */
+export function outcomeOf(run: PartyRun): Outcome {
+  const golpes = run.pieces.reduce((total, item) => total + (item.type === "yarn" ? 0 : item.done.length), 0);
+  const perfect = golpes === hitsIn(run.score) && run.cuenta.vacias === 0;
+  const won = run.cuenta.raya >= goalOf(run.score);
+  return { result: perfect ? "perfecto" : won ? "bien" : "casi", won };
 }
 
 export function nextOpenHit(run: PartyRun, pulse: number) {

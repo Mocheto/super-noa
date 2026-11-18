@@ -198,6 +198,10 @@ _Avoid_: Mesa, bloque
 Pulso en que un gatito empujador suelta una pieza en la cinta, dos pulsos antes de su primer golpe.
 _Avoid_: Lanzamiento, salida
 
+**Montón de leña**:
+Montón que crece con cada golpe acertado en la fiesta de los gatitos; su raya dorada marca el mínimo para encender la hoguera.
+_Avoid_: Pila, marcador
+
 **Leñadora**:
 Noa vestida de gata, que golpea las piezas con el hacha cada vez que la jugadora pulsa.
 _Avoid_: Gata leñadora, oso

@@ -51,7 +51,8 @@ test("el margen de ±300 ms incluye sus bordes y no cuenta dos veces el mismo go
   assert.equal(pressAt(createRun("practice"), first + HIT_WINDOW_PULSES + 0.01).kind, "empty");
   const run = createRun("practice");
   assert.equal(pressAt(run, first).kind, "hit");
-  assert.equal(pressAt(run, first + 0.1).kind, "empty");
+  assert.equal(pressAt(run, first + 0.1).kind, "rebote", "un rebote del dedo no cuenta");
+  assert.equal(pressAt(run, first + 0.2).kind, "empty");
   assert.equal(run.broken, 1);
 });
 

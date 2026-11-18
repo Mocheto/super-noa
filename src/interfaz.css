@@ -21,22 +21,24 @@
   --rojo-boton-sombra: #a51c2c;
   --lila-control: #5b386c;
 
-  /* Escala del texto para Noa: título, rótulo y etiqueta pequeña (nunca menos de 16 px). */
-  --rotulo-titulo: 32px;
-  --rotulo: 24px;
-  --rotulo-pequeno: 16px;
+  /* Escala del texto para Noa: título, rótulo y etiqueta pequeña. Reducida tras probarla en móvil. */
+  --rotulo-titulo: 28px;
+  --rotulo: 20px;
+  --rotulo-pequeno: 14px;
 
   /* Botones: alto con palabra y diámetro de los controles redondos. */
-  --boton-alto: 72px;
-  --control: 56px;
+  --boton-alto: 60px;
+  --control: 48px;
 }
 
-/* Móvil apaisado: el título baja a 24 px y los botones a 52 px de alto. */
-@media (orientation: landscape) and (max-height: 500px) {
+/* Móvil (apaisado o vertical): letra y botones más pequeños para que todo quepa. */
+@media (orientation: landscape) and (max-height: 540px), (orientation: portrait) and (max-width: 700px) {
   :root {
-    --rotulo-titulo: 24px;
-    --boton-alto: 52px;
-    --control: 48px;
+    --rotulo-titulo: 20px;
+    --rotulo: 16px;
+    --rotulo-pequeno: 12px;
+    --boton-alto: 44px;
+    --control: 40px;
   }
 }
 
@@ -205,39 +207,46 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 6px 10px;
+  min-height: 32px;
+  padding: 5px 8px;
   border: 3px solid #352044;
   color: var(--crema);
   background: rgba(37, 24, 63, .8);
   white-space: nowrap;
 }
-.hud-chip .game-asset-icon, .hud-chip .pictograma { --icon-size: 24px; font-size: 24px; margin: 0; }
-.hud-chip .pictograma { font-size: 20px; }
+.hud-chip .game-asset-icon, .hud-chip .pictograma { --icon-size: 20px; font-size: 20px; margin: 0; }
+.hud-chip .pictograma { font-size: 18px; }
 .hud-vidas { gap: 4px; }
-.hud-vidas .game-asset-icon { --icon-size: 36px; }
+.hud-vidas .game-asset-icon { --icon-size: 28px; }
 .hud-vidas .vida-perdida { filter: grayscale(1) brightness(.75); opacity: .55; }
 .hud-pantalla { color: #352044; background: var(--dorado); border-color: var(--ciruela); }
 .hud-banderas { color: var(--dorado); letter-spacing: 2px; }
-.hud-pausa { --control: 64px; pointer-events: auto; border-radius: 16px; color: var(--crema); background: var(--lila-control); border-color: var(--crema); box-shadow: 0 4px 0 #1b1129; }
+.hud-pausa { --control: 52px; pointer-events: auto; border-radius: 16px; color: var(--crema); background: var(--lila-control); border-color: var(--crema); box-shadow: 0 4px 0 #1b1129; }
 .hud-pausa:active { box-shadow: 0 1px 0 #1b1129; }
 @media (orientation: portrait), (orientation: landscape) and (max-height: 540px) {
-  .hud-esquinas { inset: 6px 6px auto 6px; gap: 4px; }
-  .hud-chip { min-height: 30px; padding: 4px 7px; border-width: 2px; }
-  .hud-chip .game-asset-icon { --icon-size: 20px; }
-  .hud-vidas .game-asset-icon { --icon-size: 24px; }
-  .hud-pausa { --control: 48px; }
+  .hud-esquinas { inset: 4px 4px auto 4px; gap: 4px; font-size: 10px; }
+  .hud-esquinas > * { gap: 3px; }
+  .hud-chip { min-height: 22px; padding: 2px 5px; gap: 3px; border-width: 2px; }
+  .hud-chip .game-asset-icon, .hud-chip .pictograma { --icon-size: 14px; font-size: 13px; }
+  .hud-vidas { gap: 2px; }
+  .hud-vidas .game-asset-icon { --icon-size: 16px; }
+  .hud-pausa { --control: 34px; border-width: 2px; border-radius: 10px; font-size: 14px; }
+}
+@media (orientation: portrait) {
+  .hud-izquierda { flex-direction: row; flex-wrap: wrap; }
+  .hud-contadores { flex-wrap: nowrap; }
 }
 .pausa-controles { display: flex; justify-content: center; gap: 14px; margin-top: 14px; }
 
-/* Botones táctiles grandes (issue 141). Medidas en MEDIDAS_TACTILES (TouchControls.tsx), que llegan como variables.
-   Flechas separadas abajo a la izquierda; SALTA en la esquina y LANA en diagonal más arriba; sin bandeja ni palabra. */
+/* Botones táctiles (issue 141, reajustados tras probarlos en móvil). Medidas en MEDIDAS_TACTILES (TouchControls.tsx):
+   grandes en tableta, pequeños sobre el escenario en móvil apaisado y debajo del escenario en vertical. Solo dibujo. */
 .touch-controls {
+  --tactil-flecha: var(--tactil-flecha-grande); --tactil-salta: var(--tactil-salta-grande); --tactil-lana: var(--tactil-lana-grande);
+  --tactil-separacion: var(--tactil-separacion-grande); --tactil-area: var(--tactil-areaExtra-grande); --tactil-borde: var(--tactil-borde-grande);
   inset: auto 0 calc(var(--tactil-borde) + env(safe-area-inset-bottom, 0px));
   padding-inline: calc(var(--tactil-borde) + env(safe-area-inset-left, 0px)) calc(var(--tactil-borde) + env(safe-area-inset-right, 0px));
-  opacity: var(--tactil-opacidad);
 }
-.touch-group { display: flex; align-items: flex-end; gap: var(--tactil-separacion); pointer-events: none; touch-action: none; }
+.touch-group { display: flex; align-items: flex-end; gap: var(--tactil-separacion); pointer-events: none; touch-action: none; opacity: var(--tactil-opacidad); }
 .touch-button {
   position: relative;
   display: grid;
@@ -245,13 +254,13 @@
   width: var(--tactil-flecha);
   height: var(--tactil-flecha);
   padding: 0;
-  border: 4px solid var(--crema);
-  border-radius: 22px;
+  border: 3px solid rgba(255, 248, 233, .9);
+  border-radius: 18px;
   color: #fff;
   background: linear-gradient(145deg, #7e4f96, #4a2a5e);
-  box-shadow: 0 6px 0 #1b1129;
+  box-shadow: 0 4px 0 rgba(27, 17, 41, .8);
   font-family: var(--letra-noa);
-  font-size: calc(var(--tactil-flecha) * .38);
+  font-size: calc(var(--tactil-flecha) * .36);
   line-height: 1;
   pointer-events: auto;
   touch-action: none;
@@ -260,16 +269,34 @@
   cursor: pointer;
 }
 /* Área táctil más grande que el dibujo, sin verse. */
-.touch-button::before { content: ""; position: absolute; inset: calc(var(--tactil-area) * -1 - 4px); border-radius: inherit; }
+.touch-button::before { content: ""; position: absolute; inset: calc(var(--tactil-area) * -1 - 3px); border-radius: inherit; }
 .touch-button > * { pointer-events: none; }
-.touch-button:active { transform: translateY(5px); box-shadow: 0 1px 0 #1b1129; filter: brightness(1.2); }
-.touch-jump { width: var(--tactil-salta); height: var(--tactil-salta); border-radius: 50%; background: linear-gradient(145deg, #f06d83, #b83959); box-shadow: 0 7px 0 #68263d; }
+.touch-button:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(27, 17, 41, .8); filter: brightness(1.2); }
+.touch-jump { width: var(--tactil-salta); height: var(--tactil-salta); border-radius: 50%; background: linear-gradient(145deg, #f06d83, #b83959); }
 .touch-jump-arrows { position: relative; display: inline-block; font-size: calc(var(--tactil-salta) * .36); }
 .touch-jump-arrows i { position: absolute; top: -.35em; right: -.45em; color: #ffe26f; font-size: .55em; font-style: normal; }
-.touch-yarn { width: var(--tactil-lana); height: var(--tactil-lana); border-radius: 50%; margin-bottom: calc(var(--tactil-salta) * .55); background: linear-gradient(145deg, #a477c8, #5b3f75); }
+.touch-yarn { width: var(--tactil-lana); height: var(--tactil-lana); border-radius: 50%; margin-bottom: calc(var(--tactil-salta) * .45); background: linear-gradient(145deg, #a477c8, #5b3f75); }
 .touch-yarn .pixel-icon { --icon-size: calc(var(--tactil-lana) * .42); }
+@media (orientation: landscape) and (max-height: 540px) {
+  .touch-controls {
+    --tactil-flecha: var(--tactil-flecha-apaisado); --tactil-salta: var(--tactil-salta-apaisado); --tactil-lana: var(--tactil-lana-apaisado);
+    --tactil-separacion: var(--tactil-separacion-apaisado); --tactil-area: var(--tactil-areaExtra-apaisado); --tactil-borde: var(--tactil-borde-apaisado);
+  }
+}
+/* En vertical, debajo del escenario y dentro del marco: opacos y sin tapar nada. */
 @media (orientation: portrait) {
-  .touch-controls { opacity: 1; }
+  .touch-controls {
+    --tactil-flecha: var(--tactil-flecha-vertical); --tactil-salta: var(--tactil-salta-vertical); --tactil-lana: var(--tactil-lana-vertical);
+    --tactil-separacion: var(--tactil-separacion-vertical); --tactil-area: var(--tactil-areaExtra-vertical); --tactil-borde: var(--tactil-borde-vertical);
+    position: static;
+    min-height: 0;
+    align-items: center;
+    padding: 10px calc(var(--tactil-borde) + env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) calc(var(--tactil-borde) + env(safe-area-inset-left, 0px));
+    border: 0;
+    background: #2c1d3b;
+  }
+  .touch-group { opacity: 1; align-items: center; }
+  .touch-yarn { margin-bottom: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .touch-button:active { transform: none; } }
 
@@ -317,7 +344,7 @@
 .rotulo-con-frase { display: grid; gap: 4px; justify-items: center; }
 .medallas { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
 .medalla { display: grid; justify-items: center; gap: 6px; opacity: .45; filter: grayscale(1); }
-.medalla .pictograma { display: grid; width: 64px; height: 64px; margin: 0; font-size: 36px; border: 3px solid var(--ciruela); border-radius: 50%; background: #fff; }
+.medalla .pictograma { display: grid; width: 52px; height: 52px; margin: 0; font-size: 28px; border: 3px solid var(--ciruela); border-radius: 50%; background: #fff; }
 .medalla.conseguida { opacity: 1; filter: none; }
 @media (orientation: landscape) and (max-height: 540px) {
   .ventana { width: min(700px, calc(100vw - 24px)); max-height: calc(100dvh - 16px); gap: 8px; padding-bottom: 12px; }
@@ -338,14 +365,14 @@
 /* Inicio (issue 144): ¡A JUGAR! grande, ¿COMO SE JUEGA?, baldosas de ALBUM y JEFES, sonido como control redondo
    y una línea discreta para adultos. En móvil apaisado la ilustración pasa a ser el fondo. */
 .home-screen { grid-template-columns: minmax(320px, 1fr) minmax(0, 1fr); }
-.inicio-titulo { display: grid; gap: 12px; margin: 0 0 22px; font-family: var(--letra-noa); font-size: clamp(56px, 8vw, 104px); font-weight: 400; line-height: 1; letter-spacing: 0; color: #fff; text-shadow: 6px 6px 0 var(--rojo-boton), 12px 12px 0 var(--ciruela); }
+.inicio-titulo { display: grid; gap: 12px; margin: 0 0 22px; font-family: var(--letra-noa); font-size: clamp(44px, 6.5vw, 84px); font-weight: 400; line-height: 1; letter-spacing: 0; color: #fff; text-shadow: 6px 6px 0 var(--rojo-boton), 12px 12px 0 var(--ciruela); }
 .inicio-titulo span { display: block; margin: 0; color: var(--dorado); font-size: .26em; letter-spacing: 0; text-shadow: 3px 3px 0 var(--ciruela); }
 .inicio-lema, .inicio-novedades { justify-items: start; text-align: left; margin: 0 0 16px; }
 .inicio-lema p, .inicio-novedades p { margin: 0; }
 .home-screen .juntos { max-width: 46ch; color: #e9dcf0; }
 .inicio-novedades .texto-noa { color: var(--dorado); }
 .home-actions { display: grid; justify-items: start; gap: 16px; margin-top: 8px; }
-.home-play { --boton-alto: 80px; min-width: 340px; }
+.home-play { --boton-alto: 68px; min-width: 300px; }
 .inicio-arte { display: grid; gap: 18px; justify-items: center; }
 .inicio-baldosas { display: flex; gap: 14px; justify-content: center; }
 .baldosa { display: grid; justify-items: center; gap: 6px; min-width: 168px; padding: 10px 14px; border: 4px solid var(--ciruela); border-radius: 8px; color: var(--ciruela); background: var(--crema); box-shadow: 0 6px 0 var(--ciruela); cursor: pointer; }
@@ -367,12 +394,12 @@
   .hero-scene { position: absolute; inset: 0; z-index: -1; max-width: none; aspect-ratio: auto; border: 0; box-shadow: none; }
   .hero-scene .hero-backdrop { object-fit: cover; }
   .hero-scene::before { content: ""; position: absolute; inset: 0; z-index: 2; background: linear-gradient(90deg, rgba(37, 24, 63, .94) 0 52%, rgba(37, 24, 63, .45)); }
-  .inicio-titulo { justify-items: start; font-size: 34px; margin-bottom: 8px; text-align: left; text-shadow: 3px 3px 0 var(--rojo-boton), 6px 6px 0 var(--ciruela); }
+  .inicio-titulo { justify-items: start; font-size: 28px; margin-bottom: 8px; text-align: left; text-shadow: 3px 3px 0 var(--rojo-boton), 6px 6px 0 var(--ciruela); }
   .inicio-arte { padding-top: 52px; align-self: start; }
   .home-actions .boton:not(.home-play) { --boton-alto: 48px; }
   .inicio-novedades { display: none; }
   .inicio-lema { margin-bottom: 8px; }
-  .home-play { --boton-alto: 56px; min-width: 300px; }
+  .home-play { --boton-alto: 48px; min-width: 260px; }
   .home-actions { gap: 10px; }
   .inicio-baldosas { flex-direction: column; }
   .baldosa { min-width: 150px; padding: 6px 10px; gap: 2px; }

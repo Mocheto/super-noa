@@ -13,16 +13,24 @@ type Props = {
 };
 
 /**
- * Medidas de los botones táctiles para dedos pequeños (decisión «Botones táctiles para dedos pequeños»), en px CSS.
- * El área táctil es el dibujo más `areaExtra` invisible por cada lado.
+ * Medidas de los botones táctiles, en px CSS, en tres tamaños de pantalla:
+ * - `grande`: tableta u ordenador táctil, botones sobre el escenario;
+ * - `apaisado`: móvil apaisado, botones sobre el escenario y más pequeños;
+ * - `vertical`: móvil en vertical, botones debajo del escenario, dentro del marco.
+ * El área táctil es el dibujo más `areaExtra` invisible por cada lado. Sobre el escenario se ven translúcidos.
  */
-export const MEDIDAS_TACTILES = { flecha: 88, salta: 116, lana: 80, separacion: 18, areaExtra: 10, borde: 16, opacidad: 0.85 } as const;
+export const MEDIDAS_TACTILES = {
+  grande: { flecha: 72, salta: 88, lana: 64, separacion: 12, areaExtra: 8, borde: 14 },
+  apaisado: { flecha: 56, salta: 68, lana: 50, separacion: 10, areaExtra: 6, borde: 8 },
+  vertical: { flecha: 60, salta: 72, lana: 54, separacion: 10, areaExtra: 6, borde: 10 },
+  opacidad: 0.6,
+} as const;
 
-const variablesTactiles = {
-  "--tactil-flecha": `${MEDIDAS_TACTILES.flecha}px`, "--tactil-salta": `${MEDIDAS_TACTILES.salta}px`, "--tactil-lana": `${MEDIDAS_TACTILES.lana}px`,
-  "--tactil-separacion": `${MEDIDAS_TACTILES.separacion}px`, "--tactil-area": `${MEDIDAS_TACTILES.areaExtra}px`,
-  "--tactil-borde": `${MEDIDAS_TACTILES.borde}px`, "--tactil-opacidad": String(MEDIDAS_TACTILES.opacidad),
-} as CSSProperties;
+const variablesTactiles = Object.fromEntries([
+  ...(["grande", "apaisado", "vertical"] as const).flatMap((tamano) => Object.entries(MEDIDAS_TACTILES[tamano])
+    .map(([medida, valor]) => [`--tactil-${medida}-${tamano}`, `${valor}px`])),
+  ["--tactil-opacidad", String(MEDIDAS_TACTILES.opacidad)],
+]) as CSSProperties;
 
 /** La campaña y las batallas de saltos comparten los mismos botones, posiciones y áreas táctiles. Solo dibujo: el nombre va en la etiqueta oculta. */
 export function TouchControls({ onPress, onRelease, onCancel, showYarn = true, disabled = false, onKeyboardPress, onKeyboardRelease }: Props) {

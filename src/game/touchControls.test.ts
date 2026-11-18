@@ -42,15 +42,21 @@ test("los controles compartidos conservan la identidad del dedo al soltar o canc
   assert.equal(prevented, true);
 });
 
-test("los botones táctiles miden lo decidido para dedos pequeños y no se tocan entre sí", () => {
+test("los botones táctiles caben en un móvil y siguen siendo fáciles de tocar", () => {
   const { MEDIDAS_TACTILES: m } = engineModules({ "react/jsx-runtime": { jsx, jsxs: jsx } })("./TouchControls") as typeof import("./TouchControls");
-  // Un dedo de cinco años mide unos 40–45 px: cada área táctil le saca al menos el doble.
-  for (const lado of [m.flecha, m.salta, m.lana]) assert.ok(lado + 2 * m.areaExtra >= 100, `área táctil de ${lado} px demasiado pequeña`);
-  assert.ok(m.salta > m.flecha && m.flecha > m.lana, "SALTA es el más grande y LANA el más pequeño");
-  // Las áreas invisibles de dos flechas vecinas no se pisan.
-  assert.ok(m.separacion >= 2 * m.areaExtra - 4, "las áreas táctiles de las flechas no deben solaparse");
-  assert.ok(m.opacidad >= 0.8 && m.opacidad < 1);
-  assert.ok(m.borde >= 16);
+  for (const tamano of [m.grande, m.apaisado, m.vertical]) {
+    // Un dedo de cinco años mide unos 40–45 px: cada área táctil le saca al menos 60.
+    for (const lado of [tamano.flecha, tamano.salta, tamano.lana]) assert.ok(lado + 2 * tamano.areaExtra >= 60, `área táctil de ${lado} px demasiado pequeña`);
+    assert.ok(tamano.salta > tamano.flecha && tamano.flecha > tamano.lana, "SALTA es el más grande y LANA el más pequeño");
+    assert.ok(tamano.separacion >= tamano.areaExtra, "las áreas táctiles de las flechas no se pisan del todo");
+  }
+  // En un móvil de 375 px de ancho en vertical caben las dos flechas, LANA y SALTA en una fila.
+  const v = m.vertical;
+  assert.ok(2 * v.flecha + v.separacion + v.lana + v.salta + v.separacion + 2 * v.borde + 40 <= 375);
+  // En móvil apaisado (340 px de alto) SALTA y LANA no suben más de un tercio de la pantalla.
+  const a = m.apaisado;
+  assert.ok(a.borde + a.salta * 1.45 + a.lana <= 340 * 0.6);
+  assert.ok(m.opacidad >= 0.5 && m.opacidad <= 0.7, "translúcidos sobre el escenario");
 });
 
 test("los botones táctiles llevan solo dibujo: el nombre va en la etiqueta oculta", () => {

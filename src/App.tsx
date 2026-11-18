@@ -32,6 +32,7 @@ import { restStopFor, restStopIndex, restStopLevels, restStopUnlocked } from "./
 import { greetFriend, visitRestStop } from "./game/restStopProgress";
 import { addHeart } from "./game/friendProgress";
 import { FriendsTab } from "./game/FriendsTab";
+import { funciones } from "./game/funciones";
 import { recordFlight } from "./game/avioneta";
 import { puntos, sinPictogramas, t } from "./textos";
 import { Boton, BotonControl, PalabraConDibujo, Pictograma, Texto } from "./textos/Texto";
@@ -548,7 +549,7 @@ export default function App() {
     const level = levels[index] ?? detourLevels[index - levels.length] ?? restStopLevels[index - levels.length - detourLevels.length];
     if (!level) return false;
     if (level.detour) return progress.detours?.[level.detour]?.discovered === true;
-    if (level.restStop) return restStopUnlocked(level.restStop, progress.levelStats);
+    if (level.restStop) return funciones.paseos && restStopUnlocked(level.restStop, progress.levelStats);
     if (level.world === 7) return progress.secretUnlocked;
     if (level.world === 8) return progress.waterUnlocked && (!level.route?.required || Boolean(progress.levelStats[level.route.required]?.completed));
     return campaignLevels.findIndex((entry) => entry.id === level.id) <= progress.unlocked;
@@ -948,7 +949,7 @@ export default function App() {
               botones={<>
                 {showCatPartyInvite && <Boton tipo="seguir" clave="ventanas.completada.fiesta.rotulo" data-gamepad-default onClick={openCatParty} />}
                 {!showCatPartyInvite && activeLevel.world !== 7 && <Boton tipo="seguir" clave="ventanas.completada.siguiente.rotulo" data-gamepad-default onClick={nextLevel} />}
-                {activeLevel.boss && restStopFor(activeLevel.world) && <Boton clave="ventanas.completada.paseo.rotulo" onClick={() => beginLevel(levels.length + detourLevels.length + restStopIndex(activeLevel.world))} />}
+                {funciones.paseos && activeLevel.boss && restStopFor(activeLevel.world) && <Boton clave="ventanas.completada.paseo.rotulo" onClick={() => beginLevel(levels.length + detourLevels.length + restStopIndex(activeLevel.world))} />}
                 <Boton tipo={activeLevel.world === 7 ? "seguir" : "secundario"} clave="ventanas.completada.mapa.rotulo" data-gamepad-back onClick={() => setScreen("map")} />
               </>}>
               <div className="ventana-dibujo">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt={t("ventanas.completada.trofeo.oculto")} /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.png"} alt={t("ventanas.completada.gatito.oculto")} />}</div>
@@ -1065,10 +1066,10 @@ export default function App() {
           <div className="collection-tabs" aria-label={t("coleccion.grupo.oculto")}>
             <button className={`pestana texto-noa ${collectionTab === "stickers" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "stickers"} aria-label={sinPictogramas(t("coleccion.pestana.pegatinas.rotulo"))} onClick={() => setCollectionTab("stickers")}><PalabraConDibujo clave="coleccion.pestana.pegatinas.rotulo" /></button>
             <button className={`pestana texto-noa ${collectionTab === "bosses" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "bosses"} aria-label={sinPictogramas(t("coleccion.pestana.jefes.rotulo"))} onClick={() => setCollectionTab("bosses")}><PalabraConDibujo clave="coleccion.pestana.jefes.rotulo" /></button>
-            <button className={`pestana texto-noa ${collectionTab === "friends" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "friends"} aria-label={sinPictogramas(t("coleccion.pestana.amigos.rotulo"))} onClick={() => setCollectionTab("friends")}><PalabraConDibujo clave="coleccion.pestana.amigos.rotulo" /></button>
+            {funciones.amigos && <button className={`pestana texto-noa ${collectionTab === "friends" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "friends"} aria-label={sinPictogramas(t("coleccion.pestana.amigos.rotulo"))} onClick={() => setCollectionTab("friends")}><PalabraConDibujo clave="coleccion.pestana.amigos.rotulo" /></button>}
             <button className={`pestana texto-noa ${collectionTab === "memories" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "memories"} aria-label={sinPictogramas(t("coleccion.pestana.postales.rotulo"))} onClick={() => setCollectionTab("memories")}><PalabraConDibujo clave="coleccion.pestana.postales.rotulo" /></button>
           </div>
-          {collectionTab === "friends" ? <FriendsTab progress={progress} onHeart={(kind) => setProgress((current) => addHeart(current, kind))} /> : collectionTab === "stickers" ? <>
+          {funciones.amigos && collectionTab === "friends" ? <FriendsTab progress={progress} onHeart={(kind) => setProgress((current) => addHeart(current, kind))} /> : collectionTab === "stickers" ? <>
             <p className="juntos">{t(progress.secretUnlocked ? "coleccion.pegatinas.introConSecreto.juntos" : "coleccion.pegatinas.introSinSecreto.juntos")}</p>
             <div className="sticker-grid">
               {albumStickers.map((sticker) => {

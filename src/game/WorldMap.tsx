@@ -10,6 +10,7 @@ import { getWorldSecretShopBadge } from "./secretShopProgress";
 import { findMapJourney, MAP_HEIGHT, MAP_WIDTH, mapLandscape, mapRoutes, mapRouteState, shortcutRoutes, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
 import { detourArtwork, detourCatalog, detourLevels } from "./detours";
 import { restStopCatalog, restStopUnlocked } from "./restStops";
+import { funciones } from "./funciones";
 import { TOTAL_STARS } from "./avioneta";
 import type { DetourId } from "./types";
 import { useMapCamera } from "./useMapCamera";
@@ -312,7 +313,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
                 onCloseDetails={() => setOpenObjectives((current) => current?.levelId === level.id ? null : current)}
               />)}
             </div>
-            {restStopUnlocked(selected.id, progress.levelStats) && (() => {
+            {funciones.paseos && restStopUnlocked(selected.id, progress.levelStats) && (() => {
               // El paseo de los amigos se ofrece dentro del mundo, no como un botón más sobre el mapa.
               const index = restStopCatalog.findIndex((stop) => stop.world === selected.id);
               const visited = progress.restStops?.[selected.id]?.visited;

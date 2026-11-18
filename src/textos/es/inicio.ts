@@ -12,10 +12,8 @@ export const inicio = {
   partidaGuardada: "Partida guardada · {hechas}/{total}",
   partidaGuardadaConSecreto: "Partida guardada · {hechas}/{total} + secreto",
   opciones: { oculto: "Opciones" },
-  sonido: { rotulo: "{pictograma:sonido} SONIDO" },
-  sinSonido: { rotulo: "{pictograma:sin-sonido} SIN SONIDO" },
-  album: { rotulo: "{pictograma:album} ALBUM {n}/{total}" },
-  jefes: { rotulo: "{pictograma:reto} JEFES {n}/{total}" },
+  album: { rotulo: "{pictograma:album} ALBUM", oculto: "Álbum: {n} de {total} pegatinas" },
+  jefes: { rotulo: "{pictograma:reto} JEFES", oculto: "Jefes amigos: {n} de {total}" },
   /** En la ayuda cada tarjeta lleva ya su icono grande, así que sus rótulos no repiten el pictograma. */
   ayuda: {
     titulo: { rotulo: "{pictograma:ayuda} ¿COMO SE JUEGA?" },

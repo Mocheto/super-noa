@@ -757,6 +757,7 @@ export default function App() {
     else void (playScreenRef.current ?? document.documentElement).requestFullscreen?.().catch(() => undefined);
   };
 
+  const albumFound = progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length;
   /** HUD de esquinas sobre el escenario (decisión «El HUD de la partida»): vidas y contadores a la izquierda, pantalla y banderas en el centro y la pausa a la derecha. */
   const hudEsquinas = !bossReplay && <div className="hud-esquinas">
     <div className="hud-izquierda">
@@ -792,24 +793,28 @@ export default function App() {
       {screen === "home" && (
         <section className="home-screen" aria-labelledby="game-title">
           <div className="home-copy">
-            <h1 id="game-title" className="rotulo"><span><Texto clave="inicio.titulo.super.rotulo" /></span> <Texto clave="inicio.titulo.noa.rotulo" /></h1>
-            <p className="home-lead"><span className="rotulo"><Texto clave="inicio.corre.rotulo" /></span> <small className="juntos">{t("inicio.corre.juntos")}</small></p>
-            <p className="coming-adventures"><span className="rotulo"><Texto clave="inicio.mundosNuevos.rotulo" /></span> <small className="juntos">{t("inicio.mundosNuevos.juntos")}</small></p>
+            <h1 id="game-title" className="inicio-titulo"><span><Texto clave="inicio.titulo.super.rotulo" /></span> <Texto clave="inicio.titulo.noa.rotulo" /></h1>
+            <div className="rotulo-con-frase inicio-lema"><p className="texto-noa"><Texto clave="inicio.corre.rotulo" /></p><p className="juntos">{t("inicio.corre.juntos")}</p></div>
+            <div className="rotulo-con-frase inicio-novedades"><p className="texto-noa pequeno"><Texto clave="inicio.mundosNuevos.rotulo" /></p><p className="juntos">{t("inicio.mundosNuevos.juntos")}</p></div>
             <div className="home-actions">
-              <button className="pixel-button primary home-play" type="button" data-gamepad-default onClick={() => void requestAdventure(() => setScreen("map"))}><Texto clave="inicio.jugar.rotulo" /></button>
-              <button className="pixel-button" type="button" onClick={() => setShowHelp(true)}><Texto clave="inicio.comoSeJuega.rotulo" /></button>
+              <Boton tipo="jugar" className="home-play" clave="inicio.jugar.rotulo" data-gamepad-default onClick={() => void requestAdventure(() => setScreen("map"))} />
+              <Boton clave="inicio.comoSeJuega.rotulo" onClick={() => setShowHelp(true)} />
             </div>
-            {progress.unlocked > 0 && !saveError && <p className="save-note">{t(progress.secretUnlocked ? "inicio.partidaGuardadaConSecreto" : "inicio.partidaGuardada", { hechas: completedLevels, total: campaignLevelCount })}</p>}
           </div>
-          <div className="hero-scene" aria-hidden="true">
-            <img className="hero-backdrop" src={optimizedAssetSource("./assets/home-adventure-v3.png")} alt="" />
+          <div className="inicio-arte">
+            <div className="hero-scene" aria-hidden="true">
+              <img className="hero-backdrop" src={optimizedAssetSource("./assets/home-adventure-v3.png")} alt="" />
+            </div>
+            <div className="inicio-baldosas">
+              <button type="button" className="baldosa" aria-label={t("inicio.album.oculto", { n: albumFound, total: albumStickers.length })} onClick={() => openCollection("stickers")}><span className="texto-noa pictograma-doble"><Texto clave="inicio.album.rotulo" /></span><span className="baldosa-cuenta">{albumFound}/{albumStickers.length}</span></button>
+              <button type="button" className="baldosa" aria-label={t("inicio.jefes.oculto", { n: knownBosses, total: bossLevels.length })} onClick={() => openCollection("bosses")}><span className="texto-noa pictograma-doble"><Texto clave="inicio.jefes.rotulo" /></span><span className="baldosa-cuenta">{knownBosses}/{bossLevels.length}</span></button>
+            </div>
           </div>
-          <nav className="home-footer" aria-label={t("inicio.opciones.oculto")}>
-            <button type="button" onClick={() => setMuted((value) => !value)}><Texto clave={muted ? "inicio.sinSonido.rotulo" : "inicio.sonido.rotulo"} /></button>
-            <button type="button" onClick={() => openCollection("stickers")}><Texto clave="inicio.album.rotulo" variables={{ n: progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length, total: albumStickers.length }} /></button>
-            <button type="button" onClick={() => openCollection("bosses")}><Texto clave="inicio.jefes.rotulo" variables={{ n: knownBosses, total: bossLevels.length }} /></button>
-            <button type="button" onClick={openRanking}>{t("adultos.app.tablon-mundial")}</button>
+          <BotonControl className="inicio-sonido" pictograma={muted ? "sin-sonido" : "sonido"} etiqueta={muted ? "partida.hud.sonido.oculto" : "partida.hud.silencio.oculto"} aria-pressed={!muted} onClick={() => setMuted((value) => !value)} />
+          <nav className="inicio-adultos" aria-label={t("inicio.opciones.oculto")}>
+            {progress.unlocked > 0 && !saveError && <span>{t(progress.secretUnlocked ? "inicio.partidaGuardadaConSecreto" : "inicio.partidaGuardada", { hechas: completedLevels, total: campaignLevelCount })}</span>}
             <button type="button" onClick={() => setShowSettings(true)}>{t("adultos.app.ajustes")}</button>
+            <button type="button" onClick={openRanking}>{t("adultos.app.tablon-mundial")}</button>
             <button type="button" onClick={() => setShowCredits(true)}>{t("adultos.app.creditos")}</button>
           </nav>
         </section>
@@ -1024,24 +1029,21 @@ export default function App() {
       )}
 
       {showHelp && (
-        <Dialog labelledBy="help-title" className="game-modal help-modal" onClose={() => setShowHelp(false)}>
-          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowHelp(false)} aria-label={t("inicio.ayuda.cerrar.oculto")}>×</button>
-          <h2 id="help-title" className="rotulo"><Texto clave="inicio.ayuda.titulo.rotulo" /></h2>
-          <div className="help-first-steps">
-            <div><b>1</b><span className="help-control-icon">◀ ▶</span><strong className="rotulo"><Texto clave="inicio.ayuda.camina.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.camina.juntos")}</small></div>
-            <div className="help-double-jump"><b>2</b><span className="help-control-icon">↑ + ↑</span><strong className="rotulo"><Texto clave="inicio.ayuda.dobleSalto.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.dobleSalto.juntos")}</small></div>
-            <div><b>3</b><span className="help-control-icon">▣</span><strong className="rotulo"><Texto clave="inicio.ayuda.caja.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.caja.juntos")}</small></div>
+        <Ventana id="help-title" titulo="inicio.ayuda.titulo.rotulo" className="ventana-ayuda" onClose={() => setShowHelp(false)}
+          botones={<Boton tipo="seguir" clave="inicio.ayuda.lista.rotulo" data-gamepad-default disabled={enrollmentChecking} onClick={() => { setShowHelp(false); void requestAdventure(() => setScreen("map")); }} />}>
+          <BotonControl className="ventana-cerrar" pictograma="cerrar" etiqueta="inicio.ayuda.cerrar.oculto" data-gamepad-back onClick={() => setShowHelp(false)} />
+          <div className="ayuda-tarjetas">
+              <div className="ayuda-tarjeta"><Pictograma nombre="camina" doble /><div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="inicio.ayuda.camina.rotulo" /></p><p className="juntos">{t("inicio.ayuda.camina.juntos")}</p></div></div>
+              <div className="ayuda-tarjeta"><Pictograma nombre="salta" doble /><div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="inicio.ayuda.dobleSalto.rotulo" /></p><p className="juntos">{t("inicio.ayuda.dobleSalto.juntos")}</p></div></div>
+              <div className="ayuda-tarjeta"><Pictograma nombre="caja" doble /><div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="inicio.ayuda.caja.rotulo" /></p><p className="juntos">{t("inicio.ayuda.caja.juntos")}</p></div></div>
+              <div className="ayuda-tarjeta"><Pictograma nombre="lana" doble /><div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="inicio.ayuda.lana.rotulo" /></p><p className="juntos">{t("inicio.ayuda.lana.juntos")}</p></div></div>
+              <div className="ayuda-tarjeta"><Pictograma nombre="manzana" doble /><div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="inicio.ayuda.manzana.rotulo" /></p><p className="juntos">{t("inicio.ayuda.manzana.juntos")}</p></div></div>
+              <div className="ayuda-tarjeta"><Pictograma nombre="reto" doble /><div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="inicio.ayuda.reto.rotulo" /></p><p className="juntos">{t("inicio.ayuda.reto.juntos")}</p></div></div>
+              <div className="ayuda-tarjeta"><Pictograma nombre="pegatina" doble /><div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="inicio.ayuda.arriba.rotulo" /></p><p className="juntos">{t("inicio.ayuda.arriba.juntos")}</p></div></div>
           </div>
-          <p className="help-mobile-tip juntos">{t("inicio.ayuda.movil.juntos")}</p>
-          <div className="help-grid">
-            <div><span><PixelIcon kind="yarn" /></span><strong className="rotulo"><Texto clave="inicio.ayuda.lana.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.lana.juntos")}</small></div>
-            <div><span><GameAssetIcon kind="apple" /></span><strong className="rotulo"><Texto clave="inicio.ayuda.manzana.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.manzana.juntos")}</small></div>
-            <div><span className="help-rps"><PixelIcon kind="rock" /><PixelIcon kind="paper" /><PixelIcon kind="scissors" /></span><strong className="rotulo"><Texto clave="inicio.ayuda.reto.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.reto.juntos")}</small></div>
-            <div><span><PixelIcon kind="sparkle" /></span><strong className="rotulo"><Texto clave="inicio.ayuda.arriba.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.arriba.juntos")}</small></div>
-          </div>
-          <p className="help-note">{t("inicio.ayuda.teclado")}</p>
-          <button className="pixel-button primary" type="button" disabled={enrollmentChecking} onClick={() => { setShowHelp(false); void requestAdventure(() => setScreen("map")); }}><Texto clave="inicio.ayuda.lista.rotulo" /></button>
-        </Dialog>
+          <p className="juntos">{t("inicio.ayuda.movil.juntos")}</p>
+          <p className="texto-adultos">{t("inicio.ayuda.teclado")}</p>
+        </Ventana>
       )}
 
       {showCredits && (

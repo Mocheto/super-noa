@@ -335,6 +335,69 @@
   .ventana-pausa .ventana-botones { display: flex; flex-wrap: wrap; justify-content: center; }
 }
 
+/* Inicio (issue 144): ¡A JUGAR! grande, ¿COMO SE JUEGA?, baldosas de ALBUM y JEFES, sonido como control redondo
+   y una línea discreta para adultos. En móvil apaisado la ilustración pasa a ser el fondo. */
+.home-screen { grid-template-columns: minmax(320px, 1fr) minmax(0, 1fr); }
+.inicio-titulo { display: grid; gap: 12px; margin: 0 0 22px; font-family: var(--letra-noa); font-size: clamp(56px, 8vw, 104px); font-weight: 400; line-height: 1; letter-spacing: 0; color: #fff; text-shadow: 6px 6px 0 var(--rojo-boton), 12px 12px 0 var(--ciruela); }
+.inicio-titulo span { display: block; margin: 0; color: var(--dorado); font-size: .26em; letter-spacing: 0; text-shadow: 3px 3px 0 var(--ciruela); }
+.inicio-lema, .inicio-novedades { justify-items: start; text-align: left; margin: 0 0 16px; }
+.inicio-lema p, .inicio-novedades p { margin: 0; }
+.home-screen .juntos { max-width: 46ch; color: #e9dcf0; }
+.inicio-novedades .texto-noa { color: var(--dorado); }
+.home-actions { display: grid; justify-items: start; gap: 16px; margin-top: 8px; }
+.home-play { --boton-alto: 80px; min-width: 340px; }
+.inicio-arte { display: grid; gap: 18px; justify-items: center; }
+.inicio-baldosas { display: flex; gap: 14px; justify-content: center; }
+.baldosa { display: grid; justify-items: center; gap: 6px; min-width: 168px; padding: 10px 14px; border: 4px solid var(--ciruela); border-radius: 8px; color: var(--ciruela); background: var(--crema); box-shadow: 0 6px 0 var(--ciruela); cursor: pointer; }
+.baldosa .texto-noa { display: grid; justify-items: center; gap: 6px; }
+.baldosa .pictograma { margin: 0; }
+.baldosa:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ciruela); }
+.baldosa-cuenta { font-family: var(--letra-noa); font-size: 14px; color: #6b4a7a; }
+.inicio-sonido { position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: calc(16px + env(safe-area-inset-right, 0px)); z-index: 6; }
+.inicio-adultos { position: absolute; right: calc(18px + env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); z-index: 6; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-family: var(--letra-adultos); font-size: 13px; color: #a995b6; }
+.inicio-adultos button { padding: 6px 2px; border: 0; background: none; color: #d6c5e2; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+@media (max-width: 760px) and (orientation: portrait) {
+  .home-screen { grid-template-columns: 1fr; padding-bottom: 80px; }
+  .home-play { min-width: 0; width: 100%; }
+  .home-actions { justify-items: stretch; }
+}
+@media (orientation: landscape) and (max-height: 540px) {
+  .home-screen { min-height: 100dvh; grid-template-columns: 1.4fr .6fr; padding: 16px max(22px, env(safe-area-inset-right)) 40px max(22px, env(safe-area-inset-left)); row-gap: 0; }
+  .home-screen::after { opacity: .08; }
+  .hero-scene { position: absolute; inset: 0; z-index: -1; max-width: none; aspect-ratio: auto; border: 0; box-shadow: none; }
+  .hero-scene .hero-backdrop { object-fit: cover; }
+  .hero-scene::before { content: ""; position: absolute; inset: 0; z-index: 2; background: linear-gradient(90deg, rgba(37, 24, 63, .94) 0 52%, rgba(37, 24, 63, .45)); }
+  .inicio-titulo { justify-items: start; font-size: 34px; margin-bottom: 8px; text-align: left; text-shadow: 3px 3px 0 var(--rojo-boton), 6px 6px 0 var(--ciruela); }
+  .inicio-arte { padding-top: 52px; align-self: start; }
+  .home-actions .boton:not(.home-play) { --boton-alto: 48px; }
+  .inicio-novedades { display: none; }
+  .inicio-lema { margin-bottom: 8px; }
+  .home-play { --boton-alto: 56px; min-width: 300px; }
+  .home-actions { gap: 10px; }
+  .inicio-baldosas { flex-direction: column; }
+  .baldosa { min-width: 150px; padding: 6px 10px; gap: 2px; }
+  .baldosa .texto-noa { gap: 2px; }
+  .inicio-adultos { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Ayuda (issue 144): tarjetas con dibujo a ×2, rótulo y frase; teclado y mando como texto para adultos. */
+.ventana-ayuda { width: min(940px, calc(100vw - 32px)); }
+.ventana-cerrar { position: absolute; top: 8px; right: 8px; z-index: 2; --control: 44px; }
+.ventana-ayuda .ventana-cuerpo, .ventana-ayuda .ventana-contenido { justify-self: stretch; }
+.ayuda-tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; width: 100%; }
+.ayuda-tarjeta { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; padding: 12px; border: 4px solid var(--ciruela); border-radius: 8px; background: #fff; text-align: left; }
+.ayuda-tarjeta .rotulo-con-frase { justify-items: start; }
+.ayuda-tarjeta .pictograma { margin: 0; }
+.texto-adultos { max-width: 70ch; font-family: var(--letra-adultos); font-size: 13px; line-height: 1.45; color: #7d6a8a; }
+@media (orientation: landscape) and (max-height: 540px) {
+  .ventana-ayuda .ventana-cuerpo { grid-template-columns: 1fr; }
+  .ventana-ayuda .ventana-botones { display: flex; }
+  .ayuda-tarjetas { grid-template-columns: repeat(4, 1fr); }
+  .ayuda-tarjeta { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 8px; }
+  .ayuda-tarjeta .rotulo-con-frase { justify-items: center; }
+  .ayuda-tarjeta .texto-noa { font-size: var(--rotulo-pequeno); }
+}
+
 /* Muestra de desarrollo (`?prueba=interfaz`) */
 .muestra-interfaz { min-height: 100vh; display: grid; place-items: center; padding: 24px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left)); background: #25183f; }
 .muestra-papel { display: grid; gap: 14px; justify-items: center; max-width: 900px; padding: 20px 24px 28px; border: 4px solid var(--ciruela); border-radius: 10px; color: var(--ciruela); background: var(--papel); box-shadow: 0 0 0 4px var(--dorado), 0 0 0 8px var(--ciruela); text-align: center; }

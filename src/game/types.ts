@@ -11,6 +11,8 @@ export type Platform = Rect & {
   beltSpeed?: number;
   bounceSpeed?: number;
   bounceDrift?: number;
+  /** Roca que asoma: arrecife que sale del agua y es sólido de arriba abajo, sin franja de algas por encima. */
+  asoma?: boolean;
   kind?: "ground" | "branch" | "stone" | "spring" | "mist" | "canopy" | "ship" | "air-plank" | "cloud-floor" | "sky-cloud" | "sky-bounce" | "sky-lift-station" | "sky-wall" | "cave-ground" | "cave-ledge" | "cave-wall" | "castle-ground" | "castle-ledge" | "castle-wall" | "sea-ground" | "sea-ledge" | "sea-wall" | "dino-ground" | "dino-ledge" | "dino-wall" | "volcano-ground" | "volcano-ledge" | "volcano-wall" | "garden-ground" | "garden-ledge" | "dew" | "ice-ground" | "ice-ledge" | "ice-wall" | "factory-ground" | "factory-ledge" | "factory-wall" | "warehouse-ground" | "warehouse-ledge" | "warehouse-wall" | "gift-spring" | "snow-ground" | "snow-ledge" | "desert-ground" | "desert-ledge" | "train-ground" | "train-roof" | "music-ground" | "music-stage" | "puzzle-block" | "puzzle-color";
 };
 

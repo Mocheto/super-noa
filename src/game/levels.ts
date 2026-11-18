@@ -195,6 +195,8 @@ const skyLiftLevelPlatforms = (height: number, offset: number, bottomY: number, 
 const seaFloor = (width: number): Platform => ({ x: 0, y: 490, width, height: 90, kind: "sea-ground" });
 const reef = (x: number, y: number, width: number, height: number): Platform => ({ x, y, width, height, kind: "sea-wall" });
 const seaLedge = (x: number, y: number, width: number): Platform => ({ x, y, width, height: 24, kind: "sea-ledge" });
+/** Roca que asoma: su cima queda 30 px por encima del agua, así que la brazada no basta y hay que bucear por debajo. */
+const rocaQueAsoma = (x: number, width: number, height = 200): Platform => ({ x, y: 90, width, height, kind: "sea-wall", asoma: true });
 const water = (width: number) => [{ x: 0, y: 120, width, height: 430 }];
 
 const datosAgua: PantallaDatos[] = [
@@ -202,26 +204,26 @@ const datosAgua: PantallaDatos[] = [
     id: "A-1", world: 8, screen: 1,
     theme: "water-lagoon", width: 3300, start: { x: 80, y: 70 }, goalX: 3080,
     waterZones: water(3300),
-    platforms: [seaFloor(3300), seaLedge(0, 110, 280), seaLedge(630, 285, 230), seaLedge(1180, 165, 220), reef(1550, 365, 150, 125), seaLedge(2040, 255, 230), seaLedge(2600, 165, 200), seaLedge(2990, 250, 310)],
-    enemies: [enemy("a1-f1", "fish", 920, 240, 880, 1120, 44), enemy("a1-f2", "fish", 1770, 220, 1710, 1970, 50), enemy("a1-f3", "fish", 2420, 350, 2300, 2540, 46), enemy("a1-u1", "urchin", 1080, 454, 1080, 1080, 0), enemy("a1-u2", "urchin", 2230, 454, 2230, 2230, 0)],
-    items: [apple("a1-apple1", 400, 175), apple("a1-apple2", 720, 235), apple("a1-apple3", 1460, 430), apple("a1-apple4", 2150, 205), sticker("sticker-a-1", 2670, 290)],
+    platforms: [seaFloor(3300), seaLedge(0, 110, 280), seaLedge(630, 285, 230), rocaQueAsoma(1220, 150), reef(1550, 365, 150, 125), seaLedge(2040, 255, 230), rocaQueAsoma(2620, 150), seaLedge(2990, 250, 310)],
+    enemies: [enemy("a1-f1", "fish", 920, 240, 880, 1120, 44), enemy("a1-f2", "fish", 1770, 220, 1710, 1970, 50), enemy("a1-f3", "fish", 2420, 350, 2300, 2490, 46), enemy("a1-u1", "urchin", 1080, 454, 1080, 1080, 0), enemy("a1-u2", "urchin", 2230, 454, 2230, 2230, 0)],
+    items: [apple("a1-apple1", 400, 175), apple("a1-apple2", 720, 235), apple("a1-apple3", 1460, 430), apple("a1-apple4", 2150, 205), sticker("sticker-a-1", 2670, 390)],
     rewardBlocks: [reward("a1-cat", 510, 320), reward("a1-armor", 1900, 360, "apple")], checkpoints: [400, 1450, 2400],
   },
   {
     id: "A-2", world: 8, screen: 2,
     theme: "water-lagoon", width: 4200, start: { x: 80, y: 70 }, goalX: 3980,
     waterZones: water(4200),
-    platforms: [seaFloor(4200), seaLedge(0, 110, 260), reef(750, 330, 160, 160), reef(1250, 120, 180, 170), seaLedge(1660, 240, 260), reef(2220, 330, 170, 160), reef(2740, 120, 180, 170), seaLedge(3200, 245, 230), seaLedge(3880, 250, 320)],
-    enemies: [enemy("a2-f1", "fish", 460, 230, 340, 630, 54), enemy("a2-f2", "fish", 1520, 360, 1450, 1940, 60), enemy("a2-f3", "fish", 2510, 220, 2410, 2680, 57), enemy("a2-f4", "fish", 3470, 330, 3440, 3780, 60), enemy("a2-u1", "urchin", 1030, 454, 1030, 1030, 0), enemy("a2-u2", "urchin", 1990, 454, 1990, 1990, 0), enemy("a2-u3", "urchin", 3080, 454, 3080, 3080, 0)],
-    items: [apple("a2-apple1", 810, 275), apple("a2-apple2", 1560, 420), apple("a2-apple3", 2310, 275), apple("a2-apple4", 3370, 190), sticker("sticker-a-2", 2820, 370)],
+    platforms: [seaFloor(4200), seaLedge(0, 110, 260), reef(750, 330, 160, 160), rocaQueAsoma(1250, 180), seaLedge(1660, 240, 260), reef(2220, 330, 170, 160), rocaQueAsoma(2740, 180), seaLedge(3200, 245, 230), rocaQueAsoma(3300, 130, 140), seaLedge(3880, 250, 320)],
+    enemies: [enemy("a2-f1", "fish", 460, 230, 340, 630, 54), enemy("a2-f2", "fish", 1600, 360, 1520, 1940, 60), enemy("a2-f3", "fish", 2510, 220, 2410, 2680, 57), enemy("a2-f4", "fish", 3600, 330, 3520, 3780, 60), enemy("a2-u1", "urchin", 1030, 454, 1030, 1030, 0), enemy("a2-u2", "urchin", 1990, 454, 1990, 1990, 0), enemy("a2-u3", "urchin", 3080, 454, 3080, 3080, 0)],
+    items: [apple("a2-apple1", 810, 275), apple("a2-apple2", 1560, 420), apple("a2-apple3", 2310, 275), apple("a2-apple4", 3370, 320), sticker("sticker-a-2", 2820, 370)],
     rewardBlocks: [reward("a2-cat", 530, 325), reward("a2-armor", 2540, 365, "apple")], checkpoints: [520, 1630, 2580, 3540], route: { required: "A-1" },
   },
   {
     id: "A-3", world: 8, screen: 3,
     theme: "water-lagoon", width: 5100, start: { x: 80, y: 70 }, goalX: 4880,
     waterZones: water(5100),
-    platforms: [seaFloor(5100), seaLedge(0, 110, 260), reef(700, 310, 180, 180), reef(1130, 90, 180, 200), seaLedge(1550, 285, 220), reef(2090, 320, 180, 170), reef(2590, 100, 180, 200), seaLedge(3120, 250, 250), reef(3640, 310, 180, 180), reef(4100, 105, 170, 190), seaLedge(4770, 250, 330)],
-    enemies: [enemy("a3-f1", "fish", 460, 240, 320, 610, 62), enemy("a3-f2", "fish", 1430, 365, 1350, 1900, 65), enemy("a3-f3", "fish", 2400, 200, 2300, 2510, 68), enemy("a3-f4", "fish", 2900, 370, 2820, 3080, 65), enemy("a3-f5", "fish", 4390, 330, 4320, 4670, 72), enemy("a3-u1", "urchin", 990, 454, 990, 990, 0), enemy("a3-u2", "urchin", 1950, 454, 1950, 1950, 0), enemy("a3-u3", "urchin", 3470, 454, 3470, 3470, 0), enemy("a3-u4", "urchin", 4540, 454, 4540, 4540, 0)],
+    platforms: [seaFloor(5100), seaLedge(0, 110, 260), reef(700, 310, 180, 180), rocaQueAsoma(1130, 180), seaLedge(1550, 285, 220), reef(2090, 320, 180, 170), rocaQueAsoma(2590, 180), seaLedge(3120, 250, 250), rocaQueAsoma(3440, 120), reef(3640, 310, 180, 180), rocaQueAsoma(4100, 170), seaLedge(4770, 250, 330)],
+    enemies: [enemy("a3-f1", "fish", 460, 240, 320, 610, 62), enemy("a3-f2", "fish", 1480, 365, 1400, 1900, 65), enemy("a3-f3", "fish", 2400, 200, 2300, 2510, 68), enemy("a3-f4", "fish", 2940, 370, 2860, 3080, 65), enemy("a3-f5", "fish", 4440, 330, 4360, 4670, 72), enemy("a3-u1", "urchin", 990, 454, 990, 990, 0), enemy("a3-u2", "urchin", 1950, 454, 1950, 1950, 0), enemy("a3-u3", "urchin", 3300, 454, 3300, 3300, 0), enemy("a3-u4", "urchin", 4540, 454, 4540, 4540, 0)],
     items: [apple("a3-apple1", 790, 255), apple("a3-apple2", 1670, 230), apple("a3-apple3", 2180, 265), apple("a3-apple4", 3230, 195), apple("a3-apple5", 4630, 180), sticker("sticker-a-3", 4160, 375)],
     rewardBlocks: [reward("a3-cat", 500, 330), reward("a3-armor", 2990, 350, "apple")], checkpoints: [510, 1600, 2870, 3920, 4630], boss: "shark-captain",
     route: { required: "A-2", next: "4-1" },

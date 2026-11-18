@@ -61,6 +61,12 @@ _Avoid_: Sorpresa (es solo uno de los tipos de giro), twist
 Último tramo, corto y antes de la bandera: una prueba final que junta lo aprendido y en la que la mecánica hace falta.
 _Avoid_: Final (reservado a la pantalla final de la campaña), clímax
 
+## Laguna
+
+**Roca que asoma**:
+Roca del arrecife que sale del agua: no se puede pasar nadando por encima ni subirse a ella con una brazada, y obliga a bucear por debajo.
+_Avoid_: Bloque, muro
+
 ## Sala-rompecabezas
 
 **Sala**:

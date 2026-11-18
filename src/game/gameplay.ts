@@ -16,8 +16,8 @@ export const wrapHorizontalPosition = (nextX: number, playerWidth: number, world
   return nextX;
 };
 
-/** En el arrecife, las algas sobresalen por encima de la roca que se puede pisar. */
-export const platformSurfaceY = (platform: Platform) => platform.kind === "sea-wall"
+/** En el arrecife, las algas sobresalen por encima de la roca que se puede pisar; la roca que asoma no lleva algas. */
+export const platformSurfaceY = (platform: Platform) => platform.kind === "sea-wall" && !platform.asoma
   ? platform.y + Math.round(platform.height * 0.3)
   : platform.y;
 

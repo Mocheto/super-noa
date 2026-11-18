@@ -101,7 +101,9 @@ type Surface = { left: number; right: number; top: number };
  * plataformas del cálculo (por ejemplo, las de la mecánica para comprobar que hace falta); `toTop` exige llegar
  * a una superficie a esa altura o más arriba (para alcanzar algo que flota) y `fromTop` sale de la superficie a esa
  * altura bajo `from`. */
-export function reachable(level: Level, options: { from?: number; fromTop?: number; to?: number; toTop?: number; ignore?: (platform: Platform) => boolean } = {}): boolean {
+export function reachable(level: Level, options: { from?: number; fromTop?: number; to?: number; toTop?: number; ignore?: (platform: Platform) => boolean; wrap?: boolean } = {}): boolean {
+  // En el cielo los dos bordes están conectados: una nube pegada a un borde está al lado de la pegada al otro.
+  const wrapWidth = (options.wrap ?? level.world === 17) ? level.width : 0;
   const from = options.from ?? level.start.x;
   const to = options.to ?? level.goalX;
   const kept = level.platforms.filter((platform) => !options.ignore?.(platform));
@@ -142,7 +144,8 @@ export function reachable(level: Level, options: { from?: number; fromTop?: numb
     return between && tallOver(column, Math.min(a.top, b.top));
   });
   const linked = (a: Surface, b: Surface) => {
-    const gap = Math.max(0, b.left - a.right, a.left - b.right);
+    const direct = Math.max(0, b.left - a.right, a.left - b.right);
+    const gap = wrapWidth ? Math.min(direct, Math.max(0, a.left + wrapWidth - b.right), Math.max(0, b.left + wrapWidth - a.right)) : direct;
     return gap <= DOUBLE_JUMP_REACH && a.top - b.top <= DOUBLE_JUMP_RISE && !blocked(a, b);
   };
   const startSurfaces = surfaces.filter((s) => s.left <= from && s.right >= from

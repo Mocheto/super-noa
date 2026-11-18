@@ -340,7 +340,8 @@ test("cada nube normal del Reino Celeste se alcanza con doble salto y los bordes
 test("los pajaritos del Reino Celeste vuelan junto a la ruta, no encima de ella", () => {
   for (const level of levels.filter((entry) => entry.world === 17)) {
     const clouds = level.platforms.filter((platform) => platform.kind === "sky-cloud");
-    const routeRight = Math.max(...clouds.filter((cloud) => cloud.y > 120 && cloud.y < (level.height ?? 0) - 100).map((cloud) => cloud.x + cloud.width));
+    // Las nubes de cruce, pegadas a los bordes, no cuentan como ruta: los pájaros solo deben evitar su altura (comprobado abajo).
+    const routeRight = Math.max(...clouds.filter((cloud) => cloud.y > 120 && cloud.y < (level.height ?? 0) - 100 && cloud.x > 0 && cloud.x + cloud.width < level.width).map((cloud) => cloud.x + cloud.width));
     for (const bird of level.enemies) {
       assert.ok(bird.maxX - bird.minX >= 200 && bird.minX >= routeRight - 60, `${level.id}: ${bird.id} invade la ruta de nubes`);
       assert.ok(bird.maxX + bird.width <= level.width - 30, `${level.id}: ${bird.id} se sale por el borde`);

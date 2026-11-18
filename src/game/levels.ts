@@ -150,14 +150,31 @@ export const themeNames = conTextos({} as Record<Theme, string>, {
 });
 
 const skyCloud = (x: number, y: number, width = 190): Platform => ({ x, y, width, height: 30, kind: "sky-cloud" });
-const skyLevelPlatforms = (height: number, offset = 0): Platform[] => {
+/** Ancho de las nubes de borde: tan grandes que un salto hacia el borde casi nunca falla. */
+const SKY_EDGE_CLOUD = 260;
+/**
+ * Nubes de una subida del cielo, de abajo arriba, en zigzag corto. `wraps` son los índices de nube donde empieza un
+ * **cruce de bordes**: esa nube y la siguiente se pegan a los dos bordes opuestos de la pantalla, una encima de la
+ * otra, y entre ellas no hay otra nube a mano. Para subir hay que salir por un borde y entrar por el otro (los dos
+ * bordes del cielo están conectados). La nube de salida se pega al lado de la nube anterior y la de llegada queda
+ * del lado de la siguiente, así que el salto previo y el posterior son siempre cortos.
+ */
+const skyLevelPlatforms = (height: number, offset = 0, wraps: readonly number[] = [], bounces?: readonly number[]): Platform[] => {
   const platforms: Platform[] = [skyCloud(40, height - 90, 880)];
+  const leftLeaning = (pattern: number) => pattern === 0 || pattern === 2;
   for (let index = 0, y = height - 245; y > 105; index += 1, y -= 145) {
     const pattern = (index + offset) % 4;
+    const crossing = wraps.find((first) => index === first || index === first + 1);
+    if (crossing !== undefined) {
+      const exitsOnLeft = crossing > 0 ? leftLeaning((crossing - 1 + offset) % 4) : !leftLeaning((crossing + 2 + offset) % 4);
+      const onLeft = index === crossing ? exitsOnLeft : !exitsOnLeft;
+      platforms.push(skyCloud(onLeft ? 0 : 960 - SKY_EDGE_CLOUD, y, SKY_EDGE_CLOUD));
+      continue;
+    }
     // Zigzag corto: entre una nube y la siguiente nunca hay más de 80 px en horizontal.
     const x = pattern === 0 ? 100 : pattern === 1 ? 470 : pattern === 2 ? 260 : 450;
     platforms.push(skyCloud(x, y, pattern === 0 ? 290 : pattern === 1 ? 220 : 240));
-    if (index >= 3 && index % 7 === 3) platforms.push({
+    if (bounces ? bounces.includes(index) : index >= 3 && index % 7 === 3) platforms.push({
       x: x < 400 ? 740 : 45, y, width: 145, height: 34, kind: "sky-bounce",
       bounceSpeed: 1450, bounceDrift: 330,
     });
@@ -166,8 +183,8 @@ const skyLevelPlatforms = (height: number, offset = 0): Platform[] => {
   return platforms;
 };
 
-const skyLiftLevelPlatforms = (height: number, offset: number, bottomY: number, topY: number): Platform[] => [
-  ...skyLevelPlatforms(height, offset).map((platform) =>
+const skyLiftLevelPlatforms = (height: number, offset: number, bottomY: number, topY: number, wraps: readonly number[] = [], bounces?: readonly number[]): Platform[] => [
+  ...skyLevelPlatforms(height, offset, wraps, bounces).map((platform) =>
     platform.kind === "sky-cloud" && platform.x === 100 && platform.y > topY && platform.y < bottomY
       ? { ...platform, x: 240 }
       : platform),
@@ -1591,7 +1608,7 @@ const datosPantallas: PantallaDatos[] = [
     theme: "sky-dawn", width: 960, height: 3500, orientation: "vertical", start: { x: 110, y: 3352 }, goalX: 480, goalY: 175,
     // Subida: el ascensor de nubes y las nubes de rebote hacen falta en el giro y en el remate.
     beats: { development: 953, twist: 1747, finale: 2542, twistKind: "invert" },
-    platforms: skyLiftLevelPlatforms(3500, 0, 2385, 1950),
+    platforms: skyLiftLevelPlatforms(3500, 0, 2385, 1950, [1, 14]),
     enemies: [
       enemy("c17a-p1", "puffling", 700, 2875, 640, 880, 48), enemy("c17a-p2", "puffling", 767, 2295, 640, 880, 52), enemy("c17a-p3", "puffling", 834, 1425, 640, 880, 56), enemy("c17a-p4", "puffling", 721, 990, 640, 880, 60),
     ],
@@ -1605,11 +1622,11 @@ const datosPantallas: PantallaDatos[] = [
     theme: "sky-blue", width: 960, height: 3900, orientation: "vertical", start: { x: 110, y: 3752 }, goalX: 480, goalY: 175,
     // Subida: el ascensor de nubes y las nubes de rebote hacen falta en el giro y en el remate.
     beats: { development: 429, twist: 1967, finale: 2862, twistKind: "combine" },
-    platforms: skyLiftLevelPlatforms(3900, 1, 2350, 1915),
+    platforms: skyLiftLevelPlatforms(3900, 1, 2350, 1915, [1, 15, 22]),
     enemies: [
       enemy("c17b-p1", "puffling", 700, 2840, 640, 880, 54), enemy("c17b-p2", "puffling", 767, 2550, 640, 880, 58), enemy("c17b-p3", "puffling", 834, 1970, 640, 880, 62), enemy("c17b-p4", "puffling", 721, 1535, 640, 880, 66), enemy("c17b-p5", "puffling", 788, 665, 640, 880, 68),
     ],
-    items: [apple("c17b1", 230, 3170), apple("c17b2", 230, 2590), sticker("sticker-17-2", 370, 2010), apple("c17b3", 230, 1430), apple("c17b4", 565, 705)],
+    items: [apple("c17b1", 230, 3170), apple("c17b2", 230, 2590), sticker("sticker-17-2", 370, 2010), apple("c17b3", 800, 1430), apple("c17b4", 565, 705)],
     rewardBlocks: [], checkpoints: [], verticalCheckpoints: [{ x: 359, y: 2930 }, { x: 559, y: 1915 }, { x: 224, y: 900 }],
     skyLifts: [{ id: "sky-lift-17-2", x: 40, bottomY: 2350, topY: 1915, width: 170, height: 30, speed: 88, waitDuration: 1.8,
       lever: { id: "sky-lever-17-2", x: 300, y: 2270, width: 68, height: 80 } }],
@@ -1619,7 +1636,7 @@ const datosPantallas: PantallaDatos[] = [
     theme: "sky-stars", width: 960, height: 4300, orientation: "vertical", start: { x: 110, y: 4152 }, goalX: 480, goalY: 175,
     // Subida: el ascensor de nubes y las nubes de rebote hacen falta en el giro y en el remate.
     beats: { development: 477, twist: 2187, finale: 3182, twistKind: "presentation" },
-    platforms: skyLiftLevelPlatforms(4300, 2, 2315, 1880),
+    platforms: skyLiftLevelPlatforms(4300, 2, 2315, 1880, [0, 8, 16, 22], [3, 10, 18, 24]),
     enemies: [
       enemy("c17c-p1", "puffling", 700, 3530, 640, 880, 58), enemy("c17c-p2", "puffling", 767, 2950, 640, 880, 62), enemy("c17c-p3", "puffling", 834, 2225, 640, 880, 66), enemy("c17c-p4", "puffling", 721, 1790, 640, 880, 70), enemy("c17c-p5", "puffling", 788, 1210, 640, 880, 74), enemy("c17c-p6", "puffling", 855, 920, 640, 880, 76),
     ],

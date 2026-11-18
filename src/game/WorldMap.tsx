@@ -258,19 +258,6 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
               disabled={moving} onFocus={() => camera.ensureVisible(spot)} onClick={() => camera.overview ? camera.showNear(spot) : onOpenAvioneta()}
               aria-label={t("mapa.avioneta.oculto", { n: best, total: TOTAL_STARS })}>✈<span>★ {best}</span></button>;
           })()}
-          {restStopCatalog.map((stop, index) => {
-            // Marcador pequeño del paseo de los amigos, junto al mundo, en cuanto se completa su pantalla 3.
-            const world = worldCatalog.find((entry) => entry.id === stop.world);
-            if (!world || !restStopUnlocked(stop.world, progress.levelStats)) return null;
-            const visited = progress.restStops?.[stop.world]?.visited;
-            const spot = { ...world, y: world.y > 85 ? world.y - 8 : world.y + 7 };
-            return <button key={`paseo-${stop.world}`} type="button" className={`map-rest-stop ${visited ? "is-visited" : ""}`}
-              style={{ left: `${spot.x}%`, top: `${spot.y}%` }} disabled={moving} onFocus={() => camera.ensureVisible(spot)}
-              onClick={() => camera.overview ? camera.showNear(spot) : onBeginLevel(levels.length + detourLevels.length + index)}
-              aria-label={t(visited ? "mapa.paseo.visitado" : "mapa.paseo.oculto", { mundo: world.name })}>
-              <span><Texto clave="mapa.paseo.rotulo" />{visited ? " ✓" : ""}</span>
-            </button>;
-          })}
         </div>
       </div>
       <div className="map-cards" inert={selectedWorld !== null} hidden={view !== "list"} aria-label={t("mapa.mundos.oculto")}>
@@ -323,6 +310,13 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
                 onCloseDetails={() => setOpenObjectives((current) => current?.levelId === level.id ? null : current)}
               />)}
             </div>
+            {restStopUnlocked(selected.id, progress.levelStats) && (() => {
+              // El paseo de los amigos se ofrece dentro del mundo, no como un botón más sobre el mapa.
+              const index = restStopCatalog.findIndex((stop) => stop.world === selected.id);
+              const visited = progress.restStops?.[selected.id]?.visited;
+              return <button className="pixel-button world-rest-stop" type="button" onClick={() => onBeginLevel(levels.length + detourLevels.length + index)}
+                aria-label={t(visited ? "mapa.paseo.visitado" : "mapa.paseo.oculto", { mundo: selected.name })}><Texto clave="mapa.paseo.rotulo" />{visited ? " ✓" : ""}</button>;
+            })()}
             {selected.id === 2 && progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed && <button className="pixel-button" type="button" onClick={onOpenCatParty}><Texto clave="mapa.mundo.fiesta.rotulo" /></button>}
             <div className="detour-list" aria-label={t("mapa.mundo.desvios.oculto")}>
               {discoveredDetours.filter((entry) => entry.world === selected.id).map((entry) => <button key={entry.id} type="button" onClick={() => beginDetour(entry.id)}>

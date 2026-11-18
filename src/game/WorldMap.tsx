@@ -15,7 +15,7 @@ import type { DetourId } from "./types";
 import { useMapCamera } from "./useMapCamera";
 import "./detours.css";
 import { puntos, t } from "../textos";
-import { Texto } from "../textos/Texto";
+import { Boton, BotonControl, Pictograma, Texto } from "../textos/Texto";
 
 export type WorldSummary = {
   complete: number; total: number; stickers: number; stickerTotal: number;
@@ -286,21 +286,23 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
       {selected && (
         <div className="modal-backdrop map-detail-backdrop">
           <div className="map-world-panel" role="dialog" aria-modal="true" aria-labelledby="map-world-title" aria-describedby="map-world-description" ref={panelRef}>
-            <button className="modal-close" type="button" data-gamepad-back onClick={closeWorld} aria-label={t("mapa.mundo.cerrar.oculto")}>×</button>
+            <BotonControl className="ventana-cerrar" pictograma="cerrar" etiqueta="mapa.mundo.cerrar.oculto" data-gamepad-back onClick={closeWorld} />
             <div className="map-world-hero">
               <img src={worldArtwork(selected.id)} alt="" />
               <div className="map-world-heading">
-                <span className="world-number">{selected.id === 7 ? <Texto clave="mapa.mundo.secreto.rotulo" /> : selected.id === 8 ? <Texto clave="mapa.mundo.agua.rotulo" /> : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: selected.id }} />}</span>
-                <h3 id="map-world-title">{selected.name}</h3>
-                <p id="map-world-description">{selected.description}</p>
+                <span className="world-number texto-noa pequeno">{selected.id === 7 ? <Texto clave="mapa.mundo.secreto.rotulo" /> : selected.id === 8 ? <Texto clave="mapa.mundo.agua.rotulo" /> : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: selected.id }} />}</span>
+                <h3 id="map-world-title" className="texto-noa titulo">{selected.name}</h3>
+                <p id="map-world-description" className="juntos">{selected.description}</p>
               </div>
+              <strong className="mundo-avance texto-noa" aria-label={t("mapa.mundo.progreso.oculto", { n: summaries[selected.id].complete, total: summaries[selected.id].total })}><Texto clave="mapa.mundo.progreso.rotulo" variables={{ puntos: puntos(summaries[selected.id].complete, summaries[selected.id].total) }} /></strong>
             </div>
             <div className="world-summary" aria-label={t("mapa.mundo.resumen.oculto", { mundo: selected.name })}>
-              <div className="world-summary-top"><strong aria-label={t("mapa.mundo.progreso.oculto", { n: summaries[selected.id].complete, total: summaries[selected.id].total })}><Texto clave="mapa.mundo.progreso.rotulo" variables={{ puntos: puntos(summaries[selected.id].complete, summaries[selected.id].total) }} /></strong><span><Texto clave={summaries[selected.id].remembered ? "mapa.mundo.postalLista.rotulo" : "mapa.mundo.postalBusca.rotulo"} /></span></div>
-              <div className="world-progress-bar" aria-hidden="true"><span style={{ width: `${summaries[selected.id].complete / summaries[selected.id].total * 100}%` }} /></div>
-              <small><PixelIcon kind="sparkle" /> {summaries[selected.id].stickers}/{summaries[selected.id].stickerTotal} · <Texto clave="mapa.mundo.sinCaer.rotulo" /> {summaries[selected.id].flawless}/{summaries[selected.id].total}{summaries[selected.id].bossFriend && <> · <Texto clave="mapa.mundo.amigo.rotulo" /></>}</small>
+              <span className="mundo-chip texto-noa pequeno"><Texto clave={summaries[selected.id].remembered ? "mapa.mundo.postalLista.rotulo" : "mapa.mundo.postalBusca.rotulo"} /></span>
+              <span className="mundo-chip texto-noa pequeno"><Pictograma nombre="pegatina" />{summaries[selected.id].stickers}/{summaries[selected.id].stickerTotal}</span>
+              <span className="mundo-chip texto-noa pequeno"><Texto clave="mapa.mundo.sinCaer.rotulo" /> {summaries[selected.id].flawless}/{summaries[selected.id].total}</span>
+              {summaries[selected.id].bossFriend && <span className="mundo-chip texto-noa pequeno"><Texto clave="mapa.mundo.amigo.rotulo" /></span>}
             </div>
-            {!worldAvailable(selected.id, progress) && <p className="map-world-hint"><span className="rotulo"><Texto clave={selected.id === 7 ? "mapa.mundo.pistaSecreto.rotulo" : selected.id === 8 ? "mapa.mundo.pistaAgua.rotulo" : "mapa.mundo.pistaCerrado.rotulo"} /></span> <small className="juntos">{t(selected.id === 7 ? "mapa.mundo.pistaSecreto.juntos" : selected.id === 8 ? "mapa.mundo.pistaAgua.juntos" : "mapa.mundo.pistaCerrado.juntos")}</small></p>}
+            {!worldAvailable(selected.id, progress) && <p className="map-world-hint rotulo-con-frase"><span className="texto-noa"><Texto clave={selected.id === 7 ? "mapa.mundo.pistaSecreto.rotulo" : selected.id === 8 ? "mapa.mundo.pistaAgua.rotulo" : "mapa.mundo.pistaCerrado.rotulo"} /></span> <small className="juntos">{t(selected.id === 7 ? "mapa.mundo.pistaSecreto.juntos" : selected.id === 8 ? "mapa.mundo.pistaAgua.juntos" : "mapa.mundo.pistaCerrado.juntos")}</small></p>}
             <div className="level-row">
               {worldLevels.map(({ level, index }) => <LevelSelectCard key={level.id}
                 level={level} index={index} unlocked={isLevelUnlocked(index)} suggested={index === suggestedLevel}
@@ -314,10 +316,10 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
               // El paseo de los amigos se ofrece dentro del mundo, no como un botón más sobre el mapa.
               const index = restStopCatalog.findIndex((stop) => stop.world === selected.id);
               const visited = progress.restStops?.[selected.id]?.visited;
-              return <button className="pixel-button world-rest-stop" type="button" onClick={() => onBeginLevel(levels.length + detourLevels.length + index)}
-                aria-label={t(visited ? "mapa.paseo.visitado" : "mapa.paseo.oculto", { mundo: selected.name })}><Texto clave="mapa.paseo.rotulo" />{visited ? " ✓" : ""}</button>;
+              return <Boton className="world-rest-stop" clave="mapa.paseo.rotulo" onClick={() => onBeginLevel(levels.length + detourLevels.length + index)}
+                aria-label={t(visited ? "mapa.paseo.visitado" : "mapa.paseo.oculto", { mundo: selected.name })} />;
             })()}
-            {selected.id === 2 && progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed && <button className="pixel-button" type="button" onClick={onOpenCatParty}><Texto clave="mapa.mundo.fiesta.rotulo" /></button>}
+            {selected.id === 2 && progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed && <Boton clave="mapa.mundo.fiesta.rotulo" onClick={onOpenCatParty} />}
             <div className="detour-list" aria-label={t("mapa.mundo.desvios.oculto")}>
               {discoveredDetours.filter((entry) => entry.world === selected.id).map((entry) => <button key={entry.id} type="button" onClick={() => beginDetour(entry.id)}>
                 {detourIcon(entry.icon)} {entry.title} {progress.detours?.[entry.id]?.completed ? "✓" : ""}

@@ -1,12 +1,11 @@
 import { useEffect, useRef, type KeyboardEvent } from "react";
-import { GameAssetIcon } from "./GameAssetIcon";
 import { PixelIcon } from "./PixelIcon";
 import { getLevelObjectives } from "./levelObjectives";
 import type { Progress } from "./progress";
 import { getSecretShopBadge } from "./secretShopProgress";
 import type { Level } from "./types";
-import { puntos, sinPictogramas, t } from "../textos";
-import { Pictogramas, Texto } from "../textos/Texto";
+import { puntos, sinPictogramas, t, tClave } from "../textos";
+import { Pictograma, Pictogramas, Texto } from "../textos/Texto";
 
 type LevelSelectCardProps = {
   level: Level;
@@ -74,16 +73,15 @@ export function LevelSelectCard({ level, index, unlocked, suggested, progress, d
       cancelHover();
       if (!details?.pinned) onCloseDetails();
     }}>
-    <div className={`level-card-row ${stats?.completed ? "is-complete" : ""}`}>
-      <button className={`level-card ${available ? "has-objectives" : ""} ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked}
-        data-gamepad-default={suggested || undefined} onKeyDown={dismissOnEscape} onClick={() => onBeginLevel(index)}>
-        <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}
-          {shop && <span className={`shop-visit-badge level-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.png')" }} role="img" aria-label={shop.label} title={shop.label} />}
-        </span>
-        <strong>{!unlocked && level.world === 7 ? <Texto clave="mapa.tarjeta.sorpresa.rotulo" /> : level.title}</strong>
-        <small>{stats?.completed ? <span aria-label={t("mapa.tarjeta.completada.oculto")}><Texto clave="mapa.tarjeta.completada.rotulo" /> · <GameAssetIcon kind="apple" /> {stats.bestApples}</span>
-          : <Texto clave={unlocked ? "mapa.tarjeta.jugar.rotulo" : level.world === 8 && !progress.waterUnlocked ? "mapa.tarjeta.pozaAzul.rotulo" : "mapa.tarjeta.cerrada.rotulo"} />}</small>
-      </button>
+    <div className={`level-card-row ${stats?.completed ? "is-complete" : ""} ${unlocked ? "" : "is-locked"}`}>
+      <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}
+        {shop && <span className={`shop-visit-badge level-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.png')" }} role="img" aria-label={shop.label} title={shop.label} />}
+      </span>
+      <span className="tarjeta-nombre">
+        <span className="texto-noa">{!unlocked && level.world === 7 ? <Texto clave="mapa.tarjeta.sorpresa.rotulo" /> : level.title}</span>
+        {unlocked ? <span className="juntos tarjeta-largo">{tClave(`pantallas.${level.id}.titulo.juntos`)}</span>
+          : <span className="texto-noa pequeno"><Texto clave={level.world === 8 && !progress.waterUnlocked ? "mapa.tarjeta.pozaAzul.rotulo" : "mapa.tarjeta.cerrada.rotulo"} /></span>}
+      </span>
       {available && <button className="level-objectives-trigger" type="button"
         aria-label={t(expanded ? "mapa.tarjeta.ocultar.oculto" : "mapa.tarjeta.ver.oculto", { titulo: level.title, n: medals.filter(Boolean).length })}
         aria-expanded={expanded} aria-controls={panelId} onKeyDown={dismissOnEscape}
@@ -92,8 +90,13 @@ export function LevelSelectCard({ level, index, unlocked, suggested, progress, d
           if (details?.pinned) onCloseDetails();
           else onOpenDetails(true);
         }}>
-        <span className="level-medals" aria-hidden="true">{medals.map((earned, medal) => <i className={earned ? "is-earned" : ""} key={medal}>★</i>)}</span>
+        <span className="level-medals" aria-hidden="true">{(["meta", "pegatina", "vidas"] as const).map((dibujo, medal) => <i className={medals[medal] ? "is-earned" : ""} key={medal}><Pictograma nombre={dibujo} /></i>)}</span>
       </button>}
+      <button className={`level-card boton boton-seguir ${available ? "has-objectives" : ""} ${stats?.completed ? "is-complete" : ""}`} type="button" disabled={!unlocked}
+        aria-label={t(unlocked ? "mapa.tarjeta.jugarPantalla.oculto" : "mapa.tarjeta.cerradaPantalla.oculto", { titulo: level.title })}
+        data-gamepad-default={suggested || undefined} onKeyDown={dismissOnEscape} onClick={() => onBeginLevel(index)}>
+        <Pictograma nombre={unlocked ? "jugar" : "cerrado"} />
+      </button>
     </div>
     {available && <div className={`level-objectives ${expanded && !details.pinned ? "is-preview" : ""}`} id={panelId} hidden={!expanded}>
       <p className="level-objectives-status">{objectives.pendingCount ? <span aria-label={t("mapa.tarjeta.faltan.oculto", { n: objectives.pendingCount })}><Texto clave="mapa.tarjeta.faltan.rotulo" variables={{ puntos: puntos(objectives.completedCount, objectives.totalCount) }} /></span> : <Texto clave="mapa.tarjeta.todo.rotulo" />}</p>

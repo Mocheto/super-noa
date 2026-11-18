@@ -51,8 +51,8 @@ export const mapa = {
   caminoNuevo: { rotulo: "{pictograma:secreto} ¡CAMINO NUEVO!" },
   tarjeta: {
     sorpresa: { rotulo: "{pictograma:regalo} ¡SORPRESA!" },
-    completada: { rotulo: "{pictograma:si}", oculto: "Completada" },
-    jugar: { rotulo: "{pictograma:jugar} JUGAR" },
+    jugarPantalla: { oculto: "Jugar {titulo}" },
+    cerradaPantalla: { oculto: "{titulo}: cerrada" },
     pozaAzul: { rotulo: "{pictograma:agua} POZA EN 3-3" },
     cerrada: { rotulo: "{pictograma:cerrado} JUEGA LA OTRA" },
     faltan: { rotulo: "{puntos}", oculto: { one: "Falta {n}", other: "Faltan {n}" } },

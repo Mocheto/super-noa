@@ -5,7 +5,7 @@ import vm from "node:vm";
 import { Children, isValidElement, type ReactElement, type ReactNode } from "react";
 import * as jsxRuntime from "react/jsx-runtime";
 import ts from "typescript";
-import { puntos, sinPictogramas, t } from "../textos/index.ts";
+import { puntos, sinPictogramas, t, tClave } from "../textos/index.ts";
 import type { LevelSelectCard } from "./LevelSelectCard";
 import { getLevelObjectives } from "./levelObjectives.ts";
 import { levels } from "./levels.ts";
@@ -54,8 +54,8 @@ function mount(overrides: Partial<Props> = {}) {
     "./PixelIcon": { PixelIcon: () => null },
     "./levelObjectives": { getLevelObjectives },
     "./secretShopProgress": { getSecretShopBadge },
-    "../textos": { puntos, sinPictogramas, t },
-    "../textos/Texto": { Texto: () => null, Pictogramas: () => null },
+    "../textos": { puntos, sinPictogramas, t, tClave },
+    "../textos/Texto": { Texto: () => null, Pictogramas: () => null, Pictograma: () => null },
   };
   const module = { exports: {} };
   const context = vm.createContext({

@@ -7,6 +7,8 @@ import { bossCatalog, type BossChallengeId } from "./bosses";
 import { justPressed, readDuelPad, type DuelPadButtons } from "./duelGamepad";
 import { firstConnectedGamepad } from "./gamepad";
 import type { BossId } from "./types";
+import { conTextos, t, tClave } from "../textos/index.ts";
+import { Texto } from "../textos/Texto";
 
 type Choice = "rock" | "paper" | "scissors";
 type RoundWinner = "noa" | "boss" | "tie";
@@ -36,11 +38,12 @@ type BossBattleProps = {
   friendlyReplay?: boolean;
 };
 
-const choices: Array<{ id: Choice; label: string }> = [
-  { id: "rock", label: "Piedra" },
-  { id: "paper", label: "Papel" },
-  { id: "scissors", label: "Tijera" },
-];
+const choices = [
+  conTextos({ id: "rock" }, { label: "duelos.gesto.piedra.rotulo" }),
+  conTextos({ id: "paper" }, { label: "duelos.gesto.papel.rotulo" }),
+  conTextos({ id: "scissors" }, { label: "duelos.gesto.tijera.rotulo" }),
+] as Array<{ id: Choice; label: string }>;
+const gestoDe = (choice: Choice) => choice === "rock" ? "piedra" : choice === "paper" ? "papel" : "tijera";
 
 const choiceById = Object.fromEntries(choices.map((choice) => [choice.id, choice])) as Record<Choice, (typeof choices)[number]>;
 
@@ -59,18 +62,18 @@ function getWinner(noa: Choice, boss: Choice): RoundWinner {
 }
 
 function getRuleText(noa: Choice, boss: Choice) {
-  if (noa === boss) return `Los dos han elegido ${choiceById[noa].label.toLowerCase()}.`;
+  if (noa === boss) return t("duelos.regla.empate.juntos", { gesto: tClave(`duelos.gesto.${gestoDe(noa)}.juntos`) });
   const pair = new Set([noa, boss]);
-  if (pair.has("rock") && pair.has("scissors")) return "La piedra rompe las tijeras.";
-  if (pair.has("paper") && pair.has("rock")) return "El papel envuelve la piedra.";
-  return "Las tijeras cortan el papel.";
+  if (pair.has("rock") && pair.has("scissors")) return t("duelos.regla.piedra.juntos");
+  if (pair.has("paper") && pair.has("rock")) return t("duelos.regla.papel.juntos");
+  return t("duelos.regla.tijeras.juntos");
 }
 
 function BossSprite({ assetPrefix, assetAtlas, frame, name }: { assetPrefix: string; assetAtlas?: string; frame: number; name: string }) {
-  const gesture = frame === 1 ? "piedra" : frame === 2 ? "papel" : frame === 3 ? "tijera" : frame === 4 ? "derrota" : "reto";
+  const gesture = tClave(`duelos.gesto.${frame === 1 ? "piedra" : frame === 2 ? "papel" : frame === 3 ? "tijera" : frame === 4 ? "derrota" : "reto"}.juntos`);
   const isWideSprite = assetPrefix.includes("reina-arcoiris");
   return (
-    <div className={`boss-sprite-window ${isWideSprite ? "is-wide-sprite" : ""} ${assetAtlas ? "is-atlas-sprite" : ""}`} role="img" aria-label={`${name} hace el gesto de ${gesture}`}>
+    <div className={`boss-sprite-window ${isWideSprite ? "is-wide-sprite" : ""} ${assetAtlas ? "is-atlas-sprite" : ""}`} role="img" aria-label={t("duelos.haceGesto.oculto", { nombre: name, gesto: gesture })}>
       {assetAtlas
         ? <span className="boss-sprite-frame boss-atlas-frame" style={{ backgroundImage: `url("${assetAtlas}")`, backgroundPosition: `${frame * 25}% 100%` }} />
         : <img className="boss-sprite-frame" src={`${assetPrefix}-${frame}.png`} alt="" />}
@@ -79,11 +82,11 @@ function BossSprite({ assetPrefix, assetAtlas, frame, name }: { assetPrefix: str
 }
 
 function NoaDuelSprite({ frame, protectedByApple }: { frame: number | null; protectedByApple: boolean }) {
-  const gesture = frame === 0 ? "piedra" : frame === 1 ? "papel" : frame === 2 ? "tijera" : frame === 3 ? "victoria" : "preparada";
+  const gesture = tClave(`duelos.gesto.${frame === 0 ? "piedra" : frame === 1 ? "papel" : frame === 2 ? "tijera" : frame === 3 ? "victoria" : "preparada"}.juntos`);
   const armorSuffix = protectedByApple ? "-gold-armor-v1" : "";
   const idleSource = optimizedAssetSource(`./assets/sprites/noa-sprite-sheet${armorSuffix}.png`);
   return (
-    <div className="duel-noa-sprite" role="img" aria-label={`Noa hace el gesto de ${gesture}`}>
+    <div className="duel-noa-sprite" role="img" aria-label={t("duelos.haceGesto.oculto", { nombre: tClave("duelos.noa.rotulo"), gesto: gesture })}>
       {frame === null
         ? <div className="duel-noa-idle" style={{ backgroundImage: `url("${idleSource}")` }} />
         : <img src={`./assets/sprites/noa-rps-${frame}${armorSuffix}.png`} alt="" />}
@@ -152,7 +155,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
   const visibleWinner = choicesRevealed ? battle.roundWinner : undefined;
   const bossFrame = battle.status === "won" ? 4 : choicesRevealed && battle.bossChoice ? choices.findIndex((choice) => choice.id === battle.bossChoice) + 1 : 0;
   const noaFrame = battle.status === "won" ? 3 : choicesRevealed && battle.noaChoice ? choices.findIndex((choice) => choice.id === battle.noaChoice) : null;
-  const roundText = battle.noaChoice && battle.bossChoice ? getRuleText(battle.noaChoice, battle.bossChoice) : "Elige un gesto. El primero que gane dos rondas vence.";
+  const roundText = battle.noaChoice && battle.bossChoice ? getRuleText(battle.noaChoice, battle.bossChoice) : t("duelos.regla.elige.juntos");
   const roundNumber = battle.status === "choosing" || battle.status === "countdown" ? history.length + 1 : Math.max(1, history.length);
   const challengeCompleted = (challengeId: BossChallengeId) => {
     if (challengeId === "clean-sweep") return battle.bossScore === 0;
@@ -216,90 +219,89 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
         )}
         <header className="boss-header">
           <div>
-            <p className="eyebrow">{friendlyReplay ? "Duelo amistoso" : "Monstruo final"} · Ronda {roundNumber}</p>
-            <h2 id="boss-title">{friendlyReplay ? `Juega con ${boss.name}` : `Duelo contra ${boss.name}`}</h2>
-            <p>{boss.intro}</p>
-            <p className="boss-challenge">★ Reto de amistad: {boss.challenge.label}</p>
+            <p className="eyebrow rotulo"><Texto clave="duelos.ronda.rotulo" variables={{ n: roundNumber }} /></p>
+            <h2 id="boss-title" className="rotulo"><Texto clave={friendlyReplay ? "duelos.titulo.amistoso.rotulo" : "duelos.titulo.final.rotulo"} variables={{ nombre: boss.name }} /></h2>
+            <p className="juntos">{boss.intro}</p>
+            <p className="boss-challenge"><Texto clave="duelos.reto.rotulo" /> <span className="juntos">{boss.challenge.label}</span></p>
           </div>
           <div className="duel-status-panel">
-            <div className="duel-score" aria-label={`Marcador: Noa ${battle.noaScore}, ${boss.name} ${battle.bossScore}`}>
-              <span>NOA <strong>{battle.noaScore}</strong></span><b>—</b><span><strong>{battle.bossScore}</strong> JEFE</span>
+            <div className="duel-score" aria-label={t("duelos.marcador.oculto", { noa: battle.noaScore, nombre: boss.name, jefe: battle.bossScore })}>
+              <span><Texto clave="duelos.noa.rotulo" /> <strong>{battle.noaScore}</strong></span><b>—</b><span><strong>{battle.bossScore}</strong> <Texto clave="duelos.jefe.rotulo" /></span>
             </div>
-            {!friendlyReplay && <div className="duel-attempts" aria-label={`${apples} reintentos disponibles`}>
-              <span><GameAssetIcon kind="apple" /> × {apples}</span><small>{apples === 1 ? "reintento" : "reintentos"}</small>
+            {!friendlyReplay && <div className="duel-attempts" aria-label={t("duelos.intentos.oculto", { n: apples })}>
+              <span><GameAssetIcon kind="apple" /> × {apples}</span><small><Texto clave="duelos.intentos.rotulo" /></small>
             </div>}
           </div>
         </header>
 
         {history.length > 0 && (
-          <ol className="round-history" aria-label="Historial de rondas">
+          <ol className="round-history" aria-label={t("duelos.historial.oculto")}>
             {history.map((round, index) => (
               <li className={`history-${round.winner}`} key={`${round.noaChoice}-${round.bossChoice}-${index}`}>
-                <small>R{index + 1}</small><RpsIcon choice={round.noaChoice} small /><b>{round.winner === "noa" ? "★" : round.winner === "boss" ? "×" : "="}</b><RpsIcon choice={round.bossChoice} small />
+                <small><Texto clave="duelos.historial.ronda.rotulo" variables={{ n: index + 1 }} /></small><RpsIcon choice={round.noaChoice} small /><b>{round.winner === "noa" ? "★" : round.winner === "boss" ? "×" : "="}</b><RpsIcon choice={round.bossChoice} small />
               </li>
             ))}
           </ol>
         )}
 
         <div className={`duel-arena ${battle.status === "countdown" ? "is-countdown" : ""} ${choicesRevealed ? "is-revealed" : ""}`}>
-          {battle.status === "countdown" && <div className="duel-countdown" aria-live="assertive">{countdown === 0 ? "¡YA!" : countdown}</div>}
+          {battle.status === "countdown" && <div className="duel-countdown" aria-live="assertive">{countdown === 0 ? <Texto clave="duelos.cuenta.ya.rotulo" /> : countdown}</div>}
           <div className={`duel-fighter noa-fighter ${visibleWinner === "noa" ? "round-winner" : visibleWinner === "boss" ? "round-loser" : ""}`}>
             <NoaDuelSprite frame={noaFrame} protectedByApple={protectedByApple} />
-            <strong>NOA</strong>
+            <strong><Texto clave="duelos.noa.rotulo" /></strong>
             <div className={`gesture-card ${battle.status === "countdown" ? "is-hidden" : ""}`}>
               <span>{choicesRevealed && battle.noaChoice ? <RpsIcon choice={battle.noaChoice} /> : "?"}</span>
-              <b>{choicesRevealed && battle.noaChoice ? choiceById[battle.noaChoice].label : battle.status === "countdown" ? "Pensando…" : "Preparada"}</b>
+              <b>{choicesRevealed && battle.noaChoice ? choiceById[battle.noaChoice].label : <Texto clave={battle.status === "countdown" ? "duelos.cuenta.piensa.rotulo" : "duelos.cuenta.lista.rotulo"} />}</b>
             </div>
           </div>
-          <div className="duel-versus" aria-hidden="true">VS</div>
+          <div className="duel-versus" aria-hidden="true"><Texto clave="duelos.vs.rotulo" /></div>
           <div className={`duel-fighter ${visibleWinner === "boss" ? "round-winner" : visibleWinner === "noa" ? "round-loser" : ""}`}>
             <BossSprite assetPrefix={boss.assetPrefix} assetAtlas={boss.assetAtlas} frame={bossFrame} name={boss.name} />
             <strong>{boss.name}</strong>
             <div className={`gesture-card ${battle.status === "countdown" ? "is-hidden" : ""}`}>
               <span>{choicesRevealed && battle.bossChoice ? <RpsIcon choice={battle.bossChoice} /> : "?"}</span>
-              <b>{choicesRevealed && battle.bossChoice ? choiceById[battle.bossChoice].label : battle.status === "countdown" ? "Pensando…" : "Esperando"}</b>
+              <b>{choicesRevealed && battle.bossChoice ? choiceById[battle.bossChoice].label : <Texto clave={battle.status === "countdown" ? "duelos.cuenta.piensa.rotulo" : "duelos.cuenta.espera.rotulo"} />}</b>
             </div>
           </div>
         </div>
 
         <div className={`round-message result-${visibleWinner ?? "none"}`} aria-live="polite">
-          <strong>{battle.status === "countdown" ? "Piedra, papel…" : battle.status === "won" ? "¡Noa gana el duelo!" : battle.status === "lost" ? `Esta vez gana ${boss.name}` : visibleWinner === "noa" ? "¡Ronda para Noa!" : visibleWinner === "boss" ? `Ronda para ${boss.name}` : visibleWinner === "tie" ? "¡Empate!" : "Piedra, papel o tijera"}</strong>
+          <strong><Texto variables={{ nombre: boss.name }} clave={battle.status === "countdown" ? "duelos.mensaje.cuenta.rotulo" : battle.status === "won" ? "duelos.mensaje.gana.rotulo" : battle.status === "lost" ? "duelos.mensaje.pierde.rotulo" : visibleWinner === "noa" ? "duelos.mensaje.rondaNoa.rotulo" : visibleWinner === "boss" ? "duelos.mensaje.rondaJefe.rotulo" : visibleWinner === "tie" ? "duelos.mensaje.empate.rotulo" : "duelos.mensaje.elige.rotulo"} /></strong>
           {choicesRevealed && battle.noaChoice && battle.bossChoice && (
-            <div className="round-choice-spotlight" aria-label={`Noa elige ${choiceById[battle.noaChoice].label} y ${boss.name} elige ${choiceById[battle.bossChoice].label}`}>
-              <span><small>NOA</small><RpsIcon choice={battle.noaChoice} /><b>{choiceById[battle.noaChoice].label}</b></span>
-              <em>VS</em>
+            <div className="round-choice-spotlight" aria-label={t("duelos.mensaje.eleccion.oculto", { noa: choiceById[battle.noaChoice].label, nombre: boss.name, jefe: choiceById[battle.bossChoice].label })}>
+              <span><small><Texto clave="duelos.noa.rotulo" /></small><RpsIcon choice={battle.noaChoice} /><b>{choiceById[battle.noaChoice].label}</b></span>
+              <em><Texto clave="duelos.vs.rotulo" /></em>
               <span><small>{boss.name.toUpperCase()}</small><RpsIcon choice={battle.bossChoice} /><b>{choiceById[battle.bossChoice].label}</b></span>
             </div>
           )}
-          <span>{battle.status === "countdown" ? "Los dos gestos aparecerán a la vez." : battle.status === "won" ? friendlyReplay ? `La amistad con ${boss.name} sigue creciendo.` : wonChallenge ? `¡Reto logrado! ${boss.name} te regala un marco especial.` : `${boss.name} sonríe y deja libre el camino.` : battle.status === "lost" ? friendlyReplay ? "¡Puedes intentarlo otra vez cuando quieras!" : apples > 0 ? "Puedes gastar una manzana para repetir el duelo." : "No quedan manzanas: toca recorrer de nuevo la pantalla." : roundText}</span>
+          <span className="juntos">{battle.status === "countdown" ? t("duelos.detalle.cuenta.juntos") : battle.status === "won" ? friendlyReplay ? t("duelos.detalle.amistad.juntos", { nombre: boss.name }) : wonChallenge ? t("duelos.detalle.reto.juntos", { nombre: boss.name }) : t("duelos.detalle.libre.juntos", { nombre: boss.name }) : battle.status === "lost" ? friendlyReplay ? t("duelos.detalle.otraVez.juntos") : apples > 0 ? t("duelos.detalle.manzana.juntos") : t("duelos.detalle.sinManzanas.juntos") : roundText}</span>
         </div>
 
         {battle.status === "choosing" && (
-          <div className="duel-choices" aria-label="Elige piedra, papel o tijera">
+          <div className="duel-choices" aria-label={t("duelos.regla.grupo.oculto")}>
             {choices.map((choice, index) => (
               <button type="button" className={gamepadConnected && selectedChoiceIndex === index ? "is-pad-selected" : ""} onClick={() => choose(choice.id)} style={{ "--choice-delay": `${index * 75}ms` } as CSSProperties} key={choice.id}>
                 <span><RpsIcon choice={choice.id} /></span><strong>{choice.label}</strong>
               </button>
             ))}
-            {gamepadConnected && <p className="duel-pad-tip">Con mando: elige con la cruceta, pulsa A para confirmar o B para volver al mapa.</p>}
+            {gamepadConnected && <p className="duel-pad-tip">{t("duelos.regla.mando")}</p>}
           </div>
         )}
-        {battle.status === "revealed" && <button className="pixel-button primary duel-next" type="button" onClick={nextRound}>Siguiente ronda ▶</button>}
-        {battle.status === "lost" && friendlyReplay && <button className="pixel-button primary duel-next" type="button" onClick={retryFriendly}>↺ Jugar otra vez</button>}
-        {battle.status === "lost" && !friendlyReplay && apples > 0 && <button className="pixel-button primary duel-next apple-retry" type="button" onClick={retryWithApple}><GameAssetIcon kind="apple" /> Usar una manzana y repetir</button>}
-        {battle.status === "lost" && !friendlyReplay && apples === 0 && <button className="pixel-button primary duel-next restart-level" type="button" onClick={onRestartLevel}>↺ Volver a empezar la pantalla</button>}
-        {battle.status === "won" && <button className="pixel-button primary duel-next" type="button" onClick={() => { playSound("goal"); onWin(wonChallenge); }}>{friendlyReplay ? "Volver a mis amigos" : "Continuar la aventura ▶"}</button>}
-        {battle.status !== "won" && <button className="text-button duel-abandon" type="button" onClick={abandonBattle}>{friendlyReplay ? "Volver a mis amigos" : "🏳 Rendirse y volver al mapa"}</button>}
+        {battle.status === "revealed" && <button className="pixel-button primary duel-next" type="button" onClick={nextRound}><Texto clave="duelos.boton.siguiente.rotulo" /></button>}
+        {battle.status === "lost" && friendlyReplay && <button className="pixel-button primary duel-next" type="button" onClick={retryFriendly}><Texto clave="duelos.boton.otraVez.rotulo" /></button>}
+        {battle.status === "lost" && !friendlyReplay && apples > 0 && <button className="pixel-button primary duel-next apple-retry" type="button" onClick={retryWithApple}><Texto clave="duelos.boton.manzana.rotulo" /></button>}
+        {battle.status === "lost" && !friendlyReplay && apples === 0 && <button className="pixel-button primary duel-next restart-level" type="button" onClick={onRestartLevel}><Texto clave="duelos.boton.empezar.rotulo" /></button>}
+        {battle.status === "won" && <button className="pixel-button primary duel-next" type="button" onClick={() => { playSound("goal"); onWin(wonChallenge); }}><Texto clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.continuar.rotulo"} /></button>}
+        {battle.status !== "won" && <button className="text-button duel-abandon" type="button" onClick={abandonBattle}><Texto clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.rendirse.rotulo"} /></button>}
 
-        <p className="duel-rules"><span><RpsIcon choice="rock" small /> gana a <RpsIcon choice="scissors" small /></span><span><RpsIcon choice="scissors" small /> gana a <RpsIcon choice="paper" small /></span><span><RpsIcon choice="paper" small /> gana a <RpsIcon choice="rock" small /></span></p>
+        <p className="duel-rules"><span><RpsIcon choice="rock" small /> <Texto clave="duelos.regla.gana.rotulo" /> <RpsIcon choice="scissors" small /></span><span><RpsIcon choice="scissors" small /> <Texto clave="duelos.regla.gana.rotulo" /> <RpsIcon choice="paper" small /></span><span><RpsIcon choice="paper" small /> <Texto clave="duelos.regla.gana.rotulo" /> <RpsIcon choice="rock" small /></span></p>
       </Dialog>
       {showAbandon && (
         <Dialog labelledBy="abandon-title" className="game-modal compact" onClose={() => setShowAbandon(false)} gamepad>
-          <p className="eyebrow">Un momento</p>
-          <h2 id="abandon-title">¿Volvemos al mapa?</h2>
-          <p>Este duelo empezará de nuevo cuando vuelvas. Tus pegatinas encontradas siguen guardadas.</p>
-          <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowAbandon(false)}>Seguir con el duelo</button>
-          <button className="pixel-button" type="button" onClick={onAbandon}>Sí, volver al mapa</button>
+          <h2 id="abandon-title" className="rotulo"><Texto clave="duelos.abandonar.titulo.rotulo" /></h2>
+          <p className="juntos">{t("duelos.abandonar.duelo.juntos")}</p>
+          <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowAbandon(false)}><Texto clave="duelos.abandonar.seguir.rotulo" /></button>
+          <button className="pixel-button" type="button" onClick={onAbandon}><Texto clave="duelos.abandonar.salir.rotulo" /></button>
         </Dialog>
       )}
     </>

@@ -1,3 +1,6 @@
+import { duelos } from "./duelos.ts";
+import { guardianes } from "./guardianes.ts";
+import { juegos } from "./juegos.ts";
 import { amigos } from "./amigos.ts";
 import { pegatinas } from "./pegatinas.ts";
 import { caminos } from "./caminos.ts";
@@ -17,6 +20,9 @@ export const es = {
   inicio,
   mapa,
   partida,
+  duelos,
+  guardianes,
+  juegos,
   amigos,
   pegatinas,
   caminos,

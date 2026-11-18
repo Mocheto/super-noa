@@ -2,6 +2,7 @@ import { getImage } from "./assets";
 import { actionBossBackgrounds, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets";
 import { SANTA_ARENA, SANTA_PLATFORMS, type SantaBattle } from "./santaBattle";
 import type { BossId } from "./types";
+import { textoLienzo, tClave } from "../textos/index.ts";
 
 type PlatformBossId = Extract<BossId, "santa-claus" | "siroco" | "don-silbato">;
 
@@ -67,7 +68,7 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
   } else { ctx.fillStyle = "#bd3047"; ctx.fillRect(boss.x, boss.y, boss.width, boss.height); }
   if (boss.attackIn < .65 && !boss.stun && state.status === "playing") {
     ctx.fillStyle = "#fff1a2"; ctx.font = "bold 24px sans-serif"; ctx.textAlign = "center";
-    ctx.fillText(bossId === "siroco" ? "¡Va la arena!" : bossId === "don-silbato" ? "¡Va una maleta!" : "¡Va un regalo!", boss.x + boss.width / 2, boss.y - 30);
+    ctx.fillText(textoLienzo(bossId === "siroco" ? "duelos.santa.siroco.lanza.rotulo" : bossId === "don-silbato" ? "duelos.santa.don-silbato.lanza.rotulo" : "duelos.santa.santa-claus.lanza.rotulo"), boss.x + boss.width / 2, boss.y - 30);
   }
   const p = state.player;
   ctx.save();
@@ -85,6 +86,6 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
   ctx.restore();
   if (boss.x > cameraX + viewWidth - 30) {
     ctx.fillStyle = "#fff1a2"; ctx.font = "bold 20px sans-serif"; ctx.textAlign = "right";
-    ctx.fillText(`${bossId === "siroco" ? "Siroco" : bossId === "don-silbato" ? "Don Silbato" : "Papá Noel"} →`, viewWidth - 18, 190); ctx.textAlign = "left";
+    ctx.fillText(`${tClave(`guardianes.${bossId}.nombre.rotulo`)} →`, viewWidth - 18, 190); ctx.textAlign = "left";
   }
 }

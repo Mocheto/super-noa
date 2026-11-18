@@ -6,6 +6,8 @@ import { createSantaBattle, PLATFORM_BOSS_HITS, SANTA_ARENA, stepSantaBattle } f
 import { drawSantaBattle } from "./santaBattleRendering";
 import { TouchControls, type TouchControl } from "./TouchControls";
 import type { BossId } from "./types";
+import { t, tClave } from "../textos/index.ts";
+import { Pictogramas, Texto } from "../textos/Texto";
 
 type Props = {
   bossId?: Extract<BossId, "santa-claus" | "siroco" | "don-silbato">;
@@ -14,14 +16,10 @@ type Props = {
 };
 const emptyInput = () => ({ left: false, right: false, jump: false, queued: false });
 
-const battleCopy = {
-  "santa-claus": { eyebrow: "Jefe final de Navidad", title: "Ayuda a Papá Noel", projectile: "regalos", win: "Papá Noel sonríe: ahora los regalos saldrán a tiempo.", aria: "Noa y Papá Noel en el patio nevado de los regalos." },
-  siroco: { eyebrow: "Guardián del desierto", title: "Juega con Siroco", projectile: "bolas de arena", win: "Siroco sonríe y abre el camino entre las dunas.", aria: "Noa y Siroco en las ruinas doradas del desierto." },
-  "don-silbato": { eyebrow: "Guardián de la locomotora", title: "Ayuda a Don Silbato", projectile: "maletas", win: "Don Silbato toca su silbato: el tren puede continuar.", aria: "Noa y Don Silbato junto a la gran locomotora." },
-} as const;
+
 
 export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpendApple, onRestartLevel, onAbandon, onWin, playSound }: Props) {
-  const copy = battleCopy[bossId];
+  const clave = (hoja: string) => `duelos.santa.${bossId}.${hoja}`;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const battle = useRef(createSantaBattle());
   const keys = useRef(emptyInput()), touch = useRef(emptyInput());
@@ -102,14 +100,14 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
   };
   const won = hud.status === "won", lost = hud.status === "lost";
   return <section className="santa-boss-battle" role="dialog" aria-modal="true" aria-labelledby="santa-boss-title">
-    <header className="santa-boss-hud"><div><p className="eyebrow">{copy.eyebrow}</p><h2 id="santa-boss-title">{copy.title}</h2><p>Salta las {copy.projectile} y cae sobre su cabeza tres veces. ¡Atención, cada ronda va un poquito más rápido!</p></div><div className="santa-hit-counter"><span aria-label={`${hud.lives} vidas`}>{"♥".repeat(hud.lives)}{"♡".repeat(3 - hud.lives)}</span><b aria-live="polite">{hud.hits}/{PLATFORM_BOSS_HITS} saltos</b></div></header>
+    <header className="santa-boss-hud"><div><p className="eyebrow rotulo"><Pictogramas texto={tClave(clave("etiqueta.rotulo"))} /></p><h2 id="santa-boss-title" className="rotulo"><Pictogramas texto={tClave(clave("titulo.rotulo"))} /></h2><p className="juntos">{tClave(clave("como.juntos"))}</p></div><div className="santa-hit-counter"><span aria-label={t("partida.hud.vidas.oculto", { n: hud.lives })}>{"♥".repeat(hud.lives)}{"♡".repeat(3 - hud.lives)}</span><b aria-live="polite" aria-label={t("duelos.santa.saltos.oculto", { n: hud.hits, total: PLATFORM_BOSS_HITS })}><Texto clave="duelos.santa.saltos.rotulo" variables={{ n: hud.hits, total: PLATFORM_BOSS_HITS }} /></b></div></header>
     <div className="santa-arena game-frame">
-      <div className="game-stage"><canvas ref={canvasRef} tabIndex={0} width={SANTA_ARENA.width} height={SANTA_ARENA.height} aria-label={`${copy.aria} Muévete con las flechas y salta con espacio.`} /></div>
+      <div className="game-stage"><canvas ref={canvasRef} tabIndex={0} width={SANTA_ARENA.width} height={SANTA_ARENA.height} aria-label={t("duelos.santa.controles.oculto", { escena: tClave(clave("escena.oculto")) })} /></div>
       {!won && !lost && <TouchControls showYarn={false} disabled={paused} onPress={press} onRelease={release} onCancel={release}
         onKeyboardPress={(control) => { if (control !== "shoot") { touch.current[control] = true; if (control === "jump") touch.current.queued = true; } }}
         onKeyboardRelease={(control) => { if (control !== "shoot") touch.current[control] = false; }} />}
     </div>
-    {won ? <div className="santa-result"><h3>¡Lo conseguiste!</h3><p>{copy.win}</p><button className="pixel-button primary" onClick={() => { playSound("goal"); onWin(true); }}>Abrir el camino ▶</button></div> : lost ? <div className="santa-result"><h3>¡Vamos otra vez!</h3><p>Usa las plataformas y el doble salto para caer sobre su cabeza.</p><button className="pixel-button primary" onClick={retry}>{apples > 0 ? "Usar una manzana y reintentar" : "Volver a la pantalla"}</button></div> : null}
-    <button className="santa-exit" onClick={onAbandon}>Volver al mapa</button>
+    {won ? <div className="santa-result"><h3 className="rotulo"><Texto clave="duelos.santa.conseguido.rotulo" /></h3><p className="juntos">{tClave(clave("gana.juntos"))}</p><button className="pixel-button primary" onClick={() => { playSound("goal"); onWin(true); }}><Texto clave="duelos.santa.abrir.rotulo" /></button></div> : lost ? <div className="santa-result"><h3 className="rotulo"><Texto clave="duelos.santa.otraVez.rotulo" /></h3><p className="juntos">{t("duelos.santa.perdido.juntos")}</p><button className="pixel-button primary" onClick={retry}><Texto clave={apples > 0 ? "duelos.santa.manzana.rotulo" : "duelos.santa.pantalla.rotulo"} /></button></div> : null}
+    <button className="santa-exit" onClick={onAbandon}><Texto clave="duelos.santa.mapa.rotulo" /></button>
   </section>;
 }

@@ -5,6 +5,8 @@ import { GameAssetIcon } from "./GameAssetIcon";
 import { bossCatalog } from "./bosses";
 import { GUARDIAN_GAME_ROUNDS, guardianGames, type GuardianGameId, makeGuardianSequence } from "./guardianGames";
 import type { GuardianOption } from "./guardianGames";
+import { t } from "../textos";
+import { Texto } from "../textos/Texto";
 
 type Props = {
   bossId: GuardianGameId; paused: boolean; apples: number; protectedByApple: boolean;
@@ -55,9 +57,9 @@ export function GuardianMiniGame({ bossId, paused, apples, protectedByApple, onS
     if (!correct) {
       const nextMistakes = mistakes + 1;
       setMistakes(nextMistakes); playSound("hurt");
-      if (nextMistakes >= 3) { setPhase("lost"); setMessage("No pasa nada. Ya sabes cómo se juega y puedes probar otra vez."); return; }
+      if (nextMistakes >= 3) { setPhase("lost"); setMessage(t("duelos.guardian.perdido.juntos")); return; }
       setInput([]); setPhase(game.kind === "sequence" ? "watch" : "play");
-      setMessage(game.kind === "sequence" ? "Casi. Mira de nuevo la secuencia despacito." : "Casi. Mira la pista y prueba otra vez.");
+      setMessage(t(game.kind === "sequence" ? "duelos.guardian.casiSecuencia.juntos" : "duelos.guardian.casiPista.juntos"));
       return;
     }
     playSound("checkpoint"); setInput([]); setMessage(game.success);
@@ -80,30 +82,30 @@ export function GuardianMiniGame({ bossId, paused, apples, protectedByApple, onS
 
   return <><Dialog labelledBy="guardian-game-title" backdropClassName="boss-backdrop" className={`boss-battle guardian-game boss-theme-${bossId}`} gamepad>
     <header className="boss-header">
-      <div><p className="eyebrow">{friendlyReplay ? "Juego amistoso" : "Juego del guardián"} · Ronda {Math.min(round + 1, GUARDIAN_GAME_ROUNDS)} de {GUARDIAN_GAME_ROUNDS}</p><h2 id="guardian-game-title">{game.title}</h2><p>{game.instruction}</p><p className="boss-challenge">★ Reto de amistad: completa las cinco rondas sin equivocarte.</p></div>
-      <div className="guardian-game-status"><span aria-label={`${3 - mistakes} oportunidades`}>{"♥".repeat(3 - mistakes)}{"♡".repeat(mistakes)}</span><b>{round + (won ? 1 : 0)}/{GUARDIAN_GAME_ROUNDS}</b>{!friendlyReplay && <small><GameAssetIcon kind="apple" /> × {apples}</small>}</div>
+      <div><p className="eyebrow rotulo"><Texto clave="duelos.guardian.ronda.rotulo" variables={{ n: Math.min(round + 1, GUARDIAN_GAME_ROUNDS), total: GUARDIAN_GAME_ROUNDS }} /></p><h2 id="guardian-game-title" className="rotulo">{game.title}</h2><p className="juntos">{game.instruction}</p><p className="boss-challenge"><Texto clave="duelos.guardian.reto.rotulo" /> <span className="juntos">{t("duelos.guardian.reto.juntos")}</span></p></div>
+      <div className="guardian-game-status"><span aria-label={t("duelos.guardian.oportunidades.oculto", { n: 3 - mistakes })}>{"♥".repeat(3 - mistakes)}{"♡".repeat(mistakes)}</span><b>{round + (won ? 1 : 0)}/{GUARDIAN_GAME_ROUNDS}</b>{!friendlyReplay && <small><GameAssetIcon kind="apple" /> × {apples}</small>}</div>
     </header>
     <div className="guardian-game-stage">
       <GuardianPortrait bossId={bossId} won={won} />
       <div className="guardian-game-board">
-        <strong>{phase === "watch" || game.kind === "choice" ? game.prompt : phase === "play" ? "Ahora repítelo" : message}</strong>
+        <strong>{phase === "watch" || game.kind === "choice" ? game.prompt : phase === "play" ? <Texto clave="duelos.guardian.repite.rotulo" /> : message}</strong>
         {game.kind === "choice" && !won && !lost && <div className="guardian-target" style={{ "--guardian-color": target.color } as CSSProperties}><GuardianGameIcon option={target} /><b>{target.label}</b></div>}
         {game.kind === "sequence" && phase === "watch" && <div className="guardian-sequence">{sequence.map((id, index) => <span role="img" aria-label={`${index + 1}: ${option(id).label}`} style={{ "--guardian-color": option(id).color } as CSSProperties} key={`${id}-${index}`}><GuardianGameIcon option={option(id)} /><small aria-hidden="true">{index + 1}</small></span>)}</div>}
-        {game.kind === "sequence" && phase === "play" && <div className="guardian-progress" aria-label={`${input.length} de ${sequence.length} pasos`} >{sequence.map((_, index) => <span className={index < input.length ? "is-done" : ""} key={index}>{index < input.length ? "★" : index + 1}</span>)}</div>}
+        {game.kind === "sequence" && phase === "play" && <div className="guardian-progress" aria-label={t("duelos.guardian.pasos.oculto", { n: input.length, total: sequence.length })} >{sequence.map((_, index) => <span className={index < input.length ? "is-done" : ""} key={index}>{index < input.length ? "★" : index + 1}</span>)}</div>}
         <p aria-live="polite">{message}</p>
       </div>
     </div>
-    {phase === "watch" && <button className="pixel-button primary guardian-ready" type="button" disabled={paused} data-gamepad-default onClick={() => { setPhase("play"); setMessage("Toca los dibujos en el mismo orden."); }}>¡Ya me acuerdo! ▶</button>}
+    {phase === "watch" && <button className="pixel-button primary guardian-ready" type="button" disabled={paused} data-gamepad-default onClick={() => { setPhase("play"); setMessage(t("duelos.guardian.mismoOrden.juntos")); }}><Texto clave="duelos.guardian.listo.rotulo" /></button>}
     {phase === "play" && <div className="guardian-options">{game.options.map((item) => <button type="button" disabled={paused} onClick={() => choose(item.id)} style={{ "--guardian-color": item.color } as CSSProperties} key={item.id}><GuardianGameIcon option={item} /><strong>{item.label}</strong></button>)}</div>}
-    {phase === "feedback" && <button className="pixel-button primary guardian-ready" type="button" disabled={paused} data-gamepad-default onClick={nextRound}>Siguiente ronda ▶</button>}
-    {won && <div className="guardian-result"><h3>¡Juego completado!</h3><p>{mistakes === 0 ? `¡Reto logrado! ${boss.name} te regala un marco especial.` : `${boss.name} sonríe y abre el camino.`}</p><button className="pixel-button primary" data-gamepad-default onClick={() => { playSound("goal"); onWin(mistakes === 0); }}>{friendlyReplay ? "Volver a mis amigos" : "Continuar la aventura ▶"}</button></div>}
-    {lost && <div className="guardian-result"><h3>¡Vamos otra vez!</h3><p>{message}</p>{friendlyReplay ? <button className="pixel-button primary" data-gamepad-default onClick={() => reset(false)}>Jugar otra vez</button> : apples > 0 ? <button className="pixel-button primary" data-gamepad-default onClick={() => reset(true)}><GameAssetIcon kind="apple" /> Usar una manzana y repetir</button> : <button className="pixel-button primary" data-gamepad-default onClick={onRestartLevel}>Volver a empezar la pantalla</button>}</div>}
-    {!won && <button className="text-button duel-abandon" type="button" onClick={() => friendlyReplay ? onAbandon() : setShowAbandon(true)}>{friendlyReplay ? "Volver a mis amigos" : "🏳 Rendirse y volver al mapa"}</button>}
-    {protectedByApple && <p className="guardian-armor-note">La armadura dorada de Noa sigue brillando durante el juego.</p>}
+    {phase === "feedback" && <button className="pixel-button primary guardian-ready" type="button" disabled={paused} data-gamepad-default onClick={nextRound}><Texto clave="duelos.boton.siguiente.rotulo" /></button>}
+    {won && <div className="guardian-result"><h3 className="rotulo"><Texto clave="duelos.guardian.completado.rotulo" /></h3><p className="juntos">{t(mistakes === 0 ? "duelos.detalle.reto.juntos" : "duelos.detalle.libre.juntos", { nombre: boss.name })}</p><button className="pixel-button primary" data-gamepad-default onClick={() => { playSound("goal"); onWin(mistakes === 0); }}><Texto clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.continuar.rotulo"} /></button></div>}
+    {lost && <div className="guardian-result"><h3 className="rotulo"><Texto clave="duelos.guardian.otraVez.rotulo" /></h3><p>{message}</p>{friendlyReplay ? <button className="pixel-button primary" data-gamepad-default onClick={() => reset(false)}><Texto clave="duelos.boton.otraVez.rotulo" /></button> : apples > 0 ? <button className="pixel-button primary" data-gamepad-default onClick={() => reset(true)}><Texto clave="duelos.boton.manzana.rotulo" /></button> : <button className="pixel-button primary" data-gamepad-default onClick={onRestartLevel}><Texto clave="duelos.boton.empezar.rotulo" /></button>}</div>}
+    {!won && <button className="text-button duel-abandon" type="button" onClick={() => friendlyReplay ? onAbandon() : setShowAbandon(true)}><Texto clave={friendlyReplay ? "duelos.boton.amigos.rotulo" : "duelos.boton.rendirse.rotulo"} /></button>}
+    {protectedByApple && <p className="guardian-armor-note juntos">{t("duelos.guardian.armadura.juntos")}</p>}
   </Dialog>{showAbandon && <Dialog labelledBy="guardian-abandon-title" className="game-modal compact" onClose={() => setShowAbandon(false)} gamepad>
-    <p className="eyebrow">Un momento</p><h2 id="guardian-abandon-title">¿Volvemos al mapa?</h2>
-    <p>Este juego empezará de nuevo cuando vuelvas. Tus pegatinas encontradas siguen guardadas.</p>
-    <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowAbandon(false)}>Seguir con el juego</button>
-    <button className="pixel-button" type="button" onClick={onAbandon}>Sí, volver al mapa</button>
+    <h2 id="guardian-abandon-title" className="rotulo"><Texto clave="duelos.abandonar.titulo.rotulo" /></h2>
+    <p className="juntos">{t("duelos.abandonar.juego.juntos")}</p>
+    <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowAbandon(false)}><Texto clave="duelos.abandonar.seguir.rotulo" /></button>
+    <button className="pixel-button" type="button" onClick={onAbandon}><Texto clave="duelos.abandonar.salir.rotulo" /></button>
   </Dialog>}</>;
 }

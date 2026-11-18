@@ -1,25 +1,32 @@
 import type { BossId } from "./types";
+import { conTextos } from "../textos/index.ts";
 
 export type BossChallengeId = "clean-sweep" | "no-apple" | "finish-rock" | "tie-then-win" | "finish-scissors" | "finish-paper" | "perfect-game";
 
+type BossDatos = { assetPrefix: string; assetAtlas?: string; challenge: { id: BossChallengeId } };
 export type BossDefinition = { name: string; assetPrefix: string; assetAtlas?: string; intro: string; challenge: { id: BossChallengeId; label: string } };
 
-export const bossCatalog: Record<BossId, BossDefinition> = {
-  "shark-captain": { name: "Don Aleta", assetPrefix: "./assets/sprites/boss-don-aleta", intro: "El guardián del mar quiere jugar contigo antes de abrir su palacio.", challenge: { id: "finish-paper", label: "Termina con papel para conseguir su marco de conchas." } },
-  "bramble-king": { name: "Rey Zarzal", assetPrefix: "./assets/sprites/boss-rey-zarzal", intro: "El guardián de las raíces te reta a un duelo.", challenge: { id: "clean-sweep", label: "Gana 2–0 para conseguir su marco de raíces." } },
-  "mist-countess": { name: "Condesa Niebla", assetPrefix: "./assets/sprites/boss-condesa-niebla", intro: "La guardiana de las grutas quiere probar tu ingenio.", challenge: { id: "no-apple", label: "Gana sin gastar una manzana para conseguir su marco de niebla." } },
-  "great-wolf": { name: "Gran Lobo", assetPrefix: "./assets/sprites/boss-gran-lobo", intro: "El rey de las huellas te espera para el último duelo.", challenge: { id: "finish-rock", label: "Termina con piedra para conseguir su marco de luna." } },
-  "great-boar": { name: "Gran Jabalí", assetPrefix: "./assets/sprites/boss-gran-jabali", intro: "El guardián de las bellotas protege las copas del bosque.", challenge: { id: "perfect-game", label: "Dale de comer a todos los jabatos sin que ninguno se quede con hambre para conseguir su marco de bellotas." } },
-  "sky-captain": { name: "Capitán Celeste", assetPrefix: "./assets/sprites/boss-capitan-celeste", intro: "El capitán de la flota te reta por el tesoro de las nubes.", challenge: { id: "perfect-game", label: "Despeja las cinco nubes sin equivocarte para conseguir su marco de nubes." } },
-  "vampire-count": { name: "Conde Vampiro", assetPrefix: "./assets/sprites/boss-conde-vampiro", intro: "El conde del castillo te reta a un duelo de ingenio.", challenge: { id: "clean-sweep", label: "Gana 2–0 para conseguir su marco lunar." } },
-  "rainbow-queen": { name: "Reina Arcoíris", assetPrefix: "./assets/sprites/boss-reina-arcoiris-v2", intro: "La guardiana del cielo quiere comprobar tu magia.", challenge: { id: "perfect-game", label: "Pinta el arcoíris sin equivocarte para conseguir su marco arcoíris." } },
-  "triceratops-queen": { name: "Reina Tricera", assetPrefix: "./assets/sprites/boss-reina-tricera", intro: "La guardiana de la isla quiere jugar antes de enseñarte su nido de flores.", challenge: { id: "perfect-game", label: "Protege los cinco huevos sin equivocarte para conseguir su marco tropical." } },
-  "ruby-dragon": { name: "Dragona Rubí", assetPrefix: "", assetAtlas: "./assets/atlases/volcano-characters-v1.png", intro: "La guardiana del volcán quiere comprobar tu valor antes de calmar la lava.", challenge: { id: "finish-rock", label: "Termina con piedra para conseguir su marco de rubíes." } },
-  "queen-bee": { name: "Reina Melisa", assetPrefix: "", assetAtlas: "./assets/atlases/giant-valley-characters-v1.png", intro: "La guardiana de las flores te invita a un juego lleno de zumbidos.", challenge: { id: "perfect-game", label: "Corta todas las flores sin dejar caer ninguna para conseguir su marco de flores." } },
-  "polar-bear": { name: "Osa Boreal", assetPrefix: "", assetAtlas: "./assets/atlases/ice-mountain-characters-v1.png", intro: "La guardiana de la cima quiere jugar bajo la aurora.", challenge: { id: "clean-sweep", label: "Gana 2–0 para conseguir su marco de copos." } },
-  "santa-claus": { name: "Papá Noel", assetPrefix: "", assetAtlas: "./assets/sprites/boss-papa-noel-sheet-v2.png", intro: "Papá Noel ha perdido el ritmo de los regalos. Esquiva sus paquetes y ayúdale con tres saltitos suaves.", challenge: { id: "clean-sweep", label: "No pierdas ninguna vida para conseguir su marco de estrella." } },
-  "siroco": { name: "Siroco", assetPrefix: "", assetAtlas: "./assets/sprites/boss-siroco-sheet-v1.png", intro: "Siroco juega con la arena del desierto. Esquiva sus bolas y salta suavemente sobre él tres veces.", challenge: { id: "clean-sweep", label: "No pierdas ninguna vida para conseguir su marco de oasis." } },
-  "don-silbato": { name: "Don Silbato", assetPrefix: "", assetAtlas: "./assets/sprites/boss-don-silbato-sheet-v1.png", intro: "Don Silbato necesita ordenar el equipaje. Esquiva las maletas y salta sobre su gorra tres veces.", challenge: { id: "clean-sweep", label: "No pierdas ninguna vida para conseguir su marco de locomotora." } },
-  "maestra-armonia": { name: "Maestra Armonía", assetPrefix: "", assetAtlas: "./assets/atlases/music-characters-v1.png", intro: "La directora del gran teatro quiere compartir contigo su juego musical.", challenge: { id: "perfect-game", label: "Repite todos los golpes de Armonía sin que se escape ninguno para conseguir su marco de notas." } },
-  "aurora-celeste": { name: "Aurora Celeste", assetPrefix: "", assetAtlas: "./assets/atlases/sky-kingdom-characters-v1.png", intro: "La guardiana de las nubes celebra que hayas llegado tan alto.", challenge: { id: "perfect-game", label: "Enciende las constelaciones sin equivocarte para conseguir su marco de estrellas." } },
+/** Guardianes tal como se declaran: sin textos. Nombre, presentación y reto salen del catálogo (`guardianes.<id>.nombre.rotulo`, `.presentacion.juntos`, `.reto.juntos`). */
+const datosGuardianes: Record<BossId, BossDatos> = {
+  "shark-captain": { assetPrefix: "./assets/sprites/boss-don-aleta", challenge: { id: "finish-paper" } },
+  "bramble-king": { assetPrefix: "./assets/sprites/boss-rey-zarzal", challenge: { id: "clean-sweep" } },
+  "mist-countess": { assetPrefix: "./assets/sprites/boss-condesa-niebla", challenge: { id: "no-apple" } },
+  "great-wolf": { assetPrefix: "./assets/sprites/boss-gran-lobo", challenge: { id: "finish-rock" } },
+  "great-boar": { assetPrefix: "./assets/sprites/boss-gran-jabali", challenge: { id: "perfect-game" } },
+  "sky-captain": { assetPrefix: "./assets/sprites/boss-capitan-celeste", challenge: { id: "perfect-game" } },
+  "vampire-count": { assetPrefix: "./assets/sprites/boss-conde-vampiro", challenge: { id: "clean-sweep" } },
+  "rainbow-queen": { assetPrefix: "./assets/sprites/boss-reina-arcoiris-v2", challenge: { id: "perfect-game" } },
+  "triceratops-queen": { assetPrefix: "./assets/sprites/boss-reina-tricera", challenge: { id: "perfect-game" } },
+  "ruby-dragon": { assetPrefix: "", assetAtlas: "./assets/atlases/volcano-characters-v1.png", challenge: { id: "finish-rock" } },
+  "queen-bee": { assetPrefix: "", assetAtlas: "./assets/atlases/giant-valley-characters-v1.png", challenge: { id: "perfect-game" } },
+  "polar-bear": { assetPrefix: "", assetAtlas: "./assets/atlases/ice-mountain-characters-v1.png", challenge: { id: "clean-sweep" } },
+  "santa-claus": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-papa-noel-sheet-v2.png", challenge: { id: "clean-sweep" } },
+  "siroco": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-siroco-sheet-v1.png", challenge: { id: "clean-sweep" } },
+  "don-silbato": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-don-silbato-sheet-v1.png", challenge: { id: "clean-sweep" } },
+  "maestra-armonia": { assetPrefix: "", assetAtlas: "./assets/atlases/music-characters-v1.png", challenge: { id: "perfect-game" } },
+  "aurora-celeste": { assetPrefix: "", assetAtlas: "./assets/atlases/sky-kingdom-characters-v1.png", challenge: { id: "perfect-game" } },
 };
+
+export const bossCatalog = Object.fromEntries(Object.entries(datosGuardianes).map(([id, guardian]) => [id, conTextos({ ...guardian, challenge: conTextos({ ...guardian.challenge }, { label: `guardianes.${id}.reto.juntos` }) }, {
+  name: `guardianes.${id}.nombre.rotulo`, intro: `guardianes.${id}.presentacion.juntos`,
+})])) as Record<BossId, BossDefinition>;

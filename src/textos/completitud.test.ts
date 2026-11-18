@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { detourCatalog, detourLevels } from "../game/detours.ts";
+import { bossCatalog } from "../game/bosses.ts";
 import { friendCatalog, foodNames } from "../game/friends.ts";
+import { guardianGames } from "../game/guardianGames.ts";
 import { levels, themeNames } from "../game/levels.ts";
 import { restStopCatalog, restStopLevels } from "../game/restStops.ts";
 import { stickerCatalog } from "../game/stickers.ts";
@@ -73,4 +75,24 @@ test("cada pegatina y cada amigo tiene sus textos y no sobra ninguno", () => {
   for (const comida of Object.keys(foodNames)) assert.ok(existeClave(`amigos.comida.${comida}.rotulo`), `Falta la comida ${comida}`);
   sinSobrantes("amigos", friendCatalog.map((amigo) => amigo.kind), ["comida"]);
   assert.ok(stickerCatalog.every((pegatina) => pegatina.name && pegatina.hint) && friendCatalog.every((amigo) => amigo.name && amigo.biteLine && amigo.tip));
+});
+
+test("cada guardián, juego de guardián y batalla de saltos tiene sus textos y no sobra ninguno", () => {
+  for (const [id, guardian] of Object.entries(bossCatalog)) {
+    for (const hoja of ["nombre.rotulo", "nombre.juntos", "presentacion.juntos", "reto.juntos"]) assert.ok(existeClave(`guardianes.${id}.${hoja}`), `Falta guardianes.${id}.${hoja}`);
+    assert.ok(guardian.name && guardian.intro && guardian.challenge.label, `Guardián ${id} sin textos`);
+  }
+  sinSobrantes("guardianes", Object.keys(bossCatalog));
+  for (const [id, juego] of Object.entries(guardianGames)) {
+    for (const hoja of ["titulo.rotulo", "instruccion.juntos", "pista.rotulo", "exito.rotulo"]) assert.ok(existeClave(`juegos.${id}.${hoja}`), `Falta juegos.${id}.${hoja}`);
+    for (const opcion of juego.options) assert.ok(existeClave(`juegos.${id}.opciones.${opcion.id}.rotulo`) && opcion.label, `Falta la opción ${opcion.id} de ${id}`);
+    const esperadas = new Set(juego.options.map((opcion) => opcion.id));
+    const sobran = Object.keys((es.juegos as unknown as Record<string, { opciones: Record<string, unknown> }>)[id].opciones).filter((opcion) => !esperadas.has(opcion));
+    assert.deepEqual(sobran, [], `Opciones de ${id} sin dato: quítalas de juegos.ts`);
+  }
+  sinSobrantes("juegos", Object.keys(guardianGames));
+  for (const jefe of ["santa-claus", "siroco", "don-silbato"]) {
+    for (const hoja of ["etiqueta.rotulo", "titulo.rotulo", "como.juntos", "gana.juntos", "escena.oculto", "lanza.rotulo"]) assert.ok(existeClave(`duelos.santa.${jefe}.${hoja}`), `Falta duelos.santa.${jefe}.${hoja}`);
+    assert.ok(existeClave(`guardianes.${jefe}.nombre.rotulo`), `Falta el nombre de ${jefe}`);
+  }
 });

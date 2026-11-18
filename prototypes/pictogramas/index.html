@@ -1,0 +1,209 @@
+<title>Pictogramas de Super Noa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+/* Estética única del juego (noche lila). Tres estilos de pictograma en columnas, dibujados por código sobre una rejilla de píxeles. */
+:root {
+  color-scheme: dark;
+  --night: #25183f;
+  --panel: #2c1d47;
+  --ink: #352044;
+  --plum: #3d1430;
+  --cream: #fff8e9;
+  --lilac: #b979dc;
+  --gold: #ffd45f;
+  --apple: #e74755;
+  --muted: #cdb8dc;
+  --noa: "Press Start 2P", monospace;
+  --adult: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--night); color: var(--cream); font-family: var(--adult); }
+.wrap { max-width: 1400px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 22px; }
+h1 { margin: 0; font-family: var(--noa); font-size: clamp(16px, 3vw, 24px); color: var(--gold); line-height: 1.5; }
+h2 { margin: 0 0 10px; font-size: 1.05rem; color: var(--gold); }
+p.lead { margin: 0; max-width: 72ch; color: #e9dcf0; line-height: 1.5; }
+.cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1000px) { .cols { grid-template-columns: 1fr; } }
+.col { min-width: 0; padding: 14px; background: var(--panel); border: 4px solid #2e1a3b; box-shadow: 0 6px 0 #150c22; display: grid; gap: 14px; align-content: start; }
+.col.chosen { border-color: var(--gold); }
+.col h3 { margin: 0; font-size: 1rem; color: var(--gold); }
+.col p { margin: 0; font-size: .85rem; color: var(--muted); line-height: 1.45; }
+.label { font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: #bfa6d3; margin: 0 0 6px; }
+.big { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; background: #3a2858; padding: 10px; border: 3px solid #2e1a3b; }
+.big.light { background: var(--cream); }
+canvas { image-rendering: pixelated; display: block; }
+.hud { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: linear-gradient(#7ab6de, #a9d6a0); border: 3px solid #2e1a3b; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(37,24,63,.9); border: 3px solid var(--ink); font-family: var(--noa); font-size: 16px; color: var(--cream); }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 16px; border: 4px solid #2e1a3b; box-shadow: 0 5px 0 #2e1a3b; background: var(--apple); color: #fff; font-family: var(--noa); font-size: 18px; }
+.btn.alt { background: #f9eafc; color: var(--ink); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+.word { display: inline-flex; align-items: center; gap: 10px; font-family: var(--noa); font-size: 24px; color: var(--ink); }
+.vote { font: inherit; font-weight: 700; padding: 10px 14px; border: 3px solid var(--gold); background: transparent; color: var(--gold); cursor: pointer; justify-self: start; }
+.vote[aria-pressed="true"] { background: var(--gold); color: var(--ink); }
+.vote:focus-visible, select:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; padding: 12px 14px; background: rgba(0,0,0,.25); border: 2px solid #623879; font-size: .9rem; }
+.controls select { font: inherit; padding: 5px; background: var(--ink); color: var(--cream); border: 2px solid var(--lilac); }
+.list { background: var(--panel); border: 4px solid #2e1a3b; padding: 14px; }
+.groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.group h4 { margin: 0 0 8px; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: #bfa6d3; }
+.group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.group li { display: grid; grid-template-columns: 2em minmax(0, 1fr); gap: 8px; align-items: baseline; font-size: .88rem; }
+.group li b { font-family: var(--noa); font-size: 11px; font-weight: 400; color: var(--cream); }
+.group li span.e { font-size: 1.2rem; }
+.group li small { display: block; color: var(--muted); font-size: .75rem; }
+.note { font-size: .85rem; color: var(--muted); line-height: 1.5; max-width: 80ch; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>PICTOGRAMAS</h1>
+    <p class="lead">Prototipo del ticket «Palabras con dibujo y estilo del atlas de pictogramas». Los mismos cuatro dibujos (corazón, manzana, estrella y gato) en tres estilos, junto a la palabra en Press Start 2P, en el HUD y en un botón. Los dibujos se generan con código sobre la rejilla, así que son bocetos: el arte final se hará a mano con prompts siguiendo el estilo elegido.</p>
+  </header>
+
+  <div class="controls">
+    <label for="scale">Tamaño de pantalla del píxel
+      <select id="scale"><option value="2">×2</option><option value="3" selected>×3</option><option value="4">×4</option></select>
+    </label>
+    <span>La palabra va siempre a 24 px; el pictograma se escala a múltiplos enteros para que no se emborrone.</span>
+  </div>
+
+  <div class="cols" id="cols"></div>
+
+  <section class="list" aria-labelledby="list-title">
+    <h2 id="list-title">Lista propuesta de palabras con dibujo</h2>
+    <p class="note">Sale de la lista base de la guía de escritura. El emoji es solo el relleno provisional. Los mundos usan su icono del mapa, que ya existe, así que no aparecen aquí. Los controles (flechas, pausa, sonido…) son pictogramas de un solo color, el del texto, para que se distingan de los objetos del juego.</p>
+    <div class="groups" id="groups"></div>
+  </section>
+</div>
+
+<script>
+const styles = [
+  { id: "A", name: "A · Pequeño de 16 px", desc: "Rejilla de 16 × 16, contorno ciruela de 1 píxel, dos tonos y un brillo. Encaja con la rejilla de 8 px de la letra: el dibujo mide dos letras de alto.", size: 16, outline: "plum", shades: 2, face: false },
+  { id: "B", name: "B · Como el arte del juego (24 px)", desc: "Rejilla de 24 × 24, contorno ciruela, tres tonos, brillo y carita en lo que tiene vida. Es el estilo de la manzana, el gato y el corazón que ya hay en el juego.", size: 24, outline: "plum", shades: 3, face: true },
+  { id: "C", name: "C · Pegatina (24 px)", desc: "Rejilla de 24 × 24, plano, con borde blanco grueso de pegatina por fuera del contorno. Se lee muy bien sobre fondos de escenario, pero es más grande.", size: 24, outline: "sticker", shades: 2, face: true },
+];
+
+const palettes = {
+  heart: ["#ff7a92", "#f2264b", "#b9123a"],
+  apple: ["#ff6b6b", "#e2313c", "#a51c2c"],
+  star: ["#fff08a", "#ffd02e", "#e09a12"],
+  cat: ["#d9b3f5", "#a873d6", "#7a4aa8"],
+};
+const PLUM = "#3d1430";
+
+// Formas en coordenadas unitarias (-1..1). Devuelven 0 (vacío), 1 (cuerpo) u otros códigos.
+function heart(x, y) { y = -y * 1.1 + .25; x *= 1.15; const v = Math.pow(x * x + y * y - 1, 3) - x * x * y * y * y; return v <= 0 ? 1 : 0; }
+function apple(x, y) {
+  const body = ((x + .32) ** 2 + (y - .18) ** 2 < .42) || ((x - .32) ** 2 + (y - .18) ** 2 < .42) || (x * x + (y - .45) ** 2 < .25);
+  const notch = x * x + (y + .45) ** 2 < .03;
+  if (body && !notch) return 1;
+  if (Math.abs(x + .03) < .08 && y < -.38 && y > -.9) return 2; // tallo
+  const lx = x - .32, ly = y + .62; if ((lx * .9 + ly * .5) ** 2 / .09 + (lx * .5 - ly * .9) ** 2 / .012 < 1) return 3; // hoja
+  return 0;
+}
+function star(x, y) {
+  const pts = []; for (let i = 0; i < 10; i++) { const r = i % 2 ? .42 : .98; const a = -Math.PI / 2 + i * Math.PI / 5; pts.push([Math.cos(a) * r, Math.sin(a) * r + .06]); }
+  let inside = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) inside = !inside; }
+  return inside ? 1 : 0;
+}
+function cat(x, y) {
+  if (x * x / .78 + (y - .18) ** 2 / .55 < 1) return 1;
+  const ear = (cx) => { const dx = x - cx, dy = y + .45; return dy < 0 && dy > -.5 && Math.abs(dx) < (dy + .5) * .55; };
+  if (ear(-.5) || ear(.5)) return 1;
+  return 0;
+}
+const shapes = { heart, apple, star, cat };
+const alive = { cat: true, apple: true, star: true, heart: false };
+
+function rasterize(fn, n) {
+  const g = []; for (let j = 0; j < n; j++) { g.push([]); for (let i = 0; i < n; i++) { const x = (i + .5) / n * 2.3 - 1.15, y = (j + .5) / n * 2.3 - 1.15; g[j].push(fn(x, y)); } }
+  return g;
+}
+
+function drawIcon(kind, st, scale) {
+  const n = st.size, pad = st.outline === "sticker" ? 3 : 1, N = n + pad * 2;
+  const g = rasterize(shapes[kind], n);
+  const cv = document.createElement("canvas"); cv.width = N; cv.height = N;
+  const c = cv.getContext("2d");
+  const at = (i, j) => (j >= 0 && j < n && i >= 0 && i < n) ? g[j][i] : 0;
+  const pal = palettes[kind];
+  // relleno con sombreado de luz arriba a la izquierda
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const v = g[j][i]; if (!v) continue;
+    let col;
+    if (v === 2) col = "#6b3a1e"; else if (v === 3) col = "#5fb04f";
+    else {
+      const d = (i / n - .3) + (j / n - .25);
+      if (st.shades === 3) col = d < -.05 ? pal[0] : d < .55 ? pal[1] : pal[2];
+      else col = d < .5 ? pal[1] : pal[2];
+    }
+    c.fillStyle = col; c.fillRect(i + pad, j + pad, 1, 1);
+  }
+  // brillo
+  let hl = null; for (let j = 0; j < n && !hl; j++) for (let i = 0; i < n; i++) if (g[j][i] === 1 && at(i - 1, j) === 1 && at(i, j - 1) === 1 && at(i + 1, j + 1) === 1) { hl = [i + Math.round(n * .08), j + Math.round(n * .08)]; break; }
+  if (hl) { c.fillStyle = "#ffffffcc"; const s = n >= 24 ? 2 : 1; c.fillRect(hl[0] + pad, hl[1] + pad, s, s); if (n >= 24) c.fillRect(hl[0] + pad + 2, hl[1] + pad + 2, 1, 1); }
+  // carita
+  if (st.face && alive[kind]) {
+    const cx = Math.floor(n / 2), cy = Math.floor(n * (kind === "cat" ? .6 : .58));
+    c.fillStyle = PLUM;
+    c.fillRect(cx - 4 + pad, cy - 1 + pad, 2, 2); c.fillRect(cx + 2 + pad, cy - 1 + pad, 2, 2);
+    c.fillRect(cx - 1 + pad, cy + 2 + pad, 2, 1);
+    c.fillStyle = "#ff9fb5"; c.fillRect(cx - 6 + pad, cy + 1 + pad, 2, 1); c.fillRect(cx + 4 + pad, cy + 1 + pad, 2, 1);
+  }
+  // contorno
+  const filled = (i, j) => at(i, j) !== 0;
+  const ring = (dist) => { const out = []; for (let j = -pad; j < n + pad; j++) for (let i = -pad; i < n + pad; i++) { if (filled(i, j)) continue; let near = false; for (let dj = -dist; dj <= dist && !near; dj++) for (let di = -dist; di <= dist; di++) if (Math.abs(di) + Math.abs(dj) <= dist && filled(i + di, j + dj)) { near = true; break; } if (near) out.push([i, j]); } return out; };
+  if (st.outline === "sticker") { c.fillStyle = "#ffffff"; ring(3).forEach(([i, j]) => c.fillRect(i + pad, j + pad, 1, 1)); }
+  c.fillStyle = PLUM; ring(1).forEach(([i, j]) => c.fillRect(i + pad, j + pad, 1, 1));
+  cv.style.width = N * scale + "px"; cv.style.height = N * scale + "px";
+  cv.setAttribute("role", "img"); cv.setAttribute("aria-label", { heart: "corazón", apple: "manzana", star: "estrella", cat: "gato" }[kind]);
+  return cv;
+}
+
+function render() {
+  const scale = +document.getElementById("scale").value;
+  const cols = document.getElementById("cols"); cols.textContent = "";
+  styles.forEach((st) => {
+    const col = document.createElement("section"); col.className = "col";
+    col.innerHTML = `<h3>${st.name}</h3><p>${st.desc}</p>
+      <div><p class="label">Los cuatro dibujos (fondo oscuro y claro)</p><div class="big dark"></div><div class="big light" style="margin-top:6px"></div></div>
+      <div><p class="label">Junto a la palabra (24 px)</p><div class="big light words"></div></div>
+      <div><p class="label">En el HUD (letra de 16 px)</p><div class="hud"></div></div>
+      <div><p class="label">En un botón</p><div class="row btns"></div></div>
+      <button class="vote" type="button" aria-pressed="false">Me gusta este</button>`;
+    const iconScale = (base) => Math.max(1, Math.round(base / st.size));
+    ["heart", "apple", "star", "cat"].forEach((k) => { col.querySelector(".dark").appendChild(drawIcon(k, st, scale)); col.querySelector(".light").appendChild(drawIcon(k, st, scale)); });
+    [["heart", "VIDAS"], ["apple", "MANZANA"], ["star", "¡MUY BIEN!"], ["cat", "GATITO"]].forEach(([k, w]) => {
+      const el = document.createElement("span"); el.className = "word"; el.appendChild(drawIcon(k, st, iconScale(40))); el.append(w); col.querySelector(".words").appendChild(el);
+    });
+    [["heart", "3"], ["apple", "1"], ["star", "2"], ["cat", "●●○"]].forEach(([k, w]) => {
+      const el = document.createElement("span"); el.className = "pill"; el.appendChild(drawIcon(k, st, iconScale(26))); el.append(w); col.querySelector(".hud").appendChild(el);
+    });
+    const b1 = document.createElement("span"); b1.className = "btn"; b1.append("▶ ¡A JUGAR!");
+    const b2 = document.createElement("span"); b2.className = "btn alt"; b2.appendChild(drawIcon("star", st, iconScale(30))); b2.append("SIGUE");
+    col.querySelector(".btns").append(b1, b2);
+    const v = col.querySelector(".vote");
+    v.addEventListener("click", () => { document.querySelectorAll(".col").forEach((c) => { c.classList.remove("chosen"); const b = c.querySelector(".vote"); b.setAttribute("aria-pressed", "false"); b.textContent = "Me gusta este"; }); col.classList.add("chosen"); v.setAttribute("aria-pressed", "true"); v.textContent = "★ Elegido"; });
+    cols.appendChild(col);
+  });
+}
+
+const groups = [
+  ["Partida (a color)", [["❤", "VIDAS", "vidas, sin caer"], ["🍎", "MANZANA", ""], ["✨", "PEGATINA", ""], ["⭐", "ESTRELLA", "medalla, perfecto, mejor marca"], ["🐱", "GATO", "gatito, poder de gato"], ["🧶", "LANA", ""], ["📦", "CAJA", ""], ["🚩", "BANDERA", "puntos seguros"], ["🏁", "META", ""], ["🚪", "SALA", "puerta"], ["👑", "RETO", "jefes, guardián"], ["🏆", "¡BRAVO!", "final"], ["🖼", "MARCO", "premio de guardián"], ["👧", "NOA", "dónde está Noa"]]],
+  ["Mundo y peligros (a color)", [["💧", "AGUA", "poza, gota"], ["🌋", "LAVA", ""], ["🧊", "HIELO", ""], ["💨", "AIRE", ""], ["🌸", "FLOR", ""], ["☁", "NUBE", "supersalto"], ["🦔", "ERIZO", "pinchos"], ["🐶", "PERRITO", ""], ["🎵", "MUSICA", "compás"], ["🎁", "REGALO", "sorpresa"], ["🌿", "ENREDADERA", ""], ["🚃", "TREN", "vagones"]]],
+  ["Menús y colección (a color)", [["🗺", "MAPA", ""], ["🏠", "INICIO", ""], ["📒", "ALBUM", ""], ["🐾", "AMIGOS", "paseo"], ["✉", "POSTAL", ""], ["🎉", "FIESTA", ""], ["✦", "SECRETO", "camino secreto"], ["😊", "NO MUERDE", "amigos"], ["💡", "PISTA", ""], ["🔒", "CERRADO", ""]]],
+  ["Controles (un color)", [["▶", "JUGAR", "seguir, siguiente"], ["⏸", "PAUSA", ""], ["🔊", "SONIDO", ""], ["🔇", "SIN SONIDO", ""], ["↺", "OTRA VEZ", "reintentar, empezar la sala"], ["↩", "VUELVE", ""], ["✓", "¡SI!", "conseguido"], ["❔", "¿?", "por descubrir"], ["❓", "AYUDA", "cómo se juega"], ["⏳", "ESPERA", "cargando"], ["⛶", "PANTALLA GRANDE", ""], ["✕", "CERRAR", ""], ["↑", "SALTA", ""], ["◀ ▶", "CAMINA", "izquierda y derecha"], ["🔍", "BUSCA", "ver todo"]]],
+];
+const gEl = document.getElementById("groups");
+groups.forEach(([title, items]) => {
+  const d = document.createElement("div"); d.className = "group";
+  d.innerHTML = `<h4>${title} · ${items.length}</h4><ul>${items.map(([e, w, n]) => `<li><span class="e" aria-hidden="true">${e}</span><span><b>${w}</b>${n ? `<small>${n}</small>` : ""}</span></li>`).join("")}</ul>`;
+  gEl.appendChild(d);
+});
+
+document.getElementById("scale").addEventListener("change", render);
+document.fonts?.ready.then(render); render();
+</script>

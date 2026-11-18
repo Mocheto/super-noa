@@ -1,0 +1,151 @@
+<title>HUD de Super Noa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+/* Estética del juego. El escenario es la ilustración del mundo 1; encima, dos propuestas de HUD en escritorio y móvil apaisado. */
+:root {
+  color-scheme: dark;
+  --night: #25183f;
+  --frame: #1b1129;
+  --ink: #352044;
+  --plum: #3d1430;
+  --cream: #fff8e9;
+  --gold: #ffd45f;
+  --lilac: #b979dc;
+  --muted: #cdb8dc;
+  --noa: "Press Start 2P", monospace;
+  --adult: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--night); color: var(--cream); font-family: var(--adult); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+h1 { margin: 0; font-family: var(--noa); font-size: clamp(16px, 3vw, 24px); color: var(--gold); }
+.lead { margin: 0; max-width: 75ch; color: #e9dcf0; line-height: 1.5; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; padding: 12px 14px; background: rgba(0,0,0,.25); border: 2px solid #623879; font-size: .9rem; }
+.seg { display: inline-flex; border: 2px solid var(--lilac); }
+.seg button { font: inherit; padding: 6px 12px; background: transparent; color: var(--cream); border: 0; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--lilac); color: var(--night); font-weight: 700; }
+.seg button:focus-visible, .hudbtn:focus-visible { outline: 4px solid var(--gold); outline-offset: 2px; }
+.stage-wrap { overflow-x: auto; }
+.device { margin: 0 auto; background: var(--frame); padding: 10px; border: 4px solid #120b1d; width: max-content; max-width: 100%; }
+.screen { position: relative; overflow: hidden; background: #6aa0c8 url("__BG__") center / cover; image-rendering: pixelated; }
+.desc { display: grid; gap: 6px; padding: 12px 14px; background: #2c1d47; border: 4px solid #2e1a3b; line-height: 1.5; font-size: .92rem; }
+.desc b { color: var(--gold); }
+.desc ul { margin: 0; padding-left: 1.2em; }
+
+/* piezas comunes */
+canvas.pix { image-rendering: pixelated; display: block; }
+.chip { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; background: rgba(37,24,63,.9); border: 3px solid var(--ink); font-family: var(--noa); font-size: 16px; color: var(--cream); line-height: 1; }
+.chip.world { background: var(--gold); color: var(--ink); }
+.hudbtn { display: grid; place-items: center; width: 48px; height: 48px; background: rgba(37,24,63,.9); border: 3px solid var(--cream); color: var(--cream); font-family: var(--noa); font-size: 18px; cursor: pointer; box-shadow: 0 4px 0 #120b1d; padding: 0; }
+.hudbtn.big { width: 64px; height: 64px; font-size: 24px; border-radius: 14px; background: #5b386c; }
+.dots { letter-spacing: 4px; color: var(--gold); }
+.dots i { font-style: normal; color: rgba(255,248,233,.45); }
+
+/* A: barra arriba, fuera del escenario */
+.hudA { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; background: #2c1d47; border-bottom: 4px solid #120b1d; flex-wrap: wrap; }
+.hudA .mid { display: flex; gap: 6px; flex-wrap: wrap; }
+.hudA .right { display: flex; gap: 6px; }
+/* B: sobre el escenario, en las esquinas */
+.hudB { position: absolute; inset: 10px 10px auto 10px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 8px; pointer-events: none; }
+.hudB > * { pointer-events: auto; }
+.hudB .left { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.hearts { display: flex; gap: 4px; padding: 6px 8px; background: rgba(37,24,63,.75); border: 3px solid var(--ink); }
+.hudB .center { display: flex; gap: 6px; }
+.hudB .right { justify-self: end; }
+/* controles táctiles */
+.touch { position: absolute; inset: auto 10px 10px 10px; display: flex; justify-content: space-between; align-items: end; pointer-events: none; }
+.touch div { display: flex; gap: 10px; }
+.tb { width: 64px; height: 64px; border: 3px solid var(--cream); border-radius: 16px; display: grid; place-items: center; background: rgba(123,77,150,.8); color: #fff; font-family: var(--noa); font-size: 20px; }
+.tb.jump { width: 76px; height: 76px; }
+/* ventana de pausa */
+.pause { position: absolute; inset: 0; display: none; place-items: center; background: rgba(16,8,25,.55); }
+.pause.open { display: grid; }
+.pausebox { background: var(--cream); color: var(--ink); border: 6px solid #2d183a; padding: 18px 22px; display: grid; gap: 12px; justify-items: center; font-family: var(--noa); box-shadow: 8px 8px 0 rgba(16,8,25,.65); }
+.pausebox h2 { margin: 0; font-size: 22px; font-weight: 400; }
+.pausebox .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.pbtn { padding: 12px 14px; border: 4px solid #2e1a3b; background: #f9eafc; color: var(--ink); font-family: var(--noa); font-size: 14px; box-shadow: 0 4px 0 #2e1a3b; cursor: pointer; }
+.pbtn.go { background: #e74755; color: #fff; }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <h1>HUD DE LA PARTIDA</h1>
+    <p class="lead">Prototipo del ticket «El HUD de la partida». Dos propuestas sobre la pantalla 1-2 del bosque, en escritorio (960 × 540) y en un móvil apaisado con los controles táctiles. Corazón, manzana, pegatina y gato son pictogramas de estilo B dibujados por código; el resto son emoji provisionales. Toca el botón de pausa para ver qué queda dentro.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Opciones del prototipo">
+    <span>Propuesta <span class="seg" id="v"><button type="button" data-v="A">A · Barra arriba</button><button type="button" data-v="B" aria-pressed="true">B · Esquinas</button></span></span>
+    <span>Pantalla <span class="seg" id="d"><button type="button" data-d="desk" aria-pressed="true">Escritorio</button><button type="button" data-d="phone">Móvil apaisado</button></span></span>
+    <span>Vidas <span class="seg" id="l"><button type="button" data-l="3" aria-pressed="true">3</button><button type="button" data-l="2">2</button><button type="button" data-l="1">1</button></span></span>
+    <span>Poder <span class="seg" id="p"><button type="button" data-p="none" aria-pressed="true">Ninguno</button><button type="button" data-p="cat">Gata</button><button type="button" data-p="apple">Manzana</button></span></span>
+  </div>
+
+  <div class="stage-wrap"><div class="device" id="device"></div></div>
+  <div class="desc" id="desc"></div>
+</div>
+
+<script>
+const PLUM = "#3d1430";
+const pal = { heart: ["#ff7a92", "#f2264b", "#b9123a"], apple: ["#ff6b6b", "#e2313c", "#a51c2c"], star: ["#fff08a", "#ffd02e", "#e09a12"], cat: ["#d9b3f5", "#a873d6", "#7a4aa8"], empty: ["#8c7a99", "#6d5c7a", "#54465f"] };
+const shp = {
+  heart: (x, y) => { y = -y * 1.1 + .25; x *= 1.15; return Math.pow(x * x + y * y - 1, 3) - x * x * y * y * y <= 0 ? 1 : 0; },
+  apple: (x, y) => { const b = ((x + .32) ** 2 + (y - .18) ** 2 < .42) || ((x - .32) ** 2 + (y - .18) ** 2 < .42) || (x * x + (y - .45) ** 2 < .25); if (b && !(x * x + (y + .45) ** 2 < .03)) return 1; if (Math.abs(x + .03) < .08 && y < -.38 && y > -.9) return 2; const lx = x - .32, ly = y + .62; return (lx * .9 + ly * .5) ** 2 / .09 + (lx * .5 - ly * .9) ** 2 / .012 < 1 ? 3 : 0; },
+  star: (x, y) => { const p = []; for (let i = 0; i < 8; i++) { const r = i % 2 ? .28 : 1; const a = -Math.PI / 2 + i * Math.PI / 4; p.push([Math.cos(a) * r, Math.sin(a) * r]); } let ins = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++) { const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) ins = !ins; } return ins ? 1 : 0; },
+  cat: (x, y) => { if (x * x / .78 + (y - .18) ** 2 / .55 < 1) return 1; const e = (cx) => { const dx = x - cx, dy = y + .45; return dy < 0 && dy > -.5 && Math.abs(dx) < (dy + .5) * .55; }; return e(-.5) || e(.5) ? 1 : 0; },
+};
+const faces = { apple: true, cat: true };
+function icon(kind, scale, colors = kind) {
+  const n = 24, N = 26, g = [];
+  for (let j = 0; j < n; j++) { g.push([]); for (let i = 0; i < n; i++) g[j].push(shp[kind]((i + .5) / n * 2.3 - 1.15, (j + .5) / n * 2.3 - 1.15)); }
+  const cv = document.createElement("canvas"); cv.width = N; cv.height = N; cv.className = "pix"; const c = cv.getContext("2d");
+  const at = (i, j) => (j >= 0 && j < n && i >= 0 && i < n) ? g[j][i] : 0; const P = pal[colors];
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const v = g[j][i]; if (!v) continue; const d = (i / n - .3) + (j / n - .25); c.fillStyle = v === 2 ? "#6b3a1e" : v === 3 ? "#5fb04f" : d < -.05 ? P[0] : d < .55 ? P[1] : P[2]; c.fillRect(i + 1, j + 1, 1, 1); }
+  if (colors !== "empty") { c.fillStyle = "#ffffffcc"; for (let j = 0; j < n; j++) { let done = false; for (let i = 0; i < n; i++) if (g[j][i] === 1 && at(i - 1, j) === 1 && at(i, j - 1) === 1) { c.fillRect(i + 3, j + 3, 2, 2); done = true; break; } if (done) break; } }
+  if (faces[kind] && colors !== "empty") { const cx = 12, cy = 14; c.fillStyle = PLUM; c.fillRect(cx - 4 + 1, cy, 2, 2); c.fillRect(cx + 2 + 1, cy, 2, 2); c.fillRect(cx + 1 - 1, cy + 3, 2, 1); c.fillStyle = "#ff9fb5"; c.fillRect(cx - 6 + 1, cy + 2, 2, 1); c.fillRect(cx + 4 + 1, cy + 2, 2, 1); }
+  c.fillStyle = PLUM; for (let j = -1; j <= n; j++) for (let i = -1; i <= n; i++) { if (at(i, j)) continue; if (at(i + 1, j) || at(i - 1, j) || at(i, j + 1) || at(i, j - 1)) c.fillRect(i + 1, j + 1, 1, 1); }
+  cv.style.width = N * scale + "px"; cv.style.height = N * scale + "px"; cv.setAttribute("aria-hidden", "true");
+  return cv;
+}
+
+const state = { v: "B", d: "desk", l: 3, p: "none", paused: false };
+const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const chip = (kind, value, cls = "") => { const e = h("span", "chip " + cls); if (kind) e.appendChild(icon(kind, 1)); e.append(value); return e; };
+const dots = (got, total) => { const e = h("span", "dots"); e.setAttribute("aria-label", `bandera ${got} de ${total}`); for (let i = 0; i < total; i++) { if (i < got) e.append("●"); else e.appendChild(h("i", "", "●")); } return e; };
+const power = () => state.p === "cat" ? chip("cat", "") : state.p === "apple" ? chip("apple", "") : null;
+const pauseBtn = (big) => { const b = h("button", "hudbtn" + (big ? " big" : ""), "⏸"); b.type = "button"; b.setAttribute("aria-label", "Pausa"); b.onclick = () => { state.paused = true; render(); }; return b; };
+
+function render() {
+  document.querySelectorAll(".seg button").forEach((b) => { const k = Object.keys(b.dataset)[0]; b.setAttribute("aria-pressed", String(String(state[k]) === b.dataset[k])); });
+  const desk = state.d === "desk"; const W = desk ? 960 : 740, H = desk ? 540 : 342;
+  const dev = document.getElementById("device"); dev.textContent = "";
+  const screen = h("div", "screen"); screen.style.width = W + "px"; screen.style.height = H + "px";
+  if (state.v === "A") {
+    const bar = h("div", "hudA"); bar.style.width = W + "px";
+    const left = h("span", "chip world", "🌲 1-2");
+    const mid = h("div", "mid"); mid.append(chip("heart", String(state.l)), chip("apple", "1"), chip("star", "2"), (() => { const c = h("span", "chip", "🚩 "); c.appendChild(dots(2, 3)); return c; })()); const pw = power(); if (pw) mid.append(pw);
+    const right = h("div", "right"); const s = h("button", "hudbtn", "🔊"); s.type = "button"; s.setAttribute("aria-label", "Sonido"); const f = h("button", "hudbtn", "⛶"); f.type = "button"; f.setAttribute("aria-label", "Pantalla grande"); right.append(s, f, pauseBtn(false));
+    bar.append(left, mid, right); dev.appendChild(bar);
+  } else {
+    const hud = h("div", "hudB");
+    const left = h("div", "left"); const hearts = h("div", "hearts"); hearts.setAttribute("aria-label", `${state.l} vidas`); for (let i = 0; i < 3; i++) hearts.appendChild(icon("heart", desk ? 1.4 : 1.1, i < state.l ? "heart" : "empty")); left.append(hearts);
+    const row = h("div", ""); row.style.display = "flex"; row.style.gap = "6px"; row.append(chip("apple", "1"), chip("star", "2")); const pw = power(); if (pw) row.append(pw); left.append(row);
+    const center = h("div", "center"); center.append(h("span", "chip world", "🌲 1-2"), (() => { const c = h("span", "chip", "🚩 "); c.appendChild(dots(2, 3)); return c; })());
+    const right = h("div", "right"); right.append(pauseBtn(true));
+    hud.append(left, center, right); screen.appendChild(hud);
+  }
+  if (!desk) { const t = h("div", "touch"); const l = h("div"); l.append(h("span", "tb", "◀"), h("span", "tb", "▶")); const r = h("div"); r.append(h("span", "tb", "🧶"), h("span", "tb jump", "↑↑")); t.append(l, r); screen.appendChild(t); }
+  const pause = h("div", "pause" + (state.paused ? " open" : "")); const box = h("div", "pausebox"); box.append(h("h2", "", "⏸ PAUSA"));
+  const r1 = h("div", "row"); const go = h("button", "pbtn go", "▶ SEGUIR"); go.type = "button"; go.onclick = () => { state.paused = false; render(); }; r1.append(go, h("button", "pbtn", "↺ OTRA VEZ"), h("button", "pbtn", "🗺 MAPA")); box.append(r1);
+  if (state.v === "B") { const r2 = h("div", "row"); r2.append(h("button", "pbtn", "🔊 SONIDO"), h("button", "pbtn", "⛶ GRANDE")); box.append(r2); }
+  pause.appendChild(box); screen.appendChild(pause);
+  dev.appendChild(screen);
+  document.getElementById("desc").innerHTML = state.v === "A"
+    ? `<div><b>A · Barra arriba.</b> Como ahora, pero con la nueva letra y pictogramas. La barra va fuera del escenario y la franja de debajo desaparece: las banderas pasan a la barra.</div><ul><li>A favor: no tapa nada del juego y los tres botones están siempre a mano.</li><li>En contra: en el móvil apaisado la barra roba unos 64 px de alto, y los números (❤ 3) exigen leer una cifra.</li></ul>`
+    : `<div><b>B · Esquinas sobre el escenario.</b> Las vidas se ven como tres corazones (los perdidos quedan grises), sin número. Manzana y pegatinas debajo. En el centro, el mundo y las banderas con puntos. A la derecha solo un botón de pausa grande; sonido y pantalla grande pasan a la ventana de pausa.</div><ul><li>A favor: todo el alto de la pantalla para jugar, vidas que se cuentan mirando y un único botón grande fácil de acertar con un dedo pequeño.</li><li>En contra: tapa un poco las esquinas de arriba del escenario, y para silenciar hay que pausar.</li></ul>`;
+}
+document.querySelectorAll(".seg").forEach((seg) => seg.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; const k = Object.keys(b.dataset)[0]; state[k] = k === "l" ? +b.dataset[k] : b.dataset[k]; state.paused = false; render(); }));
+document.fonts?.ready.then(render); render();
+</script>

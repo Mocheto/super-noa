@@ -94,7 +94,12 @@ def celda(lamina: Image.Image, caja: tuple[int, int, int, int], controles: bool)
         opaco = pequeno.mean(axis=2) > 110
         rgba[1:-1, 1:-1, :3] = 255
     else:
-        opaco = (255 - pequeno.min(axis=2)) > 80  # sin el halo claro que deja la reducción junto al blanco
+        # Solo es fondo el blanco unido al borde (con el halo claro que deja la reducción junto a él): los rellenos
+        # claros dentro del contorno (nube, hielo, sobre, bombilla) se quedan.
+        claro = (255 - pequeno.min(axis=2)) <= 80
+        etiquetas, _ = ndimage.label(claro)
+        borde = set(np.unique(np.concatenate([etiquetas[0], etiquetas[-1], etiquetas[:, 0], etiquetas[:, -1]]))) - {0}
+        opaco = ~np.isin(etiquetas, list(borde))
         rgba[1:-1, 1:-1, :3] = pequeno
     rgba[1:-1, 1:-1, 3] = np.where(opaco, 255, 0)
     return Image.fromarray(rgba, "RGBA").resize((CELDA, CELDA), Image.Resampling.NEAREST)

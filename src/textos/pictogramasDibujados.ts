@@ -1,2 +1,2 @@
 /** Pictogramas que ya tienen dibujo en los atlas (lo escribe prototypes/tools/pictogramas-recorte.py). Los demás usan su emoji. */
-export const pictogramasDibujados = ["vidas", "estrella", "reto", "flor", "pausa", "salta"] as const;
+export const pictogramasDibujados = ["vidas", "manzana", "pegatina", "estrella", "gato", "lana", "caja", "bandera", "meta", "sala", "reto", "bravo", "marco", "noa", "agua", "lava", "hielo", "aire", "flor", "nube", "erizo", "perrito", "musica", "regalo", "postal", "fiesta", "secreto", "no-muerde", "pista", "cerrado", "jugar", "pausa", "sonido", "sin-sonido", "otra-vez", "vuelve", "si", "por-descubrir", "ayuda", "espera", "pantalla-grande", "cerrar", "salta", "camina", "busca"] as const;

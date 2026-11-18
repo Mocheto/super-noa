@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { detourCatalog, detourLevels } from "../game/detours.ts";
 import { bossCatalog } from "../game/bosses.ts";
@@ -95,4 +96,11 @@ test("cada guardián, juego de guardián y batalla de saltos tiene sus textos y 
     for (const hoja of ["etiqueta.rotulo", "titulo.rotulo", "como.juntos", "gana.juntos", "escena.oculto", "lanza.rotulo"]) assert.ok(existeClave(`duelos.santa.${jefe}.${hoja}`), `Falta duelos.santa.${jefe}.${hoja}`);
     assert.ok(existeClave(`guardianes.${jefe}.nombre.rotulo`), `Falta el nombre de ${jefe}`);
   }
+});
+
+test("cada texto de los minijuegos rítmicos lo usa algún archivo", () => {
+  const raiz = new URL("../game/", import.meta.url);
+  const codigo = readdirSync(raiz).filter((nombre) => /\.tsx?$/.test(nombre) && !/\.test\./.test(nombre)).map((nombre) => readFileSync(new URL(nombre, raiz), "utf8")).join("\n");
+  const sinUso = hojas().map(([clave]) => clave).filter((clave) => clave.startsWith("minijuegos.") && !codigo.includes(`"${clave}"`));
+  assert.deepEqual(sinUso, [], "Textos de minijuegos que ningún archivo usa: quítalos de src/textos/es/minijuegos.ts");
 });

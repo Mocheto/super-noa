@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import { t } from "../textos/index.ts";
 
 export { outputLatencySeconds };
 
@@ -20,12 +21,12 @@ export type Food = "bellota" | "castana";
 
 /** Cada jabato: a cuántos pulsos de la llamada come, qué come, cómo lo llama el Gran Jabalí y desde qué fase sale. */
 export const JABATOS: Record<JabatoKind, { bites: readonly number[]; food: Food; call: string; fromPhase: Phase }> = {
-  pequeno: { bites: [2], food: "bellota", call: "¡Gru!", fromPhase: 1 },
-  grande: { bites: [4], food: "castana", call: "¡GRUUUU!", fromPhase: 2 },
+  pequeno: { bites: [2], food: "bellota", call: t("minijuegos.merienda.gru.rotulo"), fromPhase: 1 },
+  grande: { bites: [4], food: "castana", call: t("minijuegos.merienda.gruuuu.rotulo"), fromPhase: 2 },
   gloton: { bites: [2, 3], food: "bellota", call: "¡Gru-gru!", fromPhase: 3 },
 };
 
-export const PHASE_NAMES: Record<Phase, string> = { 1: "Bellotas tranquilas", 2: "¡Llega el grande!", 3: "¡Merienda glotona!" };
+export const PHASE_NAMES: Record<Phase, string> = { 1: t("minijuegos.merienda.bellotas-tranquilas.rotulo"), 2: t("minijuegos.merienda.llega-el-grande.rotulo"), 3: t("minijuegos.merienda.merienda-glotona.rotulo") };
 
 /** Una llamada del Gran Jabalí: pulso contado desde el primer pulso de la merienda (tras la cuenta). */
 export type Call = { phase: Phase; at: number; kind: JabatoKind };

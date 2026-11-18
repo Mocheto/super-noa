@@ -10,6 +10,7 @@ import {
   ART, BELT, CLEARING_BACKGROUND, FIRE_BOX, FIRE_FRAMES, KITTENS, KITTEN_POSES, LOG_CELLS, NOA_FEET, NOA_POSES, STUMP_BOX, WOODPILE_SCALE, cellStyle, halfCell, shown,
 } from "./catPartyArt";
 import "./catParty.css";
+import { t } from "../textos/index.ts";
 
 const sprites = "./assets/sprites";
 const STAGE_WIDTH = 960;
@@ -63,9 +64,9 @@ type View = {
 const emptyView: View = { pulse: -1, pieces: [], halves: [], pile: 0, ring: null, lamp: -1, bubbleA: null, bubbleB: null, noaPose: NOA_POSES.ready, kittenA: KITTEN_POSES.ready, kittenB: KITTEN_POSES.ready, feedback: null, caption: "", phase: "" };
 
 const CAPTIONS: Record<PartyMode, readonly [number, string][]> = {
-  demo: [[0, "Mira cómo lo hace Noa."], [4, "Tronco pequeño: un golpe."], [8, "Tronco mediano: dos golpes seguidos."], [12, "El ovillo no se corta: déjalo pasar."]],
-  practice: [[0, "¡Ensayamos! Escucha la cuenta."], [4, "Golpea cuando el tronco llegue al tajo."]],
-  song: [[0, "¡Que empiece la fiesta!"], [4, ""]],
+  demo: [[0, t("minijuegos.gatitos.mira-como-lo-hace.juntos")], [4, t("minijuegos.gatitos.tronco-pequeno-un-golpe.juntos")], [8, t("minijuegos.gatitos.tronco-mediano-dos-golpes.juntos")], [12, t("minijuegos.gatitos.el-ovillo-no-se.juntos")]],
+  practice: [[0, t("minijuegos.gatitos.ensayamos-escucha-la-cuenta.juntos")], [4, t("minijuegos.gatitos.golpea-cuando-el-tronco.juntos")]],
+  song: [[0, t("minijuegos.gatitos.que-empiece-la-fiesta.rotulo")], [4, ""]],
 };
 
 const pieceSize = (type: PieceView["type"]) => type === "yarn" ? { width: 62, height: 56 } : shown(type === "small" ? ART.smallLog : ART.mediumLog);
@@ -83,8 +84,8 @@ function snapshot(session: Session, pulse: number, reduceMotion: boolean): View 
   const ring = untilHit < TRAVEL_PULSES && untilHit > -0.2 ? { radius: reduceMotion ? 40 : 34 + Math.max(0, untilHit) * 46, ready: Math.abs(untilHit) <= HIT_WINDOW_PULSES * 0.6 } : null;
   const pushed = run.pieces.find((item) => item.push === whole && pulse - item.push < 0.7);
   const echoed = run.pieces.find((item) => item.type === "medium" && item.push + 1 === whole && pulse - whole < 0.7);
-  const bubbleA = session.yarnBubbleUntil > pulse ? { text: "¡Es mi ovillo!", pink: true }
-    : pushed ? { text: pushed.type === "yarn" ? "¡plop!" : "¡miau!", pink: pushed.type === "yarn" } : null;
+  const bubbleA = session.yarnBubbleUntil > pulse ? { text: t("minijuegos.gatitos.es-mi-ovillo.rotulo"), pink: true }
+    : pushed ? { text: pushed.type === "yarn" ? t("minijuegos.gatitos.plop.rotulo") : t("minijuegos.gatitos.miau.rotulo"), pink: pushed.type === "yarn" } : null;
   const counting = pulse >= 0 && pulse < 4 && pulse - whole < 0.65;
   const noaPose = session.chopUntil > pulse ? NOA_POSES.chop : untilHit < 0.9 && untilHit > 0.05 ? NOA_POSES.raise : NOA_POSES.ready;
   const kittenA = pushed ? (pulse - pushed.push < 0.35 ? KITTEN_POSES.push : pushed.type === "yarn" ? KITTEN_POSES.ready : KITTEN_POSES.meow)
@@ -98,7 +99,7 @@ function snapshot(session: Session, pulse: number, reduceMotion: boolean): View 
     pile: run.broken,
     lamp: pulse >= 0 ? whole % 4 : -1,
     bubbleA,
-    bubbleB: counting ? String(whole + 1) : echoed ? "¡miau!" : null,
+    bubbleB: counting ? String(whole + 1) : echoed ? t("minijuegos.gatitos.miau.rotulo") : null,
     noaPose, kittenA, kittenB,
     feedback: session.feedback && session.feedback.until > pulse ? { text: session.feedback.text, miss: session.feedback.miss } : null,
   };
@@ -115,7 +116,7 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
   const [silent, setSilent] = useState(false);
   const [clockKind, setClockKind] = useState<"audio" | "frame" | null>(null);
   const [view, setView] = useState<View>(emptyView);
-  const [message, setMessage] = useState("Bruma y sus amigos necesitan leña para la fiesta. ¿Ayudas a Noa a cortarla?");
+  const [message, setMessage] = useState(t("minijuegos.gatitos.bruma-y-sus-amigos.juntos"));
   const soundOff = muted || silent;
 
   useLayoutEffect(() => {
@@ -243,23 +244,23 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
         playNow(note, 0.3, "triangle", 0.13);
         playNow(720, 0.06, "sine", 0.05);
       }
-      session.feedback = { text: "¡Toc!", miss: false, until: pulse + 0.5 };
+      session.feedback = { text: t("minijuegos.gatitos.toc.rotulo"), miss: false, until: pulse + 0.5 };
       if (result.broke) {
         const type = result.piece.type === "small" ? "small" : "medium";
         const { width, height } = pieceSize(type);
         // Las mitades se juntan en el tajo: la izquierda acaba en su centro y la derecha empieza en él.
         for (const side of [-1, 1] as const) session.halves.push({ id: session.halfId++, type, x: side < 0 ? STUMP_X - width : STUMP_X, y: BELT_Y - height, width, height, side, start: pulse });
-        setMessage(result.piece.type === "small" ? "¡Toc! Un tronco más para la hoguera." : "¡Toc, toc! El tronco mediano está listo.");
-      } else setMessage("¡Toc! Falta otro golpe.");
+        setMessage(result.piece.type === "small" ? t("minijuegos.gatitos.toc-un-tronco-mas.juntos") : t("minijuegos.gatitos.toc-toc-el-tronco.juntos"));
+      } else setMessage(t("minijuegos.gatitos.toc-falta-otro-golpe.juntos"));
     } else if (result.kind === "yarn") {
       if (!playSamplesNow([MISS_SAMPLE])) playNow(92, 0.16, "sine", 0.14);
-      session.feedback = { text: "¡Boing!", miss: true, until: pulse + 0.5 };
+      session.feedback = { text: t("minijuegos.gatitos.boing.rotulo"), miss: true, until: pulse + 0.5 };
       session.yarnBubbleUntil = pulse + 1.5;
-      setMessage("Era el ovillo. ¡Déjalo pasar sin golpear!");
+      setMessage(t("minijuegos.gatitos.era-el-ovillo-dejalo.juntos"));
     } else {
       if (!playSamplesNow([MISS_SAMPLE])) playNow(92, 0.16, "sine", 0.14);
-      session.feedback = { text: "¡Uy!", miss: true, until: pulse + 0.5 };
-      setMessage("Espera a que el tronco llegue al tajo.");
+      session.feedback = { text: t("minijuegos.gatitos.uy.rotulo"), miss: true, until: pulse + 0.5 };
+      setMessage(t("minijuegos.gatitos.espera-a-que-el.juntos"));
     }
   }, [playNow, playSamplesNow]);
 
@@ -268,8 +269,8 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
     const finishedMode = session.run.mode;
     setMode(null);
     setCelebrating(finishedMode === "song");
-    setMessage(finishedMode === "song" ? "¡La hoguera ya brilla! Gracias por la leña." : finishedMode === "demo"
-      ? "¡Ya lo has visto! Puedes ensayar o empezar la canción." : "¡Buen ensayo! Puedes ensayar otra vez o empezar la canción.");
+    setMessage(finishedMode === "song" ? t("minijuegos.gatitos.la-hoguera-ya-brilla.juntos") : finishedMode === "demo"
+      ? t("minijuegos.gatitos.ya-lo-has-visto.juntos") : t("minijuegos.gatitos.buen-ensayo-puedes-ensayar.juntos"));
   }, []);
 
   const strike = useCallback(() => {
@@ -289,7 +290,7 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
     sessionRef.current = session;
     setView(emptyView);
     setCelebrating(false);
-    setMessage(nextMode === "demo" ? "Mira cómo lo hace Noa." : "Escucha la cuenta y golpea cuando el tronco llegue al tajo.");
+    setMessage(nextMode === "demo" ? t("minijuegos.gatitos.mira-como-lo-hace.juntos") : t("minijuegos.gatitos.escucha-la-cuenta-y.juntos"));
     const audioReady = !muted && await ensureAudio();
     if (sessionRef.current !== session) return;
     if (audioReady && audioRef.current) {
@@ -339,8 +340,8 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
       } else {
         for (const missed of collectMisses(session.run, pulse)) {
           if (!playSamplesNow([ROLL_SAMPLE])) playNow(180, 0.18, "triangle", 0.06, 90);
-          session.feedback = { text: "Se fue rodando", miss: true, until: pulse + 0.6 };
-          setMessage(missed.done.length ? "Faltó el segundo golpe. ¡No pasa nada, viene otro!" : "No pasa nada. ¡Ya viene otro tronco!");
+          session.feedback = { text: t("minijuegos.gatitos.se-fue-rodando.rotulo"), miss: true, until: pulse + 0.6 };
+          setMessage(missed.done.length ? t("minijuegos.gatitos.falto-el-segundo-golpe.juntos") : t("minijuegos.gatitos.no-pasa-nada-ya.juntos"));
         }
       }
       const down = readA();
@@ -374,11 +375,11 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
   const fireSize = { width: shown(ART.fire).width * FIRE_BOX.scale, height: shown(ART.fire).height * FIRE_BOX.scale };
   return <section className={`cat-party-screen${reduceMotion ? " cat-party-still" : ""}`} data-gamepad-managed={mode ? "true" : undefined} aria-labelledby="cat-party-title">
     <header className="cat-party-header">
-      <div><p className="eyebrow">El Bosque de los Gatitos</p><h2 id="cat-party-title">La fiesta de los gatitos</h2></div>
+      <div><p className="eyebrow">{t("minijuegos.gatitos.el-bosque-de-los.juntos")}</p><h2 id="cat-party-title">{t("minijuegos.gatitos.la-fiesta-de-los.juntos")}</h2></div>
       <div className="cat-party-options">
-        <button className="pixel-button" type="button" aria-pressed={soundOff} disabled={muted} onClick={() => setSilent(!silent)}>{soundOff ? "Sonido apagado" : "Silenciar"}</button>
-        {mode && <button className="pixel-button" type="button" onClick={onPause}>Pausa</button>}
-        <button className="pixel-button" type="button" data-gamepad-back onClick={onExit}>Volver al mapa</button>
+        <button className="pixel-button" type="button" aria-pressed={soundOff} disabled={muted} onClick={() => setSilent(!silent)}>{soundOff ? t("minijuegos.gatitos.sonido-apagado.rotulo") : t("minijuegos.gatitos.silenciar.rotulo")}</button>
+        {mode && <button className="pixel-button" type="button" onClick={onPause}>{t("minijuegos.gatitos.pausa.rotulo")}</button>}
+        <button className="pixel-button" type="button" data-gamepad-back onClick={onExit}>{t("minijuegos.gatitos.volver-al-mapa.rotulo")}</button>
       </div>
     </header>
     <div className="cat-party-frame" ref={frameRef}>
@@ -393,7 +394,7 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
             <img key={index} src={ART.stick.src} alt="" style={{ left: (index % 6) * 30 + Math.floor(index / 6) * 14, top: 78 - Math.floor(index / 6) * 16, width: ART.stick.size[0] / 2, height: ART.stick.size[1] / 2 }} />)}</div>
         <div className="cat-party-stump" style={{ backgroundImage: `url("${ART.stump.src}")`, width: ART.stump.size[0] / 2, height: ART.stump.size[1] / 2, left: STUMP_BOX.centerX - ART.stump.size[0] / 4, top: STUMP_BOX.centerTop - 23 }} />
         {view.ring && <div className={`cat-party-ring${view.ring.ready ? " is-ready" : ""}`} style={{ width: view.ring.radius * 2, height: view.ring.radius * 2, left: STUMP_X - view.ring.radius, top: BELT_Y - 18 - view.ring.radius }} />}
-        {view.ring?.ready && <div className="cat-party-now">¡Ahora!</div>}
+        {view.ring?.ready && <div className="cat-party-now">{t("minijuegos.gatitos.ahora.rotulo")}</div>}
         <div className="cat-party-noa" style={{ ...cellStyle(ART.noa, celebrating ? NOA_POSES.celebrate : view.noaPose), ...noaSize, left: NOA_FEET.x - ART.noa.feetX! / 2, top: NOA_FEET.y - noaSize.height }} />
         <div className={`cat-party-kitten is-first${celebrating ? " is-party" : ""}`} style={{ ...cellStyle(ART.kittenGrey, celebrating ? KITTEN_POSES.meow : view.kittenA), ...greySize, left: KITTENS.grey.feetX - ART.kittenGrey.feetX! / 2, top: KITTENS.grey.floor - greySize.height }}>
           {view.bubbleA && !celebrating && <span className={`cat-party-bubble${view.bubbleA.pink ? " is-pink" : ""}`}>{view.bubbleA.text}</span>}
@@ -414,18 +415,18 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
         {mode && view.phase && <span className="cat-party-phase">{view.phase}</span>}
       </div>
     </div>
-    {mode && <progress className="cat-party-progress" max={total} value={Math.max(0, view.pulse)} aria-label="Avance de la canción" />}
+    {mode && <progress className="cat-party-progress" max={total} value={Math.max(0, view.pulse)} aria-label={t("minijuegos.gatitos.avance-de-la-cancion.oculto")} />}
     <p className="cat-party-message" aria-live="polite">{message}</p>
     <div className="cat-party-controls">
-      {mode && mode !== "demo" && <button className="pixel-button primary cat-party-strike" type="button" disabled={paused} onPointerDown={(event) => { if (event.button === 0) strike(); }} onClick={(event) => { if (event.detail === 0) strike(); }}>¡Golpea!</button>}
-      {mode === "demo" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>Terminar demostración</button>}
-      {mode === "practice" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>Terminar ensayo</button>}
+      {mode && mode !== "demo" && <button className="pixel-button primary cat-party-strike" type="button" disabled={paused} onPointerDown={(event) => { if (event.button === 0) strike(); }} onClick={(event) => { if (event.detail === 0) strike(); }}>{t("minijuegos.gatitos.golpea.rotulo")}</button>}
+      {mode === "demo" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>{t("minijuegos.gatitos.terminar-demostracion.rotulo")}</button>}
+      {mode === "practice" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>{t("minijuegos.gatitos.terminar-ensayo.rotulo")}</button>}
       {!mode && <>
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>{celebrating ? "Jugar otra vez" : "Empezar la canción"}</button>
-        {!celebrating && <><button className="pixel-button" type="button" onClick={() => void begin("demo")}>Ver la demostración</button><button className="pixel-button" type="button" onClick={() => void begin("practice")}>Ensayar</button></>}
+        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>{celebrating ? t("minijuegos.gatitos.jugar-otra-vez.rotulo") : t("minijuegos.gatitos.empezar-la-cancion.rotulo")}</button>
+        {!celebrating && <><button className="pixel-button" type="button" onClick={() => void begin("demo")}>{t("minijuegos.gatitos.ver-la-demostracion.rotulo")}</button><button className="pixel-button" type="button" onClick={() => void begin("practice")}>{t("minijuegos.gatitos.ensayar.rotulo")}</button></>}
       </>}
     </div>
-    {clockKind === "frame" && mode && <p className="cat-party-note">Sin sonido: sigue los farolillos y el aro dorado.</p>}
+    {clockKind === "frame" && mode && <p className="cat-party-note">{t("minijuegos.gatitos.sin-sonido-sigue-los.juntos")}</p>}
   </section>;
 }
 

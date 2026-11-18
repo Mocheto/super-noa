@@ -5,16 +5,8 @@
  */
 export const archivosPendientes: readonly string[] = [
   "src/App.tsx",
-  "src/game/ArmoniaDrumGame.tsx",
   "src/game/AvionetaGame.tsx",
-  "src/game/BeeNinjaGame.tsx",
-  "src/game/CatPartyGame.tsx",
-  "src/game/MeriendaJabatosGame.tsx",
   "src/game/SecretShop.tsx",
-  "src/game/armoniaDrum.ts",
-  "src/game/beeNinja.ts",
-  "src/game/catParty.ts",
-  "src/game/meriendaJabatos.ts",
   "src/game/ranking.ts",
   "src/game/secretShopProgress.ts",
 ];

@@ -11,6 +11,7 @@ import {
   type DrumMode, type DrumNote, type DrumRun, type Outcome, type PressResult, type PrintsView,
 } from "./armoniaDrum";
 import "./armoniaDrum.css";
+import { t } from "../textos/index.ts";
 
 type Props = {
   paused: boolean;
@@ -68,15 +69,15 @@ const emptyView: View = { pulse: -1, lamp: -1, turn: null, armoniaPose: 0, armon
 const NOA_POSES: Record<NoaPose, string> = { espera: "0%", golpe: "33.333%", escucha: "66.667%", celebra: "100%" };
 
 const CAPTIONS: Record<DrumMode, readonly [number, string][]> = {
-  demo: [[0, "Mira: Armonía toca y Noa repite."], [callStart(0), "Escucha a Armonía… ¡tin! te avisa."], [responseStart(0), "Noa repite los mismos golpes."], [callStart(1), "Ahora tres golpes seguidos."], [responseStart(1), "¡Noa los repite igual!"]],
-  practice: [[0, "¡Ahora tú! Escucha la cuenta de Armonía."], [callStart(0), "Escucha y mira las huellas."], [responseStart(0), "¡Tu turno! Golpea como Armonía."], [callStart(1), ""]],
-  song: [[0, "¡Que empiece el concierto!"], [COUNT_PULSES, ""]],
+  demo: [[0, t("minijuegos.tambor.mira-armonia-toca-y.juntos")], [callStart(0), t("minijuegos.tambor.escucha-a-armonia-tin.juntos")], [responseStart(0), t("minijuegos.tambor.noa-repite-los-mismos.juntos")], [callStart(1), t("minijuegos.tambor.ahora-tres-golpes-seguidos.juntos")], [responseStart(1), t("minijuegos.tambor.noa-los-repite-igual.rotulo")]],
+  practice: [[0, t("minijuegos.tambor.ahora-tu-escucha-la.juntos")], [callStart(0), t("minijuegos.tambor.escucha-y-mira-las.juntos")], [responseStart(0), t("minijuegos.tambor.tu-turno-golpea-como.juntos")], [callStart(1), ""]],
+  song: [[0, t("minijuegos.tambor.que-empiece-el-concierto.rotulo")], [COUNT_PULSES, ""]],
 };
 
 const RESULT_TEXT: Record<Outcome["result"], { title: string; text: string }> = {
-  perfecto: { title: "¡Perfecto!", text: "¡No se ha escapado ni un golpe! Armonía te regala su marco de notas." },
-  bien: { title: "¡Bien hecho!", text: "Las notas del atril han pasado la raya dorada. ¡Armonía está muy contenta!" },
-  casi: { title: "¡Casi!", text: "Las notas aún no llegan a la raya dorada. Armonía quiere tocar otra vez contigo." },
+  perfecto: { title: t("minijuegos.tambor.perfecto.rotulo"), text: t("minijuegos.tambor.no-se-ha-escapado.juntos") },
+  bien: { title: t("minijuegos.tambor.bien-hecho.rotulo"), text: t("minijuegos.tambor.las-notas-del-atril.juntos") },
+  casi: { title: t("minijuegos.tambor.casi.rotulo"), text: t("minijuegos.tambor.las-notas-aun-no.juntos") },
 };
 
 function snapshot(session: Session, pulse: number, counting: number): View {
@@ -94,18 +95,18 @@ function snapshot(session: Session, pulse: number, counting: number): View {
         : callHit && part ? (part.beat % 2 ? 1 : 2)
           : part?.kind === "call" && part.beat === 3 ? 3 : 0;
   const armoniaBubble = shownCount ? String(shownCount)
-    : applauding ? "¡Bravo!"
-      : part?.kind === "call" && part.beat < 2 ? "¡Escucha!"
-        : part?.kind === "call" && part.beat === 3 ? "¡tin!" : null;
+    : applauding ? t("minijuegos.tambor.bravo.rotulo")
+      : part?.kind === "call" && part.beat < 2 ? t("minijuegos.tambor.escucha.rotulo")
+        : part?.kind === "call" && part.beat === 3 ? t("minijuegos.tambor.tin.rotulo") : null;
   const noaPose: NoaPose = session.strikeUntil > pulse ? "golpe" : part?.kind === "end" ? "celebra" : part?.kind === "call" ? "escucha" : "espera";
   const caption = counting ? "" : CAPTIONS[run.mode].filter(([from]) => pulse >= from).at(-1)?.[1] ?? "";
-  const phase = !part ? "" : part.kind === "count" ? "Cuenta" : part.kind === "end" ? "¡Fanfarria!" : PHASE_NAMES[run.score.pairs[part.pair].phase];
+  const phase = !part ? "" : part.kind === "count" ? t("minijuegos.tambor.cuenta.rotulo") : part.kind === "end" ? t("minijuegos.tambor.fanfarria.rotulo") : PHASE_NAMES[run.score.pairs[part.pair].phase];
   return {
     pulse, caption, phase, counting, armoniaPose, armoniaBubble, noaPose,
     lamp: part && !counting ? part.beat : -1,
     turn: part?.kind === "call" ? "call" : part?.kind === "response" ? "response" : null,
     armoniaHit: Boolean(callHit) && fraction < 0.15,
-    noaBubble: !counting && part?.kind === "response" && part.beat < 2 ? "¡Tu turno!" : null,
+    noaBubble: !counting && part?.kind === "response" && part.beat < 2 ? t("minijuegos.tambor.tu-turno.rotulo") : null,
     noaHit: session.strikeUntil > pulse,
     noaGlow: session.glowUntil > pulse,
     prints: counting ? null : printsAt(run, pulse),
@@ -131,7 +132,7 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
   const [view, setView] = useState<View>(emptyView);
   const [got, setGot] = useState(0);
   const [showLeave, setShowLeave] = useState(false);
-  const [message, setMessage] = useState("Armonía toca su tambor. ¡Escucha y repite sus golpes en el tambor de Noa!");
+  const [message, setMessage] = useState(t("minijuegos.tambor.armonia-toca-su-tambor.juntos"));
   const interactionPaused = paused || showLeave;
   const wasPausedRef = useRef(false);
   const boss = bossCatalog["maestra-armonia"];
@@ -246,17 +247,17 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
     session.strikeUntil = pulse + 0.25;
     if (result.kind === "hit") {
       if (!automatic) playCue([...snare(false), ...xylophone(responseNote(session.run, result.target))]);
-      session.feedback = { text: "¡Bien!", miss: false, until: pulse + 0.5 };
+      session.feedback = { text: t("minijuegos.tambor.bien.rotulo"), miss: false, until: pulse + 0.5 };
       session.glowUntil = pulse + 0.3;
       setGot(session.run.got);
       if (session.run.mode === "song" && session.run.got === WIN_AT) {
         session.applaudFrom = pulse;
-        setMessage("¡Las notas han pasado la raya dorada! Sigue tocando hasta el final.");
+        setMessage(t("minijuegos.tambor.las-notas-han-pasado.juntos"));
       }
     } else if (result.kind === "uy") {
       playCue(snare(true));
-      session.feedback = { text: "¡Uy!", miss: true, until: pulse + 0.5 };
-      setMessage("Escucha a Armonía y golpea en las huellas doradas.");
+      session.feedback = { text: t("minijuegos.tambor.uy.rotulo"), miss: true, until: pulse + 0.5 };
+      setMessage(t("minijuegos.tambor.escucha-a-armonia-y.juntos"));
     } else playCue(snare(true));
   }, [playCue]);
 
@@ -267,7 +268,7 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
     setMode(null);
     setFinished({ mode: session.run.mode, outcome });
     setMessage(session.run.mode === "song" ? RESULT_TEXT[outcome.result].text : session.run.mode === "demo"
-      ? "¡Ya lo has visto! Ahora ensaya tú, o empieza el concierto." : "¡Buen ensayo! Puedes ensayar otra vez o empezar el concierto.");
+      ? t("minijuegos.tambor.ya-lo-has-visto.juntos") : t("minijuegos.tambor.buen-ensayo-puedes-ensayar.juntos"));
     if (session.run.mode === "song") playSound(outcome.won ? "checkpoint" : "hurt");
   }, [freshSegment, playSound]);
 
@@ -288,7 +289,7 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
     setFinished(null);
     setGot(0);
     setView(emptyView);
-    setMessage(nextMode === "demo" ? "Mira cómo lo hacen Armonía y Noa." : "Escucha a Armonía y repite sus golpes cuando sea tu turno.");
+    setMessage(nextMode === "demo" ? t("minijuegos.tambor.mira-como-lo-hacen.juntos") : t("minijuegos.tambor.escucha-a-armonia-y-2.juntos"));
     const audioReady = await ensureAudio();
     if (sessionRef.current !== session) return;
     if (audioReady && audioRef.current) {
@@ -413,10 +414,10 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
   return <><Dialog labelledBy="armonia-drum-title" backdropClassName="boss-backdrop" className="boss-battle armonia-drum-game" gamepad={interactionPaused || !mode}>
     <header className="boss-header armonia-drum-header">
       <div>
-        <p className="eyebrow">{friendlyReplay ? "Juego amistoso" : "Juego del guardián"} · {boss.name}</p>
-        <h2 id="armonia-drum-title">El tambor de Armonía</h2>
-        <p>Armonía toca su tambor. Escucha y repite sus golpes en el tambor de Noa.</p>
-        <p className="boss-challenge">★ Reto de amistad: {boss.challenge.label}</p>
+        <p className="eyebrow">{friendlyReplay ? t("minijuegos.tambor.juego-amistoso.rotulo") : t("minijuegos.tambor.juego-del-guardian.rotulo")} · {boss.name}</p>
+        <h2 id="armonia-drum-title">{t("minijuegos.tambor.el-tambor-de-armonia.rotulo")}</h2>
+        <p>{t("minijuegos.tambor.armonia-toca-su-tambor-2.juntos")}</p>
+        <p className="boss-challenge">{t("minijuegos.tambor.reto-de-amistad.rotulo")} {boss.challenge.label}</p>
       </div>
     </header>
 
@@ -441,12 +442,12 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
           </div>
         </div>
         {mode && view.caption && <div className="armonia-drum-caption">{view.caption}</div>}
-        {mode && view.counting > 0 && <div className="armonia-drum-caption">¡Seguimos! Armonía cuenta: {view.counting}</div>}
+        {mode && view.counting > 0 && <div className="armonia-drum-caption">{t("minijuegos.tambor.seguimos-armonia-cuenta.juntos")} {view.counting}</div>}
         {mode && view.phase && <span className="armonia-drum-phase">{view.phase}</span>}
         {result && <div className="armonia-drum-result"><strong>{RESULT_TEXT[result.result].title}</strong></div>}
       </div>
     </div>
-    {mode && <progress className="armonia-drum-progress" max={scoreLength(drumScores[mode])} value={Math.max(0, view.pulse)} aria-label="Avance de la canción" />}
+    {mode && <progress className="armonia-drum-progress" max={scoreLength(drumScores[mode])} value={Math.max(0, view.pulse)} aria-label={t("minijuegos.tambor.avance-de-la-cancion.oculto")} />}
 
     <div className="armonia-drum-controls">
       <p className="armonia-drum-message" aria-live="polite">{result ? <><b>{RESULT_TEXT[result.result].title}</b> {message}</> : message}</p>
@@ -454,42 +455,42 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
         {prints ? <Prints view={prints} className="armonia-drum-bigprints-row" /> : <span className="armonia-drum-bigprints-row" />}
       </div>}
       {mode && mode !== "demo" && <button className="pixel-button primary armonia-drum-hit" type="button" disabled={interactionPaused}
-        onPointerDown={(event) => { event.stopPropagation(); if (event.button === 0) strike(); }} onClick={(event) => { if (event.detail === 0) strike(); }}>¡Golpea!</button>}
-      {mode === "demo" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>Terminar demostración</button>}
-      {mode === "practice" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>Terminar ensayo</button>}
+        onPointerDown={(event) => { event.stopPropagation(); if (event.button === 0) strike(); }} onClick={(event) => { if (event.detail === 0) strike(); }}>{t("minijuegos.tambor.golpea.rotulo")}</button>}
+      {mode === "demo" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>{t("minijuegos.tambor.terminar-demostracion.rotulo")}</button>}
+      {mode === "practice" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>{t("minijuegos.tambor.terminar-ensayo.rotulo")}</button>}
       {!mode && !finished && <div className="armonia-drum-actions">
-        <button className={`pixel-button${highlightPractice ? " primary" : ""}`} type="button" data-gamepad-default={highlightPractice || undefined} onClick={() => void begin("demo")}>Practicar</button>
-        <button className={`pixel-button${highlightPractice ? "" : " primary"}`} type="button" data-gamepad-default={!highlightPractice || undefined} onClick={() => void begin("song")}>¡A jugar!</button>
+        <button className={`pixel-button${highlightPractice ? " primary" : ""}`} type="button" data-gamepad-default={highlightPractice || undefined} onClick={() => void begin("demo")}>{t("minijuegos.tambor.practicar.rotulo")}</button>
+        <button className={`pixel-button${highlightPractice ? "" : " primary"}`} type="button" data-gamepad-default={!highlightPractice || undefined} onClick={() => void begin("song")}>{t("minijuegos.tambor.a-jugar.rotulo")}</button>
       </div>}
       {finished?.mode === "demo" && <div className="armonia-drum-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("practice")}>Ensayar</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("song")}>¡A jugar!</button>
+        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("practice")}>{t("minijuegos.tambor.ensayar.rotulo")}</button>
+        <button className="pixel-button" type="button" onClick={() => void begin("song")}>{t("minijuegos.tambor.a-jugar.rotulo")}</button>
       </div>}
       {finished?.mode === "practice" && <div className="armonia-drum-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>¡A jugar!</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("practice")}>Ensayar otra vez</button>
+        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>{t("minijuegos.tambor.a-jugar.rotulo")}</button>
+        <button className="pixel-button" type="button" onClick={() => void begin("practice")}>{t("minijuegos.tambor.ensayar-otra-vez.rotulo")}</button>
       </div>}
       {result?.won && <div className="armonia-drum-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => confirmWin(result.challengeCompleted)}>{friendlyReplay ? "Volver a mis amigos" : "Continuar la aventura ▶"}</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("song")}>Jugar otra vez</button>
+        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => confirmWin(result.challengeCompleted)}>{friendlyReplay ? t("minijuegos.tambor.volver-a-mis-amigos.rotulo") : t("minijuegos.tambor.continuar-la-aventura.rotulo")}</button>
+        <button className="pixel-button" type="button" onClick={() => void begin("song")}>{t("minijuegos.tambor.jugar-otra-vez.rotulo")}</button>
       </div>}
-      {result?.won && !result.challengeCompleted && <p className="armonia-drum-note">Si repites todos los golpes sin que se escape ninguno, Armonía te dará su marco de notas.</p>}
+      {result?.won && !result.challengeCompleted && <p className="armonia-drum-note">{t("minijuegos.tambor.si-repites-todos-los.juntos")}</p>}
       {result && !result.won && <div className="armonia-drum-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>Intentar otra vez</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("demo")}>Practicar</button>
-        <button className="pixel-button" type="button" onClick={leave}>{friendlyReplay ? "Volver a mis amigos" : "Volver al mapa"}</button>
+        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>{t("minijuegos.tambor.intentar-otra-vez.rotulo")}</button>
+        <button className="pixel-button" type="button" onClick={() => void begin("demo")}>{t("minijuegos.tambor.practicar.rotulo")}</button>
+        <button className="pixel-button" type="button" onClick={leave}>{friendlyReplay ? t("minijuegos.tambor.volver-a-mis-amigos.rotulo") : t("minijuegos.tambor.volver-al-mapa.rotulo")}</button>
       </div>}
-      {mode && clockKind === "frame" && <p className="armonia-drum-note">{muted ? "Sonido apagado: sigue las huellas, el foco y las luces." : "Sin sonido: sigue las huellas, el foco y las luces."}</p>}
-      <p className="armonia-drum-help">Teclado: Espacio · Mando: botón A · Toca la escena o «¡Golpea!»</p>
-      {!(result && !result.won) && <button className="text-button duel-abandon" type="button" onClick={leave}>{friendlyReplay ? "Volver a mis amigos" : "Volver al mapa"}</button>}
+      {mode && clockKind === "frame" && <p className="armonia-drum-note">{muted ? t("minijuegos.tambor.sonido-apagado-sigue-las.juntos") : t("minijuegos.tambor.sin-sonido-sigue-las.juntos")}</p>}
+      <p className="armonia-drum-help">{t("minijuegos.tambor.teclado-espacio-mando-boton.juntos")}</p>
+      {!(result && !result.won) && <button className="text-button duel-abandon" type="button" onClick={leave}>{friendlyReplay ? t("minijuegos.tambor.volver-a-mis-amigos.rotulo") : t("minijuegos.tambor.volver-al-mapa.rotulo")}</button>}
     </div>
   </Dialog>
 
   {showLeave && <Dialog labelledBy="armonia-drum-leave-title" className="game-modal compact" gamepad onClose={() => setShowLeave(false)}>
-    <p className="eyebrow">Un momento</p><h2 id="armonia-drum-leave-title">¿Volvemos al mapa?</h2>
-    <p>Podrás tocar con Armonía otra vez cuando quieras. Tus pegatinas guardadas seguirán contigo.</p>
-    <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowLeave(false)}>Seguir jugando</button>
-    <button className="pixel-button" type="button" onClick={onAbandon}>Sí, volver al mapa</button>
+    <p className="eyebrow">{t("minijuegos.tambor.un-momento.rotulo")}</p><h2 id="armonia-drum-leave-title">{t("minijuegos.tambor.volvemos-al-mapa.rotulo")}</h2>
+    <p>{t("minijuegos.tambor.podras-tocar-con-armonia.juntos")}</p>
+    <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowLeave(false)}>{t("minijuegos.tambor.seguir-jugando.rotulo")}</button>
+    <button className="pixel-button" type="button" onClick={onAbandon}>{t("minijuegos.tambor.si-volver-al-mapa.rotulo")}</button>
   </Dialog>}
   </>;
 }

@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import { t } from "../textos/index.ts";
 
 export { outputLatencySeconds };
 
@@ -20,7 +21,7 @@ export type Phase = 1 | 2 | 3;
 export type CallPair = { phase: Phase; hits: readonly number[] };
 export type DrumScore = { pairs: readonly CallPair[]; closingBars: number; auto: boolean };
 
-export const PHASE_NAMES: Record<Phase, string> = { 1: "Golpes sueltos", 2: "Golpes seguidos", 3: "¡Todo el compás!" };
+export const PHASE_NAMES: Record<Phase, string> = { 1: t("minijuegos.tambor.golpes-sueltos.rotulo"), 2: t("minijuegos.tambor.golpes-seguidos.rotulo"), 3: t("minijuegos.tambor.todo-el-compas.rotulo") };
 
 const pair = (phase: Phase, ...hits: number[]): CallPair => ({ phase, hits });
 

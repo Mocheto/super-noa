@@ -1,3 +1,4 @@
+import { minijuegos } from "./minijuegos.ts";
 import { duelos } from "./duelos.ts";
 import { guardianes } from "./guardianes.ts";
 import { juegos } from "./juegos.ts";
@@ -20,6 +21,7 @@ export const es = {
   inicio,
   mapa,
   partida,
+  minijuegos,
   duelos,
   guardianes,
   juegos,

@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import { t } from "../textos/index.ts";
 
 export { outputLatencySeconds };
 
@@ -37,8 +38,8 @@ export const beeScores: Record<BeeMode, Score> = {
     closingBars: 2,
     ladybugFromBar: 19,
     phases: [
-      { fromBar: 1, name: "Cuenta" }, { fromBar: 2, name: "Primera flor" }, { fromBar: 3, name: "Tranquila" },
-      { fromBar: 11, name: "Animada" }, { fromBar: 19, name: "¡Cuidado con las mariquitas!" }, { fromBar: 23, name: "¡Fanfarria!" },
+      { fromBar: 1, name: t("minijuegos.abeja.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.abeja.primera-flor.rotulo") }, { fromBar: 3, name: t("minijuegos.abeja.tranquila.rotulo") },
+      { fromBar: 11, name: t("minijuegos.abeja.animada.rotulo") }, { fromBar: 19, name: t("minijuegos.abeja.cuidado-con-las-mariquitas.rotulo") }, { fromBar: 23, name: t("minijuegos.abeja.fanfarria.rotulo") },
     ],
     items: [
       at(2, 3),
@@ -51,14 +52,14 @@ export const beeScores: Record<BeeMode, Score> = {
     bars: 6,
     closingBars: 0,
     ladybugFromBar: 2,
-    phases: [{ fromBar: 1, name: "Cuenta" }, { fromBar: 2, name: "Ensayo" }],
+    phases: [{ fromBar: 1, name: t("minijuegos.abeja.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.abeja.ensayo.rotulo") }],
     items: [at(2, 3), at(3, 3), at(4, 1, "duo"), at(5, 1, "ladybug")],
   },
   demo: {
     bars: 5,
     closingBars: 0,
     ladybugFromBar: 2,
-    phases: [{ fromBar: 1, name: "Cuenta" }, { fromBar: 2, name: "Demostración" }],
+    phases: [{ fromBar: 1, name: t("minijuegos.abeja.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.abeja.demostracion.rotulo") }],
     items: [at(2, 3), at(3, 3, "duo"), at(4, 3, "ladybug")],
   },
 };

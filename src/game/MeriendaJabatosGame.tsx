@@ -11,6 +11,7 @@ import {
   type Dot, type Food, type JabatoKind, type JabatoPose, type MeriendaMode, type MeriendaNote, type MeriendaRun, type Outcome, type PressResult,
 } from "./meriendaJabatos";
 import "./meriendaJabatos.css";
+import { t } from "../textos/index.ts";
 
 type Props = {
   paused: boolean;
@@ -80,15 +81,15 @@ const STAGE_ART = {
 const FOOD_SPRITES: Record<Food, string> ={ bellota: "./assets/sprites/bellota-v1.webp", castana: "./assets/sprites/castana-v1.webp" };
 
 const CAPTIONS: Record<MeriendaMode, readonly [number, string][]> = {
-  demo: [[0, "Mira: el Gran Jabalí llama a un jabato."], [COUNT_PULSES, "¡Gru! El jabato abre la boca…"], [COUNT_PULSES + 2, "¡Ahora! Noa le da su bellota."], [COUNT_PULSES + 4, "¡GRUUUU! El grande tarda más…"], [COUNT_PULSES + 8, "¡Castaña para el grande!"]],
-  practice: [[0, "¡Ahora tú! Escucha la cuenta del Gran Jabalí."], [COUNT_PULSES, "Cuando la boca esté abierta del todo… ¡dale de comer!"], [COUNT_PULSES + 8, "El grande espera cuatro puntos."], [COUNT_PULSES + 13, ""]],
-  song: [[0, "¡A merendar!"], [COUNT_PULSES, ""]],
+  demo: [[0, t("minijuegos.merienda.mira-el-gran-jabali.juntos")], [COUNT_PULSES, t("minijuegos.merienda.gru-el-jabato-abre.juntos")], [COUNT_PULSES + 2, t("minijuegos.merienda.ahora-noa-le-da.juntos")], [COUNT_PULSES + 4, t("minijuegos.merienda.gruuuu-el-grande-tarda.juntos")], [COUNT_PULSES + 8, t("minijuegos.merienda.castana-para-el-grande.rotulo")]],
+  practice: [[0, t("minijuegos.merienda.ahora-tu-escucha-la.juntos")], [COUNT_PULSES, t("minijuegos.merienda.cuando-la-boca-este.juntos")], [COUNT_PULSES + 8, t("minijuegos.merienda.el-grande-espera-cuatro.juntos")], [COUNT_PULSES + 13, ""]],
+  song: [[0, t("minijuegos.merienda.a-merendar.rotulo")], [COUNT_PULSES, ""]],
 };
 
 const RESULT_TEXT: Record<Outcome["result"], { title: string; text: string }> = {
-  perfecto: { title: "¡Perfecto!", text: "¡Ningún jabato se ha quedado con hambre! El Gran Jabalí te regala su marco de bellotas." },
-  bien: { title: "¡Bien hecho!", text: "Las bellotas de la rama han pasado la raya dorada. ¡Los jabatos están contentos!" },
-  casi: { title: "¡Casi!", text: "Las bellotas aún no llegan a la raya dorada. Los jabatos quieren merendar otra vez contigo." },
+  perfecto: { title: t("minijuegos.merienda.perfecto.rotulo"), text: t("minijuegos.merienda.ningun-jabato-se-ha.juntos") },
+  bien: { title: t("minijuegos.merienda.bien-hecho.rotulo"), text: t("minijuegos.merienda.las-bellotas-de-la.juntos") },
+  casi: { title: t("minijuegos.merienda.casi.rotulo"), text: t("minijuegos.merienda.las-bellotas-aun-no.juntos") },
 };
 
 function snapshot(session: Session, pulse: number, counting: number): View {
@@ -101,7 +102,7 @@ function snapshot(session: Session, pulse: number, counting: number): View {
   const cheering = (session.cheerFrom !== null && pulse - session.cheerFrom < 2) || part?.kind === "end";
   const jabato = counting ? null : activeJabato(run, pulse);
   const caption = counting ? "" : CAPTIONS[run.mode].filter(([from]) => pulse >= from).at(-1)?.[1] ?? "";
-  const phase = !part ? "" : part.kind === "count" ? "Cuenta" : part.kind === "end" ? "¡Fanfarria!" : PHASE_NAMES[part.phase ?? 1];
+  const phase = !part ? "" : part.kind === "count" ? t("minijuegos.merienda.cuenta.rotulo") : part.kind === "end" ? t("minijuegos.merienda.fanfarria.rotulo") : PHASE_NAMES[part.phase ?? 1];
   return {
     pulse, caption, phase, counting,
     lamp: part && !counting ? part.beat : -1,
@@ -109,7 +110,7 @@ function snapshot(session: Session, pulse: number, counting: number): View {
     bossCheer: !shownCount && !calling && cheering,
     bossBubble: shownCount ? { text: String(shownCount), big: false }
       : calling ? { text: JABATOS[calling.kind].call, big: calling.kind === "grande" }
-        : session.cheerFrom !== null && pulse - session.cheerFrom < 2 ? { text: "¡Qué rico!", big: false } : null,
+        : session.cheerFrom !== null && pulse - session.cheerFrom < 2 ? { text: t("minijuegos.merienda.que-rico.rotulo"), big: false } : null,
     noaPose: part?.kind === "end" ? 3 : session.oopsUntil > pulse ? 2 : session.feedUntil > pulse ? 1 : 0,
     jabato: jabato ? { kind: jabato.kind, pose: jabatoPose(jabato, pulse), index: jabato.index } : null,
     dots: jabato ? dotsFor(jabato, pulse) : [],
@@ -137,7 +138,7 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
   const [view, setView] = useState<View>(emptyView);
   const [got, setGot] = useState(0);
   const [showLeave, setShowLeave] = useState(false);
-  const [message, setMessage] = useState("Los jabatos tienen hambre. Cuando el Gran Jabalí gruña, ¡dales su bellota al compás!");
+  const [message, setMessage] = useState(t("minijuegos.merienda.los-jabatos-tienen-hambre.juntos"));
   const interactionPaused = paused || showLeave;
   const wasPausedRef = useRef(false);
   const boss = bossCatalog["great-boar"];
@@ -272,12 +273,12 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
       if (!automatic) playCue(biteSound(session.run, result.bite));
       const big = result.jabato.kind === "grande";
       session.thrown = { food: JABATOS[result.jabato.kind].food, id: ++session.throws, miss: false };
-      session.feedback = { text: big ? "¡ÑAM!" : "¡Ñam!", miss: false, until: pulse + 0.5 };
+      session.feedback = { text: big ? t("minijuegos.merienda.nam.rotulo") : t("minijuegos.merienda.nam.rotulo"), miss: false, until: pulse + 0.5 };
       setGot(session.run.got);
       if (session.run.mode === "song" && session.run.got === goalOf(session.run.score)) {
         session.cheerFrom = pulse;
         playCue(grunt(false));
-        setMessage("¡Las bellotas han pasado la raya dorada! Sigue dando de merendar hasta el final.");
+        setMessage(t("minijuegos.merienda.las-bellotas-han-pasado.juntos"));
       }
     } else playCue(FSSS);
   }, [playCue]);
@@ -289,7 +290,7 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
     setMode(null);
     setFinished({ mode: session.run.mode, outcome });
     setMessage(session.run.mode === "song" ? RESULT_TEXT[outcome.result].text : session.run.mode === "demo"
-      ? "¡Ya lo has visto! Ahora ensaya tú, o empieza la merienda." : "¡Buen ensayo! Puedes ensayar otra vez o empezar la merienda.");
+      ? t("minijuegos.merienda.ya-lo-has-visto.juntos") : t("minijuegos.merienda.buen-ensayo-puedes-ensayar.juntos"));
     if (session.run.mode === "song") playSound(outcome.won ? "checkpoint" : "hurt");
   }, [freshSegment, playSound]);
 
@@ -310,7 +311,7 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
     setFinished(null);
     setGot(0);
     setView(emptyView);
-    setMessage(nextMode === "demo" ? "Mira cómo Noa da de merendar a los jabatos." : "Cuando el jabato abra la boca del todo, ¡dale de comer!");
+    setMessage(nextMode === "demo" ? t("minijuegos.merienda.mira-como-noa-da.juntos") : t("minijuegos.merienda.cuando-el-jabato-abra.juntos"));
     const audioReady = await ensureAudio();
     if (sessionRef.current !== session) return;
     if (audioReady && audioRef.current) {
@@ -396,9 +397,9 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
           playCue(MISS);
           const kind = session.run.jabatos[missed[0].jabato].kind;
           session.thrown = { food: JABATOS[kind].food, id: ++session.throws, miss: true };
-          session.feedback = { text: "¡Ay!", miss: true, until: pulse + 0.5 };
+          session.feedback = { text: t("minijuegos.merienda.ay.rotulo"), miss: true, until: pulse + 0.5 };
           session.oopsUntil = pulse + 0.5;
-          setMessage("Mira los puntos: cuando se encienda la bellota grande, ¡dale de comer!");
+          setMessage(t("minijuegos.merienda.mira-los-puntos-cuando.juntos"));
         }
       }
       const down = Boolean(firstConnectedGamepad()?.buttons[0]?.pressed);
@@ -445,10 +446,10 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
   return <><Dialog labelledBy="merienda-title" backdropClassName="boss-backdrop" className="boss-battle merienda-game" gamepad={interactionPaused || !mode}>
     <header className="boss-header merienda-header">
       <div>
-        <p className="eyebrow">{friendlyReplay ? "Juego amistoso" : "Juego del guardián"} · {boss.name}</p>
-        <h2 id="merienda-title">La merienda de los jabatos</h2>
-        <p>Cuando el Gran Jabalí gruña, un jabato asomará con hambre. ¡Dale su bocado cuando abra la boca del todo!</p>
-        <p className="boss-challenge">★ Reto de amistad: {boss.challenge.label}</p>
+        <p className="eyebrow">{friendlyReplay ? t("minijuegos.merienda.juego-amistoso.rotulo") : t("minijuegos.merienda.juego-del-guardian.rotulo")} · {boss.name}</p>
+        <h2 id="merienda-title">{t("minijuegos.merienda.la-merienda-de-los.juntos")}</h2>
+        <p>{t("minijuegos.merienda.cuando-el-gran-jabali.juntos")}</p>
+        <p className="boss-challenge">{t("minijuegos.merienda.reto-de-amistad.rotulo")} {boss.challenge.label}</p>
       </div>
     </header>
 
@@ -479,53 +480,53 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
           {showGoal && <b className="merienda-line" style={{ left: `${(branchSlot(goal - 1, total) + branchSlot(goal, total)) / 2}%` }} />}
         </div>
         {mode && view.caption && <div className="merienda-caption">{view.caption}</div>}
-        {mode && view.counting > 0 && <div className="merienda-caption">¡Seguimos! El Gran Jabalí cuenta: {view.counting}</div>}
+        {mode && view.counting > 0 && <div className="merienda-caption">{t("minijuegos.merienda.seguimos-el-gran-jabali.juntos")} {view.counting}</div>}
         {mode && view.phase && <span className="merienda-phase">{view.phase}</span>}
         {result && <div className="merienda-result"><strong>{RESULT_TEXT[result.result].title}</strong></div>}
       </div>
     </div>
-    {mode && <progress className="merienda-progress" max={scoreLength(meriendaScores[mode])} value={Math.max(0, view.pulse)} aria-label="Avance de la merienda" />}
+    {mode && <progress className="merienda-progress" max={scoreLength(meriendaScores[mode])} value={Math.max(0, view.pulse)} aria-label={t("minijuegos.merienda.avance-de-la-merienda.oculto")} />}
 
     <div className="merienda-controls">
       <p className="merienda-message" aria-live="polite">{result ? <><b>{RESULT_TEXT[result.result].title}</b> {message}</> : message}</p>
       {mode && <div className={`merienda-bigdots${jabato ? "" : " is-off"}`} aria-hidden="true"><Dots dots={jabato ? view.dots : []} className="merienda-bigdots-row" /></div>}
       {mode && mode !== "demo" && <button className="pixel-button primary merienda-feed" type="button" disabled={interactionPaused}
-        onPointerDown={(event) => { event.stopPropagation(); if (event.button === 0) feed(); }} onClick={(event) => { if (event.detail === 0) feed(); }}>¡Dale de comer!</button>}
-      {mode === "demo" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>Terminar demostración</button>}
-      {mode === "practice" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>Terminar ensayo</button>}
+        onPointerDown={(event) => { event.stopPropagation(); if (event.button === 0) feed(); }} onClick={(event) => { if (event.detail === 0) feed(); }}>{t("minijuegos.merienda.dale-de-comer.rotulo")}</button>}
+      {mode === "demo" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>{t("minijuegos.merienda.terminar-demostracion.rotulo")}</button>}
+      {mode === "practice" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>{t("minijuegos.merienda.terminar-ensayo.rotulo")}</button>}
       {!mode && !finished && <div className="merienda-actions">
-        <button className={`pixel-button${highlightPractice ? " primary" : ""}`} type="button" data-gamepad-default={highlightPractice || undefined} onClick={() => void begin("demo")}>Practicar</button>
-        <button className={`pixel-button${highlightPractice ? "" : " primary"}`} type="button" data-gamepad-default={!highlightPractice || undefined} onClick={() => void begin("song")}>¡A jugar!</button>
+        <button className={`pixel-button${highlightPractice ? " primary" : ""}`} type="button" data-gamepad-default={highlightPractice || undefined} onClick={() => void begin("demo")}>{t("minijuegos.merienda.practicar.rotulo")}</button>
+        <button className={`pixel-button${highlightPractice ? "" : " primary"}`} type="button" data-gamepad-default={!highlightPractice || undefined} onClick={() => void begin("song")}>{t("minijuegos.merienda.a-jugar.rotulo")}</button>
       </div>}
       {finished?.mode === "demo" && <div className="merienda-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("practice")}>Ensayar</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("song")}>¡A jugar!</button>
+        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("practice")}>{t("minijuegos.merienda.ensayar.rotulo")}</button>
+        <button className="pixel-button" type="button" onClick={() => void begin("song")}>{t("minijuegos.merienda.a-jugar.rotulo")}</button>
       </div>}
       {finished?.mode === "practice" && <div className="merienda-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>¡A jugar!</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("practice")}>Ensayar otra vez</button>
+        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>{t("minijuegos.merienda.a-jugar.rotulo")}</button>
+        <button className="pixel-button" type="button" onClick={() => void begin("practice")}>{t("minijuegos.merienda.ensayar-otra-vez.rotulo")}</button>
       </div>}
       {result?.won && <div className="merienda-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => confirmWin(result.challengeCompleted)}>{friendlyReplay ? "Volver a mis amigos" : "Continuar la aventura ▶"}</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("song")}>Jugar otra vez</button>
+        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => confirmWin(result.challengeCompleted)}>{friendlyReplay ? t("minijuegos.merienda.volver-a-mis-amigos.rotulo") : t("minijuegos.merienda.continuar-la-aventura.rotulo")}</button>
+        <button className="pixel-button" type="button" onClick={() => void begin("song")}>{t("minijuegos.merienda.jugar-otra-vez.rotulo")}</button>
       </div>}
-      {result?.won && !result.challengeCompleted && <p className="merienda-note">Si das de comer a todos los jabatos sin que ninguno se quede con hambre, el Gran Jabalí te dará su marco de bellotas.</p>}
+      {result?.won && !result.challengeCompleted && <p className="merienda-note">{t("minijuegos.merienda.si-das-de-comer.juntos")}</p>}
       {result && !result.won && <div className="merienda-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>Intentar otra vez</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("demo")}>Practicar</button>
-        <button className="pixel-button" type="button" onClick={leave}>{friendlyReplay ? "Volver a mis amigos" : "Volver al mapa"}</button>
+        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>{t("minijuegos.merienda.intentar-otra-vez.rotulo")}</button>
+        <button className="pixel-button" type="button" onClick={() => void begin("demo")}>{t("minijuegos.merienda.practicar.rotulo")}</button>
+        <button className="pixel-button" type="button" onClick={leave}>{friendlyReplay ? t("minijuegos.merienda.volver-a-mis-amigos.rotulo") : t("minijuegos.merienda.volver-al-mapa.rotulo")}</button>
       </div>}
-      {mode && clockKind === "frame" && <p className="merienda-note">{muted ? "Sonido apagado: sigue los puntos y la boca del jabato." : "Sin sonido: sigue los puntos y la boca del jabato."}</p>}
-      <p className="merienda-help">Teclado: Espacio · Mando: botón A · Toca la escena o «¡Dale de comer!»</p>
-      {!(result && !result.won) && <button className="text-button duel-abandon" type="button" onClick={leave}>{friendlyReplay ? "Volver a mis amigos" : "Volver al mapa"}</button>}
+      {mode && clockKind === "frame" && <p className="merienda-note">{muted ? t("minijuegos.merienda.sonido-apagado-sigue-los.juntos") : t("minijuegos.merienda.sin-sonido-sigue-los.juntos")}</p>}
+      <p className="merienda-help">{t("minijuegos.merienda.teclado-espacio-mando-boton.juntos")}</p>
+      {!(result && !result.won) && <button className="text-button duel-abandon" type="button" onClick={leave}>{friendlyReplay ? t("minijuegos.merienda.volver-a-mis-amigos.rotulo") : t("minijuegos.merienda.volver-al-mapa.rotulo")}</button>}
     </div>
   </Dialog>
 
   {showLeave && <Dialog labelledBy="merienda-leave-title" className="game-modal compact" gamepad onClose={() => setShowLeave(false)}>
-    <p className="eyebrow">Un momento</p><h2 id="merienda-leave-title">¿Volvemos al mapa?</h2>
-    <p>Podrás volver a dar de merendar a los jabatos cuando quieras. Tus pegatinas guardadas seguirán contigo.</p>
-    <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowLeave(false)}>Seguir jugando</button>
-    <button className="pixel-button" type="button" onClick={onAbandon}>Sí, volver al mapa</button>
+    <p className="eyebrow">{t("minijuegos.merienda.un-momento.rotulo")}</p><h2 id="merienda-leave-title">{t("minijuegos.merienda.volvemos-al-mapa.rotulo")}</h2>
+    <p>{t("minijuegos.merienda.podras-volver-a-dar.juntos")}</p>
+    <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowLeave(false)}>{t("minijuegos.merienda.seguir-jugando.rotulo")}</button>
+    <button className="pixel-button" type="button" onClick={onAbandon}>{t("minijuegos.merienda.si-volver-al-mapa.rotulo")}</button>
   </Dialog>}
   </>;
 }

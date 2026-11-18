@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import { t } from "../textos/index.ts";
 
 export { outputLatencySeconds };
 
@@ -34,8 +35,8 @@ export const partyScores: Record<PartyMode, Score> = {
     closingBars: 2,
     yarnFromBar: 21,
     phases: [
-      { fromBar: 1, name: "Cuenta" }, { fromBar: 2, name: "Primeros troncos" }, { fromBar: 5, name: "Troncos pequeños" },
-      { fromBar: 13, name: "Troncos medianos" }, { fromBar: 21, name: "Cuidado con los ovillos" }, { fromBar: 27, name: "¡Fiesta!" },
+      { fromBar: 1, name: t("minijuegos.gatitos.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.gatitos.primeros-troncos.rotulo") }, { fromBar: 5, name: t("minijuegos.gatitos.troncos-pequenos.rotulo") },
+      { fromBar: 13, name: t("minijuegos.gatitos.troncos-medianos.rotulo") }, { fromBar: 21, name: t("minijuegos.gatitos.cuidado-con-los-ovillos.rotulo") }, { fromBar: 27, name: t("minijuegos.gatitos.fiesta.rotulo") },
     ],
     pieces: [
       piece(2, 3), piece(3, 3), piece(4, 3),
@@ -48,14 +49,14 @@ export const partyScores: Record<PartyMode, Score> = {
     bars: 6,
     closingBars: 0,
     yarnFromBar: 2,
-    phases: [{ fromBar: 1, name: "Cuenta" }, { fromBar: 2, name: "Ensayo" }],
+    phases: [{ fromBar: 1, name: t("minijuegos.gatitos.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.gatitos.ensayo.rotulo") }],
     pieces: [piece(2, 3), piece(3, 3), piece(4, 1, "medium"), piece(5, 1, "yarn")],
   },
   demo: {
     bars: 5,
     closingBars: 0,
     yarnFromBar: 2,
-    phases: [{ fromBar: 1, name: "Cuenta" }, { fromBar: 2, name: "Demostración" }],
+    phases: [{ fromBar: 1, name: t("minijuegos.gatitos.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.gatitos.demostracion.rotulo") }],
     pieces: [piece(2, 3), piece(3, 3, "medium"), piece(4, 3, "yarn")],
   },
 };

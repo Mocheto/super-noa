@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { acentoMundo, emblemaMundo } from "./worldMapData";
 import { SecretShop } from "./SecretShop";
 import "./secretDoors.css";
@@ -49,6 +49,8 @@ type SoundKind = "apple" | "block" | "cat" | "jump" | "hurt" | "stomp" | "yarn" 
 
 type GameCanvasProps = {
   level: Level;
+  /** HUD de esquinas que se pinta sobre el escenario (también en los caminos secretos). */
+  hud?: ReactNode;
   running: boolean;
   onLoseLife: () => void;
   onComplete: (finalSnapshot: GameSnapshot) => void;
@@ -122,7 +124,7 @@ const marcoMundo = (world: Parameters<typeof acentoMundo>[0]) => {
   return { "--acento": base, "--acento-oscuro": oscuro, "--acento-claro": claro } as CSSProperties;
 };
 
-export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourComplete, onDetourActiveChange, onFriendGreeted, onReturn, reduceMotion = false, playSound }: GameCanvasProps) {
+export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourComplete, onDetourActiveChange, onFriendGreeted, onReturn, reduceMotion = false, playSound }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const [shopOpen, setShopOpen] = useState(false);
@@ -1311,6 +1313,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       <div className="game-stage">
         <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={t("partida.lienzo.pantalla.oculto", { id: level.id, titulo: level.title })} />
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />
+        {hud}
         {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label={t(`partida.lienzo.interaccion.${interaction}.oculto`)} onClick={() => { inputRef.current.enterQueued = true; }}>↑ <Texto clave={`partida.lienzo.interaccion.${interaction}.rotulo`} /></button>}
         {level.puzzleRooms && <button className={`room-restart${roomHint ? " is-hinting" : ""}`} type="button" disabled={!running} onClick={(event) => { event.currentTarget.blur(); restartRoomRef.current?.(); }}><Texto clave="partida.lienzo.empezarSala.rotulo" /></button>}
         {level.detour && onReturn && <button className="detour-return" type="button" disabled={!running} onClick={onReturn}><Texto clave="partida.lienzo.volverCamino.rotulo" /></button>}
@@ -1325,7 +1328,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       }} />}
       <TouchControls onPress={handleTouchStart} onRelease={handleTouchEnd} onCancel={handleTouchCancel} />
     </div>
-    {excursion && <GameCanvas level={detourLevel(excursion)} running={running} reduceMotion={reduceMotion}
+    {excursion && <GameCanvas level={detourLevel(excursion)} hud={hud} running={running} reduceMotion={reduceMotion}
       onLoseLife={onLoseLife} onSnapshot={onSnapshot} onAppleCollected={onAppleCollected} playSound={playSound}
       onBossEncounter={onBossEncounter} onSecretExit={onSecretExit} onWaterExit={onWaterExit}
       onComplete={() => { onDetourComplete?.(excursion); returnFromDetourRef.current?.(); }}

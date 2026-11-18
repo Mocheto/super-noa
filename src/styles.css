@@ -897,7 +897,7 @@ dialog.modal-backdrop::backdrop { background: transparent; }
   .game-hud { min-height: 48px; padding-block: 3px; }
   .hud-level strong { font-size: .7rem; }
   .hud-stats { font-size: .7rem; }
-  .game-hud, .game-frame { width: min(calc(100vw - 8px), calc(177.78dvh - 100px)); }
+  .game-frame { width: min(calc(100vw - 8px), calc(177.78dvh - 16px)); }
   .game-stage { width: 100%; }
   .level-caption { display: none; }
   .touch-controls { position: absolute; inset: auto 0 max(7px, env(safe-area-inset-bottom)); padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right)); border: 0; background: transparent; }

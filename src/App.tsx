@@ -7,7 +7,7 @@ import { isGuardianGameId } from "./game/guardianGames";
 import { GameAssetIcon } from "./game/GameAssetIcon";
 import { PixelIcon } from "./game/PixelIcon";
 import type { SoundKind } from "./game/GameCanvas";
-import { levels, themeNames } from "./game/levels";
+import { levels } from "./game/levels";
 import { campaignLevels, campaignUnlockIndex, levelIndex, nextLevelIndex } from "./game/routes";
 import { testScreens } from "./game/testScreens";
 
@@ -34,7 +34,7 @@ import { addHeart } from "./game/friendProgress";
 import { FriendsTab } from "./game/FriendsTab";
 import { recordFlight } from "./game/avioneta";
 import { puntos, t } from "./textos";
-import { Pictogramas, Texto } from "./textos/Texto";
+import { BotonControl, Pictograma, Texto } from "./textos/Texto";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
 import { visitDetour } from "./game/detourProgress";
 
@@ -756,6 +756,31 @@ export default function App() {
     else void (playScreenRef.current ?? document.documentElement).requestFullscreen?.().catch(() => undefined);
   };
 
+  /** HUD de esquinas sobre el escenario (decisión «El HUD de la partida»): vidas y contadores a la izquierda, pantalla y banderas en el centro y la pausa a la derecha. */
+  const hudEsquinas = !bossReplay && <div className="hud-esquinas">
+    <div className="hud-izquierda">
+      <span className="hud-chip hud-vidas" role="img" aria-label={t("partida.hud.vidas.oculto", { n: lives })}>{Array.from({ length: MAX_LIVES }, (_, vida) => <GameAssetIcon key={vida} kind="heart" className={vida < lives ? "" : "vida-perdida"} />)}</span>
+      <span className="hud-contadores">
+        <span className="hud-chip" role="img" aria-label={t("partida.hud.manzanas.oculto", { n: snapshot.apples })}><GameAssetIcon kind="apple" /> {snapshot.apples}</span>
+        <span className="hud-chip" role="img" aria-label={t("partida.hud.pegatinas.oculto", { n: snapshot.stickers.length })}><Pictograma nombre="pegatina" />{snapshot.stickers.length}</span>
+        {(starActive || snapshot.power === "cat" || snapshot.power === "apple") && <span className={`hud-chip power-chip power-${snapshot.power} ${starActive ? "star-power-chip" : ""}`} role="img" aria-label={t(starActive ? "partida.hud.poder.estrella.oculto" : snapshot.power === "cat" ? "partida.hud.poder.gata.oculto" : "partida.hud.poder.manzana.oculto")}><Texto clave={starActive ? "partida.hud.poder.estrella.rotulo" : snapshot.power === "cat" ? "partida.hud.poder.gata.rotulo" : "partida.hud.poder.manzana.rotulo"} /></span>}
+      </span>
+    </div>
+    <div className="hud-centro">
+      {displayedLevel.detour ? <span className="hud-chip hud-pantalla"><Texto clave="partida.hud.secreto.rotulo" /></span>
+        : displayedLevel.restStop ? <span className="hud-chip hud-pantalla"><Texto clave="partida.hud.paseo.rotulo" /></span>
+          : <span className="hud-chip hud-pantalla">{displayedLevel.id}</span>}
+      {!displayedLevel.detour && !displayedLevel.restStop && <span className="hud-chip hud-banderas" role="img" aria-label={displayedLevel.puzzleRooms
+        ? t("partida.hud.salas.oculto", { n: snapshot.checkpoint + 1, total: displayedLevel.puzzleRooms.length })
+        : t("partida.hud.banderas.oculto", { n: snapshot.checkpoint, total: displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length })}>
+        {displayedLevel.puzzleRooms ? <Texto clave="partida.hud.sala.rotulo" variables={{ puntos: puntos(snapshot.checkpoint + 1, displayedLevel.puzzleRooms.length) }} /> : <Texto clave="partida.hud.bandera.rotulo" variables={{ puntos: puntos(snapshot.checkpoint, displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length) }} />}
+      </span>}
+    </div>
+    <div className="hud-derecha">
+      {(screen === "game" || screen === "boss") && <BotonControl className="hud-pausa" pictograma="pausa" etiqueta="partida.hud.pausa.oculto" onClick={() => setPaused((value) => !value)} />}
+    </div>
+  </div>;
+
   return (
     <main className={`app-shell ${reduceMotion ? "reduce-motion" : ""} ${touchControls === "always" ? "touch-controls-always" : ""}`}>
       {saveError && <p className="save-warning" role="alert">{t("adultos.app.no-se-pudo-guardar")}</p>}
@@ -838,24 +863,9 @@ export default function App() {
 
       {(screen === "game" || screen === "boss" || screen === "complete" || screen === "gameover" || screen === "finished") && (
         <section className="play-screen" ref={playScreenRef}>
-          {!bossReplay && <header className="game-hud">
-            <div className="hud-level"><span>{displayedLevel.detour ? "✦" : displayedLevel.id}</span><strong>{displayedLevel.title}</strong></div>
-            <div className="hud-stats">
-              <span aria-label={t("partida.hud.vidas.oculto", { n: lives })}><GameAssetIcon kind="heart" /> {lives}</span>
-              <span aria-label={t("partida.hud.manzanas.oculto", { n: snapshot.apples })}><GameAssetIcon kind="apple" /> {snapshot.apples}</span>
-              <span aria-label={t("partida.hud.pegatinas.oculto", { n: snapshot.stickers.length })}><PixelIcon kind="sparkle" /> {snapshot.stickers.length}</span>
-              {(starActive || snapshot.power === "cat" || snapshot.power === "apple") && <span className={`power-chip power-${snapshot.power} ${starActive ? "star-power-chip" : ""}`} aria-label={t(starActive ? "partida.hud.poder.estrella.oculto" : snapshot.power === "cat" ? "partida.hud.poder.gata.oculto" : "partida.hud.poder.manzana.oculto")}><Texto clave={starActive ? "partida.hud.poder.estrella.rotulo" : snapshot.power === "cat" ? "partida.hud.poder.gata.rotulo" : "partida.hud.poder.manzana.rotulo"} /></span>}
-            </div>
-            <div className="hud-actions">
-              <button type="button" onClick={() => setMuted((value) => !value)} aria-label={t(muted ? "partida.hud.sonido.oculto" : "partida.hud.silencio.oculto")}><PixelIcon kind={muted ? "mute" : "sound"} /></button>
-              <button type="button" onClick={toggleFullscreen} aria-label={t("partida.hud.pantallaGrande.oculto")}>⛶</button>
-              {(screen === "game" || screen === "boss") && <button type="button" onClick={() => setPaused((value) => !value)} aria-label={t("partida.hud.pausa.oculto")}>Ⅱ</button>}
-            </div>
-          </header>}
           {!bossReplay && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
-            <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onFriendGreeted={handleFriendGreeted} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
+            <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} hud={hudEsquinas} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onFriendGreeted={handleFriendGreeted} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
           </Suspense>}
-          {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? <Texto clave="partida.hud.secreto.rotulo" /> : displayedLevel.restStop ? <Texto clave="partida.hud.paseo.rotulo" /> : displayedLevel.puzzleRooms ? <Texto clave="partida.hud.sala.rotulo" variables={{ puntos: puntos(snapshot.checkpoint + 1, displayedLevel.puzzleRooms.length) }} /> : <Texto clave="partida.hud.bandera.rotulo" variables={{ puntos: puntos(snapshot.checkpoint, displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length) }} />}</span>{!displayedLevel.detour && <small><Pictogramas texto={displayedLevel.subtitle} /></small>}</div>}
 
           {screen === "boss" && activeLevel.boss && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
             {
@@ -974,6 +984,10 @@ export default function App() {
           <button className="pixel-button primary rotulo" type="button" data-gamepad-default onClick={() => setPaused(false)}><Texto clave="partida.pausa.seguir.rotulo" /></button>
           {screen !== "cat-party" && <button className="pause-restart rotulo" type="button" onClick={restartCurrentLevel}><Texto clave="partida.pausa.otraVez.rotulo" /></button>}
           <button className="pixel-button rotulo" type="button" data-gamepad-back onClick={screen === "cat-party" ? leaveCatParty : () => { setPaused(false); setScreen("map"); }}><Texto clave="partida.pausa.mapa.rotulo" /></button>
+          <div className="pausa-controles">
+            <BotonControl pictograma={muted ? "sin-sonido" : "sonido"} etiqueta={muted ? "partida.hud.sonido.oculto" : "partida.hud.silencio.oculto"} aria-pressed={!muted} onClick={() => setMuted((value) => !value)} />
+            <BotonControl pictograma="pantalla-grande" etiqueta="partida.hud.pantallaGrande.oculto" onClick={toggleFullscreen} />
+          </div>
         </Dialog>
       )}
 

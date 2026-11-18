@@ -3,6 +3,13 @@
  * Redacción normal, con tildes y minúsculas. Las hojas sin capa son texto para adultos; `oculto` es para lector de pantalla.
  */
 export const adultos = {
+  /** Ayuda de teclado, mando y sin sonido de los minijuegos: solo en su pantalla previa. */
+  minijuegos: {
+    abeja: {
+      controles: "Teclado: Espacio. Mando: botón A. También puedes tocar la escena o el botón de cortar.",
+      sinSonido: "Sin sonido, sigue el aro dorado y el panal: la flor está lista cuando el aro se ilumina.",
+    },
+  },
   app: {
     "message-puedes-seguir-jugando": "{message} Puedes seguir jugando. Te pediremos un alias cuando vuelva el tablón, en el mapa o al inicio.",
     "el-tablon-no-esta": "El tablón no está disponible.",

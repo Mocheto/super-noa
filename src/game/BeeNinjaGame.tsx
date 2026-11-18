@@ -13,6 +13,10 @@ import {
 import { loadBeeSamples, type SampleBank } from "./beeNinjaSamples";
 import "./beeNinja.css";
 import { t } from "../textos/index.ts";
+import { Boton, Pictograma, Texto } from "../textos/Texto";
+import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
+import { createPracticaConPausas, type ParadaPractica } from "./practicaPausas";
+import { Ventana } from "./Ventana";
 
 type Props = {
   paused: boolean;
@@ -64,26 +68,31 @@ type View = {
   melisaBubble: string | null;
   greet: { x: number; y: number } | null;
   feedback: { text: string; miss: boolean } | null;
-  caption: string;
-  phase: string;
+  phase: { name: string; piece: "flower" | "duo" | "ladybug" } | null;
   counting: number;
 };
 
 const START_DELAY_S = 0.15;
 const STAGE_WIDTH = 960;
-const emptyView: View = { pulse: -1, targets: [], halves: [], jar: 0, ring: null, lamp: -1, heroPose: "espera", melisaPose: 0, melisaThrowing: false, melisaBubble: null, greet: null, feedback: null, caption: "", phase: "", counting: 0 };
+const emptyView: View = { pulse: -1, targets: [], halves: [], jar: 0, ring: null, lamp: -1, heroPose: "espera", melisaPose: 0, melisaThrowing: false, melisaBubble: null, greet: null, feedback: null, phase: null, counting: 0 };
 
-const CAPTIONS: Record<BeeMode, readonly [number, string][]> = {
-  demo: [[0, t("minijuegos.abeja.mira-como-lo-hace.juntos")], [4, t("minijuegos.abeja.flor-un-corte-cuando.juntos")], [8, t("minijuegos.abeja.duo-dos-flores-dos.juntos")], [12, t("minijuegos.abeja.la-mariquita-no-se.juntos")]],
-  practice: [[0, t("minijuegos.abeja.ahora-tu-escucha-la.juntos")], [4, t("minijuegos.abeja.corta-cuando-la-flor.juntos")], [12, t("minijuegos.abeja.zum-zum-dos-cortes.juntos")], [16, t("minijuegos.abeja.a-la-mariquita-no.rotulo")]],
-  song: [[0, t("minijuegos.abeja.que-empiece-el-duelo.rotulo")], [4, ""]],
+/** La práctica se detiene en cada pieza nueva (pulso en que llega a la varita) y explica cómo se corta. */
+const PARADAS: Record<BeeMode, ParadaPractica[]> = {
+  demo: [{ pulso: 4, pieza: "flor" }, { pulso: 8, pieza: "duo" }, { pulso: 12, pieza: "mariquita" }],
+  practice: [{ pulso: 4, pieza: "flor" }, { pulso: 12, pieza: "duo" }, { pulso: 16, pieza: "mariquita" }],
+  song: [],
 };
+const CLAVE_PARADA = {
+  flor: { rotulo: "minijuegos.abeja.practica.flor.rotulo", juntos: "minijuegos.abeja.practica.flor.juntos" },
+  duo: { rotulo: "minijuegos.abeja.practica.duo.rotulo", juntos: "minijuegos.abeja.practica.duo.juntos" },
+  mariquita: { rotulo: "minijuegos.abeja.practica.mariquita.rotulo", juntos: "minijuegos.abeja.practica.mariquita.juntos" },
+} as const;
 
-const RESULT_TEXT: Record<Outcome["result"], { title: string; text: string }> = {
-  perfecto: { title: t("minijuegos.abeja.perfecto.rotulo"), text: t("minijuegos.abeja.no-ha-caido-ni.juntos") },
-  bien: { title: t("minijuegos.abeja.bien-hecho.rotulo"), text: t("minijuegos.abeja.el-tarro-de-miel.juntos") },
-  casi: { title: t("minijuegos.abeja.casi.rotulo"), text: t("minijuegos.abeja.el-tarro-aun-no.juntos") },
-};
+const RESULT_TEXT = {
+  perfecto: { title: "minijuegos.abeja.resultado.perfecto.rotulo", text: "minijuegos.abeja.resultado.perfecto.juntos" },
+  bien: { title: "minijuegos.abeja.resultado.bien.rotulo", text: "minijuegos.abeja.resultado.bien.juntos" },
+  casi: { title: "minijuegos.abeja.resultado.casi.rotulo", text: "minijuegos.abeja.resultado.casi.juntos" },
+} as const satisfies Record<Outcome["result"], { title: string; text: string }>;
 
 /** Arte que usa la hoja de estilos, con rutas relativas al sitio publicado. */
 const STAGE_ART = {
@@ -107,17 +116,17 @@ function snapshot(session: Session, pulse: number, counting: number, reduceMotio
   const shownCount = counting || introCount;
   const applauding = session.applaudFrom !== null && pulse - session.applaudFrom < 2;
   const heroPose = session.cutUntil > pulse ? "corta" : session.celebrateUntil > pulse ? "celebra" : untilCut <= 1 && untilCut > 0.1 ? "alza" : "espera";
-  const caption = counting ? "" : CAPTIONS[run.mode].filter(([from]) => pulse >= from).at(-1)?.[1] ?? "";
-  const phase = run.score.phases.filter(({ fromBar }) => barOfPulse(Math.max(0, whole)) >= fromBar).at(-1)?.name ?? "";
+  // El cartel de fase solo dura el primer compás de la fase.
+  const phase = counting ? null : run.score.phases.find(({ fromBar }) => barOfPulse(Math.max(0, whole)) === fromBar) ?? null;
   return {
-    pulse, targets, ring, caption, phase, counting,
+    pulse, targets, ring, phase, counting,
     halves: session.halves.filter((half) => pulse - half.start < 0.9),
     jar: jarLevel(run.cut),
     lamp: pulse >= 0 && !counting ? whole % 4 : -1,
     heroPose,
     melisaPose: shownCount ? (shownCount % 2 ? 1 : 3) : applauding ? 2 : throwing ? 1 : 0,
     melisaThrowing: Boolean(throwing) && !shownCount,
-    melisaBubble: shownCount ? String(shownCount) : applauding ? t("minijuegos.abeja.bravo.rotulo") : throwing ? (throwing.type === "duo" ? "¡zum-zum!" : t("minijuegos.abeja.zum.rotulo")) : null,
+    melisaBubble: shownCount ? String(shownCount) : applauding ? t("minijuegos.abeja.compas.bravo.rotulo") : throwing ? t(throwing.type === "duo" ? "minijuegos.abeja.compas.zumzum.rotulo" : "minijuegos.abeja.compas.zum.rotulo") : null,
     greet: session.greet && session.greet.until > pulse ? { x: session.greet.x, y: session.greet.y } : null,
     feedback: session.feedback && session.feedback.until > pulse ? { text: session.feedback.text, miss: session.feedback.miss } : null,
   };
@@ -135,8 +144,9 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
   const [clockKind, setClockKind] = useState<"audio" | "frame" | null>(null);
   const [view, setView] = useState<View>(emptyView);
   const [showLeave, setShowLeave] = useState(false);
-  const [message, setMessage] = useState(t("minijuegos.abeja.la-reina-melisa-te.juntos"));
-  const interactionPaused = paused || showLeave;
+  const [parada, setParada] = useState<ParadaPractica | null>(null);
+  const practicaRef = useRef<ReturnType<typeof createPracticaConPausas> | null>(null);
+  const interactionPaused = paused || showLeave || parada !== null;
   const wasPausedRef = useRef(false);
   const boss = bossCatalog["queen-bee"];
 
@@ -279,22 +289,20 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
     session.cutUntil = pulse + 0.3;
     if (result.kind === "cut") {
       playCue(cutSound(leadNote(session.run)));
-      session.feedback = { text: t("minijuegos.abeja.zas.rotulo"), miss: false, until: pulse + 0.5 };
+      session.feedback = { text: t("minijuegos.abeja.compas.zas.rotulo"), miss: false, until: pulse + 0.5 };
       session.halves.push({ id: session.halfId++, color: result.target.color, start: pulse });
       if (session.run.mode === "song") {
         const level = jarLevel(session.run.cut);
         if (level > session.lastJar) { session.lastJar = level; session.celebrateUntil = pulse + 0.9; }
-        if (session.run.cut === WIN_AT) { session.applaudFrom = pulse; setMessage(t("minijuegos.abeja.el-tarro-ha-pasado.juntos")); }
+        if (session.run.cut === WIN_AT) session.applaudFrom = pulse;
       }
     } else if (result.kind === "ladybug") {
       session.cutUntil = -Infinity;
       const place = targetPlacement(result.target, pulse, reduceMotion);
       session.greet = { x: place.x, y: place.y, until: pulse + 1.2 };
-      setMessage(t("minijuegos.abeja.a-la-mariquita-no-2.juntos"));
     } else {
       playCue(UY_SOUND);
-      session.feedback = { text: t("minijuegos.abeja.uy.rotulo"), miss: true, until: pulse + 0.5 };
-      setMessage(t("minijuegos.abeja.espera-a-que-la.juntos"));
+      session.feedback = { text: t("minijuegos.abeja.compas.uy.rotulo"), miss: true, until: pulse + 0.5 };
     }
   }, [playCue, reduceMotion]);
 
@@ -304,8 +312,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
     const outcome = outcomeOf(session.run);
     setMode(null);
     setFinished({ mode: session.run.mode, outcome });
-    setMessage(session.run.mode === "song" ? RESULT_TEXT[outcome.result].text : session.run.mode === "demo"
-      ? t("minijuegos.abeja.ya-lo-has-visto.juntos") : t("minijuegos.abeja.buen-ensayo-puedes-ensayar.juntos"));
+    setParada(null);
     if (session.run.mode === "song") playSound(outcome.won ? "checkpoint" : "hurt");
   }, [freshSegment, playSound]);
 
@@ -323,10 +330,11 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
       lastPulse: -1, nextEighth: 0, cutUntil: -Infinity, greet: null, feedback: null, applaudFrom: null, celebrateUntil: -Infinity, lastJar: 0, halves: [], halfId: 0, ended: false,
     };
     sessionRef.current = session;
+    practicaRef.current = createPracticaConPausas(PARADAS[nextMode]);
+    setParada(null);
     if (nextMode === "song") setAttempted(true);
     setFinished(null);
     setView(emptyView);
-    setMessage(nextMode === "demo" ? t("minijuegos.abeja.mira-como-lo-hace.juntos") : t("minijuegos.abeja.escucha-la-cuenta-de.juntos"));
     const audioReady = await ensureAudio();
     if (sessionRef.current !== session) return;
     if (audioReady && audioRef.current) {
@@ -405,12 +413,18 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
       }
       const pulse = pulseNow(session);
       session.lastPulse = pulse;
+      // Práctica: al llegar una pieza nueva se detiene y la explica; sigue al tocar SIGUE (con la cuenta de Melisa).
+      const nueva = !counting && session.run.mode !== "song" ? practicaRef.current?.llegar(pulse) : undefined;
+      if (nueva) {
+        setView(snapshot(session, pulse, 0, reduceMotion));
+        setParada(nueva);
+        return;
+      }
       if (!counting) {
         if (session.run.mode === "demo") for (const result of autoCuts(session.run, pulse)) react(session, result, pulse);
         else if (collectFalls(session.run, pulse).length) {
           playCue(PLOF_SOUND);
-          session.feedback = { text: "plof", miss: true, until: pulse + 0.6 };
-          setMessage(t("minijuegos.abeja.no-pasa-nada-ya.juntos"));
+          session.feedback = { text: t("minijuegos.abeja.compas.plof.rotulo"), miss: true, until: pulse + 0.6 };
         }
       }
       const down = Boolean(firstConnectedGamepad()?.buttons[0]?.pressed);
@@ -451,16 +465,12 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
   const heroPose = result?.won ? "celebra" : mode ? view.heroPose : "espera";
   const total = mode ? scoreLength(beeScores[mode]) : 0;
 
-  return <><Dialog labelledBy="bee-ninja-title" backdropClassName="boss-backdrop" className="boss-battle bee-ninja-game" gamepad={interactionPaused || !mode}>
-    <header className="boss-header bee-ninja-header">
-      <div>
-        <p className="eyebrow">{friendlyReplay ? t("minijuegos.abeja.juego-amistoso.rotulo") : t("minijuegos.abeja.juego-del-guardian.rotulo")} · {boss.name}</p>
-        <h2 id="bee-ninja-title">{t("minijuegos.abeja.la-abeja-ninja.rotulo")}</h2>
-        <p>{t("minijuegos.abeja.melisa-lanza-flores-cortalas.juntos")}</p>
-        <p className="boss-challenge">{t("minijuegos.abeja.reto-de-amistad.rotulo")} {boss.challenge.label}</p>
-      </div>
-    </header>
+  const retrato = <div className="bee-ninja-retrato" style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />;
+  const salir = friendlyReplay ? "minijuegos.abeja.resultado.amigos.rotulo" : "minijuegos.abeja.resultado.mapa.rotulo";
+  const enPrevia = !mode && (!finished || finished.mode !== "song");
 
+  return <><Dialog labelledBy="bee-ninja-title" backdropClassName="boss-backdrop" className="boss-battle bee-ninja-game" gamepad={interactionPaused || !mode}>
+    <h2 id="bee-ninja-title" className="sr-only"><Texto clave="minijuegos.abeja.previa.nombre.rotulo" /></h2>
     <div className={`bee-ninja-frame${reduceMotion ? " is-still" : ""}`} ref={frameRef} onPointerDown={(event) => { if (event.button === 0 && mode && mode !== "demo") strike(); }}>
       <div className="bee-ninja-stage" style={{ transform: `scale(${scale})`, ...STAGE_ART }} aria-hidden="true">
         <img className="bee-ninja-background" src="./assets/worlds/world-11.webp" alt="" />
@@ -470,7 +480,8 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
         {mode && view.melisaBubble && <span className="bee-ninja-bubble is-melisa">{view.melisaBubble}</span>}
         <div className={`bee-ninja-jar${view.jar >= 2 ? " is-reached" : ""}`} style={{ backgroundImage: 'url("./assets/sprites/tarro-miel-v1.webp")', backgroundPosition: `${(mode || ended ? view.jar : 0) * 25}% 0` }} />
         {view.ring && mode && <div className={`bee-ninja-ring${view.ring.ready ? " is-ready" : ""}`} style={{ left: CUT_POINT.x - 50, top: CUT_POINT.y - 50, transform: `scale(${view.ring.scale})` }} />}
-        {view.ring?.ready && mode && <div className="bee-ninja-now" style={{ left: CUT_POINT.x - 26, top: CUT_POINT.y - 150 }}>{t("minijuegos.abeja.ya.rotulo")}</div>}
+        {mode && clockKind === "frame" && <span className="bee-ninja-mute" style={{ left: CUT_POINT.x + 40, top: CUT_POINT.y - 70 }}><Pictograma nombre="sin-sonido" /></span>}
+        {view.ring?.ready && mode && <div className="bee-ninja-now" style={{ left: CUT_POINT.x - 26, top: CUT_POINT.y - 150 }}>{t("minijuegos.abeja.compas.ya.rotulo")}</div>}
         <div className="bee-ninja-hero" data-pose={heroPose} style={{ backgroundImage: 'url("./assets/sprites/noa-abeja-v1.webp")', left: HERO.left, top: HERO.top, width: HERO.width, height: HERO.height }} />
         {view.targets.map((target) => <div key={target.id} className={`bee-ninja-target is-${target.kind}${target.kind === "ladybug" && view.greet ? " is-greeting" : ""}`}
           style={{ transform: `translate(${target.x - 32}px, ${target.y - 32}px) rotate(${target.rotation}deg)`, opacity: target.opacity, ...(target.kind === "ladybug" ? {} : flowerSprite(target.color, 0)) }} />)}
@@ -479,55 +490,50 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
           <span className="is-right" style={flowerSprite(half.color, 2)} />
           {!reduceMotion && [0, 1, 2, 3].map((petal) => <i key={petal} style={{ ...flowerSprite(half.color, 3), "--dx": `${870 - CUT_POINT.x + (petal - 1.5) * 12}px`, "--dy": `${430 - CUT_POINT.y}px` } as CSSProperties} />)}
         </div>)}
-        {view.greet && <span className="bee-ninja-bubble is-pink" style={{ left: view.greet.x - 24, top: view.greet.y - 70 }}>{t("minijuegos.abeja.hola.rotulo")}</span>}
+        {view.greet && <span className="bee-ninja-bubble is-pink" style={{ left: view.greet.x - 24, top: view.greet.y - 70 }}>{t("minijuegos.abeja.compas.hola.rotulo")}</span>}
         {view.feedback && <div className={`bee-ninja-feedback${view.feedback.miss ? " is-miss" : ""}`} style={{ left: CUT_POINT.x - 130, top: CUT_POINT.y - 110 }}>{view.feedback.text}</div>}
-        {mode && view.caption && <div className="bee-ninja-caption">{view.caption}</div>}
-        {mode && view.counting > 0 && <div className="bee-ninja-caption">{t("minijuegos.abeja.seguimos-melisa-cuenta.juntos")} {view.counting}</div>}
-        {mode && view.phase && <span className="bee-ninja-phase">{view.phase}</span>}
-        {result && <div className="bee-ninja-result"><strong>{RESULT_TEXT[result.result].title}</strong></div>}
+        {mode && view.counting > 0 && <div className="bee-ninja-caption">{view.counting}</div>}
+        {mode && view.phase && <span className="bee-ninja-phase"><i className={`bee-ninja-phase-piece is-${view.phase.piece}`} style={view.phase.piece === "ladybug" ? undefined : flowerSprite(0, 0)} />{view.phase.piece === "duo" && <i className="bee-ninja-phase-piece is-duo" style={flowerSprite(1, 0)} />}{view.phase.name}</span>}
       </div>
     </div>
-    {mode && <progress className="bee-ninja-progress" max={total} value={Math.max(0, view.pulse)} aria-label={t("minijuegos.abeja.avance-de-la-cancion.oculto")} />}
+    {mode && <progress className="bee-ninja-progress" max={total} value={Math.max(0, view.pulse)} aria-label={t("minijuegos.abeja.avance.oculto")} />}
 
-    <div className="bee-ninja-controls">
-      <p className="bee-ninja-message" aria-live="polite">{result ? <><b>{RESULT_TEXT[result.result].title}</b> {message}</> : message}</p>
-      {mode && mode !== "demo" && <button className="pixel-button primary bee-ninja-cut" type="button" disabled={interactionPaused}
-        onPointerDown={(event) => { event.stopPropagation(); if (event.button === 0) strike(); }} onClick={(event) => { if (event.detail === 0) strike(); }}>{t("minijuegos.abeja.corta.rotulo")}</button>}
-      {mode === "demo" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>{t("minijuegos.abeja.terminar-demostracion.rotulo")}</button>}
-      {mode === "practice" && <button className="pixel-button" type="button" onClick={() => { const session = sessionRef.current; if (session) finish(session); }}>{t("minijuegos.abeja.terminar-ensayo.rotulo")}</button>}
-      {!mode && !finished && <div className="bee-ninja-actions">
-        <button className={`pixel-button${highlightPractice ? " primary" : ""}`} type="button" data-gamepad-default={highlightPractice || undefined} onClick={() => void begin("demo")}>{t("minijuegos.abeja.practicar.rotulo")}</button>
-        <button className={`pixel-button${highlightPractice ? "" : " primary"}`} type="button" data-gamepad-default={!highlightPractice || undefined} onClick={() => void begin("song")}>{t("minijuegos.abeja.a-jugar.rotulo")}</button>
-      </div>}
-      {finished?.mode === "demo" && <div className="bee-ninja-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("practice")}>{t("minijuegos.abeja.ensayar.rotulo")}</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("song")}>{t("minijuegos.abeja.a-jugar.rotulo")}</button>
-      </div>}
-      {finished?.mode === "practice" && <div className="bee-ninja-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>{t("minijuegos.abeja.a-jugar.rotulo")}</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("practice")}>{t("minijuegos.abeja.ensayar-otra-vez.rotulo")}</button>
-      </div>}
-      {result?.won && <div className="bee-ninja-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => confirmWin(result.challengeCompleted)}>{friendlyReplay ? t("minijuegos.abeja.volver-a-mis-amigos.rotulo") : t("minijuegos.abeja.continuar-la-aventura.rotulo")}</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("song")}>{t("minijuegos.abeja.jugar-otra-vez.rotulo")}</button>
-      </div>}
-      {result?.won && !result.challengeCompleted && <p className="bee-ninja-note">{t("minijuegos.abeja.si-cortas-todas-las.juntos")}</p>}
-      {result && !result.won && <div className="bee-ninja-actions">
-        <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => void begin("song")}>{t("minijuegos.abeja.intentar-otra-vez.rotulo")}</button>
-        <button className="pixel-button" type="button" onClick={() => void begin("demo")}>{t("minijuegos.abeja.practicar.rotulo")}</button>
-        <button className="pixel-button" type="button" onClick={leave}>{friendlyReplay ? t("minijuegos.abeja.volver-a-mis-amigos.rotulo") : t("minijuegos.abeja.volver-al-mapa.rotulo")}</button>
-      </div>}
-      {mode && clockKind === "frame" && <p className="bee-ninja-note">{muted ? t("minijuegos.abeja.sonido-apagado-sigue-el.juntos") : t("minijuegos.abeja.sin-sonido-sigue-el.juntos")}</p>}
-      <p className="bee-ninja-help">{t("minijuegos.abeja.teclado-espacio-mando-boton.juntos")}</p>
-      {!(result && !result.won) && <button className="text-button duel-abandon" type="button" onClick={leave}>{friendlyReplay ? t("minijuegos.abeja.volver-a-mis-amigos.rotulo") : t("minijuegos.abeja.volver-al-mapa.rotulo")}</button>}
-    </div>
+    {mode && <div className="bee-ninja-controls">
+      {mode !== "demo" && <Boton tipo="seguir" className="bee-ninja-cut" clave="minijuegos.abeja.boton.corta.rotulo" disabled={interactionPaused}
+        onPointerDown={(event) => { event.stopPropagation(); if (event.button === 0) strike(); }} onClick={(event) => { if (event.detail === 0) strike(); }} />}
+      {mode !== "song" && <Boton clave="minijuegos.abeja.practica.termina.rotulo" onClick={() => { const session = sessionRef.current; if (session) finish(session); }} />}
+    </div>}
   </Dialog>
 
-  {showLeave && <Dialog labelledBy="bee-ninja-leave-title" className="game-modal compact" gamepad onClose={() => setShowLeave(false)}>
-    <p className="eyebrow">{t("minijuegos.abeja.un-momento.rotulo")}</p><h2 id="bee-ninja-leave-title">{t("minijuegos.abeja.volvemos-al-mapa.rotulo")}</h2>
-    <p>{t("minijuegos.abeja.podras-jugar-con-melisa.juntos")}</p>
-    <button className="pixel-button primary" type="button" data-gamepad-default data-gamepad-back onClick={() => setShowLeave(false)}>{t("minijuegos.abeja.seguir-jugando.rotulo")}</button>
-    <button className="pixel-button" type="button" onClick={onAbandon}>{t("minijuegos.abeja.si-volver-al-mapa.rotulo")}</button>
-  </Dialog>}
+  {enPrevia && !showLeave && <PantallaPrevia id="bee-ninja-previa" nombre="minijuegos.abeja.previa.nombre.rotulo" guardian={retrato}
+    regla={`${t("minijuegos.abeja.previa.regla.juntos")} ${boss.challenge.label}`}
+    ayudaAdultos={[t("adultos.minijuegos.abeja.controles"), t("adultos.minijuegos.abeja.sinSonido")]}
+    practicaPrimero={highlightPractice && finished?.mode !== "practice"}
+    onPracticar={() => void begin(finished?.mode === "demo" ? "practice" : "demo")} onJugar={() => void begin("song")} onSalir={leave} />}
+
+  {parada && !paused && <Ventana id="bee-ninja-parada" titulo={CLAVE_PARADA[parada.pieza as keyof typeof CLAVE_PARADA].rotulo}
+    botones={<Boton tipo="seguir" clave="minijuegos.abeja.practica.sigue.rotulo" data-gamepad-default onClick={() => { practicaRef.current?.seguir(); setParada(null); }} />}>
+    <p className="juntos">{t(CLAVE_PARADA[parada.pieza as keyof typeof CLAVE_PARADA].juntos)}</p>
+  </Ventana>}
+
+  {result && !showLeave && <ResultadoMinijuego id="bee-ninja-resultado" titulo={RESULT_TEXT[result.result].title} gano={result.won} onSalir={leave}
+    dibujo={<div className="bee-ninja-jar-resultado" role="img" aria-label={t("minijuegos.abeja.resultado.tarro.oculto")} style={{ backgroundImage: 'url("./assets/sprites/tarro-miel-v1.webp")', backgroundPosition: `${view.jar * 25}% 0` }} />}
+    frase={t(RESULT_TEXT[result.result].text)}
+    botones={result.won ? <>
+      <Boton tipo="seguir" clave={friendlyReplay ? "minijuegos.abeja.resultado.amigos.rotulo" : "minijuegos.abeja.resultado.sigue.rotulo"} data-gamepad-default onClick={() => confirmWin(result.challengeCompleted)} />
+      <Boton clave="minijuegos.abeja.resultado.otraVez.rotulo" onClick={() => void begin("song")} />
+    </> : <>
+      <Boton tipo="seguir" clave="minijuegos.abeja.resultado.otraVez.rotulo" data-gamepad-default onClick={() => void begin("song")} />
+      <Boton clave="minijuegos.comun.previa.practica.rotulo" onClick={() => void begin("demo")} />
+      <Boton clave={salir} data-gamepad-back onClick={leave} />
+    </>} />}
+
+  {showLeave && <Ventana id="bee-ninja-leave-title" titulo="minijuegos.abeja.salir.titulo.rotulo" onClose={() => setShowLeave(false)}
+    botones={<>
+      <Boton tipo="seguir" clave="minijuegos.abeja.salir.seguir.rotulo" data-gamepad-default data-gamepad-back onClick={() => setShowLeave(false)} />
+      <Boton clave="minijuegos.abeja.salir.si.rotulo" onClick={onAbandon} />
+    </>}>
+    <p className="juntos">{t("minijuegos.abeja.salir.juntos.juntos")}</p>
+  </Ventana>}
   </>;
 }

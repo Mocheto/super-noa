@@ -2,16 +2,19 @@ import { t } from "../textos";
 import { Boton, BotonControl, Texto } from "../textos/Texto";
 import { Medalla, Ventana } from "./Ventana";
 import { PantallaPrevia } from "./minijuegoComun";
+import { BeeNinjaGame } from "./BeeNinjaGame";
 
 /** Solo en desarrollo (`?prueba=interfaz`): muestra los cimientos de la interfaz para revisarlos en escritorio y móvil. */
 export function MuestraInterfaz() {
   // `?prueba=interfaz&ventana=resultado` abre además la pantalla de resultado común; `&ventana=previa`, la pantalla previa de los minijuegos.
   const ventana = new URLSearchParams(window.location.search).get("ventana");
   const nada = () => undefined;
+  // `&ventana=abeja` abre la abeja ninja tal como sale tras el guardián, para revisar su pantalla previa y su práctica.
+  if (ventana === "abeja") return <BeeNinjaGame paused={false} muted musicVolume={0} effectsVolume={0} reduceMotion={false} levelCompleted={false} onAbandon={nada} onWin={nada} playSound={nada} />;
   return <main className="muestra-interfaz">
-    {ventana === "previa" && <PantallaPrevia id="muestra-previa" nombre="minijuegos.abeja.la-abeja-ninja.rotulo"
-      guardian={<img src="./assets/sprites/boss-gran-jabali-0.png" alt="" />} regla={t("minijuegos.abeja.melisa-lanza-flores-cortalas.juntos")}
-      ayudaAdultos={[t("minijuegos.abeja.teclado-espacio-mando-boton.juntos")]} practicaPrimero onPracticar={nada} onJugar={nada} onSalir={nada} />}
+    {ventana === "previa" && <PantallaPrevia id="muestra-previa" nombre="minijuegos.abeja.previa.nombre.rotulo"
+      guardian={<div className="bee-ninja-retrato" style={{ backgroundImage: "url(./assets/atlases/giant-valley-characters-v1.png)" }} />} regla={t("minijuegos.abeja.previa.regla.juntos")}
+      ayudaAdultos={[t("adultos.minijuegos.abeja.controles")]} practicaPrimero onPracticar={nada} onJugar={nada} onSalir={nada} />}
     {ventana === "resultado" && <Ventana id="muestra-resultado" titulo="ventanas.completada.titulo.rotulo" celebracion
       botones={<><Boton tipo="seguir" clave="ventanas.completada.siguiente.rotulo" /><Boton clave="ventanas.completada.mapa.rotulo" /></>}>
       <div className="ventana-dibujo"><img className="completion-cat" src="./assets/sprites/world-cat-1-v1.png" alt={t("ventanas.completada.gatito.oculto")} /></div>

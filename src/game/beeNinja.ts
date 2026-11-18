@@ -24,7 +24,8 @@ export type Score = {
   bars: number;
   closingBars: number;
   ladybugFromBar: number;
-  phases: readonly { fromBar: number; name: string }[];
+  /** Carteles de fase: solo cuando llega una pieza nueva, con su sprite y hasta dos palabras. */
+  phases: readonly { fromBar: number; name: string; piece: "flower" | "duo" | "ladybug" }[];
   items: readonly ScoreItem[];
 };
 
@@ -38,8 +39,8 @@ export const beeScores: Record<BeeMode, Score> = {
     closingBars: 2,
     ladybugFromBar: 19,
     phases: [
-      { fromBar: 1, name: t("minijuegos.abeja.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.abeja.primera-flor.rotulo") }, { fromBar: 3, name: t("minijuegos.abeja.tranquila.rotulo") },
-      { fromBar: 11, name: t("minijuegos.abeja.animada.rotulo") }, { fromBar: 19, name: t("minijuegos.abeja.cuidado-con-las-mariquitas.rotulo") }, { fromBar: 23, name: t("minijuegos.abeja.fanfarria.rotulo") },
+      { fromBar: 2, name: t("minijuegos.abeja.fase.flor.rotulo"), piece: "flower" }, { fromBar: 11, name: t("minijuegos.abeja.fase.duo.rotulo"), piece: "duo" },
+      { fromBar: 19, name: t("minijuegos.abeja.fase.mariquita.rotulo"), piece: "ladybug" },
     ],
     items: [
       at(2, 3),
@@ -52,14 +53,14 @@ export const beeScores: Record<BeeMode, Score> = {
     bars: 6,
     closingBars: 0,
     ladybugFromBar: 2,
-    phases: [{ fromBar: 1, name: t("minijuegos.abeja.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.abeja.ensayo.rotulo") }],
+    phases: [],
     items: [at(2, 3), at(3, 3), at(4, 1, "duo"), at(5, 1, "ladybug")],
   },
   demo: {
     bars: 5,
     closingBars: 0,
     ladybugFromBar: 2,
-    phases: [{ fromBar: 1, name: t("minijuegos.abeja.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.abeja.demostracion.rotulo") }],
+    phases: [],
     items: [at(2, 3), at(3, 3, "duo"), at(4, 3, "ladybug")],
   },
 };

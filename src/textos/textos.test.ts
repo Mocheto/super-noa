@@ -22,7 +22,8 @@ test("cada rótulo cumple la guía de escritura del texto para Noa", () => {
   }
 });
 
-test("en los minijuegos, un rótulo al compás tiene una palabra y un cartel de fase hasta dos con su dibujo", () => {
+// El dibujo del cartel de fase es el sprite de la pieza del propio juego, que pone el minijuego (no un pictograma del atlas).
+test("en los minijuegos, un rótulo al compás tiene una palabra y un cartel de fase hasta dos", () => {
   for (const [clave, hoja] of hojas()) {
     const compas = /^minijuegos\.[\w-]+\.compas\..+\.rotulo$/.test(clave);
     const fase = /^minijuegos\.[\w-]+\.fase\..+\.rotulo$/.test(clave);
@@ -30,10 +31,7 @@ test("en los minijuegos, un rótulo al compás tiene una palabra y un cartel de 
     for (const texto of formas(hoja)) {
       const palabras = sinMarcas(texto).trim().split(/\s+/).filter((palabra) => /[A-ZÑ0-9]/.test(palabra));
       if (compas) assert.equal(palabras.length, 1, `${clave} dura un pulso: una sola palabra («${texto}»)`);
-      if (fase) {
-        assert.ok(palabras.length <= 2, `${clave} dura un compás: hasta dos palabras («${texto}»)`);
-        assert.match(texto, /\{pictograma:[\w-]+\}/, `${clave} lleva el dibujo de la pieza nueva`);
-      }
+      if (fase) assert.ok(palabras.length <= 2, `${clave} dura un compás: hasta dos palabras («${texto}»)`);
     }
   }
 });

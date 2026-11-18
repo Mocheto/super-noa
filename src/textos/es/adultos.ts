@@ -5,6 +5,10 @@
 export const adultos = {
   /** Ayuda de teclado, mando y sin sonido de los minijuegos: solo en su pantalla previa. */
   minijuegos: {
+    gatitos: {
+      controles: "Teclado: Espacio. Mando: botón A. También puedes tocar el botón de golpear.",
+      sinSonido: "Sin sonido, sigue los farolillos y el aro dorado: el tronco está listo cuando el aro se ilumina.",
+    },
     merienda: {
       controles: "Teclado: Espacio. Mando: botón A. También puedes tocar la escena o el botón de dar de comer.",
       sinSonido: "Sin sonido, sigue los puntos y la boca del jabato: la bellota grande se enciende cuando hay que darle de comer.",

@@ -21,7 +21,8 @@ export type Score = {
   bars: number;
   closingBars: number;
   yarnFromBar: number;
-  phases: readonly { fromBar: number; name: string }[];
+  /** Carteles de fase: solo cuando llega una pieza nueva, con su sprite y hasta dos palabras. */
+  phases: readonly { fromBar: number; name: string; piece: "small" | "medium" | "yarn" }[];
   pieces: readonly ScorePiece[];
 };
 
@@ -35,8 +36,8 @@ export const partyScores: Record<PartyMode, Score> = {
     closingBars: 2,
     yarnFromBar: 21,
     phases: [
-      { fromBar: 1, name: t("minijuegos.gatitos.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.gatitos.primeros-troncos.rotulo") }, { fromBar: 5, name: t("minijuegos.gatitos.troncos-pequenos.rotulo") },
-      { fromBar: 13, name: t("minijuegos.gatitos.troncos-medianos.rotulo") }, { fromBar: 21, name: t("minijuegos.gatitos.cuidado-con-los-ovillos.rotulo") }, { fromBar: 27, name: t("minijuegos.gatitos.fiesta.rotulo") },
+      { fromBar: 2, name: t("minijuegos.gatitos.fase.troncos.rotulo"), piece: "small" }, { fromBar: 13, name: t("minijuegos.gatitos.fase.dos.rotulo"), piece: "medium" },
+      { fromBar: 21, name: t("minijuegos.gatitos.fase.ovillo.rotulo"), piece: "yarn" },
     ],
     pieces: [
       piece(2, 3), piece(3, 3), piece(4, 3),
@@ -49,14 +50,14 @@ export const partyScores: Record<PartyMode, Score> = {
     bars: 6,
     closingBars: 0,
     yarnFromBar: 2,
-    phases: [{ fromBar: 1, name: t("minijuegos.gatitos.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.gatitos.ensayo.rotulo") }],
+    phases: [],
     pieces: [piece(2, 3), piece(3, 3), piece(4, 1, "medium"), piece(5, 1, "yarn")],
   },
   demo: {
     bars: 5,
     closingBars: 0,
     yarnFromBar: 2,
-    phases: [{ fromBar: 1, name: t("minijuegos.gatitos.cuenta.rotulo") }, { fromBar: 2, name: t("minijuegos.gatitos.demostracion.rotulo") }],
+    phases: [],
     pieces: [piece(2, 3), piece(3, 3, "medium"), piece(4, 3, "yarn")],
   },
 };

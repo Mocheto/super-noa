@@ -5,6 +5,7 @@ import { PantallaPrevia } from "./minijuegoComun";
 import { BeeNinjaGame } from "./BeeNinjaGame";
 import { ArmoniaDrumGame } from "./ArmoniaDrumGame";
 import { MeriendaJabatosGame } from "./MeriendaJabatosGame";
+import { CatParty } from "./CatPartyGame";
 
 /** Solo en desarrollo (`?prueba=interfaz`): muestra los cimientos de la interfaz para revisarlos en escritorio y móvil. */
 export function MuestraInterfaz() {
@@ -12,6 +13,7 @@ export function MuestraInterfaz() {
   const ventana = new URLSearchParams(window.location.search).get("ventana");
   const nada = () => undefined;
   // `&ventana=abeja` abre la abeja ninja tal como sale tras el guardián, para revisar su pantalla previa y su práctica.
+  if (ventana === "gatitos") return <CatParty paused={false} muted musicVolume={0} effectsVolume={0} reduceMotion={false} onPause={nada} onExit={nada} />;
   if (ventana === "merienda") return <MeriendaJabatosGame paused={false} muted musicVolume={0} effectsVolume={0} reduceMotion={false} levelCompleted={false} onAbandon={nada} onWin={nada} playSound={nada} />;
   if (ventana === "tambor") return <ArmoniaDrumGame paused={false} muted musicVolume={0} effectsVolume={0} reduceMotion={false} levelCompleted={false} onAbandon={nada} onWin={nada} playSound={nada} />;
   if (ventana === "abeja") return <BeeNinjaGame paused={false} muted musicVolume={0} effectsVolume={0} reduceMotion={false} levelCompleted={false} onAbandon={nada} onWin={nada} playSound={nada} />;

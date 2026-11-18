@@ -1,0 +1,135 @@
+<title>Transición de Super Noa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<style>
+/* Estética del juego. Un lienzo de 960 × 540 que reproduce el paso de una pantalla a la siguiente con tres efectos. */
+:root {
+  color-scheme: dark;
+  --night: #25183f;
+  --ink: #352044;
+  --plum: #3d1430;
+  --cream: #fff8e9;
+  --gold: #ffd45f;
+  --lilac: #b979dc;
+  --noa: "Press Start 2P", monospace;
+  --adult: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--night); color: var(--cream); font-family: var(--adult); }
+.wrap { max-width: 1100px; margin: 0 auto; padding-block: 24px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+h1 { margin: 0; font-family: var(--noa); font-size: clamp(16px, 3vw, 24px); color: var(--gold); }
+.lead { margin: 0; max-width: 75ch; color: #e9dcf0; line-height: 1.5; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; padding: 12px 14px; background: rgba(0,0,0,.25); border: 2px solid #623879; font-size: .9rem; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 2px solid var(--lilac); }
+.seg button { font: inherit; padding: 6px 12px; background: transparent; color: var(--cream); border: 0; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--lilac); color: var(--night); font-weight: 700; }
+.play { font-family: var(--noa); font-size: 14px; padding: 12px 16px; border: 4px solid #2e1a3b; background: #e74755; color: #fff; box-shadow: 0 4px 0 #2e1a3b; cursor: pointer; }
+.play:disabled { opacity: .6; cursor: default; }
+button:focus-visible, label:focus-within { outline: 4px solid var(--gold); outline-offset: 2px; }
+canvas { display: block; width: 100%; max-width: 960px; aspect-ratio: 16 / 9; height: auto; margin: 0 auto; image-rendering: pixelated; border: 4px solid #120b1d; background: #6aa0c8; }
+.desc { padding: 12px 14px; background: #2c1d47; border: 4px solid #2e1a3b; line-height: 1.5; font-size: .92rem; }
+.desc b { color: var(--gold); }
+.desc ul { margin: 6px 0 0; padding-left: 1.2em; }
+.time { font-family: var(--noa); font-size: 11px; color: var(--gold); }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <h1>TRANSICION</h1>
+    <p class="lead">Prototipo del ticket «La transición entre pantallas». Pulsa «Llegar a la meta»: Noa toca la bandera, suena la salida, aparece la ventana de pantalla completada y, al tocar SEGUIR, entra la pantalla siguiente. Las tres propuestas duran como mucho 1,5 s por tramo. Noa y la bandera son bloques provisionales.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Opciones del prototipo">
+    <span>Efecto <span class="seg" id="e"><button type="button" data-e="iris" aria-pressed="true">A · Círculo sobre Noa</button><button type="button" data-e="stars">B · Cortina de estrellas</button><button type="button" data-e="card">C · Cartel con pegatina</button></span></span>
+    <label><input id="calm" type="checkbox"> Movimiento tranquilo</label>
+    <button class="play" id="go" type="button">▶ LLEGAR A LA META</button>
+    <span class="time" id="time" aria-live="polite"></span>
+  </div>
+
+  <canvas id="cv" width="960" height="540" aria-label="Escena de prueba de la transición"></canvas>
+  <div class="desc" id="desc"></div>
+</div>
+
+<script>
+const BG = new Image(); BG.src = "__BG__";
+const cv = document.getElementById("cv"), c = cv.getContext("2d");
+const S = { e: "iris", phase: "idle", t: 0, level: 1, noaX: 120, last: 0, sticker: false };
+const NOA = { y: 430, w: 36, h: 52 }, FLAG = 820;
+const DUR = { out: 1.2, in: 0.9 };
+const calm = () => document.getElementById("calm").checked;
+const font = (px) => `${px}px "Press Start 2P", monospace`;
+
+function drawScene() {
+  if (BG.complete && BG.naturalWidth) c.drawImage(BG, 0, 0, 960, 540); else { c.fillStyle = "#6aa0c8"; c.fillRect(0, 0, 960, 540); }
+  if (S.level === 2) { c.fillStyle = "rgba(255,170,90,.28)"; c.fillRect(0, 0, 960, 540); }
+  c.fillStyle = "#5fb04f"; c.fillRect(0, 482, 960, 58); c.fillStyle = "#3d1430"; c.fillRect(0, 478, 960, 4);
+  c.fillStyle = "#3d1430"; c.fillRect(FLAG - 2, 330, 6, 150); c.fillStyle = S.level === 1 ? "#e74755" : "#ffd45f"; c.fillRect(FLAG + 4, 334, 46, 30);
+  c.fillStyle = "#3d1430"; c.fillRect(S.noaX - 3, NOA.y - 3, NOA.w + 6, NOA.h + 6); c.fillStyle = "#f2a0c8"; c.fillRect(S.noaX, NOA.y, NOA.w, NOA.h); c.fillStyle = "#3d1430"; c.fillRect(S.noaX + 9, NOA.y + 14, 5, 5); c.fillRect(S.noaX + 22, NOA.y + 14, 5, 5);
+  c.font = font(18); c.fillStyle = "#fff8e9"; c.strokeStyle = "#3d1430"; c.lineWidth = 6; const lab = S.level === 1 ? "1-2" : "1-3"; c.strokeText(lab, 20, 40); c.fillText(lab, 20, 40);
+}
+const ease = (x) => x < .5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+const cx = () => S.noaX + NOA.w / 2, cy = () => NOA.y + NOA.h / 2;
+
+function overlay(p, dir) { // p 0..1, dir "out" cierra / "in" abre
+  const k = dir === "out" ? ease(p) : 1 - ease(p);
+  if (calm()) { c.fillStyle = `rgba(37,24,63,${k})`; c.fillRect(0, 0, 960, 540); return; }
+  if (S.e === "iris") {
+    const R = 1100 * (1 - k) + 0.1;
+    c.save(); c.fillStyle = "#25183f"; c.beginPath(); c.rect(0, 0, 960, 540); c.arc(cx(), cy(), R, 0, Math.PI * 2, true); c.fill("evenodd");
+    c.strokeStyle = "#ffd45f"; c.lineWidth = 8; c.beginPath(); c.arc(cx(), cy(), R, 0, Math.PI * 2); c.stroke(); c.restore();
+    if (dir === "out" && p > .55) { const a = Math.min(1, (p - .55) / .3); c.globalAlpha = a; c.font = font(28); c.textAlign = "center"; c.fillStyle = "#ffd45f"; c.fillText("⭐ ¡BIEN!", 480, 120); c.textAlign = "left"; c.globalAlpha = 1; }
+  } else if (S.e === "stars") {
+    const cols = 16, rows = 9, cw = 60, ch = 60;
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      const delay = (i / cols) * .55; const q = Math.max(0, Math.min(1, (k * 1.55 - delay) / 1)); if (q <= 0) continue;
+      const s = q * 1.25; const x = i * cw + cw / 2, y = j * ch + ch / 2;
+      c.fillStyle = (i + j) % 2 ? "#3a2858" : "#2c1d47"; c.fillRect(x - cw / 2 * Math.min(1, s), y - ch / 2 * Math.min(1, s), cw * Math.min(1, s), ch * Math.min(1, s));
+      if (q < 1) { c.fillStyle = "#ffd45f"; star(x, y, 14 * (1 - q) + 6); }
+    }
+  } else {
+    const fade = Math.min(1, k * 1.4); c.fillStyle = `rgba(37,24,63,${fade * .85})`; c.fillRect(0, 0, 960, 540);
+    const y = -220 + ease(Math.min(1, k * 1.2)) * 400;
+    c.fillStyle = "#3d1430"; c.fillRect(300 - 6, y - 6, 372, 192); c.fillStyle = "#fff8e9"; c.fillRect(300, y, 360, 180);
+    c.font = font(26); c.fillStyle = "#e74755"; c.textAlign = "center"; c.fillText(dir === "out" ? "¡MUY BIEN!" : "1-3", 480, y + 64);
+    c.fillStyle = "#ffd45f"; star(480, y + 125, 30 + Math.sin(performance.now() / 120) * 3); c.textAlign = "left";
+  }
+}
+function star(x, y, r) { c.beginPath(); for (let i = 0; i < 10; i++) { const rr = i % 2 ? r * .45 : r; const a = -Math.PI / 2 + i * Math.PI / 5; c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } c.closePath(); c.fill(); c.strokeStyle = "#3d1430"; c.lineWidth = 3; c.stroke(); }
+
+function windowBox() {
+  c.fillStyle = "rgba(16,8,25,.55)"; c.fillRect(0, 0, 960, 540);
+  c.fillStyle = "#3d1430"; c.fillRect(294, 134, 372, 272); c.fillStyle = "#fff8e9"; c.fillRect(300, 140, 360, 260);
+  c.textAlign = "center"; c.font = font(26); c.fillStyle = "#e74755"; c.fillText("⭐ ¡MUY BIEN!", 480, 210);
+  c.font = font(14); c.fillStyle = "#352044"; c.fillText("⭐ META  ✨ PEGATINA", 480, 260);
+  const ready = S.t > .5; c.fillStyle = ready ? "#e74755" : "#c9a7b0"; c.fillRect(390, 300, 180, 56); c.fillStyle = "#fff"; c.font = font(16); c.fillText("▶ SIGUE", 480, 336); c.textAlign = "left";
+  if (!ready) { c.font = "12px system-ui"; c.fillStyle = "#6f5c78"; c.textAlign = "center"; c.fillText("(espera medio segundo antes de aceptar toques)", 480, 380); c.textAlign = "left"; }
+}
+
+function frame(now) {
+  const dt = Math.min(.05, (now - (S.last || now)) / 1000); S.last = now; S.t += dt;
+  if (S.phase === "walk") { S.noaX += 260 * dt; if (S.noaX + NOA.w >= FLAG) { S.noaX = FLAG - NOA.w; S.phase = "out"; S.t = 0; } }
+  if (S.phase === "out" && S.t >= DUR.out) { S.phase = "window"; S.t = 0; }
+  if (S.phase === "in" && S.t >= DUR.in) { S.phase = "idle"; S.t = 0; document.getElementById("go").disabled = false; document.getElementById("time").textContent = ""; }
+  drawScene();
+  if (S.phase === "out") { overlay(S.t / DUR.out, "out"); document.getElementById("time").textContent = `salida ${S.t.toFixed(1)} / ${DUR.out} s`; }
+  if (S.phase === "window") { overlay(1, "out"); windowBox(); document.getElementById("time").textContent = "ventana: toca SIGUE"; }
+  if (S.phase === "in") { overlay(S.t / DUR.in, "in"); document.getElementById("time").textContent = `entrada ${S.t.toFixed(1)} / ${DUR.in} s`; }
+  requestAnimationFrame(frame);
+}
+cv.addEventListener("click", (e) => {
+  if (S.phase !== "window" || S.t < .5) return;
+  const r = cv.getBoundingClientRect(); const x = (e.clientX - r.left) * 960 / r.width, y = (e.clientY - r.top) * 540 / r.height;
+  if (x > 390 && x < 570 && y > 300 && y < 356) { S.level = 2; S.noaX = 120; S.phase = "in"; S.t = 0; }
+});
+document.getElementById("go").addEventListener("click", () => { S.level = 1; S.noaX = 120; S.phase = "walk"; S.t = 0; document.getElementById("go").disabled = true; });
+const texts = {
+  iris: `<b>A · Círculo sobre Noa.</b> Un círculo con borde dorado se cierra sobre Noa y aparece «⭐ ¡BIEN!»; en la pantalla siguiente se abre desde Noa.<ul><li>A favor: los ojos siguen a Noa, se entiende al momento que la pantalla termina y empieza otra, y es muy de juego de plataformas.</li><li>En contra: es el efecto más conocido; hay que dibujarlo para que no recuerde a ningún juego concreto (borde dorado y estrella propia).</li></ul>`,
+  stars: `<b>B · Cortina de estrellas.</b> Estrellas doradas barren la pantalla de izquierda a derecha y dejan una cortina de cuadros lilas; al entrar, la cortina se retira igual.<ul><li>A favor: muy vistoso y alegre, y marca la dirección de avance.</li><li>En contra: mucho movimiento y destellos; con movimiento tranquilo se cambia por un fundido.</li></ul>`,
+  card: `<b>C · Cartel con pegatina.</b> La pantalla se oscurece y baja un cartel con «¡MUY BIEN!» y una estrella; al entrar, el cartel muestra el número de la pantalla nueva y sube.<ul><li>A favor: refuerza la lectura (una palabra grande cada vez) y enseña el número de pantalla.</li><li>En contra: se parece a la ventana de pantalla completada que viene justo después, así que se repite el mensaje.</li></ul>`,
+};
+function desc() { document.querySelectorAll("#e button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.e === S.e))); document.getElementById("desc").innerHTML = texts[S.e] + `<p style="margin:8px 0 0">En los tres: la salida dura 1,2 s y la entrada 0,9 s; el tiempo corre con el reloj del juego, así que la pausa lo detiene; la ventana ignora los toques durante medio segundo para que no se salte sin querer; con «Movimiento tranquilo» se usa un fundido suave.</p>`; }
+document.getElementById("e").addEventListener("click", (ev) => { const b = ev.target.closest("button"); if (!b) return; S.e = b.dataset.e; desc(); });
+desc(); requestAnimationFrame(frame);
+</script>

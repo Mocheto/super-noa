@@ -9,7 +9,7 @@
 
 Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 
-- `src/textos/`: catálogo de textos en español (`es/<zona>.ts`, una zona por archivo), `t()`, `<Texto>` y `textoLienzo()` para pedirlos por clave, y `pictogramas.ts` con los nombres de los pictogramas. La guía de escritura del texto para Noa está en `docs/interfaz/guia-texto-noa.md` y los pictogramas en `docs/interfaz/pictogramas.md`.
+- `src/textos/`: catálogo de textos en español (`es/<zona>.ts`, una zona por archivo), `t()`, `<Texto>` y `textoLienzo()` para pedirlos por clave, y `pictogramas.ts` con los nombres de los pictogramas. La guía del catálogo está en `docs/interfaz/catalogo-textos.md`, la de escritura del texto para Noa en `docs/interfaz/guia-texto-noa.md` y los pictogramas en `docs/interfaz/pictogramas.md`; `npm run textos:json` exporta el catálogo a `dist-textos/es.json` (ignorado) con plurales ICU.
 - `src/App.tsx`: navegación, HUD, música, modales y pausa automática al perder visibilidad o foco; `src/game/music.ts`: motor de audio y gestión de pistas.
 - `src/game/progress.ts`: lectura, validación, migración y escritura del progreso local; `src/game/storage.ts`: acceso seguro al almacenamiento local, incluso si el navegador lo bloquea.
 - `src/game/GameCanvas.tsx`: coordinación de la partida, física y estado de cada pantalla.
@@ -53,7 +53,7 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 ## Reglas
 
 - Mantén los textos visibles en español y adecuados para una niña de cinco años.
-- **Ningún texto visible escrito en el código.** Todo texto va a `src/textos/es/` con su clave y se pide con `t()`, `<Texto>` o `textoLienzo()`; los datos declarativos usan su identificador como clave (`pantallas.1-2.titulo.rotulo`) y dejan de llevar texto. Los textos para Noa son **rótulos** (MAYÚSCULAS sin tildes, de una a cuatro palabras, con pictograma) y, si aporta algo, **para leer juntos**, según [la guía de escritura](docs/interfaz/guia-texto-noa.md). Mientras dura la migración, `src/textos/pendientes.ts` lista los archivos que aún tienen texto suelto: la lista solo encoge y `npm run test:logic` falla si un archivo migrado vuelve a tener texto suelto.
+- **Ningún texto visible escrito en el código.** Todo texto va a `src/textos/es/` con su clave y se pide con `t()`, `<Texto>` o `textoLienzo()`; los datos declarativos usan su identificador como clave (`pantallas.1-2.titulo.rotulo`) y dejan de llevar texto. Los textos para Noa son **rótulos** (MAYÚSCULAS sin tildes, de una a cuatro palabras, con pictograma) y, si aporta algo, **para leer juntos**, según [la guía de escritura](docs/interfaz/guia-texto-noa.md). `npm run test:logic` falla si aparece texto visible fuera del catálogo (`src/textos/textoSuelto.test.ts`) y si a un dato le falta un texto o le sobra uno (`src/textos/completitud.test.ts`). Cómo nombrar claves y añadir textos: [catálogo de textos](docs/interfaz/catalogo-textos.md).
 - No copies recursos, niveles, música, sonidos o personajes de Nintendo ni de otros juegos comerciales.
 - Conserva rutas relativas (`./assets/...`) para que funcione tanto en el dominio propio como bajo una subruta de GitHub Pages.
 - El progreso usa la clave `super-noa-progress-v1`. El formato actual declara `version: 2`; amplíalo de forma tolerante a campos ausentes y conserva la migración de guardados anteriores.
@@ -76,7 +76,7 @@ npm run lint
 npm run build:pages
 ```
 
-Ejecuta también `npm run test:logic` cuando cambien reglas, niveles, recursos, entrada, bucle o progreso.
+Ejecuta también `npm run test:logic` cuando cambien reglas, niveles, recursos, entrada, bucle, progreso o textos.
 
 Antes de publicar comprueba las cuarenta y cinco pantallas de campaña, las tres acuáticas y el reino secreto de las nubes, doble salto, natación, muelles, niebla, avisos de lobos y jabalíes, ruta secreta por las copas, barcos voladores, piratas, loros, cañones, pasillos y pinchos del castillo, la isla tropical, t-rex pequeños, terodáctilos y agua mortal, el volcán y su lava, el rebote en gotas del valle, el deslizamiento en la montaña de hielo, pájaros, unicornios, pegatinas y álbum, los doce duelos, la abeja ninja de la Reina Melisa (práctica, cortes al compás, mariquitas, raya dorada, pausa con cuenta de cuatro y revancha), el tambor de Armonía (práctica, llamada y respuesta, huellas, atril con raya dorada, pausa con cuenta de cuatro y revancha), la merienda de los jabatos del Gran Jabalí (práctica, llamadas del pequeño, el grande y el glotón, cuenta atrás de puntos, bocados al compás, «fsss» sin castigo, rama con raya dorada, pausa con cuenta de cuatro y revancha), rendirse y volver al mapa, el reintento gastando una manzana y el reinicio sin manzanas, cajas golpeadas desde abajo, pérdida de vidas y reaparición con tres vidas, checkpoints, manzana, gato, lana, rescate final del gatito, progreso, sonido, teclado, controles táctiles, mando en los duelos y pausa automática al ocultar la pestaña o perder el foco. Comprueba también:
 - los cuatro tramos de cada pantalla;

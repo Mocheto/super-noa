@@ -9,11 +9,14 @@ const atributosTecnicos = /^(className|key|id|type|role|href|src|rel|htmlFor|lab
 const propiedadesTecnicas = /^(id|kind|theme|world|type|src|path|key|className|track|music|asset|image|sprite|atlas|color|fill|stroke|font|mode|power|orientation|shape|variant|pose|easing|direction|face|mood|tone|cue|sound|instrument|sfx|from|to|next|route|backgroundPosition|backgroundSize|backgroundImage|transform|left|top|width|height|method|--.*)$/;
 const llamadasTecnicas = /^(console\.|new Error|Error|querySelector|document\.|classList|addEventListener|localStorage|setAttribute|fetch|require)|(querySelector|getItem|setItem|addEventListener|startsWith|endsWith|includes|split|replace|match|test|classList\.\w+)$/;
 
-/** Archivos que nunca llevan texto visible para la niña: pruebas, arnés, utilidades y entrada de teclas. */
-export const excepcionesFijas = [
-  "pngTestUtils.ts", "engineTestHarness.ts", "levelBeats.ts", "input.ts", "Dialog.tsx", "GameAssetIcon.tsx", "PixelIcon.tsx",
-  "catPartyArt.ts", "testScreens.ts", "progress.ts", "useMapCamera.ts",
-] as const;
+/**
+ * Excepciones fijas: archivos cuyas cadenas no son texto para la niña ni para la persona adulta.
+ * - `pngTestUtils.ts`: mensajes de utilidades de prueba.
+ * - `levelBeats.ts`: mensajes de validación para quien programa.
+ * - `input.ts`: códigos de tecla («ArrowLeft», «KeyA»).
+ * - `testScreens.ts`: pantallas de prueba de los motores, que solo se abren en desarrollo.
+ */
+export const excepcionesFijas = ["pngTestUtils.ts", "levelBeats.ts", "input.ts", "testScreens.ts"] as const;
 
 /** Archivos de partituras: sus cadenas sin propiedad son mensajes de validación, no texto visible. */
 const archivosDePartitura = /(beeNinja|catParty|armoniaDrum|meriendaJabatos)\.ts$/;
@@ -29,7 +32,7 @@ function esTextoVisible(texto: string, esTextoJsx = false): boolean {
   if (/^(\.|#|--|var\(|rgba?\(|\/)/i.test(limpio) || /^#[0-9a-f]{3,6}$/i.test(limpio)) return false;
   if (/^[a-z][\w-]*( [a-z][\w-]*)*$/.test(limpio)) return false;
   if (/^(bold |italic )*\d+px /.test(limpio) || /^\(/.test(limpio)) return false;
-  if (/:not\(|a\[href|`/.test(limpio)) return false;
+  if (/:not\(|a\[href|`/.test(limpio) || /[[\]=>]/.test(limpio)) return false;
   // Un solo trozo sin espacios con cifras, puntos, guiones o plantillas es un identificador o una clave («A-1», «pantallas.${id}.titulo»).
   const sinExpresiones = limpio.replace(/\$\{[^}]*\}/g, "$");
   if (!/\s/.test(sinExpresiones) && /[0-9._$-]/.test(sinExpresiones)) return false;

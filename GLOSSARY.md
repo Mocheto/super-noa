@@ -354,7 +354,7 @@ La capa del texto para Noa: de una a cuatro palabras en mayúsculas, con su pict
 _Avoid_: Etiqueta, título
 
 **Para leer juntos**:
-Frase completa y en letra normal que acompaña a un rótulo para que una persona adulta la lea en voz alta. Es texto para adultos que aparece en las pantallas de Noa; nunca en botones, HUD ni durante la partida.
+Frase completa y en letra normal que acompaña a un rótulo para que una persona adulta la lea en voz alta. Es texto para adultos que aparece en las pantallas de Noa; nunca en botones, HUD, durante la partida ni mientras está en marcha un minijuego o un duelo.
 _Avoid_: Subtítulo, descripción, ayuda
 
 **Pictograma**:
@@ -364,6 +364,22 @@ _Avoid_: Emoji, icono (cuando acompaña a una palabra)
 **Palabra con dibujo**:
 Pareja fija de una palabra del vocabulario y su pictograma (MANZANA con la manzana, VIDAS con el corazón), que aparece siempre igual en toda la interfaz para que se asocien.
 _Avoid_: Etiqueta, icono con texto
+
+**Pantalla previa**:
+Ventana común con la que empieza cada minijuego y duelo: el nombre del juego con el dibujo de su guardián, la regla para leer juntos y los botones para practicar o jugar.
+_Avoid_: Intro, portada, instrucciones
+
+**Rótulo al compás**:
+Rótulo de una sola palabra que dura un pulso mientras suena la canción de un minijuego (¡ZAS!, ¡CORTA!, ¡UY!).
+_Avoid_: Feedback, popup
+
+**Cartel de fase**:
+Rótulo de hasta dos palabras, con su dibujo, que dura un compás al cambiar de parte dentro de un minijuego.
+_Avoid_: Título de fase, banner
+
+**Pantalla de resultado**:
+Ventana común que cierra una pantalla, un minijuego o un duelo: cómo ha ido, lo que se ha ganado y los botones para seguir, repetir o volver al mapa.
+_Avoid_: Pantalla final, game over
 
 **Catálogo de textos**:
 Lugar único donde vive cada texto visible del juego, en español, organizado para poder añadir otros idiomas. Los datos y las pantallas no escriben textos: los piden al catálogo.

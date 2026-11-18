@@ -8,6 +8,7 @@ import { drawMechanicSprite, drawMechanicStrip } from "./mechanicSprites.ts";
 import { worldEnemySpriteSources } from "./worldEnemySprites.ts";
 import { guardianBounds, type LiveChainGuardian } from "./chainGuardians";
 import { starPowerLight } from "./starPowerVisuals.ts";
+import { textoLienzo } from "../textos/index.ts";
 
 const SKY_LIFT_CROPS = {
   platform: [0, 90, 870, 420], leverOff: [850, 35, 330, 475], leverOn: [1175, 35, 361, 475],
@@ -1442,7 +1443,7 @@ function drawEnemyWarning(context: CanvasRenderingContext2D, x: number, y: numbe
   context.fillStyle = kind === "boar" ? "#4a2b2e" : "#3c294a";
   context.font = "bold 12px monospace";
   context.textAlign = "center";
-  context.fillText(kind === "boar" ? "¡OINK!" : "¡AUUU!", x + 30, y - 19);
+  context.fillText(textoLienzo(kind === "boar" ? "partida.lienzo.oink.rotulo" : "partida.lienzo.auuu.rotulo"), x + 30, y - 19);
   context.textAlign = "start";
 }
 
@@ -1508,7 +1509,7 @@ function drawSleepingWolf(context: CanvasRenderingContext2D, enemy: LiveEnemy, x
   context.fillStyle = warning ? "#ffe79a" : "#f5ecff";
   context.fillRect(center - labelWidth / 2, y - 31, labelWidth, 23);
   context.fillStyle = "#3a2c50";
-  context.fillText(warning ? "¡DESPIERTA!" : "ZZZ", center, y - 14);
+  context.fillText(textoLienzo(warning ? "partida.lienzo.despierta.rotulo" : "partida.lienzo.zzz.rotulo"), center, y - 14);
   if (warning) {
     context.fillStyle = "#ffe79a";
     context.fillRect(x + width + 6, y + 3, 22, 26);
@@ -1889,7 +1890,7 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
       context.fillStyle = "#4a2b2e";
       context.font = "bold 12px monospace";
       context.textAlign = "center";
-      context.fillText("¡OINK!", x + 30, y - 18);
+      context.fillText(textoLienzo("partida.lienzo.oink.rotulo"), x + 30, y - 18);
       context.textAlign = "start";
     }
     context.fillStyle = "#2d1d24";
@@ -1922,7 +1923,7 @@ export function drawEnemy(context: CanvasRenderingContext2D, enemy: LiveEnemy, c
       context.fillStyle = "#3c294a";
       context.font = "bold 12px monospace";
       context.textAlign = "center";
-      context.fillText("¡AUUU!", x + 29, y - 19);
+      context.fillText(textoLienzo("partida.lienzo.auuu.rotulo"), x + 29, y - 19);
       context.textAlign = "start";
     }
     context.fillStyle = "#201a2b";
@@ -2090,7 +2091,7 @@ export function drawBloomBridge(context: CanvasRenderingContext2D, bridge: Bloom
       context.fillRect(x, bridge.y, bridge.width, 4);
     }
   }
-  const label = warning ? "¡SE CIERRA!" : state === "open" ? "¡PASA!" : opening > 0 ? "¡SE ABRE!" : "ESPERA LA FLOR";
+  const label = textoLienzo(warning ? "partida.lienzo.puente.cierra.rotulo" : state === "open" ? "partida.lienzo.puente.pasa.rotulo" : opening > 0 ? "partida.lienzo.puente.abre.rotulo" : "partida.lienzo.puente.espera.rotulo");
   const center = x + bridge.width / 2;
   context.fillStyle = warning ? "#fff0a3" : "#fff7e5";
   context.fillRect(center - 68, bridge.y - 42, 136, 23);
@@ -2139,7 +2140,7 @@ export function drawUpdraft(context: CanvasRenderingContext2D, zone: Updraft, ca
   context.fillStyle = "#fff8df";
   context.font = "bold 12px monospace";
   context.textAlign = "center";
-  context.fillText("¡AIRE ARRIBA!", x + zone.width / 2, zone.y + 17);
+  context.fillText(textoLienzo("partida.lienzo.aire.rotulo"), x + zone.width / 2, zone.y + 17);
   context.restore();
 }
 
@@ -2164,7 +2165,7 @@ export function drawWaterEntrance(context: CanvasRenderingContext2D, entrance: N
   context.fillStyle = "#e7fff8";
   context.font = "bold 13px monospace";
   context.textAlign = "center";
-  context.fillText("↓ ¡AGUA! ↓", x + entrance.width / 2, entrance.y - 28);
+  context.fillText(textoLienzo("partida.lienzo.agua.rotulo"), x + entrance.width / 2, entrance.y - 28);
   context.restore();
 }
 
@@ -2325,10 +2326,10 @@ export function drawGoalCat(context: CanvasRenderingContext2D, worldX: number, c
   context.fillStyle = "#6d3e82";
   context.font = "bold 21px monospace";
   context.textAlign = "center";
-  context.fillText("¡GATITO RESCATADO!", VIEW_WIDTH / 2, 91);
+  context.fillText(textoLienzo("partida.lienzo.gatitoRescatado.rotulo"), VIEW_WIDTH / 2, 91);
   context.fillStyle = "#473052";
   context.font = "bold 13px monospace";
-  context.fillText("NOA HA ENCONTRADO UN AMIGO", VIEW_WIDTH / 2, 111);
+  context.fillText(textoLienzo("partida.lienzo.amigoEncontrado.rotulo"), VIEW_WIDTH / 2, 111);
   context.textAlign = "start";
   context.restore();
 }
@@ -2350,7 +2351,7 @@ export function drawBossGate(context: CanvasRenderingContext2D, worldX: number, 
   context.fillStyle = "#fff1a3";
   context.font = "bold 15px monospace";
   context.textAlign = "center";
-  context.fillText("DUELO", x + 66, 323);
+  context.fillText(textoLienzo("partida.lienzo.duelo.rotulo"), x + 66, 323);
   context.fillStyle = "#fff3d2";
   context.fillRect(x + 40, 362, 18, 18);
   context.fillRect(x + 73, 362, 18, 18);

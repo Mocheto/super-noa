@@ -71,3 +71,8 @@ export function hojas(nodo: unknown = actual, prefijo = ""): Array<[string, Hoja
   if (typeof nodo === "string" || (nodo && typeof nodo === "object" && "other" in nodo)) return [[prefijo, nodo as Hoja]];
   return Object.entries(nodo as Record<string, unknown>).flatMap(([clave, hijo]) => hojas(hijo, prefijo ? `${prefijo}.${clave}` : clave));
 }
+
+/** Puntos de avance para los rótulos: ●●○ es 2 de 3. Se cuentan con el dedo, a diferencia de una fracción. */
+export function puntos(logrados: number, total: number): string {
+  return "●".repeat(Math.max(0, Math.min(logrados, total))) + "○".repeat(Math.max(0, total - Math.max(0, logrados)));
+}

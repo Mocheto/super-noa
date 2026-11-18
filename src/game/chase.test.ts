@@ -4,6 +4,7 @@ import { levels } from "./levels.ts";
 import { reachable } from "./levelBeats.ts";
 import { CHASE_TALK_EVERY, chaseGoalX, chaseTrail, createChaseState, stepChase } from "./chase.ts";
 import { chaseTestLevel } from "./testScreens.ts";
+import { textoLienzo } from "../textos/index.ts";
 import type { Level } from "./types";
 
 const chaseLevels: Level[] = [...levels.filter((level) => level.chase), chaseTestLevel];
@@ -77,7 +78,7 @@ test("los saltos hacen un arco y en el rincón se pilla al animal", () => {
   assert.ok(highest < chase.stops[4].y, "sube en arco por encima de la parada");
   state.stop = chase.stops.length - 1; state.x = chase.stops.at(-1)!.x; state.y = 456;
   assert.deepEqual(stepChase(chase, state, noa(state.x - 120), 1 / 60), []);
-  assert.deepEqual(stepChase(chase, state, noa(state.x - 20), 1 / 60), [{ kind: "caught", text: "¡Toma tu ovillo!" }]);
+  assert.deepEqual(stepChase(chase, state, noa(state.x - 20), 1 / 60), [{ kind: "caught", text: textoLienzo("partida.lienzo.tuLana.rotulo") }]);
   assert.ok(state.caught);
   assert.deepEqual(chaseTrail(chase, state), []);
 });

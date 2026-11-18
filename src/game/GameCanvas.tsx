@@ -38,7 +38,8 @@ import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
-import { textoLienzo } from "../textos";
+import { t, textoLienzo } from "../textos";
+import { Texto } from "../textos/Texto";
 import { conveyorSpeed, boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SKY_BOUNCE_SPEED, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
 
 const MOVE_SPEED = 250;
@@ -111,16 +112,18 @@ function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
   context.textAlign = "start";
 }
 
+type Interaccion = "entrar" | "explorar" | "subir" | "activar";
+
 export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourComplete, onDetourActiveChange, onFriendGreeted, onReturn, reduceMotion = false, playSound }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const [doorAvailable, setDoorAvailable] = useState(false);
   const [excursion, setExcursion] = useState<DetourId | null>(null);
-  const [interactionLabel, setInteractionLabel] = useState("Entrar");
+  const [interaction, setInteraction] = useState<Interaccion>("entrar");
   const [roomHint, setRoomHint] = useState(false);
   const restartRoomRef = useRef<(() => void) | null>(null);
-  const interactionRef = useRef("");
+  const interactionRef = useRef<Interaccion | "">("");
   const returnFromDetourRef = useRef<(() => void) | null>(null);
   const shopOpenRef = useRef(false);
   const doorAvailableRef = useRef(false);
@@ -229,7 +232,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       setShopOpen(false);
       callbacksRef.current.onShopActiveChange?.(false);
       callbacksRef.current.onSnapshot(currentSnapshot());
-      if (statusRef.current) statusRef.current.textContent = starRemaining > 0 ? "¡Noa Estelar! Las estrellas te protegen de los enemigos. Sigue saltando los fosos." : "¡Hasta pronto, gatito! La aventura continúa.";
+      if (statusRef.current) statusRef.current.textContent = t(starRemaining > 0 ? "partida.avisos.estelar.oculto" : "partida.avisos.adiosGatito.oculto");
     };
     const finishLevel = (delay: number, complete: (snapshot: GameSnapshot) => void) => {
       if (completed) return;
@@ -257,7 +260,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       player.jumpsUsed = 0;
       player.invincible = 1;
       callbacksRef.current.playSound(fromHazard ? "hurt" : "checkpoint");
-      if (statusRef.current) statusRef.current.textContent = fromHazard ? "¡Uy! Noa vuelve a la entrada de la sala, sin perder vidas." : "La sala vuelve a empezar.";
+      if (statusRef.current) statusRef.current.textContent = t(fromHazard ? "partida.avisos.salaPeligro.oculto" : "partida.avisos.salaReinicio.oculto");
     };
     restartRoomRef.current = () => restartRoom(false);
 
@@ -291,7 +294,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       projectiles.length = 0;
       cannonballs.length = 0;
       callbacksRef.current.onLoseLife();
-      if (level.world === 17 && statusRef.current) statusRef.current.textContent = "¡Una nube cercana ha recogido a Noa!";
+      if (level.world === 17 && statusRef.current) statusRef.current.textContent = t("partida.avisos.nubeRecoge.oculto");
     };
 
     const hurt = () => {
@@ -330,10 +333,10 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       const detourAvailable = canEnterSecretShop(level.detourEntrance, player, false);
       const toggle = level.detourSwitches?.find((entry) => canEnterSecretShop(entry, player, false));
       const skyLift = level.skyLifts?.find((entry) => !activatedSkyLifts.has(entry.id) && canEnterSecretShop(entry.lever, player, false));
-      const interaction = detourAvailable ? "Explorar" : skyLift ? "Subir" : toggle ? "Activar" : available ? "Entrar" : "";
+      const interaction: Interaccion | "" = detourAvailable ? "explorar" : skyLift ? "subir" : toggle ? "activar" : available ? "entrar" : "";
       if (interaction !== interactionRef.current) {
         interactionRef.current = interaction;
-        setInteractionLabel(interaction);
+        if (interaction) setInteraction(interaction);
         doorAvailableRef.current = Boolean(interaction);
         setDoorAvailable(Boolean(interaction));
       }
@@ -358,14 +361,14 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         input.jumpQueued = false;
         input.jump = false;
         callbacksRef.current.playSound("block");
-        if (statusRef.current) statusRef.current.textContent = toggle.id === "bell" ? "La rueda cambia de dirección." : toggle.id === "books" ? "Los libros cambian el camino." : "El agua despierta la planta.";
+        if (statusRef.current) statusRef.current.textContent = t(toggle.id === "bell" ? "partida.avisos.ruedaCambia.oculto" : toggle.id === "books" ? "partida.avisos.librosCambian.oculto" : "partida.avisos.aguaDespierta.oculto");
       }
       if (enter && skyLift) {
         activatedSkyLifts.set(skyLift.id, levelAge);
         input.jumpQueued = false;
         input.jump = false;
         callbacksRef.current.playSound("checkpoint");
-        if (statusRef.current) statusRef.current.textContent = "¡Ascensor despierto! La nube sube, espera arriba y vuelve a bajar.";
+        if (statusRef.current) statusRef.current.textContent = t("partida.avisos.ascensor.oculto");
       }
       if (available && enter && level.secretShop) {
         shopUsed = true;
@@ -515,7 +518,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
               player.facing = direction;
               skyBounceSteerLock = .42;
               skyBounceUses += 1;
-              if (statusRef.current) statusRef.current.textContent = "¡Nube esponjosa! Noa sale disparada hacia otra parte del cielo.";
+              if (statusRef.current) statusRef.current.textContent = t("partida.avisos.nubeEsponjosa.oculto");
             }
             player.grounded = false;
             player.jumpsUsed = 2;
@@ -547,12 +550,12 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           bursts.push({ x: event.from.x, y: event.from.y, life: 0.45, color: event.kind === "color" ? "#ffc4e1" : "#ffe477", kind: "stars" });
           if (event.to) sparks.push({ from: event.from, to: event.to, life: 1 });
           callbacksRef.current.playSound(event.kind === "door" ? "checkpoint" : "block");
-          if (statusRef.current) statusRef.current.textContent = event.kind === "door" ? "¡Clic! Se abre una puerta." : event.kind === "color" ? "Las plataformas cambian de color." : "Botón de huella pulsado.";
+          if (statusRef.current) statusRef.current.textContent = t(event.kind === "door" ? "partida.avisos.puertaAbre.oculto" : event.kind === "color" ? "partida.avisos.plataformasColor.oculto" : "partida.avisos.botonHuella.oculto");
         }
         if (advanceRoom(level, puzzle, player.x, levelAge)) {
           checkpointIndex = puzzle.room - 1;
           callbacksRef.current.playSound("checkpoint");
-          if (statusRef.current) statusRef.current.textContent = `Sala ${puzzle.room + 1}. La puerta se cierra detrás.`;
+          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.salaNueva.oculto", { n: puzzle.room + 1 });
         }
         for (let index = sparks.length - 1; index >= 0; index -= 1) {
           sparks[index].life -= delta;
@@ -627,15 +630,15 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           callbacksRef.current.onAppleCollected?.(1);
           if (player.power === "normal") player.power = "apple";
           callbacksRef.current.playSound("apple");
-          if (statusRef.current) statusRef.current.textContent = "Manzana conseguida.";
+          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.manzana.oculto");
         } else if (item.kind === "cat") {
           player.power = "cat";
           callbacksRef.current.playSound("cat");
-          if (statusRef.current) statusRef.current.textContent = "¡Noa se ha convertido en gata! Ya puede lanzar lana.";
+          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.gata.oculto");
         } else {
           collectedStickers.add(item.id);
           callbacksRef.current.playSound("sticker");
-          if (statusRef.current) statusRef.current.textContent = "Insignia encontrada.";
+          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.insignia.oculto");
         }
       }
 
@@ -652,10 +655,10 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           greetedFriends.add(enemy.id);
           friendHops.set(enemy.id, .5);
           const friend = restStop.friends[index];
-          friendSay = { text: `¡Aquí no muerde! ${friend?.line ?? ""}`.trim(), life: 3.2, id: enemy.id };
+          friendSay = { text: `${textoLienzo("partida.lienzo.noMuerde.rotulo")} ${friend?.line ?? ""}`.trim(), life: 3.2, id: enemy.id };
           callbacksRef.current.playSound("cat");
           if (friend) callbacksRef.current.onFriendGreeted?.(restStop.world, friend.kind);
-          if (statusRef.current) statusRef.current.textContent = `Has saludado a un amigo: ${friend?.line ?? ""}`;
+          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.amigoSaludado.oculto", { linea: friend?.line ?? "" });
         });
       }
       if (friendSay) friendSay.life -= delta;
@@ -700,7 +703,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         updateChainGuardian(guardian, delta, player.x + player.width / 2);
         if (guardian.phase === "warning" && previousPhase !== "warning" && Math.abs(player.x - guardian.x) < 800) {
           callbacksRef.current.playSound("countdown");
-          if (statusRef.current) statusRef.current.textContent = "¡El perrito avisa! Salta por arriba o espera lejos de su cadena.";
+          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.perritoAvisa.oculto");
         }
         if (intersects(player, guardianHitbox(guardian))) hurt();
       });
@@ -801,7 +804,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           checkpointIndex = index;
           respawnX = checkpoint + 22;
           callbacksRef.current.playSound("checkpoint");
-          if (statusRef.current) statusRef.current.textContent = `Bandera ${index + 1} conseguida.`;
+          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.bandera.oculto", { n: index + 1 });
         }
       });
       level.verticalCheckpoints?.forEach((checkpoint, index) => {
@@ -814,7 +817,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           respawnX = checkpoint.x;
           respawnY = checkpoint.y - player.height;
           callbacksRef.current.playSound("checkpoint");
-          if (statusRef.current) statusRef.current.textContent = `Nube segura ${index + 1} conseguida.`;
+          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.nubeSegura.oculto", { n: index + 1 });
         }
       });
 
@@ -829,7 +832,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         const vineHeight = Math.max(1, Math.round((secretVine.y + 80) * growth));
         const vineHitbox = { x: secretVine.x - 28, y: secretVine.y - vineHeight, width: 104, height: vineHeight + 120 };
         if (growth >= 0.65 && intersects(player, vineHitbox)) {
-          if (statusRef.current) statusRef.current.textContent = "Noa trepa por la enredadera al Reino Secreto de las Nubes.";
+          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.enredadera.oculto");
           enterSecretVine();
           return;
         }
@@ -841,7 +844,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           if (event.text) chaseSay = { text: event.text, life: event.kind === "caught" ? 9 : 2.2 };
           if (event.kind === "caught") {
             callbacksRef.current.playSound("goal");
-            if (statusRef.current) statusRef.current.textContent = "¡Has pillado al animal travieso! Te devuelve el ovillo.";
+            if (statusRef.current) statusRef.current.textContent = t("partida.avisos.travieso.oculto");
             finishLevel(1.45, (snapshot) => callbacksRef.current.onComplete(snapshot));
           }
         }
@@ -855,16 +858,16 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           if (event.kind === "found") {
             callbacksRef.current.playSound("cat");
             bursts.push({ x: event.kitten!.x, y: event.kitten!.y - 30, life: .5, color: "#ffe477", kind: "stars" });
-            if (statusRef.current) statusRef.current.textContent = `¡Gatito encontrado! Llevas ${explore.found.length} de ${level.lostKittens?.length ?? 3}.`;
+            if (statusRef.current) statusRef.current.textContent = t("partida.avisos.gatitoEncontrado.oculto", { n: explore.found.length, total: level.lostKittens?.length ?? 3 });
           }
           if (event.kind === "open") {
             callbacksRef.current.playSound("checkpoint");
-            if (statusRef.current) statusRef.current.textContent = "¡Los tres gatitos! La puerta de los gatitos está abierta.";
+            if (statusRef.current) statusRef.current.textContent = t("partida.avisos.tresGatitos.oculto");
           }
         }
         if (reachedGate(level, explore, player)) {
           callbacksRef.current.playSound("goal");
-          if (statusRef.current) statusRef.current.textContent = "¡Los gatitos vuelven a casa! Pantalla superada.";
+          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.gatitosCasa.oculto");
           finishLevel(1.2, (snapshot) => callbacksRef.current.onComplete(snapshot));
         }
       }
@@ -882,7 +885,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         player.jumpsUsed = 0;
         player.facing = 1;
         callbacksRef.current.playSound("goal");
-        if (statusRef.current) statusRef.current.textContent = "¡Banderín tocado! Pantalla superada.";
+        if (statusRef.current) statusRef.current.textContent = t("partida.avisos.banderin.oculto");
         finishLevel(
           level.boss ? 0.85 : 1.45,
           (snapshot) => level.boss ? callbacksRef.current.onBossEncounter(snapshot) : callbacksRef.current.onComplete(snapshot),
@@ -1027,17 +1030,17 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       drawBackground(context, level, cameraX, frame, raster, cameraY);
       drawDetourScenery(context, level, cameraX);
       if (level.orientation !== "vertical" && !level.detour && level.screen === 1 && cameraX < 520 && level.world >= 10 && !(level.world === 11 && level.bloomBridges?.length)) {
-        const hint = level.world === 10 ? "¡MIRA EL RITMO DE LA LAVA!" : level.world === 11 ? "¡CAE SOBRE EL ROCÍO PARA REBOTAR!" : level.world === 13 ? "¡SALTA SOBRE EL REGALO DE LA FLECHA!" : level.world === 14 ? "¡LA ARENA TE AYUDA A SUBIR!" : level.world === 15 ? "¡LOS VAGONES TE LLEVAN!" : level.world === 16 ? "¡SIGUE LAS ONDAS DE LA MÚSICA!" : "¡EL HIELO RESBALA Y EL VIENTO EMPUJA!";
+        const hint = textoLienzo(level.world === 10 ? "partida.lienzo.ayudaMundo.lava.rotulo" : level.world === 11 ? "partida.lienzo.ayudaMundo.rocio.rotulo" : level.world === 13 ? "partida.lienzo.ayudaMundo.regalo.rotulo" : level.world === 14 ? "partida.lienzo.ayudaMundo.arena.rotulo" : level.world === 15 ? "partida.lienzo.ayudaMundo.vagones.rotulo" : level.world === 16 ? "partida.lienzo.ayudaMundo.musica.rotulo" : "partida.lienzo.ayudaMundo.hielo.rotulo");
         context.save(); context.fillStyle = "rgba(42,24,55,.88)"; context.fillRect(205 - cameraX * .22, 82, 550, 42);
         context.strokeStyle = "#fff0b0"; context.lineWidth = 3; context.strokeRect(205 - cameraX * .22, 82, 550, 42);
         context.fillStyle = "#fff7dd"; context.font = "bold 17px monospace"; context.textAlign = "center"; context.fillText(hint, 480 - cameraX * .22, 109); context.restore();
       }
       if (hasWorldMechanics(level) && levelAge < 7 && cameraX < 360 && player.y > 150 && !completed) {
-        const hint = level.world === 3 ? "ZZZ: PASA · ¡OJO AL DESPERTAR!"
-          : level.world === 11 ? "PÉTALOS ROSAS: PASA · AMARILLOS: ¡SE CIERRA!"
-          : level.world === 6 ? "¡EL PERRITO AVISA! PASA POR ARRIBA"
-          : level.world === 16 ? "¡SALTA CUANDO EL COMPÁS SE ILUMINE!"
-          : "↑ EL AIRE TE AYUDA A SUBIR ↑";
+        const hint = textoLienzo(level.world === 3 ? "partida.lienzo.ayudaInicio.lobos.rotulo"
+          : level.world === 11 ? "partida.lienzo.ayudaInicio.petalos.rotulo"
+          : level.world === 6 ? "partida.lienzo.ayudaInicio.perrito.rotulo"
+          : level.world === 16 ? "partida.lienzo.ayudaInicio.compas.rotulo"
+          : "partida.lienzo.ayudaInicio.aire.rotulo");
         context.save();
         context.fillStyle = "#fff8e7";
         context.fillRect(150, 18, 660, 33);
@@ -1106,7 +1109,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           context.fillStyle = "#4b295f";
           context.font = "bold 12px monospace";
           context.textAlign = "center";
-          context.fillText(block.reward === "secret-vine" ? "¿QUÉ ESCONDE ESTE BLOQUE?" : "¡SALTA BAJO EL GATITO!", x + 24, block.y - 19);
+          context.fillText(textoLienzo(block.reward === "secret-vine" ? "partida.lienzo.bloque.queHay.rotulo" : "partida.lienzo.bloque.debajo.rotulo"), x + 24, block.y - 19);
           context.textAlign = "start";
         } else if (block.reward === "secret-vine" && vineStartedFrame >= 0 && !completed && Math.abs(player.x - block.x) < 250) {
           context.fillStyle = "#fff8d6";
@@ -1114,7 +1117,7 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
           context.fillStyle = "#3f7651";
           context.font = "bold 12px monospace";
           context.textAlign = "center";
-          context.fillText("¡TOCA LA ENREDADERA!", x + 24, block.y - 24);
+          context.fillText(textoLienzo("partida.lienzo.enredadera.rotulo"), x + 24, block.y - 24);
           context.textAlign = "start";
         }
       });
@@ -1246,9 +1249,9 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
       if (level.world === 17 && levelAge < 8) {
         context.fillStyle = "rgba(42,24,70,.9)"; context.fillRect(176, 12, 608, 72);
         context.fillStyle = "#fff7dd"; context.font = "bold 15px monospace"; context.textAlign = "center";
-        context.fillText("¡SUBE! LOS DOS BORDES ESTÁN CONECTADOS", VIEW_WIDTH / 2, 33);
-        context.fillText("Sal por un lado y entrarás por el otro.", VIEW_WIDTH / 2, 54);
-        context.fillStyle = "#ffb8ec"; context.fillText("NUBE ROSA ↑? = ¡SUPERSALTO SORPRESA!", VIEW_WIDTH / 2, 75); context.textAlign = "start";
+        context.fillText(textoLienzo("partida.lienzo.vertical.sube.rotulo"), VIEW_WIDTH / 2, 33);
+        context.fillText(textoLienzo("partida.lienzo.vertical.bordes.rotulo"), VIEW_WIDTH / 2, 54);
+        context.fillStyle = "#ffb8ec"; context.fillText(textoLienzo("partida.lienzo.vertical.supersalto.rotulo"), VIEW_WIDTH / 2, 75); context.textAlign = "start";
       }
       if (level.world === 8 && player.x < 650) {
         context.fillStyle = "#fff8e9";
@@ -1256,8 +1259,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
         context.fillStyle = "#352044";
         context.textAlign = "center";
         context.font = "bold 14px monospace";
-        context.fillText("SALTAR: NADA ARRIBA · SUELTA: BAJA", 480, 42);
-        context.fillText("Puedes caminar por la arena. ¡Evita los erizos!", 480, 62);
+        context.fillText(textoLienzo("partida.lienzo.nadar.nada.rotulo"), 480, 42);
+        context.fillText(textoLienzo("partida.lienzo.nadar.erizos.rotulo"), 480, 62);
         context.textAlign = "start";
       }
 
@@ -1297,11 +1300,11 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
     <>
     <div className="game-frame" hidden={Boolean(excursion)}>
       <div className="game-stage">
-        <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={`Pantalla ${level.id}: ${level.title}`} />
+        <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={t("partida.lienzo.pantalla.oculto", { id: level.id, titulo: level.title })} />
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />
-        {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label={interactionLabel === "Entrar" ? "Entrar en la tienda secreta" : interactionLabel === "Explorar" ? "Explorar el desvío secreto" : interactionLabel === "Subir" ? "Activar el ascensor de nubes" : "Activar mecanismo"} onClick={() => { inputRef.current.enterQueued = true; }}>↑ {interactionLabel}</button>}
-        {level.puzzleRooms && <button className={`room-restart${roomHint ? " is-hinting" : ""}`} type="button" disabled={!running} onClick={(event) => { event.currentTarget.blur(); restartRoomRef.current?.(); }}>↺ Empezar la sala</button>}
-        {level.detour && onReturn && <button className="detour-return" type="button" disabled={!running} onClick={onReturn}>↩ Volver al camino</button>}
+        {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label={t(`partida.lienzo.interaccion.${interaction}.oculto`)} onClick={() => { inputRef.current.enterQueued = true; }}>↑ <Texto clave={`partida.lienzo.interaccion.${interaction}.rotulo`} /></button>}
+        {level.puzzleRooms && <button className={`room-restart${roomHint ? " is-hinting" : ""}`} type="button" disabled={!running} onClick={(event) => { event.currentTarget.blur(); restartRoomRef.current?.(); }}><Texto clave="partida.lienzo.empezarSala.rotulo" /></button>}
+        {level.detour && onReturn && <button className="detour-return" type="button" disabled={!running} onClick={onReturn}><Texto clave="partida.lienzo.volverCamino.rotulo" /></button>}
       </div>
       {shopOpen && <SecretShop world={level.world} paused={!running} reduceMotion={reduceMotion} playSound={playSound} onResult={(matches) => {
         if (shopResultRef.current !== null) return;

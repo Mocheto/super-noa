@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { textoLienzo } from "../textos/index.ts";
 import { levels } from "./levels.ts";
 import { mountEngine } from "./engineTestHarness.ts";
 import { readRgbaPng } from "./pngTestUtils.ts";
@@ -36,8 +37,8 @@ test("los atlas propios de la aldea tienen transparencia y dos zonas de terreno 
 test("la senda de Navidad muestra su propio consejo y no descarga los atlas de hielo", () => {
   const engine = mountEngine(levels.find((l) => l.id === "13-1")!);
   engine.tick(1); engine.tick(18);
-  assert.ok(engine.drawnText.includes("¡SALTA SOBRE EL REGALO DE LA FLECHA!"));
-  assert.ok(engine.drawnText.every((text) => !text.includes("HIELO RESBALA")));
+  assert.ok(engine.drawnText.includes(textoLienzo("partida.lienzo.ayudaMundo.regalo.rotulo")));
+  assert.ok(engine.drawnText.every((text) => text !== textoLienzo("partida.lienzo.ayudaMundo.hielo.rotulo")));
   assert.ok(engine.requested.some((path) => path.includes("winter-village-enemies")));
   assert.ok(engine.requested.every((path) => !path.includes("ice-mountain")));
   engine.unmount();

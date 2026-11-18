@@ -1,5 +1,7 @@
 import type { PointerEvent, ReactNode } from "react";
 import { PixelIcon } from "./PixelIcon";
+import { t } from "../textos";
+import { Texto } from "../textos/Texto";
 
 export type TouchControl = "left" | "right" | "jump" | "shoot";
 type Handler = (control: TouchControl, event: PointerEvent<HTMLButtonElement>) => void;
@@ -26,14 +28,14 @@ export function TouchControls({ onPress, onRelease, onCancel, showYarn = true, d
       event.preventDefault(); onKeyboardRelease(control);
     } : undefined}
   >{content}</button>;
-  return <div className="touch-controls" aria-label="Controles táctiles">
+  return <div className="touch-controls" aria-label={t("partida.controles.grupo.oculto")}>
     <div className="touch-group touch-move">
-      {button("left", "touch-direction", "Mover a la izquierda", <><span>◀</span><small>IZQ.</small></>)}
-      {button("right", "touch-direction", "Mover a la derecha", <><span>▶</span><small>DER.</small></>)}
+      {button("left", "touch-direction", t("partida.controles.izquierda.oculto"), <span><Texto clave="partida.controles.izquierda.rotulo" /></span>)}
+      {button("right", "touch-direction", t("partida.controles.derecha.oculto"), <span><Texto clave="partida.controles.derecha.rotulo" /></span>)}
     </div>
     <div className="touch-group touch-actions">
-      {showYarn && button("shoot", "touch-yarn", "Lanzar bola de lana", <><PixelIcon kind="yarn" /><small>LANA</small></>)}
-      {button("jump", "touch-jump", "Saltar; vuelve a tocar para hacer doble salto", <><span className="touch-jump-arrows">↑<i>↑</i></span><small>SALTAR</small></>)}
+      {showYarn && button("shoot", "touch-yarn", t("partida.controles.lana.oculto"), <><PixelIcon kind="yarn" /><small><Texto clave="partida.controles.lana.rotulo" /></small></>)}
+      {button("jump", "touch-jump", t("partida.controles.salta.oculto"), <><span className="touch-jump-arrows">↑<i>↑</i></span><small><Texto clave="partida.controles.salta.rotulo" /></small></>)}
     </div>
   </div>;
 }

@@ -1,6 +1,7 @@
 import { getImage } from "./assets.ts";
 import { allFound, followerPositions, type ExploreState } from "./explore.ts";
 import type { Level, LostKitten } from "./types";
+import { textoLienzo } from "../textos/index.ts";
 
 const GATE = "./assets/sprites/kitten-gate-v1.webp";
 const catSprite = (kitten: LostKitten) => getImage(`./assets/sprites/world-cat-${kitten.cat}-v1.png`);
@@ -62,7 +63,7 @@ export function drawExploreWorld(context: CanvasRenderingContext2D, level: Level
     if (state.found.includes(kitten.id)) continue;
     const bob = Math.sin(frame * .05 + kitten.x) * 3;
     drawCat(context, kitten, kitten.x - cameraX, kitten.y + bob, 56);
-    if (state.meowing?.kitten === kitten.id) bubble(context, "¡Miau!", kitten.x - cameraX, kitten.y - 62);
+    if (state.meowing?.kitten === kitten.id) bubble(context, textoLienzo("partida.lienzo.miau.rotulo"), kitten.x - cameraX, kitten.y - 62);
   }
   const followers = followerPositions(state);
   state.found.forEach((id, index) => {
@@ -77,7 +78,7 @@ export function drawExploreOverlay(context: CanvasRenderingContext2D, level: Lev
   context.save();
   context.fillStyle = "rgba(42,24,55,.82)";
   context.beginPath(); context.roundRect(12, 12, 190, 46, 10); context.fill();
-  context.fillStyle = "#fff6e3"; context.font = "bold 14px monospace"; context.fillText("Gatitos:", 24, 40);
+  context.fillStyle = "#fff6e3"; context.font = "bold 14px monospace"; context.fillText(textoLienzo("partida.lienzo.gatitos.rotulo"), 24, 40);
   (level.lostKittens ?? []).forEach((kitten, index) => {
     const x = 118 + index * 28;
     context.fillStyle = "rgba(255,246,227,.35)";

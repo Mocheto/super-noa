@@ -1,4 +1,5 @@
 import type { Chase, ChaseRunner, Level, Rect } from "./types";
+import { textoLienzo } from "../textos/index.ts";
 
 export const CHASE_SPEED = 330;
 export const CHASE_WAIT_RADIUS = { x: 230, y: 150 };
@@ -62,7 +63,7 @@ export function stepChase(chase: Chase, state: ChaseState, player: Rect, delta: 
     const centre = player.x + player.width / 2;
     if (Math.abs(centre - state.x) < 50 && Math.abs(player.y + player.height - state.y) < 70) {
       state.caught = true;
-      events.push({ kind: "caught", text: "¡Toma tu ovillo!" });
+      events.push({ kind: "caught", text: textoLienzo("partida.lienzo.tuLana.rotulo") });
     }
   } else if (playerClose(chase, state, player)) {
     state.from = { x: state.x, y: state.y };

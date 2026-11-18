@@ -33,7 +33,7 @@ import { greetFriend, visitRestStop } from "./game/restStopProgress";
 import { addHeart } from "./game/friendProgress";
 import { FriendsTab } from "./game/FriendsTab";
 import { recordFlight } from "./game/avioneta";
-import { t } from "./textos";
+import { puntos, t } from "./textos";
 import { Texto } from "./textos/Texto";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
 import { visitDetour } from "./game/detourProgress";
@@ -804,14 +804,14 @@ export default function App() {
               <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label="Volver al inicio">⌂</button>
             </div>
           </header>
-          <Suspense fallback={<p className="lazy-loading" role="status">Preparando el mapa…</p>}>
+          <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
             <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} onOpenAvioneta={() => void requestAdventure(() => { setAvionetaGift(false); setPaused(false); setScreen("avioneta"); })} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
           </Suspense>
           <button className="text-button reset-button" type="button" onClick={resetProgress}>Borrar progreso</button>
         </section>
       )}
 
-      {screen === "avioneta" && <Suspense fallback={<p className="lazy-loading" role="status">Preparando la avioneta…</p>}>
+      {screen === "avioneta" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
         <AvionetaGame paused={paused} muted={muted} musicVolume={musicVolume / 100} reduceMotion={reduceMotion} gift={avionetaGift}
           bestStars={progress.avioneta?.bestStars ?? 0} playSound={playSound}
           onExit={(stars) => {
@@ -823,7 +823,7 @@ export default function App() {
             setScreen("map");
           }} />
       </Suspense>}
-      {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status">Preparando la fiesta…</p>}>
+      {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
         <CatParty paused={paused} muted={muted} musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotion}
           onPause={() => setPaused(true)} onExit={leaveCatParty} />
       </Suspense>}
@@ -831,9 +831,9 @@ export default function App() {
       {screen === "secret-transition" && (
         <section className="secret-transition" aria-live="polite">
           <img className="secret-vine-rise" src="./assets/sprites/secret-vine-transition-v1.png" alt="" aria-hidden="true" />
-          <p className="eyebrow">¡Pasadizo secreto!</p>
-          <h2>Subiendo al Reino de las Nubes…</h2>
-          <p>La enredadera mágica lleva a Noa por encima del bosque.</p>
+          <p className="eyebrow rotulo"><Texto clave="ventanas.subidaSecreta.secreto.rotulo" /></p>
+          <h2 className="rotulo"><Texto clave="ventanas.subidaSecreta.arriba.rotulo" /></h2>
+          <p className="juntos">{t("ventanas.subidaSecreta.arriba.juntos")}</p>
           <div className="transition-clouds" aria-hidden="true">☁ ☁ ☁</div>
         </section>
       )}
@@ -854,12 +854,12 @@ export default function App() {
               {(screen === "game" || screen === "boss") && <button type="button" onClick={() => setPaused((value) => !value)} aria-label={t("partida.hud.pausa.oculto")}>Ⅱ</button>}
             </div>
           </header>}
-          {!bossReplay && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status">Preparando la aventura…</p>}>
+          {!bossReplay && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
             <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onFriendGreeted={handleFriendGreeted} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
           </Suspense>}
-          {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? "Camino opcional" : displayedLevel.restStop ? "Paseo de los amigos" : displayedLevel.puzzleRooms ? `Sala ${snapshot.checkpoint + 1}/${displayedLevel.puzzleRooms.length}` : `Bandera ${snapshot.checkpoint}/${displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length}`}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
+          {!bossReplay && <div className="level-caption"><span>{themeNames[displayedLevel.theme]}</span><span>{displayedLevel.detour ? <Texto clave="partida.hud.secreto.rotulo" /> : displayedLevel.restStop ? <Texto clave="partida.hud.paseo.rotulo" /> : displayedLevel.puzzleRooms ? <Texto clave="partida.hud.sala.rotulo" variables={{ puntos: puntos(snapshot.checkpoint + 1, displayedLevel.puzzleRooms.length) }} /> : <Texto clave="partida.hud.bandera.rotulo" variables={{ puntos: puntos(snapshot.checkpoint, displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length) }} />}</span>{!displayedLevel.detour && <small>{displayedLevel.subtitle}</small>}</div>}
 
-          {screen === "boss" && activeLevel.boss && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status">Preparando al guardián…</p>}>
+          {screen === "boss" && activeLevel.boss && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
             {
             (activeLevel.boss === "santa-claus" || activeLevel.boss === "siroco" || activeLevel.boss === "don-silbato") ? <SantaBossBattle
               key={`santa-boss-${activeLevel.id}-${levelRun}`}
@@ -931,25 +931,25 @@ export default function App() {
 
           {screen === "complete" && (
             <Dialog labelledBy="complete-title" backdropClassName="celebration" onClose={() => setScreen("map")}>
-              <div className="big-icon">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt="Trofeo dorado con una huella de gato" /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.png"} alt="Gatito feliz rescatado" />}</div><p className="eyebrow">{activeLevel.boss ? "¡Juego ganado!" : "¡Gatito encontrado!"}</p>
-              <h2 id="complete-title">Pantalla {activeLevel.id} completada</h2>
-              <p>Noa ha recogido {snapshot.apples} {snapshot.apples === 1 ? "manzana" : "manzanas"}. {activeLevel.world === 7 ? "La Reina Arcoíris guarda para siempre las insignias encontradas." : activeLevel.boss ? "El monstruo guardián ha dejado libre el camino." : "La siguiente aventura ya está abierta."}</p>
-              <div className="completion-medals" aria-label="Medallas de esta pantalla"><span className="is-earned">★ Pantalla</span><span className={snapshot.stickers.length > 0 || progress.stickers.includes(activeLevel.items.find((item) => item.kind === "sticker")?.id ?? "") ? "is-earned" : ""}>★ Pegatina</span><span className={lives === MAX_LIVES ? "is-earned" : ""}>★ Sin perder vida</span></div>
-              {snapshot.stickers.length > 0 && <p className="sticker-found"><PixelIcon kind="sparkle" /> {snapshot.stickers.length === 1 ? "Insignia guardada" : `${snapshot.stickers.length} insignias guardadas`} en el álbum.</p>}
-              {showCatPartyInvite && <><p>Bruma te invita a preparar la leña para la fiesta. ¿Vamos al claro?</p><button className="pixel-button primary" type="button" data-gamepad-default onClick={openCatParty}>Ir a la fiesta</button></>}
-              {!showCatPartyInvite && activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}>{activeLevel.route?.nextLabel ?? "Siguiente pantalla ▶"}</button>}
-              {activeLevel.boss && restStopFor(activeLevel.world) && <button className="pixel-button" type="button" onClick={() => beginLevel(levels.length + detourLevels.length + restStopIndex(activeLevel.world))}>🐾 Visitar a los amigos</button>}
-              {activeLevel.world === 7 && <button className="pixel-button primary" type="button" data-gamepad-back onClick={() => setScreen("map")}>Volver al mapa secreto</button>}
-              {activeLevel.world !== 7 && <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("map")}>Volver al mapa</button>}
+              <div className="big-icon">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt={t("ventanas.completada.trofeo.oculto")} /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.png"} alt={t("ventanas.completada.gatito.oculto")} />}</div>
+              <h2 id="complete-title" className="rotulo"><Texto clave="ventanas.completada.titulo.rotulo" /></h2>
+              <p className="juntos">{t("ventanas.completada.manzanas.juntos", { n: snapshot.apples })} {t(activeLevel.world === 7 ? "ventanas.completada.reina.juntos" : activeLevel.boss ? "ventanas.completada.guardian.juntos" : "ventanas.completada.siguienteAventura.juntos")}</p>
+              <div className="completion-medals" aria-label={t("ventanas.completada.medallas.oculto")}><span className="is-earned"><Texto clave="ventanas.completada.meta.rotulo" /></span><span className={snapshot.stickers.length > 0 || progress.stickers.includes(activeLevel.items.find((item) => item.kind === "sticker")?.id ?? "") ? "is-earned" : ""}><Texto clave="ventanas.completada.pegatina.rotulo" /></span><span className={lives === MAX_LIVES ? "is-earned" : ""}><Texto clave="ventanas.completada.sinCaer.rotulo" /></span></div>
+              {snapshot.stickers.length > 0 && <p className="sticker-found"><PixelIcon kind="sparkle" /> <Texto clave="ventanas.completada.insignia.rotulo" /> <small>{t("ventanas.completada.insignia.juntos", { n: snapshot.stickers.length })}</small></p>}
+              {showCatPartyInvite && <><p className="juntos">{t("ventanas.completada.fiesta.juntos")}</p><button className="pixel-button primary rotulo" type="button" data-gamepad-default onClick={openCatParty}><Texto clave="ventanas.completada.fiesta.rotulo" /></button></>}
+              {!showCatPartyInvite && activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}><Texto clave="ventanas.completada.siguiente.rotulo" />{activeLevel.route?.nextLabel && <small className="juntos">{activeLevel.route.nextLabel}</small>}</button>}
+              {activeLevel.boss && restStopFor(activeLevel.world) && <button className="pixel-button" type="button" onClick={() => beginLevel(levels.length + detourLevels.length + restStopIndex(activeLevel.world))}><Texto clave="ventanas.completada.paseo.rotulo" /></button>}
+              {activeLevel.world === 7 && <button className="pixel-button primary" type="button" data-gamepad-back onClick={() => setScreen("map")}><Texto clave="ventanas.completada.mapa.rotulo" /></button>}
+              {activeLevel.world !== 7 && <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("map")}><Texto clave="ventanas.completada.mapa.rotulo" /></button>}
             </Dialog>
           )}
 
           {screen === "gameover" && (
             <Dialog labelledBy="gameover-title" onClose={() => setScreen("map")}>
-              <div className="big-icon"><GameAssetIcon kind="apple" /></div><p className="eyebrow">Casi, casi…</p><h2 id="gameover-title">¡Otra oportunidad!</h2>
-              <p>Las tres vidas vuelven a estar listas. El camino ya te lo sabes.</p>
-              <button className="pixel-button primary" type="button" onClick={() => beginLevel(activeIndex)}>Reintentar</button>
-              <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("map")}>Volver al mapa</button>
+              <div className="big-icon"><GameAssetIcon kind="apple" /></div><h2 id="gameover-title" className="rotulo"><Texto clave="ventanas.otraOportunidad.titulo.rotulo" /></h2>
+              <p className="juntos">{t("ventanas.otraOportunidad.vidas.juntos")}</p>
+              <button className="pixel-button primary rotulo" type="button" onClick={() => beginLevel(activeIndex)}><Texto clave="ventanas.otraOportunidad.otraVez.rotulo" /></button>
+              <button className="pixel-button rotulo" type="button" data-gamepad-back onClick={() => setScreen("map")}><Texto clave="ventanas.otraOportunidad.mapa.rotulo" /></button>
             </Dialog>
           )}
 
@@ -961,10 +961,10 @@ export default function App() {
                 <img src="./assets/sprites/world-cat-2-v1.png" alt="" />
                 <img className="party-yarn" src="./assets/sprites/yarn-ball-v1.png" alt="" />
                 <img src="./assets/sprites/world-cat-6-v1.png" alt="" />
-              </div><p className="eyebrow">Aventura completada</p>
-              <h2 id="finished-title">¡Bravo, Super Noa!</h2><p>Los guardianes son ahora amigos de Noa. Los gatitos y la tripulación celebran una fiesta en el castillo. Fin… por ahora.</p>
-              <button className="pixel-button primary" type="button" onClick={() => setScreen("map")}>Ver el mapa</button>
-              <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("home")}>Ir al inicio</button>
+              </div>
+              <h2 id="finished-title" className="rotulo"><Texto clave="ventanas.final.titulo.rotulo" /></h2><p className="juntos">{t("ventanas.final.amigos.juntos")}</p>
+              <button className="pixel-button primary rotulo" type="button" onClick={() => setScreen("map")}><Texto clave="ventanas.final.mapa.rotulo" /></button>
+              <button className="pixel-button rotulo" type="button" data-gamepad-back onClick={() => setScreen("home")}><Texto clave="ventanas.final.inicio.rotulo" /></button>
             </Dialog>
           )}
         </section>

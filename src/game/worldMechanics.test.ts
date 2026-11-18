@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { beatPlatformActive, bloomBridgeState, getMechanicPlatforms, mechanicRespawn, skyLiftPlatform, skyLiftY, updraftVelocity, visibleSkyRespawn, wolfSleepState } from "./worldMechanics.ts";
 import { engineModules, mountEngine } from "./engineTestHarness.ts";
+import { textoLienzo } from "../textos/index.ts";
 import type { BloomBridge, Enemy, Level, SkyLift, Updraft } from "./types";
 import type { RasterAssets } from "./assets";
 import type { LiveEnemy } from "./gameState";
@@ -119,7 +120,7 @@ test("el lobo real no patrulla ni daña dormido o avisando; pausa y reintento re
     let now = advance(engine, 40);
     assert.equal(engine.drawnEnemies[0].enemy.x, 100);
     assert.equal(engine.drawnEnemies[0].sleepPhase, "sleeping");
-    assert.ok(engine.drawnText.includes("ZZZ"));
+    assert.ok(engine.drawnText.includes(textoLienzo("partida.lienzo.zzz.rotulo")));
     assert.equal(engine.events.includes("hurt"), false);
     engine.setRunning(false);
     engine.setRunning(true);
@@ -128,7 +129,7 @@ test("el lobo real no patrulla ni daña dormido o avisando; pausa y reintento re
     now = advance(engine, 40, now + 10_000);
     assert.equal(engine.drawnEnemies[0].enemy.x, 100);
     assert.equal(engine.drawnEnemies[0].sleepPhase, "warning");
-    assert.ok(engine.drawnText.includes("¡DESPIERTA!"));
+    assert.ok(engine.drawnText.includes(textoLienzo("partida.lienzo.despierta.rotulo")));
     assert.equal(engine.events.includes("hurt"), false);
     assert.equal(engine.events.includes("howl"), false);
     advance(engine, 60, now);
@@ -169,7 +170,7 @@ test("el puente real permite aterrizar sin rebotar, avisa, pausa y deja caer sob
     engine.tick(1000);
     let now = advance(engine, 40);
     assert.equal(engine.playerRect!.y, 292);
-    assert.ok(engine.drawnText.includes("¡PASA!"));
+    assert.ok(engine.drawnText.includes(textoLienzo("partida.lienzo.puente.pasa.rotulo")));
     assert.equal(engine.events.includes("jump"), false, "una flor no es un muelle");
     engine.setRunning(false);
     engine.setRunning(true);
@@ -177,10 +178,10 @@ test("el puente real permite aterrizar sin rebotar, avisa, pausa y deja caer sob
     assert.equal(engine.playerRect!.y, 292);
     now = advance(engine, 40, now + 10_000);
     assert.equal(engine.playerRect!.y, 292);
-    assert.ok(engine.drawnText.includes("¡SE CIERRA!"));
+    assert.ok(engine.drawnText.includes(textoLienzo("partida.lienzo.puente.cierra.rotulo")));
     advance(engine, 80, now);
     assert.equal(engine.playerRect!.y, 398);
-    assert.ok(engine.drawnText.includes("¡SE ABRE!"), "los capullos anticipan suavemente la próxima apertura");
+    assert.ok(engine.drawnText.includes(textoLienzo("partida.lienzo.puente.abre.rotulo")), "los capullos anticipan suavemente la próxima apertura");
     assert.equal(engine.events.includes("life"), false);
   } finally {
     engine.unmount();
@@ -190,7 +191,7 @@ test("el puente real permite aterrizar sin rebotar, avisa, pausa y deja caer sob
     retry.tick(1000);
     advance(retry, 1);
     assert.equal(retry.playerRect!.y, 292);
-    assert.ok(retry.drawnText.includes("¡PASA!"));
+    assert.ok(retry.drawnText.includes(textoLienzo("partida.lienzo.puente.pasa.rotulo")));
   } finally {
     retry.unmount();
   }
@@ -231,7 +232,7 @@ test("la corriente real eleva solo dentro de su zona, pausa y no altera un salto
     let now = advance(engine, 45);
     assert.ok(engine.playerRect!.y < 330, "el aire debe elevar a Noa suavemente");
     assert.ok(engine.playerRect!.y > 250, "no es un lanzamiento de muelle");
-    assert.ok(engine.drawnText.includes("¡AIRE ARRIBA!"));
+    assert.ok(engine.drawnText.includes(textoLienzo("partida.lienzo.aire.rotulo")));
     const y = engine.playerRect!.y;
     engine.setRunning(false);
     engine.setRunning(true);
@@ -351,8 +352,8 @@ for (const world of [1, 2] as const) {
       assert.equal(annotated.drawnEnemies[0].enemy.x, control.drawnEnemies[0].enemy.x);
       if (world === 1) assert.ok(control.events.filter((event) => event === "jump").length > 1, "el muelle conserva su rebote");
       assert.equal(getMechanicPlatforms({ ...base, bloomBridges: [flower] }, 0), base.platforms);
-      assert.ok(!annotated.drawnText.includes("¡AIRE ARRIBA!"));
-      assert.ok(!annotated.drawnText.includes("¡PASA!"));
+      assert.ok(!annotated.drawnText.includes(textoLienzo("partida.lienzo.aire.rotulo")));
+      assert.ok(!annotated.drawnText.includes(textoLienzo("partida.lienzo.puente.pasa.rotulo")));
     } finally {
       control.unmount();
       annotated.unmount();

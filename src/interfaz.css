@@ -137,6 +137,50 @@
 }
 .boton-control:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ciruela); }
 
+
+/* Marco caramelo de la partida (issue 139): común a todos los mundos; solo cambian los tres acentos y el emblema.
+   36 px con remaches y emblema en escritorio, 8 px sin adornos en móvil y nada en pantalla completa. */
+.game-frame {
+  --grosor-marco: 36px;
+  --remache: linear-gradient(var(--dorado), var(--dorado));
+  --remache-borde: linear-gradient(var(--ciruela), var(--ciruela));
+  padding: var(--grosor-marco);
+  background:
+    var(--remache) 13px 13px / 12px 12px no-repeat, var(--remache) right 13px top 13px / 12px 12px no-repeat,
+    var(--remache) 13px calc(100% - 13px) / 12px 12px no-repeat, var(--remache) right 13px bottom 13px / 12px 12px no-repeat,
+    var(--remache-borde) 10px 10px / 18px 18px no-repeat, var(--remache-borde) right 10px top 10px / 18px 18px no-repeat,
+    var(--remache-borde) 10px calc(100% - 10px) / 18px 18px no-repeat, var(--remache-borde) right 10px bottom 10px / 18px 18px no-repeat,
+    var(--acento, #68aa5c);
+  box-shadow:
+    inset 0 0 0 4px var(--ciruela), inset 0 0 0 8px var(--acento-claro, #a6dc8f), inset -8px -8px 0 8px var(--acento-oscuro, #3f7a3a),
+    0 0 0 4px var(--ciruela), 8px 8px 0 4px rgba(0, 0, 0, .45);
+}
+.game-frame > .game-stage { border: 0; box-shadow: 0 0 0 4px var(--ciruela), 0 0 0 8px var(--dorado), 0 0 0 12px var(--ciruela); }
+.marco-emblema {
+  position: absolute;
+  z-index: 6;
+  left: -22px;
+  bottom: -22px;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  color: var(--ciruela);
+  background: var(--crema);
+  box-shadow: 0 0 0 4px var(--ciruela), inset -5px -5px 0 #e6d6c3;
+  font-family: var(--letra-noa);
+  font-size: 20px;
+  pointer-events: none;
+}
+@media (orientation: portrait), (orientation: landscape) and (max-height: 540px) {
+  .game-frame { --grosor-marco: 8px; background: var(--acento, #68aa5c); box-shadow: inset 0 0 0 2px var(--ciruela), 0 0 0 2px var(--ciruela); }
+  .game-frame > .game-stage { box-shadow: 0 0 0 2px var(--dorado); }
+  .marco-emblema { display: none; }
+}
+.play-screen:fullscreen .game-frame { padding: 0; background: none; box-shadow: none; }
+.play-screen:fullscreen .game-frame > .game-stage { box-shadow: none; }
+.play-screen:fullscreen .marco-emblema { display: none; }
+
 /* Muestra de desarrollo (`?prueba=interfaz`) */
 .muestra-interfaz { min-height: 100vh; display: grid; place-items: center; padding: 24px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left)); background: #25183f; }
 .muestra-papel { display: grid; gap: 14px; justify-items: center; max-width: 900px; padding: 20px 24px 28px; border: 4px solid var(--ciruela); border-radius: 10px; color: var(--ciruela); background: var(--papel); box-shadow: 0 0 0 4px var(--dorado), 0 0 0 8px var(--ciruela); text-align: center; }

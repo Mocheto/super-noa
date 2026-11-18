@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { acentoMundo, emblemaMundo } from "./worldMapData";
 import { SecretShop } from "./SecretShop";
 import "./secretDoors.css";
 import { TouchControls } from "./TouchControls";
@@ -113,6 +114,13 @@ function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
 }
 
 type Interaccion = "entrar" | "explorar" | "subir" | "activar";
+
+
+/** Colores del marco caramelo del mundo (decisión «El marco exterior de la partida»). */
+const marcoMundo = (world: Parameters<typeof acentoMundo>[0]) => {
+  const { base, oscuro, claro } = acentoMundo(world);
+  return { "--acento": base, "--acento-oscuro": oscuro, "--acento-claro": claro } as CSSProperties;
+};
 
 export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourComplete, onDetourActiveChange, onFriendGreeted, onReturn, reduceMotion = false, playSound }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1298,7 +1306,8 @@ export function GameCanvas({ level, running, onLoseLife, onComplete, onBossEncou
 
   return (
     <>
-    <div className="game-frame" hidden={Boolean(excursion)}>
+    <div className="game-frame" hidden={Boolean(excursion)} style={marcoMundo(level.world)}>
+      <span className="marco-emblema" aria-hidden="true">{emblemaMundo(level.world)}</span>
       <div className="game-stage">
         <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={t("partida.lienzo.pantalla.oculto", { id: level.id, titulo: level.title })} />
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />

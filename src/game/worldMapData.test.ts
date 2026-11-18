@@ -5,7 +5,7 @@ import { detourCatalog } from "./detours.ts";
 import { mapCenterAt, mapFrame, mapPointAt, mapPointIsVisible, mapZoomLimits } from "./mapCamera.ts";
 import { levels } from "./levels.ts";
 import { emptyProgress } from "./progress.ts";
-import { findMapJourney, MAP_HEIGHT, MAP_WIDTH, mapLandscape, mapRoutes, mapRouteState, shortcutRoutes, worldAvailable, worldCatalog } from "./worldMapData.ts";
+import { acentoMundo, emblemaMundo, findMapJourney, MAP_HEIGHT, MAP_WIDTH, mapLandscape, mapRoutes, mapRouteState, shortcutRoutes, worldAvailable, worldCatalog } from "./worldMapData.ts";
 
 test("el mapa representa los diecisiete mundos y todos sus caminos tienen destinos", () => {
   assert.equal(worldCatalog.length, 17);
@@ -111,4 +111,26 @@ test("la cámara encuadra el mapa entero, conserva un anclaje al ampliar y limit
   const edge = mapFrame(viewport, { x: 1000, y: -500 }, "near");
   assert.equal(edge.x, viewport.width - near.width);
   assert.equal(edge.y, 0);
+});
+
+const luminancia = (hex: string) => {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+const contraste = (a: string, b: string) => { const [x, y] = [luminancia(a), luminancia(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+
+test("cada mundo declara los tres colores de acento de su marco y se distinguen del contorno ciruela", () => {
+  for (const world of worldCatalog) {
+    const { base, oscuro, claro } = acentoMundo(world.id);
+    for (const color of [base, oscuro, claro]) assert.match(color, /^#[0-9a-f]{6}$/, `Color de acento no válido en ${world.name}`);
+    assert.ok(luminancia(oscuro) < luminancia(base) && luminancia(base) < luminancia(claro), `En ${world.name} el acento oscuro, base y claro deben ir de más oscuro a más claro`);
+    assert.ok(contraste(base, "#3d1430") >= 3, `El acento de ${world.name} se confunde con el contorno ciruela`);
+    assert.ok(contraste(claro, "#3d1430") >= 7, `El acento claro de ${world.name} no destaca sobre el ciruela`);
+  }
+});
+
+test("el emblema del marco es el mismo distintivo que el marcador del mapa", () => {
+  assert.equal(emblemaMundo(7), "✦");
+  assert.equal(emblemaMundo(8), "≈");
+  assert.equal(emblemaMundo(12), "12");
 });

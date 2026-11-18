@@ -21,6 +21,17 @@ export function Texto({ clave, variables }: { clave: ClaveTexto; variables?: Var
   return <Pictogramas texto={t(clave, variables)} />;
 }
 
+/**
+ * Palabra con dibujo partida en sus dos piezas: el pictograma y la palabra en un `<span className="palabra">`,
+ * para poder ocultar la palabra donde no cabe (pestañas en móvil) sin perder el dibujo.
+ */
+export function PalabraConDibujo({ clave, variables }: { clave: ClaveTexto; variables?: Variables }) {
+  const lista = partes(t(clave, variables));
+  const dibujo = lista.find((parte) => parte.tipo === "pictograma");
+  const palabra = lista.filter((parte) => parte.tipo === "texto").map((parte) => parte.valor).join("").trim();
+  return <>{dibujo && dibujo.tipo === "pictograma" && <Pictograma nombre={dibujo.nombre} />}<span className="palabra">{palabra}</span></>;
+}
+
 type AtributosBoton = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children" | "type">;
 
 /**

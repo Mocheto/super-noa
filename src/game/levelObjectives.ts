@@ -2,6 +2,7 @@ import { bossCatalog } from "./bosses.ts";
 import type { Progress } from "./progress.ts";
 import { campaignLevels } from "./routes.ts";
 import { stickerCatalog } from "./stickers.ts";
+import { t } from "../textos/index.ts";
 import type { Level } from "./types.ts";
 
 export type LevelObjective = {
@@ -27,19 +28,19 @@ export function getLevelObjectives(level: Level, progress: Progress): LevelObjec
     : campaignIndex >= 0 && campaignIndex <= progress.unlocked;
   const stats = progress.levelStats[level.id];
   const objectives: LevelObjective[] = available ? [
-    { id: "complete", kind: "complete", label: "Llegar al final", completed: stats?.completed === true,
-      hint: level.chainGuardians?.length ? "El perrito avisa antes de correr. Su cadena tiene un límite: espera lejos o pasa por las plataformas de arriba." : "Sigue el camino hasta la meta." },
+    { id: "complete", kind: "complete", label: t("mapa.objetivos.llegar.rotulo"), completed: stats?.completed === true,
+      hint: t(level.chainGuardians?.length ? "mapa.objetivos.llegarPerrito.juntos" : "mapa.objetivos.llegar.juntos") },
     ...level.items.filter((item) => item.kind === "sticker").map((item, index, items): LevelObjective => {
       const sticker = stickerCatalog.find((entry) => entry.id === item.id);
       return {
-        id: item.id, kind: "sticker", label: items.length > 1 ? `Pegatina ${index + 1}` : "Pegatina",
+        id: item.id, kind: "sticker", label: items.length > 1 ? t("mapa.objetivos.pegatinaNumero.rotulo", { n: index + 1 }) : t("mapa.objetivos.pegatina.rotulo"),
         completed: progress.stickers.includes(item.id),
-        hint: sticker?.hint ?? "Explora las plataformas de esta pantalla.",
+        hint: sticker?.hint ?? t("mapa.objetivos.pegatina.juntos"),
       };
     }),
-    { id: "flawless", kind: "flawless", label: "Sin perder vidas", completed: stats?.completed === true && stats.flawless === true, hint: "Llega a la meta sin perder ninguna vida. Puedes intentarlo otra vez." },
+    { id: "flawless", kind: "flawless", label: t("mapa.objetivos.sinCaer.rotulo"), completed: stats?.completed === true && stats.flawless === true, hint: t("mapa.objetivos.sinCaer.juntos") },
     ...(level.boss ? [{
-      id: level.boss, kind: "boss" as const, label: "Reto del guardián",
+      id: level.boss, kind: "boss" as const, label: t("mapa.objetivos.reto.rotulo"),
       completed: progress.bossChallenges[level.boss] === true,
       hint: bossCatalog[level.boss].challenge.label,
     }] : []),

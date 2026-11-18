@@ -766,24 +766,22 @@ export default function App() {
       {screen === "home" && (
         <section className="home-screen" aria-labelledby="game-title">
           <div className="home-copy">
-            <p className="eyebrow home-eyebrow"><PixelIcon kind="sparkle" /> Una aventura pixel art</p>
-            <h1 id="game-title"><span>SUPER</span> NOA</h1>
-            <p className="home-lead">Corre, salta y explora castillos, volcanes, flores gigantes, trenes, música y un cielo lleno de nubes. ¡Los gatitos te esperan!</p>
-            <p className="home-invite"><PixelIcon kind="heart" /> Una gran aventura para pequeñas heroínas</p>
-            <p className="coming-adventures"><strong>Nuevas aventuras:</strong> El Tren de las Estaciones · El Reino de la Música · El Reino Celeste</p>
+            <h1 id="game-title" className="rotulo"><span><Texto clave="inicio.titulo.super.rotulo" /></span> <Texto clave="inicio.titulo.noa.rotulo" /></h1>
+            <p className="home-lead"><span className="rotulo"><Texto clave="inicio.corre.rotulo" /></span> <small className="juntos">{t("inicio.corre.juntos")}</small></p>
+            <p className="coming-adventures"><span className="rotulo"><Texto clave="inicio.mundosNuevos.rotulo" /></span> <small className="juntos">{t("inicio.mundosNuevos.juntos")}</small></p>
             <div className="home-actions">
-              <button className="pixel-button primary home-play" type="button" data-gamepad-default onClick={() => void requestAdventure(() => setScreen("map"))}>▶ ¡Jugar ahora!</button>
-              <button className="pixel-button" type="button" onClick={() => setShowHelp(true)}>¿Cómo se juega?</button>
+              <button className="pixel-button primary home-play" type="button" data-gamepad-default onClick={() => void requestAdventure(() => setScreen("map"))}><Texto clave="inicio.jugar.rotulo" /></button>
+              <button className="pixel-button" type="button" onClick={() => setShowHelp(true)}><Texto clave="inicio.comoSeJuega.rotulo" /></button>
             </div>
-            {progress.unlocked > 0 && !saveError && <p className="save-note">Partida guardada · {completedLevels}/{campaignLevelCount}{progress.secretUnlocked ? " + secreto" : ""}</p>}
+            {progress.unlocked > 0 && !saveError && <p className="save-note">{t(progress.secretUnlocked ? "inicio.partidaGuardadaConSecreto" : "inicio.partidaGuardada", { hechas: completedLevels, total: campaignLevelCount })}</p>}
           </div>
           <div className="hero-scene" aria-hidden="true">
             <img className="hero-backdrop" src={optimizedAssetSource("./assets/home-adventure-v3.png")} alt="" />
           </div>
-          <nav className="home-footer" aria-label="Opciones">
-            <button type="button" onClick={() => setMuted((value) => !value)}><PixelIcon kind={muted ? "mute" : "sound"} /> {muted ? "Activar sonido" : "Sonido"}</button>
-            <button type="button" onClick={() => openCollection("stickers")}>Álbum {progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length}/{albumStickers.length}</button>
-            <button type="button" onClick={() => openCollection("bosses")}>Jefes amigos {knownBosses}/{bossLevels.length}</button>
+          <nav className="home-footer" aria-label={t("inicio.opciones.oculto")}>
+            <button type="button" onClick={() => setMuted((value) => !value)}><Texto clave={muted ? "inicio.sinSonido.rotulo" : "inicio.sonido.rotulo"} /></button>
+            <button type="button" onClick={() => openCollection("stickers")}><Texto clave="inicio.album.rotulo" variables={{ n: progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length, total: albumStickers.length }} /></button>
+            <button type="button" onClick={() => openCollection("bosses")}><Texto clave="inicio.jefes.rotulo" variables={{ n: knownBosses, total: bossLevels.length }} /></button>
             <button type="button" onClick={openRanking}>🌍 Tablón mundial</button>
             <button type="button" onClick={() => setShowSettings(true)}>⚙ Ajustes</button>
             <button type="button" onClick={() => setShowCredits(true)}>Créditos</button>
@@ -794,20 +792,20 @@ export default function App() {
       {screen === "map" && (
         <section className="map-screen">
           <header className="map-header">
-            <div><p className="eyebrow">Elige una pantalla</p><h2>El mapa de Noa</h2></div>
+            <div><h2 className="rotulo"><Texto clave="mapa.cabecera.rotulo" /></h2><p className="eyebrow juntos">{t("mapa.cabecera.juntos")}</p></div>
             <div className="map-actions">
               <span className="apple-total"><GameAssetIcon kind="apple" /> {totalApples}</span>
-              <button className="album-button" type="button" onClick={() => openCollection("stickers")} aria-label="Abrir álbum de pegatinas"><PixelIcon kind="sparkle" /> {progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length}/{albumStickers.length}</button>
-              <button className="album-button" type="button" onClick={() => openCollection("bosses")} aria-label="Abrir jefes amigos">★ {knownBosses}/{bossLevels.length}</button>
+              <button className="album-button" type="button" onClick={() => openCollection("stickers")} aria-label={t("mapa.abrirAlbum.oculto")}><PixelIcon kind="sparkle" /> {progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length}/{albumStickers.length}</button>
+              <button className="album-button" type="button" onClick={() => openCollection("bosses")} aria-label={t("mapa.abrirJefes.oculto")}>★ {knownBosses}/{bossLevels.length}</button>
               <button className="album-button" type="button" onClick={openRanking}>🌍 Tablón</button>
-              <button className="icon-button" type="button" onClick={() => setShowSettings(true)} aria-label="Abrir ajustes">⚙</button>
-              <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label="Volver al inicio">⌂</button>
+              <button className="icon-button" type="button" onClick={() => setShowSettings(true)} aria-label={t("mapa.abrirAjustes.oculto")}>⚙</button>
+              <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label={t("mapa.volverInicio.oculto")}>⌂</button>
             </div>
           </header>
           <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
             <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} onOpenAvioneta={() => void requestAdventure(() => { setAvionetaGift(false); setPaused(false); setScreen("avioneta"); })} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
           </Suspense>
-          <button className="text-button reset-button" type="button" onClick={resetProgress}>Borrar progreso</button>
+          <button className="text-button reset-button" type="button" onClick={resetProgress}>{t("mapa.borrarProgreso")}</button>
         </section>
       )}
 
@@ -1002,23 +1000,22 @@ export default function App() {
 
       {showHelp && (
         <Dialog labelledBy="help-title" className="game-modal help-modal" onClose={() => setShowHelp(false)}>
-          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowHelp(false)} aria-label="Cerrar">×</button>
-          <p className="eyebrow">Ayuda a Noa</p><h2 id="help-title">¿Cómo se juega?</h2>
-          <p className="help-intro">¡Camina, salta y busca caminos secretos!</p>
+          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowHelp(false)} aria-label={t("inicio.ayuda.cerrar.oculto")}>×</button>
+          <h2 id="help-title" className="rotulo"><Texto clave="inicio.ayuda.titulo.rotulo" /></h2>
           <div className="help-first-steps">
-            <div><b>1</b><span className="help-control-icon">◀ ▶</span><strong>Camina</strong><small>Mantén pulsada una flecha.</small></div>
-            <div className="help-double-jump"><b>2</b><span className="help-control-icon">↑ + ↑</span><strong>Haz un doble salto</strong><small>Toca <em>SALTAR</em>. En el aire, ¡tócalo otra vez!</small></div>
-            <div><b>3</b><span className="help-control-icon">▣</span><strong>Abre las cajas</strong><small>Salta y golpea la caja por debajo.</small></div>
+            <div><b>1</b><span className="help-control-icon">◀ ▶</span><strong className="rotulo"><Texto clave="inicio.ayuda.camina.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.camina.juntos")}</small></div>
+            <div className="help-double-jump"><b>2</b><span className="help-control-icon">↑ + ↑</span><strong className="rotulo"><Texto clave="inicio.ayuda.dobleSalto.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.dobleSalto.juntos")}</small></div>
+            <div><b>3</b><span className="help-control-icon">▣</span><strong className="rotulo"><Texto clave="inicio.ayuda.caja.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.caja.juntos")}</small></div>
           </div>
-          <p className="help-mobile-tip"><strong>En móvil:</strong> puedes mantener una flecha con un dedo y tocar <b>SALTAR</b> con el otro.</p>
+          <p className="help-mobile-tip juntos">{t("inicio.ayuda.movil.juntos")}</p>
           <div className="help-grid">
-            <div><span><PixelIcon kind="yarn" /></span><strong>Bola de lana</strong><small>Cuando Noa tenga orejas de gato, toca <b>LANA</b>.</small></div>
-            <div><span><GameAssetIcon kind="apple" /></span><strong>Manzana escudo</strong><small>La manzana salva a Noa de un golpe.</small></div>
-            <div><span className="help-rps"><PixelIcon kind="rock" /><PixelIcon kind="paper" /><PixelIcon kind="scissors" /></span><strong>Juego final</strong><small>Cada guardián propone un juego sencillo. Mira su explicación y completa tres rondas.</small></div>
-            <div><span><PixelIcon kind="sparkle" /></span><strong>Mira arriba</strong><small>Las pegatinas se esconden en caminos altos.</small></div>
+            <div><span><PixelIcon kind="yarn" /></span><strong className="rotulo"><Texto clave="inicio.ayuda.lana.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.lana.juntos")}</small></div>
+            <div><span><GameAssetIcon kind="apple" /></span><strong className="rotulo"><Texto clave="inicio.ayuda.manzana.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.manzana.juntos")}</small></div>
+            <div><span className="help-rps"><PixelIcon kind="rock" /><PixelIcon kind="paper" /><PixelIcon kind="scissors" /></span><strong className="rotulo"><Texto clave="inicio.ayuda.reto.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.reto.juntos")}</small></div>
+            <div><span><PixelIcon kind="sparkle" /></span><strong className="rotulo"><Texto clave="inicio.ayuda.arriba.rotulo" /></strong><small className="juntos">{t("inicio.ayuda.arriba.juntos")}</small></div>
           </div>
-          <p className="help-note">Con teclado: A/D o flechas para caminar, espacio para saltar y X/K para lanzar lana. Con mando, usa la cruceta o palanca, A para saltar o elegir y B para volver. En el agua, SALTAR da una brazada hacia arriba; al soltarlo, Noa baja despacito y puede caminar por la arena. ¡Los erizos pinchan!</p>
-          <button className="pixel-button primary" type="button" disabled={enrollmentChecking} onClick={() => { setShowHelp(false); void requestAdventure(() => setScreen("map")); }}>¡Lista para jugar!</button>
+          <p className="help-note">{t("inicio.ayuda.teclado")}</p>
+          <button className="pixel-button primary" type="button" disabled={enrollmentChecking} onClick={() => { setShowHelp(false); void requestAdventure(() => setScreen("map")); }}><Texto clave="inicio.ayuda.lista.rotulo" /></button>
         </Dialog>
       )}
 

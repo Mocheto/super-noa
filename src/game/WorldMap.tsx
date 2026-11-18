@@ -14,6 +14,8 @@ import { TOTAL_STARS } from "./avioneta";
 import type { DetourId } from "./types";
 import { useMapCamera } from "./useMapCamera";
 import "./detours.css";
+import { puntos, t } from "../textos";
+import { Texto } from "../textos/Texto";
 
 export type WorldSummary = {
   complete: number; total: number; stickers: number; stickerTotal: number;
@@ -178,21 +180,21 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
 
   return (
     <>
-      <p className="map-intro">Arrastra el mapa para explorar. Junta o separa dos dedos para alejar o acercar. Toca un mundo para ver sus pantallas.</p>
+      <p className="map-intro"><span className="rotulo"><Texto clave="mapa.intro.rotulo" /></span> <small className="juntos">{t("mapa.intro.juntos")}</small></p>
       <div className="map-layout">
-      <div className="map-controls" inert={selectedWorld !== null} aria-label="Explorar el mapa">
+      <div className="map-controls" inert={selectedWorld !== null} aria-label={t("mapa.controles.oculto")}>
         <div className="map-mode">
-          <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}>Mapa</button>
-          <button type="button" aria-pressed={view === "list"} onClick={() => { followNoa.current = false; setView("list"); }}>Lista</button>
+          <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}><Texto clave="mapa.vistaMapa.rotulo" /></button>
+          <button type="button" aria-pressed={view === "list"} onClick={() => { followNoa.current = false; setView("list"); }}><Texto clave="mapa.vistaLista.rotulo" /></button>
         </div>
         {view === "map" && <div className="map-zoom">
-          <button type="button" aria-label="Alejar mapa" disabled={camera.atMin} onClick={() => camera.zoomBy(-1)}>−</button>
-          <button type="button" aria-label="Acercar mapa" disabled={camera.atMax} onClick={() => camera.zoomBy(1)}>+</button>
-          <button type="button" aria-pressed={camera.atMin} onClick={camera.showAll}>Ver todo</button>
-          <button type="button" onClick={() => camera.showNear(noaPosition)}>Volver a Noa</button>
+          <button type="button" aria-label={t("mapa.alejar.oculto")} disabled={camera.atMin} onClick={() => camera.zoomBy(-1)}>−</button>
+          <button type="button" aria-label={t("mapa.acercar.oculto")} disabled={camera.atMax} onClick={() => camera.zoomBy(1)}>+</button>
+          <button type="button" aria-pressed={camera.atMin} onClick={camera.showAll}><Texto clave="mapa.verTodo.rotulo" /></button>
+          <button type="button" onClick={() => camera.showNear(noaPosition)}><Texto clave="mapa.volverANoa.rotulo" /></button>
         </div>}
       </div>
-      <div className="map-scroll" inert={selectedWorld !== null} hidden={view !== "map"} role="region" aria-label="Mapa ilustrado de los mundos de Noa"
+      <div className="map-scroll" inert={selectedWorld !== null} hidden={view !== "map"} role="region" aria-label={t("mapa.mapaIlustrado.oculto")}
         ref={viewportRef} {...camera.viewportEvents}>
         <div className={`map-board${camera.overview ? " is-overview" : ""}`} style={{ width: camera.frame.width, height: camera.frame.height, left: camera.frame.x, top: camera.frame.y }}>
           <img className="map-landscape" src={mapLandscape} alt="" aria-hidden="true" draggable={false} />
@@ -206,17 +208,17 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
               </g>;
             })}
           </svg>
-          <svg className="map-detour-paths" viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} preserveAspectRatio="none" aria-label="Senderos secretos descubiertos">
+          <svg className="map-detour-paths" viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} preserveAspectRatio="none" aria-label={t("mapa.senderos.oculto")}>
             {discoveredDetours.map((entry) => <path key={entry.id} d={entry.path} pathLength="1"
               className={`map-detour-path ${newDetours.includes(entry.id) ? "is-new" : ""}`} role="button"
-              tabIndex={moving || camera.overview ? -1 : 0} aria-label={`Explorar ${entry.title}`} aria-disabled={moving}
+              tabIndex={moving || camera.overview ? -1 : 0} aria-label={t("mapa.explorarSendero.oculto", { titulo: entry.title })} aria-disabled={moving}
               onFocus={() => camera.ensureVisible(entry)}
               onClick={() => { if (!moving && !camera.overview) beginDetour(entry.id); }}
               onKeyDown={(event) => { if (!moving && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); beginDetour(entry.id); } }} />)}
             {shortcutRoutes.filter((route) => mapRouteState(route, progress) === "open").map((route) =>
               <path key={route.detour} className={`map-detour-path map-shortcut${route.detour === "mine" ? " is-tunnel" : ""}`} d={route.path} />)}
           </svg>
-          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: `url('${optimizedAssetSource("./assets/sprites/noa-sprite-sheet.png")}')` }} role="img" aria-label={`Noa está en ${noaLocation.name}`} />
+          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: `url('${optimizedAssetSource("./assets/sprites/noa-sprite-sheet.png")}')` }} role="img" aria-label={t("mapa.noaEsta.oculto", { lugar: noaLocation.name })} />
           {worldCatalog.map((world) => {
             if (world.id === 7 && !progress.secretUnlocked) return null;
             const available = worldAvailable(world.id, progress);
@@ -254,7 +256,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
             const all = best >= TOTAL_STARS;
             return <button type="button" className={`map-rest-stop map-avioneta ${all ? "is-golden" : ""}`} style={{ left: `${spot.x}%`, top: `${spot.y}%` }}
               disabled={moving} onFocus={() => camera.ensureVisible(spot)} onClick={() => camera.overview ? camera.showNear(spot) : onOpenAvioneta()}
-              aria-label={`La avioneta de las nubes: mejor marca ${best} de ${TOTAL_STARS} estrellas`}>✈<span>★ {best}</span></button>;
+              aria-label={t("mapa.avioneta.oculto", { n: best, total: TOTAL_STARS })}>✈<span>★ {best}</span></button>;
           })()}
           {restStopCatalog.map((stop, index) => {
             // Marcador pequeño del paseo de los amigos, junto al mundo, en cuanto se completa su pantalla 3.
@@ -265,13 +267,13 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
             return <button key={`paseo-${stop.world}`} type="button" className={`map-rest-stop ${visited ? "is-visited" : ""}`}
               style={{ left: `${spot.x}%`, top: `${spot.y}%` }} disabled={moving} onFocus={() => camera.ensureVisible(spot)}
               onClick={() => camera.overview ? camera.showNear(spot) : onBeginLevel(levels.length + detourLevels.length + index)}
-              aria-label={`Paseo de los amigos de ${world.name}${visited ? ": visitado, volver a pasear" : ""}`}>
-              🐾<span>Paseo{visited ? " ✓" : ""}</span>
+              aria-label={t(visited ? "mapa.paseo.visitado" : "mapa.paseo.oculto", { mundo: world.name })}>
+              <span><Texto clave="mapa.paseo.rotulo" />{visited ? " ✓" : ""}</span>
             </button>;
           })}
         </div>
       </div>
-      <div className="map-cards" inert={selectedWorld !== null} hidden={view !== "list"} aria-label="Mundos de Noa">
+      <div className="map-cards" inert={selectedWorld !== null} hidden={view !== "list"} aria-label={t("mapa.mundos.oculto")}>
         {worldCatalog.map((world) => {
           const available = worldAvailable(world.id, progress);
           const summary = summaries[world.id];
@@ -281,37 +283,37 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
             onClick={(event) => openWorld(world, event.currentTarget, false)} key={world.id}>
             <span className="map-card-art"><img src={worldArtwork(world.id)} alt="" loading="lazy" /></span>
             <span className="map-card-body">
-              <span className="map-card-label">{world.id === 7 ? "Mundo secreto" : world.id === 8 ? "Mundo del agua" : `Mundo ${world.id}`}</span>
+              <span className="map-card-label">{world.id === 7 ? <Texto clave="mapa.mundo.secreto.rotulo" /> : world.id === 8 ? <Texto clave="mapa.mundo.agua.rotulo" /> : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: world.id }} />}</span>
               <strong>{world.name}</strong>
               <small>{world.description}</small>
-              <span className="map-card-status">{available ? `${summary.complete}/${summary.total} pantallas completadas` : "Todavía cerrado"}</span>
+              <span className="map-card-status">{available ? <span aria-label={t("mapa.mundo.progreso.oculto", { n: summary.complete, total: summary.total })}><Texto clave="mapa.mundo.progreso.rotulo" variables={{ puntos: puntos(summary.complete, summary.total) }} /></span> : <Texto clave="mapa.mundo.cerrado.rotulo" />}</span>
             </span>
-            {world.id === noaWorld && <span className="map-card-here">Noa está aquí</span>}
+            {world.id === noaWorld && <span className="map-card-here"><Texto clave="mapa.mundo.aqui.rotulo" /></span>}
           </button>;
         })}
       </div>
       </div>
-      <p className="map-location" aria-live="polite">{moving ? "Noa va de camino…" : <>Noa está en <strong>{noaLocation.name}</strong> · {summaries[noaWorld].complete}/{summaries[noaWorld].total} pantallas completadas</>}</p>
-      {newDetours.length > 0 && <p role="status">¡Un camino nuevo! {discoveredDetours.filter((entry) => newDetours.includes(entry.id)).map((entry) => entry.title).join(", ")}</p>}
+      <p className="map-location" aria-live="polite">{moving ? <Texto clave="mapa.ubicacion.enCamino.rotulo" /> : <><Texto clave="mapa.ubicacion.aqui.rotulo" /> <strong>{noaLocation.name}</strong> <span aria-label={t("mapa.mundo.progreso.oculto", { n: summaries[noaWorld].complete, total: summaries[noaWorld].total })}>{puntos(summaries[noaWorld].complete, summaries[noaWorld].total)}</span></>}</p>
+      {newDetours.length > 0 && <p role="status"><Texto clave="mapa.caminoNuevo.rotulo" /> {discoveredDetours.filter((entry) => newDetours.includes(entry.id)).map((entry) => entry.title).join(", ")}</p>}
 
       {selected && (
         <div className="modal-backdrop map-detail-backdrop">
           <div className="map-world-panel" role="dialog" aria-modal="true" aria-labelledby="map-world-title" aria-describedby="map-world-description" ref={panelRef}>
-            <button className="modal-close" type="button" data-gamepad-back onClick={closeWorld} aria-label="Cerrar mundo">×</button>
+            <button className="modal-close" type="button" data-gamepad-back onClick={closeWorld} aria-label={t("mapa.mundo.cerrar.oculto")}>×</button>
             <div className="map-world-hero">
               <img src={worldArtwork(selected.id)} alt="" />
               <div className="map-world-heading">
-                <span className="world-number">{selected.id === 7 ? "Mundo secreto" : selected.id === 8 ? "Mundo del agua" : `Mundo ${selected.id}`}</span>
+                <span className="world-number">{selected.id === 7 ? <Texto clave="mapa.mundo.secreto.rotulo" /> : selected.id === 8 ? <Texto clave="mapa.mundo.agua.rotulo" /> : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: selected.id }} />}</span>
                 <h3 id="map-world-title">{selected.name}</h3>
                 <p id="map-world-description">{selected.description}</p>
               </div>
             </div>
-            <div className="world-summary" aria-label={`Progreso de ${selected.name}`}>
-              <div className="world-summary-top"><strong>{summaries[selected.id].complete}/{summaries[selected.id].total} pantallas</strong><span>{summaries[selected.id].remembered ? "✉ Postal lista" : "✉ Busca su recuerdo"}</span></div>
+            <div className="world-summary" aria-label={t("mapa.mundo.resumen.oculto", { mundo: selected.name })}>
+              <div className="world-summary-top"><strong aria-label={t("mapa.mundo.progreso.oculto", { n: summaries[selected.id].complete, total: summaries[selected.id].total })}><Texto clave="mapa.mundo.progreso.rotulo" variables={{ puntos: puntos(summaries[selected.id].complete, summaries[selected.id].total) }} /></strong><span><Texto clave={summaries[selected.id].remembered ? "mapa.mundo.postalLista.rotulo" : "mapa.mundo.postalBusca.rotulo"} /></span></div>
               <div className="world-progress-bar" aria-hidden="true"><span style={{ width: `${summaries[selected.id].complete / summaries[selected.id].total * 100}%` }} /></div>
-              <small><PixelIcon kind="sparkle" /> {summaries[selected.id].stickers}/{summaries[selected.id].stickerTotal} · ★ {summaries[selected.id].flawless}/{summaries[selected.id].total} sin perder vidas{summaries[selected.id].bossFriend ? " · Amigo" : ""}</small>
+              <small><PixelIcon kind="sparkle" /> {summaries[selected.id].stickers}/{summaries[selected.id].stickerTotal} · <Texto clave="mapa.mundo.sinCaer.rotulo" /> {summaries[selected.id].flawless}/{summaries[selected.id].total}{summaries[selected.id].bossFriend && <> · <Texto clave="mapa.mundo.amigo.rotulo" /></>}</small>
             </div>
-            {!worldAvailable(selected.id, progress) && <p className="map-world-hint">{selected.id === 7 ? "Sigue explorando. ¡Hay sorpresas por descubrir!" : selected.id === 8 ? "Busca la poza azul en el bosque de los lobos." : "Completa las pantallas anteriores para llegar hasta aquí."}</p>}
+            {!worldAvailable(selected.id, progress) && <p className="map-world-hint"><span className="rotulo"><Texto clave={selected.id === 7 ? "mapa.mundo.pistaSecreto.rotulo" : selected.id === 8 ? "mapa.mundo.pistaAgua.rotulo" : "mapa.mundo.pistaCerrado.rotulo"} /></span> <small className="juntos">{t(selected.id === 7 ? "mapa.mundo.pistaSecreto.juntos" : selected.id === 8 ? "mapa.mundo.pistaAgua.juntos" : "mapa.mundo.pistaCerrado.juntos")}</small></p>}
             <div className="level-row">
               {worldLevels.map(({ level, index }) => <LevelSelectCard key={level.id}
                 level={level} index={index} unlocked={isLevelUnlocked(index)} suggested={index === suggestedLevel}
@@ -321,8 +323,8 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
                 onCloseDetails={() => setOpenObjectives((current) => current?.levelId === level.id ? null : current)}
               />)}
             </div>
-            {selected.id === 2 && progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed && <button className="pixel-button" type="button" onClick={onOpenCatParty}>Jugar a la fiesta</button>}
-            <div className="detour-list" aria-label="Desvíos descubiertos">
+            {selected.id === 2 && progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed && <button className="pixel-button" type="button" onClick={onOpenCatParty}><Texto clave="mapa.mundo.fiesta.rotulo" /></button>}
+            <div className="detour-list" aria-label={t("mapa.mundo.desvios.oculto")}>
               {discoveredDetours.filter((entry) => entry.world === selected.id).map((entry) => <button key={entry.id} type="button" onClick={() => beginDetour(entry.id)}>
                 {detourIcon(entry.icon)} {entry.title} {progress.detours?.[entry.id]?.completed ? "✓" : ""}
               </button>)}

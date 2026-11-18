@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { levels } from "./levels.ts";
 import { getLevelObjectives } from "./levelObjectives.ts";
+import { t } from "../textos/index.ts";
 import { emptyProgress } from "./progress.ts";
 import { stickerCatalog } from "./stickers.ts";
 import { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
@@ -102,7 +103,6 @@ test("todos los objetivos conseguidos dejan cero pendientes sin modificar el pro
 
 test("la pista del castillo explica la cadena sin confundir al perrito con el duelo final", () => {
   const result = getLevelObjectives(level("6-1"), { ...emptyProgress, unlocked: 29 });
-  assert.match(result.objectives[0].hint, /cadena tiene un límite/);
-  assert.match(result.objectives[0].hint, /plataformas de arriba/);
+  assert.equal(result.objectives[0].hint, t("mapa.objetivos.llegarPerrito.juntos"));
   assert.equal(result.objectives.some((objective) => objective.kind === "boss"), false);
 });

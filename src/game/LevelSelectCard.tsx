@@ -5,6 +5,8 @@ import { getLevelObjectives } from "./levelObjectives";
 import type { Progress } from "./progress";
 import { getSecretShopBadge } from "./secretShopProgress";
 import type { Level } from "./types";
+import { puntos, sinPictogramas, t } from "../textos";
+import { Pictogramas, Texto } from "../textos/Texto";
 
 type LevelSelectCardProps = {
   level: Level;
@@ -78,12 +80,12 @@ export function LevelSelectCard({ level, index, unlocked, suggested, progress, d
         <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}
           {shop && <span className={`shop-visit-badge level-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.png')" }} role="img" aria-label={shop.label} title={shop.label} />}
         </span>
-        <strong>{!unlocked && level.world === 7 ? "Una sorpresa te espera" : level.title}</strong>
-        <small>{stats?.completed ? <span>✓ Completada · <GameAssetIcon kind="apple" /> {stats.bestApples}</span>
-          : unlocked ? "Lista para jugar" : level.world === 8 && !progress.waterUnlocked ? "Busca la poza azul en 3-3" : "Completa la anterior"}</small>
+        <strong>{!unlocked && level.world === 7 ? <Texto clave="mapa.tarjeta.sorpresa.rotulo" /> : level.title}</strong>
+        <small>{stats?.completed ? <span aria-label={t("mapa.tarjeta.completada.oculto")}><Texto clave="mapa.tarjeta.completada.rotulo" /> · <GameAssetIcon kind="apple" /> {stats.bestApples}</span>
+          : <Texto clave={unlocked ? "mapa.tarjeta.jugar.rotulo" : level.world === 8 && !progress.waterUnlocked ? "mapa.tarjeta.pozaAzul.rotulo" : "mapa.tarjeta.cerrada.rotulo"} />}</small>
       </button>
       {available && <button className="level-objectives-trigger" type="button"
-        aria-label={`${expanded ? "Ocultar" : "Ver"} objetivos y pista de ${level.title}: ${medals.filter(Boolean).length} de 3 medallas`}
+        aria-label={t(expanded ? "mapa.tarjeta.ocultar.oculto" : "mapa.tarjeta.ver.oculto", { titulo: level.title, n: medals.filter(Boolean).length })}
         aria-expanded={expanded} aria-controls={panelId} onKeyDown={dismissOnEscape}
         onClick={() => {
           cancelHover();
@@ -94,15 +96,15 @@ export function LevelSelectCard({ level, index, unlocked, suggested, progress, d
       </button>}
     </div>
     {available && <div className={`level-objectives ${expanded && !details.pinned ? "is-preview" : ""}`} id={panelId} hidden={!expanded}>
-      <p className="level-objectives-status">{objectives.pendingCount === 1 ? "Falta 1" : objectives.pendingCount ? `Faltan ${objectives.pendingCount}` : "¡Todo conseguido!"}</p>
-      <ul aria-label={`Objetivos de ${level.title}`}>
+      <p className="level-objectives-status">{objectives.pendingCount ? <span aria-label={t("mapa.tarjeta.faltan.oculto", { n: objectives.pendingCount })}><Texto clave="mapa.tarjeta.faltan.rotulo" variables={{ puntos: puntos(objectives.completedCount, objectives.totalCount) }} /></span> : <Texto clave="mapa.tarjeta.todo.rotulo" />}</p>
+      <ul aria-label={t("mapa.tarjeta.objetivos.oculto", { titulo: level.title })}>
         {objectives.objectives.map((objective) => <li className={objective.completed ? "is-complete" : "is-pending"} key={objective.id}
-          aria-label={`${objective.label}: ${objective.completed ? "conseguido" : "pendiente"}`}>
-          <span aria-hidden="true">{objective.completed ? "✓" : "○"}</span> {objective.label}
+          aria-label={t(objective.completed ? "mapa.tarjeta.conseguido.oculto" : "mapa.tarjeta.pendiente.oculto", { objetivo: sinPictogramas(objective.label) })}>
+          <span aria-hidden="true">{objective.completed ? "✓" : "○"}</span> <Pictogramas texto={objective.label} />
         </li>)}
       </ul>
       {nextHint && <p className="level-objective-hint">{nextHint.hint}</p>}
-      {shop && <p className="level-shop-hint">{shop.label}. Busca una puerta en una repisa segura. Alinea los tres gatitos para conseguir su estrella.</p>}
+      {shop && <p className="level-shop-hint">{shop.label}. {t("mapa.tarjeta.tienda.juntos")}</p>}
     </div>}
   </div>;
 }

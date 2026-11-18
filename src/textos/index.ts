@@ -76,3 +76,8 @@ export function hojas(nodo: unknown = actual, prefijo = ""): Array<[string, Hoja
 export function puntos(logrados: number, total: number): string {
   return "●".repeat(Math.max(0, Math.min(logrados, total))) + "○".repeat(Math.max(0, total - Math.max(0, logrados)));
 }
+
+/** Texto sin las marcas de pictograma, para etiquetas de lector de pantalla: «{pictograma:meta} META» → «META». */
+export function sinPictogramas(texto: string): string {
+  return texto.replace(/\{pictograma:[\w-]+\}/g, "").replace(/\s+/g, " ").trim();
+}

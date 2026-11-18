@@ -18,17 +18,32 @@ export const excepcionesFijas = [
 /** Archivos de partituras: sus cadenas sin propiedad son mensajes de validación, no texto visible. */
 const archivosDePartitura = /(beeNinja|catParty|armoniaDrum|meriendaJabatos)\.ts$/;
 
-function esTextoVisible(texto: string): boolean {
+function esTextoVisible(texto: string, esTextoJsx = false): boolean {
   const limpio = texto.trim();
   if (!limpio || !/[A-Za-zÁÉÍÓÚÑáéíóúñ¡¿]/.test(limpio)) return false;
+  // Entre las etiquetas JSX no hay nombres de clase: cualquier palabra es texto.
+  if (esTextoJsx) return true;
   if (!(/[ áéíóúñÁÉÍÓÚÑ¡¿!?…]/.test(limpio) || /^[A-ZÁÉÍÓÚÑ¡¿]/.test(limpio))) return false;
   if (/^[\w./-]+\.(png|webp|mp3|ogg|svg|css|json)$/.test(limpio)) return false;
   if (/^(\.|#|--|var\(|rgba?\(|\/)/i.test(limpio) || /^#[0-9a-f]{3,6}$/i.test(limpio)) return false;
   if (/^[a-z][\w-]*( [a-z][\w-]*)*$/.test(limpio)) return false;
   if (/^(bold |italic )*\d+px /.test(limpio) || /^\(/.test(limpio)) return false;
   if (/:not\(|a\[href|`/.test(limpio)) return false;
-  const sinVariables = limpio.replace(/\$\{[^}]*\}/g, "");
-  return !(/^[a-z0-9 _:.%()\-+*/,]*$/i.test(sinVariables) && !/[A-ZÁÉÍÓÚÑ¡¿]/.test(sinVariables.trim()[0] ?? ""));
+  const sinVariables = limpio.replace(/\$\{[^}]*\}/g, "").trim();
+  // Varias palabras en minúscula sin guiones ni cifras («pantallas completadas») son texto; «level-card is-complete» son clases.
+  const soloLetras = /[-_()]/.test(sinVariables) ? sinVariables : sinVariables.replace(/[^A-Za-záéíóúñüÁÉÍÓÚÑ ]+/g, " ").replace(/\s+/g, " ").trim();
+  if (/^[a-záéíóúñü]+( [a-záéíóúñü]+)+$/.test(soloLetras) && soloLetras.replace(/ /g, "").length >= 6) return true;
+  return !(/^[a-z0-9 _:.%()\-+*/,]*$/i.test(sinVariables) && !/[A-ZÁÉÍÓÚÑ¡¿]/.test(sinVariables[0] ?? ""));
+}
+
+/** Atributo JSX del que cuelga un valor, aunque venga dentro de una expresión (`aria-label={cond ? "a" : "b"}`). */
+function atributoDe(nodo: ts.Node): ts.JsxAttribute | undefined {
+  let actual: ts.Node = nodo;
+  while (actual.parent && !ts.isJsxAttribute(actual.parent)) {
+    if (ts.isJsxElement(actual.parent) || ts.isJsxSelfClosingElement(actual.parent) || ts.isJsxFragment(actual.parent) || ts.isBlock(actual.parent) || ts.isArrowFunction(actual.parent) || ts.isFunctionExpression(actual.parent)) return undefined;
+    actual = actual.parent;
+  }
+  return actual.parent && ts.isJsxAttribute(actual.parent) ? actual.parent : undefined;
 }
 
 /** Busca los textos visibles de un archivo recorriendo su árbol sintáctico. */
@@ -49,8 +64,9 @@ export function textosSueltos(archivo: string, codigo: string): TextoSuelto[] {
     }
     const padre = nodo.parent;
     let contexto = "";
-    if (ts.isJsxAttribute(padre)) {
-      const atributo = padre.name.getText(fuente);
+    const atributoJsx = atributoDe(nodo);
+    if (atributoJsx) {
+      const atributo = atributoJsx.name.getText(fuente);
       if (atributosTecnicos.test(atributo)) return;
       contexto = atributo;
     }
@@ -63,7 +79,7 @@ export function textosSueltos(archivo: string, codigo: string): TextoSuelto[] {
     if (ts.isLiteralTypeNode(padre) || ts.isCaseClause(padre) || ts.isElementAccessExpression(padre)) return;
     if (ts.isBinaryExpression(padre) && /[=!]==?/.test(padre.operatorToken.getText(fuente))) return;
     if (archivosDePartitura.test(archivo) && !contexto) return;
-    if (!esTextoVisible(texto)) return;
+    if (!esTextoVisible(texto, ts.isJsxText(nodo))) return;
     encontrados.push({ archivo, linea: fuente.getLineAndCharacterOfPosition(nodo.getStart(fuente)).line + 1, texto });
   };
   visitar(fuente);

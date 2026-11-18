@@ -13,7 +13,7 @@ import {
 import { loadBeeSamples, type SampleBank } from "./beeNinjaSamples";
 import "./beeNinja.css";
 import { t } from "../textos/index.ts";
-import { Boton, Pictograma, Texto } from "../textos/Texto";
+import { Boton, BotonControl, Pictograma, Texto } from "../textos/Texto";
 import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
 import { createPracticaConPausas, type ParadaPractica } from "./practicaPausas";
 import { Ventana } from "./Ventana";
@@ -457,7 +457,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
     playSound("goal");
     onWin(challengeCompleted);
   };
-  const leave = () => friendlyReplay ? onAbandon() : setShowLeave(true);
+  const leave = () => friendlyReplay && !mode ? onAbandon() : setShowLeave(true);
   const highlightPractice = practiceFirst(levelCompleted, friendlyReplay, attempted);
   const result = finished?.mode === "song" ? finished.outcome : null;
   const ended = finished !== null;
@@ -496,6 +496,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
         {mode && view.phase && <span className="bee-ninja-phase"><i className={`bee-ninja-phase-piece is-${view.phase.piece}`} style={view.phase.piece === "ladybug" ? undefined : flowerSprite(0, 0)} />{view.phase.piece === "duo" && <i className="bee-ninja-phase-piece is-duo" style={flowerSprite(1, 0)} />}{view.phase.name}</span>}
       </div>
     </div>
+    {mode && <BotonControl className="bee-ninja-pausa" pictograma="pausa" etiqueta="partida.hud.pausa.oculto" onClick={() => setShowLeave(true)} />}
     {mode && <progress className="bee-ninja-progress" max={total} value={Math.max(0, view.pulse)} aria-label={t("minijuegos.abeja.avance.oculto")} />}
 
     {mode && <div className="bee-ninja-controls">
@@ -528,10 +529,10 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
       <Boton clave={salir} data-gamepad-back onClick={leave} />
     </>} />}
 
-  {showLeave && <Ventana id="bee-ninja-leave-title" titulo="minijuegos.abeja.salir.titulo.rotulo" onClose={() => setShowLeave(false)}
+  {showLeave && <Ventana id="bee-ninja-leave-title" titulo={mode ? "partida.pausa.titulo.rotulo" : "minijuegos.abeja.salir.titulo.rotulo"} onClose={() => setShowLeave(false)}
     botones={<>
       <Boton tipo="seguir" clave="minijuegos.abeja.salir.seguir.rotulo" data-gamepad-default data-gamepad-back onClick={() => setShowLeave(false)} />
-      <Boton clave="minijuegos.abeja.salir.si.rotulo" onClick={onAbandon} />
+      <Boton clave={friendlyReplay ? "minijuegos.abeja.resultado.amigos.rotulo" : mode ? "minijuegos.abeja.resultado.mapa.rotulo" : "minijuegos.abeja.salir.si.rotulo"} onClick={onAbandon} />
     </>}>
     <p className="juntos">{t("minijuegos.abeja.salir.juntos.juntos")}</p>
   </Ventana>}

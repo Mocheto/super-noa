@@ -105,3 +105,25 @@
   .bee-ninja-retrato { width: 72px; height: 72px; }
   .bee-ninja-jar-resultado { width: 56px; height: 70px; }
 }
+
+/* Pausa sobre el escenario y escenario que cabe en el alto del móvil (ajuste tras probarlo): el tarro y el botón de
+   cortar tienen que verse siempre. */
+.bee-ninja-pausa { position: absolute; z-index: 8; top: 10px; right: 10px; --control: 44px; color: #fff8e9; background: #5b386c; border-color: #fff8e9; opacity: .85; }
+.bee-ninja-game { position: relative; }
+@media (orientation: landscape) and (max-height: 540px) {
+  .bee-ninja-game { width: min(calc(100vw - 8px), calc((100dvh - 22px) * 16 / 9 + 14px)); max-height: calc(100dvh - 8px); padding: 4px; border-width: 3px; overflow: hidden; }
+  .bee-ninja-game.boss-battle { box-shadow: none; }
+  .bee-ninja-frame { width: 100%; margin: 0; }
+  .bee-ninja-progress { position: absolute; left: 8px; right: 8px; bottom: 6px; z-index: 7; width: auto; height: 6px; margin: 0; }
+  .bee-ninja-controls { position: absolute; z-index: 7; left: 50%; bottom: 14px; translate: -50%; opacity: .85; }
+  .bee-ninja-pausa { top: 8px; right: 8px; --control: 36px; }
+}
+@media (orientation: portrait) {
+  .bee-ninja-pausa { --control: 36px; }
+}
+/* El título oculto no debe ocupar sitio aunque `.boss-battle > *` sea relativo. */
+.bee-ninja-game > .sr-only { position: absolute; }
+@media (orientation: landscape) and (max-height: 540px) {
+  .bee-ninja-controls { left: 14px; translate: none; bottom: 16px; }
+  .bee-ninja-controls .boton { --boton-alto: 40px; padding: 0 12px; }
+}

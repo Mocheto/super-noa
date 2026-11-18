@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { t, type ClaveTexto } from "../textos";
-import { Boton } from "../textos/Texto";
+import { Boton, BotonControl } from "../textos/Texto";
 import { Ventana } from "./Ventana";
 
 type PantallaPreviaProps = {
@@ -30,6 +30,7 @@ export function PantallaPrevia({ id, nombre, guardian, regla, ayudaAdultos = [],
       <Boton tipo={practicaPrimero ? "seguir" : "secundario"} clave="minijuegos.comun.previa.practica.rotulo" data-gamepad-default={practicaPrimero || undefined} onClick={onPracticar} />
       <Boton tipo={practicaPrimero ? "secundario" : "jugar"} clave="minijuegos.comun.previa.jugar.rotulo" data-gamepad-default={!practicaPrimero || undefined} onClick={onJugar} />
     </>}>
+    <BotonControl className="ventana-cerrar" pictograma="cerrar" etiqueta="minijuegos.comun.salir.mapa.oculto" data-gamepad-back onClick={onSalir} />
     <div className="ventana-dibujo previa-guardian">{guardian}</div>
     <p className="juntos">{regla}</p>
     {ayudaAdultos.map((ayuda) => <p className="texto-adultos" key={ayuda}>{ayuda}</p>)}

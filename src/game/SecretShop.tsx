@@ -7,6 +7,7 @@ import {
   shopRewardSeconds, snapShopCat, type ShopCat, type ShopClock,
 } from "./secretShopGame";
 import "./secretShop.css";
+import { t } from "../textos/index.ts";
 
 type SecretShopProps = {
   world: Level["world"];
@@ -25,7 +26,7 @@ const kittenColors: Record<Level["world"], string> = {
   17: "#84cce9",
 };
 const partNames = ["orejas", "carita", "patitas"];
-const prompts = ["¡Para las orejas!", "¡Para la carita!", "¡Para las patitas!"];
+const prompts = [t("minijuegos.tienda.para-las-orejas.rotulo"), t("minijuegos.tienda.para-la-carita.rotulo"), t("minijuegos.tienda.para-las-patitas.rotulo")];
 
 export function SecretShop({ world, paused, reduceMotion, onResult, onLeave, playSound }: SecretShopProps) {
   const catSet = getSecretShopCatSet(world);
@@ -126,11 +127,11 @@ export function SecretShop({ world, paused, reduceMotion, onResult, onLeave, pla
       >
         {!roomFailed && <img className="secret-shop-room" src="./assets/worlds/secret-shop-room-v1.png" alt="" onError={() => setRoomFailed(true)} />}
         <header>
-          <h2 id={titleId}>El rincón de los gatitos</h2>
-          <p>¡Junta las tres partes del mismo gatito!</p>
+          <h2 id={titleId}>{t("minijuegos.tienda.el-rincon-de-los.juntos")}</h2>
+          <p>{t("minijuegos.tienda.junta-las-tres-partes.juntos")}</p>
         </header>
         <img key={kittenSource} className="secret-shop-preload" src={kittenSource} alt="" onLoad={() => setLoadedSource(kittenSource)} onError={() => setFailedSource(kittenSource)} />
-        <div className="secret-shop-bands" aria-label="Retrato del gatito">
+        <div className="secret-shop-bands" aria-label={t("minijuegos.tienda.retrato-del-gatito.oculto")}>
           {[0, 1, 2].map((row) => {
             const locked = stopped[row];
             const phase = locked ?? shopPhase(activeMs, row, reduceMotion);
@@ -170,8 +171,8 @@ export function SecretShop({ world, paused, reduceMotion, onResult, onLeave, pla
         <div className="secret-shop-feedback" role="status" aria-live="polite" aria-atomic="true">
           {result !== null ? <>
             <span className="secret-shop-stars" aria-hidden="true">{"★".repeat(result)}</span>
-            <p>{seconds ? `¡${seconds} segundos de estrellas al salir!` : "¡Qué gatito tan divertido!"}</p>
-          </> : <p>{frozen ? "Descansamos un poquito." : `${prompts[stopped.length]} (${stopped.length + 1}/3)`}</p>}
+            <p>{seconds ? t("minijuegos.tienda.seconds-segundos-de-estrellas.juntos", { seconds }) : t("minijuegos.tienda.que-gatito-tan-divertido.rotulo")}</p>
+          </> : <p>{frozen ? t("minijuegos.tienda.descansamos-un-poquito.juntos") : `${prompts[stopped.length]} (${stopped.length + 1}/3)`}</p>}
         </div>
         <div className="secret-shop-controls">
           <button
@@ -181,13 +182,13 @@ export function SecretShop({ world, paused, reduceMotion, onResult, onLeave, pla
             data-testid="shop-stop"
             disabled={frozen}
             onClick={result === null ? stopBand : onLeave}
-          >{result === null ? "¡Parar!" : "Volver a jugar fuera"}</button>
+          >{result === null ? t("minijuegos.tienda.parar.rotulo") : t("minijuegos.tienda.volver-a-jugar-fuera.rotulo")}</button>
           <button type="button" className="secret-shop-pause" data-testid="shop-pause" onClick={togglePause}>
-            {localPaused ? "Seguir" : "Pausa"}
+            {localPaused ? t("minijuegos.tienda.seguir.rotulo") : t("minijuegos.tienda.pausa.rotulo")}
           </button>
         </div>
-        <p className="secret-shop-hint">3 iguales: ★ 12 s · 2 iguales: ★ 5 s</p>
-        {imageFailed && <p className="secret-shop-notice">El dibujo no ha llegado. ¡Jugamos con gatitos de colores!</p>}
+        <p className="secret-shop-hint">{t("minijuegos.tienda.3-iguales-12-s.juntos")}</p>
+        {imageFailed && <p className="secret-shop-notice">{t("minijuegos.tienda.el-dibujo-no-ha.juntos")}</p>}
       </div>
     </Dialog>
   );

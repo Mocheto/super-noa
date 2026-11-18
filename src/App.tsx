@@ -153,7 +153,7 @@ export default function App() {
   const deferEnrollment = useCallback((message: string) => {
     enrollmentRetryAtRef.current = Date.now() + ENROLLMENT_RETRY_MS;
     setEnrollmentDeferred(true);
-    setEnrollmentMessage(`${message} Puedes seguir jugando. Te pediremos un alias cuando vuelva el tablón, en el mapa o al inicio.`);
+    setEnrollmentMessage(t("adultos.app.message-puedes-seguir-jugando", { message }));
     finishEnrollment();
   }, [finishEnrollment]);
 
@@ -196,7 +196,7 @@ export default function App() {
         window.requestAnimationFrame(() => rankingAliasRef.current?.focus());
       }
     } catch (error) {
-      const message = rankingErrorMessage(error, "El tablón no está disponible.");
+      const message = rankingErrorMessage(error, t("adultos.app.el-tablon-no-esta"));
       if (enrollmentFailure(error) === "validate" || enrollmentFailure(error) === "storage") {
         setRankingDevice(readRankingDevice());
         setRankingAlias(readRankingDevice()?.alias ?? "");
@@ -255,7 +255,7 @@ export default function App() {
       checking = true;
       try { await checkRankingAvailability(); }
       catch (error) {
-        if (!cancelled && !rankingJoiningRef.current) deferEnrollment(rankingErrorMessage(error, "El tablón no está disponible."));
+        if (!cancelled && !rankingJoiningRef.current) deferEnrollment(rankingErrorMessage(error, t("adultos.app.el-tablon-no-esta")));
       } finally { checking = false; }
     };
     const interval = window.setInterval(() => void check(), ENROLLMENT_RETRY_MS);
@@ -289,7 +289,7 @@ export default function App() {
       } catch (error) {
         if (!cancelled && currentAttempt === attempt) {
           setRankingSyncState("pending");
-          setRankingSyncMessage(rankingErrorMessage(error, "No pude enviar tus logros."));
+          setRankingSyncMessage(rankingErrorMessage(error, t("adultos.app.no-pude-enviar-tus")));
         }
       }
     };
@@ -319,7 +319,7 @@ export default function App() {
       (source) => new Audio(source),
       (error) => {
         console.warn("No se pudo reproducir la música.", error);
-        setAudioMessage("La música no ha podido sonar. Prueba a activar el sonido otra vez.");
+        setAudioMessage(t("adultos.app.la-musica-no-ha"));
       },
       () => setAudioMessage(""),
     );
@@ -504,7 +504,7 @@ export default function App() {
       if (rankingDevice) setRankingRetry((current) => current + 1);
       setRankingPlayers(await loadRanking());
     } catch (error) {
-      setRankingMessage(rankingErrorMessage(error, "No pude actualizar el tablón."));
+      setRankingMessage(rankingErrorMessage(error, t("adultos.app.no-pude-actualizar-el")));
     } finally {
       setRankingLoading(false);
     }
@@ -526,13 +526,13 @@ export default function App() {
       setEnrollmentDeferred(false);
       setEnrollmentMessage("");
       setEnrollmentStorageBlocked(false);
-      setRankingMessage(`¡Hola, ${device.alias}! Tu tarjeta está lista.`);
+      setRankingMessage(t("adultos.app.hola-alias-tu-tarjeta", { alias: device.alias }));
       if (enrollmentRequiredRef.current) finishEnrollment();
       else void refreshRanking();
     } catch (error) {
       const pendingDevice = readRankingDevice();
       setRankingDevice(pendingDevice);
-      const message = rankingErrorMessage(error, "No pude guardar ese alias.");
+      const message = rankingErrorMessage(error, t("adultos.app.no-pude-guardar-ese"));
       setRankingMessage(message);
       setEnrollmentStorageBlocked(enrollmentFailure(error) === "storage");
       if (enrollmentRequiredRef.current && enrollmentFailure(error) === "defer") deferEnrollment(message);
@@ -743,7 +743,7 @@ export default function App() {
   };
 
   const resetProgress = () => {
-    if (!window.confirm("¿Empezar de nuevo? Se borrarán las pantallas, las pegatinas y los jefes amigos guardados. Tu alias, las manzanas de toda la aventura y su fecha se conservan.")) return;
+    if (!window.confirm(t("adultos.app.empezar-de-nuevo-se"))) return;
     setMapReturnWorld(undefined);
     setLevelRun(0);
     setProgress(resetCampaignProgress);
@@ -758,10 +758,10 @@ export default function App() {
 
   return (
     <main className={`app-shell ${reduceMotion ? "reduce-motion" : ""} ${touchControls === "always" ? "touch-controls-always" : ""}`}>
-      {saveError && <p className="save-warning" role="alert">No se pudo guardar la partida en este dispositivo. Puedes seguir jugando, pero el progreso podría perderse al cerrar.</p>}
-      {enrollmentChecking && <p className="ranking-sync-warning" role="status">Conectando el tablón en segundo plano…</p>}
+      {saveError && <p className="save-warning" role="alert">{t("adultos.app.no-se-pudo-guardar")}</p>}
+      {enrollmentChecking && <p className="ranking-sync-warning" role="status">{t("adultos.app.conectando-el-tablon-en")}</p>}
       {enrollmentMessage && <p className="ranking-sync-warning" role="status">{enrollmentMessage}</p>}
-      {rankingDevice && rankingSyncState === "pending" && <p className="ranking-sync-warning" role="status">Tus logros del tablón están pendientes. {rankingSyncMessage} {saveError ? "Puedes seguir jugando, aunque este navegador no pudo guardar la partida." : "Tu partida sigue guardada en este dispositivo."} <button type="button" onClick={() => setRankingRetry((current) => current + 1)}>Reintentar envío</button></p>}
+      {rankingDevice && rankingSyncState === "pending" && <p className="ranking-sync-warning" role="status">{t("adultos.app.tus-logros-del-tablon")} {rankingSyncMessage} {saveError ? t("adultos.app.puedes-seguir-jugando-aunque") : t("adultos.app.tu-partida-sigue-guardada")} <button type="button" onClick={() => setRankingRetry((current) => current + 1)}>{t("adultos.app.reintentar-envio")}</button></p>}
       {audioMessage && !muted && musicVolume > 0 && <p className="audio-warning" role="status">{audioMessage}</p>}
       {screen === "home" && (
         <section className="home-screen" aria-labelledby="game-title">
@@ -782,9 +782,9 @@ export default function App() {
             <button type="button" onClick={() => setMuted((value) => !value)}><Texto clave={muted ? "inicio.sinSonido.rotulo" : "inicio.sonido.rotulo"} /></button>
             <button type="button" onClick={() => openCollection("stickers")}><Texto clave="inicio.album.rotulo" variables={{ n: progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length, total: albumStickers.length }} /></button>
             <button type="button" onClick={() => openCollection("bosses")}><Texto clave="inicio.jefes.rotulo" variables={{ n: knownBosses, total: bossLevels.length }} /></button>
-            <button type="button" onClick={openRanking}>🌍 Tablón mundial</button>
-            <button type="button" onClick={() => setShowSettings(true)}>⚙ Ajustes</button>
-            <button type="button" onClick={() => setShowCredits(true)}>Créditos</button>
+            <button type="button" onClick={openRanking}>{t("adultos.app.tablon-mundial")}</button>
+            <button type="button" onClick={() => setShowSettings(true)}>{t("adultos.app.ajustes")}</button>
+            <button type="button" onClick={() => setShowCredits(true)}>{t("adultos.app.creditos")}</button>
           </nav>
         </section>
       )}
@@ -797,7 +797,7 @@ export default function App() {
               <span className="apple-total"><GameAssetIcon kind="apple" /> {totalApples}</span>
               <button className="album-button" type="button" onClick={() => openCollection("stickers")} aria-label={t("mapa.abrirAlbum.oculto")}><PixelIcon kind="sparkle" /> {progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length}/{albumStickers.length}</button>
               <button className="album-button" type="button" onClick={() => openCollection("bosses")} aria-label={t("mapa.abrirJefes.oculto")}>★ {knownBosses}/{bossLevels.length}</button>
-              <button className="album-button" type="button" onClick={openRanking}>🌍 Tablón</button>
+              <button className="album-button" type="button" onClick={openRanking}>{t("adultos.app.tablon")}</button>
               <button className="icon-button" type="button" onClick={() => setShowSettings(true)} aria-label={t("mapa.abrirAjustes.oculto")}>⚙</button>
               <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label={t("mapa.volverInicio.oculto")}>⌂</button>
             </div>
@@ -979,22 +979,22 @@ export default function App() {
 
       {showSettings && (
         <Dialog labelledBy="settings-title" className="game-modal settings-modal" onClose={() => setShowSettings(false)}>
-          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowSettings(false)} aria-label="Cerrar">×</button>
-          <p className="eyebrow">A tu manera</p><h2 id="settings-title">Ajustes de juego</h2>
-          <p>Estos ajustes se guardan en este dispositivo.</p>
+          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowSettings(false)} aria-label={t("adultos.app.cerrar.oculto")}>×</button>
+          <p className="eyebrow">{t("adultos.app.a-tu-manera")}</p><h2 id="settings-title">{t("adultos.app.ajustes-de-juego")}</h2>
+          <p>{t("adultos.app.estos-ajustes-se-guardan")}</p>
           <div className="settings-group">
-            <label htmlFor="music-volume">Música <output>{Math.round(musicVolume)}%</output></label>
+            <label htmlFor="music-volume">{t("adultos.app.musica")} <output>{Math.round(musicVolume)}%</output></label>
             <input id="music-volume" type="range" min="0" max="100" value={musicVolume} onChange={(event) => { writeStorage(`${MUSIC_VOLUME_KEY}-configured`, "true"); setMusicVolume(Number(event.target.value)); }} />
-            <label htmlFor="effects-volume">Efectos <output>{Math.round(effectsVolume)}%</output></label>
+            <label htmlFor="effects-volume">{t("adultos.app.efectos")} <output>{Math.round(effectsVolume)}%</output></label>
             <input id="effects-volume" type="range" min="0" max="100" value={effectsVolume} onChange={(event) => { writeStorage(`${EFFECTS_VOLUME_KEY}-configured`, "true"); setEffectsVolume(Number(event.target.value)); }} />
           </div>
-          <div className="settings-toggle"><input id="reduce-motion" type="checkbox" checked={reduceMotion} onChange={(event) => setReduceMotion(event.target.checked)} /><label htmlFor="reduce-motion"><strong>Movimiento tranquilo</strong><small>Reduce destellos y animaciones rápidas.</small></label></div>
-          <fieldset className="settings-controls"><legend>Controles táctiles</legend>
-            <label><input type="radio" name="touch-controls" checked={touchControls === "auto"} onChange={() => setTouchControls("auto")} /> Automáticos en móvil</label>
-            <label><input type="radio" name="touch-controls" checked={touchControls === "always"} onChange={() => setTouchControls("always")} /> Siempre visibles</label>
+          <div className="settings-toggle"><input id="reduce-motion" type="checkbox" checked={reduceMotion} onChange={(event) => setReduceMotion(event.target.checked)} /><label htmlFor="reduce-motion"><strong>{t("adultos.app.movimiento-tranquilo")}</strong><small>{t("adultos.app.reduce-destellos-y-animaciones")}</small></label></div>
+          <fieldset className="settings-controls"><legend>{t("adultos.app.controles-tactiles")}</legend>
+            <label><input type="radio" name="touch-controls" checked={touchControls === "auto"} onChange={() => setTouchControls("auto")} /> {t("adultos.app.automaticos-en-movil")}</label>
+            <label><input type="radio" name="touch-controls" checked={touchControls === "always"} onChange={() => setTouchControls("always")} /> {t("adultos.app.siempre-visibles")}</label>
           </fieldset>
-          <p className="settings-help"><strong>Teclado:</strong> flechas o A/D para caminar, espacio para saltar y X/K para lanzar lana. <strong>Mando:</strong> cruceta o palanca para moverte y elegir opciones, A para saltar o confirmar, B para volver y Start para pausar.</p>
-          <button className="pixel-button primary" type="button" onClick={() => setShowSettings(false)}>Listo</button>
+          <p className="settings-help"><strong>{t("adultos.app.teclado")}</strong> {t("adultos.app.flechas-o-a-d")} <strong>{t("adultos.app.mando")}</strong> {t("adultos.app.cruceta-o-palanca-para")}</p>
+          <button className="pixel-button primary" type="button" onClick={() => setShowSettings(false)}>{t("adultos.app.listo")}</button>
         </Dialog>
       )}
 
@@ -1021,13 +1021,13 @@ export default function App() {
 
       {showCredits && (
         <Dialog labelledBy="credits-title" className="game-modal credits-modal" onClose={() => setShowCredits(false)}>
-          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowCredits(false)} aria-label="Cerrar">×</button>
-          <p className="eyebrow">Hecho con cariño</p><h2 id="credits-title">Créditos</h2>
-          <p><strong>Super Noa</strong> es un juego original inspirado en los plataformas familiares de 8 bits.</p>
-          <p>Personaje creado para este proyecto a partir de referencias privadas. Las fotografías originales no forman parte de la web.</p>
-          <p>Todas las aventuras tienen una melodía diferente. Algunas pistas proceden de <a href="https://opengameart.org/content/platformer-chiptunes" target="_blank" rel="noreferrer">Platformer Chiptunes</a>, de Guy G. Gamerson, publicado con licencia CC0; las demás son composiciones originales para Super Noa.</p>
-          <p>Los guardianes finales y las miniaturas pixel art de los mundos son diseños originales generados para este proyecto. Efectos de sonido generados en el navegador; escenarios jugables, interfaz y código creados para Super Noa.</p>
-          <button className="pixel-button primary" type="button" onClick={() => setShowCredits(false)}>Cerrar</button>
+          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowCredits(false)} aria-label={t("adultos.app.cerrar.oculto")}>×</button>
+          <p className="eyebrow">{t("adultos.app.hecho-con-carino")}</p><h2 id="credits-title">{t("adultos.app.creditos")}</h2>
+          <p><strong>{t("adultos.app.super-noa")}</strong> {t("adultos.app.es-un-juego-original")}</p>
+          <p>{t("adultos.app.personaje-creado-para-este")}</p>
+          <p>{t("adultos.app.todas-las-aventuras-tienen")} <a href="https://opengameart.org/content/platformer-chiptunes" target="_blank" rel="noreferrer">{t("adultos.app.platformer-chiptunes")}</a>{t("adultos.app.de-guy-g-gamerson")}</p>
+          <p>{t("adultos.app.los-guardianes-finales-y")}</p>
+          <button className="pixel-button primary" type="button" onClick={() => setShowCredits(false)}>{t("adultos.app.cerrar-2")}</button>
         </Dialog>
       )}
 
@@ -1107,28 +1107,28 @@ export default function App() {
       )}
       {showRanking && (
         <Dialog labelledBy="ranking-title" className="game-modal ranking-modal" onClose={enrollmentRequired ? undefined : () => setShowRanking(false)}>
-          {!enrollmentRequired && <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowRanking(false)} aria-label="Cerrar">×</button>}
+          {!enrollmentRequired && <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowRanking(false)} aria-label={t("adultos.app.cerrar.oculto")}>×</button>}
           <div className="ranking-heading">
             <span className="ranking-trophy" aria-hidden="true">★</span>
-            <div><p className="eyebrow">Aventureras y aventureros</p><h2 id="ranking-title">{enrollmentRequired ? "Tu alias para la aventura" : "Tablón mundial"}</h2></div>
+            <div><p className="eyebrow">{t("adultos.app.aventureras-y-aventureros")}</p><h2 id="ranking-title">{enrollmentRequired ? t("adultos.app.tu-alias-para-la") : t("adultos.app.tablon-mundial-2")}</h2></div>
           </div>
-          {enrollmentRequired && <p>Antes de jugar, elige un alias de fantasía para guardar tus logros en el tablón.</p>}
-          {!isEnrolled(rankingDevice) ? <form className="ranking-join" onSubmit={(event) => { event.preventDefault(); void joinRanking(); }}><label htmlFor="ranking-alias">Tu alias de aventura</label><input ref={rankingAliasRef} data-gamepad-default id="ranking-alias" value={rankingDevice?.registrationPending ? rankingDevice.alias : rankingAlias} onChange={(event) => setRankingAlias(event.target.value)} readOnly={Boolean(rankingDevice?.registrationPending)} maxLength={16} disabled={rankingJoining} placeholder="Por ejemplo, Moche" autoComplete="off" aria-describedby="ranking-alias-help" /><button className="pixel-button primary" type="submit" disabled={rankingJoining}>{rankingJoining ? "Preparando tu tarjeta…" : rankingDevice?.registrationPending ? "Reintentar mi tarjeta" : enrollmentRequired ? "Guardar alias y jugar" : "¡Salir al tablón!"}</button><small id="ranking-alias-help">Solo compartimos tu alias y tus logros. No pongas tu nombre real.{rankingDevice?.registrationPending ? " Recuperaremos tu tarjeta pendiente con el mismo alias." : ""}</small></form> : <><p className="ranking-welcome">¡Hola, {rankingDevice!.alias}!</p><p className="ranking-sync-status" role="status">{rankingSyncState === "saved" ? "Tus logros ya están en el tablón." : rankingSyncState === "pending" ? `Envío pendiente. ${rankingSyncMessage}` : "Enviando tus logros…"}</p></>}
+          {enrollmentRequired && <p>{t("adultos.app.antes-de-jugar-elige")}</p>}
+          {!isEnrolled(rankingDevice) ? <form className="ranking-join" onSubmit={(event) => { event.preventDefault(); void joinRanking(); }}><label htmlFor="ranking-alias">{t("adultos.app.tu-alias-de-aventura")}</label><input ref={rankingAliasRef} data-gamepad-default id="ranking-alias" value={rankingDevice?.registrationPending ? rankingDevice.alias : rankingAlias} onChange={(event) => setRankingAlias(event.target.value)} readOnly={Boolean(rankingDevice?.registrationPending)} maxLength={16} disabled={rankingJoining} placeholder={t("adultos.app.por-ejemplo-moche")} autoComplete="off" aria-describedby="ranking-alias-help" /><button className="pixel-button primary" type="submit" disabled={rankingJoining}>{rankingJoining ? t("adultos.app.preparando-tu-tarjeta") : rankingDevice?.registrationPending ? t("adultos.app.reintentar-mi-tarjeta") : enrollmentRequired ? t("adultos.app.guardar-alias-y-jugar") : t("adultos.app.salir-al-tablon")}</button><small id="ranking-alias-help">{t("adultos.app.solo-compartimos-tu-alias")}{rankingDevice?.registrationPending ? t("adultos.app.recuperaremos-tu-tarjeta-pendiente") : ""}</small></form> : <><p className="ranking-welcome">{t("adultos.app.hola")} {rankingDevice!.alias}!</p><p className="ranking-sync-status" role="status">{rankingSyncState === "saved" ? t("adultos.app.tus-logros-ya-estan") : rankingSyncState === "pending" ? t("adultos.app.envio-pendiente-rankingsyncmessage", { rankingSyncMessage }) : t("adultos.app.enviando-tus-logros")}</p></>}
           {rankingMessage && <p className="ranking-message" role="status">{rankingMessage}</p>}
-          {enrollmentRequired && enrollmentStorageBlocked && <><p>No podemos guardar tu tarjeta en este navegador. Puedes permitir el almacenamiento y reintentar, o jugar sin conexión al tablón por ahora.</p><button className="pixel-button" type="button" disabled={rankingJoining} onClick={() => deferEnrollment("El navegador no permite guardar tu tarjeta del ranking.")}>Jugar sin guardar tarjeta</button></>}
+          {enrollmentRequired && enrollmentStorageBlocked && <><p>{t("adultos.app.no-podemos-guardar-tu")}</p><button className="pixel-button" type="button" disabled={rankingJoining} onClick={() => deferEnrollment(t("adultos.app.el-navegador-no-permite"))}>{t("adultos.app.jugar-sin-guardar-tarjeta")}</button></>}
           {!enrollmentRequired && <><ol className="ranking-list">{rankingPlayers.map((player, index) => {
             const position = index + 1;
             const isCurrentPlayer = rankingDevice?.alias.toLocaleLowerCase("es") === player.alias.toLocaleLowerCase("es");
             return <li className={`${position <= 3 ? `ranking-podium ranking-place-${position}` : ""} ${isCurrentPlayer ? "is-current-player" : ""}`} key={`${player.alias}-${index}`}>
-              <span className="ranking-position" aria-label={`Puesto ${position}`}>{position}</span>
+              <span className="ranking-position" aria-label={t("adultos.app.puesto-position.oculto", { position })}>{position}</span>
               <div className="ranking-player">
-                <div className="ranking-player-name"><strong>{player.alias}</strong>{isCurrentPlayer && <em>Tú</em>}</div>
-                <div className="ranking-stats">{player.campaignWorld != null && player.campaignWorld > 0 && <span>🌍 Etapa {player.campaignWorld}/15</span>}<span>🚩 {player.completedLevels}/{campaignLevelCount} pantallas</span><span>★ {player.stickers}/51 pegatinas</span><span>🤝 {player.bossChallenges}/17 retos de amistad</span><span>🍎 {player.totalApples === null ? "Total sin datos" : `${player.totalApples.toLocaleString("es-ES")} en toda la aventura`}</span><span>{player.achievedAt === null ? "Fecha del progreso: sin datos" : `Progreso logrado el ${new Date(player.achievedAt).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })}`}</span></div>
+                <div className="ranking-player-name"><strong>{player.alias}</strong>{isCurrentPlayer && <em>{t("adultos.app.tu")}</em>}</div>
+                <div className="ranking-stats">{player.campaignWorld != null && player.campaignWorld > 0 && <span>{t("adultos.app.etapa")} {player.campaignWorld}/15</span>}<span>🚩 {player.completedLevels}/{campaignLevelCount} {t("adultos.app.pantallas")}</span><span>★ {player.stickers}{t("adultos.app.51-pegatinas")}</span><span>🤝 {player.bossChallenges}{t("adultos.app.17-retos-de-amistad")}</span><span>🍎 {player.totalApples === null ? t("adultos.app.total-sin-datos") : t("adultos.app.v-en-toda-la", { v: player.totalApples.toLocaleString("es-ES") })}</span><span>{player.achievedAt === null ? t("adultos.app.fecha-del-progreso-sin") : t("adultos.app.progreso-logrado-el-v", { v: new Date(player.achievedAt).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" }) })}</span></div>
               </div>
             </li>;
           })}</ol>
-          {rankingPlayers.length === 0 && !rankingMessage && <p className="ranking-empty">Aún no hay nadie. ¡Puedes ser la primera aventurera!</p>}
-          <div className="ranking-footer"><button className="pixel-button ranking-refresh" type="button" disabled={rankingLoading} onClick={() => void refreshRanking()}><span aria-hidden="true">↻</span> {rankingLoading ? "Actualizando…" : "Actualizar tablón"}</button></div></>}
+          {rankingPlayers.length === 0 && !rankingMessage && <p className="ranking-empty">{t("adultos.app.aun-no-hay-nadie")}</p>}
+          <div className="ranking-footer"><button className="pixel-button ranking-refresh" type="button" disabled={rankingLoading} onClick={() => void refreshRanking()}><span aria-hidden="true">↻</span> {rankingLoading ? t("adultos.app.actualizando") : t("adultos.app.actualizar-tablon")}</button></div></>}
         </Dialog>
       )}
     </main>

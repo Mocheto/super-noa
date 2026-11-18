@@ -3,6 +3,7 @@ import { getImage } from "./assets";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createFlight, FLIGHT_SECONDS, PLANE_Y, SKY_HEIGHT, SKY_WIDTH, stepFlight, TOTAL_STARS, type Flight, type FlightEvent } from "./avioneta";
 import "./avioneta.css";
+import { t } from "../textos/index.ts";
 
 type SoundKind = "apple" | "block" | "cat" | "jump" | "hurt" | "stomp" | "yarn" | "checkpoint" | "goal" | "sticker" | "howl" | "snort" | "cannon" | "countdown";
 type Props = {
@@ -153,7 +154,7 @@ function drawFlight(context: CanvasRenderingContext2D, flight: Flight, scroll: n
   if (flight.t < 4.5) {
     context.save();
     context.font = "bold 18px monospace"; context.textAlign = "center";
-    const text = gift && flight.t < 2.2 ? "¡La Reina Arcoíris te regala su avioneta!" : "¡Lanza pompas a los nubarrones!";
+    const text = gift && flight.t < 2.2 ? t("minijuegos.avioneta.la-reina-arcoiris-te.juntos") : t("minijuegos.avioneta.lanza-pompas-a-los.juntos");
     context.fillStyle = "rgba(42,24,55,.88)"; context.fillRect(180, 250, 600, 46);
     context.fillStyle = "#fff6e3"; context.fillText(text, SKY_WIDTH / 2, 280);
     context.restore();
@@ -227,19 +228,19 @@ export function AvionetaGame({ paused, muted, musicVolume, reduceMotion, gift, b
   );
 
   return (
-    <section className={`avioneta ${reduceMotion ? "is-calm" : ""}`} aria-label="La avioneta de las nubes">
-      <canvas ref={canvasRef} width={SKY_WIDTH} height={SKY_HEIGHT} aria-label="Cielo de la avioneta: mueve la avioneta y lanza pompas a los nubarrones" />
-      <button className="avioneta-leave" type="button" data-gamepad-back onClick={() => onExit(null)}>Volver al mapa</button>
+    <section className={`avioneta ${reduceMotion ? "is-calm" : ""}`} aria-label={t("minijuegos.avioneta.la-avioneta-de-las.oculto")}>
+      <canvas ref={canvasRef} width={SKY_WIDTH} height={SKY_HEIGHT} aria-label={t("minijuegos.avioneta.cielo-de-la-avioneta.oculto")} />
+      <button className="avioneta-leave" type="button" data-gamepad-back onClick={() => onExit(null)}>{t("minijuegos.avioneta.volver-al-mapa.rotulo")}</button>
       <div className="avioneta-controls">
-        {pad("left", "Mover a la izquierda", "is-left")}
-        {pad("fire", "Lanzar pompa", "is-fire")}
-        {pad("right", "Mover a la derecha", "is-right")}
+        {pad("left", t("minijuegos.avioneta.mover-a-la-izquierda.rotulo"), "is-left")}
+        {pad("fire", t("minijuegos.avioneta.lanzar-pompa.rotulo"), "is-fire")}
+        {pad("right", t("minijuegos.avioneta.mover-a-la-derecha.rotulo"), "is-right")}
       </div>
       {result !== null && (
         <div className="avioneta-end" role="dialog" aria-labelledby="avioneta-end-title">
-          <h2 id="avioneta-end-title">{result === TOTAL_STARS ? "¡Todas las estrellas!" : "¡Has cruzado el arcoíris!"}</h2>
-          <p>Has recogido {result} de {TOTAL_STARS} estrellas.{result > bestStars ? " ¡Nueva mejor marca!" : ""}</p>
-          <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => onExit(result)}>Volver al mapa</button>
+          <h2 id="avioneta-end-title">{result === TOTAL_STARS ? t("minijuegos.avioneta.todas-las-estrellas.rotulo") : t("minijuegos.avioneta.has-cruzado-el-arcoiris.rotulo")}</h2>
+          <p>{t("minijuegos.avioneta.recogidas.juntos", { n: result, total: TOTAL_STARS })}{result > bestStars ? <> <b>{t("minijuegos.avioneta.nueva-marca.rotulo")}</b></> : ""}</p>
+          <button className="pixel-button primary" type="button" data-gamepad-default onClick={() => onExit(result)}>{t("minijuegos.avioneta.volver-al-mapa.rotulo")}</button>
         </div>
       )}
     </section>

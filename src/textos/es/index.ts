@@ -1,3 +1,4 @@
+import { adultos } from "./adultos.ts";
 import { minijuegos } from "./minijuegos.ts";
 import { duelos } from "./duelos.ts";
 import { guardianes } from "./guardianes.ts";
@@ -21,6 +22,7 @@ export const es = {
   inicio,
   mapa,
   partida,
+  adultos,
   minijuegos,
   duelos,
   guardianes,

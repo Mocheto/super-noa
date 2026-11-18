@@ -20,7 +20,8 @@ const archivosDePartitura = /(beeNinja|catParty|armoniaDrum|meriendaJabatos)\.ts
 
 function esTextoVisible(texto: string, esTextoJsx = false): boolean {
   const limpio = texto.trim();
-  if (!limpio || !/[A-Za-zÁÉÍÓÚÑáéíóúñ¡¿]/.test(limpio)) return false;
+  // Sin letras fuera de las variables («★ ${n} / ${total}») es un contador, no texto.
+  if (!limpio || !/[A-Za-zÁÉÍÓÚÑáéíóúñ¡¿]/.test(limpio.replace(/\$\{[^}]*\}/g, ""))) return false;
   // Entre las etiquetas JSX no hay nombres de clase: cualquier palabra es texto.
   if (esTextoJsx) return true;
   if (!(/[ áéíóúñÁÉÍÓÚÑ¡¿!?…]/.test(limpio) || /^[A-ZÁÉÍÓÚÑ¡¿]/.test(limpio))) return false;
@@ -81,6 +82,8 @@ export function textosSueltos(archivo: string, codigo: string): TextoSuelto[] {
     }
     if (ts.isLiteralTypeNode(padre) || ts.isCaseClause(padre) || ts.isElementAccessExpression(padre)) return;
     if (ts.isBinaryExpression(padre) && /[=!]==?/.test(padre.operatorToken.getText(fuente))) return;
+    // `this.name = "RankingError"`: el nombre de una clase de error no es texto visible.
+    if (ts.isBinaryExpression(padre) && padre.operatorToken.kind === ts.SyntaxKind.EqualsToken && padre.left.getText(fuente).endsWith(".name")) return;
     if (archivosDePartitura.test(archivo) && !contexto) return;
     if (!esTextoVisible(texto, ts.isJsxText(nodo))) return;
     encontrados.push({ archivo, linea: fuente.getLineAndCharacterOfPosition(nodo.getStart(fuente)).line + 1, texto });

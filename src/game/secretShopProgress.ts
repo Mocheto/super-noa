@@ -2,6 +2,7 @@ import { levels } from "./levels.ts";
 import type { Progress } from "./progress.ts";
 import type { Level } from "./types.ts";
 import { worldAvailable } from "./worldMapData.ts";
+import { t } from "../textos/index.ts";
 
 export type SecretShopVisit = { visited: boolean; completed: boolean };
 export type SecretShopVisits = Record<string, SecretShopVisit>;
@@ -34,7 +35,7 @@ export function getSecretShopBadge(level: Level, progress: Progress): SecretShop
   if (!level.secretShop || !worldAvailable(level.world, progress)) return null;
   const visit = progress.secretShops?.[level.secretShop.id];
   const state = visit?.completed ? "completed" : visit?.visited ? "visited" : "available";
-  const label = state === "completed" ? "Tienda secreta: reto conseguido" : state === "visited" ? "Tienda secreta: visitada" : "Tienda secreta: por descubrir";
+  const label = state === "completed" ? t("minijuegos.tienda.tienda-secreta-reto-conseguido.juntos") : state === "visited" ? t("minijuegos.tienda.tienda-secreta-visitada.juntos") : t("minijuegos.tienda.tienda-secreta-por-descubrir.juntos");
   return { id: level.secretShop.id, levelId: level.id, state, label };
 }
 

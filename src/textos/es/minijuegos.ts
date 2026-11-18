@@ -1,5 +1,6 @@
 /**
- * Textos de los cuatro minijuegos rítmicos: la abeja ninja, el tambor de Armonía, la merienda de los jabatos y la fiesta de los gatitos.
+ * Textos de los cuatro minijuegos rítmicos (la abeja ninja, el tambor de Armonía, la merienda de los jabatos y la fiesta de los gatitos),
+ * de la avioneta de las nubes y de la tienda secreta.
  * Las claves salen del propio texto (`minijuegos.abeja.practica.rotulo`). Hojas reservadas: `rotulo` (texto para Noa), `juntos` (para leer juntos) y `oculto` (lector de pantalla).
  */
 export const minijuegos = {
@@ -246,5 +247,39 @@ export const minijuegos = {
     "fiesta": { rotulo: "¡FIESTA!" },
     "ensayo": { rotulo: "ENSAYO" },
     "demostracion": { rotulo: "DEMOSTRACION" },
+  },
+  avioneta: {
+    "la-reina-arcoiris-te": { juntos: "¡La Reina Arcoíris te regala su avioneta!" },
+    "lanza-pompas-a-los": { juntos: "¡Lanza pompas a los nubarrones!" },
+    "la-avioneta-de-las": { oculto: "La avioneta de las nubes" },
+    "cielo-de-la-avioneta": { oculto: "Cielo de la avioneta: mueve la avioneta y lanza pompas a los nubarrones" },
+    "volver-al-mapa": { rotulo: "VUELVE AL MAPA" },
+    "mover-a-la-izquierda": { rotulo: "MOVER A LA IZQUIERDA" },
+    "lanzar-pompa": { rotulo: "LANZAR POMPA" },
+    "mover-a-la-derecha": { rotulo: "MOVER A LA DERECHA" },
+    "todas-las-estrellas": { rotulo: "¡TODAS LAS ESTRELLAS!" },
+    "has-cruzado-el-arcoiris": { rotulo: "¡HAS CRUZADO EL ARCOIRIS!" },
+    "recogidas": { juntos: "Has recogido {n} de {total} estrellas." },
+    "nueva-marca": { rotulo: "¡NUEVA MARCA!" },
+  },
+  tienda: {
+    "para-las-orejas": { rotulo: "¡PARA LAS OREJAS!" },
+    "para-la-carita": { rotulo: "¡PARA LA CARITA!" },
+    "para-las-patitas": { rotulo: "¡PARA LAS PATITAS!" },
+    "el-rincon-de-los": { juntos: "El rincón de los gatitos" },
+    "junta-las-tres-partes": { juntos: "¡Junta las tres partes del mismo gatito!" },
+    "retrato-del-gatito": { oculto: "Retrato del gatito" },
+    "seconds-segundos-de-estrellas": { juntos: "¡{seconds} segundos de estrellas al salir!" },
+    "que-gatito-tan-divertido": { rotulo: "¡QUE GATITO TAN DIVERTIDO!" },
+    "descansamos-un-poquito": { juntos: "Descansamos un poquito." },
+    "parar": { rotulo: "¡PARAR!" },
+    "volver-a-jugar-fuera": { rotulo: "VOLVER A JUGAR FUERA" },
+    "seguir": { rotulo: "SEGUIR" },
+    "pausa": { rotulo: "PAUSA" },
+    "3-iguales-12-s": { juntos: "3 iguales: ★ 12 s · 2 iguales: ★ 5 s" },
+    "el-dibujo-no-ha": { juntos: "El dibujo no ha llegado. ¡Jugamos con gatitos de colores!" },
+    "tienda-secreta-reto-conseguido": { juntos: "Tienda secreta: reto conseguido" },
+    "tienda-secreta-visitada": { juntos: "Tienda secreta: visitada" },
+    "tienda-secreta-por-descubrir": { juntos: "Tienda secreta: por descubrir" },
   },
 } as const;

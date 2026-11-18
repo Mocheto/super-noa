@@ -2,10 +2,11 @@ import type { Progress } from "./progress";
 import { readStorage, writeStorage } from "./storage.ts";
 import { campaignLevels } from "./routes.ts";
 import { lifetimeApples, normalizeProgressDate, validProgressDate } from "./progress.ts";
+import { t } from "../textos/index.ts";
 
 const RANKING_URL = "https://rankings.moche-home.es";
 const DEVICE_KEY = "super-noa-ranking-device-v1";
-export const rankingConnectionMessage = "No puedo conectar con el ranking. Tu aventura sigue guardada aquí. Puedes volver a intentarlo.";
+export const rankingConnectionMessage = t("adultos.ranking.sin-conexion");
 
 export type RankingDevice = { id: string; token: string; alias: string; registrationPending?: boolean };
 export type RankingPlayer = { alias: string; world: number; campaignWorld: number | null; completedLevels: number; stickers: number; bossChallenges: number; totalApples: number | null; achievedAt: string | null };

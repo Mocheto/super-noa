@@ -8,7 +8,7 @@ Todo texto visible de Super Noa vive en `src/textos/es/` y se pide por **clave**
 |---|---|
 | `src/textos/es/<zona>.ts` | Los textos en español, una zona por archivo. `es/index.ts` las une. |
 | `src/textos/index.ts` | `t()`, `tClave()`, `partes()`, `textoLienzo()`, `sinPictogramas()`, `puntos()`, `conTextos()`, `existeClave()` y `hojas()`. |
-| `src/textos/Texto.tsx` | `<Texto clave="…" />` y `<Pictogramas texto="…" />` para pintar un texto con sus pictogramas en React. |
+| `src/textos/Texto.tsx` | `<Texto clave="…" />` y `<Pictogramas texto="…" />` para pintar un texto con sus pictogramas en React; `<Pictograma nombre="…" />` suelto, `<Boton clave="…" tipo="seguir" />` y `<BotonControl pictograma="…" etiqueta="….oculto" />`. Sus estilos están en `src/interfaz.css`. |
 | `src/textos/pictogramas.ts` | Los 51 nombres de pictograma y su emoji provisional. |
 | `src/textos/exportar.ts` | Exportación a JSON con plurales ICU; la usa `npm run textos:json`. |
 

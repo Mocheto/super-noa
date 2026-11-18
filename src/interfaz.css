@@ -1,0 +1,150 @@
+/*
+ * Cimientos de la interfaz (mapa «Interfaz para una niña que aprende a leer», issue 138).
+ * Letra para Noa, colores, escala de rótulos, pictogramas a su tamaño y los tres botones comunes.
+ * Las superficies (marco, HUD, ventanas, mapa…) los adoptan en sus propias issues.
+ */
+@import "@fontsource/press-start-2p/latin-400.css";
+
+:root {
+  /* Letras: Press Start 2P para el texto para Noa; la del sistema para el texto para adultos. */
+  --letra-noa: "Press Start 2P", ui-monospace, monospace;
+  --letra-adultos: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Colores comunes de la interfaz */
+  --ciruela: #3d1430;
+  --crema: #fff8e9;
+  --papel: #fff3dc;
+  --dorado: #ffd45f;
+  --verde-boton: #68aa5c;
+  --verde-boton-sombra: #3f7a3a;
+  --rojo-boton: #e2313c;
+  --rojo-boton-sombra: #a51c2c;
+  --lila-control: #5b386c;
+
+  /* Escala del texto para Noa: título, rótulo y etiqueta pequeña (nunca menos de 16 px). */
+  --rotulo-titulo: 32px;
+  --rotulo: 24px;
+  --rotulo-pequeno: 16px;
+
+  /* Botones: alto con palabra y diámetro de los controles redondos. */
+  --boton-alto: 72px;
+  --control: 56px;
+}
+
+/* Móvil apaisado: el título baja a 24 px y los botones a 52 px de alto. */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root {
+    --rotulo-titulo: 24px;
+    --boton-alto: 52px;
+    --control: 48px;
+  }
+}
+
+/* Texto para Noa. Una palabra nunca se parte: un rótulo largo solo puede bajar de línea entre palabras. */
+.texto-noa {
+  font-family: var(--letra-noa);
+  font-weight: 400;
+  font-size: var(--rotulo);
+  line-height: 1.35;
+  letter-spacing: 0;
+  text-transform: none;
+  text-shadow: none;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+.texto-noa.titulo { font-size: var(--rotulo-titulo); }
+.texto-noa.pequeno { font-size: var(--rotulo-pequeno); }
+
+/* Para leer juntos: frase normal, discreta, siempre debajo de su rótulo. */
+.juntos {
+  font-family: var(--letra-adultos);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Pictogramas: cuadrados y en múltiplos enteros del tamaño de la letra.
+   ×1 en botones y HUD (un cuadro de letra); ×2 junto a una palabra de 24 px (`.pictograma-doble`). */
+.pictograma {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-width: 1em;
+  height: 1em;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 1em;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: 0;
+  text-shadow: none;
+  margin: 0;
+  vertical-align: -0.15em;
+  image-rendering: pixelated;
+}
+.pictograma-doble .pictograma, .pictograma.pictograma-doble { font-size: 2em; vertical-align: middle; }
+/* El espacio tras el pictograma lo pone el margen, no la letra: en Press Start 2P un espacio mide una letra entera. */
+.pictograma { margin-inline-end: .3em; }
+.pictograma-doble .pictograma { margin-inline-end: .2em; }
+.boton .pictograma, .boton-control .pictograma { margin: 0; }
+
+/* Botones comunes. Principal: verde para seguir y rojo para ¡A JUGAR!; secundario crema; control redondo sin palabra. */
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: var(--boton-alto);
+  padding: 0 22px;
+  border: 4px solid var(--ciruela);
+  border-radius: 6px;
+  color: var(--ciruela);
+  background: var(--crema);
+  box-shadow: 0 6px 0 var(--ciruela);
+  font-family: var(--letra-noa);
+  font-size: var(--rotulo);
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+.boton:hover { filter: brightness(1.06); }
+.boton:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ciruela); }
+.boton:disabled { cursor: default; filter: grayscale(.6); opacity: .7; }
+.boton-seguir { color: #fff; background: var(--verde-boton); box-shadow: 0 6px 0 var(--ciruela), inset 0 -6px 0 var(--verde-boton-sombra); }
+.boton-jugar { color: #fff; background: var(--rojo-boton); box-shadow: 0 6px 0 var(--ciruela), inset 0 -6px 0 var(--rojo-boton-sombra); }
+.boton-seguir:active, .boton-jugar:active { box-shadow: 0 2px 0 var(--ciruela); }
+
+.boton-control {
+  display: inline-grid;
+  place-items: center;
+  width: var(--control);
+  height: var(--control);
+  padding: 0;
+  border: 4px solid var(--ciruela);
+  border-radius: 50%;
+  color: var(--ciruela);
+  background: var(--crema);
+  box-shadow: 0 4px 0 var(--ciruela);
+  font-size: calc(var(--control) * .42);
+  line-height: 1;
+  cursor: pointer;
+}
+.boton-control:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--ciruela); }
+
+/* Muestra de desarrollo (`?prueba=interfaz`) */
+.muestra-interfaz { min-height: 100vh; display: grid; place-items: center; padding: 24px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left)); background: #25183f; }
+.muestra-papel { display: grid; gap: 14px; justify-items: center; max-width: 900px; padding: 20px 24px 28px; border: 4px solid var(--ciruela); border-radius: 10px; color: var(--ciruela); background: var(--papel); box-shadow: 0 0 0 4px var(--dorado), 0 0 0 8px var(--ciruela); text-align: center; }
+.muestra-papel h1, .muestra-papel p { margin: 0; }
+.muestra-papel h1 { color: var(--ciruela); }
+.muestra-fila { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .boton, .boton-control { transition: none; }
+  .boton:active, .boton-control:active { transform: none; }
+}

@@ -15,6 +15,9 @@ test("cada rótulo cumple la guía de escritura del texto para Noa", () => {
       assert.doesNotMatch(limpio, /[:·…]|\.\.\./, `${clave} no lleva dos puntos, puntos medios ni suspensivos: ${texto}`);
       const palabras = limpio.split(/\s+/).filter((palabra) => /[A-ZÑ0-9]/.test(palabra));
       assert.ok(palabras.length <= 4, `${clave} tiene más de cuatro palabras: ${texto}`);
+      // Una palabra nunca se parte: a 24 px, una caja de rótulo mide 288 px por dentro, doce letras de Press Start 2P.
+      const larga = palabras.reduce((mayor, palabra) => palabra.replace(/[¡!¿?,]/g, "").length > mayor.length ? palabra.replace(/[¡!¿?,]/g, "") : mayor, "");
+      assert.ok(larga.length <= 12, `${clave} tiene una palabra de más de doce letras («${larga}»), que no cabe en 288 px a 24 px: ${texto}`);
     }
   }
 });

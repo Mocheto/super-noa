@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import { anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
 
 export { outputLatencySeconds };
@@ -96,8 +97,9 @@ export function partAt(score: MeriendaScore, pulse: number): Part {
 
 export type Bite = { jabato: number; order: number; pulse: number; fedAt: number | null; missed: boolean };
 export type Jabato = { index: number; kind: JabatoKind; phase: Phase; call: number; bites: Bite[] };
-export type MeriendaRun = { mode: MeriendaMode; score: MeriendaScore; jabatos: Jabato[]; bites: Bite[]; got: number; extra: number };
-export type PressResult = { kind: "fed"; bite: Bite; jabato: Jabato } | { kind: "fsss" };
+/** `got` cuenta todos los bocados dados; la rama y la raya dorada miran `cuenta.raya`, que bajan los «fsss» de la canción. */
+export type MeriendaRun = { mode: MeriendaMode; score: MeriendaScore; jabatos: Jabato[]; bites: Bite[]; got: number; extra: number; cuenta: Raya };
+export type PressResult = { kind: "fed"; bite: Bite; jabato: Jabato } | { kind: "fsss"; resta: boolean } | { kind: "rebote" };
 
 export function createRun(mode: MeriendaMode): MeriendaRun {
   const score = meriendaScores[mode];
@@ -106,24 +108,30 @@ export function createRun(mode: MeriendaMode): MeriendaRun {
     index, kind: item.kind, phase: item.phase, call: callPulse(item),
     bites: bitePulses(item).map((pulse) => ({ jabato: index, order: order++, pulse, fedAt: null, missed: false })),
   }));
-  return { mode, score, jabatos, bites: jabatos.flatMap((item) => item.bites), got: 0, extra: 0 };
+  return { mode, score, jabatos, bites: jabatos.flatMap((item) => item.bites), got: 0, extra: 0, cuenta: nuevaRaya() };
 }
 
 const open = (bite: Bite) => bite.fedAt === null && !bite.missed;
 
 /**
  * Pulsación de la jugadora. Da de comer al bocado libre más cercano a menos de medio pulso; si no hay ninguno
- * (antes de tiempo, en un silencio o repetido), Noa hace «fsss» con la mano vacía y no se resta nada.
+ * (antes de tiempo, en un silencio o repetido), Noa hace «fsss» con la mano vacía: una pulsación vacía que en la
+ * canción, pasada la cuenta de entrada, tira una bellota de la rama. Un rebote justo después de un bocado no cuenta.
  */
 export function pressAt(run: MeriendaRun, pulse: number): PressResult {
+  if (esRebote(run.cuenta, pulse)) return { kind: "rebote" };
   let best: Bite | null = null;
   for (const bite of run.bites) {
     if (!open(bite) || Math.abs(pulse - bite.pulse) > HIT_WINDOW_PULSES) continue;
     if (!best || Math.abs(pulse - bite.pulse) < Math.abs(pulse - best.pulse)) best = bite;
   }
-  if (!best) { run.extra += 1; return { kind: "fsss" }; }
+  if (!best) {
+    run.extra += 1;
+    return { kind: "fsss", resta: anotarVacia(run.cuenta, run.mode === "song" && partAt(run.score, pulse).kind !== "count") };
+  }
   best.fedAt = pulse;
   run.got += 1;
+  anotarAcierto(run.cuenta, pulse);
   return { kind: "fed", bite: best, jabato: run.jabatos[best.jabato] };
 }
 
@@ -142,6 +150,7 @@ export function autoFeeds(run: MeriendaRun, pulse: number): PressResult[] {
     if (open(bite) && pulse >= bite.pulse) {
       bite.fedAt = bite.pulse;
       run.got += 1;
+      anotarAcierto(run.cuenta, bite.pulse);
       results.push({ kind: "fed", bite, jabato: run.jabatos[bite.jabato] });
     }
   }
@@ -186,10 +195,10 @@ export function dotsFor(jabato: Jabato, pulse: number): Dot[] {
 
 export type Outcome = { result: "casi" | "bien" | "perfecto"; won: boolean; challengeCompleted: boolean };
 
-/** La victoria pide la raya dorada de la rama; el reto, que ningún jabato se quede con hambre. «Fsss» no cuenta. */
+/** La victoria pide la raya dorada de la rama; el reto, que ningún jabato se quede con hambre y ningún «fsss». */
 export function outcomeOf(run: MeriendaRun): Outcome {
-  const perfect = run.got === bitesIn(run.score);
-  const won = run.got >= goalOf(run.score);
+  const perfect = run.got === bitesIn(run.score) && run.cuenta.vacias === 0;
+  const won = run.cuenta.raya >= goalOf(run.score);
   return { result: perfect ? "perfecto" : won ? "bien" : "casi", won, challengeCompleted: perfect };
 }
 

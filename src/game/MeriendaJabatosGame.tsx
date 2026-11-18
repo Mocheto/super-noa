@@ -47,6 +47,10 @@ type Session = {
   thrown: { food: Food; id: number; miss: boolean } | null;
   feedback: { text: string; miss: boolean; until: number } | null;
   cheerFrom: number | null;
+  /** Pulso hasta el que cae una bellota de la rama tras un «fsss». */
+  gotaUntil: number;
+  /** La demostración ya ha enseñado su «fsss». */
+  demoVacia: boolean;
   ended: boolean;
 };
 type AudioRig = { context: AudioContext; music: GainNode; segment: GainNode; cue: GainNode; noise: AudioBuffer };
@@ -63,13 +67,14 @@ type View = {
   dots: Dot[];
   thrown: Session["thrown"];
   feedback: { text: string; miss: boolean } | null;
+  gota: boolean;
   phase: { name: string; kind: JabatoKind } | null;
   counting: number;
 };
 
 const START_DELAY_S = 0.15;
 const STAGE_WIDTH = 960;
-const emptyView: View = { pulse: -1, lamp: -1, bossCall: false, bossCheer: false, bossBubble: null, noaPose: 0, jabato: null, dots: [], thrown: null, feedback: null, phase: null, counting: 0 };
+const emptyView: View = { pulse: -1, lamp: -1, bossCall: false, bossCheer: false, bossBubble: null, noaPose: 0, jabato: null, dots: [], thrown: null, feedback: null, gota: false, phase: null, counting: 0 };
 const JABATO_SPRITES: Record<JabatoKind, string> = {
   pequeno: "./assets/sprites/jabato-pequeno-v1.webp",
   grande: "./assets/sprites/jabato-grande-v1.webp",
@@ -83,15 +88,18 @@ const STAGE_ART = {
 } as CSSProperties;
 const FOOD_SPRITES: Record<Food, string> ={ bellota: "./assets/sprites/bellota-v1.webp", castana: "./assets/sprites/castana-v1.webp" };
 
+/** La demostración enseña un «fsss» en el silencio tras el primer bocado y se para medio pulso después. */
+const DEMO_VACIA_PULSO = COUNT_PULSES + 3;
 /** La práctica se detiene en cada jabato nuevo y explica cuándo darle de comer. */
 const PARADAS: Record<MeriendaMode, ParadaPractica[]> = {
-  demo: [{ pulso: COUNT_PULSES, pieza: "pequeno" }, { pulso: COUNT_PULSES + 4, pieza: "grande" }],
+  demo: [{ pulso: COUNT_PULSES, pieza: "pequeno" }, { pulso: DEMO_VACIA_PULSO + 0.5, pieza: "vacia" }, { pulso: COUNT_PULSES + 4, pieza: "grande" }],
   practice: [{ pulso: COUNT_PULSES, pieza: "pequeno" }, { pulso: COUNT_PULSES + 8, pieza: "grande" }],
   song: [],
 };
 const CLAVE_PARADA = {
   pequeno: { rotulo: "minijuegos.merienda.practica.pequeno.rotulo", juntos: "minijuegos.merienda.practica.pequeno.juntos" },
   grande: { rotulo: "minijuegos.merienda.practica.grande.rotulo", juntos: "minijuegos.merienda.practica.grande.juntos" },
+  vacia: { rotulo: "minijuegos.merienda.practica.vacia.rotulo", juntos: "minijuegos.merienda.practica.vacia.juntos" },
 } as const;
 
 const RESULT_TEXT = {
@@ -116,6 +124,7 @@ function snapshot(session: Session, pulse: number, counting: number): View {
   const phase = !counting && firstCall && phaseName && phaseKind && pulse >= callPulse(firstCall) && pulse < callPulse(firstCall) + 4 ? { name: phaseName, kind: phaseKind } : null;
   return {
     pulse, phase, counting,
+    gota: session.gotaUntil > pulse,
     lamp: part && !counting ? part.beat : -1,
     bossCall: Boolean(shownCount ? shownCount % 2 === 0 : calling),
     bossCheer: !shownCount && !calling && cheering,
@@ -285,12 +294,17 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
       if (!automatic) playCue(biteSound(session.run, result.bite));
       session.thrown = { food: JABATOS[result.jabato.kind].food, id: ++session.throws, miss: false };
       session.feedback = { text: t("minijuegos.merienda.compas.nam.rotulo"), miss: false, until: pulse + 0.5 };
-      setGot(session.run.got);
-      if (session.run.mode === "song" && session.run.got === goalOf(session.run.score)) {
+      setGot(session.run.cuenta.raya);
+      if (session.run.mode === "song" && session.run.cuenta.raya === goalOf(session.run.score) && session.cheerFrom === null) {
         session.cheerFrom = pulse;
         playCue(grunt(false));
       }
-    } else playCue(FSSS);
+    } else if (result.kind === "fsss") {
+      // Pulsación vacía: «fsss» y cae una bellota de la rama (en la práctica solo se ve; en la canción, además, resta).
+      playCue(FSSS);
+      session.gotaUntil = pulse + 0.6;
+      setGot(session.run.cuenta.raya);
+    }
   }, [playCue]);
 
   const finish = useCallback((session: Session) => {
@@ -313,7 +327,7 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
   const begin = async (nextMode: MeriendaMode) => {
     const session: Session = {
       run: createRun(nextMode), clock: "frame", songStart: 0, frameMs: -START_DELAY_S * 1000, countMs: 0, countUntil: null, pausedAt: null, frozenPulse: 0,
-      lastPulse: -1, nextEighth: 0, feedUntil: -Infinity, oopsUntil: -Infinity, throws: 0, thrown: null, feedback: null, cheerFrom: null, ended: false,
+      lastPulse: -1, nextEighth: 0, feedUntil: -Infinity, oopsUntil: -Infinity, throws: 0, thrown: null, feedback: null, cheerFrom: null, gotaUntil: -Infinity, demoVacia: false, ended: false,
     };
     sessionRef.current = session;
     if (nextMode === "song") setAttempted(true);
@@ -408,7 +422,10 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
         return;
       }
       if (!counting) {
-        if (session.run.score.auto) for (const result of autoFeeds(session.run, pulse)) react(session, result, pulse, true);
+        if (session.run.score.auto) {
+          for (const result of autoFeeds(session.run, pulse)) react(session, result, pulse, true);
+          if (!session.demoVacia && pulse >= DEMO_VACIA_PULSO) { session.demoVacia = true; react(session, { kind: "fsss", resta: false }, pulse); }
+        }
         const missed = missesAt(session.run, pulse);
         if (missed.length) {
           playCue(MISS);
@@ -489,6 +506,7 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
         <div className={`merienda-branch${showGoal && got >= goal ? " is-reached" : ""}`}>
           {Array.from({ length: total }, (_, index) => <i key={index} className={index < got ? "is-got" : undefined} style={{ left: `${branchSlot(index, total)}%` }} />)}
           {showGoal && <b className="merienda-line" style={{ left: `${(branchSlot(goal - 1, total) + branchSlot(goal, total)) / 2}%` }} />}
+          {mode && view.gota && <i className="gota-cae" style={{ "--gota": "#a8693a", left: `${branchSlot(Math.min(got, total - 1), total)}%` } as CSSProperties} />}
         </div>
         {mode && view.counting > 0 && <div className="merienda-caption">{view.counting}</div>}
         {mode && clockKind === "frame" && <span className="merienda-mute"><Pictograma nombre="sin-sonido" /></span>}

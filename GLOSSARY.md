@@ -146,6 +146,10 @@ _Avoid_: Ronda, barra
 Línea de pulsos y medios pulsos de toda la canción, a tempo fijo, a la que se ajustan música y piezas.
 _Avoid_: Línea de tiempo en milisegundos, cronología
 
+**Pulsación vacía**:
+Pulsación durante la canción de un minijuego rítmico que no acierta ninguna pieza (también tocar lo que no se toca: la mariquita, un ovillo, el «fsss»); baja un acierto en la raya, sin bajar de cero.
+_Avoid_: Toque de más, fallo (es la pieza que se escapa), golpe al aire
+
 **Partitura**:
 Descripción de la canción y de sus piezas expresada en pulsos sobre la rejilla.
 _Avoid_: Gráfico, charting en milisegundos

@@ -136,7 +136,8 @@ test("el margen de medio pulso incluye sus bordes y un corte adelantado no pierd
   assert.equal(pressAt(run, flower.cut - 0.8).kind, "empty", "¡Uy!: demasiado pronto");
   assert.equal(flower.cutAt, null, "la flor sigue volando");
   assert.equal(pressAt(run, flower.cut).kind, "cut");
-  assert.equal(pressAt(run, flower.cut + 0.1).kind, "empty", "una flor solo se corta una vez");
+  assert.equal(pressAt(run, flower.cut + 0.1).kind, "rebote", "un rebote del dedo no cuenta");
+  assert.equal(pressAt(run, flower.cut + 0.2).kind, "empty", "una flor solo se corta una vez");
   assert.equal(run.cut, 1);
 });
 

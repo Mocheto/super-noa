@@ -45,6 +45,10 @@ type Session = {
   glowUntil: number;
   feedback: { text: string; miss: boolean; until: number } | null;
   applaudFrom: number | null;
+  /** Pulso hasta el que cae una nota del atril tras un «¡Uy!». */
+  gotaUntil: number;
+  /** La demostración ya ha enseñado su «¡Uy!». */
+  demoVacia: boolean;
   ended: boolean;
 };
 type AudioRig = { context: AudioContext; music: GainNode; segment: GainNode; cue: GainNode; noise: AudioBuffer };
@@ -62,18 +66,21 @@ type View = {
   noaGlow: boolean;
   prints: PrintsView;
   feedback: { text: string; miss: boolean } | null;
+  gota: boolean;
   phase: string | null;
   counting: number;
 };
 
 const START_DELAY_S = 0.15;
 const STAGE_WIDTH = 960;
-const emptyView: View = { pulse: -1, lamp: -1, turn: null, armoniaPose: 0, armoniaHit: false, armoniaBubble: null, noaPose: "espera", noaBubble: null, noaHit: false, noaGlow: false, prints: null, feedback: null, phase: null, counting: 0 };
+const emptyView: View = { pulse: -1, lamp: -1, turn: null, armoniaPose: 0, armoniaHit: false, armoniaBubble: null, noaPose: "espera", noaBubble: null, noaHit: false, noaGlow: false, prints: null, feedback: null, gota: false, phase: null, counting: 0 };
 const NOA_POSES: Record<NoaPose, string> = { espera: "0%", golpe: "33.333%", escucha: "66.667%", celebra: "100%" };
 
+/** La demostración enseña un «¡Uy!» en el silencio del segundo pulso de la primera respuesta y se para medio pulso después. */
+const DEMO_VACIA_PULSO = responseStart(0) + 1;
 /** La práctica se detiene al llegar cada parte nueva y la explica con su rótulo y su frase. */
 const PARADAS: Record<DrumMode, ParadaPractica[]> = {
-  demo: [{ pulso: callStart(0), pieza: "escucha" }, { pulso: responseStart(0), pieza: "turno" }, { pulso: callStart(1), pieza: "seguidos" }],
+  demo: [{ pulso: callStart(0), pieza: "escucha" }, { pulso: responseStart(0), pieza: "turno" }, { pulso: DEMO_VACIA_PULSO + 0.5, pieza: "vacia" }, { pulso: callStart(1), pieza: "seguidos" }],
   practice: [{ pulso: callStart(0), pieza: "escucha" }, { pulso: responseStart(0), pieza: "turno" }],
   song: [],
 };
@@ -81,6 +88,7 @@ const CLAVE_PARADA = {
   escucha: { rotulo: "minijuegos.tambor.practica.escucha.rotulo", juntos: "minijuegos.tambor.practica.escucha.juntos" },
   turno: { rotulo: "minijuegos.tambor.practica.turno.rotulo", juntos: "minijuegos.tambor.practica.turno.juntos" },
   seguidos: { rotulo: "minijuegos.tambor.practica.seguidos.rotulo", juntos: "minijuegos.tambor.practica.seguidos.juntos" },
+  vacia: { rotulo: "minijuegos.tambor.practica.vacia.rotulo", juntos: "minijuegos.tambor.practica.vacia.juntos" },
 } as const;
 
 const RESULT_TEXT = {
@@ -122,6 +130,7 @@ function snapshot(session: Session, pulse: number, counting: number): View {
     noaGlow: session.glowUntil > pulse,
     prints: counting ? null : printsAt(run, pulse),
     feedback: session.feedback && session.feedback.until > pulse ? { text: session.feedback.text, miss: session.feedback.miss } : null,
+    gota: session.gotaUntil > pulse,
   };
 }
 
@@ -261,14 +270,17 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
       if (!automatic) playCue([...snare(false), ...xylophone(responseNote(session.run, result.target))]);
       session.feedback = { text: t("minijuegos.tambor.compas.bien.rotulo"), miss: false, until: pulse + 0.5 };
       session.glowUntil = pulse + 0.3;
-      setGot(session.run.got);
-      if (session.run.mode === "song" && session.run.got === WIN_AT) {
+      setGot(session.run.cuenta.raya);
+      if (session.run.mode === "song" && session.run.cuenta.raya === WIN_AT && session.applaudFrom === null) {
         session.applaudFrom = pulse;
       }
     } else if (result.kind === "uy") {
+      // Pulsación vacía: «¡Uy!» y cae una nota del atril (en la práctica solo se ve; en la canción, además, resta).
       playCue(snare(true));
       session.feedback = { text: t("minijuegos.tambor.compas.uy.rotulo"), miss: true, until: pulse + 0.5 };
-    } else playCue(snare(true));
+      session.gotaUntil = pulse + 0.6;
+      setGot(session.run.cuenta.raya);
+    } else if (result.kind === "soft") playCue(snare(true));
   }, [playCue]);
 
   const finish = useCallback((session: Session) => {
@@ -291,7 +303,7 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
   const begin = async (nextMode: DrumMode) => {
     const session: Session = {
       run: createRun(nextMode), clock: "frame", songStart: 0, frameMs: -START_DELAY_S * 1000, countMs: 0, countUntil: null, pausedAt: null, frozenPulse: 0,
-      lastPulse: -1, nextEighth: 0, strikeUntil: -Infinity, glowUntil: -Infinity, feedback: null, applaudFrom: null, ended: false,
+      lastPulse: -1, nextEighth: 0, strikeUntil: -Infinity, glowUntil: -Infinity, feedback: null, applaudFrom: null, gotaUntil: -Infinity, demoVacia: false, ended: false,
     };
     sessionRef.current = session;
     practicaRef.current = createPracticaConPausas(PARADAS[nextMode]);
@@ -385,7 +397,10 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
         setParada(nueva);
         return;
       }
-      if (!counting && session.run.score.auto) for (const result of autoHits(session.run, pulse)) react(session, result, pulse, true);
+      if (!counting && session.run.score.auto) {
+        for (const result of autoHits(session.run, pulse)) react(session, result, pulse, true);
+        if (!session.demoVacia && pulse >= DEMO_VACIA_PULSO) { session.demoVacia = true; react(session, { kind: "uy", resta: false }, pulse); }
+      }
       const down = Boolean(firstConnectedGamepad()?.buttons[0]?.pressed);
       if (risingEdge(padDown, down)) strike();
       padDown = down;
@@ -452,6 +467,7 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
             {Array.from({ length: total }, (_, index) => <i key={index} className={index < got ? "is-got" : undefined} />)}
             {showGoal && <b className="armonia-drum-line" style={{ left: `calc(${WIN_AT / total * 100}% - 3px)` }} />}
           </div>
+          {mode && view.gota && <i className="gota-cae" style={{ "--gota": "#ffd76a", left: `calc(${Math.min(got, total - 1) / total * 100}% + 8px)` } as CSSProperties} />}
         </div>
         {mode && view.counting > 0 && <div className="armonia-drum-caption">{view.counting}</div>}
         {mode && clockKind === "frame" && <span className="armonia-drum-mute" style={{ left: noaPrints.x + 150, top: noaPrints.y - 90 }}><Pictograma nombre="sin-sonido" /></span>}

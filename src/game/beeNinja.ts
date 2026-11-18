@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import { anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
 
 export { outputLatencySeconds };
@@ -119,12 +120,14 @@ export type Target = {
   greetedAt: number | null;
 };
 
-export type BeeRun = { mode: BeeMode; score: Score; targets: Target[]; cut: number; fallen: number; noteIndex: number };
+/** `cut` cuenta todas las flores cortadas; la raya dorada mira `cuenta.raya`, que bajan las pulsaciones vacías. */
+export type BeeRun = { mode: BeeMode; score: Score; targets: Target[]; cut: number; fallen: number; noteIndex: number; cuenta: Raya };
 
 export type PressResult =
   | { kind: "cut"; target: Target }
-  | { kind: "ladybug"; target: Target }
-  | { kind: "empty" };
+  | { kind: "ladybug"; target: Target; resta: boolean }
+  | { kind: "empty"; resta: boolean }
+  | { kind: "rebote" };
 
 export function createRun(mode: BeeMode): BeeRun {
   const score = beeScores[mode];
@@ -136,16 +139,19 @@ export function createRun(mode: BeeMode): BeeRun {
       targets.push({ id: targets.length, kind: ladybug ? "ladybug" : "flower", cut, appear: cut - FLIGHT_PULSES, duo: item.type === "duo", color: ladybug ? 0 : color++, cutAt: null, fallenAt: null, greetedAt: null });
     }
   }
-  return { mode, score, targets, cut: 0, fallen: 0, noteIndex: 0 };
+  return { mode, score, targets, cut: 0, fallen: 0, noteIndex: 0, cuenta: nuevaRaya() };
 }
 
 const flying = (target: Target) => target.kind === "flower" && target.cutAt === null && target.fallenAt === null;
 
 /**
  * Corte de la jugadora en el pulso dado. Corta la flor más cercana dentro del margen. Un corte fuera
- * del margen no hace nada a las flores: siguen volando y aún pueden cortarse a tiempo.
+ * del margen no hace nada a las flores: siguen volando y aún pueden cortarse a tiempo. Pero en la canción es una
+ * pulsación vacía y baja una gota del tarro, igual que cortar la mariquita; el rebote tras un corte no cuenta.
  */
 export function pressAt(run: BeeRun, pulse: number): PressResult {
+  if (esRebote(run.cuenta, pulse)) return { kind: "rebote" };
+  const cuesta = run.mode === "song";
   let best: Target | null = null;
   let bestDistance = Infinity;
   for (const target of run.targets) {
@@ -154,10 +160,11 @@ export function pressAt(run: BeeRun, pulse: number): PressResult {
     const distance = Math.abs(pulse - target.cut);
     if (distance <= HIT_WINDOW_PULSES && distance < bestDistance) { bestDistance = distance; best = target; }
   }
-  if (!best) return { kind: "empty" };
-  if (best.kind === "ladybug") { best.greetedAt = pulse; return { kind: "ladybug", target: best }; }
+  if (!best) return { kind: "empty", resta: anotarVacia(run.cuenta, cuesta) };
+  if (best.kind === "ladybug") { best.greetedAt = pulse; return { kind: "ladybug", target: best, resta: anotarVacia(run.cuenta, cuesta) }; }
   best.cutAt = pulse;
   run.cut += 1;
+  anotarAcierto(run.cuenta, pulse);
   return { kind: "cut", target: best };
 }
 
@@ -168,6 +175,7 @@ export function autoCuts(run: BeeRun, pulse: number): PressResult[] {
     if (flying(target) && pulse >= target.cut) {
       target.cutAt = target.cut;
       run.cut += 1;
+      anotarAcierto(run.cuenta, target.cut);
       results.push({ kind: "cut", target });
     }
   }
@@ -195,11 +203,11 @@ export function nextOpenCut(run: BeeRun, pulse: number) {
 
 export type Outcome = { result: "casi" | "bien" | "perfecto"; won: boolean; challengeCompleted: boolean };
 
-/** La victoria pide la raya dorada; el reto, que no caiga ninguna flor. */
+/** La victoria pide la raya dorada; el reto, que no caiga ninguna flor y ninguna pulsación vacía. */
 export function outcomeOf(run: BeeRun): Outcome {
   const total = flowersIn(run.score);
-  const perfect = run.cut === total && run.fallen === 0;
-  const won = run.cut >= WIN_AT;
+  const perfect = run.cut === total && run.fallen === 0 && run.cuenta.vacias === 0;
+  const won = run.cuenta.raya >= WIN_AT;
   return { result: perfect ? "perfecto" : won ? "bien" : "casi", won, challengeCompleted: perfect };
 }
 

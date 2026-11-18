@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import { anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
 
 export { outputLatencySeconds };
@@ -79,16 +80,18 @@ export function validateScore(score: DrumScore): string[] {
 // ---------------------------------------------------------------- partida
 
 export type DrumTarget = { pair: number; beat: number; pulse: number; hitAt: number | null };
-export type DrumRun = { mode: DrumMode; score: DrumScore; targets: DrumTarget[]; got: number; uy: number };
+/** `got` cuenta todos los golpes acertados; el atril y la raya dorada miran `cuenta.raya`, que bajan los «¡Uy!» de la canción. */
+export type DrumRun = { mode: DrumMode; score: DrumScore; targets: DrumTarget[]; got: number; uy: number; cuenta: Raya };
 export type PressResult =
   | { kind: "hit"; target: DrumTarget; note: number }
   | { kind: "soft" }
-  | { kind: "uy" };
+  | { kind: "uy"; resta: boolean }
+  | { kind: "rebote" };
 
 export function createRun(mode: DrumMode): DrumRun {
   const score = drumScores[mode];
   const targets = score.pairs.flatMap((item, index) => item.hits.map((beat) => ({ pair: index, beat, pulse: responseStart(index) + beat - 1, hitAt: null })));
-  return { mode, score, targets, got: 0, uy: 0 };
+  return { mode, score, targets, got: 0, uy: 0, cuenta: nuevaRaya() };
 }
 
 /** Posición del golpe dentro de su patrón: elige la nota de xilófono que cierra la frase. */
@@ -96,17 +99,23 @@ const noteIndexOf = (run: DrumRun, target: DrumTarget) => run.score.pairs[target
 
 /**
  * Golpe de la jugadora en el pulso dado. En la respuesta, un golpe a menos de medio pulso de una huella aún
- * libre la acierta; un golpe a destiempo, en un silencio o repetido es un «¡Uy!» que no resta. Fuera de la
- * respuesta (cuenta, llamada o cierre) el golpe suena flojito y no cuenta.
+ * libre la acierta; un golpe a destiempo, en un silencio o repetido es un «¡Uy!»: una pulsación vacía que en la
+ * canción baja una nota del atril (en la práctica no resta). Un rebote justo después de un acierto no cuenta. Fuera
+ * de la respuesta (cuenta, llamada o cierre) el golpe suena flojito y no cuenta.
  */
 export function pressAt(run: DrumRun, pulse: number): PressResult {
   const nearest = Math.round(pulse);
   const part = partAt(run.score, nearest);
   if (pulse < 0 || part.kind !== "response") return { kind: "soft" };
+  if (esRebote(run.cuenta, pulse)) return { kind: "rebote" };
   const target = run.targets.find((item) => item.pulse === nearest);
-  if (!target || target.hitAt !== null || Math.abs(pulse - nearest) > HIT_WINDOW_PULSES) { run.uy += 1; return { kind: "uy" }; }
+  if (!target || target.hitAt !== null || Math.abs(pulse - nearest) > HIT_WINDOW_PULSES) {
+    run.uy += 1;
+    return { kind: "uy", resta: anotarVacia(run.cuenta, run.mode === "song") };
+  }
   target.hitAt = pulse;
   run.got += 1;
+  anotarAcierto(run.cuenta, pulse);
   return { kind: "hit", target, note: noteIndexOf(run, target) };
 }
 
@@ -117,6 +126,7 @@ export function autoHits(run: DrumRun, pulse: number): PressResult[] {
     if (target.hitAt === null && pulse >= target.pulse) {
       target.hitAt = target.pulse;
       run.got += 1;
+      anotarAcierto(run.cuenta, target.pulse);
       results.push({ kind: "hit", target, note: noteIndexOf(run, target) });
     }
   }
@@ -151,10 +161,10 @@ export function printsAt(run: DrumRun, pulse: number): PrintsView {
 
 export type Outcome = { result: "casi" | "bien" | "perfecto"; won: boolean; challengeCompleted: boolean };
 
-/** La victoria pide la raya dorada del atril; el reto, que no se escape ningún golpe. Los «¡Uy!» no cuentan. */
+/** La victoria pide la raya dorada del atril; el reto, que no se escape ningún golpe y no haya ningún «¡Uy!». */
 export function outcomeOf(run: DrumRun): Outcome {
-  const perfect = run.got === hitsIn(run.score);
-  const won = run.got >= WIN_AT;
+  const perfect = run.got === hitsIn(run.score) && run.cuenta.vacias === 0;
+  const won = run.cuenta.raya >= WIN_AT;
   return { result: perfect ? "perfecto" : won ? "bien" : "casi", won, challengeCompleted: perfect };
 }
 

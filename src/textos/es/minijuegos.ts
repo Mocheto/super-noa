@@ -22,13 +22,14 @@ export const minijuegos = {
   abeja: {
     previa: {
       nombre: { rotulo: "ABEJA NINJA" },
-      regla: { juntos: "La Reina Melisa te lanza flores. ¡Córtalas con tu varita cuando lleguen a la punta, al ritmo de la música! A la mariquita no se la corta." },
+      regla: { juntos: "La Reina Melisa te lanza flores. ¡Córtalas con tu varita cuando lleguen a la punta, al ritmo de la música! A la mariquita no se la corta. Si cortas sin flor, se cae una gota de miel." },
     },
     /** La práctica se detiene en cada pieza nueva: su rótulo y la frase para leer juntos. */
     practica: {
       flor: { rotulo: "{pictograma:flor} CORTA", juntos: "Flor: un corte cuando llega a la punta de la varita." },
       duo: { rotulo: "{pictograma:flor}{pictograma:flor} DOS", juntos: "Dúo: dos flores, dos cortes seguidos." },
       mariquita: { rotulo: "¡NO!", juntos: "La mariquita no se corta: déjala pasar." },
+      vacia: { rotulo: "¡UY!", juntos: "Si cortas sin flor, se cae una gota de miel. Espera a que llegue la flor." },
       sigue: { rotulo: "{pictograma:jugar} SIGUE" },
       termina: { rotulo: "TERMINA" },
     },
@@ -73,13 +74,14 @@ export const minijuegos = {
   tambor: {
     previa: {
       nombre: { rotulo: "{pictograma:musica} TAMBOR" },
-      regla: { juntos: "La Maestra Armonía toca su tambor y Noa repite sus golpes. Escucha, espera tu turno y golpea en las huellas doradas." },
+      regla: { juntos: "La Maestra Armonía toca su tambor y Noa repite sus golpes. Escucha, espera tu turno y golpea en las huellas doradas. Si golpeas sin huella, se cae una nota." },
     },
     /** La práctica se detiene en cada pieza nueva: su rótulo y la frase para leer juntos. */
     practica: {
       escucha: { rotulo: "¡ESCUCHA!", juntos: "Escucha a Armonía: el ¡tin! avisa de que acaba su turno." },
       turno: { rotulo: "¡AHORA TU!", juntos: "Noa repite los mismos golpes, en las huellas doradas." },
       seguidos: { rotulo: "{pictograma:musica} SEGUIDOS", juntos: "Ahora tres golpes seguidos." },
+      vacia: { rotulo: "¡UY!", juntos: "Si golpeas donde no hay huella, se cae una nota del atril. Golpea solo en las huellas." },
       sigue: { rotulo: "{pictograma:jugar} SIGUE" },
       termina: { rotulo: "TERMINA" },
     },
@@ -121,12 +123,13 @@ export const minijuegos = {
   merienda: {
     previa: {
       nombre: { rotulo: "{pictograma:amigos} MERIENDA" },
-      regla: { juntos: "Los jabatos tienen hambre. Cuando el Gran Jabalí gruña, un jabato asomará: ¡dale su bocado cuando abra la boca del todo, al compás!" },
+      regla: { juntos: "Los jabatos tienen hambre. Cuando el Gran Jabalí gruña, un jabato asomará: ¡dale su bocado cuando abra la boca del todo, al compás! Si das sin boca abierta, se cae una bellota." },
     },
     /** La práctica se detiene en cada jabato nuevo: su rótulo y la frase para leer juntos. */
     practica: {
       pequeno: { rotulo: "¡GRU!", juntos: "¡Gru! El jabato abre la boca. Cuando esté abierta del todo, Noa le da su bellota." },
       grande: { rotulo: "¡GRUUUU!", juntos: "El grande tarda más: espera cuatro puntos y dale su castaña." },
+      vacia: { rotulo: "¡FSSS!", juntos: "Si das de comer sin boca abierta, se cae una bellota de la rama. Espera a que abra la boca." },
       sigue: { rotulo: "{pictograma:jugar} SIGUE" },
       termina: { rotulo: "TERMINA" },
     },

@@ -83,7 +83,7 @@ test("las reglas detectan cada incumplimiento", () => {
   assert.match(errors([{ phase: 2, hits: [1] }, { phase: 1, hits: [1] }]), /hacia atrás/);
 });
 
-test("el margen es de medio pulso y los golpes de más no restan", () => {
+test("el margen es de medio pulso y en la práctica los golpes de más no restan", () => {
   assert.ok(Math.abs(HIT_WINDOW_PULSES * PULSE_MS - 300) < 1e-9, "±300 ms");
   const first = createRun("practice").targets[0];
   assert.equal(pressAt(createRun("practice"), first.pulse - HIT_WINDOW_PULSES).kind, "hit", "borde adelantado");
@@ -93,7 +93,9 @@ test("el margen es de medio pulso y los golpes de más no restan", () => {
   const target = run.targets[0];
   assert.equal(pressAt(run, target.pulse + 1).kind, "uy", "un silencio");
   assert.equal(pressAt(run, target.pulse).kind, "hit");
-  assert.equal(pressAt(run, target.pulse + 0.1).kind, "uy", "la misma huella no suma dos veces");
+  assert.equal(pressAt(run, target.pulse + 0.1).kind, "rebote", "un rebote del dedo no cuenta");
+  assert.equal(pressAt(run, target.pulse + 0.2).kind, "uy", "la misma huella no suma dos veces");
+  assert.equal(run.cuenta.raya, 1, "en la práctica el «¡Uy!» no resta");
   assert.deepEqual([run.got, run.uy], [1, 2]);
   assert.equal(outcomeOf(run).result, "casi");
 });
@@ -114,10 +116,21 @@ test("se gana con 12 golpes y el reto solo con los 24", () => {
   assert.equal(WIN_AT, 12);
   assert.deepEqual(outcomeOf(playSong(13)), { result: "casi", won: false, challengeCompleted: false }, "11 golpes");
   assert.deepEqual(outcomeOf(playSong(12)), { result: "bien", won: true, challengeCompleted: false }, "12 golpes");
+  assert.deepEqual(outcomeOf(playSong()), { result: "perfecto", won: true, challengeCompleted: true }, "24 golpes");
   const all = playSong();
   pressAt(all, all.targets[0].pulse + 1);
   assert.equal(all.got, 24);
-  assert.deepEqual(outcomeOf(all), { result: "perfecto", won: true, challengeCompleted: true }, "los «¡Uy!» no quitan el reto");
+  assert.equal(all.cuenta.raya, 23, "en la canción el «¡Uy!» baja una nota");
+  assert.deepEqual(outcomeOf(all), { result: "bien", won: true, challengeCompleted: false }, "un «¡Uy!» quita el reto");
+});
+
+test("en la canción los «¡Uy!» bajan la raya sin pasar de cero", () => {
+  const run = createRun("song");
+  const first = run.targets[0];
+  assert.deepEqual(pressAt(run, first.pulse + 1), { kind: "uy", resta: true });
+  assert.equal(run.cuenta.raya, 0, "no baja de cero");
+  pressAt(run, first.pulse);
+  assert.equal(run.cuenta.raya, 1);
 });
 
 test("Practicar se destaca solo la primera vez", () => {

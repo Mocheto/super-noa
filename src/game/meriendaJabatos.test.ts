@@ -92,7 +92,7 @@ test("las reglas detectan cada incumplimiento", () => {
   assert.match(errors([{ phase: 1, at: 0.5, kind: "pequeno" }]), /rejilla/);
 });
 
-test("el juicio da medio pulso de margen y pulsar de más solo hace «fsss»", () => {
+test("el juicio da medio pulso de margen y pulsar de más hace «fsss» y tira una bellota", () => {
   const run = createRun("song");
   const first = run.bites[0];
   assert.equal(first.pulse, COUNT_PULSES + 2);
@@ -101,10 +101,12 @@ test("el juicio da medio pulso de margen y pulsar de más solo hace «fsss»", (
   assert.equal(pressAt(run, first.pulse).kind, "fsss", "un bocado no se come dos veces");
   const second = run.bites[1];
   assert.equal(pressAt(run, second.pulse + HIT_WINDOW_PULSES).kind, "fed");
-  assert.equal(pressAt(run, second.pulse + HIT_WINDOW_PULSES + 0.01).kind, "fsss");
+  assert.equal(pressAt(run, second.pulse + HIT_WINDOW_PULSES + 0.01).kind, "rebote", "un rebote justo tras el bocado no cuenta");
+  assert.equal(pressAt(run, second.pulse + HIT_WINDOW_PULSES + 0.2).kind, "fsss");
   assert.equal(run.got, 2);
   assert.equal(run.extra, 3);
-  assert.equal(outcomeOf(run).won, false, "pulsar de más no suma ni resta");
+  assert.equal(run.cuenta.raya, 0, "cada «fsss» tira la bellota que se acababa de ganar");
+  assert.equal(outcomeOf(run).won, false);
 });
 
 test("el bocado que se escapa no se puede recuperar", () => {
@@ -124,7 +126,8 @@ test("el glotón come dos bellotas en pulsos seguidos y cada pulsación da una",
   assert.equal(pressAt(run, a.pulse + 0.45).kind, "fed");
   assert.equal(a.fedAt, a.pulse + 0.45, "la pulsación entre los dos bocados da de comer al más cercano");
   assert.equal(pressAt(run, b.pulse).kind, "fed");
-  assert.equal(pressAt(run, b.pulse + 0.1).kind, "fsss");
+  assert.equal(pressAt(run, b.pulse + 0.1).kind, "rebote", "un rebote del dedo no cuenta");
+  assert.equal(pressAt(run, b.pulse + 0.2).kind, "fsss");
 });
 
 test("mantener pulsado cuenta una sola vez", () => {

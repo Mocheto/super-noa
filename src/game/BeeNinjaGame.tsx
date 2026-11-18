@@ -49,6 +49,10 @@ type Session = {
   applaudFrom: number | null;
   celebrateUntil: number;
   lastJar: number;
+  /** Pulso hasta el que cae una gota del tarro tras una pulsación vacía. */
+  gotaUntil: number;
+  /** La demostración ya ha enseñado su pulsación vacía. */
+  demoVacia: boolean;
   halves: Half[];
   halfId: number;
   ended: boolean;
@@ -60,6 +64,7 @@ type View = {
   targets: TargetView[];
   halves: Half[];
   jar: number;
+  gota: boolean;
   ring: { scale: number; ready: boolean } | null;
   lamp: number;
   heroPose: "espera" | "alza" | "corta" | "celebra";
@@ -74,11 +79,13 @@ type View = {
 
 const START_DELAY_S = 0.15;
 const STAGE_WIDTH = 960;
-const emptyView: View = { pulse: -1, targets: [], halves: [], jar: 0, ring: null, lamp: -1, heroPose: "espera", melisaPose: 0, melisaThrowing: false, melisaBubble: null, greet: null, feedback: null, phase: null, counting: 0 };
+const emptyView: View = { pulse: -1, targets: [], halves: [], jar: 0, gota: false, ring: null, lamp: -1, heroPose: "espera", melisaPose: 0, melisaThrowing: false, melisaBubble: null, greet: null, feedback: null, phase: null, counting: 0 };
 
+/** La demostración enseña una pulsación vacía en este pulso, sin flor delante, y se para medio pulso después. */
+const DEMO_VACIA_PULSO = 15.5;
 /** La práctica se detiene en cada pieza nueva (pulso en que llega a la varita) y explica cómo se corta. */
 const PARADAS: Record<BeeMode, ParadaPractica[]> = {
-  demo: [{ pulso: 4, pieza: "flor" }, { pulso: 8, pieza: "duo" }, { pulso: 12, pieza: "mariquita" }],
+  demo: [{ pulso: 4, pieza: "flor" }, { pulso: 8, pieza: "duo" }, { pulso: 12, pieza: "mariquita" }, { pulso: DEMO_VACIA_PULSO + 0.5, pieza: "vacia" }],
   practice: [{ pulso: 4, pieza: "flor" }, { pulso: 12, pieza: "duo" }, { pulso: 16, pieza: "mariquita" }],
   song: [],
 };
@@ -86,6 +93,7 @@ const CLAVE_PARADA = {
   flor: { rotulo: "minijuegos.abeja.practica.flor.rotulo", juntos: "minijuegos.abeja.practica.flor.juntos" },
   duo: { rotulo: "minijuegos.abeja.practica.duo.rotulo", juntos: "minijuegos.abeja.practica.duo.juntos" },
   mariquita: { rotulo: "minijuegos.abeja.practica.mariquita.rotulo", juntos: "minijuegos.abeja.practica.mariquita.juntos" },
+  vacia: { rotulo: "minijuegos.abeja.practica.vacia.rotulo", juntos: "minijuegos.abeja.practica.vacia.juntos" },
 } as const;
 
 const RESULT_TEXT = {
@@ -121,7 +129,8 @@ function snapshot(session: Session, pulse: number, counting: number, reduceMotio
   return {
     pulse, targets, ring, phase, counting,
     halves: session.halves.filter((half) => pulse - half.start < 0.9),
-    jar: jarLevel(run.cut),
+    jar: jarLevel(run.cuenta.raya),
+    gota: session.gotaUntil > pulse,
     lamp: pulse >= 0 && !counting ? whole % 4 : -1,
     heroPose,
     melisaPose: shownCount ? (shownCount % 2 ? 1 : 3) : applauding ? 2 : throwing ? 1 : 0,
@@ -292,18 +301,23 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
       session.feedback = { text: t("minijuegos.abeja.compas.zas.rotulo"), miss: false, until: pulse + 0.5 };
       session.halves.push({ id: session.halfId++, color: result.target.color, start: pulse });
       if (session.run.mode === "song") {
-        const level = jarLevel(session.run.cut);
+        const level = jarLevel(session.run.cuenta.raya);
         if (level > session.lastJar) { session.lastJar = level; session.celebrateUntil = pulse + 0.9; }
-        if (session.run.cut === WIN_AT) session.applaudFrom = pulse;
+        if (session.run.cuenta.raya === WIN_AT && session.applaudFrom === null) session.applaudFrom = pulse;
       }
     } else if (result.kind === "ladybug") {
       session.cutUntil = -Infinity;
       const place = targetPlacement(result.target, pulse, reduceMotion);
       session.greet = { x: place.x, y: place.y, until: pulse + 1.2 };
-    } else {
+      session.gotaUntil = pulse + 0.6;
+      session.lastJar = Math.min(session.lastJar, jarLevel(session.run.cuenta.raya));
+    } else if (result.kind === "empty") {
+      // Pulsación vacía: «¡UY!» y cae una gota del tarro (en la práctica solo se ve; en la canción, además, resta).
       playCue(UY_SOUND);
       session.feedback = { text: t("minijuegos.abeja.compas.uy.rotulo"), miss: true, until: pulse + 0.5 };
-    }
+      session.gotaUntil = pulse + 0.6;
+      session.lastJar = Math.min(session.lastJar, jarLevel(session.run.cuenta.raya));
+    } else session.cutUntil = -Infinity;
   }, [playCue, reduceMotion]);
 
   const finish = useCallback((session: Session) => {
@@ -327,7 +341,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
   const begin = async (nextMode: BeeMode) => {
     const session: Session = {
       run: createRun(nextMode), clock: "frame", songStart: 0, frameMs: -START_DELAY_S * 1000, countMs: 0, countUntil: null, pausedAt: null, frozenPulse: 0,
-      lastPulse: -1, nextEighth: 0, cutUntil: -Infinity, greet: null, feedback: null, applaudFrom: null, celebrateUntil: -Infinity, lastJar: 0, halves: [], halfId: 0, ended: false,
+      lastPulse: -1, nextEighth: 0, cutUntil: -Infinity, greet: null, feedback: null, applaudFrom: null, celebrateUntil: -Infinity, lastJar: 0, gotaUntil: -Infinity, demoVacia: false, halves: [], halfId: 0, ended: false,
     };
     sessionRef.current = session;
     practicaRef.current = createPracticaConPausas(PARADAS[nextMode]);
@@ -421,7 +435,10 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
         return;
       }
       if (!counting) {
-        if (session.run.mode === "demo") for (const result of autoCuts(session.run, pulse)) react(session, result, pulse);
+        if (session.run.mode === "demo") {
+          for (const result of autoCuts(session.run, pulse)) react(session, result, pulse);
+          if (!session.demoVacia && pulse >= DEMO_VACIA_PULSO) { session.demoVacia = true; react(session, { kind: "empty", resta: false }, pulse); }
+        }
         else if (collectFalls(session.run, pulse).length) {
           playCue(PLOF_SOUND);
           session.feedback = { text: t("minijuegos.abeja.compas.plof.rotulo"), miss: true, until: pulse + 0.6 };
@@ -478,7 +495,9 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
         <div className="bee-ninja-comb">{[0, 1, 2, 3].map((index) => <span key={index} className={mode && view.lamp === index ? "is-on" : undefined} />)}</div>
         <div className={`bee-ninja-melisa${view.melisaThrowing && mode ? " is-throwing" : ""}`} style={{ backgroundImage: `url("${boss.assetAtlas}")`, backgroundPosition: `${melisaPose * 25}% 100%` }} />
         {mode && view.melisaBubble && <span className="bee-ninja-bubble is-melisa">{view.melisaBubble}</span>}
-        <div className={`bee-ninja-jar${view.jar >= 2 ? " is-reached" : ""}`} style={{ backgroundImage: 'url("./assets/sprites/tarro-miel-v1.webp")', backgroundPosition: `${(mode || ended ? view.jar : 0) * 25}% 0` }} />
+        <div className={`bee-ninja-jar${view.jar >= 2 ? " is-reached" : ""}`} style={{ backgroundImage: 'url("./assets/sprites/tarro-miel-v1.webp")', backgroundPosition: `${(mode || ended ? view.jar : 0) * 25}% 0` }}>
+          {mode && view.gota && <i className="gota-cae" style={{ "--gota": "#f2b632" } as CSSProperties} />}
+        </div>
         {view.ring && mode && <div className={`bee-ninja-ring${view.ring.ready ? " is-ready" : ""}`} style={{ left: CUT_POINT.x - 50, top: CUT_POINT.y - 50, transform: `scale(${view.ring.scale})` }} />}
         {mode && clockKind === "frame" && <span className="bee-ninja-mute" style={{ left: CUT_POINT.x + 40, top: CUT_POINT.y - 70 }}><Pictograma nombre="sin-sonido" /></span>}
         {view.ring?.ready && mode && <div className="bee-ninja-now" style={{ left: CUT_POINT.x - 26, top: CUT_POINT.y - 150 }}>{t("minijuegos.abeja.compas.ya.rotulo")}</div>}

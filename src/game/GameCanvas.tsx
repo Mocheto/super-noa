@@ -13,6 +13,7 @@ import {
 import { useGameInput } from "./input";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createGameLoop, type GameLoop } from "./gameLoop";
+import { createPalabrasRecoger, type CapaPalabra } from "./palabrasRecoger";
 import { capaTransicion, createLevelTransition, SALIDA_SEGUNDOS, type CapaTransicion } from "./levelTransition";
 import { beatPlatformActive, getMechanicPlatforms, hasWorldMechanics, mechanicRespawn, skyLiftPlatform, updraftVelocity, visibleSkyRespawn, wolfSleepState } from "./worldMechanics";
 import { getStickerSprite } from "./stickers";
@@ -94,29 +95,67 @@ function createInitialPlayer(level: Level): Player {
   };
 }
 
-function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
-  const x = 238;
-  const y = 48;
-  const width = 484;
-  const height = 82;
-  context.fillStyle = "#352044";
-  context.fillRect(x - 5, y - 5, width + 10, height + 10);
+/** Ancho de un texto en el lienzo; en los lienzos de prueba, que no miden, se estima por letras (Press Start 2P es cuadrada). */
+const medirTexto = (context: CanvasRenderingContext2D, texto: string, tamano: number) => context.measureText?.(texto)?.width ?? texto.length * tamano;
+/** Rectángulo redondeado, o recto si el lienzo no sabe redondear. */
+const cajaRedondeada = (context: CanvasRenderingContext2D, x: number, y: number, ancho: number, alto: number, radio: number) => {
+  context.beginPath();
+  if (typeof context.roundRect === "function") context.roundRect(x, y, ancho, alto, radio);
+  else context.rect?.(x, y, ancho, alto);
+};
+
+/** Primera fila libre bajo el HUD de esquinas, en unidades del lienzo. */
+const CARTEL_ARRIBA = 66;
+
+/**
+ * Cartel del lienzo con el estilo de la interfaz: Press Start 2P a 16 px, caja crema con contorno ciruela a la medida
+ * del texto. Cada línea es un rótulo de hasta dos palabras con su dibujo.
+ */
+function drawCartel(context: CanvasRenderingContext2D, lineas: string[], centroX: number, arriba: number, { alfa = 1, color = "#3d1430" } = {}) {
+  context.save();
+  context.globalAlpha = alfa;
+  context.font = '16px "Press Start 2P", monospace';
+  const ancho = Math.max(...lineas.map((linea) => medirTexto(context, linea, 16))) + 28;
+  const alto = lineas.length * 26 + 14;
+  const x = centroX - ancho / 2;
+  context.fillStyle = "#3d1430";
+  cajaRedondeada(context, x - 4, arriba - 4, ancho + 8, alto + 8, 10); context.fill();
   context.fillStyle = "#fff8e9";
-  context.fillRect(x, y, width, height);
-  context.fillStyle = "#f0ddf7";
-  context.fillRect(x + 7, y + 7, width - 14, height - 14);
-  context.fillStyle = "#6f3c86";
-  context.font = "bold 17px monospace";
+  cajaRedondeada(context, x, arriba, ancho, alto, 7); context.fill();
+  context.fillStyle = color;
   context.textAlign = "center";
-  context.fillText(textoLienzo("partida.lienzo.dobleSalto.rotulo"), x + width / 2, y + 29);
-  context.fillStyle = "#352044";
-  context.font = "bold 14px monospace";
-  context.fillText(textoLienzo("partida.lienzo.dobleSaltoComo.rotulo"), x + width / 2, y + 58);
-  context.textAlign = "start";
+  context.textBaseline = "middle";
+  lineas.forEach((linea, indice) => context.fillText(linea, centroX, arriba + 20 + indice * 26));
+  context.restore();
+}
+
+function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
+  drawCartel(context, [textoLienzo("partida.lienzo.dobleSalto.rotulo"), textoLienzo("partida.lienzo.dobleSaltoComo.rotulo")], VIEW_WIDTH / 2, CARTEL_ARRIBA);
 }
 
 type Interaccion = "entrar" | "explorar" | "subir" | "activar";
 
+
+const CLAVE_PALABRA = { apple: "partida.lienzo.recoger.manzana.rotulo", sticker: "partida.lienzo.recoger.pegatina.rotulo", cat: "partida.lienzo.recoger.gato.rotulo", flag: "partida.lienzo.recoger.bandera.rotulo" } as const;
+
+/** Etiqueta crema con el dibujo y la palabra del objeto recogido, sobre la cabeza de Noa sin salirse de la pantalla. */
+function drawPalabraRecogida(context: CanvasRenderingContext2D, capa: CapaPalabra, x: number, cabeza: number) {
+  context.save();
+  context.globalAlpha = capa.alfa;
+  context.font = `${Math.round(24 * capa.escala)}px "Press Start 2P", monospace`;
+  const texto = textoLienzo(CLAVE_PALABRA[capa.objeto]);
+  const ancho = medirTexto(context, texto, 24 * capa.escala) + 32;
+  const alto = 48 * capa.escala;
+  const centro = Math.max(ancho / 2 + 8, Math.min(VIEW_WIDTH - ancho / 2 - 8, x));
+  const y = Math.max(CARTEL_ARRIBA, cabeza - 64 - capa.subida) - alto / 2;
+  context.fillStyle = "rgba(0, 0, 0, .3)";
+  cajaRedondeada(context, centro - ancho / 2 + 4, y + 5, ancho, alto, 10); context.fill();
+  context.fillStyle = "#fff8e9"; context.strokeStyle = "#3d1430"; context.lineWidth = 4;
+  cajaRedondeada(context, centro - ancho / 2, y, ancho, alto, 10); context.fill(); context.stroke();
+  context.fillStyle = "#3d1430"; context.textAlign = "center"; context.textBaseline = "middle";
+  context.fillText(texto, centro, y + alto / 2 + 2);
+  context.restore();
+}
 
 /** Círculo con borde dorado sobre el color noche, centrado en Noa; con movimiento tranquilo, un fundido. */
 function drawTransitionLayer(context: CanvasRenderingContext2D, capa: CapaTransicion, x: number, y: number) {
@@ -230,6 +269,8 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     let cameraX = 0;
     /** Segundos de simulación desde que empezó la pantalla, para el círculo de entrada. */
     let entradaSegundos = 0;
+    /** Palabra con dibujo al recoger: la primera vez de cada objeto en esta pantalla. */
+    const palabras = createPalabrasRecoger();
     let cameraY = level.orientation === "vertical" ? Math.max(0, (level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT)
       : level.orientation === "explore" ? exploreCameraTarget(level, player, { width: VIEW_WIDTH, height: VIEW_HEIGHT }).y : 0;
     let apples = 0;
@@ -677,14 +718,17 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
           if (player.power === "normal") player.power = "apple";
           callbacksRef.current.playSound("apple");
           if (statusRef.current) statusRef.current.textContent = t("partida.avisos.manzana.oculto");
+          palabras.recoger("apple");
         } else if (item.kind === "cat") {
           player.power = "cat";
           callbacksRef.current.playSound("cat");
           if (statusRef.current) statusRef.current.textContent = t("partida.avisos.gata.oculto");
+          palabras.recoger("cat");
         } else {
           collectedStickers.add(item.id);
           callbacksRef.current.playSound("sticker");
           if (statusRef.current) statusRef.current.textContent = t("partida.avisos.insignia.oculto");
+          palabras.recoger("sticker");
         }
       }
 
@@ -851,6 +895,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
           respawnX = checkpoint + 22;
           callbacksRef.current.playSound("checkpoint");
           if (statusRef.current) statusRef.current.textContent = t("partida.avisos.bandera.oculto", { n: index + 1 });
+          palabras.recoger("flag");
         }
       });
       level.verticalCheckpoints?.forEach((checkpoint, index) => {
@@ -864,6 +909,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
           respawnY = checkpoint.y - player.height;
           callbacksRef.current.playSound("checkpoint");
           if (statusRef.current) statusRef.current.textContent = t("partida.avisos.nubeSegura.oculto", { n: index + 1 });
+          palabras.recoger("flag");
         }
       });
 
@@ -1077,9 +1123,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       drawDetourScenery(context, level, cameraX);
       if (level.orientation !== "vertical" && !level.detour && level.screen === 1 && cameraX < 520 && level.world >= 10 && !(level.world === 11 && level.bloomBridges?.length)) {
         const hint = textoLienzo(level.world === 10 ? "partida.lienzo.ayudaMundo.lava.rotulo" : level.world === 11 ? "partida.lienzo.ayudaMundo.rocio.rotulo" : level.world === 13 ? "partida.lienzo.ayudaMundo.regalo.rotulo" : level.world === 14 ? "partida.lienzo.ayudaMundo.arena.rotulo" : level.world === 15 ? "partida.lienzo.ayudaMundo.vagones.rotulo" : level.world === 16 ? "partida.lienzo.ayudaMundo.musica.rotulo" : "partida.lienzo.ayudaMundo.hielo.rotulo");
-        context.save(); context.fillStyle = "rgba(42,24,55,.88)"; context.fillRect(205 - cameraX * .22, 82, 550, 42);
-        context.strokeStyle = "#fff0b0"; context.lineWidth = 3; context.strokeRect(205 - cameraX * .22, 82, 550, 42);
-        context.fillStyle = "#fff7dd"; context.font = "bold 17px monospace"; context.textAlign = "center"; context.fillText(hint, 480 - cameraX * .22, 109); context.restore();
+        drawCartel(context, [hint], 480 - cameraX * .22, CARTEL_ARRIBA + 20);
       }
       if (hasWorldMechanics(level) && levelAge < 7 && cameraX < 360 && player.y > 150 && !completed) {
         const hint = textoLienzo(level.world === 3 ? "partida.lienzo.ayudaInicio.lobos.rotulo"
@@ -1087,14 +1131,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
           : level.world === 6 ? "partida.lienzo.ayudaInicio.perrito.rotulo"
           : level.world === 16 ? "partida.lienzo.ayudaInicio.compas.rotulo"
           : "partida.lienzo.ayudaInicio.aire.rotulo");
-        context.save();
-        context.fillStyle = "#fff8e7";
-        context.fillRect(150, 18, 660, 33);
-        context.fillStyle = "#493052";
-        context.font = "bold 14px monospace";
-        context.textAlign = "center";
-        context.fillText(hint, VIEW_WIDTH / 2, 40);
-        context.restore();
+        drawCartel(context, [hint], VIEW_WIDTH / 2, CARTEL_ARRIBA);
       }
       context.save();
       if (level.orientation === "vertical" || explore) context.translate(0, -cameraY);
@@ -1150,21 +1187,9 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
           drawRewardBlock(context, x, block.y, hitBlocks.has(block.id), raster.collectibles);
         }
         if (!hitBlocks.has(block.id) && Math.abs(player.x - block.x) < 230) {
-          context.fillStyle = "#fff8d6";
-          context.fillRect(x - 66, block.y - 35, 180, 24);
-          context.fillStyle = "#4b295f";
-          context.font = "bold 12px monospace";
-          context.textAlign = "center";
-          context.fillText(textoLienzo(block.reward === "secret-vine" ? "partida.lienzo.bloque.queHay.rotulo" : "partida.lienzo.bloque.debajo.rotulo"), x + 24, block.y - 19);
-          context.textAlign = "start";
+          drawCartel(context, [textoLienzo(block.reward === "secret-vine" ? "partida.lienzo.bloque.queHay.rotulo" : "partida.lienzo.bloque.debajo.rotulo")], x + 24, block.y - 50, { alfa: palabras.capa(false) ? 0.35 : 1 });
         } else if (block.reward === "secret-vine" && vineStartedFrame >= 0 && !completed && Math.abs(player.x - block.x) < 250) {
-          context.fillStyle = "#fff8d6";
-          context.fillRect(x - 65, block.y - 40, 180, 24);
-          context.fillStyle = "#3f7651";
-          context.font = "bold 12px monospace";
-          context.textAlign = "center";
-          context.fillText(textoLienzo("partida.lienzo.enredadera.rotulo"), x + 24, block.y - 24);
-          context.textAlign = "start";
+          drawCartel(context, [textoLienzo("partida.lienzo.enredadera.rotulo")], x + 24, block.y - 54, { color: "#3f7651", alfa: palabras.capa(false) ? 0.35 : 1 });
         }
       });
       cannons.forEach((cannon) => drawCannon(context, cannon, cameraX, raster.cannon));
@@ -1293,23 +1318,14 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       }
       if (level.id === "1-1" && player.x >= 130 && player.x < 1120) drawDoubleJumpTip(context);
       if (level.world === 17 && levelAge < 8) {
-        context.fillStyle = "rgba(42,24,70,.9)"; context.fillRect(176, 12, 608, 72);
-        context.fillStyle = "#fff7dd"; context.font = "bold 15px monospace"; context.textAlign = "center";
-        context.fillText(textoLienzo("partida.lienzo.vertical.sube.rotulo"), VIEW_WIDTH / 2, 33);
-        context.fillText(textoLienzo("partida.lienzo.vertical.bordes.rotulo"), VIEW_WIDTH / 2, 54);
-        context.fillStyle = "#ffb8ec"; context.fillText(textoLienzo("partida.lienzo.vertical.supersalto.rotulo"), VIEW_WIDTH / 2, 75); context.textAlign = "start";
+        drawCartel(context, [textoLienzo("partida.lienzo.vertical.sube.rotulo"), textoLienzo("partida.lienzo.vertical.bordes.rotulo"), textoLienzo("partida.lienzo.vertical.supersalto.rotulo")], VIEW_WIDTH / 2, CARTEL_ARRIBA);
       }
       if (level.world === 8 && player.x < 650) {
-        context.fillStyle = "#fff8e9";
-        context.fillRect(205, 18, 550, 56);
-        context.fillStyle = "#352044";
-        context.textAlign = "center";
-        context.font = "bold 14px monospace";
-        context.fillText(textoLienzo("partida.lienzo.nadar.nada.rotulo"), 480, 42);
-        context.fillText(textoLienzo("partida.lienzo.nadar.erizos.rotulo"), 480, 62);
-        context.textAlign = "start";
+        drawCartel(context, [textoLienzo("partida.lienzo.nadar.nada.rotulo"), textoLienzo("partida.lienzo.nadar.erizos.rotulo")], VIEW_WIDTH / 2, CARTEL_ARRIBA);
       }
 
+      const palabra = palabras.capa(motionRef.current);
+      if (palabra) drawPalabraRecogida(context, palabra, player.x + player.width / 2 - cameraX, player.y - cameraY);
       const radioMaximo = Math.hypot(VIEW_WIDTH, VIEW_HEIGHT);
       const salida = transition.remaining();
       const capa = salida !== undefined ? capaTransicion("salida", salida, radioMaximo, motionRef.current)
@@ -1330,6 +1346,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     const gameLoop = createGameLoop((delta, now) => {
       if (!runningRef.current || shopOpenRef.current) return;
       entradaSegundos += delta;
+      palabras.avanzar(delta);
       if (completed) transition.advance(delta, runningRef.current);
       else update(delta, now);
     }, render, () => { frame += 1; });

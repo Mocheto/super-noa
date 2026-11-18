@@ -36,6 +36,13 @@ export const partida = {
     dobleSalto: { rotulo: "{pictograma:salta}{pictograma:salta} ¡DOBLE SALTO!" },
     dobleSaltoComo: { rotulo: "{pictograma:salta} Y OTRA VEZ {pictograma:salta}" },
     bien: { rotulo: "{pictograma:estrella} ¡BIEN!" },
+    /** Palabra con dibujo al recoger un objeto, la primera vez en cada pantalla. */
+    recoger: {
+      manzana: { rotulo: "{pictograma:manzana} MANZANA" },
+      pegatina: { rotulo: "{pictograma:pegatina} PEGATINA" },
+      gato: { rotulo: "{pictograma:gato} GATO" },
+      bandera: { rotulo: "{pictograma:bandera} BANDERA" },
+    },
     oink: { rotulo: "¡OINK!" },
     auuu: { rotulo: "¡AUUU!" },
     despierta: { rotulo: "¡OJO!" },

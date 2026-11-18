@@ -31,7 +31,8 @@ function esTextoVisible(texto: string, esTextoJsx = false): boolean {
   if (/^[\w./-]+\.(png|webp|mp3|ogg|svg|css|json)$/.test(limpio)) return false;
   if (/^(\.|#|--|var\(|rgba?\(|\/)/i.test(limpio) || /^#[0-9a-f]{3,6}$/i.test(limpio)) return false;
   if (/^[a-z][\w-]*( [a-z][\w-]*)*$/.test(limpio)) return false;
-  if (/^(bold |italic )*\d+px /.test(limpio) || /^\(/.test(limpio)) return false;
+  // Tipos de letra del lienzo, también con el tamaño calculado («${tamano}px "Press Start 2P", monospace»).
+  if (/^(bold |italic )*(\d+|\$\{[^}]*\})px /.test(limpio) || /^\(/.test(limpio)) return false;
   if (/:not\(|a\[href|`/.test(limpio) || /[[\]=>]/.test(limpio)) return false;
   // Un solo trozo sin espacios con cifras, puntos, guiones o plantillas es un identificador o una clave («A-1», «pantallas.${id}.titulo»).
   const sinExpresiones = limpio.replace(/\$\{[^}]*\}/g, "$");

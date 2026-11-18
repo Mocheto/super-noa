@@ -372,3 +372,17 @@ _Avoid_: Fichero de traducciones, strings, literales
 **Clave de texto**:
 Nombre estable con el que se pide un texto al catálogo; no cambia aunque cambie la redacción ni el idioma.
 _Avoid_: ID de texto, etiqueta
+
+## Tablón mundial
+
+**Tablón mundial**:
+Clasificación pública y opcional de logros entre jugadoras de distintos dispositivos. Solo se activa si una persona adulta lo decide.
+_Avoid_: Ranking (en textos visibles), marcador
+
+**Tarjeta del tablón**:
+Inscripción de un dispositivo en el tablón: un alias y su progreso. Se puede borrar desde el juego o desde una página web.
+_Avoid_: Cuenta, perfil, usuario
+
+**Puerta para adultos**:
+Pregunta sencilla para una persona adulta y difícil para una niña de cinco años que protege acciones con datos: apuntarse al tablón o borrar la tarjeta.
+_Avoid_: Control parental, contraseña

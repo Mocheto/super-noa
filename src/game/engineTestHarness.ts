@@ -10,21 +10,27 @@ import type { LiveChainGuardian } from "./chainGuardians";
 export function engineModules(overrides: Record<string, unknown> = {}, globals: Record<string, unknown> = {}) {
   const context = vm.createContext({ console, ...globals });
   const cache = new Map<string, { exports: unknown }>();
-  const load = (name: string): unknown => {
+  // Resuelve como Vite: relativo al módulo que importa, con o sin extensión, y carpetas con index.ts.
+  const resolve = (name: string, from: URL) => {
+    const base = new URL(name, from);
+    if (/\.(ts|tsx)$/.test(name)) return base;
+    return [".ts", ".tsx", "/index.ts"].map((suffix) => new URL(`${base.href}${suffix}`)).find((url) => existsSync(url)) ?? new URL(`${base.href}.tsx`);
+  };
+  const loadFrom = (from: URL) => (name: string): unknown => {
     if (name.endsWith(".css")) return {};
     if (name in overrides) return overrides[name];
-    if (cache.has(name)) return cache.get(name)!.exports;
+    const url = resolve(name, from);
+    if (cache.has(url.href)) return cache.get(url.href)!.exports;
     const module = { exports: {} };
-    cache.set(name, module);
-    const file = name.slice(2) + (/\.(ts|tsx)$/.test(name) ? "" : existsSync(new URL(`${name.slice(2)}.ts`, import.meta.url)) ? ".ts" : ".tsx");
-    const source = readFileSync(new URL(file, import.meta.url), "utf8");
+    cache.set(url.href, module);
+    const source = readFileSync(url, "utf8");
     const code = ts.transpileModule(source, {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
     }).outputText;
-    vm.runInContext(`(function(require, module, exports) { ${code}\n})`, context)(load, module, module.exports);
+    vm.runInContext(`(function(require, module, exports) { ${code}\n})`, context)(loadFrom(url), module, module.exports);
     return module.exports;
   };
-  return load;
+  return loadFrom(new URL("./", import.meta.url));
 }
 
 export function mountEngine(level: Level) {

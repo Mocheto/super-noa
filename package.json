@@ -12,7 +12,7 @@
     "preview:pages": "vite preview --config vite.github.config.ts --outDir dist-pages",
     "test": "npm run lint && npm run test:logic && npm run build:pages",
     "typecheck": "tsc --noEmit",
-    "test:logic": "node --experimental-strip-types --test src/game/*.test.ts server/*.test.mjs",
+    "test:logic": "node --experimental-strip-types --test src/game/*.test.ts src/textos/*.test.ts server/*.test.mjs",
     "lint": "eslint . --ignore-pattern dist-pages"
   },
   "dependencies": {

@@ -34,7 +34,8 @@ import { addHeart } from "./game/friendProgress";
 import { FriendsTab } from "./game/FriendsTab";
 import { recordFlight } from "./game/avioneta";
 import { puntos, t } from "./textos";
-import { BotonControl, Pictograma, Texto } from "./textos/Texto";
+import { Boton, BotonControl, Pictograma, Texto } from "./textos/Texto";
+import { Medalla, Ventana } from "./game/Ventana";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
 import { visitDetour } from "./game/detourProgress";
 
@@ -854,8 +855,8 @@ export default function App() {
       {screen === "secret-transition" && (
         <section className="secret-transition" aria-live="polite">
           <img className="secret-vine-rise" src="./assets/sprites/secret-vine-transition-v1.png" alt="" aria-hidden="true" />
-          <p className="eyebrow rotulo"><Texto clave="ventanas.subidaSecreta.secreto.rotulo" /></p>
-          <h2 className="rotulo"><Texto clave="ventanas.subidaSecreta.arriba.rotulo" /></h2>
+          <p className="eyebrow texto-noa"><Texto clave="ventanas.subidaSecreta.secreto.rotulo" /></p>
+          <h2 className="texto-noa titulo pictograma-doble"><Texto clave="ventanas.subidaSecreta.arriba.rotulo" /></h2>
           <p className="juntos">{t("ventanas.subidaSecreta.arriba.juntos")}</p>
           <div className="transition-clouds" aria-hidden="true">☁ ☁ ☁</div>
         </section>
@@ -938,57 +939,67 @@ export default function App() {
           </Suspense>}
 
           {screen === "complete" && (
-            <Dialog labelledBy="complete-title" backdropClassName="celebration" esperaMs={500} onClose={() => setScreen("map")}>
-              <div className="big-icon">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt={t("ventanas.completada.trofeo.oculto")} /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.png"} alt={t("ventanas.completada.gatito.oculto")} />}</div>
-              <h2 id="complete-title" className="rotulo"><Texto clave="ventanas.completada.titulo.rotulo" /></h2>
+            <Ventana id="complete-title" titulo="ventanas.completada.titulo.rotulo" celebracion esperaMs={500} onClose={() => setScreen("map")}
+              botones={<>
+                {showCatPartyInvite && <Boton tipo="seguir" clave="ventanas.completada.fiesta.rotulo" data-gamepad-default onClick={openCatParty} />}
+                {!showCatPartyInvite && activeLevel.world !== 7 && <Boton tipo="seguir" clave="ventanas.completada.siguiente.rotulo" data-gamepad-default onClick={nextLevel} />}
+                {activeLevel.boss && restStopFor(activeLevel.world) && <Boton clave="ventanas.completada.paseo.rotulo" onClick={() => beginLevel(levels.length + detourLevels.length + restStopIndex(activeLevel.world))} />}
+                <Boton tipo={activeLevel.world === 7 ? "seguir" : "secundario"} clave="ventanas.completada.mapa.rotulo" data-gamepad-back onClick={() => setScreen("map")} />
+              </>}>
+              <div className="ventana-dibujo">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt={t("ventanas.completada.trofeo.oculto")} /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.png"} alt={t("ventanas.completada.gatito.oculto")} />}</div>
+              <div className="medallas" role="group" aria-label={t("ventanas.completada.medallas.oculto")}>
+                <Medalla clave="ventanas.completada.meta.rotulo" conseguida />
+                <Medalla clave="ventanas.completada.pegatina.rotulo" conseguida={snapshot.stickers.length > 0 || progress.stickers.includes(activeLevel.items.find((item) => item.kind === "sticker")?.id ?? "")} />
+                <Medalla clave="ventanas.completada.sinCaer.rotulo" conseguida={lives === MAX_LIVES} />
+              </div>
+              {snapshot.stickers.length > 0 && <div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="ventanas.completada.insignia.rotulo" /></p><p className="juntos">{t("ventanas.completada.insignia.juntos", { n: snapshot.stickers.length })}</p></div>}
               <p className="juntos">{t("ventanas.completada.manzanas.juntos", { n: snapshot.apples })} {t(activeLevel.world === 7 ? "ventanas.completada.reina.juntos" : activeLevel.boss ? "ventanas.completada.guardian.juntos" : "ventanas.completada.siguienteAventura.juntos")}</p>
-              <div className="completion-medals" aria-label={t("ventanas.completada.medallas.oculto")}><span className="is-earned"><Texto clave="ventanas.completada.meta.rotulo" /></span><span className={snapshot.stickers.length > 0 || progress.stickers.includes(activeLevel.items.find((item) => item.kind === "sticker")?.id ?? "") ? "is-earned" : ""}><Texto clave="ventanas.completada.pegatina.rotulo" /></span><span className={lives === MAX_LIVES ? "is-earned" : ""}><Texto clave="ventanas.completada.sinCaer.rotulo" /></span></div>
-              {snapshot.stickers.length > 0 && <p className="sticker-found"><PixelIcon kind="sparkle" /> <Texto clave="ventanas.completada.insignia.rotulo" /> <small>{t("ventanas.completada.insignia.juntos", { n: snapshot.stickers.length })}</small></p>}
-              {showCatPartyInvite && <><p className="juntos">{t("ventanas.completada.fiesta.juntos")}</p><button className="pixel-button primary rotulo" type="button" data-gamepad-default onClick={openCatParty}><Texto clave="ventanas.completada.fiesta.rotulo" /></button></>}
-              {!showCatPartyInvite && activeLevel.world !== 7 && <button className="pixel-button primary" type="button" onClick={nextLevel}><Texto clave="ventanas.completada.siguiente.rotulo" />{activeLevel.route?.nextLabel && <small className="juntos">{activeLevel.route.nextLabel}</small>}</button>}
-              {activeLevel.boss && restStopFor(activeLevel.world) && <button className="pixel-button" type="button" onClick={() => beginLevel(levels.length + detourLevels.length + restStopIndex(activeLevel.world))}><Texto clave="ventanas.completada.paseo.rotulo" /></button>}
-              {activeLevel.world === 7 && <button className="pixel-button primary" type="button" data-gamepad-back onClick={() => setScreen("map")}><Texto clave="ventanas.completada.mapa.rotulo" /></button>}
-              {activeLevel.world !== 7 && <button className="pixel-button" type="button" data-gamepad-back onClick={() => setScreen("map")}><Texto clave="ventanas.completada.mapa.rotulo" /></button>}
-            </Dialog>
+              {showCatPartyInvite && <p className="juntos">{t("ventanas.completada.fiesta.juntos")}</p>}
+              {!showCatPartyInvite && activeLevel.world !== 7 && activeLevel.route?.nextLabel && <p className="juntos">{activeLevel.route.nextLabel}</p>}
+            </Ventana>
           )}
 
           {screen === "gameover" && (
-            <Dialog labelledBy="gameover-title" esperaMs={500} onClose={() => setScreen("map")}>
-              <div className="big-icon"><GameAssetIcon kind="apple" /></div><h2 id="gameover-title" className="rotulo"><Texto clave="ventanas.otraOportunidad.titulo.rotulo" /></h2>
+            <Ventana id="gameover-title" titulo="ventanas.otraOportunidad.titulo.rotulo" esperaMs={500} onClose={() => setScreen("map")}
+              botones={<>
+                <Boton tipo="seguir" clave="ventanas.otraOportunidad.otraVez.rotulo" data-gamepad-default onClick={() => beginLevel(activeIndex)} />
+                <Boton clave="ventanas.otraOportunidad.mapa.rotulo" data-gamepad-back onClick={() => setScreen("map")} />
+              </>}>
+              <div className="ventana-dibujo corazones" aria-hidden="true">{Array.from({ length: MAX_LIVES }, (_, vida) => <GameAssetIcon key={vida} kind="heart" />)}</div>
               <p className="juntos">{t("ventanas.otraOportunidad.vidas.juntos")}</p>
-              <button className="pixel-button primary rotulo" type="button" onClick={() => beginLevel(activeIndex)}><Texto clave="ventanas.otraOportunidad.otraVez.rotulo" /></button>
-              <button className="pixel-button rotulo" type="button" data-gamepad-back onClick={() => setScreen("map")}><Texto clave="ventanas.otraOportunidad.mapa.rotulo" /></button>
-            </Dialog>
+            </Ventana>
           )}
 
           {screen === "finished" && (
-            <Dialog labelledBy="finished-title" esperaMs={500} className="game-modal finale" backdropClassName="celebration" onClose={() => setScreen("map")}>
-              <div className="cat-party" aria-hidden="true">
+            <Ventana id="finished-title" titulo="ventanas.final.titulo.rotulo" className="finale" celebracion esperaMs={500} onClose={() => setScreen("map")}
+              botones={<>
+                <Boton tipo="seguir" clave="ventanas.final.mapa.rotulo" data-gamepad-default onClick={() => setScreen("map")} />
+                <Boton clave="ventanas.final.inicio.rotulo" data-gamepad-back onClick={() => setScreen("home")} />
+              </>}>
+              <div className="ventana-dibujo cat-party" aria-hidden="true">
                 <img src="./assets/sprites/world-cat-1-v1.png" alt="" />
                 <GameAssetIcon kind="apple" />
                 <img src="./assets/sprites/world-cat-2-v1.png" alt="" />
                 <img className="party-yarn" src="./assets/sprites/yarn-ball-v1.png" alt="" />
                 <img src="./assets/sprites/world-cat-6-v1.png" alt="" />
               </div>
-              <h2 id="finished-title" className="rotulo"><Texto clave="ventanas.final.titulo.rotulo" /></h2><p className="juntos">{t("ventanas.final.amigos.juntos")}</p>
-              <button className="pixel-button primary rotulo" type="button" onClick={() => setScreen("map")}><Texto clave="ventanas.final.mapa.rotulo" /></button>
-              <button className="pixel-button rotulo" type="button" data-gamepad-back onClick={() => setScreen("home")}><Texto clave="ventanas.final.inicio.rotulo" /></button>
-            </Dialog>
+              <p className="juntos">{t("ventanas.final.amigos.juntos")}</p>
+            </Ventana>
           )}
         </section>
       )}
 
       {paused && isTimedScreen(screen) && (
-        <Dialog labelledBy="pause-title" className="game-modal compact" onClose={() => setPaused(false)}>
-          <h2 id="pause-title" className="rotulo"><Texto clave="partida.pausa.titulo.rotulo" /></h2>
-          <button className="pixel-button primary rotulo" type="button" data-gamepad-default onClick={() => setPaused(false)}><Texto clave="partida.pausa.seguir.rotulo" /></button>
-          {screen !== "cat-party" && <button className="pause-restart rotulo" type="button" onClick={restartCurrentLevel}><Texto clave="partida.pausa.otraVez.rotulo" /></button>}
-          <button className="pixel-button rotulo" type="button" data-gamepad-back onClick={screen === "cat-party" ? leaveCatParty : () => { setPaused(false); setScreen("map"); }}><Texto clave="partida.pausa.mapa.rotulo" /></button>
-          <div className="pausa-controles">
-            <BotonControl pictograma={muted ? "sin-sonido" : "sonido"} etiqueta={muted ? "partida.hud.sonido.oculto" : "partida.hud.silencio.oculto"} aria-pressed={!muted} onClick={() => setMuted((value) => !value)} />
-            <BotonControl pictograma="pantalla-grande" etiqueta="partida.hud.pantallaGrande.oculto" onClick={toggleFullscreen} />
-          </div>
-        </Dialog>
+        <Ventana id="pause-title" titulo="partida.pausa.titulo.rotulo" className="ventana-pausa" onClose={() => setPaused(false)}
+          botones={<>
+            <Boton tipo="seguir" clave="partida.pausa.seguir.rotulo" data-gamepad-default onClick={() => setPaused(false)} />
+            {screen !== "cat-party" && <Boton clave="partida.pausa.otraVez.rotulo" onClick={restartCurrentLevel} />}
+            <Boton clave="partida.pausa.mapa.rotulo" data-gamepad-back onClick={screen === "cat-party" ? leaveCatParty : () => { setPaused(false); setScreen("map"); }} />
+            <div className="pausa-controles">
+              <BotonControl pictograma={muted ? "sin-sonido" : "sonido"} etiqueta={muted ? "partida.hud.sonido.oculto" : "partida.hud.silencio.oculto"} aria-pressed={!muted} onClick={() => setMuted((value) => !value)} />
+              <BotonControl pictograma="pantalla-grande" etiqueta="partida.hud.pantallaGrande.oculto" onClick={toggleFullscreen} />
+            </div>
+          </>} />
       )}
 
       {showSettings && (

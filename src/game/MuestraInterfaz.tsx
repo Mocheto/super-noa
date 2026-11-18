@@ -1,9 +1,19 @@
 import { t } from "../textos";
 import { Boton, BotonControl, Texto } from "../textos/Texto";
+import { Medalla, Ventana } from "./Ventana";
 
 /** Solo en desarrollo (`?prueba=interfaz`): muestra los cimientos de la interfaz para revisarlos en escritorio y móvil. */
 export function MuestraInterfaz() {
+  // `?prueba=interfaz&ventana=resultado` abre además la pantalla de resultado común.
+  const ventana = new URLSearchParams(window.location.search).get("ventana");
   return <main className="muestra-interfaz">
+    {ventana === "resultado" && <Ventana id="muestra-resultado" titulo="ventanas.completada.titulo.rotulo" celebracion
+      botones={<><Boton tipo="seguir" clave="ventanas.completada.siguiente.rotulo" /><Boton clave="ventanas.completada.mapa.rotulo" /></>}>
+      <div className="ventana-dibujo"><img className="completion-cat" src="./assets/sprites/world-cat-1-v1.png" alt={t("ventanas.completada.gatito.oculto")} /></div>
+      <div className="medallas"><Medalla clave="ventanas.completada.meta.rotulo" conseguida /><Medalla clave="ventanas.completada.pegatina.rotulo" conseguida /><Medalla clave="ventanas.completada.sinCaer.rotulo" conseguida={false} /></div>
+      <div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="ventanas.completada.insignia.rotulo" /></p><p className="juntos">{t("ventanas.completada.insignia.juntos", { n: 1 })}</p></div>
+      <p className="juntos">{t("ventanas.completada.manzanas.juntos", { n: 4 })} {t("ventanas.completada.siguienteAventura.juntos")}</p>
+    </Ventana>}
     <section className="muestra-papel">
       <h1 className="texto-noa titulo pictograma-doble"><Texto clave="partida.pausa.titulo.rotulo" /></h1>
       <p className="juntos">{t("ventanas.completada.reina.juntos")}</p>

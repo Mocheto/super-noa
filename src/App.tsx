@@ -1033,16 +1033,16 @@ export default function App() {
 
       {showAlbum && (
         <Dialog labelledBy="album-title" className="game-modal album-modal" onClose={() => setShowAlbum(false)}>
-          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowAlbum(false)} aria-label="Cerrar">×</button>
-          <p className="eyebrow">Colección de Noa</p><h2 id="album-title">{collectionTab === "stickers" ? "Álbum de pegatinas" : collectionTab === "bosses" ? "Jefes amigos" : collectionTab === "friends" ? "Amigos" : "Postales de viaje"}</h2>
-          <div className="collection-tabs" aria-label="Ver colección">
-            <button className={collectionTab === "stickers" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "stickers"} onClick={() => setCollectionTab("stickers")}>Pegatinas</button>
-            <button className={collectionTab === "bosses" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "bosses"} onClick={() => setCollectionTab("bosses")}>Jefes amigos</button>
-            <button className={collectionTab === "friends" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "friends"} onClick={() => setCollectionTab("friends")}>Amigos</button>
-            <button className={collectionTab === "memories" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "memories"} onClick={() => setCollectionTab("memories")}>Recuerdos</button>
+          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowAlbum(false)} aria-label={t("coleccion.cerrar.oculto")}>×</button>
+          <h2 id="album-title" className="rotulo"><Texto clave={collectionTab === "stickers" ? "coleccion.titulo.pegatinas.rotulo" : collectionTab === "bosses" ? "coleccion.titulo.jefes.rotulo" : collectionTab === "friends" ? "coleccion.titulo.amigos.rotulo" : "coleccion.titulo.postales.rotulo"} /></h2>
+          <div className="collection-tabs" aria-label={t("coleccion.grupo.oculto")}>
+            <button className={collectionTab === "stickers" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "stickers"} onClick={() => setCollectionTab("stickers")}><Texto clave="coleccion.pestana.pegatinas.rotulo" /></button>
+            <button className={collectionTab === "bosses" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "bosses"} onClick={() => setCollectionTab("bosses")}><Texto clave="coleccion.pestana.jefes.rotulo" /></button>
+            <button className={collectionTab === "friends" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "friends"} onClick={() => setCollectionTab("friends")}><Texto clave="coleccion.pestana.amigos.rotulo" /></button>
+            <button className={collectionTab === "memories" ? "is-active" : ""} type="button" aria-pressed={collectionTab === "memories"} onClick={() => setCollectionTab("memories")}><Texto clave="coleccion.pestana.postales.rotulo" /></button>
           </div>
           {collectionTab === "friends" ? <FriendsTab progress={progress} onHeart={(kind) => setProgress((current) => addHeart(current, kind))} /> : collectionTab === "stickers" ? <>
-            <p>{progress.secretUnlocked ? "Hay una pegatina por pantalla y tres insignias en el reino secreto." : "Hay una pegatina escondida en la ruta elevada de cada pantalla."}</p>
+            <p className="juntos">{t(progress.secretUnlocked ? "coleccion.pegatinas.introConSecreto.juntos" : "coleccion.pegatinas.introSinSecreto.juntos")}</p>
             <div className="sticker-grid">
               {albumStickers.map((sticker) => {
                 const found = progress.stickers.includes(sticker.id);
@@ -1053,39 +1053,39 @@ export default function App() {
                 return (
                   <article className={`sticker-card ${found ? "is-found" : "is-locked"}`} key={sticker.id}>
                     <span className="sticker-frame" aria-hidden="true">{found && sprite ? <span className="sticker-sprite" style={{ backgroundImage: `url(${optimizedAssetSource(sprite.src)})`, backgroundPosition: `${sprite.column * 50}% center` }} /> : "?"}</span>
-                    <strong>{found ? sticker.name : `Mundo ${sticker.world}`}</strong>
-                    <small>{stickerLevel ? `Pantalla ${stickerLevel.id}` : ""} · {found ? "¡Encontrada!" : "Pegatina pendiente"}</small>
-                    {!found && available && <><button className="level-hint-toggle" type="button" aria-expanded={hintVisible} aria-controls={`album-hint-${sticker.id}`} onClick={() => setAlbumHints((current) => hintVisible ? current.filter((id) => id !== sticker.id) : [...current, sticker.id])}>{hintVisible ? "Ocultar pista" : "Mostrar pista"}</button><p className="album-sticker-hint" id={`album-hint-${sticker.id}`} hidden={!hintVisible}>{sticker.hint}</p></>}
-                    {!found && !available && <small>Abre esta pantalla para ver su pista.</small>}
+                    <strong>{found ? sticker.name : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: sticker.world }} />}</strong>
+                    <small>{stickerLevel ? stickerLevel.id : ""} · <Texto clave={found ? "coleccion.pegatinas.encontrada.rotulo" : "coleccion.pegatinas.pendiente.rotulo"} /></small>
+                    {!found && available && <><button className="level-hint-toggle" type="button" aria-expanded={hintVisible} aria-controls={`album-hint-${sticker.id}`} onClick={() => setAlbumHints((current) => hintVisible ? current.filter((id) => id !== sticker.id) : [...current, sticker.id])}><Texto clave="coleccion.pegatinas.pista.rotulo" /></button><p className="album-sticker-hint" id={`album-hint-${sticker.id}`} hidden={!hintVisible}>{sticker.hint}</p></>}
+                    {!found && !available && <small><Texto clave="coleccion.pegatinas.abrirPantalla.rotulo" /> <span className="juntos">{t("coleccion.pegatinas.abrirPantalla.juntos")}</span></small>}
                   </article>
                 );
               })}
             </div>
-            <p className="album-progress"><PixelIcon kind="sparkle" /> {progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length} de {albumStickers.length}</p>
+            <p className="album-progress" aria-label={t("coleccion.pegatinas.progreso.oculto", { n: progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length, total: albumStickers.length })}><Texto clave="coleccion.pegatinas.progreso.rotulo" variables={{ n: progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length, total: albumStickers.length }} /></p>
           </> : collectionTab === "bosses" ? <>
-            <p>Completa el juego de cada guardián para hacerte su amiga. Después podréis jugar otra vez.</p>
+            <p className="juntos">{t("coleccion.jefes.intro.juntos")}</p>
             <div className="boss-friends-grid">
               {bossLevels.map(({ level, index, boss }) => {
                 const known = Boolean(progress.levelStats[level.id]?.completed);
                 const challengeDone = Boolean(progress.bossChallenges[level.boss ?? ""]);
                 return (
                   <article className={`boss-friend-card ${known ? "is-friend" : "is-mystery"} ${challengeDone ? "has-challenge-frame" : ""}`} key={level.id}>
-                    <span className="boss-friend-world">{level.world === 7 ? (progress.secretUnlocked ? "Mundo secreto" : "Mundo misterioso") : level.world === 8 ? "Mundo del agua" : `Mundo ${level.world}`}</span>
+                    <span className="boss-friend-world">{level.world === 7 ? (progress.secretUnlocked ? <Texto clave="mapa.mundo.secreto.rotulo" /> : <Texto clave="coleccion.jefes.misterioso.rotulo" />) : level.world === 8 ? <Texto clave="mapa.mundo.agua.rotulo" /> : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: level.world }} />}</span>
                     <div className="boss-friend-portrait" aria-hidden="true">
                       {known ? boss.assetAtlas
                         ? <span className={`boss-friend-atlas ${level.boss === "santa-claus" ? "boss-friend-atlas-santa" : ""}`} style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />
                         : <img src={`${boss.assetPrefix}-0.png`} alt="" />
                         : <span className="boss-mystery-shape">?</span>}
                     </div>
-                    <strong>{known ? boss.name : "Amigo por descubrir"}</strong>
-                    {known ? <>{challengeDone ? <small className="challenge-frame-label">★ Marco especial conseguido</small> : <small>★ Reto pendiente: {boss.challenge.label}</small>}<button type="button" onClick={() => replayBoss(index)}>Jugar otra vez</button></> : <small>Completa su juego para conocerlo.</small>}
+                    <strong aria-label={known ? undefined : t("coleccion.jefes.porDescubrir.oculto")}>{known ? boss.name : <Texto clave="coleccion.jefes.porDescubrir.rotulo" />}</strong>
+                    {known ? <>{challengeDone ? <small className="challenge-frame-label"><Texto clave="coleccion.jefes.marco.rotulo" /></small> : <small><Texto clave="coleccion.jefes.retoPendiente.rotulo" /> {boss.challenge.label}</small>}<button type="button" onClick={() => replayBoss(index)}><Texto clave="coleccion.jefes.jugarOtraVez.rotulo" /></button></> : <small className="juntos">{t("coleccion.jefes.conocer.juntos")}</small>}
                   </article>
                 );
               })}
             </div>
-            <p className="album-progress">★ {knownBosses} de {bossLevels.length} amigos</p>
+            <p className="album-progress" aria-label={t("coleccion.jefes.progreso.oculto", { n: knownBosses, total: bossLevels.length })}><Texto clave="coleccion.jefes.progreso.rotulo" variables={{ n: knownBosses, total: bossLevels.length }} /></p>
           </> : <>
-            <p>Termina todas las pantallas de un mundo para guardar una postal con el gatito que conociste allí.</p>
+            <p className="juntos">{t("coleccion.postales.intro.juntos")}</p>
             <div className="memory-grid">
               {worldCatalog.map((world) => {
                 const memory = worldProgress[world.id];
@@ -1093,16 +1093,16 @@ export default function App() {
                   <article className={`memory-card world-${world.id} ${memory.remembered ? "is-remembered" : "is-locked"}`} key={world.id}>
                     <img className="memory-world-art" src={worldArtwork(world.id)} alt="" aria-hidden="true" />
                     <div className="memory-content">
-                      <span>{world.id === 7 ? "Mundo secreto" : world.id === 8 ? "Mundo del agua" : `Mundo ${world.id}`}</span>
-                      {memory.remembered ? <><img className="memory-cat" src={world.catAsset} alt={`${world.cat}, el gatito amigo de ${world.name}`} /><strong>{world.cat}</strong><small>{world.name}</small><em>★ {memory.complete + memory.stickers + memory.flawless} medallas de aventura</em></> : <><b className="memory-lock">?</b><strong>Postal por descubrir</strong><small>{memory.complete}/{memory.total} pantallas completadas</small></>}
+                      <span>{world.id === 7 ? <Texto clave="mapa.mundo.secreto.rotulo" /> : world.id === 8 ? <Texto clave="mapa.mundo.agua.rotulo" /> : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: world.id }} />}</span>
+                      {memory.remembered ? <><img className="memory-cat" src={world.catAsset} alt={t("coleccion.postales.gatito.oculto", { gato: world.cat, mundo: world.name })} /><strong>{world.cat}</strong><small>{world.name}</small><em aria-label={t("coleccion.postales.medallas.oculto", { n: memory.complete + memory.stickers + memory.flawless })}><Texto clave="coleccion.postales.medallas.rotulo" variables={{ n: memory.complete + memory.stickers + memory.flawless }} /></em></> : <><b className="memory-lock">?</b><strong aria-label={t("coleccion.postales.porDescubrir.oculto")}><Texto clave="coleccion.postales.porDescubrir.rotulo" /></strong><small aria-label={t("mapa.mundo.progreso.oculto", { n: memory.complete, total: memory.total })}><Texto clave="mapa.mundo.progreso.rotulo" variables={{ puntos: puntos(memory.complete, memory.total) }} /></small></>}
                     </div>
                   </article>
                 );
               })}
             </div>
-            <p className="album-progress">✉ {Object.values(worldProgress).filter((world) => world.remembered).length} de {worldCatalog.length} postales guardadas</p>
+            <p className="album-progress" aria-label={t("coleccion.postales.progreso.oculto", { n: Object.values(worldProgress).filter((world) => world.remembered).length, total: worldCatalog.length })}><Texto clave="coleccion.postales.progreso.rotulo" variables={{ n: Object.values(worldProgress).filter((world) => world.remembered).length, total: worldCatalog.length }} /></p>
           </>}
-          <button className="pixel-button primary" type="button" onClick={() => setShowAlbum(false)}>Seguir explorando</button>
+          <button className="pixel-button primary" type="button" onClick={() => setShowAlbum(false)}><Texto clave="coleccion.seguir.rotulo" /></button>
         </Dialog>
       )}
       {showRanking && (

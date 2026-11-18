@@ -10,7 +10,6 @@ export const archivosPendientes: readonly string[] = [
   "src/game/BeeNinjaGame.tsx",
   "src/game/BossBattle.tsx",
   "src/game/CatPartyGame.tsx",
-  "src/game/FriendsTab.tsx",
   "src/game/GuardianMiniGame.tsx",
   "src/game/MeriendaJabatosGame.tsx",
   "src/game/SantaBossBattle.tsx",

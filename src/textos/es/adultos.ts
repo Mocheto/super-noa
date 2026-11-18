@@ -5,6 +5,9 @@
 export const adultos = {
   /** Ayuda de teclado, mando y sin sonido de los minijuegos: solo en su pantalla previa. */
   minijuegos: {
+    saltos: {
+      controles: "Teclado: flechas o A/D para moverte y espacio para saltar. Mando: cruceta o palanca, y botón A para saltar.",
+    },
     gatitos: {
       controles: "Teclado: Espacio. Mando: botón A. También puedes tocar el botón de golpear.",
       sinSonido: "Sin sonido, sigue los farolillos y el aro dorado: el tronco está listo cuando el aro se ilumina.",

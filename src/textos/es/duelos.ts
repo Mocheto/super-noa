@@ -91,7 +91,7 @@ export const duelos = {
       como: { juntos: "Salta los regalos y cae sobre su cabeza tres veces. ¡Atención, cada ronda va un poquito más rápido!" },
       gana: { juntos: "Papá Noel sonríe: ahora los regalos saldrán a tiempo." },
       escena: { oculto: "Noa y Papá Noel en el patio nevado de los regalos." },
-      lanza: { rotulo: "¡VA UN REGALO!" },
+      lanza: { rotulo: "{pictograma:regalo} ¡VA!" },
     },
     siroco: {
       etiqueta: { rotulo: "{pictograma:reto} GUARDIAN" },
@@ -99,7 +99,7 @@ export const duelos = {
       como: { juntos: "Salta las bolas de arena y cae sobre su cabeza tres veces. ¡Atención, cada ronda va un poquito más rápido!" },
       gana: { juntos: "Siroco sonríe y abre el camino entre las dunas." },
       escena: { oculto: "Noa y Siroco en las ruinas doradas del desierto." },
-      lanza: { rotulo: "¡VA LA ARENA!" },
+      lanza: { rotulo: "¡ARENA!" },
     },
     "don-silbato": {
       etiqueta: { rotulo: "{pictograma:tren} GUARDIAN" },
@@ -107,7 +107,7 @@ export const duelos = {
       como: { juntos: "Salta las maletas y cae sobre su cabeza tres veces. ¡Atención, cada ronda va un poquito más rápido!" },
       gana: { juntos: "Don Silbato toca su silbato: el tren puede continuar." },
       escena: { oculto: "Noa y Don Silbato junto a la gran locomotora." },
-      lanza: { rotulo: "¡VA UNA MALETA!" },
+      lanza: { rotulo: "¡MALETA!" },
     },
     controles: { oculto: "{escena} Muévete con las flechas y salta con espacio." },
     saltos: { rotulo: "{pictograma:salta} {n}/{total}", oculto: "{n} de {total} saltos" },

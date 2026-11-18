@@ -6,8 +6,10 @@ import { createSantaBattle, PLATFORM_BOSS_HITS, SANTA_ARENA, stepSantaBattle } f
 import { drawSantaBattle } from "./santaBattleRendering";
 import { TouchControls, type TouchControl } from "./TouchControls";
 import type { BossId } from "./types";
-import { t, tClave } from "../textos/index.ts";
-import { Pictogramas, Texto } from "../textos/Texto";
+import { t, tClave, type ClaveTexto } from "../textos/index.ts";
+import { Boton, Texto } from "../textos/Texto";
+import { bossCatalog } from "./bosses";
+import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
 
 type Props = {
   bossId?: Extract<BossId, "santa-claus" | "siroco" | "don-silbato">;
@@ -25,6 +27,8 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
   const keys = useRef(emptyInput()), touch = useRef(emptyInput());
   const touchPointers = useRef<Partial<Record<TouchControl, number>>>({});
   const [hud, setHud] = useState({ hits: 0, lives: 3, status: "playing" });
+  const [empezado, setEmpezado] = useState(false);
+  const detenido = paused || !empezado;
   const soundRef = useRef(playSound);
   useEffect(() => { soundRef.current = playSound; }, [playSound]);
 
@@ -69,15 +73,15 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
     window.addEventListener("keydown", key); window.addEventListener("keyup", key);
     window.addEventListener("blur", blur); document.addEventListener("visibilitychange", visibility);
     clearInput();
-    if (!paused && battle.current.status === "playing") canvasRef.current?.focus({ preventScroll: true });
-    loop.setRunning(!paused && battle.current.status === "playing" && !document.hidden);
-    if (paused || battle.current.status !== "playing") drawSantaBattle(context, battle.current, bossId);
+    if (!detenido && battle.current.status === "playing") canvasRef.current?.focus({ preventScroll: true });
+    loop.setRunning(!detenido && battle.current.status === "playing" && !document.hidden);
+    if (detenido || battle.current.status !== "playing") drawSantaBattle(context, battle.current, bossId);
     return () => {
       loop.stop(); clearInput(); window.removeEventListener("resize", resize);
       window.removeEventListener("keydown", key); window.removeEventListener("keyup", key);
       window.removeEventListener("blur", blur); document.removeEventListener("visibilitychange", visibility);
     };
-  }, [bossId, paused, hud.status]);
+  }, [bossId, detenido, hud.status]);
 
   const retry = () => {
     if (apples <= 0) { onRestartLevel(); return; }
@@ -85,7 +89,7 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
     setHud({ hits: 0, lives: 3, status: "playing" });
   };
   const press = (control: TouchControl, event: PointerEvent<HTMLButtonElement>) => {
-    if (control === "shoot" || paused || hud.status !== "playing") return;
+    if (control === "shoot" || detenido || hud.status !== "playing") return;
     event.preventDefault();
     if (touchPointers.current[control] !== undefined) return;
     touchPointers.current[control] = event.pointerId;
@@ -99,15 +103,34 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
     delete touchPointers.current[control]; touch.current[control] = false;
   };
   const won = hud.status === "won", lost = hud.status === "lost";
+  const boss = bossCatalog[bossId];
+  const retrato = <span className="santa-retrato" style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />;
   return <section className="santa-boss-battle" role="dialog" aria-modal="true" aria-labelledby="santa-boss-title">
-    <header className="santa-boss-hud"><div><p className="eyebrow rotulo"><Pictogramas texto={tClave(clave("etiqueta.rotulo"))} /></p><h2 id="santa-boss-title" className="rotulo"><Pictogramas texto={tClave(clave("titulo.rotulo"))} /></h2><p className="juntos">{tClave(clave("como.juntos"))}</p></div><div className="santa-hit-counter"><span aria-label={t("partida.hud.vidas.oculto", { n: hud.lives })}>{"♥".repeat(hud.lives)}{"♡".repeat(3 - hud.lives)}</span><b aria-live="polite" aria-label={t("duelos.santa.saltos.oculto", { n: hud.hits, total: PLATFORM_BOSS_HITS })}><Texto clave="duelos.santa.saltos.rotulo" variables={{ n: hud.hits, total: PLATFORM_BOSS_HITS }} /></b></div></header>
+    <h2 id="santa-boss-title" className="sr-only"><Texto clave={clave("titulo.rotulo") as ClaveTexto} /></h2>
     <div className="santa-arena game-frame">
-      <div className="game-stage"><canvas ref={canvasRef} tabIndex={0} width={SANTA_ARENA.width} height={SANTA_ARENA.height} aria-label={t("duelos.santa.controles.oculto", { escena: tClave(clave("escena.oculto")) })} /></div>
-      {!won && !lost && <TouchControls showYarn={false} disabled={paused} onPress={press} onRelease={release} onCancel={release}
+      <div className="game-stage"><canvas ref={canvasRef} tabIndex={0} width={SANTA_ARENA.width} height={SANTA_ARENA.height} aria-label={t("duelos.santa.controles.oculto", { escena: tClave(clave("escena.oculto")) })} />
+        {/* HUD de esquinas, como en la partida: vidas a la izquierda, saltos en el centro y el mapa a la derecha. */}
+        <div className="hud-esquinas">
+          <div className="hud-izquierda"><span className="hud-chip hud-vidas santa-vidas" role="img" aria-label={t("partida.hud.vidas.oculto", { n: hud.lives })}>{"♥".repeat(hud.lives)}{"♡".repeat(3 - hud.lives)}</span></div>
+          <div className="hud-centro"><span className="hud-chip hud-banderas" aria-live="polite" aria-label={t("duelos.santa.saltos.oculto", { n: hud.hits, total: PLATFORM_BOSS_HITS })}><Texto clave="duelos.santa.saltos.rotulo" variables={{ n: hud.hits, total: PLATFORM_BOSS_HITS }} /></span></div>
+          <div className="hud-derecha"><Boton className="santa-exit boton-pequeno" clave="duelos.santa.mapa.rotulo" onClick={onAbandon} /></div>
+        </div>
+      </div>
+      {!won && !lost && empezado && <TouchControls showYarn={false} disabled={detenido} onPress={press} onRelease={release} onCancel={release}
         onKeyboardPress={(control) => { if (control !== "shoot") { touch.current[control] = true; if (control === "jump") touch.current.queued = true; } }}
         onKeyboardRelease={(control) => { if (control !== "shoot") touch.current[control] = false; }} />}
     </div>
-    {won ? <div className="santa-result"><h3 className="rotulo"><Texto clave="duelos.santa.conseguido.rotulo" /></h3><p className="juntos">{tClave(clave("gana.juntos"))}</p><button className="pixel-button primary" onClick={() => { playSound("goal"); onWin(true); }}><Texto clave="duelos.santa.abrir.rotulo" /></button></div> : lost ? <div className="santa-result"><h3 className="rotulo"><Texto clave="duelos.santa.otraVez.rotulo" /></h3><p className="juntos">{t("duelos.santa.perdido.juntos")}</p><button className="pixel-button primary" onClick={retry}><Texto clave={apples > 0 ? "duelos.santa.manzana.rotulo" : "duelos.santa.pantalla.rotulo"} /></button></div> : null}
-    <button className="santa-exit" onClick={onAbandon}><Texto clave="duelos.santa.mapa.rotulo" /></button>
+    {!empezado && !paused && <PantallaPrevia id="santa-previa" nombre={clave("titulo.rotulo") as ClaveTexto} guardian={retrato}
+      regla={`${tClave(clave("como.juntos"))} ${t("duelos.santa.perdido.juntos")}`} ayudaAdultos={[t("adultos.minijuegos.saltos.controles")]}
+      practicaPrimero={false} onJugar={() => setEmpezado(true)} onSalir={onAbandon} />}
+    {won && !paused && <ResultadoMinijuego id="santa-resultado" titulo="duelos.santa.conseguido.rotulo" gano onSalir={() => { playSound("goal"); onWin(true); }}
+      dibujo={retrato} frase={tClave(clave("gana.juntos"))}
+      botones={<Boton tipo="seguir" clave="duelos.santa.abrir.rotulo" data-gamepad-default onClick={() => { playSound("goal"); onWin(true); }} />} />}
+    {lost && !paused && <ResultadoMinijuego id="santa-resultado" titulo="duelos.santa.otraVez.rotulo" gano={false} onSalir={onAbandon}
+      dibujo={retrato} frase={t("duelos.santa.perdido.juntos")}
+      botones={<>
+        <Boton tipo="seguir" clave={apples > 0 ? "duelos.santa.manzana.rotulo" : "duelos.santa.pantalla.rotulo"} data-gamepad-default onClick={retry} />
+        <Boton clave="duelos.santa.mapa.rotulo" data-gamepad-back onClick={onAbandon} />
+      </>} />}
   </section>;
 }

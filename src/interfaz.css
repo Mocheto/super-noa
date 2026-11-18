@@ -544,3 +544,17 @@
   .boss-battle[class*=" battle-"] .duel-choices button { min-height: 0; padding: 4px; }
   .boss-battle[class*=" battle-"] .duel-abandon, .boss-battle.guardian-game .duel-abandon { position: absolute; top: 8px; right: 12px; margin: 0; }
 }
+
+/* Batallas de saltos (issue 154): HUD de esquinas sobre el escenario, retrato del guardián en la pantalla previa y el
+   resultado, y escenario que cabe en el alto del móvil. */
+.santa-retrato { display: block; width: 120px; height: 120px; background-size: 500% 100%; background-position: 0 0; background-repeat: no-repeat; image-rendering: pixelated; }
+.santa-boss-battle .hud-esquinas { pointer-events: none; }
+.santa-boss-battle .hud-derecha .boton { pointer-events: auto; }
+.santa-vidas { color: #ff6b81; letter-spacing: 2px; }
+@media (orientation: landscape) and (max-height: 540px) {
+  .santa-boss-battle { padding: 4px max(8px, env(safe-area-inset-right)) 4px max(8px, env(safe-area-inset-left)); }
+  .santa-boss-battle .santa-arena { width: min(100%, calc((100dvh - 14px) * 2)); max-width: none; margin: 0 auto; }
+  .santa-retrato { width: 72px; height: 72px; }
+}
+.santa-boss-battle .game-stage { position: relative; }
+.santa-boss-battle .hud-derecha .santa-exit { position: absolute; top: 0; right: 0; left: auto; width: auto; min-width: 0; align-self: auto; margin: 0; }

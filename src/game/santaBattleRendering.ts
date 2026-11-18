@@ -67,7 +67,8 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
     ctx.restore();
   } else { ctx.fillStyle = "#bd3047"; ctx.fillRect(boss.x, boss.y, boss.width, boss.height); }
   if (boss.attackIn < .65 && !boss.stun && state.status === "playing") {
-    ctx.fillStyle = "#fff1a2"; ctx.font = "bold 24px sans-serif"; ctx.textAlign = "center";
+    ctx.fillStyle = "#fff1a2"; ctx.strokeStyle = "#3d1430"; ctx.lineWidth = 6; ctx.font = '20px "Press Start 2P", monospace'; ctx.textAlign = "center";
+    ctx.strokeText(textoLienzo(bossId === "siroco" ? "duelos.santa.siroco.lanza.rotulo" : bossId === "don-silbato" ? "duelos.santa.don-silbato.lanza.rotulo" : "duelos.santa.santa-claus.lanza.rotulo"), boss.x + boss.width / 2, boss.y - 30);
     ctx.fillText(textoLienzo(bossId === "siroco" ? "duelos.santa.siroco.lanza.rotulo" : bossId === "don-silbato" ? "duelos.santa.don-silbato.lanza.rotulo" : "duelos.santa.santa-claus.lanza.rotulo"), boss.x + boss.width / 2, boss.y - 30);
   }
   const p = state.player;

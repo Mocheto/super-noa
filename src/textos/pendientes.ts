@@ -18,11 +18,9 @@ export const archivosPendientes: readonly string[] = [
   "src/game/beeNinja.ts",
   "src/game/bosses.ts",
   "src/game/catParty.ts",
-  "src/game/friends.ts",
   "src/game/guardianGames.ts",
   "src/game/meriendaJabatos.ts",
   "src/game/ranking.ts",
   "src/game/santaBattleRendering.ts",
   "src/game/secretShopProgress.ts",
-  "src/game/stickers.ts",
 ];

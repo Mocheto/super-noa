@@ -1,3 +1,5 @@
+import { amigos } from "./amigos.ts";
+import { pegatinas } from "./pegatinas.ts";
 import { caminos } from "./caminos.ts";
 import { mundos } from "./mundos.ts";
 import { pantallas } from "./pantallas.ts";
@@ -15,6 +17,8 @@ export const es = {
   inicio,
   mapa,
   partida,
+  amigos,
+  pegatinas,
   caminos,
   mundos,
   pantallas,

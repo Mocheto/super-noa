@@ -55,6 +55,7 @@ export const coleccion = {
     nam: { rotulo: "¡ÑAM!" },
     favorita: { rotulo: "{pictograma:vidas} ¡ÑAM, ÑAM!", juntos: "¡Su comida favorita! Baila de alegría." },
     muerde: { rotulo: "{pictograma:no-muerde} ¿MUERDE?" },
+    noMuerde: { rotulo: "{pictograma:no-muerde} ¡NO MUERDE!" },
     volver: { rotulo: "{pictograma:vuelve} VUELVE" },
     nuevo: { rotulo: "NUEVO AMIGO" },
     porDescubrir: { oculto: "Amigo por descubrir" },

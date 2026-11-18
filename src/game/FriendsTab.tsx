@@ -92,7 +92,7 @@ export function FriendsTab({ progress, onHeart }: { progress: Progress; onHeart:
               {foodNames[food]}
             </button>
           ))}
-          <button className="pixel-button" type="button" onClick={() => act(`${visiting.biteLine} ${visiting.tip}`, "hop", false)}><Texto clave="coleccion.amigos.muerde.rotulo" /></button>
+          <button className="pixel-button" type="button" onClick={() => act(`${t("coleccion.amigos.noMuerde.rotulo")} ${visiting.biteLine} ${visiting.tip}`, "hop", false)}><Texto clave="coleccion.amigos.muerde.rotulo" /></button>
         </div>
         <p className="friend-reply" role="status" aria-live="polite"><Pictogramas texto={reply} /></p>
         <button className="pixel-button" type="button" data-gamepad-back onClick={() => { setVisiting(null); setReply(""); }}><Texto clave="coleccion.amigos.volver.rotulo" /></button>

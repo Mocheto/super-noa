@@ -349,6 +349,14 @@ _Avoid_: Texto infantil, copy
 **Texto para adultos**:
 Texto de la interfaz que lee una persona adulta: ajustes, créditos, alias del tablón, avisos de guardado o conexión y ayuda de teclado y mando. Mantiene la redacción normal y se muestra discreto.
 
+**Rótulo**:
+La capa del texto para Noa: de una a cuatro palabras en mayúsculas, con su pictograma, que la niña lee sola.
+_Avoid_: Etiqueta, título
+
+**Para leer juntos**:
+Frase completa y en letra normal que acompaña a un rótulo para que una persona adulta la lea en voz alta. Es texto para adultos que aparece en las pantallas de Noa; nunca en botones, HUD ni durante la partida.
+_Avoid_: Subtítulo, descripción, ayuda
+
 **Pictograma**:
 Dibujo pixel art propio que acompaña a una palabra. Los emoji solo se usan como relleno provisional hasta que existe el pictograma.
 _Avoid_: Emoji, icono (cuando acompaña a una palabra)

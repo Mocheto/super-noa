@@ -35,6 +35,7 @@ export const partida = {
     pantalla: { oculto: "Pantalla {id}: {titulo}" },
     dobleSalto: { rotulo: "{pictograma:salta}{pictograma:salta} ¡DOBLE SALTO!" },
     dobleSaltoComo: { rotulo: "{pictograma:salta} Y OTRA VEZ {pictograma:salta}" },
+    bien: { rotulo: "{pictograma:estrella} ¡BIEN!" },
     oink: { rotulo: "¡OINK!" },
     auuu: { rotulo: "¡AUUU!" },
     despierta: { rotulo: "¡OJO!" },

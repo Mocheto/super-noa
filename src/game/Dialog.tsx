@@ -9,6 +9,8 @@ type DialogProps = {
   backdropClassName?: string;
   onClose?: () => void;
   gamepad?: boolean;
+  /** Milisegundos al abrirse en los que la ventana no acepta toques, teclas ni mando, para no saltarla sin querer. */
+  esperaMs?: number;
 };
 
 function focusableElements(dialog: HTMLDialogElement) {
@@ -17,8 +19,19 @@ function focusableElements(dialog: HTMLDialogElement) {
   )).filter((element) => element.getClientRects().length > 0 && !element.closest("[inert]"));
 }
 
-export function Dialog({ children, labelledBy, className = "game-modal", backdropClassName = "", onClose, gamepad = false }: DialogProps) {
+export function Dialog({ children, labelledBy, className = "game-modal", backdropClassName = "", onClose, gamepad = false, esperaMs = 0 }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const listaRef = useRef(esperaMs <= 0);
+  useLayoutEffect(() => {
+    if (esperaMs <= 0) return;
+    const temporizador = window.setTimeout(() => { listaRef.current = true; }, esperaMs);
+    return () => window.clearTimeout(temporizador);
+  }, [esperaMs]);
+  const bloquear = (event: { preventDefault: () => void; stopPropagation: () => void }) => {
+    if (listaRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
   const closeRef = useRef(onClose);
   useLayoutEffect(() => { closeRef.current = onClose; }, [onClose]);
 
@@ -44,7 +57,7 @@ export function Dialog({ children, labelledBy, className = "game-modal", backdro
       const current = readMenuPad(pad);
       const dialog = dialogRef.current;
       const overlays = document.querySelectorAll(".modal-backdrop");
-      if (pad && dialog && pad.index === previousPad?.index && dialog === overlays.item(overlays.length - 1)) {
+      if (pad && dialog && listaRef.current && pad.index === previousPad?.index && dialog === overlays.item(overlays.length - 1)) {
         const focusables = focusableElements(dialog);
         const selected = focusables.find((element) => element === document.activeElement) ?? focusables[0];
         const direction = menuDirection(current, previous);
@@ -69,7 +82,10 @@ export function Dialog({ children, labelledBy, className = "game-modal", backdro
       aria-modal="true"
       data-gamepad-managed={gamepad || undefined}
       ref={dialogRef}
-      onCancel={(event) => { event.preventDefault(); closeRef.current?.(); }}
+      onCancel={(event) => { event.preventDefault(); if (listaRef.current) closeRef.current?.(); }}
+      onPointerDownCapture={bloquear}
+      onClickCapture={bloquear}
+      onKeyDownCapture={(event) => { if (event.key !== "Tab") bloquear(event); }}
       onKeyDown={(event) => {
         if (event.key === "Escape" && closeRef.current) {
           event.preventDefault();

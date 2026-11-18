@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createLevelTransition } from "./levelTransition.ts";
+import { capaTransicion, createLevelTransition, ENTRADA_SEGUNDOS, SALIDA_SEGUNDOS } from "./levelTransition.ts";
 import type { GameSnapshot } from "./types";
 
 test("las transiciones solo consumen tiempo de simulación activa y finalizan una vez", () => {
@@ -27,4 +27,22 @@ test("cancelar una transición evita su callback", () => {
   transition.begin({ apples: 0, stickers: [], power: "normal", checkpoint: 0, paused: false }, .45, () => assert.fail("cancelada"));
   transition.cancel();
   transition.advance(1, true);
+});
+
+test("el círculo de salida se cierra en 1,2 s sobre Noa y dice ¡BIEN! en la segunda mitad", () => {
+  assert.equal(capaTransicion("salida", 3, 500, false), undefined, "antes de los últimos 1,2 s no se dibuja nada");
+  const empieza = capaTransicion("salida", SALIDA_SEGUNDOS * 0.99, 500, false);
+  const mitad = capaTransicion("salida", SALIDA_SEGUNDOS * 0.4, 500, false);
+  const final = capaTransicion("salida", 0, 500, false);
+  assert.ok(empieza?.tipo === "circulo" && empieza.radio > 490 && !empieza.bien);
+  assert.ok(mitad?.tipo === "circulo" && mitad.radio < 250 && mitad.bien);
+  assert.ok(final?.tipo === "circulo" && final.radio === 0);
+});
+
+test("el círculo de entrada se abre en 0,9 s y con movimiento tranquilo es un fundido", () => {
+  const abre = capaTransicion("entrada", 0.1, 500, false);
+  assert.ok(abre?.tipo === "circulo" && abre.radio < 100 && !abre.bien);
+  assert.equal(capaTransicion("entrada", ENTRADA_SEGUNDOS, 500, false), undefined);
+  const fundido = capaTransicion("entrada", 0.45, 500, true);
+  assert.ok(fundido?.tipo === "fundido" && fundido.alfa > 0.4 && fundido.alfa < 0.6);
 });

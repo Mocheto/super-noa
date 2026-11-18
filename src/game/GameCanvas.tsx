@@ -13,7 +13,7 @@ import {
 import { useGameInput } from "./input";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createGameLoop, type GameLoop } from "./gameLoop";
-import { createLevelTransition } from "./levelTransition";
+import { capaTransicion, createLevelTransition, SALIDA_SEGUNDOS, type CapaTransicion } from "./levelTransition";
 import { beatPlatformActive, getMechanicPlatforms, hasWorldMechanics, mechanicRespawn, skyLiftPlatform, updraftVelocity, visibleSkyRespawn, wolfSleepState } from "./worldMechanics";
 import { getStickerSprite } from "./stickers";
 import { createChainGuardian, guardianHitbox, updateChainGuardian } from "./chainGuardians";
@@ -118,6 +118,40 @@ function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
 type Interaccion = "entrar" | "explorar" | "subir" | "activar";
 
 
+/** Círculo con borde dorado sobre el color noche, centrado en Noa; con movimiento tranquilo, un fundido. */
+function drawTransitionLayer(context: CanvasRenderingContext2D, capa: CapaTransicion, x: number, y: number) {
+  context.save();
+  context.fillStyle = "#25183f";
+  if (capa.tipo === "fundido") {
+    context.globalAlpha = capa.alfa;
+    context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    context.globalAlpha = 1;
+  } else {
+    context.beginPath();
+    context.rect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
+    context.arc(x, y, capa.radio, 0, Math.PI * 2, true);
+    context.fill("evenodd");
+    if (capa.radio > 0) {
+      context.strokeStyle = "#ffd45f";
+      context.lineWidth = 8;
+      context.beginPath();
+      context.arc(x, y, capa.radio, 0, Math.PI * 2);
+      context.stroke();
+    }
+  }
+  if (capa.bien) {
+    context.font = '24px "Press Start 2P", monospace';
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.lineWidth = 6;
+    context.strokeStyle = "#3d1430";
+    context.strokeText(textoLienzo("partida.lienzo.bien.rotulo"), VIEW_WIDTH / 2, 70);
+    context.fillStyle = "#ffd45f";
+    context.fillText(textoLienzo("partida.lienzo.bien.rotulo"), VIEW_WIDTH / 2, 70);
+  }
+  context.restore();
+}
+
 /** Colores del marco caramelo del mundo (decisión «El marco exterior de la partida»). */
 const marcoMundo = (world: Parameters<typeof acentoMundo>[0]) => {
   const { base, oscuro, claro } = acentoMundo(world);
@@ -194,6 +228,8 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       ? Math.min(...goalPlatforms.map((platform) => platform.y))
       : goalPlatforms[0]?.y ?? 456;
     let cameraX = 0;
+    /** Segundos de simulación desde que empezó la pantalla, para el círculo de entrada. */
+    let entradaSegundos = 0;
     let cameraY = level.orientation === "vertical" ? Math.max(0, (level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT)
       : level.orientation === "explore" ? exploreCameraTarget(level, player, { width: VIEW_WIDTH, height: VIEW_HEIGHT }).y : 0;
     let apples = 0;
@@ -255,7 +291,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       player.vx = 0;
       player.vy = 0;
       callbacksRef.current.playSound("checkpoint");
-      finishLevel(0.7, () => callbacksRef.current.onSecretExit());
+      finishLevel(SALIDA_SEGUNDOS, () => callbacksRef.current.onSecretExit());
     };
 
     const restartRoom = (fromHazard: boolean) => {
@@ -834,7 +870,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       const secretVine = level.rewardBlocks.find((block) => block.reward === "secret-vine");
       if (level.waterEntrance && intersects(player, level.waterEntrance)) {
         callbacksRef.current.playSound("checkpoint");
-        finishLevel(0.45, () => callbacksRef.current.onWaterExit());
+        finishLevel(SALIDA_SEGUNDOS, () => callbacksRef.current.onWaterExit());
         return;
       }
       if (secretVine && vineStartedFrame >= 0) {
@@ -878,7 +914,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         if (reachedGate(level, explore, player)) {
           callbacksRef.current.playSound("goal");
           if (statusRef.current) statusRef.current.textContent = t("partida.avisos.gatitosCasa.oculto");
-          finishLevel(1.2, (snapshot) => callbacksRef.current.onComplete(snapshot));
+          finishLevel(SALIDA_SEGUNDOS, (snapshot) => callbacksRef.current.onComplete(snapshot));
         }
       }
 
@@ -897,7 +933,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         callbacksRef.current.playSound("goal");
         if (statusRef.current) statusRef.current.textContent = t("partida.avisos.banderin.oculto");
         finishLevel(
-          level.boss ? 0.85 : 1.45,
+          level.boss ? SALIDA_SEGUNDOS : 1.45,
           (snapshot) => level.boss ? callbacksRef.current.onBossEncounter(snapshot) : callbacksRef.current.onComplete(snapshot),
         );
       }
@@ -1274,6 +1310,12 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         context.textAlign = "start";
       }
 
+      const radioMaximo = Math.hypot(VIEW_WIDTH, VIEW_HEIGHT);
+      const salida = transition.remaining();
+      const capa = salida !== undefined ? capaTransicion("salida", salida, radioMaximo, motionRef.current)
+        : capaTransicion("entrada", entradaSegundos, radioMaximo, motionRef.current);
+      if (capa) drawTransitionLayer(context, capa, player.x + player.width / 2 - cameraX, player.y + player.height / 2 - cameraY);
+
       if (!runningRef.current) {
         context.fillStyle = "rgba(34, 24, 57, 0.42)";
         context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT);
@@ -1287,6 +1329,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     if (puzzle) window.addEventListener("keydown", restartKey);
     const gameLoop = createGameLoop((delta, now) => {
       if (!runningRef.current || shopOpenRef.current) return;
+      entradaSegundos += delta;
       if (completed) transition.advance(delta, runningRef.current);
       else update(delta, now);
     }, render, () => { frame += 1; });

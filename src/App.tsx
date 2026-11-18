@@ -938,7 +938,7 @@ export default function App() {
           </Suspense>}
 
           {screen === "complete" && (
-            <Dialog labelledBy="complete-title" backdropClassName="celebration" onClose={() => setScreen("map")}>
+            <Dialog labelledBy="complete-title" backdropClassName="celebration" esperaMs={500} onClose={() => setScreen("map")}>
               <div className="big-icon">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt={t("ventanas.completada.trofeo.oculto")} /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.png"} alt={t("ventanas.completada.gatito.oculto")} />}</div>
               <h2 id="complete-title" className="rotulo"><Texto clave="ventanas.completada.titulo.rotulo" /></h2>
               <p className="juntos">{t("ventanas.completada.manzanas.juntos", { n: snapshot.apples })} {t(activeLevel.world === 7 ? "ventanas.completada.reina.juntos" : activeLevel.boss ? "ventanas.completada.guardian.juntos" : "ventanas.completada.siguienteAventura.juntos")}</p>
@@ -953,7 +953,7 @@ export default function App() {
           )}
 
           {screen === "gameover" && (
-            <Dialog labelledBy="gameover-title" onClose={() => setScreen("map")}>
+            <Dialog labelledBy="gameover-title" esperaMs={500} onClose={() => setScreen("map")}>
               <div className="big-icon"><GameAssetIcon kind="apple" /></div><h2 id="gameover-title" className="rotulo"><Texto clave="ventanas.otraOportunidad.titulo.rotulo" /></h2>
               <p className="juntos">{t("ventanas.otraOportunidad.vidas.juntos")}</p>
               <button className="pixel-button primary rotulo" type="button" onClick={() => beginLevel(activeIndex)}><Texto clave="ventanas.otraOportunidad.otraVez.rotulo" /></button>
@@ -962,7 +962,7 @@ export default function App() {
           )}
 
           {screen === "finished" && (
-            <Dialog labelledBy="finished-title" className="game-modal finale" backdropClassName="celebration" onClose={() => setScreen("map")}>
+            <Dialog labelledBy="finished-title" esperaMs={500} className="game-modal finale" backdropClassName="celebration" onClose={() => setScreen("map")}>
               <div className="cat-party" aria-hidden="true">
                 <img src="./assets/sprites/world-cat-1-v1.png" alt="" />
                 <GameAssetIcon kind="apple" />

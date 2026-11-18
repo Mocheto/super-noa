@@ -61,9 +61,11 @@ test("salida acuática recoge y comunica objetos del mismo paso antes de pausar"
     assert.equal(engine.events.includes("water"), false);
     engine.setRunning(true);
     engine.tick(10_000);
-    for (let now = 10_100; now <= 10_400; now += 100) engine.tick(now);
+    // La salida dura lo que el círculo de la transición: 1,2 s de simulación.
+    for (let now = 10_100; now <= 11_100; now += 100) engine.tick(now);
     assert.equal(engine.events.includes("water"), false);
-    engine.tick(10_500);
+    engine.tick(11_200);
+    engine.tick(11_300);
     assert.equal(engine.events.filter((event) => event === "water").length, 1);
   } finally {
     engine.unmount();
@@ -125,7 +127,9 @@ test("la enredadera emite snapshot final y su transición espera al reanudar", (
     now += 10_000;
     engine.tick(now);
     assert.equal(engine.events.includes("secret"), false);
-    for (let tick = 0; tick < 8; tick += 1) { now += 100; engine.tick(now); }
+    for (let tick = 0; tick < 11; tick += 1) { now += 100; engine.tick(now); }
+    assert.equal(engine.events.includes("secret"), false, "la salida dura 1,2 s");
+    for (let tick = 0; tick < 2; tick += 1) { now += 100; engine.tick(now); }
     assert.equal(engine.events.filter((event) => event === "secret").length, 1);
     assert.equal(engine.snapshots.length, count);
   } finally {

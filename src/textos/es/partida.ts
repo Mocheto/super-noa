@@ -129,7 +129,7 @@ export const partida = {
     grupo: { oculto: "Controles táctiles" },
     izquierda: { rotulo: "◀", oculto: "Mover a la izquierda" },
     derecha: { rotulo: "▶", oculto: "Mover a la derecha" },
-    lana: { rotulo: "LANA", oculto: "Lanzar bola de lana" },
-    salta: { rotulo: "SALTA", oculto: "Saltar; vuelve a tocar para hacer doble salto" },
+    lana: { oculto: "Lanzar bola de lana" },
+    salta: { oculto: "Saltar; vuelve a tocar para hacer doble salto" },
   },
 } as const;

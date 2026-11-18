@@ -41,3 +41,22 @@ test("los controles compartidos conservan la identidad del dedo al soltar o canc
   (jump.props.onContextMenu as (e: unknown) => void)({ preventDefault: () => { prevented = true; } });
   assert.equal(prevented, true);
 });
+
+test("los botones táctiles miden lo decidido para dedos pequeños y no se tocan entre sí", () => {
+  const { MEDIDAS_TACTILES: m } = engineModules({ "react/jsx-runtime": { jsx, jsxs: jsx } })("./TouchControls") as typeof import("./TouchControls");
+  // Un dedo de cinco años mide unos 40–45 px: cada área táctil le saca al menos el doble.
+  for (const lado of [m.flecha, m.salta, m.lana]) assert.ok(lado + 2 * m.areaExtra >= 100, `área táctil de ${lado} px demasiado pequeña`);
+  assert.ok(m.salta > m.flecha && m.flecha > m.lana, "SALTA es el más grande y LANA el más pequeño");
+  // Las áreas invisibles de dos flechas vecinas no se pisan.
+  assert.ok(m.separacion >= 2 * m.areaExtra - 4, "las áreas táctiles de las flechas no deben solaparse");
+  assert.ok(m.opacidad >= 0.8 && m.opacidad < 1);
+  assert.ok(m.borde >= 16);
+});
+
+test("los botones táctiles llevan solo dibujo: el nombre va en la etiqueta oculta", () => {
+  const tree = TouchControls({ onPress: noop, onRelease: noop, onCancel: noop }) as unknown as Tree;
+  for (const button of buttons(tree)) {
+    assert.ok(typeof button.props["aria-label"] === "string" && (button.props["aria-label"] as string).length > 3);
+    assert.ok(!JSON.stringify(button.props.children).includes("small"), "sin palabra pequeña debajo del dibujo");
+  }
+});

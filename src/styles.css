@@ -404,19 +404,6 @@ h1 span {
 @keyframes transition-float { to { transform: translateY(-12px); } }
 
 .touch-controls { position: absolute; z-index: 5; inset: auto 0 max(12px, env(safe-area-inset-bottom)); display: none; justify-content: space-between; align-items: end; padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); pointer-events: none; touch-action: none; }
-.touch-group { display: flex; align-items: end; gap: 9px; border: 3px solid rgba(255,248,233,.82); border-radius: 22px; padding: 7px; background: rgba(38,22,57,.78); box-shadow: 0 6px 0 rgba(18,11,29,.75), inset 0 0 0 3px rgba(201,135,232,.2); pointer-events: auto; touch-action: none; }
-.touch-button { position: relative; display: grid; place-items: center; align-content: center; gap: 1px; width: 70px; height: 70px; border: 3px solid #fff8e9; border-radius: 17px; padding: 5px; color: #fff; background: linear-gradient(145deg, rgba(126,79,150,.98), rgba(73,42,94,.98)); box-shadow: 0 6px 0 #25172f, inset 0 3px 0 rgba(255,255,255,.2); font-weight: 900; font-size: 1.55rem; line-height: 1; user-select: none; -webkit-user-select: none; touch-action: none; cursor: pointer; }
-.touch-button > * { pointer-events: none; }
-.touch-button small { color: #fff4c7; font-family: system-ui, sans-serif; font-size: .52rem; font-weight: 950; letter-spacing: .06em; line-height: 1; }
-.touch-button:active { transform: translateY(5px); background: linear-gradient(145deg, #b47bd0, #704486); box-shadow: 0 1px 0 #25172f, inset 0 3px 0 rgba(255,255,255,.18); }
-.touch-direction:first-child { border-radius: 24px 12px 12px 24px; }
-.touch-direction:last-child { border-radius: 12px 24px 24px 12px; }
-.touch-jump { width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(145deg, #f06d83, #b83959); box-shadow: 0 7px 0 #68263d, inset 0 4px 0 rgba(255,255,255,.28); }
-.touch-jump:active { background: linear-gradient(145deg, #ff8fa0, #c94762); box-shadow: 0 1px 0 #68263d; }
-.touch-jump-arrows { position: relative; display: inline-block; width: 33px; height: 30px; font-size: 1.8rem; }
-.touch-jump-arrows i { position: absolute; top: -8px; right: -4px; color: #ffe26f; font-size: 1rem; font-style: normal; }
-.touch-yarn { width: 66px; height: 66px; border-radius: 50%; background: linear-gradient(145deg, #8f63b4, #59406e); }
-.touch-yarn .pixel-icon { --icon-size: 1.65rem; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 20px; background: rgba(25, 13, 38, .78); backdrop-filter: blur(5px); }
 dialog.modal-backdrop { width: 100%; max-width: none; height: 100%; max-height: none; margin: 0; border: 0; color: inherit; }
@@ -811,12 +798,7 @@ dialog.modal-backdrop::backdrop { background: transparent; }
   .hud-actions button { width: 38px; height: 38px; }
   .game-stage { border-inline: 0; }
   .level-caption { border-inline: 0; }
-  .touch-controls { display: flex; padding-inline: max(10px, env(safe-area-inset-left)) max(10px, env(safe-area-inset-right)); }
-  .touch-group { gap: 6px; padding: 6px; }
-  .touch-button { width: 59px; height: 59px; }
-  .touch-jump { width: 76px; height: 76px; }
-  .touch-yarn { width: 57px; height: 57px; }
-  .touch-yarn .pixel-icon { --icon-size: 1.35rem; }
+  .touch-controls { display: flex; }
   .help-grid { grid-template-columns: 1fr; }
   .help-first-steps { grid-template-columns: 1fr; }
   .help-first-steps > div { grid-template-columns: 68px 1fr; grid-template-rows: auto auto; align-items: center; min-height: 100px; padding: 12px 10px 10px 19px; text-align: left; }
@@ -900,11 +882,6 @@ dialog.modal-backdrop::backdrop { background: transparent; }
   .game-frame { width: min(calc(100vw - 8px), calc(177.78dvh - 16px)); }
   .game-stage { width: 100%; }
   .level-caption { display: none; }
-  .touch-controls { position: absolute; inset: auto 0 max(7px, env(safe-area-inset-bottom)); padding-inline: max(12px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-right)); border: 0; background: transparent; }
-  .touch-group { border-width: 2px; padding: 4px; }
-  .touch-button { width: 58px; height: 58px; }
-  .touch-jump { width: 70px; height: 70px; }
-  .touch-yarn { width: 54px; height: 54px; }
 }
 
 .play-screen:fullscreen { width: 100vw; height: 100dvh; min-height: 100dvh; overflow: hidden; }

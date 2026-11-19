@@ -29,6 +29,31 @@ export const notaHz = (mundo: number, semitonos: number) => NOTA_BASE_HZ * tonoD
 
 type Ajustes = { silencio: boolean; volumen: number };
 
+/** Sonidos del baño (mapa «El baño de la casa de los gatitos»). */
+export type BucleBano = "agua" | "secador";
+export type GolpeBano = "burbuja" | "cepillo" | "campanita";
+export type EventoBano = "nada" | "avanza" | "frotando" | "todaviaNo" | "pasoHecho" | "terminado";
+export type UtensilioSonido = "alcachofa" | "jabon" | "secador" | "peine";
+/** Un golpe corto como mucho cada este tiempo, para que frotar no suene a ametralladora. */
+export const GOLPE_BANO_CADA_MS = 160;
+
+/**
+ * Qué suena en el baño con cada aviso de la pantalla: un sonido continuo mientras se frota (agua con la alcachofa,
+ * aire con el secador), golpes cortos (burbujas con el jabón, cepillo con el peine, campanita al acabar un paso) y
+ * maullidos («ahora no» con el utensilio equivocado, «gracias» y canción al terminar). `bucle: undefined` deja el que haya.
+ */
+export function sonidoDelBano(evento: EventoBano, utensilio: UtensilioSonido | null): { bucle?: BucleBano | null; golpe?: GolpeBano; maullido?: "ahoraNo" | "gracias"; cantar?: boolean } {
+  if (evento === "nada") return { bucle: null };
+  if (evento === "todaviaNo") return { bucle: null, maullido: "ahoraNo" };
+  if (evento === "pasoHecho") return { bucle: null, golpe: "campanita" };
+  if (evento === "terminado") return { bucle: null, maullido: "gracias", cantar: true };
+  if (utensilio === "alcachofa") return { bucle: "agua" };
+  if (utensilio === "secador") return { bucle: "secador" };
+  if (utensilio === "jabon") return { golpe: "burbuja" };
+  if (utensilio === "peine") return { golpe: "cepillo" };
+  return {};
+}
+
 /** Motor de sonido de la casa. Se crea una vez por visita; el contexto de audio arranca con el primer toque. */
 export function crearSonidoCasa(ajustesIniciales: Ajustes) {
   let ajustes = ajustesIniciales;
@@ -36,6 +61,8 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
   let salida: GainNode | null = null;
   let samples: SampleBank | null = null;
   let ronroneo: { parar: () => void } | null = null;
+  let bucle: { tipo: BucleBano; parar: () => void } | null = null;
+  let ultimoGolpe = -Infinity;
   const ultimoPide = new Map<number, number>();
 
   const preparar = () => {
@@ -145,9 +172,65 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
       lfo.start();
       ronroneo = { parar: () => { gain.gain.setTargetAtTime(0, ctx.currentTime, 0.05); osc.stop(ctx.currentTime + 0.2); lfo.stop(ctx.currentTime + 0.2); } };
     },
+    /** Sonido continuo del baño (agua o secador); `null` lo para. */
+    bucleBano(tipo: BucleBano | null) {
+      if (bucle?.tipo === tipo) return;
+      bucle?.parar();
+      bucle = null;
+      const ctx = tipo ? listo() : null;
+      if (!tipo || !ctx || !salida) return;
+      const ruido = ctx.createBufferSource();
+      const muestras = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const datos = muestras.getChannelData(0);
+      for (let i = 0; i < datos.length; i++) datos[i] = Math.random() * 2 - 1;
+      ruido.buffer = muestras;
+      ruido.loop = true;
+      const filtro = ctx.createBiquadFilter();
+      filtro.type = tipo === "agua" ? "highpass" : "bandpass";
+      filtro.frequency.value = tipo === "agua" ? 1800 : 700;
+      const gain = ctx.createGain();
+      gain.gain.value = 0;
+      gain.gain.setTargetAtTime(tipo === "agua" ? 0.08 : 0.06, ctx.currentTime, 0.05);
+      ruido.connect(filtro).connect(gain).connect(salida);
+      ruido.start();
+      bucle = { tipo, parar: () => { gain.gain.setTargetAtTime(0, ctx.currentTime, 0.06); ruido.stop(ctx.currentTime + 0.3); } };
+    },
+    /** Golpe corto del baño: burbuja, cepillo o campanita (como mucho uno cada `GOLPE_BANO_CADA_MS`). */
+    golpeBano(tipo: GolpeBano, ahora = performance.now()) {
+      if (tipo !== "campanita" && ahora - ultimoGolpe < GOLPE_BANO_CADA_MS) return;
+      ultimoGolpe = ahora;
+      const ctx = listo();
+      if (!ctx || !salida) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const inicio = ctx.currentTime;
+      if (tipo === "burbuja") {
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(380 + Math.random() * 240, inicio);
+        osc.frequency.exponentialRampToValueAtTime(900 + Math.random() * 300, inicio + 0.08);
+        gain.gain.setValueAtTime(0.08, inicio);
+        gain.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.1);
+      } else if (tipo === "cepillo") {
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(1600, inicio);
+        gain.gain.setValueAtTime(0.025, inicio);
+        gain.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.05);
+      } else {
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(1318.5, inicio);
+        osc.frequency.setValueAtTime(1760, inicio + 0.09);
+        gain.gain.setValueAtTime(0.1, inicio);
+        gain.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.35);
+      }
+      osc.connect(gain).connect(salida);
+      osc.start(inicio);
+      osc.stop(inicio + 0.4);
+    },
     cerrar() {
       ronroneo?.parar();
       ronroneo = null;
+      bucle?.parar();
+      bucle = null;
       void contexto?.close();
       contexto = null;
     },

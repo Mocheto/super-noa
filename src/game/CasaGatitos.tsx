@@ -4,7 +4,7 @@ import {
   aEscena, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
   MANTENER_PARA_COGER_MS, MOVER_PARA_FROTAR, SITIOS_CASA, type Frote, type Herramienta,
 } from "./casaInteraccion";
-import { crearSonidoCasa, type SonidoCasa } from "./casaSonido";
+import { crearSonidoCasa, sonidoDelBano, type SonidoCasa } from "./casaSonido";
 import { crearNana, type Nana } from "./casaNana";
 import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, type AnimacionGato } from "./casaGatoArte";
 import { MUNDOS_CASA, prepararCasa } from "./casaRescate";
@@ -171,7 +171,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     return () => { nana.cerrar(); nanaRef.current = null; };
     // Solo al montar: los cambios van por `ajustar`.
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { nanaRef.current?.ajustar({ silencio: muted, volumen: musicVolume / 100, noche }); }, [muted, musicVolume, noche]);
+  // Durante el baño, la nana suena a la mitad para que se oigan el agua y el secador.
+  useEffect(() => { nanaRef.current?.ajustar({ silencio: muted, volumen: (musicVolume / 100) * (bano !== null ? 0.5 : 1), noche }); }, [muted, musicVolume, noche, bano]);
 
   const presentes = MUNDOS_CASA.filter((mundo) => casa.gatitos[mundo]).join(",");
   const gatitos = useMemo(() => presentes ? presentes.split(",").map(Number) : [], [presentes]);
@@ -548,6 +549,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
   const varianteBano = bano !== null ? variantes[gatitos.indexOf(bano)] : undefined;
   const hojaBano = varianteBano && hojas[`${varianteBano.mundo}-${varianteBano.sucio}-${varianteBano.mejorAmigo}`];
+  /** Sonido del baño: bucle de agua o secador, golpes cortos y maullidos del gatito que se baña. */
+  const sonarBano = (evento: Parameters<typeof sonidoDelBano>[0], utensilio: Parameters<typeof sonidoDelBano>[1]) => {
+    const sonido = sonidoRef.current;
+    if (!sonido || bano === null) return;
+    const { bucle, golpe, maullido, cantar } = sonidoDelBano(evento, utensilio);
+    if (bucle !== undefined) sonido.bucleBano(bucle);
+    if (golpe) sonido.golpeBano(golpe);
+    if (maullido) sonido.maullar(bano, maullido);
+    if (cantar) sonido.cantar(bano);
+  };
   const terminarBano = () => {
     const indice = bano === null ? -1 : gatitos.indexOf(bano);
     setBano(null);
@@ -613,7 +624,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         </button>)}
       </div>}
     </div>
-    {bano !== null && <BanoGatito nombre={nombreDe(bano)} hoja={hojaBano} reduceMotion={reduceMotion} onSalir={() => setBano(null)} onTerminar={terminarBano} />}
+    {bano !== null && <BanoGatito nombre={nombreDe(bano)} hoja={hojaBano} reduceMotion={reduceMotion} onSalir={() => { sonidoRef.current?.bucleBano(null); setBano(null); }} onTerminar={terminarBano} onSonido={sonarBano} />}
     {fase === "hola" && <Ventana id="casa-llegada" titulo="casa.llegada.titulo.rotulo" celebracion onClose={seguir}
       botones={<Boton tipo="seguir" clave="casa.llegada.sigue.rotulo" data-gamepad-default onClick={seguir} />}>
       <div className="ventana-dibujo casa-llegada-dibujo">{llegan.map((mundo) => <img key={mundo} src={worldCatalog.find((world) => world.id === mundo)?.catAsset} alt="" />)}</div>

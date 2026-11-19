@@ -23,3 +23,16 @@ test("la canción tiene cuatro notas en la tonalidad de cada gatito", () => {
   assert.ok(Math.abs(notaHz(1, 12) / notaHz(1, 0) - 2) < 1e-9, "doce semitonos son una octava");
   assert.ok(notaHz(3, 0) > notaHz(1, 0) && notaHz(2, 0) < notaHz(1, 0));
 });
+
+test("el baño suena: agua y secador mientras se frota, burbujas, cepillo y campanita, y maullidos", async () => {
+  const { sonidoDelBano, GOLPE_BANO_CADA_MS } = await import("./casaSonido.ts");
+  assert.deepEqual(sonidoDelBano("frotando", "alcachofa"), { bucle: "agua" });
+  assert.deepEqual(sonidoDelBano("frotando", "secador"), { bucle: "secador" });
+  assert.deepEqual(sonidoDelBano("frotando", "jabon"), { golpe: "burbuja" });
+  assert.deepEqual(sonidoDelBano("frotando", "peine"), { golpe: "cepillo" });
+  assert.deepEqual(sonidoDelBano("nada", null), { bucle: null }, "al soltar se para el agua");
+  assert.deepEqual(sonidoDelBano("pasoHecho", "alcachofa"), { bucle: null, golpe: "campanita" });
+  assert.deepEqual(sonidoDelBano("todaviaNo", "peine"), { bucle: null, maullido: "ahoraNo" });
+  assert.deepEqual(sonidoDelBano("terminado", null), { bucle: null, maullido: "gracias", cantar: true });
+  assert.ok(GOLPE_BANO_CADA_MS >= 100, "frotar no suena a ametralladora");
+});

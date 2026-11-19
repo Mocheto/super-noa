@@ -125,8 +125,8 @@
 /* Decorar: el botón de la bandeja, los muebles (cada uno en su versión, de su lámina), las zonas que brillan al
    decorar y el destello al cambiar uno. */
 .casa-bandeja-modo { width: 44px; height: 44px; }
-.casa-bandeja-modos { display: flex; gap: 4px; justify-content: center; }
-.casa-gatitos.is-vertical .casa-bandeja-modos { flex-direction: column; }
+/* Botones de modo (estrella, flor, marco, gato): de dos en dos. */
+.casa-bandeja-modos { display: grid; grid-template-columns: repeat(2, 44px); gap: 4px; justify-content: center; }
 /* Decorando caben el botón y cinco versiones: en columna, de dos en dos; en el móvil vertical, en fila. */
 .casa-bandeja.is-decorar { display: grid; grid-template-columns: repeat(2, auto); place-items: center; }
 .casa-bandeja.is-decorar .casa-bandeja-modo { grid-column: 1 / -1; }
@@ -232,3 +232,16 @@
 .casa-objeto.is-lampara::before { content: ""; position: absolute; left: 26%; top: 8%; width: 48%; height: 34%; border: 3px solid #2f1d33; border-radius: 40% 40% 6px 6px; background: #fff3c2; box-shadow: 0 0 14px 6px #ffe7a0aa; }
 .casa-objeto.is-lampara::after { content: ""; position: absolute; left: 46%; top: 42%; width: 8%; height: 46%; border: 3px solid #2f1d33; border-bottom-width: 6px; background: #9b6a3c; }
 .casa-objeto.is-lampara.is-apagada::before { background: #8b8fa8; box-shadow: none; }
+
+/* Foto: destello blanco sobre la vista y una miniatura que vuela hacia la bandeja. */
+.casa-flash { position: absolute; inset: 0; z-index: 30; pointer-events: none; background: #fff; animation: casa-flash .45s ease-out forwards; }
+@keyframes casa-flash { from { opacity: .9; } to { opacity: 0; background: transparent; } }
+.casa-foto-vuela { position: absolute; left: 25%; top: 25%; width: 50%; height: 50%; border: 6px solid #fff; border-radius: 4px; box-shadow: 0 4px 12px #2f1d3388; animation: casa-foto-vuela .8s ease-in forwards; }
+@keyframes casa-foto-vuela { to { transform: translate(60%, 70%) scale(.1) rotate(-12deg); opacity: 0; } }
+.casa-gatitos.is-vertical .casa-foto-vuela { animation-name: casa-foto-vuela-abajo; }
+@keyframes casa-foto-vuela-abajo { to { transform: translate(-30%, 140%) scale(.1) rotate(-12deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .casa-flash { animation-duration: .2s; } .casa-foto-vuela { display: none; } }
+/* En pantallas anchas la bandeja va en columna: con los cuatro botones de modo, los objetos van de dos en dos. */
+.casa-gatitos:not(.is-vertical) .casa-bandeja:not(.is-decorar) { display: grid; grid-template-columns: repeat(2, auto); justify-items: center; align-items: center; }
+.casa-gatitos:not(.is-vertical) .casa-bandeja:not(.is-decorar) .casa-bandeja-modos { grid-column: 1 / -1; }
+.casa-gatitos.is-vertical .casa-bandeja:not(.is-decorar) { gap: 2px; padding: 8px 4px; }

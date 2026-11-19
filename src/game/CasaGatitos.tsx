@@ -12,6 +12,7 @@ import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, 
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreLaBanera } from "./casaHabitacion";
 import { arropadosDe, arropar, puedeDormir, todosArropados } from "./casaDormir";
 import { HOJA_MANTITA, mantitaDe } from "./casaDormirArte";
+import { guardarFoto, type FotoCasa } from "./casaFoto";
 import { cambiarMueble, muebleEn, MUEBLES_CASA, PARED_HASTA, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
 import { fondoConPared } from "./casaDecoracionArte";
 import { cssAssetUrl } from "./assets";
@@ -140,6 +141,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [acostando, setAcostando] = useState(false);
   const [lamparaApagada, setLamparaApagada] = useState(false);
   const [buenasNoches, setBuenasNoches] = useState<"no" | "ventana" | "vista">("no");
+  // Foto recién hecha: destello y miniatura que vuela a la bandeja.
+  const [flash, setFlash] = useState(0);
   const noche = nocheReloj || acostando;
   const [fechaCasa, setFechaCasa] = useState(() => relojCasa(ajustes));
   const arropados = noche ? arropadosDe(casa, fechaCasa) : [];
@@ -639,7 +642,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       return;
     }
     dedoRef.current = true;
-    froteRef.current = frotar(null, indice, performance.now(), ajustes.frotarMs).frote;
+    froteRef.current = frotar(null, indice, event.timeStamp, ajustes.frotarMs).frote;
     // Con el dedo casi quieto un momento (MANTENER_PARA_COGER_MS), se coge al gatito; si se mueve más, es frotar.
     const inicio = { clienteX: event.clientX, clienteY: event.clientY, indice, temporizador: 0 };
     inicio.temporizador = window.setTimeout(() => {
@@ -739,6 +742,52 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const quedaIzquierda = vistaX > 1;
   const quedaDerecha = vistaX < ESCENA_CASA.ancho - anchoVisible - 1;
 
+  // Cómo se ve cada gatito en casa ahora mismo: lo usan el dibujo y las fotos.
+  const aspectos = gatitos.map((mundo, indice) => {
+    const quieto = lista[indice];
+    const enBrazos = cogido?.indice === indice;
+    const andante = enBrazos ? { ...quieto, x: cogido!.x, y: cogido!.y + COGIDO_PIES, destino: null } : quieto;
+    const llegando = llegan.includes(mundo) && fase === "entrando";
+    const gatito = casa.gatitos[mundo];
+    const pide = fase === "casa" ? bocadilloDe(gatito) : null;
+    const respuesta = respuestas.find((r) => r.gatito === indice);
+    const anda = andando(andante);
+    const tapado = arropados.includes(mundo) && !enBrazos;
+    const dormido = tapado || (!anda && andante.pose === "dormir" && !respuesta && frotando !== indice);
+    // Anda o hace su pose; si pide algo y está quieto, lloriquea. El bocadillo se ve también andando.
+    const animacion: AnimacionGato = respuesta ? animacionDeRespuesta(respuesta)
+      : frotando === indice ? (arrastre?.herramienta === "esponja" ? "bano" : "ronronear")
+        : anda ? "andar" : dormido ? "dormir" : pide ? "pedir" : ANIMACION_DE_VIDA[andante.pose];
+    const desde = respuesta?.desde ?? andante.desde;
+    const { fila } = ANIMACIONES_GATO[animacion];
+    const cuadro = reduceMotion ? 0 : cuadroDe(animacion, (ahora - desde) / 1000);
+    const hoja = hojaDe(mundo);
+    const mira = andante.mira;
+    const escala = escalaDe(andante.y);
+    return { mundo, indice, enBrazos, andante, llegando, pide, respuesta, tapado, dormido, animacion, fila, cuadro, hoja, mira, escala };
+  });
+
+  /** El marco de la bandeja: guarda como foto lo que se ve ahora (el trozo de habitación y sus gatitos). */
+  const hacerFoto = () => {
+    const margen = 80;
+    const foto: FotoCasa = {
+      hecha: new Date().toISOString(),
+      vista: { x: Math.round(vistaX), ancho: Math.round(anchoVisible) },
+      decoracion,
+      noche,
+      apagada: noche && lamparaApagada,
+      gatitos: aspectos
+        .filter(({ andante }) => andante.x >= vistaX - margen && andante.x <= vistaX + anchoVisible + margen)
+        .map(({ mundo, andante, animacion, cuadro, mira, tapado }) => {
+          const variante = variantes.find((v) => v.mundo === mundo);
+          return { mundo, x: Math.round(andante.x), y: Math.round(andante.y), animacion, cuadro, mira, sucio: variante?.sucio ?? false, mejorAmigo: variante?.mejorAmigo ?? false, arropado: tapado };
+        }),
+    };
+    guardar(guardarFoto(casaRef.current, foto));
+    sonidoRef.current?.clic();
+    setFlash((veces) => veces + 1);
+  };
+
   const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
   const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
@@ -789,27 +838,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} />
           {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
           {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
-          {gatitos.map((mundo, indice) => {
-            const quieto = lista[indice];
-            const enBrazos = cogido?.indice === indice;
-            const andante = enBrazos ? { ...quieto, x: cogido!.x, y: cogido!.y + COGIDO_PIES, destino: null } : quieto;
-            const llegando = llegan.includes(mundo) && fase === "entrando";
-            const gatito = casa.gatitos[mundo];
-            const pide = fase === "casa" ? bocadilloDe(gatito) : null;
-            const respuesta = respuestas.find((r) => r.gatito === indice);
-            const anda = andando(andante);
-            const tapado = arropados.includes(mundo) && !enBrazos;
-            const dormido = tapado || (!anda && andante.pose === "dormir" && !respuesta && frotando !== indice);
-            // Anda o hace su pose; si pide algo y está quieto, lloriquea. El bocadillo se ve también andando.
-            const animacion: AnimacionGato = respuesta ? animacionDeRespuesta(respuesta)
-              : frotando === indice ? (arrastre?.herramienta === "esponja" ? "bano" : "ronronear")
-                : anda ? "andar" : dormido ? "dormir" : pide ? "pedir" : ANIMACION_DE_VIDA[andante.pose];
-            const desde = respuesta?.desde ?? andante.desde;
-            const { fila } = ANIMACIONES_GATO[animacion];
-            const cuadro = reduceMotion ? 0 : cuadroDe(animacion, (ahora - desde) / 1000);
-            const hoja = hojaDe(mundo);
-            const mira = andante.mira;
-            const escala = escalaDe(andante.y);
+          {aspectos.map(({ mundo, enBrazos, andante, llegando, pide, respuesta, tapado, dormido, fila, cuadro, hoja, mira, escala }) => {
             return <div key={mundo} role="img" aria-label={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })}
               className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${dormido ? " is-dormido" : ""}`}
               style={{ left: andante.x, top: andante.y - PIES_GATITO, zIndex: enBrazos ? 1500 : Math.round(andante.y), "--escala": escala } as CSSProperties}>
@@ -834,6 +863,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         {quedaIzquierda && <span className="casa-borde is-izquierda" aria-hidden="true" />}
         {quedaDerecha && <span className="casa-borde is-derecha" aria-hidden="true" />}
         {fuera.map((aviso) => <span key={aviso.mundo} className={`casa-aviso is-${aviso.lado}`} aria-hidden="true"><i className={`casa-objeto is-${aviso.objeto}`} /></span>)}
+        {flash > 0 && <span key={flash} className="casa-flash" aria-hidden="true"><i className="casa-foto-vuela" /></span>}
       </div>
       {fase === "casa" && bano === null && decorando && <div className="casa-bandeja is-decorar" aria-label={t("casa.decorar.bandeja.oculto")} role="toolbar">
         <BotonControl className="casa-bandeja-modo" pictograma="vuelve" etiqueta="casa.decorar.cuidar.oculto" onClick={cambiarDecorar} />
@@ -844,7 +874,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         </button>)}
       </div>}
       {fase === "casa" && bano === null && !decorando && acostando && <div className="casa-bandeja" aria-label={t("casa.dormir.bandeja.oculto")} role="toolbar">
-        <BotonControl className="casa-bandeja-modo" pictograma="vuelve" etiqueta="casa.dormir.salir.oculto" onClick={terminarDeDormir} />
+        <span className="casa-bandeja-modos">
+          <BotonControl className="casa-bandeja-modo" pictograma="vuelve" etiqueta="casa.dormir.salir.oculto" onClick={terminarDeDormir} />
+          <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
+        </span>
         <button type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === "mantita" ? " is-cogido" : ""}`} aria-label={t("casa.dormir.mantita.oculto")}
           onPointerDown={(event) => cogerObjeto("mantita")(event)} onClick={(event) => {
             if (event.detail !== 0) return;
@@ -862,6 +895,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         <span className="casa-bandeja-modos">
           {horaDeDormir && <BotonControl className="casa-bandeja-modo casa-dormir" pictograma="estrella" etiqueta="casa.dormir.empezar.oculto" onClick={empezarADormir} />}
           <BotonControl className="casa-bandeja-modo" pictograma="flor" etiqueta="casa.decorar.boton.oculto" onClick={cambiarDecorar} />
+          <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
           <BotonControl className="casa-bandeja-modo" pictograma="gato" etiqueta="casa.enCasa.boton.oculto" onClick={() => setEligiendo({ orden: [...enCasaDe(casaRef.current), ...dePaseoDe(casaRef.current)], antes: enCasaDe(casaRef.current) })} />
         </span>
         {HERRAMIENTAS.map((herramienta) => <button key={herramienta} type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === herramienta ? " is-cogido" : ""}`}

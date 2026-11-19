@@ -42,6 +42,9 @@ export const casa = {
       pared: { oculto: "La pared" },
     },
   },
+  foto: {
+    boton: { oculto: "Hacer una foto de la casa" },
+  },
   dormir: {
     empezar: { oculto: "Hora de dormir: acostar a los gatitos" },
     salir: { oculto: "Terminar la hora de dormir" },

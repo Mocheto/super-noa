@@ -232,6 +232,23 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
       osc.start(inicio);
       osc.stop(inicio + 0.4);
     },
+    /** El «clic» de la cámara: dos chasquidos cortos. */
+    clic() {
+      const ctx = listo();
+      if (!ctx || !salida) return;
+      [0, 0.07].forEach((retraso, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const inicio = ctx.currentTime + retraso;
+        osc.type = "square";
+        osc.frequency.setValueAtTime(i ? 1300 : 2100, inicio);
+        gain.gain.setValueAtTime(0.06, inicio);
+        gain.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.04);
+        osc.connect(gain).connect(salida!);
+        osc.start(inicio);
+        osc.stop(inicio + 0.05);
+      });
+    },
     cerrar() {
       ronroneo?.parar();
       ronroneo = null;

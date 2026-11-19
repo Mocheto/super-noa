@@ -32,7 +32,8 @@ const RESPUESTA_MS = 1400;
 /** Necesidad que enseña cada objeto en el bocadillo. */
 const OBJETO_DE: Record<NecesidadId, Herramienta | "mano"> = { comer: "cuenco", mimos: "mano", bano: "esponja", jugar: "pelota" };
 
-const ajustes = leerAjustesCasa(import.meta.env.DEV ? window.location.search : null);
+// Los ajustes de prueba también se leen en la web publicada, para probar la casa con Noa en su móvil.
+const ajustes = leerAjustesCasa(window.location.search);
 
 const porcentajeX = (x: number) => `${(x / ESCENA_CASA.ancho) * 100}%`;
 const porcentajeY = (y: number) => `${(y / ESCENA_CASA.alto) * 100}%`;

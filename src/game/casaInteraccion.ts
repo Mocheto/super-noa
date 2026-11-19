@@ -1,6 +1,6 @@
 /**
  * Arrastrar y frotar en la casa (prototipo «Arrastrar y frotar en la habitación»). Solo cuentas y medidas, sin
- * React, para probarlas. Los números que hay que fijar jugando con Noa se pueden cambiar en desarrollo desde la URL:
+ * React, para probarlas. Los números que hay que fijar jugando con Noa se pueden cambiar desde la URL, también en la web:
  * `?casaFrotar=1500` (milisegundos frotando), `?casaObjeto=96` (tamaño de los objetos de la bandeja, en px de la
  * escena), `?casaToque=90` (radio para soltar algo sobre un gatito) y `?casaNecesidades=pide|senota` (para probar con
  * los gatitos pidiendo o con pistas).

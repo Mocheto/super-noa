@@ -7,9 +7,14 @@
  */
 import type { Cuidado } from "./casa.ts";
 
-export const ESCENA_CASA = { ancho: 960, alto: 540, suelo: 470 } as const;
-/** Sitio de cada gatito en la habitación, por su orden en `MUNDOS_CASA`. */
-export const SITIOS_CASA = [300, 500, 700] as const;
+/** La habitación mide 1280 × 540 y se desliza con el dedo («La habitación de la casa»). */
+export const ESCENA_CASA = { ancho: 1280, alto: 540, suelo: 470 } as const;
+/** Sitio de cada gatito sobre la alfombra, por su orden en `MUNDOS_CASA`. */
+export const SITIOS_CASA = [440, 640, 840] as const;
+/** De noche duermen juntos en la cama redonda. */
+export const SITIOS_NOCHE = [215, 285, 355] as const;
+/** Al llevar un objeto a menos de esta distancia del borde de la vista, la habitación se desliza sola. */
+export const BORDE_AUTODESLIZAR = 40;
 /** Alto de un gatito sentado en la escena. */
 export const ALTO_GATITO = 140;
 
@@ -46,7 +51,7 @@ export function leerAjustesCasa(busqueda: string | null): AjustesCasa {
   };
 }
 
-/** Pasa un punto de la pantalla a coordenadas de la escena de 960 × 540. */
+/** Pasa un punto de la pantalla a coordenadas de la escena (la caja es la de la escena entera, ya escalada y desplazada). */
 export const aEscena = (clienteX: number, clienteY: number, caja: { left: number; top: number; width: number; height: number }) => ({
   x: ((clienteX - caja.left) / caja.width) * ESCENA_CASA.ancho,
   y: ((clienteY - caja.top) / caja.height) * ESCENA_CASA.alto,
@@ -89,4 +94,27 @@ export function frotar(frote: Frote | null, gatito: number, ahora: number, objet
   const ms = frote.ms + (paso > 0 && paso <= PARON_MS ? paso : 0);
   if (ms >= objetivoMs) return { frote: null, listo: true };
   return { frote: { gatito, ms, ultimo: ahora }, listo: false };
+}
+
+/**
+ * Escala de la habitación en pantalla: cabe a lo alto, y en pantallas estrechas no baja de 0,75 para que el gatito
+ * (140 px de escena) mida unos 105 px; entonces se desliza a los lados.
+ */
+export const ESCALA_MINIMA = 0.75;
+export function escalaCasa(anchoDisponible: number, altoDisponible: number): number {
+  if (anchoDisponible <= 0 || altoDisponible <= 0) return ESCALA_MINIMA;
+  return Math.min(altoDisponible / ESCENA_CASA.alto, Math.max(anchoDisponible / ESCENA_CASA.ancho, ESCALA_MINIMA));
+}
+
+/** Desplazamiento de la vista (en px de escena) dentro de los límites de la habitación. */
+export const limitarVista = (x: number, anchoVisible: number) => Math.max(0, Math.min(Math.max(0, ESCENA_CASA.ancho - anchoVisible), x));
+
+/** Vista que deja `objetivo` en el centro, si cabe. */
+export const centrarEn = (objetivo: number, anchoVisible: number) => limitarVista(objetivo - anchoVisible / 2, anchoVisible);
+
+/** -1, 0 o 1: hacia dónde se desliza sola la vista con un objeto cerca del borde (coordenadas de pantalla). */
+export function autodeslizar(clienteX: number, izquierda: number, derecha: number): -1 | 0 | 1 {
+  if (clienteX < izquierda + BORDE_AUTODESLIZAR) return -1;
+  if (clienteX > derecha - BORDE_AUTODESLIZAR) return 1;
+  return 0;
 }

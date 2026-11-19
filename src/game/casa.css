@@ -1,5 +1,5 @@
-/* Casa de los gatitos: habitación provisional de 960 × 540 hasta que llegue su arte («La habitación de la casa»).
-   Todo se coloca en porcentajes de la escena, así se ve igual en el móvil vertical, el apaisado y la tableta. */
+/* Casa de los gatitos: habitación provisional de 1280 × 540 que se desliza con el dedo, hasta que llegue su arte
+   («La habitación de la casa»). La escena se dibuja en px de escena y el componente la escala y la desplaza. */
 .casa-gatitos {
   position: relative;
   display: grid;
@@ -12,84 +12,63 @@
 
 .casa-salir { position: absolute; top: 8px; left: 16px; z-index: 3; }
 
-/* El marco lleva la escena y la bandeja; mide lo mismo que la escena para que los objetos escalen con ella (cqw). */
-.casa-marco {
-  position: relative;
-  width: min(100%, calc((100dvh - 96px) * 16 / 9), 1200px);
-  container-type: inline-size;
-}
+/* Marco caramelo neutro, color miel (los acentos van en línea). */
+.casa-marco { position: relative; width: fit-content; max-width: 100%; box-sizing: border-box; --grosor-marco: 8px; padding: 8px; }
+
+.casa-visor { position: relative; overflow: hidden; border-radius: 8px; touch-action: none; }
 
 .casa-escena {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  touch-action: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1280px;
+  height: 540px;
+  transform-origin: 0 0;
   user-select: none;
-  overflow: hidden;
-  border: 4px solid #2f1d33;
-  border-radius: 16px;
-  box-shadow: 0 6px 0 #2f1d3355;
+  touch-action: none;
 }
 
 .casa-escena > * { position: absolute; }
 
-.casa-pared {
-  inset: 0;
-  background:
-    repeating-linear-gradient(90deg, #f7e6c8 0 48px, #f2dcb8 48px 96px);
-}
+.casa-pared { inset: 0; background: repeating-linear-gradient(90deg, #f7e6c8 0 48px, #f2dcb8 48px 96px); }
 
-.casa-ventana {
-  top: 12%;
-  left: 58%;
-  width: 22%;
-  height: 34%;
-  border: 6px solid #8a5a3b;
-  border-radius: 8px;
-  background: linear-gradient(#a9dcf5, #d9f1fb);
-  box-shadow: inset 0 0 0 4px #fff8e9;
-}
+.casa-ventana { top: 70px; left: 660px; width: 240px; height: 190px; border: 8px solid #8a5a3b; border-radius: 10px; background: linear-gradient(#a9dcf5, #d9f1fb); box-shadow: inset 0 0 0 5px #fff8e9; }
+.casa-escena.is-noche .casa-ventana { background: radial-gradient(circle at 70% 30%, #fff3b0 0 12px, transparent 13px), radial-gradient(circle at 30% 60%, #fff 0 2px, transparent 3px), radial-gradient(circle at 50% 20%, #fff 0 2px, transparent 3px), linear-gradient(#1d2a6b, #3b4a9a); }
 
-.casa-suelo {
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background: repeating-linear-gradient(90deg, #c98e5a 0 64px, #bd8250 64px 128px);
-  border-top: 6px solid #8a5a3b;
-}
+.casa-cuadro { top: 140px; left: 935px; width: 60px; height: 60px; border: 6px solid #8a5a3b; background: radial-gradient(circle at 50% 60%, #c98e5a 0 12px, transparent 13px), #fff8e9; }
+.casa-estanteria { top: 330px; left: 915px; width: 100px; height: 140px; border: 5px solid #5c3a26; border-radius: 6px 6px 0 0; background: linear-gradient(#a8693a 0 46%, #5c3a26 46% 50%, #a8693a 50%); }
+.casa-estanteria::before { content: ""; position: absolute; left: 30px; top: -46px; width: 40px; height: 46px; border-radius: 50% 50% 8px 8px; background: radial-gradient(circle at 50% 30%, #5aa85a 0 18px, transparent 19px), linear-gradient(transparent 60%, #d9774a 60%); }
+.casa-rascador { top: 330px; left: 520px; width: 34px; height: 140px; border: 4px solid #5c3a26; background: repeating-linear-gradient(#e9cf9a 0 8px, #d4b37a 8px 16px); }
+.casa-rascador::before { content: ""; position: absolute; left: -24px; top: -16px; width: 74px; height: 18px; border: 4px solid #5c3a26; border-radius: 6px; background: #a8693a; }
+.casa-banera { top: 380px; left: 1035px; width: 160px; height: 90px; border: 5px solid #2f1d33; border-radius: 10px 10px 50% 50% / 10px 10px 60% 60%; background: linear-gradient(#bfe9ff 0 18%, #fff 18%); }
+.casa-lampara { top: 200px; left: 1215px; width: 40px; height: 270px; background: linear-gradient(90deg, transparent 16px, #5c3a26 16px 24px, transparent 24px); }
+.casa-lampara::before { content: ""; position: absolute; left: -22px; top: 0; width: 84px; height: 54px; border: 5px solid #2f1d33; border-radius: 40% 40% 8px 8px; background: #ffd27a; }
 
-.casa-puerta {
-  top: 34%;
-  width: 14.5%;
-  height: 54%;
-  border: 5px solid #5c3a26;
-  border-bottom: 0;
-  border-radius: 40px 40px 0 0;
-  background: linear-gradient(90deg, #a8693a, #8f5630);
-  transform-origin: left center;
-  transition: transform .5s ease-out, filter .5s;
-}
+.casa-suelo { right: 0; bottom: 0; left: 0; background: repeating-linear-gradient(90deg, #c98e5a 0 64px, #bd8250 64px 128px); border-top: 6px solid #8a5a3b; }
+.casa-alfombra { top: 486px; left: 360px; width: 580px; height: 44px; border-radius: 50%; background: radial-gradient(ellipse, #f4a6b8 0 55%, #e58aa0 56% 70%, #f4a6b8 71%); box-shadow: 0 0 0 4px #2f1d3333; }
+.casa-cama { top: 418px; left: 165px; width: 240px; height: 72px; border: 5px solid #5c3a26; border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%; background: radial-gradient(ellipse at 50% 70%, #f7b6c8 0 48%, #c98e5a 50%); }
 
-/* Abierta: la hoja gira hacia dentro y deja ver la luz de fuera. */
+.casa-puerta { top: 184px; width: 140px; height: 290px; border: 6px solid #5c3a26; border-bottom: 0; border-radius: 70px 70px 0 0; background: linear-gradient(90deg, #a8693a, #8f5630); transform-origin: left center; transition: transform .5s ease-out, filter .5s; }
 .casa-puerta.is-abierta { transform: perspective(600px) rotateY(-62deg); filter: brightness(1.15); box-shadow: -30px 0 40px #fff1a8aa; }
 
-.casa-gatito {
-  bottom: 6%;
-  height: 26%;
-  aspect-ratio: 1;
-  transform: translateX(-50%);
-  transform-origin: 50% 100%;
-}
+/* Noche (21–8 h): tono azul, lámpara encendida y ventana con luna. */
+.casa-luz-noche { inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at 1235px 230px, #ffe7a066 0 120px, transparent 260px), #1e2a6e59; }
+.casa-escena.is-noche .casa-luz-noche { opacity: 1; }
+
+.casa-gatito { bottom: 40px; width: 140px; height: 140px; transform: translateX(-50%); transform-origin: 50% 100%; z-index: 1; transition: left .8s ease-in-out; }
 .casa-gatito img { display: block; height: 100%; margin: 0 auto; image-rendering: pixelated; filter: drop-shadow(0 4px 2px #2f1d3355); pointer-events: none; }
+.casa-gatito.is-dormido { bottom: 52px; transform: translateX(-50%) scale(.72); }
+.casa-gatito.is-dormido img { filter: drop-shadow(0 4px 2px #2f1d3355) brightness(.92); }
+.casa-zzz { position: absolute; right: 6%; top: 0; width: 40px; height: 40px; background: linear-gradient(135deg, transparent 40%, #fff8e9 40% 52%, transparent 52%), linear-gradient(#fff8e9 0 0) top / 70% 5px no-repeat, linear-gradient(#fff8e9 0 0) bottom / 70% 5px no-repeat; opacity: .9; animation: casa-zzz 2s ease-in-out infinite; }
+@keyframes casa-zzz { 50% { transform: translateY(-10px); opacity: .5; } }
 
 /* Barro provisional: manchas encima del dibujo hasta que el gato base las lleve en su paleta. */
 .casa-barro { position: absolute; left: 30%; bottom: 8%; width: 40%; height: 30%; pointer-events: none;
   background: radial-gradient(circle at 25% 60%, #8b5a2bcc 0 14%, transparent 15%), radial-gradient(circle at 70% 30%, #8b5a2bcc 0 11%, transparent 12%), radial-gradient(circle at 55% 85%, #8b5a2bcc 0 9%, transparent 10%); }
 
 /* Bocadillo de «pide»: solo el dibujo de lo que quiere. */
-.casa-bocadillo { position: absolute; left: 62%; top: -34%; display: grid; place-items: center; width: 52%; aspect-ratio: 1.1; border: 3px solid #2f1d33; border-radius: 50%; background: #fff8e9; animation: casa-bocadillo 1s ease-in-out infinite alternate; }
-.casa-bocadillo::after { content: ""; position: absolute; left: 10%; bottom: -14%; width: 18%; aspect-ratio: 1; border: 3px solid #2f1d33; border-radius: 50%; background: #fff8e9; }
-.casa-bocadillo .casa-objeto { width: 70%; }
+.casa-bocadillo { position: absolute; left: 62%; top: -34%; display: grid; place-items: center; width: 72px; height: 64px; border: 4px solid #2f1d33; border-radius: 50%; background: #fff8e9; animation: casa-bocadillo 1s ease-in-out infinite alternate; }
+.casa-bocadillo::after { content: ""; position: absolute; left: 6px; bottom: -14px; width: 14px; height: 14px; border: 4px solid #2f1d33; border-radius: 50%; background: #fff8e9; }
 @keyframes casa-bocadillo { to { transform: translateY(-6%) rotate(-3deg); } }
 
 /* Respuestas a los cuidados. */
@@ -101,13 +80,16 @@
 @keyframes casa-ronroneo { from { transform: translateX(-50%) rotate(-2deg); } to { transform: translateX(-50%) rotate(2deg) scaleY(.97); } }
 @keyframes casa-ahora-no { 25% { transform: translateX(-50%) skewX(-6deg); } 75% { transform: translateX(-50%) skewX(6deg); } }
 
-.casa-corazon { position: absolute; left: 40%; top: -10%; width: 20%; aspect-ratio: 1; background: var(--corazon) center / contain no-repeat; animation: casa-corazon 1.2s ease-out forwards; }
+.casa-corazon { position: absolute; left: 40%; top: -10%; width: 28px; height: 28px; background: var(--corazon) center / contain no-repeat; animation: casa-corazon 1.2s ease-out forwards; }
 @keyframes casa-corazon { from { transform: translateY(0) scale(.6); opacity: 1; } to { transform: translateY(-120%) scale(1.2); opacity: 0; } }
 
-.casa-huella { width: 3.4%; aspect-ratio: 1.2; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle at 50% 70%, #6b4423 0 34%, transparent 36%), radial-gradient(circle at 18% 25%, #6b4423 0 14%, transparent 16%), radial-gradient(circle at 50% 12%, #6b4423 0 14%, transparent 16%), radial-gradient(circle at 82% 25%, #6b4423 0 14%, transparent 16%); }
+.casa-huella { width: 44px; height: 36px; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle at 50% 70%, #6b4423 0 34%, transparent 36%), radial-gradient(circle at 18% 25%, #6b4423 0 14%, transparent 16%), radial-gradient(circle at 50% 12%, #6b4423 0 14%, transparent 16%), radial-gradient(circle at 82% 25%, #6b4423 0 14%, transparent 16%); }
 
-/* Objetos de la bandeja, dibujados por ahora con CSS. Su tamaño (--objeto) se ajusta con ?casaObjeto=. */
-.casa-objeto { position: relative; display: block; width: var(--objeto, 10cqw); aspect-ratio: 1; }
+/* Objetos, dibujados por ahora con CSS. Dentro de la escena miden --objeto-escena (px de escena); en la bandeja,
+   --objeto (px de pantalla). Su tamaño se ajusta con ?casaObjeto=. */
+.casa-objeto { position: relative; display: block; width: var(--objeto, 64px); aspect-ratio: 1; }
+.casa-escena .casa-objeto { width: var(--objeto-escena, 96px); }
+.casa-escena .casa-bocadillo .casa-objeto { width: 52px; }
 .casa-objeto.is-cuenco::before { content: ""; position: absolute; inset: 40% 6% 12%; border: 3px solid #2f1d33; border-radius: 6px 6px 50% 50% / 6px 6px 100% 100%; background: #4f9be0; }
 .casa-objeto.is-cuenco::after { content: ""; position: absolute; inset: 28% 18% 54%; border-radius: 50% 50% 10% 10%; background: #b5703a; box-shadow: 0 0 0 3px #2f1d33; }
 .casa-objeto.is-pelota::before { content: ""; position: absolute; inset: 14%; border: 3px solid #2f1d33; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff9aa8 0 18%, #e4505f 20%); }
@@ -120,35 +102,42 @@
 .casa-pelota-lanzada { animation: casa-pelota .7s ease-in forwards; }
 @keyframes casa-pelota { to { left: var(--hasta); top: 80%; transform: translate(-50%, -50%) rotate(540deg); } }
 
-/* Bandeja: columna sobre el borde derecho de la escena en pantallas anchas; debajo de la escena en el móvil vertical. */
-.casa-bandeja { position: absolute; top: 50%; right: 1%; z-index: 3; display: flex; flex-direction: column; gap: .6cqw; padding: .6cqw; border: 3px solid #2f1d33; border-radius: 18px; background: #fff8e9e6; transform: translateY(-50%); }
-.casa-bandeja .casa-objeto { width: min(var(--objeto, 10cqw), 10.5cqw); }
+/* Bordes: queda habitación por ver a ese lado. */
+.casa-borde { position: absolute; top: 0; bottom: 0; z-index: 3; width: 40px; pointer-events: none; }
+.casa-borde.is-izquierda { left: 0; background: linear-gradient(90deg, #2f1d3366, transparent); }
+.casa-borde.is-derecha { right: 0; background: linear-gradient(-90deg, #2f1d3366, transparent); }
+.casa-borde::after { content: ""; position: absolute; top: 50%; width: 0; height: 0; border-block: 12px solid transparent; transform: translateY(-50%); animation: casa-flecha 1.2s ease-in-out infinite alternate; }
+.casa-borde.is-izquierda::after { left: 8px; border-right: 16px solid #fff8e9; }
+.casa-borde.is-derecha::after { right: 8px; border-left: 16px solid #fff8e9; }
+@keyframes casa-flecha { to { opacity: .4; } }
+
+/* Un gatito que pide algo fuera de la vista: bocadillo pequeño en ese borde. */
+.casa-aviso { position: absolute; top: 30%; z-index: 3; display: grid; place-items: center; width: 52px; height: 46px; border: 3px solid #2f1d33; border-radius: 50%; background: #fff8e9; pointer-events: none; animation: casa-bocadillo 1s ease-in-out infinite alternate; }
+.casa-aviso.is-izquierda { left: 10px; }
+.casa-aviso.is-derecha { right: 10px; }
+.casa-aviso .casa-objeto { width: 36px; }
+
+/* Bandeja: columna sobre el borde derecho de la vista en pantallas anchas; debajo de la vista en el móvil vertical. */
+.casa-bandeja { position: absolute; top: 50%; right: 16px; z-index: 4; display: flex; flex-direction: column; gap: 6px; padding: 6px; border: 3px solid #2f1d33; border-radius: 18px; background: #fff8e9e6; transform: translateY(-50%); }
 .casa-bandeja-objeto { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 14px; background: transparent; cursor: grab; touch-action: none; }
 .casa-bandeja-objeto:focus-visible { outline: 4px solid #ffd76a; }
 .casa-bandeja-objeto.is-cogido { opacity: .35; }
 .casa-gatitos.is-arrastrando { cursor: grabbing; }
 
 .casa-gatito.is-llegando { animation: casa-entra 1.6s .4s ease-out backwards; }
-
-@keyframes casa-entra {
-  from { left: var(--desde); opacity: 0; }
-  20% { opacity: 1; }
-}
+@keyframes casa-entra { from { left: var(--desde); opacity: 0; } 20% { opacity: 1; } }
 
 .casa-llegada-dibujo { display: flex; justify-content: center; gap: 12px; }
 .casa-llegada-dibujo img { height: 96px; image-rendering: pixelated; }
 
-.casa-gatitos.is-quieta .casa-puerta { transition: none; }
+.casa-gatitos.is-quieta .casa-puerta, .casa-gatitos.is-quieta .casa-gatito { transition: none; }
 .casa-gatitos.is-quieta .casa-gatito.is-llegando { animation: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .casa-puerta { transition: none; }
-  .casa-gatito.is-llegando { animation: none; }
+  .casa-puerta, .casa-gatito, .casa-luz-noche { transition: none; }
+  .casa-gatito.is-llegando, .casa-zzz, .casa-borde::after { animation: none; }
 }
 
-/* Móvil vertical: la escena ocupa el ancho, arriba, y deja sitio debajo para la bandeja. */
-@media (orientation: portrait) and (max-width: 600px) {
-  .casa-gatitos { align-content: start; }
-  .casa-bandeja { position: static; flex-direction: row; justify-content: space-around; margin-top: 16px; padding: 12px; transform: none; }
-  .casa-bandeja .casa-objeto { width: max(var(--objeto, 10cqw), 64px); }
-}
+/* Móvil vertical: la vista arriba y la bandeja debajo, dentro del marco. */
+.casa-gatitos.is-vertical { align-content: start; }
+.casa-gatitos.is-vertical .casa-bandeja { position: static; flex-direction: row; justify-content: space-around; margin-top: 12px; padding: 10px; transform: none; }

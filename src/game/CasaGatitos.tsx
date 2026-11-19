@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { avanzar, barrer, bocadilloDe, cuidar, dejarHuella, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type NecesidadId, type RespuestaCuidado } from "./casa";
-import { aEscena, CUIDADO_DE, ESCENA_CASA, frotar, gatitoEn, gatitoMasCerca, HERRAMIENTAS, huellaEn, leerAjustesCasa, SITIOS_CASA, type Frote, type Herramienta } from "./casaInteraccion";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { avanzar, barrer, bocadilloDe, cuidar, dejarHuella, esDeNoche, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type NecesidadId, type RespuestaCuidado } from "./casa";
+import {
+  aEscena, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, gatitoEn, gatitoMasCerca, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
+  SITIOS_CASA, SITIOS_NOCHE, type Frote, type Herramienta,
+} from "./casaInteraccion";
 import { MUNDOS_CASA, prepararCasa } from "./casaRescate";
 import { cssAssetUrl } from "./assets";
 import { Ventana } from "./Ventana";
@@ -28,6 +31,18 @@ const HUELLA_CADA_MS = 6000;
 const TIEMPO_CADA_MS = 60_000;
 /** Cuánto se ve la respuesta del gatito a un cuidado. */
 const RESPUESTA_MS = 1400;
+/** Velocidad con que se desliza sola la vista al llevar un objeto al borde, en px de escena por fotograma. */
+const AUTODESLIZAR_PX = 9;
+/** Un arrastre que empieza fuera de un gatito desliza la habitación a partir de este movimiento, en px de pantalla. */
+const UMBRAL_DESLIZAR = 6;
+/** Marco caramelo neutro de la casa, color miel. */
+const ACENTO_CASA = { "--acento": "#e0a452", "--acento-oscuro": "#a8693a", "--acento-claro": "#f6d08f" };
+/** Espacio de pantalla que no es habitación: botón de salir arriba, márgenes y marco. */
+const MARGEN_ARRIBA = 64;
+const MARGEN_LADOS = 32;
+const MARCO_MOVIL = 16;
+/** En el móvil vertical la bandeja va debajo de la habitación. */
+const ALTO_BANDEJA_VERTICAL = 120;
 
 /** Necesidad que enseña cada objeto en el bocadillo. */
 const OBJETO_DE: Record<NecesidadId, Herramienta | "mano"> = { comer: "cuenco", mimos: "mano", bano: "esponja", jugar: "pelota" };
@@ -46,7 +61,7 @@ function nombresJuntos(mundos: readonly number[]): string {
   return t("casa.llegada.union.juntos", { primeros: nombres.slice(0, -1).join(", "), ultimo: nombres[nombres.length - 1] });
 }
 
-/** En desarrollo, `?casaNecesidades=pide|senota` pone a los gatitos pidiendo o con pistas para probar los cuidados. */
+/** Con `?casaNecesidades=pide|senota`, los gatitos piden o dan pistas para probar los cuidados. */
 function conNecesidadesDePrueba(casa: CasaProgress): CasaProgress {
   if (!ajustes.necesidades) return casa;
   const valor = ajustes.necesidades === "pide" ? 1 : 0.6;
@@ -57,31 +72,70 @@ function conNecesidadesDePrueba(casa: CasaProgress): CasaProgress {
 type Arrastre = { herramienta: Herramienta; x: number; y: number };
 type Respuesta = { gatito: number; tipo: RespuestaCuidado; corazon: boolean; id: number };
 type Pelota = { x: number; y: number; gatito: number; id: number };
+type Desliz = { clienteX: number; vista: number; moviendo: boolean };
+type Medidas = { escala: number; anchoVisor: number; vertical: boolean; medido: boolean };
 
 /**
- * La casa de los gatitos: la llegada de los gatitos rescatados y, como prototipo, los cuidados con la bandeja
- * (arrastrar el cuenco, frotar al gatito o con la esponja, lanzar la pelota y barrer las huellas). La habitación y
- * los gatitos son provisionales hasta que llegue su arte.
+ * La casa de los gatitos: la llegada de los gatitos rescatados y los cuidados con la bandeja (arrastrar el cuenco,
+ * frotar al gatito o con la esponja, lanzar la pelota y barrer las huellas) en una habitación de 1280 × 540 que se
+ * desliza con el dedo. La habitación, los objetos y los gatitos son provisionales hasta que llegue su arte.
  */
 export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuardar, onSalir }: Props) {
   const inicial = useMemo(() => conNecesidadesDePrueba(prepararCasa(guardada, levelStats, new Date())), [guardada, levelStats]);
   const [casa, setCasa] = useState(inicial);
   const [llegan] = useState(() => llegadasPendientes(inicial));
   const [fase, setFase] = useState<"entrando" | "hola" | "casa">(llegan.length ? "entrando" : "casa");
+  const [noche, setNoche] = useState(() => esDeNoche(new Date()));
   const [arrastre, setArrastre] = useState<Arrastre | null>(null);
   const [respuestas, setRespuestas] = useState<Respuesta[]>([]);
   const [pelota, setPelota] = useState<Pelota | null>(null);
   const [frotando, setFrotando] = useState<number | null>(null);
-  const casaRef = useRef(casa);
+  const [medidas, setMedidas] = useState<Medidas>({ escala: 0.75, anchoVisor: 600, vertical: false, medido: false });
+  const [vista, setVista] = useState<number | null>(null);
+  const seccionRef = useRef<HTMLElement>(null);
+  const visorRef = useRef<HTMLDivElement>(null);
   const escenaRef = useRef<HTMLDivElement>(null);
+  const casaRef = useRef(casa);
   const froteRef = useRef<Frote | null>(null);
   const dedoRef = useRef(false);
+  const deslizRef = useRef<Desliz | null>(null);
+  const autoRef = useRef<-1 | 0 | 1>(0);
   const idRef = useRef(0);
   useEffect(() => { casaRef.current = casa; }, [casa]);
 
   const presentes = MUNDOS_CASA.filter((mundo) => casa.gatitos[mundo]).join(",");
   const gatitos = useMemo(() => presentes ? presentes.split(",").map(Number) : [], [presentes]);
-  const sitios = useMemo(() => gatitos.map((mundo) => SITIOS_CASA[MUNDOS_CASA.indexOf(mundo)] ?? SITIOS_CASA[0]), [gatitos]);
+  // De día, sobre la alfombra; de noche, juntos en la cama (salvo mientras llegan por la puerta).
+  const sitios = useMemo(() => gatitos.map((mundo) => (noche && fase === "casa" ? SITIOS_NOCHE : SITIOS_CASA)[MUNDOS_CASA.indexOf(mundo)] ?? SITIOS_CASA[0]),
+    [gatitos, noche, fase]);
+  const anchoVisible = medidas.anchoVisor / medidas.escala;
+  const vistaX = limitarVista(vista ?? 0, anchoVisible);
+
+  // La habitación cabe a lo alto; en pantallas estrechas no baja de 0,75 y se desliza.
+  useLayoutEffect(() => {
+    const seccion = seccionRef.current;
+    if (!seccion) return;
+    const medir = () => {
+      const vertical = window.matchMedia("(orientation: portrait) and (max-width: 600px)").matches;
+      const ancho = seccion.clientWidth - MARGEN_LADOS - MARCO_MOVIL;
+      // La sección crece con su contenido: el alto disponible es el de la ventana desde donde empieza.
+      const alto = window.innerHeight - Math.max(0, seccion.getBoundingClientRect().top) - MARGEN_ARRIBA - MARCO_MOVIL - (vertical ? ALTO_BANDEJA_VERTICAL : 0);
+      const escala = escalaCasa(ancho, alto);
+      setMedidas({ escala, anchoVisor: Math.min(ancho, ESCENA_CASA.ancho * escala), vertical, medido: true });
+    };
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(seccion);
+    window.addEventListener("resize", medir);
+    return () => { observador.disconnect(); window.removeEventListener("resize", medir); };
+  }, []);
+
+  // Al entrar, la vista va al gatito que pide algo, o al centro de la alfombra.
+  useEffect(() => {
+    if (vista !== null || !medidas.medido) return;
+    const pide = gatitos.findIndex((mundo) => bocadilloDe(casaRef.current.gatitos[mundo]));
+    setVista(centrarEn(pide >= 0 ? sitios[pide] : SITIOS_CASA[1], anchoVisible));
+  }, [vista, medidas, gatitos, sitios, anchoVisible]);
 
   const guardar = useCallback((nueva: CasaProgress) => {
     casaRef.current = nueva;
@@ -105,7 +159,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
     return () => window.clearTimeout(espera);
   }, [fase, reduceMotion]);
 
-  // El tiempo sigue pasando con la casa abierta, y un gatito sucio va dejando huellas cerca de su sitio.
+  // El tiempo sigue pasando con la casa abierta, un gatito sucio va dejando huellas y se nota si se hace de noche.
   useEffect(() => {
     if (fase !== "casa") return;
     const huellas = window.setInterval(() => {
@@ -113,7 +167,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
       gatitos.forEach((mundo, indice) => { siguiente = dejarHuella(siguiente, mundo, sitios[indice] + (Math.random() - 0.5) * 240); });
       if (siguiente !== casaRef.current) guardar(siguiente);
     }, HUELLA_CADA_MS);
-    const reloj = window.setInterval(() => guardar(avanzar(casaRef.current, new Date())), TIEMPO_CADA_MS);
+    const reloj = window.setInterval(() => { guardar(avanzar(casaRef.current, new Date())); setNoche(esDeNoche(new Date())); }, TIEMPO_CADA_MS);
     return () => { window.clearInterval(huellas); window.clearInterval(reloj); };
   }, [fase, gatitos, sitios, guardar]);
 
@@ -144,10 +198,25 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
     }, reduceMotion ? 0 : ATRAPAR_MS);
   };
 
+  // Con un objeto cerca del borde de la vista, la habitación se desliza sola hacia ese lado.
+  const arrastrando = arrastre !== null;
+  useEffect(() => {
+    if (!arrastrando) return;
+    let fotograma = 0;
+    const paso = () => {
+      if (autoRef.current) setVista((actual) => limitarVista((actual ?? 0) + autoRef.current * AUTODESLIZAR_PX, anchoVisible));
+      fotograma = requestAnimationFrame(paso);
+    };
+    fotograma = requestAnimationFrame(paso);
+    return () => cancelAnimationFrame(fotograma);
+  }, [arrastrando, anchoVisible]);
+
   // Arrastrar un objeto de la bandeja: se sigue al dedo por toda la pantalla, aunque salga de la escena.
   useEffect(() => {
     if (!arrastre) return;
     const mover = (event: PointerEvent) => {
+      const caja = visorRef.current?.getBoundingClientRect();
+      autoRef.current = caja ? autodeslizar(event.clientX, caja.left, caja.right) : 0;
       const punto = enEscena(event);
       if (!punto) return;
       setArrastre((actual) => actual && { ...actual, ...punto });
@@ -164,14 +233,17 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
     };
     const soltar = (event: PointerEvent) => {
       const punto = enEscena(event);
+      const caja = visorRef.current?.getBoundingClientRect();
+      const dentro = Boolean(caja && event.clientX >= caja.left && event.clientX <= caja.right && event.clientY >= caja.top && event.clientY <= caja.bottom);
       froteRef.current = null;
+      autoRef.current = 0;
       setFrotando(null);
       setArrastre(null);
-      if (!punto) return;
+      if (!punto || !dentro) return;
       if (arrastre.herramienta === "cuenco") {
         const indice = gatitoEn(punto.x, punto.y, sitios, ajustes.toque);
         if (indice >= 0) atender(indice, "comer");
-      } else if (arrastre.herramienta === "pelota" && punto.x >= 0 && punto.x <= ESCENA_CASA.ancho && punto.y >= 0 && punto.y <= ESCENA_CASA.alto) {
+      } else if (arrastre.herramienta === "pelota") {
         lanzar(punto.x, punto.y);
       }
     };
@@ -200,21 +272,38 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
     const cuidado = CUIDADO_DE[herramienta];
     const necesidad = NECESIDADES.find((id) => OBJETO_DE[id] === herramienta)!;
     const indice = Math.max(0, gatitos.findIndex((mundo) => estadoDe(casaRef.current.gatitos[mundo].necesidades[necesidad]) !== "bien"));
+    setVista(centrarEn(sitios[indice], anchoVisible));
     if (herramienta === "pelota") lanzar(sitios[indice], ESCENA_CASA.suelo - 40);
     else atender(indice, cuidado);
   };
 
-  // Frotar con el dedo, sin objeto: se empieza sobre un gatito y cuenta mientras el dedo se mueve encima.
-  const empezarMimo = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (fase !== "casa" || arrastre) return;
+  // Con el dedo y sin objeto: sobre un gatito, frotar; fuera de los gatitos, deslizar la habitación.
+  const empezarDedo = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (fase !== "casa" || arrastre || event.button !== 0) return;
     const punto = enEscena(event);
-    if (!punto || gatitoEn(punto.x, punto.y, sitios, ajustes.toque) < 0) return;
+    if (!punto) return;
+    const indice = gatitoEn(punto.x, punto.y, sitios, ajustes.toque);
+    try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* sin captura, el deslizar sigue funcionando dentro de la escena */ }
+    if (indice < 0) {
+      deslizRef.current = { clienteX: event.clientX, vista: vistaX, moviendo: false };
+      return;
+    }
     dedoRef.current = true;
-    froteRef.current = frotar(null, gatitoEn(punto.x, punto.y, sitios, ajustes.toque), performance.now(), ajustes.frotarMs).frote;
+    froteRef.current = frotar(null, indice, performance.now(), ajustes.frotarMs).frote;
     setFrotando(froteRef.current?.gatito ?? null);
   };
-  const moverMimo = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!dedoRef.current || arrastre) return;
+  const moverDedo = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (arrastre) return;
+    const desliz = deslizRef.current;
+    if (desliz) {
+      const distancia = event.clientX - desliz.clienteX;
+      if (desliz.moviendo || Math.abs(distancia) > UMBRAL_DESLIZAR) {
+        desliz.moviendo = true;
+        setVista(limitarVista(desliz.vista - distancia / medidas.escala, anchoVisible));
+      }
+      return;
+    }
+    if (!dedoRef.current) return;
     const punto = enEscena(event);
     if (!punto) return;
     const indice = gatitoEn(punto.x, punto.y, sitios, ajustes.toque);
@@ -223,14 +312,14 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
     setFrotando(frote?.gatito ?? null);
     if (listo) { dedoRef.current = false; atender(indice, "frotar"); }
   };
-  const acabarMimo = () => {
+  const acabarDedo = () => {
     dedoRef.current = false;
+    deslizRef.current = null;
     if (!arrastre) { froteRef.current = null; setFrotando(null); }
   };
 
   const seguir = () => {
-    const presentada = presentar(casa, llegan);
-    guardar(presentada);
+    guardar(presentar(casa, llegan));
     setFase("casa");
   };
   const salir = () => {
@@ -238,34 +327,61 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
     onSalir();
   };
 
-  const tamanoObjeto = { "--objeto": `${(ajustes.objeto / ESCENA_CASA.ancho) * 100}cqw`, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png") } as CSSProperties;
+  // Gatitos que piden algo pero quedan fuera de la vista: un bocadillo pequeño en ese borde.
+  const fuera = fase === "casa" ? gatitos.map((mundo, indice) => {
+    const pide = bocadilloDe(casa.gatitos[mundo]);
+    if (!pide) return null;
+    const lado = sitios[indice] < vistaX + 40 ? "izquierda" : sitios[indice] > vistaX + anchoVisible - 40 ? "derecha" : null;
+    return lado ? { mundo, lado, objeto: OBJETO_DE[pide] } : null;
+  }).filter((aviso): aviso is { mundo: number; lado: "izquierda" | "derecha"; objeto: Herramienta | "mano" } => aviso !== null) : [];
+  const quedaIzquierda = vistaX > 1;
+  const quedaDerecha = vistaX < ESCENA_CASA.ancho - anchoVisible - 1;
 
-  return <section className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}`} aria-label={t("casa.titulo.oculto")}>
+  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
+  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
+
+  return <section ref={seccionRef} className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}${medidas.vertical ? " is-vertical" : ""}`} aria-label={t("casa.titulo.oculto")}>
     <BotonControl className="casa-salir" pictograma="mapa" etiqueta="casa.salir.oculto" onClick={salir} disabled={fase === "hola"} />
-    <div className="casa-marco" style={tamanoObjeto}>
-      <div className="casa-escena" ref={escenaRef} onPointerDown={empezarMimo} onPointerMove={moverMimo} onPointerUp={acabarMimo} onPointerLeave={acabarMimo} onPointerCancel={acabarMimo}>
-        <div className="casa-pared" />
-        <div className="casa-ventana" />
-        <div className="casa-suelo" style={{ top: porcentajeY(ESCENA_CASA.suelo) }} />
-        <div className={`casa-puerta${fase === "entrando" ? " is-abierta" : ""}`} style={{ left: porcentajeX(PUERTA_X - 70) }} />
-        {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className="casa-huella" style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
-        {gatitos.map((mundo, indice) => {
-          const llegando = llegan.includes(mundo) && fase === "entrando";
-          const gatito = casa.gatitos[mundo];
-          const pide = fase === "casa" ? bocadilloDe(gatito) : null;
-          const respuesta = respuestas.find((r) => r.gatito === indice);
-          const sucio = estadoDe(gatito.necesidades.bano) !== "bien";
-          const gato = worldCatalog.find((world) => world.id === mundo);
-          return <div key={mundo} className={`casa-gatito${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${frotando === indice ? " is-frotado" : ""}`}
-            style={{ "--desde": porcentajeX(PUERTA_X), left: porcentajeX(sitios[indice]) } as CSSProperties}>
-            <img src={gato?.catAsset} alt={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })} draggable={false} />
-            {sucio && <span className="casa-barro" aria-hidden="true" />}
-            {pide && !respuesta && <span className="casa-bocadillo" aria-hidden="true"><i className={`casa-objeto is-${OBJETO_DE[pide]}`} /></span>}
-            {respuesta?.corazon && <span className="casa-corazon" aria-hidden="true" />}
-          </div>;
-        })}
-        {pelota && <i key={pelota.id} className="casa-objeto is-pelota casa-pelota-lanzada" style={{ left: porcentajeX(pelota.x), top: porcentajeY(pelota.y), "--hasta": porcentajeX(sitios[pelota.gatito]) } as CSSProperties} />}
-        {arrastre && <i className={`casa-objeto is-${arrastre.herramienta} casa-arrastrado`} style={{ left: porcentajeX(arrastre.x), top: porcentajeY(arrastre.y) }} />}
+    <div className="casa-marco game-frame" style={estiloMarco}>
+      <div className="casa-visor" ref={visorRef} style={{ width: medidas.anchoVisor, height: ESCENA_CASA.alto * medidas.escala }}>
+        <div className={`casa-escena${noche ? " is-noche" : ""}`} ref={escenaRef} style={estiloEscena}
+          onPointerDown={empezarDedo} onPointerMove={moverDedo} onPointerUp={acabarDedo} onPointerCancel={acabarDedo}>
+          <div className="casa-pared" />
+          <div className="casa-ventana" />
+          <div className="casa-cuadro" />
+          <div className="casa-estanteria" />
+          <div className="casa-rascador" />
+          <div className="casa-banera" />
+          <div className="casa-lampara" />
+          <div className="casa-suelo" style={{ top: porcentajeY(ESCENA_CASA.suelo) }} />
+          <div className="casa-alfombra" />
+          <div className="casa-cama" />
+          <div className={`casa-puerta${fase === "entrando" ? " is-abierta" : ""}`} style={{ left: porcentajeX(PUERTA_X - 70) }} />
+          {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className="casa-huella" style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
+          {gatitos.map((mundo, indice) => {
+            const llegando = llegan.includes(mundo) && fase === "entrando";
+            const gatito = casa.gatitos[mundo];
+            const pide = fase === "casa" ? bocadilloDe(gatito) : null;
+            const respuesta = respuestas.find((r) => r.gatito === indice);
+            const sucio = estadoDe(gatito.necesidades.bano) !== "bien";
+            const dormido = noche && fase === "casa" && !respuesta && frotando !== indice;
+            const gato = worldCatalog.find((world) => world.id === mundo);
+            return <div key={mundo} className={`casa-gatito${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${frotando === indice ? " is-frotado" : ""}${dormido ? " is-dormido" : ""}`}
+              style={{ "--desde": porcentajeX(PUERTA_X), left: porcentajeX(sitios[indice]) } as CSSProperties}>
+              <img src={gato?.catAsset} alt={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })} draggable={false} />
+              {sucio && <span className="casa-barro" aria-hidden="true" />}
+              {pide && !respuesta && !dormido && <span className="casa-bocadillo" aria-hidden="true"><i className={`casa-objeto is-${OBJETO_DE[pide]}`} /></span>}
+              {dormido && <span className="casa-zzz" aria-hidden="true" />}
+              {respuesta?.corazon && <span className="casa-corazon" aria-hidden="true" />}
+            </div>;
+          })}
+          <div className="casa-luz-noche" aria-hidden="true" />
+          {pelota && <i key={pelota.id} className="casa-objeto is-pelota casa-pelota-lanzada" style={{ left: porcentajeX(pelota.x), top: porcentajeY(pelota.y), "--hasta": porcentajeX(sitios[pelota.gatito]) } as CSSProperties} />}
+          {arrastre && <i className={`casa-objeto is-${arrastre.herramienta} casa-arrastrado`} style={{ left: porcentajeX(arrastre.x), top: porcentajeY(arrastre.y) }} />}
+        </div>
+        {quedaIzquierda && <span className="casa-borde is-izquierda" aria-hidden="true" />}
+        {quedaDerecha && <span className="casa-borde is-derecha" aria-hidden="true" />}
+        {fuera.map((aviso) => <span key={aviso.mundo} className={`casa-aviso is-${aviso.lado}`} aria-hidden="true"><i className={`casa-objeto is-${aviso.objeto}`} /></span>)}
       </div>
       {fase === "casa" && <div className="casa-bandeja" aria-label={t("casa.bandeja.oculto")} role="toolbar">
         {HERRAMIENTAS.map((herramienta) => <button key={herramienta} type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === herramienta ? " is-cogido" : ""}`}

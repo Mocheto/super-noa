@@ -859,7 +859,7 @@ export default function App() {
           }} />
       </Suspense>}
       {screen === "casa" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
-        <CasaGatitos casa={progress.casa} levelStats={progress.levelStats} reduceMotion={reduceMotion} muted={muted} effectsVolume={effectsVolume}
+        <CasaGatitos casa={progress.casa} levelStats={progress.levelStats} reduceMotion={reduceMotion} muted={muted} effectsVolume={effectsVolume} musicVolume={musicVolume}
           onGuardar={(casa) => setProgress((current) => ({ ...current, casa }))} onSalir={() => setScreen("map")} />
       </Suspense>}
       {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>

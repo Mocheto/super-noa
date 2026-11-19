@@ -5,6 +5,7 @@ import {
   SITIOS_CASA, type Frote, type Herramienta,
 } from "./casaInteraccion";
 import { crearSonidoCasa, type SonidoCasa } from "./casaSonido";
+import { crearNana, type Nana } from "./casaNana";
 import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, type AnimacionGato } from "./casaGatoArte";
 import { MUNDOS_CASA, prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, type Andante } from "./casaDeambular";
@@ -20,9 +21,10 @@ type Props = {
   casa: CasaProgress | undefined;
   levelStats: Record<string, { completed?: boolean } | undefined>;
   reduceMotion: boolean;
-  /** Silencio del juego y volumen de efectos (0–100). */
+  /** Silencio del juego y volúmenes de efectos y de música (0–100). */
   muted: boolean;
   effectsVolume: number;
+  musicVolume: number;
   /** Guarda la casa en el progreso: al ver una llegada, tras cada cuidado y al salir. */
   onGuardar: (casa: CasaProgress) => void;
   onSalir: () => void;
@@ -107,7 +109,7 @@ type Medidas = { escala: number; anchoVisor: number; vertical: boolean; medido: 
  * frotar al gatito o con la esponja, lanzar la pelota y barrer las huellas) en una habitación de 1280 × 540 que se
  * desliza con el dedo. La habitación, los objetos y los gatitos son provisionales hasta que llegue su arte.
  */
-export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, effectsVolume, onGuardar, onSalir }: Props) {
+export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, effectsVolume, musicVolume, onGuardar, onSalir }: Props) {
   const inicial = useMemo(() => conNecesidadesDePrueba(prepararCasa(guardada, levelStats, new Date())), [guardada, levelStats]);
   const [casa, setCasa] = useState(inicial);
   const [llegan] = useState(() => llegadasPendientes(inicial));
@@ -149,6 +151,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => { sonidoRef.current?.ajustar({ silencio: muted, volumen: effectsVolume / 100 }); }, [muted, effectsVolume]);
+
+  // Música de fondo: la nana de la casa, que empieza con el primer toque, sigue la noche y para al salir.
+  const nanaRef = useRef<Nana | null>(null);
+  useEffect(() => {
+    const nana = crearNana({ silencio: muted, volumen: musicVolume / 100, noche: esDeNoche(new Date()) });
+    nanaRef.current = nana;
+    return () => { nana.cerrar(); nanaRef.current = null; };
+    // Solo al montar: los cambios van por `ajustar`.
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { nanaRef.current?.ajustar({ silencio: muted, volumen: musicVolume / 100, noche }); }, [muted, musicVolume, noche]);
 
   const presentes = MUNDOS_CASA.filter((mundo) => casa.gatitos[mundo]).join(",");
   const gatitos = useMemo(() => presentes ? presentes.split(",").map(Number) : [], [presentes]);
@@ -482,7 +494,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
   const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
-  return <section ref={seccionRef} onPointerDownCapture={() => sonidoRef.current?.despertar()} className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}${medidas.vertical ? " is-vertical" : ""}`} aria-label={t("casa.titulo.oculto")}>
+  return <section ref={seccionRef} onPointerDownCapture={() => { sonidoRef.current?.despertar(); nanaRef.current?.empezar(); }} className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}${medidas.vertical ? " is-vertical" : ""}`} aria-label={t("casa.titulo.oculto")}>
     <BotonControl className="casa-salir" pictograma="mapa" etiqueta="casa.salir.oculto" onClick={salir} disabled={fase === "hola"} />
     <div className="casa-marco game-frame" style={estiloMarco}>
       <div className="casa-visor" ref={visorRef} style={{ width: medidas.anchoVisor, height: ESCENA_CASA.alto * medidas.escala }}>

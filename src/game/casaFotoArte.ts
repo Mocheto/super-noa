@@ -1,13 +1,13 @@
 /**
  * Dibujar una foto de la casa (mapa «Cámara de fotos de la casa»): se vuelve a pintar en un lienzo con las mismas piezas
- * que la casa (fondo vacío con la pared de su tono, muebles en su versión, gatitos con su hoja y su cuadro, mantitas y
- * noche). Las cuentas de dónde va cada cosa son puras; el dibujo usa el lienzo del navegador.
+ * que la casa (fondo vacío con la pared de su tono, muebles en su versión, gatitos con su hoja y su cuadro o su pose de
+ * arropado, y noche). Las cuentas de dónde va cada cosa son puras; el dibujo usa el lienzo del navegador.
  */
 import type { FotoCasa, GatitoEnFoto } from "./casaFoto.ts";
 import { MUEBLES, MUEBLES_CASA, VERSIONES } from "./casaDecoracion.ts";
 import { fondoConPared } from "./casaDecoracionArte.ts";
 import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito } from "./casaGatoArte.ts";
-import { mantitaDe } from "./casaDormirArte.ts";
+import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
 
 /** Fila de los pies dentro del cuadro del gato (la misma que en la casa). */
@@ -26,13 +26,6 @@ export function cajaDeGatito(gatito: Pick<GatitoEnFoto, "x" | "y">): Caja {
   const lado = CUADRO_GATO * escala;
   const arriba = gatito.y - PIES_GATITO + CUADRO_GATO * 0.95 * (1 - escala);
   return { x: gatito.x - lado / 2, y: arriba, ancho: lado, alto: lado };
-}
-
-/** Caja de la mantita extendida sobre el gatito arropado (en la casa: 76 % de ancho, centrada al 54 %, a un 3 % del suelo). */
-export function cajaDeMantita(gato: Caja): Caja {
-  const ancho = gato.ancho * 0.76;
-  const alto = ancho * 67 / 128;
-  return { x: gato.x + gato.ancho * 0.54 - ancho / 2, y: gato.y + gato.alto * 0.97 - alto, ancho, alto };
 }
 
 /** Pasa una caja de la escena a la foto: la vista empieza en `vista.x` y la foto mide `anchoFoto` px de ancho. */
@@ -99,17 +92,18 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     pintar(imagen, { x: 0, y: 0, ancho: imagen.naturalWidth, alto: imagen.naturalHeight }, { x: ventana.left, y: ventana.top, ancho: ventana.width, alto: ventana.height });
   }
 
-  // Gatitos, de atrás adelante, con su mantita si estaban arropados.
+  // Gatitos, de atrás adelante; los arropados, con su pose propia (cabeza fuera y mantita de su color).
   for (const gatito of [...foto.gatitos].sort((a, b) => a.y - b.y)) {
-    const hoja = await cargar(await hojaDeGatito(gatito.mundo, { sucio: gatito.sucio, mejorAmigo: gatito.mejorAmigo }));
-    const { fila } = ANIMACIONES_GATO[gatito.animacion];
+    const variante = { sucio: gatito.sucio, mejorAmigo: gatito.mejorAmigo };
     const caja = cajaDeGatito(gatito);
-    pintar(hoja, { x: gatito.cuadro * CUADRO_GATO, y: fila * CUADRO_GATO, ancho: CUADRO_GATO, alto: CUADRO_GATO }, caja, gatito.mira < 0);
     if (gatito.arropado) {
-      const mantita = await cargar(await mantitaDe(gatito.mundo));
-      const celda = mantita.naturalWidth / 2;
-      pintar(mantita, { x: celda, y: 0, ancho: celda, alto: mantita.naturalHeight }, cajaDeMantita(caja));
+      const hoja = await cargar(await arropadoDe(gatito.mundo, variante));
+      pintar(hoja, { x: (gatito.cuadro % CUADROS_ARROPADO) * CUADRO_GATO, y: 0, ancho: CUADRO_GATO, alto: CUADRO_GATO }, caja, gatito.mira < 0);
+      continue;
     }
+    const hoja = await cargar(await hojaDeGatito(gatito.mundo, variante));
+    const { fila } = ANIMACIONES_GATO[gatito.animacion];
+    pintar(hoja, { x: gatito.cuadro * CUADRO_GATO, y: fila * CUADRO_GATO, ancho: CUADRO_GATO, alto: CUADRO_GATO }, caja, gatito.mira < 0);
   }
 
   // Capa de noche: azul con el halo de la lámpara, o más oscura con la lámpara apagada.

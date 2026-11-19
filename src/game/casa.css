@@ -220,10 +220,9 @@
   .casa-ficha-dibujo { width: 64px; height: 64px; }
 }
 
-/* Hora de dormir: la mantita (casa-mantita-v1.webp: doblada y extendida; la del gatito, teñida del color de su collar)
-   tapando al gatito dormido con la cabeza fuera, la lámpara que se toca y la habitación con la lámpara apagada. */
+/* Hora de dormir: la mantita doblada de la bandeja (casa-mantita-v1.webp), la lámpara que se toca y la habitación con la
+   lámpara apagada. El gatito arropado tiene su propia pose (gato-casa-arropado-v1.webp), ya con la mantita. */
 .casa-objeto.is-mantita { display: block; width: var(--objeto, 56px); aspect-ratio: 1; background: var(--hoja-mantita) 0 50% / 200% auto no-repeat; image-rendering: pixelated; }
-.casa-mantita-puesta { position: absolute; left: 54%; bottom: 3%; width: 76%; aspect-ratio: 128 / 67; transform: translateX(-50%); background: 100% 100% / 200% 100% no-repeat; image-rendering: pixelated; pointer-events: none; }
 .casa-lampara { position: absolute; z-index: 1001; padding: 0; border: 0; border-radius: 40px; background: transparent; cursor: pointer; }
 .casa-lampara:focus-visible { outline: 4px solid #ffd76a; }
 .casa-escena.is-noche.is-apagada .casa-luz-noche { background: #0d1440a8; }

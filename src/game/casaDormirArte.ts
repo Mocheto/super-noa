@@ -1,13 +1,18 @@
 /**
- * La mantita de la hora de dormir (`casa-mantita-v1.webp`, de `prototypes/tools/casa-dormir-recorte.py`): dos celdas
- * (doblada y extendida) pintadas en violeta clave. Para cada gatito se tiñe del color de su collar, conservando el ribete
- * claro, los pliegues oscuros y el contorno.
+ * La mantita de la hora de dormir (`casa-mantita-v1.webp`, de `prototypes/tools/casa-dormir-recorte.py`): la doblada
+ * va en la bandeja. El gatito arropado tiene su pose propia con la mantita en violeta clave, que se tiñe del color de su
+ * collar conservando el ribete claro, los pliegues oscuros y el contorno.
  */
-import { PALETAS_GATITOS, type Rgb } from "./casaGatoArte.ts";
+import { PALETAS_GATITOS, recolorear, tablaDeColores, type Rgb, type VarianteGatito } from "./casaGatoArte.ts";
 
 export const HOJA_MANTITA = "./assets/sprites/casa-mantita-v1.webp";
-/** Tamaño de cada celda de la hoja (doblada y extendida), en px. */
-export const CELDA_MANTITA = { ancho: 128, alto: 67 } as const;
+/**
+ * Pose «arropado» (mapa «Gatitos dormidos con la cabeza fuera de la mantita»): dos cuadros de 160 × 160, el gatito en
+ * los colores clave del gato base y la mantita en el violeta clave. Se pinta con la paleta del gatito y el color de su
+ * collar, y se usa en lugar de «dormir» con la mantita encima.
+ */
+export const HOJA_ARROPADO = "./assets/sprites/gato-casa-arropado-v1.webp";
+export const CUADROS_ARROPADO = 2;
 
 function hsv([r, g, b]: Rgb): [number, number, number] {
   const max = Math.max(r, g, b) / 255;
@@ -48,31 +53,36 @@ export function teñirMantita(pixeles: Uint8ClampedArray, collar: Rgb): void {
   }
 }
 
-const mantitas = new Map<number, Promise<string>>();
-let hoja: Promise<HTMLImageElement> | null = null;
+const arropados = new Map<string, Promise<string>>();
+let hojaArropado: Promise<HTMLImageElement> | null = null;
 
-/** La hoja de la mantita teñida del color del collar del gatito del mundo dado (una vez por gatito). */
-export function mantitaDe(mundo: number): Promise<string> {
-  const guardada = mantitas.get(mundo);
+/** La pose «arropado» pintada para el gatito del mundo dado (paleta, barro y lazo) con la mantita del color de su collar. */
+export function arropadoDe(mundo: number, variante: VarianteGatito): Promise<string> {
+  const clave = `${mundo}-${variante.sucio}-${variante.mejorAmigo}`;
+  const guardada = arropados.get(clave);
   if (guardada) return guardada;
-  hoja ??= new Promise((resolver, fallar) => {
+  hojaArropado ??= new Promise((resolver, fallar) => {
     const imagen = new Image();
     imagen.onload = () => resolver(imagen);
     imagen.onerror = fallar;
-    imagen.src = HOJA_MANTITA;
+    imagen.src = HOJA_ARROPADO;
   });
-  const promesa = hoja.then((imagen) => {
+  const promesa = hojaArropado.then((imagen) => {
     const lienzo = document.createElement("canvas");
     lienzo.width = imagen.naturalWidth;
     lienzo.height = imagen.naturalHeight;
     const contexto = lienzo.getContext("2d", { willReadFrequently: true });
-    if (!contexto) return HOJA_MANTITA;
+    if (!contexto) return HOJA_ARROPADO;
     contexto.drawImage(imagen, 0, 0);
     const datos = contexto.getImageData(0, 0, lienzo.width, lienzo.height);
-    teñirMantita(datos.data, (PALETAS_GATITOS[mundo] ?? PALETAS_GATITOS[1]).collar);
+    const paleta = PALETAS_GATITOS[mundo] ?? PALETAS_GATITOS[1];
+    // Primero la mantita (con el gatito aún en colores clave, que no son violetas) y luego la paleta del gatito, que
+    // puede tener tonos lilas que la mantita no debe tocar.
+    teñirMantita(datos.data, paleta.collar);
+    recolorear(datos.data, tablaDeColores(paleta, variante));
     contexto.putImageData(datos, 0, 0);
     return new Promise<string>((resolver) => lienzo.toBlob((blob) => resolver(blob ? URL.createObjectURL(blob) : lienzo.toDataURL())));
-  }).catch(() => HOJA_MANTITA);
-  mantitas.set(mundo, promesa);
+  }).catch(() => HOJA_ARROPADO);
+  arropados.set(clave, promesa);
   return promesa;
 }

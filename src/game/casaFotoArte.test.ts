@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { aFoto, altoDeFoto, cajaDeGatito, cajaDeMantita } from "./casaFotoArte.ts";
+import { aFoto, altoDeFoto, cajaDeGatito } from "./casaFotoArte.ts";
 
 test("el gatito de la foto va donde lo dibuja la casa: pies en su sitio y más pequeño al fondo", () => {
   const delante = cajaDeGatito({ x: 600, y: 520 });
@@ -11,10 +11,7 @@ test("el gatito de la foto va donde lo dibuja la casa: pies en su sitio y más p
   assert.ok(Math.abs(fondo.y + fondo.alto * 152 / 160 - 405) < 3);
 });
 
-test("la mantita se pone sobre la mitad de abajo del gatito y la foto escala la vista", () => {
-  const gato = cajaDeGatito({ x: 600, y: 520 });
-  const mantita = cajaDeMantita(gato);
-  assert.ok(mantita.y > gato.y + gato.alto / 2 && mantita.y + mantita.alto <= gato.y + gato.alto);
+test("la foto escala la vista", () => {
   const foto = { vista: { x: 200, ancho: 640 } };
   assert.deepEqual(aFoto({ x: 200, y: 0, ancho: 640, alto: 540 }, foto, 320), { x: 0, y: 0, ancho: 320, alto: 270 });
   assert.equal(altoDeFoto(foto, 320), 270);

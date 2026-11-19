@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
-import { HOJA_MANTITA, teñirMantita } from "./casaDormirArte.ts";
+import { HOJA_ARROPADO, HOJA_MANTITA, teñirMantita } from "./casaDormirArte.ts";
 
-test("la hoja de la mantita existe", () => {
-  assert.ok(existsSync(new URL(`../../public/${HOJA_MANTITA.replace("./", "")}`, import.meta.url)));
+test("la hoja de la mantita y la de la pose arropado existen", () => {
+  for (const hoja of [HOJA_MANTITA, HOJA_ARROPADO]) assert.ok(existsSync(new URL(`../../public/${hoja.replace("./", "")}`, import.meta.url)), hoja);
 });
 
 test("la mantita toma el color del collar y conserva ribete, pliegues y contorno", () => {

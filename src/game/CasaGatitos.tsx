@@ -11,7 +11,7 @@ import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreLaBanera } from "./casaHabitacion";
 import { arropadosDe, arropar, puedeDormir, todosArropados } from "./casaDormir";
-import { HOJA_MANTITA, mantitaDe } from "./casaDormirArte";
+import { arropadoDe, CUADROS_ARROPADO, HOJA_MANTITA } from "./casaDormirArte";
 import { guardarFoto, type FotoCasa } from "./casaFoto";
 import { cambiarMueble, muebleEn, MUEBLES_CASA, PARED_HASTA, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
 import { fondoConPared } from "./casaDecoracionArte";
@@ -150,8 +150,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const noche = nocheReloj || acostando;
   const [fechaCasa, setFechaCasa] = useState(() => relojCasa(ajustes));
   const arropados = noche ? arropadosDe(casa, fechaCasa) : [];
-  // Mantita de cada gatito en casa, teñida del color de su collar.
-  const [mantitas, setMantitas] = useState<Record<number, string>>({});
+  // Pose «arropado» de cada gatito, con su paleta y la mantita del color de su collar.
+  const [poseArropado, setPoseArropado] = useState<Record<string, string>>({});
   const [arrastre, setArrastre] = useState<Arrastre | null>(null);
   const [respuestas, setRespuestas] = useState<Respuesta[]>([]);
   const [pelota, setPelota] = useState<Pelota | null>(null);
@@ -435,14 +435,19 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     return { mundo, sucio: estadoDe(gatito.necesidades.bano) !== "bien", mejorAmigo: esMejorAmigo(gatito) };
   });
   const claveVariantes = variantes.map((v) => `${v.mundo}-${v.sucio}-${v.mejorAmigo}`).join(",");
-  const clavesMantitas = Object.keys(casa.gatitos).join(",");
   useEffect(() => {
     let vivo = true;
-    for (const mundo of clavesMantitas.split(",").filter(Boolean).map(Number)) {
-      void mantitaDe(mundo).then((url) => { if (vivo) setMantitas((actuales) => actuales[mundo] === url ? actuales : { ...actuales, [mundo]: url }); });
+    for (const clave of claveVariantes.split(",").filter(Boolean)) {
+      const [mundo, sucio, mejorAmigo] = clave.split("-");
+      void arropadoDe(Number(mundo), { sucio: sucio === "true", mejorAmigo: mejorAmigo === "true" })
+        .then((url) => { if (vivo) setPoseArropado((actuales) => actuales[clave] === url ? actuales : { ...actuales, [clave]: url }); });
     }
     return () => { vivo = false; };
-  }, [clavesMantitas]);
+  }, [claveVariantes]);
+  const arropadoHoja = (mundo: number) => {
+    const variante = variantes.find((v) => v.mundo === mundo);
+    return variante && poseArropado[`${variante.mundo}-${variante.sucio}-${variante.mejorAmigo}`];
+  };
   const hojaDe = (mundo: number) => {
     const variante = variantes.find((v) => v.mundo === mundo);
     return variante && hojas[`${variante.mundo}-${variante.sucio}-${variante.mejorAmigo}`];
@@ -844,17 +849,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
           {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
           {aspectos.map(({ mundo, enBrazos, andante, llegando, pide, respuesta, tapado, dormido, fila, cuadro, hoja, mira, escala }) => {
+            // Arropado: su pose propia (cabeza fuera, mantita de su color); mientras se pinta, la de dormir.
+            const arropado = tapado ? arropadoHoja(mundo) : undefined;
+            const dibujo = arropado
+              ? { backgroundImage: `url("${arropado}")`, backgroundSize: `${CUADROS_ARROPADO * CUADRO_GATO}px ${CUADRO_GATO}px`, backgroundPosition: `${-(cuadro % CUADROS_ARROPADO) * CUADRO_GATO}px 0` }
+              : { backgroundImage: hoja ? `url("${hoja}")` : undefined, backgroundSize: `${COLUMNAS_GATO * CUADRO_GATO}px ${FILAS_GATO * CUADRO_GATO}px`, backgroundPosition: `${-cuadro * CUADRO_GATO}px ${-fila * CUADRO_GATO}px` };
             return <div key={mundo} role="img" aria-label={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })}
               className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${dormido ? " is-dormido" : ""}`}
               style={{ left: andante.x, top: andante.y - PIES_GATITO, zIndex: enBrazos ? 1500 : Math.round(andante.y), "--escala": escala } as CSSProperties}>
-              <span className="casa-gatito-dibujo" style={{
-                backgroundImage: hoja ? `url("${hoja}")` : undefined,
-                backgroundSize: `${COLUMNAS_GATO * CUADRO_GATO}px ${FILAS_GATO * CUADRO_GATO}px`,
-                backgroundPosition: `${-cuadro * CUADRO_GATO}px ${-fila * CUADRO_GATO}px`,
-                transform: mira < 0 ? "scaleX(-1)" : undefined,
-              }} />
+              <span className="casa-gatito-dibujo" style={{ ...dibujo, transform: mira < 0 ? "scaleX(-1)" : undefined }} />
               {pide && !respuesta && !dormido && <span className="casa-bocadillo" aria-hidden="true"><i className={`casa-objeto is-${OBJETO_DE[pide]}`} /></span>}
-              {tapado && <span className="casa-mantita-puesta" aria-hidden="true" style={{ backgroundImage: `url("${mantitas[mundo] ?? HOJA_MANTITA}")` }} />}
               {respuesta?.corazon && <span className="casa-corazon" aria-hidden="true" />}
             </div>;
           })}

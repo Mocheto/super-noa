@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, decoracionDe, dejarHuella, dePaseoDe, enCasaDe, esDeNoche, mandarDePaseo, MAX_EN_CASA, traerACasa, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
+import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, decoracionDe, dejarHuella, dePaseoDe, enCasaDe, esDeNoche, llegadasDePaseo, mandarDePaseo, MAX_EN_CASA, traerACasa, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
 import {
   aEscena, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
   MANTENER_PARA_COGER_MS, MOVER_PARA_FROTAR, SITIOS_CASA, type Frote, type Herramienta,
@@ -639,6 +639,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const seguir = () => {
     guardar(presentar(casa, llegan));
     setFase("casa");
+    // Si alguno no cupo, se abre la ventana de elegir con los recién llegados delante de los demás de paseo.
+    const fuera = llegadasDePaseo(casaRef.current, llegan);
+    if (fuera.length) {
+      const dentro = enCasaDe(casaRef.current);
+      setEligiendo({ orden: [...dentro, ...fuera, ...dePaseoDe(casaRef.current).filter((mundo) => !fuera.includes(mundo))], antes: dentro });
+    }
     if (estreno) {
       setBrilla(true);
       window.setTimeout(() => setBrilla(false), BRILLO_BANDEJA_MS);
@@ -790,8 +796,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     </Ventana>}
     {fase === "hola" && <Ventana id="casa-llegada" titulo="casa.llegada.titulo.rotulo" celebracion onClose={seguir}
       botones={<Boton tipo="seguir" clave="casa.llegada.sigue.rotulo" data-gamepad-default onClick={seguir} />}>
-      <div className="ventana-dibujo casa-llegada-dibujo">{llegan.map((mundo) => <img key={mundo} src={worldCatalog.find((world) => world.id === mundo)?.catAsset} alt="" />)}</div>
-      <p className="juntos">{llegan.length === 1 ? t("casa.llegada.uno.juntos", { nombre: nombreDe(llegan[0]) }) : t("casa.llegada.varios.juntos", { nombres: nombresJuntos(llegan) })}</p>
+      <div className="ventana-dibujo casa-llegada-dibujo">{llegan.slice(0, MAX_EN_CASA).map((mundo) => <img key={mundo} src={worldCatalog.find((world) => world.id === mundo)?.catAsset} alt="" />)}</div>
+      <p className="juntos">{llegan.length === 1 ? t("casa.llegada.uno.juntos", { nombre: nombreDe(llegan[0]) })
+        : llegan.length > MAX_EN_CASA ? t("casa.llegada.muchos.juntos", { cuantos: llegan.length })
+          : t("casa.llegada.varios.juntos", { nombres: nombresJuntos(llegan) })}</p>
     </Ventana>}
   </section>;
 }

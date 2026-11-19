@@ -57,6 +57,7 @@ export const casa = {
     titulo: { rotulo: "{pictograma:gato} ¡HOLA!" },
     uno: { juntos: "¡{nombre} ya tiene casa! Dale muchos mimos." },
     varios: { juntos: "¡{nombres} ya tienen casa! Dales muchos mimos." },
+    muchos: { juntos: "¡{cuantos} gatitos ya tienen casa! Elige quién se queda dentro y quién se va de paseo." },
     union: { juntos: "{primeros} y {ultimo}" },
     sigue: { rotulo: "{pictograma:jugar} SIGUE" },
   },

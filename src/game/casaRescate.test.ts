@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { llegadasPendientes, presentar } from "./casa.ts";
+import { enCasaDe, llegadasDePaseo, llegadasPendientes, presentar } from "./casa.ts";
 import { casaAbierta, gatitosRescatados, llegadasPorVer, MUNDOS_CASA, mundoCompleto, prepararCasa } from "./casaRescate.ts";
 import { levels } from "./levels.ts";
 import { worldCatalog } from "./worldMapData.ts";
@@ -37,4 +37,18 @@ test("la llegada se ve una vez: juntos si llegan varios y luego solo el nuevo", 
 test("los textos de la llegada nombran a cada gatito", () => {
   assert.equal(t("casa.llegada.uno.juntos", { nombre: t("mundos.1.gato.rotulo") }), "¡MIEL ya tiene casa! Dale muchos mimos.");
   assert.equal(t("casa.llegada.union.juntos", { primeros: "MIEL, BRUMA", ultimo: "PINO" }), "MIEL, BRUMA y PINO");
+});
+
+test("con la casa llena, los recién llegados que no caben se quedan de paseo para elegir tras su «¡HOLA!»", () => {
+  const todos = Array.from({ length: 17 }, (_, i) => i + 1);
+  // Quien ya ha jugado todo y entra por primera vez: llegan los diecisiete y caben cinco.
+  const estreno = prepararCasa(undefined, completo(...todos), ahora);
+  assert.equal(llegadasPendientes(estreno).length, 17);
+  assert.deepEqual(enCasaDe(estreno), [1, 2, 3, 4, 5]);
+  assert.deepEqual(llegadasDePaseo(estreno, llegadasPendientes(estreno)), todos.slice(5));
+  // Con sitio, el nuevo entra solo.
+  const tres = presentar(prepararCasa(undefined, completo(1, 2, 3), ahora), [1, 2, 3]);
+  const cuatro = prepararCasa(tres, completo(1, 2, 3, 4), ahora);
+  assert.deepEqual(llegadasDePaseo(cuatro, llegadasPendientes(cuatro)), []);
+  assert.ok(enCasaDe(cuatro).includes(4));
 });

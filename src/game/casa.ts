@@ -150,6 +150,10 @@ export function avanzar(casa: CasaProgress, ahora: Date): CasaProgress {
 export const llegadasPendientes = (casa: CasaProgress): number[] =>
   Object.keys(casa.gatitos).map(Number).filter((mundo) => !casa.presentados.includes(mundo)).sort((a, b) => a - b);
 
+/** Recién llegados que no cupieron en casa y se han quedado de paseo: tras su «¡HOLA!», Noa elige quién está en casa. */
+export const llegadasDePaseo = (casa: CasaProgress, llegan: readonly number[]): number[] =>
+  llegan.filter((mundo) => casa.gatitos[mundo] && !estaEnCasa(casa, mundo));
+
 /** Tras ver la llegada, esos gatitos quedan presentados. */
 export const presentar = (casa: CasaProgress, mundos: readonly number[]): CasaProgress =>
   ({ ...casa, presentados: [...new Set([...casa.presentados, ...mundos])].sort((a, b) => a - b) });

@@ -97,3 +97,10 @@ for (const juego of juegos) {
     assert.equal(juego.jugar(objetivos).result, "perfecto", "en su pulso");
   });
 }
+
+test("los números de la regla se ajustan desde la dirección dentro de unos límites", async () => {
+  const { leerAjustesRitmo, MARGEN_PULSOS, REBOTE_PULSOS, RESTA_VACIA } = await import("./pulsacionVacia.ts");
+  assert.deepEqual(leerAjustesRitmo(null), { margen: MARGEN_PULSOS, rebote: REBOTE_PULSOS, resta: RESTA_VACIA, informe: false });
+  assert.deepEqual(leerAjustesRitmo("?ritmoMargen=0.35&ritmoRebote=0.2&ritmoResta=0.5&ritmoInforme"), { margen: 0.35, rebote: 0.2, resta: 0.5, informe: true });
+  assert.deepEqual(leerAjustesRitmo("?ritmoMargen=9&ritmoResta=-1&ritmoRebote=x"), { margen: 0.5, rebote: REBOTE_PULSOS, resta: 0, informe: false });
+});

@@ -12,7 +12,7 @@ import {
 import "./catParty.css";
 import { t } from "../textos/index.ts";
 import { Boton, BotonControl, Pictograma, Texto } from "../textos/Texto";
-import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
+import { informeRitmo, PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
 import { createPracticaConPausas, type ParadaPractica } from "./practicaPausas";
 import { Ventana } from "./Ventana";
 
@@ -133,6 +133,7 @@ function snapshot(session: Session, pulse: number, reduceMotion: boolean): View 
 
 export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMotion, onPause, onExit }: Props) {
   const sessionRef = useRef<Session | null>(null);
+  const [informe, setInforme] = useState<string>();
   const audioRef = useRef<{ context: AudioContext; music: GainNode; cue: GainNode; noise: AudioBuffer } | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const samplesRef = useRef<SampleBank | null>(null);
@@ -300,6 +301,7 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
     const outcome = session.run.mode === "song" ? outcomeOf(session.run) : null;
     setMode(null);
     setResultado(outcome);
+    setInforme(outcome ? informeRitmo({ aciertos: session.run.pieces.reduce((total, item) => total + (item.type === "yarn" ? 0 : item.done.length), 0), total: hitsIn(session.run.score), vacias: session.run.cuenta.vacias, raya: session.run.cuenta.raya, meta: goalOf(session.run.score) }) : undefined);
     setCelebrating(Boolean(outcome?.won));
     setParada(null);
   }, []);
@@ -480,7 +482,7 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
       <p className="juntos">{t(CLAVE_PARADA[parada.pieza as keyof typeof CLAVE_PARADA].juntos)}</p>
     </Ventana>}
 
-    {resultado && !paused && <ResultadoMinijuego id="cat-party-resultado" titulo={RESULT_TEXT[resultado.result].title} gano={resultado.won} onSalir={onExit}
+    {resultado && !paused && <ResultadoMinijuego informe={informe} id="cat-party-resultado" titulo={RESULT_TEXT[resultado.result].title} gano={resultado.won} onSalir={onExit}
       dibujo={<div className={`cat-party-hoguera-resultado${resultado.won ? "" : " is-apagada"}`} role="img" aria-label={t(resultado.won ? "minijuegos.gatitos.resultado.hoguera.oculto" : "minijuegos.gatitos.resultado.apagada.oculto")} style={{ ...cellStyle(ART.fire, FIRE_FRAMES.unlit) }} />}
       frase={t(RESULT_TEXT[resultado.result].text)}
       botones={<>

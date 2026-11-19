@@ -13,7 +13,7 @@ import {
 import "./meriendaJabatos.css";
 import { t } from "../textos/index.ts";
 import { Boton, BotonControl, Pictograma, Texto } from "../textos/Texto";
-import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
+import { informeRitmo, PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
 import { createPracticaConPausas, type ParadaPractica } from "./practicaPausas";
 import { Ventana } from "./Ventana";
 
@@ -148,6 +148,7 @@ function Dots({ dots, className }: { dots: Dot[]; className: string }) {
 
 export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume, reduceMotion, levelCompleted, onAbandon, onWin, playSound, friendlyReplay = false }: Props) {
   const sessionRef = useRef<Session | null>(null);
+  const [informe, setInforme] = useState<string>();
   const audioRef = useRef<AudioRig | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -313,6 +314,7 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
     const outcome = outcomeOf(session.run);
     setMode(null);
     setFinished({ mode: session.run.mode, outcome });
+    setInforme(session.run.mode === "song" ? informeRitmo({ aciertos: session.run.got, total: bitesIn(session.run.score), vacias: session.run.cuenta.vacias, raya: session.run.cuenta.raya, meta: goalOf(session.run.score) }) : undefined);
     setParada(null);
     if (session.run.mode === "song") playSound(outcome.won ? "checkpoint" : "hurt");
   }, [freshSegment, playSound]);
@@ -534,7 +536,7 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
     <p className="juntos">{t(CLAVE_PARADA[parada.pieza as keyof typeof CLAVE_PARADA].juntos)}</p>
   </Ventana>}
 
-  {result && !showLeave && <ResultadoMinijuego id="merienda-resultado" titulo={RESULT_TEXT[result.result].title} gano={result.won} onSalir={leave}
+  {result && !showLeave && <ResultadoMinijuego informe={informe} id="merienda-resultado" titulo={RESULT_TEXT[result.result].title} gano={result.won} onSalir={leave}
     dibujo={<div className="merienda-rama-resultado" role="img" aria-label={t("minijuegos.merienda.resultado.rama.oculto")} style={STAGE_ART}>
         <div className={`merienda-branch${showGoal && got >= goal ? " is-reached" : ""}`}>
           {Array.from({ length: total }, (_, index) => <i key={index} className={index < got ? "is-got" : undefined} style={{ left: `${branchSlot(index, total)}%` }} />)}

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { t, type ClaveTexto, type Variables } from "../textos";
 import { Boton, BotonControl } from "../textos/Texto";
 import { Ventana } from "./Ventana";
+import { ajustesRitmo } from "./pulsacionVacia";
 
 type PantallaPreviaProps = {
   id: string;
@@ -45,6 +46,8 @@ type ResultadoMinijuegoProps = {
   /** ¡PERFECTO!, ¡MUY BIEN! o ¡CASI! */
   titulo: ClaveTexto;
   tituloVariables?: Variables;
+  /** Informe para adultos al acabar la canción (solo con `?ritmoInforme`). */
+  informe?: string;
   /** Dibujo central de cada juego (tarro con raya dorada, cesta, arcoíris…). */
   dibujo: ReactNode;
   /** Lo que regala el guardián o qué faltó, para leer juntos. */
@@ -55,11 +58,19 @@ type ResultadoMinijuegoProps = {
 };
 
 /** Pantalla de resultado común de los minijuegos: la misma ventana que ¡MUY BIEN! y ¡CASI! de la partida. */
-export function ResultadoMinijuego({ id, titulo, tituloVariables, dibujo, frase, botones, gano, onSalir }: ResultadoMinijuegoProps) {
+export function ResultadoMinijuego({ id, titulo, tituloVariables, dibujo, frase, botones, gano, onSalir, informe }: ResultadoMinijuegoProps) {
   return <Ventana id={id} titulo={titulo} tituloVariables={tituloVariables} celebracion={gano} esperaMs={500} onClose={onSalir} botones={botones}>
     <div className="ventana-dibujo">{dibujo}</div>
     <p className="juntos">{frase}</p>
+    {informe && <p className="texto-adultos">{informe}</p>}
   </Ventana>;
+}
+
+/** Informe para adultos de una canción rítmica, solo si la dirección lleva `?ritmoInforme` (prototipo de la regla). */
+export function informeRitmo(datos: { aciertos: number; total: number; vacias: number; raya: number; meta: number }): string | undefined {
+  if (!ajustesRitmo.informe) return undefined;
+  const redondo = (valor: number) => String(Math.round(valor * 100) / 100);
+  return t("adultos.minijuegos.informe", { ...datos, raya: redondo(datos.raya), margen: redondo(ajustesRitmo.margen), rebote: redondo(ajustesRitmo.rebote), resta: redondo(ajustesRitmo.resta) });
 }
 
 /** Texto oculto común para el botón de salir cuando el juego se abre desde la colección. */

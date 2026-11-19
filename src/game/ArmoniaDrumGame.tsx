@@ -13,7 +13,7 @@ import {
 import "./armoniaDrum.css";
 import { t } from "../textos/index.ts";
 import { Boton, BotonControl, Pictograma, Texto } from "../textos/Texto";
-import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
+import { informeRitmo, PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
 import { createPracticaConPausas, type ParadaPractica } from "./practicaPausas";
 import { Ventana } from "./Ventana";
 
@@ -142,6 +142,7 @@ function Prints({ view, className, style }: { view: NonNullable<PrintsView>; cla
 
 export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, reduceMotion, levelCompleted, onAbandon, onWin, playSound, friendlyReplay = false }: Props) {
   const sessionRef = useRef<Session | null>(null);
+  const [informe, setInforme] = useState<string>();
   const audioRef = useRef<AudioRig | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -289,6 +290,7 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
     const outcome = outcomeOf(session.run);
     setMode(null);
     setFinished({ mode: session.run.mode, outcome });
+    setInforme(session.run.mode === "song" ? informeRitmo({ aciertos: session.run.got, total: hitsIn(session.run.score), vacias: session.run.cuenta.vacias, raya: session.run.cuenta.raya, meta: WIN_AT }) : undefined);
     setParada(null);
     if (session.run.mode === "song") playSound(outcome.won ? "checkpoint" : "hurt");
   }, [freshSegment, playSound]);
@@ -498,7 +500,7 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
     <p className="juntos">{t(CLAVE_PARADA[parada.pieza as keyof typeof CLAVE_PARADA].juntos)}</p>
   </Ventana>}
 
-  {result && !showLeave && <ResultadoMinijuego id="armonia-drum-resultado" titulo={RESULT_TEXT[result.result].title} gano={result.won} onSalir={leave}
+  {result && !showLeave && <ResultadoMinijuego informe={informe} id="armonia-drum-resultado" titulo={RESULT_TEXT[result.result].title} gano={result.won} onSalir={leave}
     dibujo={<div className="armonia-drum-staff armonia-drum-staff-resultado" role="img" aria-label={t("minijuegos.tambor.resultado.atril.oculto")} style={{ "--atril": cssAssetUrl("./assets/sprites/atril-armonia-v0.png") } as CSSProperties}>
       {Array.from({ length: total }, (_, index) => <i key={index} className={index < got ? "is-got" : undefined} />)}
       <b className="armonia-drum-line" style={{ left: `calc(${WIN_AT / total * 100}% - 3px)` }} />

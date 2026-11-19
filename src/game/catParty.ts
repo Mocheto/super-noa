@@ -1,5 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
-import { anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
+import { ajustesRitmo, anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
 
 export { outputLatencySeconds };
@@ -12,7 +12,7 @@ export const PULSE_MS = 60_000 / PARTY_BPM;
 export const PULSES_PER_BAR = 4;
 export const COUNT_PULSES = PULSES_PER_BAR;
 export const TRAVEL_PULSES = 2;
-export const HIT_WINDOW_PULSES = 0.5; // ±300 ms a 100 pulsos por minuto
+export const HIT_WINDOW_PULSES = ajustesRitmo.margen; // medio pulso por defecto (±300 ms); ajustable con ?ritmoMargen=
 export const ROLL_OFF_PULSES = 0.9;
 
 export type PieceType = "small" | "medium" | "yarn";

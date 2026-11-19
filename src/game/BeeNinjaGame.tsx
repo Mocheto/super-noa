@@ -6,7 +6,7 @@ import type { SoundKind } from "./GameCanvas";
 import { firstConnectedGamepad } from "./gamepad";
 import {
   COUNT_PULSES, CUT_POINT, HERO, PLOF_SOUND, PULSE_MS, UY_SOUND, cutSound, RESUME_COUNT_PULSES, WIN_AT, advanceFrameClock, audioPulse, autoCuts, barOfPulse, beeScores,
-  collectFalls, COUNT_TICK, createRun, jarLevel, leadNote, musicForEighth, nextOpenCut, outcomeOf, outputLatencySeconds,
+  collectFalls, COUNT_TICK, createRun, flowersIn, jarLevel, leadNote, musicForEighth, nextOpenCut, outcomeOf, outputLatencySeconds,
   practiceFirst, pressAt, risingEdge, scoreLength, songStartAfterPause, targetPlacement, targetVisible, throwPulses,
   type BeeMode, type BeeNote, type BeeRun, type Outcome, type PressResult,
 } from "./beeNinja";
@@ -14,7 +14,7 @@ import { loadBeeSamples, type SampleBank } from "./beeNinjaSamples";
 import "./beeNinja.css";
 import { t } from "../textos/index.ts";
 import { Boton, BotonControl, Pictograma, Texto } from "../textos/Texto";
-import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
+import { informeRitmo, PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
 import { createPracticaConPausas, type ParadaPractica } from "./practicaPausas";
 import { Ventana } from "./Ventana";
 
@@ -143,6 +143,7 @@ function snapshot(session: Session, pulse: number, counting: number, reduceMotio
 
 export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduceMotion, levelCompleted, onAbandon, onWin, playSound, friendlyReplay = false }: Props) {
   const sessionRef = useRef<Session | null>(null);
+  const [informe, setInforme] = useState<string>();
   const audioRef = useRef<AudioRig | null>(null);
   const samplesRef = useRef<SampleBank | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
@@ -326,6 +327,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
     const outcome = outcomeOf(session.run);
     setMode(null);
     setFinished({ mode: session.run.mode, outcome });
+    setInforme(session.run.mode === "song" ? informeRitmo({ aciertos: session.run.cut, total: flowersIn(session.run.score), vacias: session.run.cuenta.vacias, raya: session.run.cuenta.raya, meta: WIN_AT }) : undefined);
     setParada(null);
     if (session.run.mode === "song") playSound(outcome.won ? "checkpoint" : "hurt");
   }, [freshSegment, playSound]);
@@ -536,7 +538,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
     <p className="juntos">{t(CLAVE_PARADA[parada.pieza as keyof typeof CLAVE_PARADA].juntos)}</p>
   </Ventana>}
 
-  {result && !showLeave && <ResultadoMinijuego id="bee-ninja-resultado" titulo={RESULT_TEXT[result.result].title} gano={result.won} onSalir={leave}
+  {result && !showLeave && <ResultadoMinijuego informe={informe} id="bee-ninja-resultado" titulo={RESULT_TEXT[result.result].title} gano={result.won} onSalir={leave}
     dibujo={<div className="bee-ninja-jar-resultado" role="img" aria-label={t("minijuegos.abeja.resultado.tarro.oculto")} style={{ backgroundImage: 'url("./assets/sprites/tarro-miel-v1.webp")', backgroundPosition: `${view.jar * 25}% 0` }} />}
     frase={t(RESULT_TEXT[result.result].text)}
     botones={result.won ? <>

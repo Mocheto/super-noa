@@ -5,6 +5,8 @@
 export const adultos = {
   /** Ayuda de teclado, mando y sin sonido de los minijuegos: solo en su pantalla previa. */
   minijuegos: {
+    /** Informe del prototipo de la regla contra pulsar sin parar (`?ritmoInforme`). */
+    informe: "Aciertos: {aciertos} de {total} · Pulsaciones vacías: {vacias} · Raya: {raya} (hace falta {meta}) · Margen ±{margen} pulsos, rebote {rebote}, resta {resta}.",
     avioneta: {
       controles: "Teclado: flechas o A/D para mover la avioneta y espacio para lanzar pompas. Mando: cruceta o palanca, y botón A.",
     },

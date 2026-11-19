@@ -7,6 +7,33 @@
 
 /** Una segunda pulsación a menos de esta distancia de un acierto es un rebote del dedo y se ignora (~90 ms). */
 export const REBOTE_PULSOS = 0.15;
+export const MARGEN_PULSOS = 0.5;
+export const RESTA_VACIA = 1;
+
+/**
+ * Números de la regla, ajustables desde la dirección (también en la web publicada) para probarlos jugando con Noa
+ * (prototipo «Probar con Noa la regla contra pulsar sin parar»):
+ * `?ritmoMargen=0.4` (margen de acierto, en pulsos), `?ritmoRebote=0.2` (rebote ignorado, en pulsos),
+ * `?ritmoResta=0.5` (cuánto baja la raya cada pulsación vacía) y `?ritmoInforme` (informe para adultos al acabar).
+ */
+export type AjustesRitmo = { margen: number; rebote: number; resta: number; informe: boolean };
+
+export function leerAjustesRitmo(busqueda: string | null): AjustesRitmo {
+  const parametros = new URLSearchParams(busqueda ?? "");
+  const numero = (nombre: string, minimo: number, maximo: number, defecto: number) => {
+    const valor = parametros.get(nombre);
+    const leido = Number(valor);
+    return valor !== null && valor !== "" && Number.isFinite(leido) ? Math.max(minimo, Math.min(maximo, leido)) : defecto;
+  };
+  return {
+    margen: numero("ritmoMargen", 0.15, 0.5, MARGEN_PULSOS),
+    rebote: numero("ritmoRebote", 0, 0.4, REBOTE_PULSOS),
+    resta: numero("ritmoResta", 0, 2, RESTA_VACIA),
+    informe: parametros.has("ritmoInforme"),
+  };
+}
+
+export const ajustesRitmo: AjustesRitmo = leerAjustesRitmo(typeof window !== "undefined" ? window.location.search : null);
 
 export type Raya = {
   /** Aciertos que cuentan para la raya dorada: suben con cada acierto y bajan con cada pulsación vacía que cuesta. */
@@ -19,7 +46,7 @@ export type Raya = {
 
 export const nuevaRaya = (): Raya => ({ raya: 0, vacias: 0, ultimoAcierto: -Infinity });
 
-export const esRebote = (cuenta: Raya, pulso: number) => pulso >= cuenta.ultimoAcierto && pulso - cuenta.ultimoAcierto < REBOTE_PULSOS;
+export const esRebote = (cuenta: Raya, pulso: number) => pulso >= cuenta.ultimoAcierto && pulso - cuenta.ultimoAcierto < ajustesRitmo.rebote;
 
 export function anotarAcierto(cuenta: Raya, pulso: number) {
   cuenta.raya += 1;
@@ -30,7 +57,7 @@ export function anotarAcierto(cuenta: Raya, pulso: number) {
 export function anotarVacia(cuenta: Raya, cuesta: boolean): boolean {
   if (!cuesta) return false;
   cuenta.vacias += 1;
-  cuenta.raya = Math.max(0, cuenta.raya - 1);
+  cuenta.raya = Math.max(0, cuenta.raya - ajustesRitmo.resta);
   return true;
 }
 

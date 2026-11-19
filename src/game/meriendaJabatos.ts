@@ -1,5 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
-import { anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
+import { ajustesRitmo, anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
 
 export { outputLatencySeconds };
@@ -12,7 +12,7 @@ export const MERIENDA_BPM = 100;
 export const PULSE_MS = 60_000 / MERIENDA_BPM;
 export const PULSES_PER_BAR = 4;
 export const COUNT_PULSES = PULSES_PER_BAR;
-export const HIT_WINDOW_PULSES = 0.5; // medio pulso: ±300 ms a 100 pulsos por minuto
+export const HIT_WINDOW_PULSES = ajustesRitmo.margen; // medio pulso por defecto (±300 ms); ajustable con ?ritmoMargen=
 export const RESUME_COUNT_PULSES = 4;
 
 export type MeriendaMode = "demo" | "practice" | "song";

@@ -26,6 +26,9 @@ export type Habitacion = {
   lampara: { x: number; y: number };
   /** Zona de la bañera dibujada donde se suelta a un gatito cogido para bañarlo. */
   zonaBanera: { izquierda: number; derecha: number; arriba: number; abajo: number };
+  /** Armario de la ropa (mapa «Ropa y accesorios para los gatitos»): su dibujo y la zona donde se suelta a un gatito para vestirlo. */
+  armario: { imagen: string; left: number; top: number; width: number; height: number };
+  zonaArmario: { izquierda: number; derecha: number; arriba: number; abajo: number };
 };
 
 export const HABITACION_CASA: Habitacion = {
@@ -50,11 +53,18 @@ export const HABITACION_CASA: Habitacion = {
   ventanaNoche: { imagen: "./assets/sprites/casa-ventana-noche-v1.webp", left: 619, top: 39, width: 239, height: 234 },
   lampara: { x: 1215, y: 175 },
   zonaBanera: { izquierda: 985, derecha: 1185, arriba: 340, abajo: 470 },
+  // Bajo la balda de la planta, entre la ventana y la bañera, con los pies en el suelo.
+  armario: { imagen: "./assets/sprites/casa-armario-v1.webp", left: 878, top: 250, width: 95, height: 150 },
+  zonaArmario: { izquierda: 862, derecha: 984, arriba: 240, abajo: 430 },
 };
 
 /** ¿Está el punto sobre la bañera? */
 export const sobreLaBanera = (habitacion: Habitacion, x: number, y: number) =>
   x >= habitacion.zonaBanera.izquierda && x <= habitacion.zonaBanera.derecha && y >= habitacion.zonaBanera.arriba && y <= habitacion.zonaBanera.abajo;
+
+/** ¿Está el punto sobre el armario? */
+export const sobreElArmario = (habitacion: Habitacion, x: number, y: number) =>
+  x >= habitacion.zonaArmario.izquierda && x <= habitacion.zonaArmario.derecha && y >= habitacion.zonaArmario.arriba && y <= habitacion.zonaArmario.abajo;
 
 /** Punto del suelo donde aterriza un gatito soltado en (x, y): el más cercano dentro del suelo. */
 export const aterrizar = (habitacion: Habitacion, x: number, y: number) => ({

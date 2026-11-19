@@ -99,32 +99,42 @@ export function recolorear(pixeles: Uint8ClampedArray, tabla: Map<number, Rgb | 
   return pixeles;
 }
 
-let hojaBase: Promise<HTMLImageElement> | null = null;
+const bases = new Map<string, Promise<HTMLImageElement>>();
 const hojas = new Map<string, Promise<string>>();
 
-/** URL de la hoja pintada para un gatito y una variante (se calcula una vez y se guarda). */
-export function hojaDeGatito(mundo: number, variante: VarianteGatito): Promise<string> {
-  const clave = `${mundo}-${variante.sucio}-${variante.mejorAmigo}`;
+/**
+ * URL de una hoja en los colores clave del gato base (la de la casa, la del vestidor…) pintada para un gatito y una
+ * variante (se calcula una vez y se guarda). Si algo falla, la hoja tal cual.
+ */
+export function hojaPintada(src: string, mundo: number, variante: VarianteGatito): Promise<string> {
+  const clave = `${src}#${mundo}-${variante.sucio}-${variante.mejorAmigo}`;
   const guardada = hojas.get(clave);
   if (guardada) return guardada;
-  hojaBase ??= new Promise((resolver, fallar) => {
-    const imagen = new Image();
-    imagen.onload = () => resolver(imagen);
-    imagen.onerror = fallar;
-    imagen.src = HOJA_GATO;
-  });
-  const promesa = hojaBase.then((imagen) => {
+  let base = bases.get(src);
+  if (!base) {
+    base = new Promise((resolver, fallar) => {
+      const imagen = new Image();
+      imagen.onload = () => resolver(imagen);
+      imagen.onerror = fallar;
+      imagen.src = src;
+    });
+    bases.set(src, base);
+  }
+  const promesa = base.then((imagen) => {
     const lienzo = document.createElement("canvas");
     lienzo.width = imagen.naturalWidth;
     lienzo.height = imagen.naturalHeight;
     const contexto = lienzo.getContext("2d", { willReadFrequently: true });
-    if (!contexto) return HOJA_GATO;
+    if (!contexto) return src;
     contexto.drawImage(imagen, 0, 0);
     const datos = contexto.getImageData(0, 0, lienzo.width, lienzo.height);
     recolorear(datos.data, tablaDeColores(PALETAS_GATITOS[mundo] ?? PALETAS_GATITOS[1], variante));
     contexto.putImageData(datos, 0, 0);
     return new Promise<string>((resolver) => lienzo.toBlob((blob) => resolver(blob ? URL.createObjectURL(blob) : lienzo.toDataURL())));
-  }).catch(() => HOJA_GATO);
+  }).catch(() => src);
   hojas.set(clave, promesa);
   return promesa;
 }
+
+/** URL de la hoja del gato de la casa pintada para un gatito y una variante. */
+export const hojaDeGatito = (mundo: number, variante: VarianteGatito): Promise<string> => hojaPintada(HOJA_GATO, mundo, variante);

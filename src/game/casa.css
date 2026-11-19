@@ -34,6 +34,11 @@
 .casa-fondo { inset: 0; width: 1280px; height: 540px; image-rendering: pixelated; pointer-events: none; }
 .casa-ventana-noche { opacity: 0; transition: opacity 1s; image-rendering: pixelated; pointer-events: none; }
 .casa-escena.is-noche .casa-ventana-noche { opacity: 1; }
+/* Armario de la ropa: brilla mientras se lleva a un gatito cogido, como pista de que se le puede llevar ahí. */
+.casa-armario { image-rendering: pixelated; pointer-events: none; }
+.casa-armario.is-brilla { animation: casa-armario-brilla 1s ease-in-out infinite; }
+@keyframes casa-armario-brilla { 50% { filter: drop-shadow(0 0 10px #ffd76a) brightness(1.08); } }
+@media (prefers-reduced-motion: reduce) { .casa-armario.is-brilla { animation: none; filter: drop-shadow(0 0 8px #ffd76a); } }
 /* Durante la llegada, luz por la puerta. */
 .casa-luz-puerta { top: 120px; width: 220px; height: 280px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse, #fff1a8aa, transparent 70%); pointer-events: none; animation: casa-luz-puerta 2s ease-out forwards; }
 @keyframes casa-luz-puerta { from { opacity: 0; } 30% { opacity: 1; } to { opacity: 0; } }
@@ -254,3 +259,35 @@
 /* Bandeja al lado de la habitación (móvil apaisado): fuera de la vista, así no tapa la bañera ni nada. */
 .casa-gatitos.is-lado .casa-marco { display: flex; align-items: center; gap: 8px; }
 .casa-gatitos.is-lado .casa-bandeja { position: static; flex-shrink: 0; transform: none; }
+
+/* Vestidor (mapa «Ropa y accesorios para los gatitos»): pantalla propia sobre la casa, como la de baño. Arte de
+   docs/art/casa-vestidor-v1.md; las rutas llegan como variables desde VestidorGatito y las medidas de casaVestidorArte.
+   La escena es un cuadrado del fondo centrado en la alfombra; el armario va debajo en vertical y al lado en apaisado. */
+.casa-vestidor { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; padding: 12px; box-sizing: border-box; background: #d9c7dc; }
+.casa-vestidor-escena { container-type: size; display: grid; place-items: center; min-height: 0; }
+.casa-vestidor-cuadro { position: relative; width: min(100cqw, 100cqh); aspect-ratio: 1; border: 4px solid #2f1d33; border-radius: 14px; box-sizing: border-box; overflow: hidden; background: var(--fondo-vestidor) 50% 100% / cover no-repeat; image-rendering: pixelated; }
+.casa-vestidor-gatito { position: absolute; left: 50%; bottom: 7%; height: 68%; aspect-ratio: 240 / 340; transform: translateX(-50%); transform-origin: 50% 100%; }
+.casa-vestidor-gatito.is-contento { animation: casa-vestidor-salto .45s ease-out; }
+@keyframes casa-vestidor-salto { 40% { transform: translateX(-50%) translateY(-4%) scale(1.03, .98); } }
+.casa-vestidor-cuerpo { position: absolute; inset: 0; background: 0 0 / 200% 100% no-repeat; }
+.casa-vestidor-puesta, .casa-vestidor-dibujo { background: var(--accesorios) 0 0 / 400% 300% no-repeat; image-rendering: pixelated; pointer-events: none; }
+.casa-vestidor-puesta { position: absolute; }
+.casa-vestidor-puesta.is-sombrero { z-index: 3; } .casa-vestidor-puesta.is-gafas { z-index: 2; } .casa-vestidor-puesta.is-bufanda { z-index: 1; }
+
+.casa-vestidor-lado { display: grid; justify-items: center; gap: 10px; }
+.casa-vestidor-armario { position: relative; width: min(100%, 560px); aspect-ratio: 615 / 488; background: var(--armario-abierto) center / 100% 100% no-repeat; image-rendering: pixelated; }
+.casa-vestidor-balda { position: absolute; display: grid; grid-template-columns: repeat(4, 1fr); }
+.casa-vestidor-pieza { position: relative; padding: 0; border: 0; border-radius: 12px; background: transparent; cursor: pointer; touch-action: manipulation; }
+.casa-vestidor-pieza:focus-visible { outline: 3px solid #2f1d33; outline-offset: -3px; }
+.casa-vestidor-pieza.is-puesta { background: #ffd76a66; box-shadow: inset 0 0 0 3px #ffd76a; }
+.casa-vestidor-dibujo { position: absolute; left: 4%; bottom: var(--apoyo); width: 92%; aspect-ratio: 200 / 170; }
+.casa-vestidor-dibujo.is-gafas { transform: translateY(29%); }
+.casa-vestidor-dibujo.is-bufanda { transform: translateY(8%); }
+.casa-vestidor-pieza:active .casa-vestidor-dibujo { scale: .92; }
+
+@media (orientation: landscape) {
+  .casa-vestidor { grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr) auto; }
+  .casa-vestidor-lado { grid-template-rows: minmax(0, 1fr) auto; align-items: center; height: 100%; min-height: 0; }
+  .casa-vestidor-armario { width: auto; height: min(100%, 560px * 488 / 615); max-width: 56vw; }
+}
+@media (prefers-reduced-motion: reduce) { .casa-vestidor-gatito.is-contento { animation: none; } }

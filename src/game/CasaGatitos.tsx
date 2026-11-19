@@ -9,7 +9,9 @@ import { crearNana, type Nana } from "./casaNana";
 import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, type AnimacionGato } from "./casaGatoArte";
 import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
-import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreLaBanera } from "./casaHabitacion";
+import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
+import { ropaDe, vestir, type Ropa } from "./casaRopa";
+import { VestidorGatito } from "./VestidorGatito";
 import { arropadosDe, arropar, puedeDormir, todosArropados } from "./casaDormir";
 import { arropadoDe, CUADROS_ARROPADO, HOJA_MANTITA } from "./casaDormirArte";
 import { guardarFoto, type FotoCasa } from "./casaFoto";
@@ -162,6 +164,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const pendienteRef = useRef<{ clienteX: number; clienteY: number; indice: number; temporizador: number } | null>(null);
   /** Gatito que está en la pantalla de baño, o `null`. */
   const [bano, setBano] = useState<number | null>(null);
+  // Gatito en el vestidor (se le lleva al armario).
+  const [vestidor, setVestidor] = useState<number | null>(null);
   const frotandoRef = useRef<number | null>(null);
   useEffect(() => { frotandoRef.current = frotando; }, [frotando]);
   const [medidas, setMedidas] = useState<Medidas>({ escala: 0.75, anchoVisor: 600, vertical: false, medido: false });
@@ -715,16 +719,21 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (suelto) soltarGatito(suelto);
   };
 
-  /** Suelta al gatito cogido: en la bañera, si está sucio, se abre su baño; si no, aterriza en el suelo. */
+  /** Suelta al gatito cogido: en la bañera, si está sucio, se abre su baño; en el armario, el vestidor; si no, aterriza en el suelo. */
   const soltarGatito = (suelto: Cogido) => {
     setCogido(null);
     const mundo = gatitos[suelto.indice];
     if (mundo === undefined) return;
     const momento = performance.now();
     const enBanera = sobreLaBanera(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
+    const enArmario = !enBanera && sobreElArmario(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
     const sucio = estadoDe(casaRef.current.gatitos[mundo].necesidades.bano) !== "bien";
-    const dondeCae = enBanera ? aterrizar(HABITACION, HABITACION.zonaBanera.izquierda - 40, HABITACION.suelo.delante - 20) : aterrizar(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
+    const dondeCae = enBanera ? aterrizar(HABITACION, HABITACION.zonaBanera.izquierda - 40, HABITACION.suelo.delante - 20)
+      : enArmario ? aterrizar(HABITACION, HABITACION.armario.left + HABITACION.armario.width / 2, HABITACION.suelo.fondo + 30)
+        : aterrizar(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
     setAndantes((actuales) => ({ ...actuales, [mundo]: { ...(actuales[mundo] ?? nuevoAndante(dondeCae, momento)), ...dondeCae, destino: null, pose: "sentarse", desde: momento, hasta: momento + 1500 } }));
+    // En el armario, cualquiera (también sucio) va al vestidor.
+    if (enArmario) { setVestidor(mundo); return; }
     if (!enBanera) return;
     if (sucio) setBano(mundo);
     // Limpio: hace su «ahora no», se sacude y salta fuera.
@@ -821,6 +830,17 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (maullido) sonido.maullar(bano, maullido);
     if (cantar) sonido.cantar(bano);
   };
+  /** «¡LISTO!» en el vestidor: se queda con lo que lleva y, de vuelta en la habitación, ronronea (sin corazón). */
+  const salirDelVestidor = (ropa: Ropa) => {
+    const mundo = vestidor;
+    setVestidor(null);
+    if (mundo === null) return;
+    guardar(vestir(casaRef.current, mundo, ropa));
+    const indice = gatitos.indexOf(mundo);
+    if (indice < 0) return;
+    const id = ++idRef.current;
+    setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice), { gatito: indice, tipo: "gracias", cuidado: "frotar", corazon: false, id, desde: performance.now() }]);
+  };
   const terminarBano = () => {
     const indice = bano === null ? -1 : gatitos.indexOf(bano);
     setBano(null);
@@ -853,6 +873,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             const caja = MUEBLES_CASA[destello.mueble].caja ?? { x: 0, y: 0, ancho: HABITACION.ancho, alto: PARED_HASTA };
             return <i key={destello.id} className="casa-destello" aria-hidden="true" style={{ left: caja.x + caja.ancho / 2, top: caja.y + caja.alto / 2 }} />;
           })()}
+          <img className={`casa-armario${cogido ? " is-brilla" : ""}`} src={HABITACION.armario.imagen} alt="" draggable={false}
+            style={{ left: HABITACION.armario.left, top: HABITACION.armario.top, width: HABITACION.armario.width, height: HABITACION.armario.height }} />
           <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} />
           {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
           {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
@@ -921,6 +943,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         </button>)}
       </div>}
     </div>
+    {vestidor !== null && <VestidorGatito nombre={nombreDe(vestidor)} mundo={vestidor} reduceMotion={reduceMotion} ropa={ropaDe(casa, vestidor)}
+      variante={variantes.find((v) => v.mundo === vestidor) ?? { sucio: false, mejorAmigo: false }}
+      onToque={() => sonidoRef.current?.golpeBano("campanita")} onListo={salirDelVestidor} />}
     {bano !== null && <BanoGatito nombre={nombreDe(bano)} hoja={hojaBano} reduceMotion={reduceMotion} onSalir={() => { sonidoRef.current?.bucleBano(null); setBano(null); }} onTerminar={terminarBano} onSonido={sonarBano} />}
     {buenasNoches === "ventana" && <Ventana id="casa-buenas-noches" titulo="casa.dormir.fin.titulo.rotulo" onClose={() => setBuenasNoches("vista")}
       botones={<Boton tipo="seguir" clave="casa.dormir.fin.sigue.rotulo" data-gamepad-default onClick={() => setBuenasNoches("vista")} />}>

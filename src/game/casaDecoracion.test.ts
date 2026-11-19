@@ -5,10 +5,10 @@ import { cambiarMueble, cambiarTonoPared, DECORACION_DE_SIEMPRE, muebleEn, MUEBL
 import { dentroDelSuelo, HABITACION_CASA as H } from "./casaHabitacion.ts";
 import { parseProgress, serializeProgress, emptyProgress } from "./progress.ts";
 
-test("cinco muebles con tres versiones cada uno; la pared, con tres tonos", () => {
+test("cinco muebles con cinco versiones cada uno; la pared, con cinco tonos", () => {
   assert.deepEqual([...MUEBLES], ["cama", "alfombra", "cuadro", "planta", "pared"]);
-  assert.equal(VERSIONES.length, 3);
-  assert.equal(TONOS_PARED.length, 3);
+  assert.equal(VERSIONES.length, 5);
+  assert.equal(TONOS_PARED.length, 5);
   for (const tono of TONOS_PARED) for (const color of tono) assert.match(color, /^#[0-9a-f]{6}$/);
 });
 
@@ -33,7 +33,7 @@ test("los sitios de interés de los gatitos no se mueven al decorar", () => {
 test("la decoración se lee con tolerancia: lo que falta o no vale es la de siempre", () => {
   assert.deepEqual(normalizeDecoracion(undefined), DECORACION_DE_SIEMPRE);
   assert.deepEqual(normalizeDecoracion([1, 2]), DECORACION_DE_SIEMPRE);
-  assert.deepEqual(normalizeDecoracion({ cama: 2, alfombra: 7, cuadro: "1", planta: 1, sofa: 2 }), { cama: 2, alfombra: 0, cuadro: 0, planta: 1, pared: 0 });
+  assert.deepEqual(normalizeDecoracion({ cama: 4, alfombra: 7, cuadro: "1", planta: 1, pared: 5, sofa: 2 }), { cama: 4, alfombra: 0, cuadro: 0, planta: 1, pared: 0 });
   assert.deepEqual(cambiarMueble(DECORACION_DE_SIEMPRE, "pared", 2), { ...DECORACION_DE_SIEMPRE, pared: 2 });
 });
 

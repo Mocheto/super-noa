@@ -125,6 +125,10 @@
 /* Decorar: el botón de la bandeja, los muebles cambiados (dibujos provisionales hasta su arte), las zonas que brillan
    al decorar y el destello al cambiar uno. */
 .casa-bandeja-modo { width: 44px; height: 44px; }
+/* Decorando caben el botón y cinco versiones: en columna, de dos en dos; en el móvil vertical, en fila. */
+.casa-bandeja.is-decorar { display: grid; grid-template-columns: repeat(2, auto); place-items: center; }
+.casa-bandeja.is-decorar .casa-bandeja-modo { grid-column: 1 / -1; }
+.casa-gatitos.is-vertical .casa-bandeja.is-decorar { display: flex; gap: 4px; padding: 8px 6px; }
 .casa-version { cursor: pointer; touch-action: manipulation; }
 .casa-version.is-puesta { box-shadow: 0 0 0 3px #ffd76a; }
 .casa-muestra { display: block; width: 48px; height: 48px; image-rendering: pixelated; background-repeat: no-repeat; }
@@ -143,6 +147,14 @@
 .casa-mueble.is-planta::after { content: ""; position: absolute; left: 30%; bottom: 40%; width: 40%; height: 52%; border: 4px solid #2f1d33; border-radius: 45% 45% 20% 20%; box-sizing: border-box; }
 .casa-mueble.is-planta.is-v1::before { background: #9fd8f5; } .casa-mueble.is-planta.is-v1::after { background: radial-gradient(circle at 50% 12%, #f7a1c4 0 16%, transparent 18%), #6cbf6a; }
 .casa-mueble.is-planta.is-v2::before { background: radial-gradient(circle at 50% 50%, #e2463f 0 16%, transparent 18%), #ffffff; } .casa-mueble.is-planta.is-v2::after { background: radial-gradient(circle at 25% 20%, #ffd75e 0 18%, transparent 20%), radial-gradient(circle at 75% 20%, #ffd75e 0 18%, transparent 20%), radial-gradient(circle at 50% 10%, #ffd75e 0 18%, transparent 20%), #7cc46a; }
+.casa-mueble.is-cama.is-v3 { background: radial-gradient(ellipse 34% 26% at 50% 58%, #ef5a5a 0 96%, #2f1d33 97% 100%, transparent 101%), #3f8f4a; }
+.casa-mueble.is-cama.is-v4 { background: radial-gradient(ellipse 34% 26% at 50% 58%, #9fd8f5 0 96%, #2f1d33 97% 100%, transparent 101%), #c98a4b; border-radius: 10% 10% 50% 50% / 20% 20% 80% 80%; }
+.casa-mueble.is-alfombra.is-v3 { background: radial-gradient(ellipse 18% 32% at 50% 50%, #ff9a3c 0 95%, transparent 100%), #ffe08a; }
+.casa-mueble.is-alfombra.is-v4 { background: radial-gradient(ellipse at 50% 50%, #c9a8f0 0 20%, #9fd8f5 21% 40%, #ffe08a 41% 60%, #ffb36b 61% 80%, #f7a1c4 81%); }
+.casa-mueble.is-cuadro.is-v3 { background: radial-gradient(circle at 72% 28%, #ffd75e 0 14%, transparent 16%), linear-gradient(#fff3b0 0 60%, #e2463f 60%); box-shadow: inset 0 0 0 6px #6cb4e8; }
+.casa-mueble.is-cuadro.is-v4 { background: radial-gradient(circle at 50% 45%, #ffffff 0 18%, transparent 20%), #24346b; box-shadow: inset 0 0 0 6px #e8b93c; }
+.casa-mueble.is-planta.is-v3::before { background: #e07b3c; } .casa-mueble.is-planta.is-v3::after { background: radial-gradient(circle at 50% 30%, #6b3d1d 0 14%, #ffd75e 15% 40%, transparent 42%), #7cc46a; }
+.casa-mueble.is-planta.is-v4::before { background: #c9a8f0; } .casa-mueble.is-planta.is-v4::after { background: radial-gradient(circle at 30% 30%, #f7a1c4 0 12%, transparent 14%), radial-gradient(circle at 70% 40%, #f7a1c4 0 12%, transparent 14%), #6cbf6a; border-radius: 50%; }
 .casa-mueble-zona { position: absolute; z-index: 2; padding: 0; border: 0; border-radius: 18px; background: transparent; outline: 5px dashed #ffd76a; outline-offset: 4px; cursor: pointer; animation: casa-zona 1.2s ease-in-out infinite alternate; }
 .casa-mueble-zona.is-pared { z-index: 0; outline: 0; border-radius: 0; animation: none; }
 .casa-mueble-zona.is-elegido { outline: 6px solid #ffd76a; box-shadow: 0 0 22px 8px #ffd76acc; animation: none; }

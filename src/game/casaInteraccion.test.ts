@@ -52,7 +52,9 @@ test("con el dedo quieto medio segundo se coge al gatito; si se mueve antes, es 
   const { seCoge, MANTENER_PARA_COGER_MS, HERRAMIENTAS } = await import("./casaInteraccion.ts");
   assert.equal(seCoge(MANTENER_PARA_COGER_MS, 2), true);
   assert.equal(seCoge(MANTENER_PARA_COGER_MS - 50, 0), false, "aún no");
-  assert.equal(seCoge(MANTENER_PARA_COGER_MS, 20), false, "se ha movido: frota");
+  assert.equal(seCoge(MANTENER_PARA_COGER_MS, 20), true, "un dedo que tiembla sigue cogiendo");
+  assert.equal(seCoge(MANTENER_PARA_COGER_MS, 40), false, "se ha movido: frota");
+  assert.ok(MANTENER_PARA_COGER_MS <= 300);
   assert.ok(!HERRAMIENTAS.includes("esponja"), "la esponja sale de la bandeja");
 });
 

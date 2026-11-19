@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { levels } from "./levels.ts";
 import { reachable } from "./levelBeats.ts";
+import { GRAVITY, JUMP_SPEED } from "./gameplay.ts";
 import {
   ARROW_AFTER, MEOW_EVERY, allFound, createExploreState, exploreCameraTarget, followerPositions, hintTarget, reachedGate, shortcutWalls, stepExplore,
 } from "./explore.ts";
@@ -87,4 +88,31 @@ test("la cámara sigue a Noa en los dos ejes sin salirse del mundo", () => {
   assert.ok(top.y < 200);
   const corner = exploreCameraTarget(level, { ...noaAt(2900, 1140), facing: 1 }, view);
   assert.deepEqual(corner, { x: 2040, y: 660 });
+});
+
+test("en una exploración no hay trampas: desde cualquier sitio al que se llega se puede volver a la puerta", () => {
+  for (const level of exploreLevels) {
+    // Con la pared del atajo puesta (antes de encontrar a los tres) y sin ella (después).
+    for (const conAtajo of [true, false]) {
+      const nivel = { ...level, platforms: [...level.platforms, ...(conAtajo ? level.exploreShortcut ?? [] : [])] };
+      const gate = level.exploreGate!;
+      const puerta = { to: gate.x + gate.width / 2, toTop: gate.y + gate.height + 2 };
+      for (const platform of level.platforms) {
+        const x = platform.x + Math.min(platform.width / 2, 30);
+        if (!reachable(nivel, { to: x, toTop: platform.y + 2 })) continue;
+        assert.ok(reachable(nivel, { from: x, fromTop: platform.y, ...puerta }),
+          `${level.id}: desde (${platform.x}, ${platform.y}) no se vuelve a la puerta${conAtajo ? " con el atajo cerrado" : ""}`);
+      }
+    }
+  }
+});
+
+test("3-2: del túnel del tercer gatito se sale con saltos sencillos", () => {
+  const level = levels.find((l) => l.id === "3-2")!;
+  const saltoSencillo = JUMP_SPEED ** 2 / (2 * GRAVITY);
+  const escalera = [820, 730, 640, 550, 456];
+  escalera.slice(1).forEach((alto, i) => {
+    assert.ok(level.platforms.some((p) => p.y === alto && p.x < 1560 && p.x + p.width >= 1400), `peldaño a ${alto}`);
+    assert.ok(escalera[i] - alto < saltoSencillo, `${escalera[i]} → ${alto}`);
+  });
 });

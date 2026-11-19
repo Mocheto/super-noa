@@ -567,7 +567,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }
     dedoRef.current = true;
     froteRef.current = frotar(null, indice, performance.now(), ajustes.frotarMs).frote;
-    // Con el dedo quieto medio segundo, se coge al gatito; si se mueve antes, es frotar.
+    // Con el dedo casi quieto un momento (MANTENER_PARA_COGER_MS), se coge al gatito; si se mueve más, es frotar.
     const inicio = { clienteX: event.clientX, clienteY: event.clientY, indice, temporizador: 0 };
     inicio.temporizador = window.setTimeout(() => {
       if (pendienteRef.current !== inicio) return;

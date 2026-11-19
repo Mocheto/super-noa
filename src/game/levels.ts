@@ -549,12 +549,16 @@ const datosPantallas: PantallaDatos[] = [
     start: { x: 80, y: 398 },
     goalX: 830, goalY: 456,
     // Exploración: un gatito casi a la vista, otro en la copa del árbol y el tercero en el túnel, tras los lobos
-    // dormidos; la pared junto al hueco se abre con los tres. La tienda es un hallazgo opcional.
+    // dormidos (se vuelve subiendo por la escalera del hueco); la pared junto al hueco se abre con los tres y deja
+    // pasar al otro lado. La tienda es un hallazgo opcional.
     beats: { development: 200, twist: 2050, finale: 760, twistKind: "shape" },
     platforms: [
       { x: 0, y: 456, width: 1400, height: 80, kind: "ground" }, { x: 1560, y: 456, width: 1640, height: 80, kind: "ground" }, { x: 1300, y: 820, width: 900, height: 100, kind: "ground" },
       ledge(300, 360, 160), ledge(120, 270, 160), ledge(320, 180, 160), ledge(140, 90, 180),
       ledge(1100, 310, 200, "stone"), ledge(2150, 730, 120), ledge(2650, 350, 180, "stone"),
+      // Escalera para salir del túnel por el hueco, de salto sencillo en salto sencillo (90 px): sin ella, quien bajaba
+      // a por el tercer gatito no podía volver.
+      ledge(1420, 730, 120), ledge(1445, 640, 100), ledge(1420, 550, 110),
     ],
     enemies: [
       { ...enemy("w1", "wolf", 650, 416, 560, 680, 40), sleepCycle: { interval: 10.5, delay: 0, sleepDuration: 6.5, warningDuration: 1.5 } },
@@ -577,7 +581,8 @@ const datosPantallas: PantallaDatos[] = [
       { id: "w3-k2", x: 200, y: 90, cat: 4, beat: "development" },
       { id: "w3-k3", x: 2050, y: 820, cat: 8, beat: "twist" },
     ],
-    exploreShortcut: [{ x: 1560, y: 216, width: 40, height: 240, kind: "puzzle-block" }],
+    // Alta hasta arriba: si se podía subir encima desde la piedra, se caía al otro lado y no había vuelta.
+    exploreShortcut: [{ x: 1560, y: 50, width: 40, height: 406, kind: "puzzle-block" }],
   },
   {
     id: "3-3",

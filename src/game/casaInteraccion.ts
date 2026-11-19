@@ -24,11 +24,14 @@ export const ALTO_GATITO = 140;
 export type Herramienta = "cuenco" | "pelota" | "esponja" | "escoba";
 /** Objetos de la bandeja. La esponja ya no está: para bañar se coge al gatito y se lleva a la bañera. */
 export const HERRAMIENTAS: readonly Herramienta[] = ["cuenco", "pelota", "escoba"];
-/** Con el dedo quieto este tiempo sobre un gatito, se coge; si se mueve más de `MOVER_PARA_FROTAR` px antes, es frotar. */
-export const MANTENER_PARA_COGER_MS = 500;
-export const MOVER_PARA_FROTAR = 8;
+/**
+ * Con el dedo casi quieto este tiempo sobre un gatito, se coge; si se mueve más de `MOVER_PARA_FROTAR` px antes, es
+ * frotar. Corto y con margen porque a una niña de cinco años le tiembla el dedo (antes, 500 ms y 8 px: nunca lo cogía).
+ */
+export const MANTENER_PARA_COGER_MS = 300;
+export const MOVER_PARA_FROTAR = 24;
 
-/** ¿Se coge? El dedo lleva quieto (menos de `MOVER_PARA_FROTAR` px de pantalla) al menos medio segundo. */
+/** ¿Se coge? El dedo lleva casi quieto (menos de `MOVER_PARA_FROTAR` px de pantalla) al menos `MANTENER_PARA_COGER_MS`. */
 export const seCoge = (ms: number, movido: number) => ms >= MANTENER_PARA_COGER_MS && movido < MOVER_PARA_FROTAR;
 export const CUIDADO_DE: Readonly<Record<Exclude<Herramienta, "escoba">, Cuidado>> = { cuenco: "comer", pelota: "pelota", esponja: "esponja" };
 

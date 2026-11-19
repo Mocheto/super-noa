@@ -4,7 +4,9 @@ import { aEscena, AJUSTES_CASA, autodeslizar, centrarEn, ESCALA_MINIMA, escalaCa
 
 test("los ajustes del prototipo se leen de la URL dentro de unos límites", () => {
   assert.deepEqual(leerAjustesCasa(null), AJUSTES_CASA);
-  assert.deepEqual(leerAjustesCasa("?casaFrotar=800&casaObjeto=120&casaToque=60&casaNecesidades=pide"), { frotarMs: 800, objeto: 120, toque: 60, necesidades: "pide" });
+  assert.deepEqual(leerAjustesCasa("?casaFrotar=800&casaObjeto=120&casaToque=60&casaNecesidades=pide"), { frotarMs: 800, objeto: 120, toque: 60, necesidades: "pide", hora: null });
+  assert.equal(leerAjustesCasa("?casaHora=20").hora, 20);
+  assert.equal(leerAjustesCasa("?casaHora=99").hora, 23);
   assert.deepEqual(leerAjustesCasa("?casaFrotar=1&casaObjeto=9999&casaNecesidades=hambre"), { ...AJUSTES_CASA, frotarMs: 200, objeto: 200 });
 });
 

@@ -44,9 +44,11 @@ export type AjustesCasa = {
   toque: number;
   /** Para probar: necesidades al entrar. */
   necesidades: "pide" | "senota" | null;
+  /** Para probar: la hora que cree la casa (0–23), para ver la hora de dormir de día. */
+  hora: number | null;
 };
 
-export const AJUSTES_CASA: AjustesCasa = { frotarMs: 1500, objeto: 96, toque: 90, necesidades: null };
+export const AJUSTES_CASA: AjustesCasa = { frotarMs: 1500, objeto: 96, toque: 90, necesidades: null, hora: null };
 
 const numero = (valor: string | null, minimo: number, maximo: number, defecto: number) => {
   const leido = Number(valor);
@@ -61,6 +63,7 @@ export function leerAjustesCasa(busqueda: string | null): AjustesCasa {
     objeto: numero(parametros.get("casaObjeto"), 48, 200, AJUSTES_CASA.objeto),
     toque: numero(parametros.get("casaToque"), 40, 200, AJUSTES_CASA.toque),
     necesidades: necesidades === "pide" || necesidades === "senota" ? necesidades : null,
+    hora: parametros.has("casaHora") ? Math.round(numero(parametros.get("casaHora"), 0, 23, 12)) : null,
   };
 }
 
@@ -130,4 +133,12 @@ export function autodeslizar(clienteX: number, izquierda: number, derecha: numbe
   if (clienteX < izquierda + BORDE_AUTODESLIZAR) return -1;
   if (clienteX > derecha - BORDE_AUTODESLIZAR) return 1;
   return 0;
+}
+
+/** La hora de la casa: la del reloj o, para probar, la de `casaHora` en el día de hoy. */
+export function relojCasa(ajustes: AjustesCasa, ahora = new Date()): Date {
+  if (ajustes.hora === null) return ahora;
+  const fingida = new Date(ahora);
+  fingida.setHours(ajustes.hora);
+  return fingida;
 }

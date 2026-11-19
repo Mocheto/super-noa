@@ -42,6 +42,18 @@ export const casa = {
       pared: { oculto: "La pared" },
     },
   },
+  dormir: {
+    empezar: { oculto: "Hora de dormir: acostar a los gatitos" },
+    salir: { oculto: "Terminar la hora de dormir" },
+    bandeja: { oculto: "Cosas para acostar a los gatitos" },
+    mantita: { oculto: "Mantita: arrástrala hasta un gatito para arroparlo" },
+    lampara: { oculto: "Lámpara: tócala para apagarla o encenderla" },
+    fin: {
+      titulo: { rotulo: "{pictograma:estrella} ¡BUENAS NOCHES!" },
+      frase: { juntos: "Los gatitos ya duermen arropados. ¡Hasta mañana!" },
+      sigue: { rotulo: "{pictograma:jugar} SIGUE" },
+    },
+  },
   enCasa: {
     boton: { oculto: "Elegir qué gatitos están en casa" },
     titulo: { rotulo: "{pictograma:inicio} EN CASA" },

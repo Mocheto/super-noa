@@ -1,0 +1,92 @@
+/**
+ * Arrastrar y frotar en la casa (prototipo «Arrastrar y frotar en la habitación»). Solo cuentas y medidas, sin
+ * React, para probarlas. Los números que hay que fijar jugando con Noa se pueden cambiar en desarrollo desde la URL:
+ * `?casaFrotar=1500` (milisegundos frotando), `?casaObjeto=96` (tamaño de los objetos de la bandeja, en px de la
+ * escena), `?casaToque=90` (radio para soltar algo sobre un gatito) y `?casaNecesidades=pide|senota` (para probar con
+ * los gatitos pidiendo o con pistas).
+ */
+import type { Cuidado } from "./casa.ts";
+
+export const ESCENA_CASA = { ancho: 960, alto: 540, suelo: 470 } as const;
+/** Sitio de cada gatito en la habitación, por su orden en `MUNDOS_CASA`. */
+export const SITIOS_CASA = [300, 500, 700] as const;
+/** Alto de un gatito sentado en la escena. */
+export const ALTO_GATITO = 140;
+
+export type Herramienta = "cuenco" | "pelota" | "esponja" | "escoba";
+export const HERRAMIENTAS: readonly Herramienta[] = ["cuenco", "pelota", "esponja", "escoba"];
+export const CUIDADO_DE: Readonly<Record<Exclude<Herramienta, "escoba">, Cuidado>> = { cuenco: "comer", pelota: "pelota", esponja: "esponja" };
+
+export type AjustesCasa = {
+  /** Tiempo frotando (con el dedo o la esponja) hasta que cuenta. */
+  frotarMs: number;
+  /** Tamaño de los objetos de la bandeja, en px de la escena. */
+  objeto: number;
+  /** Radio alrededor del gatito en el que cuenta soltar o frotar, en px de la escena. */
+  toque: number;
+  /** Para probar: necesidades al entrar. */
+  necesidades: "pide" | "senota" | null;
+};
+
+export const AJUSTES_CASA: AjustesCasa = { frotarMs: 1500, objeto: 96, toque: 90, necesidades: null };
+
+const numero = (valor: string | null, minimo: number, maximo: number, defecto: number) => {
+  const leido = Number(valor);
+  return valor !== null && Number.isFinite(leido) ? Math.max(minimo, Math.min(maximo, leido)) : defecto;
+};
+
+export function leerAjustesCasa(busqueda: string | null): AjustesCasa {
+  const parametros = new URLSearchParams(busqueda ?? "");
+  const necesidades = parametros.get("casaNecesidades");
+  return {
+    frotarMs: numero(parametros.get("casaFrotar"), 200, 6000, AJUSTES_CASA.frotarMs),
+    objeto: numero(parametros.get("casaObjeto"), 48, 200, AJUSTES_CASA.objeto),
+    toque: numero(parametros.get("casaToque"), 40, 200, AJUSTES_CASA.toque),
+    necesidades: necesidades === "pide" || necesidades === "senota" ? necesidades : null,
+  };
+}
+
+/** Pasa un punto de la pantalla a coordenadas de la escena de 960 × 540. */
+export const aEscena = (clienteX: number, clienteY: number, caja: { left: number; top: number; width: number; height: number }) => ({
+  x: ((clienteX - caja.left) / caja.width) * ESCENA_CASA.ancho,
+  y: ((clienteY - caja.top) / caja.height) * ESCENA_CASA.alto,
+});
+
+/** Índice del gatito bajo el punto (en `sitios`), o -1. Cuenta su cuerpo sentado más el radio de toque. */
+export function gatitoEn(x: number, y: number, sitios: readonly number[], toque = AJUSTES_CASA.toque): number {
+  const arriba = ESCENA_CASA.suelo - ALTO_GATITO - toque / 2;
+  if (y < arriba || y > ESCENA_CASA.suelo + toque / 2) return -1;
+  let mejor = -1;
+  let distancia = Infinity;
+  sitios.forEach((sitio, indice) => {
+    const d = Math.abs(x - sitio);
+    if (d <= toque && d < distancia) { mejor = indice; distancia = d; }
+  });
+  return mejor;
+}
+
+/** Índice del gatito más cercano a donde cae la pelota (el que corre a atraparla). */
+export const gatitoMasCerca = (x: number, sitios: readonly number[]) =>
+  sitios.reduce((mejor, sitio, indice) => Math.abs(x - sitio) < Math.abs(x - sitios[mejor]) ? indice : mejor, 0);
+
+/** Índice de la huella bajo la escoba, o -1. */
+export function huellaEn(x: number, y: number, huellas: readonly { x: number }[], radio = 60): number {
+  if (Math.abs(y - (ESCENA_CASA.suelo + 30)) > radio) return -1;
+  return huellas.findIndex((huella) => Math.abs(huella.x - x) <= radio);
+}
+
+/**
+ * Frotar: suma el tiempo entre movimientos seguidos sobre el mismo gatito. Un parón de más de 250 ms no suma, y
+ * cambiar de gatito empieza de cero. Devuelve el nuevo estado y si ya ha frotado bastante.
+ */
+export type Frote = { gatito: number; ms: number; ultimo: number };
+export const PARON_MS = 250;
+
+export function frotar(frote: Frote | null, gatito: number, ahora: number, objetivoMs: number): { frote: Frote | null; listo: boolean } {
+  if (gatito < 0) return { frote, listo: false };
+  if (!frote || frote.gatito !== gatito) return { frote: { gatito, ms: 0, ultimo: ahora }, listo: false };
+  const paso = ahora - frote.ultimo;
+  const ms = frote.ms + (paso > 0 && paso <= PARON_MS ? paso : 0);
+  if (ms >= objetivoMs) return { frote: null, listo: true };
+  return { frote: { gatito, ms, ultimo: ahora }, listo: false };
+}

@@ -12,10 +12,19 @@
 
 .casa-salir { position: absolute; top: 8px; left: 16px; z-index: 3; }
 
-.casa-escena {
+/* El marco lleva la escena y la bandeja; mide lo mismo que la escena para que los objetos escalen con ella (cqw). */
+.casa-marco {
   position: relative;
   width: min(100%, calc((100dvh - 96px) * 16 / 9), 1200px);
+  container-type: inline-size;
+}
+
+.casa-escena {
+  position: relative;
+  width: 100%;
   aspect-ratio: 16 / 9;
+  touch-action: none;
+  user-select: none;
   overflow: hidden;
   border: 4px solid #2f1d33;
   border-radius: 16px;
@@ -66,12 +75,58 @@
 
 .casa-gatito {
   bottom: 6%;
-  width: auto;
   height: 26%;
+  aspect-ratio: 1;
   transform: translateX(-50%);
-  image-rendering: pixelated;
-  filter: drop-shadow(0 4px 2px #2f1d3355);
+  transform-origin: 50% 100%;
 }
+.casa-gatito img { display: block; height: 100%; margin: 0 auto; image-rendering: pixelated; filter: drop-shadow(0 4px 2px #2f1d3355); pointer-events: none; }
+
+/* Barro provisional: manchas encima del dibujo hasta que el gato base las lleve en su paleta. */
+.casa-barro { position: absolute; left: 30%; bottom: 8%; width: 40%; height: 30%; pointer-events: none;
+  background: radial-gradient(circle at 25% 60%, #8b5a2bcc 0 14%, transparent 15%), radial-gradient(circle at 70% 30%, #8b5a2bcc 0 11%, transparent 12%), radial-gradient(circle at 55% 85%, #8b5a2bcc 0 9%, transparent 10%); }
+
+/* Bocadillo de «pide»: solo el dibujo de lo que quiere. */
+.casa-bocadillo { position: absolute; left: 62%; top: -34%; display: grid; place-items: center; width: 52%; aspect-ratio: 1.1; border: 3px solid #2f1d33; border-radius: 50%; background: #fff8e9; animation: casa-bocadillo 1s ease-in-out infinite alternate; }
+.casa-bocadillo::after { content: ""; position: absolute; left: 10%; bottom: -14%; width: 18%; aspect-ratio: 1; border: 3px solid #2f1d33; border-radius: 50%; background: #fff8e9; }
+.casa-bocadillo .casa-objeto { width: 70%; }
+@keyframes casa-bocadillo { to { transform: translateY(-6%) rotate(-3deg); } }
+
+/* Respuestas a los cuidados. */
+.casa-gatito.is-gracias { animation: casa-salto .5s ease-out 2; }
+.casa-gatito.is-sigueJugando, .casa-gatito.is-juegaIgual { animation: casa-salto .35s ease-out 1; }
+.casa-gatito.is-ronronea, .casa-gatito.is-frotado { animation: casa-ronroneo .18s linear infinite alternate; }
+.casa-gatito.is-ahoraNo { animation: casa-ahora-no .3s ease-in-out 3; }
+@keyframes casa-salto { 50% { transform: translateX(-50%) translateY(-18%); } }
+@keyframes casa-ronroneo { from { transform: translateX(-50%) rotate(-2deg); } to { transform: translateX(-50%) rotate(2deg) scaleY(.97); } }
+@keyframes casa-ahora-no { 25% { transform: translateX(-50%) skewX(-6deg); } 75% { transform: translateX(-50%) skewX(6deg); } }
+
+.casa-corazon { position: absolute; left: 40%; top: -10%; width: 20%; aspect-ratio: 1; background: var(--corazon) center / contain no-repeat; animation: casa-corazon 1.2s ease-out forwards; }
+@keyframes casa-corazon { from { transform: translateY(0) scale(.6); opacity: 1; } to { transform: translateY(-120%) scale(1.2); opacity: 0; } }
+
+.casa-huella { width: 3.4%; aspect-ratio: 1.2; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle at 50% 70%, #6b4423 0 34%, transparent 36%), radial-gradient(circle at 18% 25%, #6b4423 0 14%, transparent 16%), radial-gradient(circle at 50% 12%, #6b4423 0 14%, transparent 16%), radial-gradient(circle at 82% 25%, #6b4423 0 14%, transparent 16%); }
+
+/* Objetos de la bandeja, dibujados por ahora con CSS. Su tamaño (--objeto) se ajusta con ?casaObjeto=. */
+.casa-objeto { position: relative; display: block; width: var(--objeto, 10cqw); aspect-ratio: 1; }
+.casa-objeto.is-cuenco::before { content: ""; position: absolute; inset: 40% 6% 12%; border: 3px solid #2f1d33; border-radius: 6px 6px 50% 50% / 6px 6px 100% 100%; background: #4f9be0; }
+.casa-objeto.is-cuenco::after { content: ""; position: absolute; inset: 28% 18% 54%; border-radius: 50% 50% 10% 10%; background: #b5703a; box-shadow: 0 0 0 3px #2f1d33; }
+.casa-objeto.is-pelota::before { content: ""; position: absolute; inset: 14%; border: 3px solid #2f1d33; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff9aa8 0 18%, #e4505f 20%); }
+.casa-objeto.is-esponja::before { content: ""; position: absolute; inset: 26% 10%; border: 3px solid #2f1d33; border-radius: 22%; background: radial-gradient(circle at 30% 40%, #e0c23a 0 6%, transparent 7%), radial-gradient(circle at 65% 60%, #e0c23a 0 6%, transparent 7%), #ffe066; }
+.casa-objeto.is-escoba::before { content: ""; position: absolute; left: 46%; top: 4%; width: 10%; height: 58%; border: 3px solid #2f1d33; border-radius: 4px; background: #a8693a; }
+.casa-objeto.is-escoba::after { content: ""; position: absolute; left: 20%; top: 58%; width: 60%; height: 36%; border: 3px solid #2f1d33; border-radius: 4px 4px 30% 30%; background: repeating-linear-gradient(90deg, #f2c35b 0 4px, #d9a43a 4px 8px); }
+.casa-objeto.is-mano::before { content: ""; position: absolute; inset: 20%; border: 3px solid #2f1d33; border-radius: 40% 40% 45% 45%; background: #ffd9c2; }
+
+.casa-arrastrado, .casa-pelota-lanzada { z-index: 4; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 6px 4px #2f1d3366); }
+.casa-pelota-lanzada { animation: casa-pelota .7s ease-in forwards; }
+@keyframes casa-pelota { to { left: var(--hasta); top: 80%; transform: translate(-50%, -50%) rotate(540deg); } }
+
+/* Bandeja: columna sobre el borde derecho de la escena en pantallas anchas; debajo de la escena en el móvil vertical. */
+.casa-bandeja { position: absolute; top: 50%; right: 1%; z-index: 3; display: flex; flex-direction: column; gap: .6cqw; padding: .6cqw; border: 3px solid #2f1d33; border-radius: 18px; background: #fff8e9e6; transform: translateY(-50%); }
+.casa-bandeja .casa-objeto { width: min(var(--objeto, 10cqw), 10.5cqw); }
+.casa-bandeja-objeto { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 14px; background: transparent; cursor: grab; touch-action: none; }
+.casa-bandeja-objeto:focus-visible { outline: 4px solid #ffd76a; }
+.casa-bandeja-objeto.is-cogido { opacity: .35; }
+.casa-gatitos.is-arrastrando { cursor: grabbing; }
 
 .casa-gatito.is-llegando { animation: casa-entra 1.6s .4s ease-out backwards; }
 
@@ -94,4 +149,6 @@
 /* Móvil vertical: la escena ocupa el ancho, arriba, y deja sitio debajo para la bandeja. */
 @media (orientation: portrait) and (max-width: 600px) {
   .casa-gatitos { align-content: start; }
+  .casa-bandeja { position: static; flex-direction: row; justify-content: space-around; margin-top: 16px; padding: 12px; transform: none; }
+  .casa-bandeja .casa-objeto { width: max(var(--objeto, 10cqw), 64px); }
 }

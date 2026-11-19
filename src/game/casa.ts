@@ -8,6 +8,7 @@
  */
 
 import { DECORACION_DE_SIEMPRE, esDeSiempre, normalizeDecoracion, type Decoracion } from "./casaDecoracion.ts";
+import { normalizeFotos, type FotoCasa } from "./casaFoto.ts";
 
 export type NecesidadId = "comer" | "mimos" | "bano" | "jugar";
 export type EstadoNecesidad = "bien" | "seNota" | "pide";
@@ -53,6 +54,8 @@ export type CasaProgress = {
   enCasa?: number[];
   /** Hora de dormir: gatitos arropados en la noche `noche` (fecha local de la tarde en que empezó, AAAA-MM-DD). */
   dormir?: { noche: string; arropados: number[] };
+  /** Fotos de la casa, la más nueva primero (doce como mucho). */
+  fotos?: FotoCasa[];
 };
 
 /** Como mucho, estos gatitos en casa a la vez (mapa «Más gatitos en la casa»); los demás están de paseo. */
@@ -309,6 +312,7 @@ export function normalizeCasa(raw: unknown): CasaProgress | undefined {
   return {
     gatitos, huellas, calculadoEn: fecha, presentados,
     ...(decoracion && !esDeSiempre(decoracion) ? { decoracion } : {}), ...(enCasa ? { enCasa } : {}), ...(dormir ? { dormir } : {}),
+    ...(normalizeFotos(raw.fotos).length ? { fotos: normalizeFotos(raw.fotos) } : {}),
   };
 }
 

@@ -375,7 +375,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }, empieza + orden * paso));
   };
 
-  /** Cambia el mueble elegido a `version` en el momento `momento` (el del toque): destello, campanita y el gatito más cercano va a olerlo. */
+  /** Cambia el mueble elegido a `version` en el momento `momento` (el del toque): destello, campanita y, de día, el gatito más cercano va a olerlo. */
   const ponerVersion = (mueble: MuebleId, version: Version, momento: number) => {
     if (decoracionDe(casaRef.current)[mueble] === version) return;
     guardar({ ...casaRef.current, decoracion: cambiarMueble(decoracionDe(casaRef.current), mueble, version) });
@@ -383,6 +383,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setDestello({ mueble, id });
     window.setTimeout(() => setDestello((actual) => actual?.id === id ? null : actual), DESTELLO_MS);
     sonidoRef.current?.golpeBano("campanita");
+    // De noche duermen (y los arropados llevan su mantita): nadie se levanta a olerlo.
+    if (noche) return;
     const { oler } = MUEBLES_CASA[mueble];
     setAndantes((actuales) => {
       const libres = gatitos.filter((mundo, indice) => actuales[mundo] && cogidoRef.current?.indice !== indice && bano !== mundo);

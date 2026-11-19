@@ -102,6 +102,17 @@ Lo que hace Noa para atender una necesidad: dar de comer, frotar para los mimos,
 Lo que hace un gatito de la casa por su cuenta: andar por todo el suelo de la habitación, en cualquier dirección y con profundidad, hacia un sitio cualquiera o hacia un sitio de interés (cama, rascador, ventana).
 _Avoid_: Pasear (reservado al «Paseo de los amigos»), patrullar
 
+**Hora de dormir**:
+Ritual de la casa a partir de las 19 h: Noa pulsa la luna, la habitación se pone de noche, los gatitos van a su sitio de dormir y Noa los arropa y apaga la lámpara.
+_Avoid_: Noche (es la del reloj, de 21 a 8 h), siesta
+
+**Arropar**:
+Tapar con la mantita a un gatito tumbado en la hora de dormir. Es un cuidado: puede dar corazón.
+
+**Mantita**:
+Lo que Noa arrastra desde la bandeja para arropar a un gatito; toma el color de su collar.
+_Avoid_: Manta, sábana
+
 **Bañera**:
 Sitio de la casa adonde se lleva a un gatito sucio, cogiéndolo con el dedo, para bañarlo.
 

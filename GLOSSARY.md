@@ -70,8 +70,15 @@ _Avoid_: Bloque, muro
 ## Casa de los gatitos
 
 **Gatito de la casa**:
-Gatito de un mundo, ya rescatado, que vive en la casa y al que Noa cuida.
+Gatito de un mundo, ya rescatado, que vive en la casa y al que Noa cuida. Puede estar en casa o de paseo.
 _Avoid_: Mascota, tamagotchi
+
+**En casa**:
+Gatito de la casa que está en la habitación, a la vista. Como mucho cinco a la vez; Noa elige cuáles.
+
+**De paseo**:
+Gatito de la casa que Noa ha sacado de la habitación para dejar sitio a otro. No se pierde: sus necesidades se quedan como estaban y sus corazones siguen ahí hasta que vuelve.
+_Avoid_: Oculto, guardado, fuera; no confundir con el «Paseo de los amigos», que es una pantalla
 
 **Llegada**:
 Escena corta en que un gatito recién rescatado entra en la casa por primera vez.

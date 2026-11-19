@@ -18,7 +18,7 @@ export type Habitacion = {
   /** Escala del gatito al fondo y delante: más lejos, más pequeño. */
   escala: { fondo: number; delante: number };
   sitios: Record<SitioId, SitioInteres>;
-  /** Sitio de cada gatito de día (sobre la alfombra) y de noche (en la cama), por su orden entre los gatitos en casa. */
+  /** Sitio de cada gatito en casa de día (por la alfombra) y de noche (en la cama y la alfombra), por su orden entre los de casa. */
   sitiosDia: readonly { x: number; y: number }[];
   sitiosNoche: readonly { x: number; y: number }[];
   ventanaNoche: { imagen: string; left: number; top: number; width: number; height: number };
@@ -44,8 +44,9 @@ export const HABITACION_CASA: Habitacion = {
     alfombra: { x: 650, y: 505, para: "cantar" },
     banera: { x: 1085, y: 440, para: null },
   },
-  sitiosDia: [{ x: 600, y: 470 }, { x: 735, y: 470 }, { x: 870, y: 470 }],
-  sitiosNoche: [{ x: 310, y: 425 }, { x: 365, y: 425 }, { x: 420, y: 425 }],
+  sitiosDia: [{ x: 570, y: 465 }, { x: 680, y: 495 }, { x: 790, y: 465 }, { x: 900, y: 495 }, { x: 1010, y: 465 }],
+  // De noche, tres en la cama y dos en la alfombra.
+  sitiosNoche: [{ x: 310, y: 425 }, { x: 365, y: 425 }, { x: 420, y: 425 }, { x: 640, y: 470 }, { x: 760, y: 470 }],
   ventanaNoche: { imagen: "./assets/sprites/casa-ventana-noche-v1.webp", left: 619, top: 39, width: 239, height: 234 },
   lampara: { x: 1215, y: 175 },
   zonaBanera: { izquierda: 985, derecha: 1185, arriba: 340, abajo: 470 },

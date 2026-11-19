@@ -9,7 +9,7 @@ import { dentroDelSuelo, type Habitacion } from "./casaHabitacion.ts";
 /** Velocidad al andar, en px de escena por segundo, en cualquier dirección. */
 export const VELOCIDAD_GATITO = 70;
 /** Distancia mínima entre el destino de un gatito y los demás gatitos (y sus destinos). */
-export const SEPARACION = 120;
+export const SEPARACION = 100;
 /** Con qué probabilidad un gatito va a propósito al sitio de interés de lo que quiere hacer. */
 export const IR_AL_SITIO = 0.5;
 /** El gatito que pide algo anda entre 2 y 4 s y luego se para a pedir entre 4 y 6 s. */

@@ -245,3 +245,13 @@
 .casa-gatitos:not(.is-vertical) .casa-bandeja:not(.is-decorar) { display: grid; grid-template-columns: repeat(2, auto); justify-items: center; align-items: center; }
 .casa-gatitos:not(.is-vertical) .casa-bandeja:not(.is-decorar) .casa-bandeja-modos { grid-column: 1 / -1; }
 .casa-gatitos.is-vertical .casa-bandeja:not(.is-decorar) { gap: 2px; padding: 8px 4px; }
+
+/* Bandeja debajo de la habitación (pantallas con altura): en fila, a lo ancho del marco; en las anchas, los cuatro
+   botones de modo en una sola fila. */
+.casa-gatitos.is-vertical .casa-bandeja { align-items: center; }
+@media (min-width: 600px) {
+  .casa-gatitos.is-vertical .casa-bandeja-modos { grid-template-columns: repeat(4, 44px); }
+}
+/* Bandeja al lado de la habitación (móvil apaisado): fuera de la vista, así no tapa la bañera ni nada. */
+.casa-gatitos.is-lado .casa-marco { display: flex; align-items: center; gap: 8px; }
+.casa-gatitos.is-lado .casa-bandeja { position: static; flex-shrink: 0; transform: none; }

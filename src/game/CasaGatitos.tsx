@@ -72,7 +72,11 @@ const MARGEN_ARRIBA = 64;
 const MARGEN_LADOS = 32;
 const MARCO_MOVIL = 16;
 /** En el móvil vertical la bandeja va debajo de la habitación. */
-const ALTO_BANDEJA_VERTICAL = 120;
+const ALTO_BANDEJA_VERTICAL = 130;
+/** Con la ventana más baja que esto (móvil apaisado), la bandeja va al lado de la habitación, sin taparla. */
+const ALTO_PARA_BANDEJA_DEBAJO = 500;
+/** Ancho que ocupa la bandeja al lado de la habitación (dos columnas de botones y su margen). */
+const ANCHO_BANDEJA_LADO = 150;
 
 /** Necesidad que enseña cada objeto en el bocadillo. */
 const OBJETO_DE: Record<NecesidadId, Herramienta | "mano"> = { comer: "cuenco", mimos: "mano", bano: "esponja", jugar: "pelota" };
@@ -241,8 +245,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const seccion = seccionRef.current;
     if (!seccion) return;
     const medir = () => {
-      const vertical = window.matchMedia("(orientation: portrait) and (max-width: 600px)").matches;
-      const ancho = seccion.clientWidth - MARGEN_LADOS - MARCO_MOVIL;
+      // La bandeja va debajo de la habitación, en fila, salvo en pantallas bajas (móvil apaisado): ahí, al lado.
+      const vertical = window.innerHeight >= ALTO_PARA_BANDEJA_DEBAJO || window.matchMedia("(orientation: portrait)").matches;
+      const ancho = seccion.clientWidth - MARGEN_LADOS - MARCO_MOVIL - (vertical ? 0 : ANCHO_BANDEJA_LADO);
       // La sección crece con su contenido: el alto disponible es el de la ventana desde donde empieza.
       const alto = window.innerHeight - Math.max(0, seccion.getBoundingClientRect().top) - MARGEN_ARRIBA - MARCO_MOVIL - (vertical ? ALTO_BANDEJA_VERTICAL : 0);
       const escala = escalaCasa(ancho, alto);
@@ -809,7 +814,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (indice >= 0) atender(indice, "esponja");
   };
 
-  return <section ref={seccionRef} onPointerDownCapture={() => { sonidoRef.current?.despertar(); nanaRef.current?.empezar(); }} className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}${medidas.vertical ? " is-vertical" : ""}`} aria-label={t("casa.titulo.oculto")}>
+  return <section ref={seccionRef} onPointerDownCapture={() => { sonidoRef.current?.despertar(); nanaRef.current?.empezar(); }} className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}${medidas.vertical ? " is-vertical" : " is-lado"}`} aria-label={t("casa.titulo.oculto")}>
     <BotonControl className="casa-salir" pictograma="mapa" etiqueta="casa.salir.oculto" onClick={salir} disabled={fase === "hola"} />
     <div className="casa-marco game-frame" style={estiloMarco}>
       <div className="casa-visor" ref={visorRef} style={{ width: medidas.anchoVisor, height: ESCENA_CASA.alto * medidas.escala }}>

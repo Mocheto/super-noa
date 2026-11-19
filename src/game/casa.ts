@@ -51,6 +51,8 @@ export type CasaProgress = {
   decoracion?: Decoracion;
   /** Gatitos en casa (cinco como mucho); los demás están de paseo. Si falta, los primeros cinco por mundo (`enCasaDe`). */
   enCasa?: number[];
+  /** Hora de dormir: gatitos arropados en la noche `noche` (fecha local de la tarde en que empezó, AAAA-MM-DD). */
+  dormir?: { noche: string; arropados: number[] };
 };
 
 /** Como mucho, estos gatitos en casa a la vez (mapa «Más gatitos en la casa»); los demás están de paseo. */
@@ -301,7 +303,13 @@ export function normalizeCasa(raw: unknown): CasaProgress | undefined {
   const enCasa = Array.isArray(raw.enCasa)
     ? [...new Set(raw.enCasa.map(Number).filter((mundo) => Boolean(gatitos[mundo])))].sort(porMundo).slice(0, MAX_EN_CASA)
     : undefined;
-  return { gatitos, huellas, calculadoEn: fecha, presentados, ...(decoracion && !esDeSiempre(decoracion) ? { decoracion } : {}), ...(enCasa ? { enCasa } : {}) };
+  const dormir = esRegistro(raw.dormir) && typeof raw.dormir.noche === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.dormir.noche)
+    ? { noche: raw.dormir.noche, arropados: [...new Set((Array.isArray(raw.dormir.arropados) ? raw.dormir.arropados : []).map(Number).filter((mundo) => Boolean(gatitos[mundo])))].sort(porMundo) }
+    : undefined;
+  return {
+    gatitos, huellas, calculadoEn: fecha, presentados,
+    ...(decoracion && !esDeSiempre(decoracion) ? { decoracion } : {}), ...(enCasa ? { enCasa } : {}), ...(dormir ? { dormir } : {}),
+  };
 }
 
 /** La decoración de la casa: la guardada o, si no hay, la de siempre. */

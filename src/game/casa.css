@@ -39,14 +39,13 @@
 @keyframes casa-luz-puerta { from { opacity: 0; } 30% { opacity: 1; } to { opacity: 0; } }
 
 /* Noche (21–8 h): tono azul, lámpara encendida y ventana con luna. */
-.casa-luz-noche { inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at var(--lampara, 1215px 175px), #ffe7a077 0 110px, transparent 260px), #1e2a6e59; }
+.casa-luz-noche { inset: 0; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at var(--lampara, 1215px 175px), #ffe7a077 0 110px, transparent 260px), #1e2a6e59; }
 .casa-escena.is-noche .casa-luz-noche { opacity: 1; }
 
-/* Gatito: cuadro de 160 × 160 de la hoja pintada con su paleta; los pies (fila 152) sobre la alfombra (y = 470). */
-.casa-gatito { bottom: 62px; width: 160px; height: 160px; transform: translateX(-50%); transform-origin: 50% 95%; z-index: 1; transition: left 1.6s ease-in-out; }
+/* Gatito: cuadro de 160 × 160 de la hoja pintada con su paleta. El componente lo coloca con los pies (fila 152) en su
+   punto del suelo, lo escala por profundidad (--escala: 0,8 al fondo, 1 delante) y el de delante tapa al de detrás. */
+.casa-gatito { width: 160px; height: 160px; transform: translateX(-50%) scale(var(--escala, 1)); transform-origin: 50% 95%; }
 .casa-gatito-dibujo { position: absolute; inset: 0; background-repeat: no-repeat; image-rendering: pixelated; filter: drop-shadow(0 4px 2px #2f1d3355); pointer-events: none; }
-/* De noche, dormidos en la cama redonda (fondo de la cama en y = 425). */
-.casa-gatito.is-dormido { bottom: 107px; }
 
 /* Bocadillo de «pide»: solo el dibujo de lo que quiere. */
 .casa-bocadillo { position: absolute; left: 62%; top: -34%; display: grid; place-items: center; width: 72px; height: 64px; border: 4px solid #2f1d33; border-radius: 50%; background: #fff8e9; animation: casa-bocadillo 1s ease-in-out infinite alternate; }
@@ -57,7 +56,7 @@
 .casa-gatito.is-gracias { animation: casa-salto .5s ease-out 2; }
 .casa-gatito.is-sigueJugando, .casa-gatito.is-juegaIgual { animation: casa-salto .35s ease-out 1; }
 /* El ronroneo, el baño y el «ahora no» ya los anima la hoja del gato. */
-@keyframes casa-salto { 50% { transform: translateX(-50%) translateY(-18%); } }
+@keyframes casa-salto { 50% { transform: translateX(-50%) scale(var(--escala, 1)) translateY(-18%); } }
 
 .casa-corazon { position: absolute; left: 40%; top: -10%; width: 28px; height: 28px; background: var(--corazon) center / contain no-repeat; animation: casa-corazon 1.2s ease-out forwards; }
 @keyframes casa-corazon { from { transform: translateY(0) scale(.6); opacity: 1; } to { transform: translateY(-120%) scale(1.2); opacity: 0; } }
@@ -79,9 +78,9 @@
 .casa-objeto.is-huella-2 { background-position-x: 100%; }
 .casa-objeto.is-mano::before { content: ""; position: absolute; inset: 20%; border: 3px solid #2f1d33; border-radius: 40% 40% 45% 45%; background: #ffd9c2; }
 
-.casa-arrastrado, .casa-pelota-lanzada { z-index: 4; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 6px 4px #2f1d3366); }
+.casa-arrastrado, .casa-pelota-lanzada { z-index: 2000; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 6px 4px #2f1d3366); }
 .casa-pelota-lanzada { animation: casa-pelota .7s ease-in forwards; }
-@keyframes casa-pelota { to { left: var(--hasta); top: 80%; transform: translate(-50%, -50%) rotate(540deg); } }
+@keyframes casa-pelota { to { left: var(--hasta); top: var(--hasta-y, 80%); transform: translate(-50%, -50%) rotate(540deg); } }
 
 /* Bordes: queda habitación por ver a ese lado. */
 .casa-borde { position: absolute; top: 0; bottom: 0; z-index: 3; width: 40px; pointer-events: none; }
@@ -109,18 +108,14 @@
 .casa-bandeja-objeto.is-cogido { opacity: .35; }
 .casa-gatitos.is-arrastrando { cursor: grabbing; }
 
-.casa-gatito.is-llegando { animation: casa-entra 1.6s .4s ease-out backwards; }
-@keyframes casa-entra { from { left: var(--desde); opacity: 0; } 20% { opacity: 1; } }
 
 .casa-llegada-dibujo { display: flex; justify-content: center; gap: 12px; }
 .casa-llegada-dibujo img { height: 96px; image-rendering: pixelated; }
 
-.casa-gatitos.is-quieta .casa-gatito { transition: none; }
-.casa-gatitos.is-quieta .casa-gatito.is-llegando { animation: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .casa-gatito, .casa-luz-noche, .casa-ventana-noche { transition: none; }
-  .casa-gatito.is-llegando, .casa-borde::after, .casa-luz-puerta { animation: none; }
+  .casa-luz-noche, .casa-ventana-noche { transition: none; }
+  .casa-borde::after, .casa-luz-puerta { animation: none; }
 }
 
 /* Móvil vertical: la vista arriba y la bandeja debajo, dentro del marco. */

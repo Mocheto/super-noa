@@ -102,6 +102,10 @@ Lo que hace Noa para atender una necesidad: dar de comer, frotar para los mimos,
 Lo que hace un gatito de la casa por su cuenta: andar por todo el suelo de la habitación, en cualquier dirección y con profundidad, hacia un sitio cualquiera o hacia un sitio de interés (cama, rascador, ventana).
 _Avoid_: Pasear (reservado al «Paseo de los amigos»), patrullar
 
+**Foto de la casa**:
+Lo que guarda Noa al pulsar el marco de la bandeja: la habitación tal como se ve en ese momento, con sus gatitos. Se mira en la pestaña «FOTOS» del álbum; se guardan las doce últimas.
+_Avoid_: Captura, pantallazo; no confundir con la postal (recuerdo de un mundo)
+
 **Hora de dormir**:
 Ritual de la casa a partir de las 19 h: Noa pulsa la luna, la habitación se pone de noche, los gatitos van a su sitio de dormir y Noa los arropa y apaga la lámpara.
 _Avoid_: Noche (es la del reloj, de 21 a 8 h), siesta

@@ -32,7 +32,8 @@ export const HABITACION_CASA: Habitacion = {
   id: "salon",
   ancho: 1280,
   alto: 540,
-  fondo: "./assets/worlds/casa-habitacion-v1.webp",
+  /** La habitación vacía: la cama, la alfombra, el cuadro y la planta se ponen encima según la decoración. */
+  fondo: "./assets/worlds/casa-habitacion-vacia-v1.webp",
   suelo: { fondo: 405, delante: 520, izquierda: 110, derecha: 1170 },
   escala: { fondo: 0.8, delante: 1 },
   sitios: {

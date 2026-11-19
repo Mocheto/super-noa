@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { existsSync } from "node:fs";
 import { casaVacia, decoracionDe, normalizeCasa } from "./casa.ts";
 import { cambiarMueble, cambiarTonoPared, DECORACION_DE_SIEMPRE, muebleEn, MUEBLES, MUEBLES_CASA, normalizeDecoracion, PARED_HASTA, TONOS_PARED, VERSIONES } from "./casaDecoracion.ts";
 import { dentroDelSuelo, HABITACION_CASA as H } from "./casaHabitacion.ts";
@@ -18,9 +19,17 @@ test("cada mueble está dentro de la habitación y su gatito va a olerlo por el 
     if (caja) assert.ok(caja.x >= 0 && caja.y >= 0 && caja.x + caja.ancho <= H.ancho && caja.y + caja.alto <= H.alto, id);
     assert.ok(dentroDelSuelo(H, oler.x, oler.y), id);
   }
-  // Solo la pared va sin caja ni fila de lámina.
+  // Solo la pared va sin caja ni dibujo; cada dibujo existe, cabe en la escena y se apoya abajo y centrado en su caja.
   assert.deepEqual(MUEBLES.filter((id) => MUEBLES_CASA[id].caja === null), ["pared"]);
-  assert.deepEqual(MUEBLES.map((id) => MUEBLES_CASA[id].fila), [0, 1, 2, 3, null]);
+  assert.deepEqual(MUEBLES.filter((id) => MUEBLES_CASA[id].dibujo === null), ["pared"]);
+  for (const id of MUEBLES) {
+    const { caja, dibujo } = MUEBLES_CASA[id];
+    if (!caja || !dibujo) continue;
+    assert.ok(existsSync(new URL(`../../public/${dibujo.imagen.replace("./", "")}`, import.meta.url)), id);
+    assert.ok(dibujo.y >= 0 && dibujo.x + dibujo.ancho <= H.ancho, id);
+    assert.ok(Math.abs(dibujo.y + dibujo.alto - (caja.y + caja.alto)) <= 1, `${id} apoyado`);
+    assert.ok(Math.abs(dibujo.x + dibujo.ancho / 2 - (caja.x + caja.ancho / 2)) <= 1, `${id} centrado`);
+  }
 });
 
 test("los sitios de interés de los gatitos no se mueven al decorar", () => {

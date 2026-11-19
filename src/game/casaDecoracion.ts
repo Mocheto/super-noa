@@ -14,20 +14,35 @@ export const MUEBLES: readonly MuebleId[] = ["cama", "alfombra", "cuadro", "plan
 export const VERSIONES: readonly Version[] = [0, 1, 2, 3, 4];
 
 export type Mueble = {
-  /** Dónde está en la escena de 1280 × 540 (la pared es toda la habitación y no tiene caja). */
+  /** Dónde está el de siempre en la escena de 1280 × 540, para tocarlo (la pared es toda la habitación y no tiene caja). */
   caja: Caja | null;
   /** Punto del suelo adonde va a olerlo el gatito más cercano cuando cambia. */
   oler: { x: number; y: number };
-  /** Fila de su lámina en `casa-muebles-v1.webp` (la pared no tiene). */
-  fila: number | null;
+  /**
+   * Su lámina (cinco celdas en fila, una por versión, de `prototypes/tools/casa-decorar-recorte.py`) y dónde se pone
+   * cada celda en la escena: apoyada abajo y centrada en el de siempre. La pared no tiene: cambia de tono por código.
+   */
+  dibujo: (Caja & { imagen: string }) | null;
 };
 
 export const MUEBLES_CASA: Readonly<Record<MuebleId, Mueble>> = {
-  cama: { caja: { x: 262, y: 318, ancho: 195, alto: 112 }, oler: { x: 470, y: 440 }, fila: 0 },
-  alfombra: { caja: { x: 515, y: 395, ancho: 435, alto: 120 }, oler: { x: 960, y: 480 }, fila: 1 },
-  cuadro: { caja: { x: 977, y: 85, ancho: 63, alto: 80 }, oler: { x: 1010, y: 415 }, fila: 2 },
-  planta: { caja: { x: 885, y: 140, ancho: 80, alto: 82 }, oler: { x: 925, y: 415 }, fila: 3 },
-  pared: { caja: null, oler: { x: 640, y: 430 }, fila: null },
+  cama: {
+    caja: { x: 261, y: 316, ancho: 198, alto: 117 }, oler: { x: 470, y: 440 },
+    dibujo: { imagen: "./assets/sprites/casa-mueble-cama-v1.webp", x: 261, y: 251, ancho: 198, alto: 182 },
+  },
+  alfombra: {
+    caja: { x: 512, y: 396, ancho: 442, alto: 123 }, oler: { x: 960, y: 480 },
+    dibujo: { imagen: "./assets/sprites/casa-mueble-alfombra-v1.webp", x: 512, y: 396, ancho: 442, alto: 123 },
+  },
+  cuadro: {
+    caja: { x: 975, y: 81, ancho: 66, alto: 89 }, oler: { x: 1010, y: 415 },
+    dibujo: { imagen: "./assets/sprites/casa-mueble-cuadro-v1.webp", x: 975, y: 81, ancho: 66, alto: 89 },
+  },
+  planta: {
+    caja: { x: 885, y: 140, ancho: 79, alto: 77 }, oler: { x: 925, y: 415 },
+    dibujo: { imagen: "./assets/sprites/casa-mueble-planta-v1.webp", x: 885, y: 125, ancho: 79, alto: 92 },
+  },
+  pared: { caja: null, oler: { x: 640, y: 430 }, dibujo: null },
 };
 
 /** Los dos tonos de las rayas de la pared en el fondo (claro y oscuro) y sus cinco versiones: crema, menta, lila, azul cielo y amarillo. */

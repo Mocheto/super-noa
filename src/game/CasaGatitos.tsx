@@ -619,11 +619,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         <div className={`casa-escena${noche ? " is-noche" : ""}`} ref={escenaRef} style={estiloEscena}
           onPointerDown={empezarDedo} onPointerMove={moverDedo} onPointerUp={acabarDedo} onPointerCancel={acabarDedo}>
           <img className="casa-fondo" src={fondo} alt="" draggable={false} />
-          {/* Muebles cambiados (la versión 0 es la del fondo). Dibujos provisionales hasta su arte. */}
-          {MUEBLES_DECORABLES.filter((mueble) => decoracion[mueble] !== 0).map((mueble) => {
-            const caja = MUEBLES_CASA[mueble].caja!;
-            return <i key={mueble} className={`casa-mueble is-${mueble} is-v${decoracion[mueble]}`} aria-hidden="true"
-              style={{ left: caja.x, top: caja.y, width: caja.ancho, height: caja.alto, "--pared-claro": TONOS_PARED[decoracion.pared][0] } as CSSProperties} />;
+          {/* Muebles, cada uno en la versión elegida, sobre la habitación vacía. */}
+          {MUEBLES_DECORABLES.map((mueble) => {
+            const dibujo = MUEBLES_CASA[mueble].dibujo!;
+            return <i key={mueble} className="casa-mueble" aria-hidden="true"
+              style={{ left: dibujo.x, top: dibujo.y, width: dibujo.ancho, height: dibujo.alto, ...celdaDeMueble(mueble, decoracion[mueble]) }} />;
           })}
           {decorando && <>
             <button type="button" className={`casa-mueble-zona is-pared${elegido === "pared" ? " is-elegido" : ""}`} style={{ left: 0, top: 0, width: HABITACION.ancho, height: PARED_HASTA }}
@@ -688,7 +688,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         {elegido && VERSIONES.map((version) => <button key={version} type="button" className={`casa-bandeja-objeto casa-version${decoracion[elegido] === version ? " is-puesta" : ""}`}
           aria-label={t("casa.decorar.version.oculto", { mueble: tClave(`casa.decorar.mueble.${elegido}.oculto`), numero: version + 1 })} aria-pressed={decoracion[elegido] === version}
           onClick={(event) => ponerVersion(elegido, version, event.timeStamp)}>
-          <Muestra mueble={elegido} version={version} fondo={HABITACION.fondo} />
+          <Muestra mueble={elegido} version={version} />
         </button>)}
       </div>}
       {fase === "casa" && bano === null && !decorando && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
@@ -711,17 +711,19 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
 const MUEBLES_DECORABLES = (Object.keys(MUEBLES_CASA) as MuebleId[]).filter((mueble) => MUEBLES_CASA[mueble].caja !== null);
 const LADO_MUESTRA = 48;
 
-/** Muestra de una versión en la bandeja: la de siempre, recortada del fondo; las otras, su dibujo; la pared, sus rayas. */
-function Muestra({ mueble, version, fondo }: { mueble: MuebleId; version: Version; fondo: string }) {
-  const caja = MUEBLES_CASA[mueble].caja;
-  if (!caja) {
+/** Fondo de la celda de la versión `version` en la lámina del mueble (cinco celdas en fila). */
+function celdaDeMueble(mueble: MuebleId, version: Version): CSSProperties {
+  const dibujo = MUEBLES_CASA[mueble].dibujo!;
+  return { backgroundImage: `url("${dibujo.imagen}")`, backgroundSize: `${VERSIONES.length * 100}% 100%`, backgroundPosition: `${(version / (VERSIONES.length - 1)) * 100}% 0` };
+}
+
+/** Muestra de una versión en la bandeja: el mueble en esa versión, o las rayas de la pared. */
+function Muestra({ mueble, version }: { mueble: MuebleId; version: Version }) {
+  const dibujo = MUEBLES_CASA[mueble].dibujo;
+  if (!dibujo) {
     const [claro, oscuro] = TONOS_PARED[version];
     return <i className="casa-muestra is-pared" style={{ background: `repeating-linear-gradient(90deg, ${claro} 0 8px, ${oscuro} 8px 16px)` }} />;
   }
-  const escala = LADO_MUESTRA / Math.max(caja.ancho, caja.alto);
-  const tam = { width: caja.ancho * escala, height: caja.alto * escala };
-  if (version === 0) {
-    return <i className="casa-muestra" style={{ ...tam, backgroundImage: `url("${fondo}")`, backgroundSize: `${HABITACION.ancho * escala}px ${HABITACION.alto * escala}px`, backgroundPosition: `${-caja.x * escala}px ${-caja.y * escala}px` }} />;
-  }
-  return <i className={`casa-muestra casa-mueble is-${mueble} is-v${version}`} style={{ ...tam, position: "relative", "--pared-claro": "transparent" } as CSSProperties} />;
+  const escala = LADO_MUESTRA / Math.max(dibujo.ancho, dibujo.alto);
+  return <i className="casa-muestra" style={{ width: dibujo.ancho * escala, height: dibujo.alto * escala, ...celdaDeMueble(mueble, version) }} />;
 }

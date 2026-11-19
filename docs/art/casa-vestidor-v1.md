@@ -4,7 +4,24 @@ Dossier del arte del vestidor. Ticket: [Prompts del arte del vestidor](https://g
 
 ## Estado
 
-- **Prompts listos**, falta generar las láminas. Se montan en [Montar el arte del vestidor](https://github.com/Mocheto/super-noa/issues/245).
+- **Montado** ([Montar el arte del vestidor](https://github.com/Mocheto/super-noa/issues/245)): las originales están en `../super-noa-arte-original/casa-vestidor-v1/` y se recortan con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-vestidor-recorte.py ../super-noa-arte-original/casa-vestidor-v1`, que imprime las medidas.
+- **Armario cerrado** (`sprites/casa-armario-v1.webp`, 95 × 150, sin pérdida): salió con la habitación borrosa detrás en vez de verde limpio. Se recorta por el color de la madera dentro de su caja y lleva un contorno nuevo de un píxel, porque el de arriba se perdió. En la habitación cabe con los pies hacia (925, 400), bajo la balda de la planta, entre la ventana y la bañera.
+- **Fondo** (`worlds/casa-vestidor-v1.webp`, 1280 × 692): salió apaisado y se deja así, sin el marco oscuro. El suelo empieza en la fila 373. El tercio de la derecha es pared lisa para el armario abierto en apaisado.
+- **Armario abierto** (`sprites/casa-armario-abierto-v1.webp`, 615 × 488): a la mitad de la lámina, con tres baldas vacías.
+- **Gatito grande** (`sprites/gato-casa-vestidor-v1.webp`): dos cuadros de 240 × 340, quieto y contento, pasados a los colores clave y sin pérdida. Los pies quedan a 6 px del borde de abajo. Anclas en px de su cuadro:
+  - **cabeza**, en el lazo: (135, 35);
+  - **ojos**: (137, 107), los mismos en el cuadro contento, que tiene los ojos cerrados;
+  - **cuello**, en el pañuelo: (134, 181).
+- **Piezas** (`sprites/casa-accesorios-v1.webp`): cuatro columnas y tres filas de celdas de 200 × 170, en el orden de `ACCESORIOS` de `casaRopa.ts` y a la misma escala que el gatito grande. Cada pieza va colocada en su celda según su tipo:
+  - el sombrero, con el ala abajo del todo;
+  - las gafas, en el centro;
+  - la bufanda, arriba del todo.
+- **Cómo encajan en el gatito grande** (probado pintándolas encima):
+  - el ala del sombrero, 18 px por debajo del lazo;
+  - las gafas, al 85 % y centradas en los ojos;
+  - la bufanda, 14 px por encima del centro del pañuelo.
+  
+  El sombrero sobresale por arriba del cuadro del gatito: el vestidor debe dejarle sitio.
 
 ## Qué hace falta
 

@@ -9,6 +9,7 @@
 
 import { DECORACION_DE_SIEMPRE, esDeSiempre, normalizeDecoracion, type Decoracion } from "./casaDecoracion.ts";
 import { normalizeFotos, type FotoCasa } from "./casaFoto.ts";
+import { normalizeRopaCasa, type Ropa } from "./casaRopa.ts";
 
 export type NecesidadId = "comer" | "mimos" | "bano" | "jugar";
 export type EstadoNecesidad = "bien" | "seNota" | "pide";
@@ -56,6 +57,8 @@ export type CasaProgress = {
   dormir?: { noche: string; arropados: number[] };
   /** Fotos de la casa, la más nueva primero (doce como mucho). */
   fotos?: FotoCasa[];
+  /** Accesorios que lleva cada gatito, por número de mundo; solo los que llevan algo (`ropaDe`). */
+  ropa?: Record<string, Ropa>;
 };
 
 /** Como mucho, estos gatitos en casa a la vez (mapa «Más gatitos en la casa»); los demás están de paseo. */
@@ -309,10 +312,12 @@ export function normalizeCasa(raw: unknown): CasaProgress | undefined {
   const dormir = esRegistro(raw.dormir) && typeof raw.dormir.noche === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw.dormir.noche)
     ? { noche: raw.dormir.noche, arropados: [...new Set((Array.isArray(raw.dormir.arropados) ? raw.dormir.arropados : []).map(Number).filter((mundo) => Boolean(gatitos[mundo])))].sort(porMundo) }
     : undefined;
+  const ropa = normalizeRopaCasa(raw.ropa, (mundo) => Boolean(gatitos[mundo]));
   return {
     gatitos, huellas, calculadoEn: fecha, presentados,
     ...(decoracion && !esDeSiempre(decoracion) ? { decoracion } : {}), ...(enCasa ? { enCasa } : {}), ...(dormir ? { dormir } : {}),
     ...(normalizeFotos(raw.fotos).length ? { fotos: normalizeFotos(raw.fotos) } : {}),
+    ...(ropa ? { ropa } : {}),
   };
 }
 

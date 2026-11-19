@@ -100,6 +100,10 @@
 
 /* Bandeja: columna sobre el borde derecho de la vista en pantallas anchas; debajo de la vista en el móvil vertical. */
 .casa-bandeja { position: absolute; top: 50%; right: 16px; z-index: 4; display: flex; flex-direction: column; gap: 6px; padding: 6px; border: 3px solid #2f1d33; border-radius: 18px; background: #fff8e9e6; transform: translateY(-50%); }
+/* Tras la primera llegada, la bandeja brilla una vez para enseñar dónde están las cosas para cuidar. */
+.casa-bandeja.is-brilla { animation: casa-bandeja-brilla 1s ease-in-out 3; }
+@keyframes casa-bandeja-brilla { 50% { box-shadow: 0 0 0 4px #ffd76a, 0 0 24px 8px #ffd76acc; } }
+@media (prefers-reduced-motion: reduce) { .casa-bandeja.is-brilla { animation: none; box-shadow: 0 0 0 4px #ffd76a; } }
 .casa-bandeja-objeto { display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 14px; background: transparent; cursor: grab; touch-action: none; }
 .casa-bandeja-objeto:focus-visible { outline: 4px solid #ffd76a; }
 .casa-bandeja-objeto.is-cogido { opacity: .35; }

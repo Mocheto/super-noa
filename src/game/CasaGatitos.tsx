@@ -4,6 +4,7 @@ import {
   aEscena, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, gatitoEn, gatitoMasCerca, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
   ALFOMBRA, SITIOS_CASA, SITIOS_NOCHE, type Frote, type Herramienta,
 } from "./casaInteraccion";
+import { crearSonidoCasa, type SonidoCasa } from "./casaSonido";
 import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, type AnimacionGato } from "./casaGatoArte";
 import { MUNDOS_CASA, prepararCasa } from "./casaRescate";
 import { cssAssetUrl } from "./assets";
@@ -17,6 +18,9 @@ type Props = {
   casa: CasaProgress | undefined;
   levelStats: Record<string, { completed?: boolean } | undefined>;
   reduceMotion: boolean;
+  /** Silencio del juego y volumen de efectos (0–100). */
+  muted: boolean;
+  effectsVolume: number;
   /** Guarda la casa en el progreso: al ver una llegada, tras cada cuidado y al salir. */
   onGuardar: (casa: CasaProgress) => void;
   onSalir: () => void;
@@ -27,6 +31,8 @@ const PUERTA_X = 140;
 const VENTANA = { left: 619, top: 39, width: 239, height: 234 } as const;
 /** Cada cuánto se redibujan las animaciones de los gatitos. */
 const PASO_ANIMACION_MS = 100;
+/** Cuánto brilla la bandeja tras la primera llegada. */
+const BRILLO_BANDEJA_MS = 3000;
 /** Duración de la llegada: la puerta se abre y los gatitos entran hasta su sitio. */
 const LLEGADA_MS = 2000;
 /** Lo que tarda el gatito en atrapar la pelota tras soltarla. */
@@ -98,10 +104,13 @@ type Medidas = { escala: number; anchoVisor: number; vertical: boolean; medido: 
  * frotar al gatito o con la esponja, lanzar la pelota y barrer las huellas) en una habitación de 1280 × 540 que se
  * desliza con el dedo. La habitación, los objetos y los gatitos son provisionales hasta que llegue su arte.
  */
-export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuardar, onSalir }: Props) {
+export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, effectsVolume, onGuardar, onSalir }: Props) {
   const inicial = useMemo(() => conNecesidadesDePrueba(prepararCasa(guardada, levelStats, new Date())), [guardada, levelStats]);
   const [casa, setCasa] = useState(inicial);
   const [llegan] = useState(() => llegadasPendientes(inicial));
+  // La primera llegada a la casa (nadie presentado aún): al cerrarla, la bandeja brilla una vez.
+  const [estreno] = useState(() => inicial.presentados.length === 0 && llegadasPendientes(inicial).length > 0);
+  const [brilla, setBrilla] = useState(false);
   const [fase, setFase] = useState<"entrando" | "hola" | "casa">(llegan.length ? "entrando" : "casa");
   const [noche, setNoche] = useState(() => esDeNoche(new Date()));
   const [arrastre, setArrastre] = useState<Arrastre | null>(null);
@@ -122,7 +131,19 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
   const deslizRef = useRef<Desliz | null>(null);
   const autoRef = useRef<-1 | 0 | 1>(0);
   const idRef = useRef(0);
+  const sonidoRef = useRef<SonidoCasa | null>(null);
+  const estadosRef = useRef<Record<number, EstadoVida>>({});
   useEffect(() => { casaRef.current = casa; }, [casa]);
+
+  // Sonido: se crea al entrar, sigue el silencio y el volumen del juego y se cierra al salir.
+  useEffect(() => {
+    const sonido = crearSonidoCasa({ silencio: muted, volumen: effectsVolume / 100 });
+    sonidoRef.current = sonido;
+    return () => { sonido.cerrar(); sonidoRef.current = null; };
+    // Solo al montar: los cambios de volumen van por `ajustar`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => { sonidoRef.current?.ajustar({ silencio: muted, volumen: effectsVolume / 100 }); }, [muted, effectsVolume]);
 
   const presentes = MUNDOS_CASA.filter((mundo) => casa.gatitos[mundo]).join(",");
   const gatitos = useMemo(() => presentes ? presentes.split(",").map(Number) : [], [presentes]);
@@ -171,10 +192,28 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
     if (mundo === undefined) return;
     const resultado = cuidar(casaRef.current, mundo, cuidado, new Date());
     guardar(resultado.casa);
+    const sonido = sonidoRef.current;
+    if (resultado.respuesta === "gracias") sonido?.maullar(mundo, "gracias");
+    else if (resultado.respuesta === "ahoraNo") sonido?.maullar(mundo, "ahoraNo");
     const id = ++idRef.current;
     setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice), { gatito: indice, tipo: resultado.respuesta, cuidado, corazon: resultado.corazon, id, desde: performance.now() }]);
     window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
   }, [gatitos, guardar]);
+
+  // Ronroneo mientras se frota con el dedo (con la esponja no ronronea).
+  const ronronea = frotando !== null && arrastre?.herramienta !== "esponja";
+  useEffect(() => { sonidoRef.current?.ronronear(ronronea); }, [ronronea]);
+
+  // Maullido de pedir (cada gatito, como mucho uno cada pocos segundos) y canción al empezar a cantar.
+  useEffect(() => {
+    if (fase !== "casa") return;
+    gatitos.forEach((mundo) => {
+      const estado = vidas[mundo]?.estado;
+      if (estado === "pedir" || (estado !== "dormir" && bocadilloDe(casa.gatitos[mundo]) && !noche)) sonidoRef.current?.maullar(mundo, "pide");
+      if (estado === "cantar" && estadosRef.current[mundo] !== "cantar") sonidoRef.current?.cantar(mundo);
+      if (estado) estadosRef.current[mundo] = estado;
+    });
+  }, [vidas, fase, gatitos, casa, noche]);
 
   // Reloj de las animaciones de la hoja del gato.
   useEffect(() => {
@@ -269,6 +308,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
     setPelota({ x, y, gatito: indice, id });
     window.setTimeout(() => {
       setPelota((actual) => actual?.id === id ? null : actual);
+      sonidoRef.current?.bote();
       atender(indice, "pelota");
     }, reduceMotion ? 0 : ATRAPAR_MS);
   };
@@ -396,6 +436,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
   const seguir = () => {
     guardar(presentar(casa, llegan));
     setFase("casa");
+    if (estreno) {
+      setBrilla(true);
+      window.setTimeout(() => setBrilla(false), BRILLO_BANDEJA_MS);
+    }
   };
   const salir = () => {
     onGuardar(casaRef.current);
@@ -415,7 +459,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
   const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
   const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
-  return <section ref={seccionRef} className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}${medidas.vertical ? " is-vertical" : ""}`} aria-label={t("casa.titulo.oculto")}>
+  return <section ref={seccionRef} onPointerDownCapture={() => sonidoRef.current?.despertar()} className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}${medidas.vertical ? " is-vertical" : ""}`} aria-label={t("casa.titulo.oculto")}>
     <BotonControl className="casa-salir" pictograma="mapa" etiqueta="casa.salir.oculto" onClick={salir} disabled={fase === "hola"} />
     <div className="casa-marco game-frame" style={estiloMarco}>
       <div className="casa-visor" ref={visorRef} style={{ width: medidas.anchoVisor, height: ESCENA_CASA.alto * medidas.escala }}>
@@ -462,7 +506,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
         {quedaDerecha && <span className="casa-borde is-derecha" aria-hidden="true" />}
         {fuera.map((aviso) => <span key={aviso.mundo} className={`casa-aviso is-${aviso.lado}`} aria-hidden="true"><i className={`casa-objeto is-${aviso.objeto}`} /></span>)}
       </div>
-      {fase === "casa" && <div className="casa-bandeja" aria-label={t("casa.bandeja.oculto")} role="toolbar">
+      {fase === "casa" && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
         {HERRAMIENTAS.map((herramienta) => <button key={herramienta} type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === herramienta ? " is-cogido" : ""}`}
           aria-label={tClave(`casa.objeto.${herramienta}.oculto`)} onPointerDown={cogerObjeto(herramienta)} onClick={(event) => { if (event.detail === 0) usarConTeclado(herramienta); }}>
           <i className={`casa-objeto is-${herramienta}`} />

@@ -131,6 +131,18 @@ Modo de la casa en el que la bandeja enseña los muebles y sus versiones, en lug
 Pieza de la casa que se puede cambiar por otra versión al decorar (cama, alfombra, cuadro, planta y pared).
 _Avoid_: Objeto (son los de la bandeja), adorno
 
+**Armario**:
+Sitio de la casa adonde se lleva a un gatito, cogiéndolo con el dedo, para vestirlo. No es un mueble: no se decora.
+_Avoid_: Ropero, cómoda
+
+**Vestidor**:
+Pantalla en la que Noa viste a un gatito: el gatito grande en el centro y el armario abierto con sus baldas. Lo que se ve al salir es lo que lleva puesto.
+_Avoid_: Probador, tienda
+
+**Accesorio**:
+Prenda que lleva un gatito de la casa: un sombrero, unas gafas o una bufanda, como mucho uno de cada a la vez. Cada gatito conserva los suyos.
+_Avoid_: Ropa (a secas), disfraz, objeto (son los de la bandeja)
+
 **Huella de barro**:
 Mancha que deja en el suelo un gatito con la suciedad en «se nota» o «pide»; se barre con la escoba.
 

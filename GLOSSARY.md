@@ -95,6 +95,13 @@ Lo que hace Noa para atender una necesidad: dar de comer, frotar para los mimos,
 Lo que hace un gatito de la casa por su cuenta: andar por todo el suelo de la habitación, en cualquier dirección y con profundidad, hacia un sitio cualquiera o hacia un sitio de interés (cama, rascador, ventana).
 _Avoid_: Pasear (reservado al «Paseo de los amigos»), patrullar
 
+**Bañera**:
+Sitio de la casa adonde se lleva a un gatito sucio, cogiéndolo con el dedo, para bañarlo.
+
+**Pantalla de baño**:
+Escena en la que un gatito, metido en la bañera, se baña en cinco pasos guiados: mojar, enjabonar, aclarar, secar y peinar.
+_Avoid_: Ducha, baño (a secas es la necesidad)
+
 **Huella de barro**:
 Mancha que deja en el suelo un gatito con la suciedad en «se nota» o «pide»; se barre con la escoba.
 

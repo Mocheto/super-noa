@@ -36,11 +36,11 @@ Vista de un amigo en la pestaña Amigos de la colección, donde Noa puede acaric
 _Avoid_: Tamagochi, ficha, mascota
 
 **Corazón de amistad**:
-Lo que gana un amigo cada vez que Noa lo acaricia o le da de comer en su visita. Nunca se pierde.
+Lo que gana un amigo o un gatito de la casa cuando Noa lo cuida. Nunca se pierde.
 _Avoid_: Nivel de amistad, puntos
 
 **Mejor amigo**:
-Amigo que ha reunido cinco corazones de amistad.
+Amigo o gatito de la casa que ha reunido cinco corazones de amistad.
 
 **Tramo**:
 Cada una de las cuatro partes en que se ordena una pantalla: presentación, desarrollo, giro y remate.
@@ -66,6 +66,29 @@ _Avoid_: Final (reservado a la pantalla final de la campaña), clímax
 **Roca que asoma**:
 Roca del arrecife que sale del agua: no se puede pasar nadando por encima ni subirse a ella con una brazada, y obliga a bucear por debajo.
 _Avoid_: Bloque, muro
+
+## Casa de los gatitos
+
+**Gatito de la casa**:
+Gatito de un mundo, ya rescatado, que vive en la casa y al que Noa cuida.
+_Avoid_: Mascota, tamagotchi
+
+**Necesidad**:
+Cada una de las cuatro cosas que un gatito de la casa va necesitando con el paso del tiempo: comer, mimos, baño y jugar. Se ve en tres estados: bien, se nota y pide.
+_Avoid_: Barra, estadística
+
+**Se nota**:
+Estado de una necesidad a medio camino: el dibujo del gatito da una pista (mira el cuenco, tiene manchas, se arrima, mueve la cola) sin que llore.
+
+**Pide**:
+Estado de una necesidad que ya no puede esperar: el gatito lloriquea con un bocadillo que solo lleva el dibujo de lo que quiere. Se queda así, sin empeorar, hasta que Noa lo atiende.
+_Avoid_: Llora (el gatito nunca está triste de verdad), urgente
+
+**Cuidado**:
+Lo que hace Noa para atender una necesidad: dar de comer, frotar para los mimos, bañar con la esponja o jugar a la pelota.
+
+**Huella de barro**:
+Mancha que deja en el suelo un gatito con la suciedad en «se nota» o «pide»; se barre con la escoba.
 
 ## Sala-rompecabezas
 

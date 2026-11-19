@@ -14,7 +14,7 @@ import { testScreens } from "./game/testScreens";
 /** Solo en desarrollo: `?prueba=salas` abre una pantalla de prueba de los motores de formato y `?prueba=12-2`, una
  * pantalla de la campaña, para revisarlas sin recorrer el mapa. */
 const devTestName = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("prueba") ?? "" : "";
-/** En desarrollo, `?prueba=<pantalla>&duelo` abre directamente el duelo del guardián de esa pantalla, `?prueba=fiesta` la fiesta de los gatitos y `?prueba=casa` la casa de los gatitos. */
+/** En desarrollo, `?prueba=<pantalla>&duelo` abre directamente el duelo del guardián de esa pantalla, `?prueba=fiesta` la fiesta de los gatitos y `?prueba=casa` la casa de los gatitos (con `&paletas`, las paletas de sus gatitos). */
 const devDuel = import.meta.env.DEV && new URLSearchParams(window.location.search).has("duelo");
 const devTestLevel = devTestName ? testScreens[devTestName] ?? [...levels, ...detourLevels, ...restStopLevels].find((level) => level.id === devTestName) : undefined;
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
@@ -51,6 +51,9 @@ const ArmoniaDrumGame = lazy(() => import("./game/ArmoniaDrumGame").then((module
 const MeriendaJabatosGame = lazy(() => import("./game/MeriendaJabatosGame").then((module) => ({ default: module.MeriendaJabatosGame })));
 const BeeNinjaGame = lazy(() => import("./game/BeeNinjaGame").then((module) => ({ default: module.BeeNinjaGame })));
 const CasaGatitos = lazy(() => import("./game/CasaGatitos").then((module) => ({ default: module.CasaGatitos })));
+const PruebaPaletas = lazy(() => import("./game/PruebaPaletas").then((module) => ({ default: module.PruebaPaletas })));
+/** En desarrollo, `?prueba=casa&paletas` enseña los gatitos de la casa con su paleta, en vez de la casa. */
+const devPaletas = import.meta.env.DEV && new URLSearchParams(window.location.search).has("paletas");
 const CatParty = lazy(() => import("./game/CatPartyGame").then((module) => ({ default: module.CatParty })));
 const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module) => ({ default: module.SantaBossBattle })));
 
@@ -859,8 +862,8 @@ export default function App() {
           }} />
       </Suspense>}
       {screen === "casa" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
-        <CasaGatitos casa={progress.casa} levelStats={progress.levelStats} reduceMotion={reduceMotion} muted={muted} effectsVolume={effectsVolume} musicVolume={musicVolume}
-          onGuardar={(casa) => setProgress((current) => ({ ...current, casa }))} onSalir={() => setScreen("map")} />
+        {devPaletas ? <PruebaPaletas /> : <CasaGatitos casa={progress.casa} levelStats={progress.levelStats} reduceMotion={reduceMotion} muted={muted} effectsVolume={effectsVolume} musicVolume={musicVolume}
+          onGuardar={(casa) => setProgress((current) => ({ ...current, casa }))} onSalir={() => setScreen("map")} />}
       </Suspense>}
       {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
         <CatParty paused={paused} muted={muted} musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotion}

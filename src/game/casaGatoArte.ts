@@ -53,6 +53,22 @@ export const PALETAS_GATITOS: Readonly<Record<number, PaletaGatito>> = {
   1: paleta({ pelo: "#F2973A", peloClaro: "#FFC27A", peloOscuro: "#C76A1E", rayas: "#B4561A", barriga: "#FFE6C2", orejas: "#F7A1B5", ojos: "#3B82F6", collar: "#3D8BE0", collarSombra: "#2563A8" }),
   2: paleta({ pelo: "#4A4A5C", peloClaro: "#6B6B80", peloOscuro: "#2E2E3D", rayas: "#4A4A5C", barriga: "#8A8AA0", orejas: "#D99AC8", ojos: "#22C5C5", collar: "#8B5CF6", collarSombra: "#5B3BA8" }),
   3: paleta({ pelo: "#F4F1EC", peloClaro: "#FFFFFF", peloOscuro: "#C9C4BC", rayas: "#8C8C96", barriga: "#FFFFFF", orejas: "#F7A9C0", ojos: "#3FA34D", collar: "#2F7A3B", collarSombra: "#1E5428" }),
+  // Mapa «Más gatitos en la casa»: sacadas del dibujo de cada mundo (`world-cat-N`) y ajustadas para que no se parezcan
+  // entre sí (los naranjas van de dorado a óxido, y cada uno lleva otro collar y otros ojos).
+  4: paleta({ pelo: "#F2B544", peloClaro: "#FFD58A", peloOscuro: "#CC8A22", rayas: "#A8661A", barriga: "#FFF1D6", orejas: "#F7A1B5", ojos: "#7A4E2A", collar: "#8B5A2B", collarSombra: "#5E3C1C" }),
+  5: paleta({ pelo: "#2B2B33", peloClaro: "#4A4A55", peloOscuro: "#17171C", rayas: "#2B2B33", barriga: "#FFFFFF", orejas: "#F7A1B5", ojos: "#3FA34D", collar: "#E2463F", collarSombra: "#A82A25" }),
+  6: paleta({ pelo: "#A8A4B8", peloClaro: "#C8C4D6", peloOscuro: "#7E7A92", rayas: "#94909F", barriga: "#EDEBF3", orejas: "#F2A9C4", ojos: "#7C5CC4", collar: "#8B3A62", collarSombra: "#5E2442" }),
+  7: paleta({ pelo: "#8EC8F0", peloClaro: "#C2E3FA", peloOscuro: "#5C9ED0", rayas: "#7AB6E6", barriga: "#EAF6FF", orejas: "#F7B6CC", ojos: "#2563EB", collar: "#F2C14E", collarSombra: "#C99A2E" }),
+  8: paleta({ pelo: "#F3E6D2", peloClaro: "#FFF6E8", peloOscuro: "#D9C6AA", rayas: "#7FCFC2", barriga: "#FFFFFF", orejas: "#F7A9C0", ojos: "#2BB3A6", collar: "#F28CA0", collarSombra: "#C25E74" }),
+  9: paleta({ pelo: "#EE7A30", peloClaro: "#FFAD6E", peloOscuro: "#BF5418", rayas: "#9E4012", barriga: "#FFE2C0", orejas: "#F7A1B5", ojos: "#2FA38A", collar: "#4CA64C", collarSombra: "#2F7A2F" }),
+  10: paleta({ pelo: "#C9622A", peloClaro: "#E48A50", peloOscuro: "#94431A", rayas: "#6E2E10", barriga: "#FFD9B0", orejas: "#F2A0A8", ojos: "#22C5C5", collar: "#B07A3A", collarSombra: "#7A5226" }),
+  11: paleta({ pelo: "#A0673A", peloClaro: "#C98E5C", peloOscuro: "#6E4224", rayas: "#5A3418", barriga: "#FFFFFF", orejas: "#F7A1B5", ojos: "#4A8A3A", collar: "#F28CB8", collarSombra: "#C25E8A" }),
+  12: paleta({ pelo: "#FBF9FF", peloClaro: "#FFFFFF", peloOscuro: "#D6D2E4", rayas: "#E4E0EE", barriga: "#FFFFFF", orejas: "#F7A9C8", ojos: "#3B82F6", collar: "#A88BE0", collarSombra: "#7A5CB8" }),
+  13: paleta({ pelo: "#D9453A", peloClaro: "#F07A6E", peloOscuro: "#A82A22", rayas: "#8F2019", barriga: "#FFFFFF", orejas: "#F7A1B5", ojos: "#2FA34A", collar: "#3F8F4A", collarSombra: "#2A6634" }),
+  14: paleta({ pelo: "#E9A85A", peloClaro: "#F7CC8C", peloOscuro: "#C2803A", rayas: "#A8692A", barriga: "#FFEFD6", orejas: "#F2A6A6", ojos: "#1E8078", collar: "#2BB3A6", collarSombra: "#1E8078" }),
+  15: paleta({ pelo: "#262630", peloClaro: "#44444F", peloOscuro: "#121218", rayas: "#262630", barriga: "#F2F2F2", orejas: "#E89AB0", ojos: "#E0A030", collar: "#E8B93C", collarSombra: "#B5891E" }),
+  16: paleta({ pelo: "#F6DCC8", peloClaro: "#FFF0E4", peloOscuro: "#DDB8A0", rayas: "#E8C4AE", barriga: "#FFFFFF", orejas: "#F7A1B5", ojos: "#4A6FD8", collar: "#4AA8E0", collarSombra: "#2C7AB0" }),
+  17: paleta({ pelo: "#D4C6F2", peloClaro: "#ECE4FF", peloOscuro: "#A898D6", rayas: "#BFAEE8", barriga: "#F8F4FF", orejas: "#F7A9D4", ojos: "#8B5CF6", collar: "#F2C14E", collarSombra: "#C99A2E" }),
 };
 
 export const LAZO_DORADO: Rgb = hex("#F5C542");

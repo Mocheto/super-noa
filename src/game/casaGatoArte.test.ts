@@ -36,3 +36,15 @@ test("cada gatito de la casa tiene paleta y el cambio de color respeta barro y l
   assert.deepEqual([...recolorear(pixel(CLAVES_GATO.lazo), sucioAmigo)], [...LAZO_DORADO, 255]);
   assert.deepEqual([...recolorear(pixel([255, 255, 255]), limpio)], [255, 255, 255, 255], "la espuma no cambia");
 });
+
+test("los diecisiete gatitos tienen paleta y no hay dos iguales", () => {
+  const firmas = new Set<string>();
+  for (let mundo = 1; mundo <= 17; mundo++) {
+    const paleta = PALETAS_GATITOS[mundo];
+    assert.ok(paleta, `paleta del mundo ${mundo}`);
+    // Se distinguen por el pelo, el collar y los ojos juntos.
+    const firma = [paleta.pelo, paleta.collar, paleta.ojos].map((c) => c.join(",")).join("|");
+    assert.ok(!firmas.has(firma), `mundo ${mundo} repetido`);
+    firmas.add(firma);
+  }
+});

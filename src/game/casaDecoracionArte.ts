@@ -1,4 +1,4 @@
-import { cambiarTonoPared, type Version } from "./casaDecoracion";
+import { cambiarTonoPared, type Version } from "./casaDecoracion.ts";
 
 /**
  * Fondo de la habitación con la pared en el tono de la versión elegida, pintado una vez por tono en un lienzo

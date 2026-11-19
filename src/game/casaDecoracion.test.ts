@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { casaVacia, decoracionDe, normalizeCasa } from "./casa.ts";
-import { cambiarMueble, DECORACION_DE_SIEMPRE, MUEBLES, MUEBLES_CASA, normalizeDecoracion, TONOS_PARED, VERSIONES } from "./casaDecoracion.ts";
+import { cambiarMueble, cambiarTonoPared, DECORACION_DE_SIEMPRE, muebleEn, MUEBLES, MUEBLES_CASA, normalizeDecoracion, PARED_HASTA, TONOS_PARED, VERSIONES } from "./casaDecoracion.ts";
 import { dentroDelSuelo, HABITACION_CASA as H } from "./casaHabitacion.ts";
 import { parseProgress, serializeProgress, emptyProgress } from "./progress.ts";
 
@@ -51,4 +51,29 @@ test("el progreso guarda la decoración en casa.decoracion y sin ella sale la de
   const antiguo = parseProgress(serializeProgress({ ...emptyProgress, casa }));
   assert.equal(antiguo.casa?.decoracion, undefined);
   assert.deepEqual(decoracionDe(antiguo.casa), DECORACION_DE_SIEMPRE);
+});
+
+test("tocar la escena elige el mueble de esa caja, la pared por encima del zócalo o nada en el suelo", () => {
+  assert.equal(muebleEn(350, 380), "cama");
+  assert.equal(muebleEn(730, 460), "alfombra");
+  assert.equal(muebleEn(1000, 120), "cuadro");
+  assert.equal(muebleEn(920, 180), "planta");
+  assert.equal(muebleEn(400, 100), "pared");
+  assert.equal(muebleEn(200, 480), null);
+});
+
+test("la pared cambia el tono de sus rayas y deja igual lo demás", () => {
+  // Tres píxeles de una fila de pared: raya clara, raya oscura y el contorno de algo.
+  const pixeles = new Uint8ClampedArray([0xfb, 0xea, 0xd2, 255, 0xf8, 0xda, 0xbb, 255, 0x2f, 0x1d, 0x33, 255]);
+  const igual = new Uint8ClampedArray(pixeles);
+  cambiarTonoPared(igual, 3, 1, 0);
+  assert.deepEqual(igual, pixeles);
+  cambiarTonoPared(pixeles, 3, 1, 1);
+  assert.deepEqual([...pixeles], [0xe3, 0xf5, 0xe9, 255, 0xcb, 0xeb, 0xd7, 255, 0x2f, 0x1d, 0x33, 255]);
+  // Bajo el zócalo no se toca.
+  const suelo = new Uint8ClampedArray(PARED_HASTA * 4 * 1 + 4).fill(0);
+  const ultima = PARED_HASTA * 4;
+  suelo.set([0xfb, 0xea, 0xd2, 255], ultima);
+  cambiarTonoPared(suelo, 1, PARED_HASTA + 1, 2);
+  assert.deepEqual([...suelo.slice(ultima)], [0xfb, 0xea, 0xd2, 255]);
 });

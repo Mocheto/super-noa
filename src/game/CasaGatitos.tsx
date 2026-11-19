@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, dejarHuella, esDeNoche, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
+import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, decoracionDe, dejarHuella, esDeNoche, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
 import {
   aEscena, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
   MANTENER_PARA_COGER_MS, MOVER_PARA_FROTAR, SITIOS_CASA, type Frote, type Herramienta,
@@ -10,6 +10,8 @@ import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hoj
 import { MUNDOS_CASA, prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreLaBanera } from "./casaHabitacion";
+import { cambiarMueble, muebleEn, MUEBLES_CASA, PARED_HASTA, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
+import { fondoConPared } from "./casaDecoracionArte";
 import { cssAssetUrl } from "./assets";
 import { Ventana } from "./Ventana";
 import { BanoGatito } from "./BanoGatito";
@@ -50,6 +52,9 @@ const HUELLA_CADA_MS = 6000;
 const TIEMPO_CADA_MS = 60_000;
 /** Cuánto se ve la respuesta del gatito a un cuidado. */
 const RESPUESTA_MS = 1400;
+/** Lo que dura el destello al cambiar un mueble, y lo que se queda el gatito oliéndolo. */
+const DESTELLO_MS = 900;
+const OLER_S = 4;
 /** Velocidad con que se desliza sola la vista al llevar un objeto al borde, en px de escena por fotograma. */
 const AUTODESLIZAR_PX = 9;
 /** Un arrastre que empieza fuera de un gatito desliza la habitación a partir de este movimiento, en px de pantalla. */
@@ -106,7 +111,7 @@ function animacionDeRespuesta(respuesta: Respuesta): AnimacionGato {
 
 const ANIMACION_DE_VIDA: Record<EstadoVida, AnimacionGato> = { andar: "andar", sentarse: "sentado", dormir: "dormir", jugarSolo: "jugarSolo", cantar: "cantar", pedir: "pedir" };
 type Pelota = { x: number; y: number; gatito: number; id: number };
-type Desliz = { clienteX: number; vista: number; moviendo: boolean };
+type Desliz = { clienteX: number; vista: number; moviendo: boolean; punto?: { x: number; y: number } };
 type Medidas = { escala: number; anchoVisor: number; vertical: boolean; medido: boolean };
 
 /**
@@ -140,6 +145,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [andantes, setAndantes] = useState<Record<number, Andante>>({});
   const [hojas, setHojas] = useState<Record<string, string>>({});
   const [ahora, setAhora] = useState(() => performance.now());
+  // Decorar: la bandeja cambia a los muebles; `elegido` es el mueble tocado, cuyas versiones salen en la bandeja.
+  const [decorando, setDecorando] = useState(false);
+  const [elegido, setElegido] = useState<MuebleId | null>(null);
+  const [destello, setDestello] = useState<{ mueble: MuebleId; id: number } | null>(null);
+  const [fondo, setFondo] = useState(HABITACION.fondo);
   const seccionRef = useRef<HTMLElement>(null);
   const visorRef = useRef<HTMLDivElement>(null);
   const escenaRef = useRef<HTMLDivElement>(null);
@@ -222,6 +232,35 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setCasa(nueva);
     onGuardar(nueva);
   }, [onGuardar]);
+
+  // La pared, con el tono elegido (pintado por código sobre el fondo).
+  const decoracion = decoracionDe(casa);
+  useEffect(() => {
+    let vivo = true;
+    void fondoConPared(HABITACION.fondo, decoracion.pared).then((url) => { if (vivo) setFondo(url); });
+    return () => { vivo = false; };
+  }, [decoracion.pared]);
+
+  const cambiarDecorar = () => {
+    setDecorando((antes) => !antes);
+    setElegido(null);
+    setArrastre(null);
+  };
+  /** Cambia el mueble elegido a `version` en el momento `momento` (el del toque): destello, campanita y el gatito más cercano va a olerlo. */
+  const ponerVersion = (mueble: MuebleId, version: Version, momento: number) => {
+    if (decoracionDe(casaRef.current)[mueble] === version) return;
+    guardar({ ...casaRef.current, decoracion: cambiarMueble(decoracionDe(casaRef.current), mueble, version) });
+    const id = ++idRef.current;
+    setDestello({ mueble, id });
+    window.setTimeout(() => setDestello((actual) => actual?.id === id ? null : actual), DESTELLO_MS);
+    sonidoRef.current?.golpeBano("campanita");
+    const { oler } = MUEBLES_CASA[mueble];
+    setAndantes((actuales) => {
+      const libres = gatitos.filter((mundo, indice) => actuales[mundo] && cogidoRef.current?.indice !== indice && bano !== mundo);
+      const cerca = libres.sort((a, b) => Math.hypot(actuales[a].x - oler.x, actuales[a].y - oler.y) - Math.hypot(actuales[b].x - oler.x, actuales[b].y - oler.y))[0];
+      return cerca === undefined ? actuales : { ...actuales, [cerca]: ir(actuales[cerca], oler, "sentarse", OLER_S, momento) };
+    });
+  };
 
   const atender = useCallback((indice: number, cuidado: Cuidado) => {
     const mundo = gatitos[indice];
@@ -444,6 +483,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (fase !== "casa" || arrastre || event.button !== 0) return;
     const punto = enEscena(event);
     if (!punto) return;
+    if (decorando) {
+      // Decorando, el dedo no toca a los gatitos: desliza la habitación o, si no se mueve, elige el mueble.
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* sin captura, el toque sigue funcionando */ }
+      deslizRef.current = { clienteX: event.clientX, vista: vistaX, moviendo: false, punto };
+      return;
+    }
     const indice = tocar(punto);
     if (indice >= 0) pararGatito(indice);
     try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* sin captura, el deslizar sigue funcionando dentro de la escena */ }
@@ -497,6 +542,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   };
   const acabarDedo = () => {
     dedoRef.current = false;
+    const tocado = deslizRef.current;
+    if (decorando && tocado?.punto && !tocado.moviendo) setElegido(muebleEn(tocado.punto.x, tocado.punto.y));
     deslizRef.current = null;
     if (pendienteRef.current) { window.clearTimeout(pendienteRef.current.temporizador); pendienteRef.current = null; }
     if (!arrastre) { froteRef.current = null; setFrotando(null); }
@@ -571,7 +618,26 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       <div className="casa-visor" ref={visorRef} style={{ width: medidas.anchoVisor, height: ESCENA_CASA.alto * medidas.escala }}>
         <div className={`casa-escena${noche ? " is-noche" : ""}`} ref={escenaRef} style={estiloEscena}
           onPointerDown={empezarDedo} onPointerMove={moverDedo} onPointerUp={acabarDedo} onPointerCancel={acabarDedo}>
-          <img className="casa-fondo" src={HABITACION.fondo} alt="" draggable={false} />
+          <img className="casa-fondo" src={fondo} alt="" draggable={false} />
+          {/* Muebles cambiados (la versión 0 es la del fondo). Dibujos provisionales hasta su arte. */}
+          {MUEBLES_DECORABLES.filter((mueble) => decoracion[mueble] !== 0).map((mueble) => {
+            const caja = MUEBLES_CASA[mueble].caja!;
+            return <i key={mueble} className={`casa-mueble is-${mueble} is-v${decoracion[mueble]}`} aria-hidden="true"
+              style={{ left: caja.x, top: caja.y, width: caja.ancho, height: caja.alto, "--pared-claro": TONOS_PARED[decoracion.pared][0] } as CSSProperties} />;
+          })}
+          {decorando && <>
+            <button type="button" className={`casa-mueble-zona is-pared${elegido === "pared" ? " is-elegido" : ""}`} style={{ left: 0, top: 0, width: HABITACION.ancho, height: PARED_HASTA }}
+              aria-label={tClave("casa.decorar.mueble.pared.oculto")} onClick={(event) => { if (event.detail === 0) setElegido("pared"); }} />
+            {MUEBLES_DECORABLES.map((mueble) => {
+              const caja = MUEBLES_CASA[mueble].caja!;
+              return <button key={mueble} type="button" className={`casa-mueble-zona${elegido === mueble ? " is-elegido" : ""}`} style={{ left: caja.x, top: caja.y, width: caja.ancho, height: caja.alto }}
+                aria-label={tClave(`casa.decorar.mueble.${mueble}.oculto`)} onClick={(event) => { if (event.detail === 0) setElegido(mueble); }} />;
+            })}
+          </>}
+          {destello && (() => {
+            const caja = MUEBLES_CASA[destello.mueble].caja ?? { x: 0, y: 0, ancho: HABITACION.ancho, alto: PARED_HASTA };
+            return <i key={destello.id} className="casa-destello" aria-hidden="true" style={{ left: caja.x + caja.ancho / 2, top: caja.y + caja.alto / 2 }} />;
+          })()}
           <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} />
           {fase === "entrando" && <div className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
           {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
@@ -617,7 +683,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         {quedaDerecha && <span className="casa-borde is-derecha" aria-hidden="true" />}
         {fuera.map((aviso) => <span key={aviso.mundo} className={`casa-aviso is-${aviso.lado}`} aria-hidden="true"><i className={`casa-objeto is-${aviso.objeto}`} /></span>)}
       </div>
-      {fase === "casa" && bano === null && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
+      {fase === "casa" && bano === null && decorando && <div className="casa-bandeja is-decorar" aria-label={t("casa.decorar.bandeja.oculto")} role="toolbar">
+        <BotonControl className="casa-bandeja-modo" pictograma="gato" etiqueta="casa.decorar.cuidar.oculto" onClick={cambiarDecorar} />
+        {elegido && VERSIONES.map((version) => <button key={version} type="button" className={`casa-bandeja-objeto casa-version${decoracion[elegido] === version ? " is-puesta" : ""}`}
+          aria-label={t("casa.decorar.version.oculto", { mueble: tClave(`casa.decorar.mueble.${elegido}.oculto`), numero: version + 1 })} aria-pressed={decoracion[elegido] === version}
+          onClick={(event) => ponerVersion(elegido, version, event.timeStamp)}>
+          <Muestra mueble={elegido} version={version} fondo={HABITACION.fondo} />
+        </button>)}
+      </div>}
+      {fase === "casa" && bano === null && !decorando && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
+        <BotonControl className="casa-bandeja-modo" pictograma="flor" etiqueta="casa.decorar.boton.oculto" onClick={cambiarDecorar} />
         {HERRAMIENTAS.map((herramienta) => <button key={herramienta} type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === herramienta ? " is-cogido" : ""}`}
           aria-label={tClave(`casa.objeto.${herramienta}.oculto`)} onPointerDown={cogerObjeto(herramienta)} onClick={(event) => { if (event.detail === 0) usarConTeclado(herramienta); }}>
           <i className={`casa-objeto is-${herramienta}`} />
@@ -631,4 +706,22 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       <p className="juntos">{llegan.length === 1 ? t("casa.llegada.uno.juntos", { nombre: nombreDe(llegan[0]) }) : t("casa.llegada.varios.juntos", { nombres: nombresJuntos(llegan) })}</p>
     </Ventana>}
   </section>;
+}
+
+const MUEBLES_DECORABLES = (Object.keys(MUEBLES_CASA) as MuebleId[]).filter((mueble) => MUEBLES_CASA[mueble].caja !== null);
+const LADO_MUESTRA = 48;
+
+/** Muestra de una versión en la bandeja: la de siempre, recortada del fondo; las otras, su dibujo; la pared, sus rayas. */
+function Muestra({ mueble, version, fondo }: { mueble: MuebleId; version: Version; fondo: string }) {
+  const caja = MUEBLES_CASA[mueble].caja;
+  if (!caja) {
+    const [claro, oscuro] = TONOS_PARED[version];
+    return <i className="casa-muestra is-pared" style={{ background: `repeating-linear-gradient(90deg, ${claro} 0 8px, ${oscuro} 8px 16px)` }} />;
+  }
+  const escala = LADO_MUESTRA / Math.max(caja.ancho, caja.alto);
+  const tam = { width: caja.ancho * escala, height: caja.alto * escala };
+  if (version === 0) {
+    return <i className="casa-muestra" style={{ ...tam, backgroundImage: `url("${fondo}")`, backgroundSize: `${HABITACION.ancho * escala}px ${HABITACION.alto * escala}px`, backgroundPosition: `${-caja.x * escala}px ${-caja.y * escala}px` }} />;
+  }
+  return <i className={`casa-muestra casa-mueble is-${mueble} is-v${version}`} style={{ ...tam, position: "relative", "--pared-claro": "transparent" } as CSSProperties} />;
 }

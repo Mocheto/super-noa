@@ -29,6 +29,19 @@ export const casa = {
     pelota: { oculto: "Pelota: suéltala en la habitación para que un gatito la atrape" },
     escoba: { oculto: "Escoba: pásala por las huellas de barro" },
   },
+  decorar: {
+    boton: { oculto: "Decorar la casa" },
+    cuidar: { oculto: "Volver a cuidar a los gatitos" },
+    bandeja: { oculto: "Versiones del mueble que has tocado" },
+    version: { oculto: "{mueble}: opción {numero}" },
+    mueble: {
+      cama: { oculto: "La cama" },
+      alfombra: { oculto: "La alfombra" },
+      cuadro: { oculto: "El cuadro" },
+      planta: { oculto: "La planta" },
+      pared: { oculto: "La pared" },
+    },
+  },
   llegada: {
     titulo: { rotulo: "{pictograma:gato} ¡HOLA!" },
     uno: { juntos: "¡{nombre} ya tiene casa! Dale muchos mimos." },

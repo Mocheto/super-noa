@@ -122,6 +122,37 @@
 .casa-gatitos.is-vertical { align-content: start; }
 .casa-gatitos.is-vertical .casa-bandeja { position: static; flex-direction: row; justify-content: space-around; margin-top: 12px; padding: 10px; transform: none; }
 
+/* Decorar: el botón de la bandeja, los muebles cambiados (dibujos provisionales hasta su arte), las zonas que brillan
+   al decorar y el destello al cambiar uno. */
+.casa-bandeja-modo { width: 44px; height: 44px; }
+.casa-version { cursor: pointer; touch-action: manipulation; }
+.casa-version.is-puesta { box-shadow: 0 0 0 3px #ffd76a; }
+.casa-muestra { display: block; width: 48px; height: 48px; image-rendering: pixelated; background-repeat: no-repeat; }
+.casa-muestra.is-pared { width: 44px; height: 44px; border: 3px solid #2f1d33; border-radius: 8px; box-sizing: border-box; }
+.casa-mueble { position: absolute; z-index: 1; box-sizing: border-box; pointer-events: none; }
+.casa-mueble.is-cama, .casa-mueble.is-alfombra { border: 4px solid #2f1d33; border-radius: 50%; }
+.casa-mueble.is-cama.is-v1 { background: radial-gradient(ellipse 34% 26% at 50% 58%, #a8e6c4 0 96%, #2f1d33 97% 100%, transparent 101%), repeating-linear-gradient(45deg, #e9b96e 0 6px, #d79f52 6px 12px); }
+.casa-mueble.is-cama.is-v2 { background: radial-gradient(ellipse 34% 26% at 50% 58%, #ffe08a 0 96%, #2f1d33 97% 100%, transparent 101%), #c9a8f0; border-radius: 46% 54% 50% 50% / 60% 60% 40% 40%; }
+.casa-mueble.is-alfombra.is-v1 { background: #9fd8f5; box-shadow: inset 0 0 0 10px #9fd8f5, inset 0 0 0 16px #ffffff; }
+.casa-mueble.is-alfombra.is-v2 { background: #f7a08f; box-shadow: inset 0 0 0 10px #f7a08f, inset 0 0 0 16px #ffd75e; }
+.casa-mueble.is-cuadro { border: 6px solid #2f1d33; border-radius: 4px; outline: 6px solid var(--pared-claro); }
+.casa-mueble.is-cuadro.is-v1 { background: radial-gradient(ellipse 30% 18% at 50% 50%, #ffd75e 0 95%, transparent 100%), #bfe6f7; box-shadow: inset 0 0 0 6px #e3b77a; }
+.casa-mueble.is-cuadro.is-v2 { background: radial-gradient(circle at 50% 50%, #e2463f 0 22%, transparent 24%), #fff1d6; box-shadow: inset 0 0 0 6px #f7a1c4; }
+.casa-mueble.is-planta { background: var(--pared-claro); }
+.casa-mueble.is-planta::before { content: ""; position: absolute; left: 25%; bottom: 0; width: 50%; height: 42%; border: 4px solid #2f1d33; border-radius: 4px 4px 10px 10px; box-sizing: border-box; }
+.casa-mueble.is-planta::after { content: ""; position: absolute; left: 30%; bottom: 40%; width: 40%; height: 52%; border: 4px solid #2f1d33; border-radius: 45% 45% 20% 20%; box-sizing: border-box; }
+.casa-mueble.is-planta.is-v1::before { background: #9fd8f5; } .casa-mueble.is-planta.is-v1::after { background: radial-gradient(circle at 50% 12%, #f7a1c4 0 16%, transparent 18%), #6cbf6a; }
+.casa-mueble.is-planta.is-v2::before { background: radial-gradient(circle at 50% 50%, #e2463f 0 16%, transparent 18%), #ffffff; } .casa-mueble.is-planta.is-v2::after { background: radial-gradient(circle at 25% 20%, #ffd75e 0 18%, transparent 20%), radial-gradient(circle at 75% 20%, #ffd75e 0 18%, transparent 20%), radial-gradient(circle at 50% 10%, #ffd75e 0 18%, transparent 20%), #7cc46a; }
+.casa-mueble-zona { position: absolute; z-index: 2; padding: 0; border: 0; border-radius: 18px; background: transparent; outline: 5px dashed #ffd76a; outline-offset: 4px; cursor: pointer; animation: casa-zona 1.2s ease-in-out infinite alternate; }
+.casa-mueble-zona.is-pared { z-index: 0; outline: 0; border-radius: 0; animation: none; }
+.casa-mueble-zona.is-elegido { outline: 6px solid #ffd76a; box-shadow: 0 0 22px 8px #ffd76acc; animation: none; }
+.casa-mueble-zona.is-pared.is-elegido { outline-offset: -10px; box-shadow: inset 0 0 26px 10px #ffd76acc; }
+.casa-mueble-zona:focus-visible { outline-style: solid; outline-color: #fff; }
+@keyframes casa-zona { to { outline-color: #fff3c2; outline-offset: 8px; } }
+.casa-destello { position: absolute; z-index: 1400; width: 160px; height: 160px; transform: translate(-50%, -50%) scale(.2); pointer-events: none; background: radial-gradient(circle, #fff 0 8%, transparent 9%), conic-gradient(from 0deg, transparent 0 20deg, #ffd76a 20deg 25deg, transparent 25deg 65deg, #ffd76a 65deg 70deg, transparent 70deg 110deg, #ffd76a 110deg 115deg, transparent 115deg 155deg, #ffd76a 155deg 160deg, transparent 160deg 200deg, #ffd76a 200deg 205deg, transparent 205deg 245deg, #ffd76a 245deg 250deg, transparent 250deg 290deg, #ffd76a 290deg 295deg, transparent 295deg 335deg, #ffd76a 335deg 340deg, transparent 340deg); border-radius: 50%; animation: casa-destello .9s ease-out forwards; }
+@keyframes casa-destello { 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; } to { transform: translate(-50%, -50%) scale(1.4) rotate(40deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .casa-mueble-zona, .casa-destello { animation: none; } .casa-destello { opacity: 0; } }
+
 /* Gatito cogido: cuelga del dedo y se balancea. */
 .casa-gatito.is-cogido { animation: casa-colgando .6s ease-in-out infinite alternate; filter: drop-shadow(0 18px 6px #2f1d3344); }
 @keyframes casa-colgando { from { transform: translateX(-50%) scale(var(--escala, 1)) rotate(-6deg); } to { transform: translateX(-50%) scale(var(--escala, 1)) rotate(6deg); } }

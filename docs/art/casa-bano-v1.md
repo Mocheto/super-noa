@@ -6,7 +6,7 @@ Dossier del arte de la pantalla de baño. Ticket: [Prompts del arte del baño](h
 
 - **Montado** ([Montar el arte del baño](https://github.com/Mocheto/super-noa/issues/198)): las originales están en `../super-noa-arte-original/casa-bano-v1/` y se recortan con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-bano-recorte.py ../super-noa-arte-original/casa-bano-v1`.
 - El fondo salió 16:9: el recorte quita cinco columnas de azulejos para dejarlo en 4:3 con la balda, la ventana y el espejo.
-- La bañera se exporta en dos capas del mismo tamaño (`casa-banera-atras-v1.webp` y `casa-banera-delante-v1.webp`) para ponerlas una sobre otra con el gatito en medio.
+- La bañera es una sola lámina (la de dos piezas salió con borde doble y se descartó): el recorte la exporta en dos capas del mismo tamaño, entera (`casa-banera-atras-v1.webp`) y de dentro del agua para abajo (`casa-banera-delante-v1.webp`), con el gatito en medio.
 
 ## Qué hace falta
 

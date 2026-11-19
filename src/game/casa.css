@@ -133,12 +133,12 @@
 .casa-bano { position: fixed; inset: 0; z-index: 50; display: grid; grid-template-rows: 1fr auto; place-items: center; gap: 8px; padding: 56px 12px 12px; box-sizing: border-box; background: repeating-linear-gradient(0deg, #cfe9e4 0 38px, #b4d9d3 38px 40px), #cfe9e4; }
 .casa-bano-salir { position: absolute; top: 8px; left: 16px; z-index: 2; }
 .casa-bano-escena { position: relative; width: min(92vw, 640px, calc((100dvh - 190px) * 4 / 3)); aspect-ratio: 4 / 3; container-type: inline-size; touch-action: none; user-select: none; overflow: hidden; border: 4px solid #2f1d33; border-radius: 14px; box-sizing: border-box; background: var(--fondo-bano) center / 100% 100% no-repeat; image-rendering: pixelated; }
-/* La bañera son dos capas del mismo tamaño (640 × 324 sobre 960 × 720): la de atrás con el agua y el borde de delante,
-   que tapa al gatito de medio cuerpo para abajo. */
-.casa-bano-trasera, .casa-bano-borde { position: absolute; left: 16.67%; bottom: 1.4%; width: 66.67%; aspect-ratio: 640 / 324; background: center / 100% 100% no-repeat; pointer-events: none; }
+/* La bañera es una sola, en dos capas del mismo tamaño (640 × 358 sobre 960 × 720): detrás, entera; delante, de dentro
+   del agua para abajo, que tapa al gatito de medio cuerpo para abajo con el único borde delantero. */
+.casa-bano-trasera, .casa-bano-borde { position: absolute; left: 16.67%; bottom: 1.4%; width: 66.67%; aspect-ratio: 640 / 358; background: center / 100% 100% no-repeat; pointer-events: none; }
 .casa-bano-trasera { background-image: var(--banera-atras); }
 .casa-bano-borde { background-image: var(--banera-delante); }
-.casa-bano-gatito { --celda: 40cqw; position: absolute; left: 50%; bottom: 15%; width: var(--celda); height: var(--celda); transform: translateX(-50%); transform-origin: 50% 90%; background-repeat: no-repeat; background-size: calc(var(--celda) * 4) calc(var(--celda) * 13); transition: filter .3s, transform .3s; }
+.casa-bano-gatito { --celda: 40cqw; position: absolute; left: 50%; bottom: 15.5%; width: var(--celda); height: var(--celda); transform: translateX(-50%); transform-origin: 50% 90%; background-repeat: no-repeat; background-size: calc(var(--celda) * 4) calc(var(--celda) * 13); transition: filter .3s, transform .3s; }
 /* Láminas de efectos (4 × 4 celdas): espuma (4 tamaños), agua, aire y brillos (3 cuadros cada uno). */
 .casa-bano-espuma, .casa-bano-efecto { background: var(--efectos-bano) 0 0 / 400% 400% no-repeat; pointer-events: none; }
 /* Espuma en grumos donde se frota con el jabón: de pequeño a grande (el tamaño ya viene en su celda). */

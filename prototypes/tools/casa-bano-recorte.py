@@ -4,8 +4,8 @@ Entrada: una carpeta con las cuatro láminas tal como salen del generador (cualq
   casa-bano-fondo, casa-banera, casa-bano-utensilios y casa-bano-efectos.
 Salida (WebP):
   public/assets/worlds/casa-bano-v1.webp            fondo de 960 × 720 (4:3)
-  public/assets/sprites/casa-banera-atras-v1.webp   bañera de atrás (con el agua) y...
-  public/assets/sprites/casa-banera-delante-v1.webp ...borde de delante, del mismo tamaño para ponerlas una sobre otra
+  public/assets/sprites/casa-banera-atras-v1.webp   la bañera entera y...
+  public/assets/sprites/casa-banera-delante-v1.webp ...su parte de delante (de dentro del agua para abajo), del mismo tamaño
   public/assets/sprites/casa-bano-utensilios-v1.webp cuatro celdas: alcachofa, jabón, secador y peine
   public/assets/sprites/casa-bano-efectos-v1.webp   cuatro filas de cuatro celdas: espuma (4), agua, aire y brillos (3)
 Imprime las medidas que necesita el juego.
@@ -71,28 +71,37 @@ def fondo(folder):
 
 
 def banera(folder):
+    """Una sola bañera entera, cortada en dos capas del mismo tamaño: atrás, la bañera entera; delante, de la línea de
+    corte para abajo. La línea va por dentro del agua (al 60 % de su alto en cada columna), así el gatito que se pone
+    entre las dos capas queda metido en el agua y tapado por el borde delantero, que es uno solo."""
     rgba = key_out(load(folder, "casa-banera"))
-    atras, delante = sorted(poses(rgba, 2, min_area=40000), key=lambda p: p["cuerpo"][1])
-    ia, idl = recorte(rgba, atras), recorte(rgba, delante)
-    # La de delante se sube hasta que su borde quede justo bajo el agua de la de atrás: así el agua se ve por encima
-    # del borde delantero y el gatito queda metido entre las dos.
-    aa = np.array(ia).astype(int)
-    agua = (aa[..., 2] > aa[..., 0] + 40) & (aa[..., 3] > 0)
-    filas_agua = np.nonzero(agua.any(1))[0]
-    fondo_agua = int(filas_agua.max())
-    solape = fondo_agua - round(ia.height * 0.08)
-    ancho = max(ia.width, idl.width)
-    alto = max(ia.height, solape + idl.height)
-    capa_a = Image.new("RGBA", (ancho, alto))
-    capa_d = Image.new("RGBA", (ancho, alto))
-    capa_a.alpha_composite(ia, ((ancho - ia.width) // 2, 0))
-    capa_d.alpha_composite(idl, ((ancho - idl.width) // 2, solape))
-    factor = 640 / ancho
-    capa_a, capa_d = escalar(capa_a, factor), escalar(capa_d, factor)
+    (pieza,) = poses(rgba, 1, min_area=40000)
+    img = recortar_a_lo_visible(recorte(rgba, pieza))
+    a = np.array(img).astype(int)
+    agua = (a[..., 2] > a[..., 0] + 40) & (a[..., 3] > 0)
+    columnas = np.nonzero(agua.sum(0) > 4)[0]
+    corte = np.full(img.width, 0, int)
+    for x in columnas:
+        ys = np.nonzero(agua[:, x])[0]
+        corte[x] = int(ys.min() + 0.6 * (ys.max() - ys.min()))
+    # Fuera del agua (los lados del borde) la línea sigue la del agua más cercana: ahí nunca hay gatito detrás.
+    for x in range(img.width):
+        if x < columnas.min():
+            corte[x] = corte[columnas.min()]
+        elif x > columnas.max():
+            corte[x] = corte[columnas.max()]
+    filas = np.arange(img.height)[:, None]
+    delante = a.copy()
+    delante[..., 3] = np.where(filas >= corte[None, :], a[..., 3], 0)
+    factor = 640 / img.width
+    capa_a = escalar(img, factor)
+    capa_d = escalar(Image.fromarray(delante.astype(np.uint8), "RGBA"), factor)
     capa_a.save(SPRITES / "casa-banera-atras-v1.webp", "WEBP", quality=QUALITY, method=6)
     capa_d.save(SPRITES / "casa-banera-delante-v1.webp", "WEBP", quality=QUALITY, method=6)
-    return {"ancho": capa_a.width, "alto": capa_a.height, "aguaArriba": round(int(filas_agua.min()) * factor),
-            "aguaAbajo": round(fondo_agua * factor), "bordeDelante": round(solape * factor)}
+    centro = img.width // 2
+    ys = np.nonzero(agua[:, centro])[0]
+    return {"ancho": capa_a.width, "alto": capa_a.height, "aguaArriba": round(int(ys.min()) * factor),
+            "aguaAbajo": round(int(ys.max()) * factor), "corteCentro": round(int(corte[centro]) * factor)}
 
 
 def utensilios(folder):

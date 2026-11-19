@@ -11,12 +11,20 @@ export const coleccion = {
     jefes: { rotulo: "{pictograma:reto} JEFES" },
     amigos: { rotulo: "{pictograma:amigos} AMIGOS" },
     postales: { rotulo: "{pictograma:postal} POSTALES" },
+    fotos: { rotulo: "{pictograma:marco} FOTOS" },
   },
   pestana: {
     pegatinas: { rotulo: "{pictograma:pegatina} PEGATINAS" },
     jefes: { rotulo: "{pictograma:reto} JEFES" },
     amigos: { rotulo: "{pictograma:amigos} AMIGOS" },
     postales: { rotulo: "{pictograma:postal} POSTALES" },
+    fotos: { rotulo: "{pictograma:marco} FOTOS" },
+  },
+  fotos: {
+    intro: { juntos: "Las fotos que has hecho en la casa de los gatitos. Toca una para verla grande." },
+    vacio: { juntos: "Aún no hay fotos. En la casa de los gatitos, toca el marco para hacer una." },
+    foto: { oculto: "Foto {numero} de la casa de los gatitos" },
+    volver: { oculto: "Volver a las fotos" },
   },
   seguir: { rotulo: "{pictograma:jugar} SEGUIR" },
   pegatinas: {

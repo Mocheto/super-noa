@@ -34,6 +34,8 @@ import { restStopFor, restStopIndex, restStopLevels, restStopUnlocked } from "./
 import { greetFriend, visitRestStop } from "./game/restStopProgress";
 import { addHeart } from "./game/friendProgress";
 import { FriendsTab } from "./game/FriendsTab";
+import { FotosCasa } from "./game/FotosCasa";
+import { fotosDe } from "./game/casaFoto";
 import { funciones } from "./game/funciones";
 import { casaAbierta, llegadasPorVer } from "./game/casaRescate";
 import { recordFlight } from "./game/avioneta";
@@ -63,7 +65,7 @@ const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
 type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition" | "cat-party" | "avioneta" | "casa";
 const isTimedScreen = (screen: Screen) => screen === "game" || screen === "boss" || screen === "secret-transition" || screen === "cat-party" || screen === "avioneta";
 
-type CollectionTab = "stickers" | "bosses" | "memories" | "friends";
+type CollectionTab = "stickers" | "bosses" | "memories" | "friends" | "photos";
 type TouchControlsMode = "auto" | "always";
 
 const emptySnapshot: GameSnapshot = { apples: 0, stickers: [], power: "normal", checkpoint: 0, paused: false };
@@ -1075,14 +1077,15 @@ export default function App() {
       {showAlbum && (
         <Dialog labelledBy="album-title" className="game-modal album-modal ventana-coleccion" onClose={() => setShowAlbum(false)}>
           <BotonControl className="ventana-cerrar" pictograma="cerrar" etiqueta="coleccion.cerrar.oculto" data-gamepad-back onClick={() => setShowAlbum(false)} />
-          <h2 id="album-title" className="ventana-cinta texto-noa titulo pictograma-doble"><Texto clave={collectionTab === "stickers" ? "coleccion.titulo.pegatinas.rotulo" : collectionTab === "bosses" ? "coleccion.titulo.jefes.rotulo" : collectionTab === "friends" ? "coleccion.titulo.amigos.rotulo" : "coleccion.titulo.postales.rotulo"} /></h2>
+          <h2 id="album-title" className="ventana-cinta texto-noa titulo pictograma-doble"><Texto clave={collectionTab === "stickers" ? "coleccion.titulo.pegatinas.rotulo" : collectionTab === "bosses" ? "coleccion.titulo.jefes.rotulo" : collectionTab === "friends" ? "coleccion.titulo.amigos.rotulo" : collectionTab === "photos" ? "coleccion.titulo.fotos.rotulo" : "coleccion.titulo.postales.rotulo"} /></h2>
           <div className="collection-tabs" aria-label={t("coleccion.grupo.oculto")}>
             <button className={`pestana texto-noa ${collectionTab === "stickers" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "stickers"} aria-label={sinPictogramas(t("coleccion.pestana.pegatinas.rotulo"))} onClick={() => setCollectionTab("stickers")}><PalabraConDibujo clave="coleccion.pestana.pegatinas.rotulo" /></button>
             <button className={`pestana texto-noa ${collectionTab === "bosses" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "bosses"} aria-label={sinPictogramas(t("coleccion.pestana.jefes.rotulo"))} onClick={() => setCollectionTab("bosses")}><PalabraConDibujo clave="coleccion.pestana.jefes.rotulo" /></button>
             {funciones.amigos && <button className={`pestana texto-noa ${collectionTab === "friends" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "friends"} aria-label={sinPictogramas(t("coleccion.pestana.amigos.rotulo"))} onClick={() => setCollectionTab("friends")}><PalabraConDibujo clave="coleccion.pestana.amigos.rotulo" /></button>}
             <button className={`pestana texto-noa ${collectionTab === "memories" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "memories"} aria-label={sinPictogramas(t("coleccion.pestana.postales.rotulo"))} onClick={() => setCollectionTab("memories")}><PalabraConDibujo clave="coleccion.pestana.postales.rotulo" /></button>
+            {funciones.casa && progress.casa && <button className={`pestana texto-noa ${collectionTab === "photos" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "photos"} aria-label={sinPictogramas(t("coleccion.pestana.fotos.rotulo"))} onClick={() => setCollectionTab("photos")}><PalabraConDibujo clave="coleccion.pestana.fotos.rotulo" /></button>}
           </div>
-          {funciones.amigos && collectionTab === "friends" ? <FriendsTab progress={progress} onHeart={(kind) => setProgress((current) => addHeart(current, kind))} /> : collectionTab === "stickers" ? <>
+          {collectionTab === "photos" ? <FotosCasa fotos={fotosDe(progress.casa)} /> : funciones.amigos && collectionTab === "friends" ? <FriendsTab progress={progress} onHeart={(kind) => setProgress((current) => addHeart(current, kind))} /> : collectionTab === "stickers" ? <>
             <p className="juntos">{t(progress.secretUnlocked ? "coleccion.pegatinas.introConSecreto.juntos" : "coleccion.pegatinas.introSinSecreto.juntos")}</p>
             <div className="sticker-grid">
               {albumStickers.map((sticker) => {

@@ -896,3 +896,14 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }
+
+/* Pestaña FOTOS del álbum: las fotos de la casa en rejilla, y una en grande. */
+.fotos-casa-rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 12px 0; }
+.fotos-casa-foto { padding: 6px 6px 18px; border: 3px solid #553264; border-radius: 6px; background: #fff; cursor: pointer; box-shadow: 0 4px 0 #55326444; }
+.fotos-casa-foto:nth-child(odd) { transform: rotate(-1.5deg); }
+.fotos-casa-foto:nth-child(even) { transform: rotate(1.5deg); }
+.fotos-casa-foto:focus-visible { outline: 4px solid #ffd76a; }
+.fotos-casa-lienzo { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.fotos-casa-grande { position: relative; margin: 12px 0; padding: 8px 8px 24px; border: 3px solid #553264; border-radius: 6px; background: #fff; }
+.fotos-casa-volver { position: absolute; top: -18px; left: -12px; z-index: 1; }
+.fotos-casa-vacio { margin: 24px 0; }

@@ -566,3 +566,8 @@
 @keyframes gota-cae { from { transform: translate(-50%, 0); opacity: 1; } to { transform: translate(-50%, 70px); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .gota-cae { animation: gota-quieta .6s steps(1) forwards; } }
 @keyframes gota-quieta { from { transform: translate(-50%, 30px); opacity: 1; } to { transform: translate(-50%, 30px); opacity: 0; } }
+/* En el móvil vertical caben las cuatro pestañas en una fila (con FOTOS de la casa). */
+@media (max-width: 480px) {
+  .ventana-coleccion .collection-tabs { gap: 3px; }
+  .ventana-coleccion .pestana { width: 70px; padding: 0 2px; }
+}

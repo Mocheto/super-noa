@@ -7,6 +7,8 @@
  * corazón de amistad (dos al día como mucho); cuidar lo que no hace falta nunca es un error, solo «ahora no».
  */
 
+import { DECORACION_DE_SIEMPRE, esDeSiempre, normalizeDecoracion, type Decoracion } from "./casaDecoracion.ts";
+
 export type NecesidadId = "comer" | "mimos" | "bano" | "jugar";
 export type EstadoNecesidad = "bien" | "seNota" | "pide";
 export type Cuidado = "comer" | "frotar" | "esponja" | "pelota";
@@ -45,6 +47,8 @@ export type CasaProgress = {
   calculadoEn: string;
   /** Gatitos cuya llegada a la casa ya se ha visto. */
   presentados: number[];
+  /** Versión elegida de cada mueble; si falta, la decoración de siempre (`decoracionDe`). */
+  decoracion?: Decoracion;
 };
 
 const HORA_MS = 3_600_000;
@@ -243,5 +247,9 @@ export function normalizeCasa(raw: unknown): CasaProgress | undefined {
     .slice(0, MAX_HUELLAS)
     .map((huella) => ({ x: Math.max(0, Math.min(ANCHO_CASA, Math.round(Number(huella.x)))), mundo: Number(huella.mundo) }));
   const presentados = [...new Set((Array.isArray(raw.presentados) ? raw.presentados : []).map(Number).filter((mundo) => Boolean(gatitos[mundo])))].sort((a, b) => a - b);
-  return { gatitos, huellas, calculadoEn: fecha, presentados };
+  const decoracion = raw.decoracion === undefined ? undefined : normalizeDecoracion(raw.decoracion);
+  return { gatitos, huellas, calculadoEn: fecha, presentados, ...(decoracion && !esDeSiempre(decoracion) ? { decoracion } : {}) };
 }
+
+/** La decoración de la casa: la guardada o, si no hay, la de siempre. */
+export const decoracionDe = (casa: CasaProgress | undefined): Decoracion => casa?.decoracion ?? DECORACION_DE_SIEMPRE;

@@ -12,6 +12,7 @@ import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, 
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreLaBanera } from "./casaHabitacion";
 import { cssAssetUrl } from "./assets";
 import { Ventana } from "./Ventana";
+import { BanoGatito } from "./BanoGatito";
 import { worldCatalog } from "./worldMapData";
 import { t, tClave } from "../textos/index.ts";
 import { Boton, BotonControl } from "../textos/Texto";
@@ -544,6 +545,15 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
   const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
+  // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
+  const varianteBano = bano !== null ? variantes[gatitos.indexOf(bano)] : undefined;
+  const hojaBano = varianteBano && hojas[`${varianteBano.mundo}-${varianteBano.sucio}-${varianteBano.mejorAmigo}`];
+  const terminarBano = () => {
+    const indice = bano === null ? -1 : gatitos.indexOf(bano);
+    setBano(null);
+    if (indice >= 0) atender(indice, "esponja");
+  };
+
   return <section ref={seccionRef} onPointerDownCapture={() => { sonidoRef.current?.despertar(); nanaRef.current?.empezar(); }} className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}${medidas.vertical ? " is-vertical" : ""}`} aria-label={t("casa.titulo.oculto")}>
     <BotonControl className="casa-salir" pictograma="mapa" etiqueta="casa.salir.oculto" onClick={salir} disabled={fase === "hola"} />
     <div className="casa-marco game-frame" style={estiloMarco}>
@@ -603,19 +613,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         </button>)}
       </div>}
     </div>
-    {bano !== null && (() => {
-      // Pantalla de baño (provisional): el gatito en la bañera; los cinco pasos llegan con «Pantalla de baño con los cinco pasos».
-      const variante = variantes[gatitos.indexOf(bano)];
-      const hoja = variante && hojas[`${variante.mundo}-${variante.sucio}-${variante.mejorAmigo}`];
-      const { fila } = ANIMACIONES_GATO.bano;
-      return <div className="casa-bano" role="dialog" aria-label={t("casa.bano.titulo.oculto", { nombre: nombreDe(bano) })}>
-        <BotonControl className="casa-bano-salir" pictograma="vuelve" etiqueta="casa.bano.salir.oculto" onClick={() => setBano(null)} />
-        <div className="casa-bano-escena">
-          <span className="casa-bano-gatito" style={{ backgroundImage: hoja ? `url("${hoja}")` : undefined, backgroundPosition: `0 calc(var(--celda) * ${-fila})` }} />
-          <span className="casa-bano-borde" />
-        </div>
-      </div>;
-    })()}
+    {bano !== null && <BanoGatito nombre={nombreDe(bano)} hoja={hojaBano} reduceMotion={reduceMotion} onSalir={() => setBano(null)} onTerminar={terminarBano} />}
     {fase === "hola" && <Ventana id="casa-llegada" titulo="casa.llegada.titulo.rotulo" celebracion onClose={seguir}
       botones={<Boton tipo="seguir" clave="casa.llegada.sigue.rotulo" data-gamepad-default onClick={seguir} />}>
       <div className="ventana-dibujo casa-llegada-dibujo">{llegan.map((mundo) => <img key={mundo} src={worldCatalog.find((world) => world.id === mundo)?.catAsset} alt="" />)}</div>

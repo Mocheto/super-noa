@@ -11,6 +11,18 @@ export const casa = {
   bano: {
     titulo: { oculto: "Baño de {nombre}" },
     salir: { oculto: "Volver a la habitación" },
+    bandeja: { oculto: "Cosas para bañar al gatito" },
+    utensilio: {
+      alcachofa: { oculto: "Alcachofa de la ducha: moja y aclara al gatito" },
+      jabon: { oculto: "Jabón: frota para hacer espuma" },
+      secador: { oculto: "Secador: seca al gatito" },
+      peine: { oculto: "Peine: péinalo de arriba abajo" },
+    },
+    fin: {
+      titulo: { rotulo: "{pictograma:estrella} ¡LIMPIO!" },
+      frase: { juntos: "¡{nombre} está limpio y brillante!" },
+      sigue: { rotulo: "{pictograma:jugar} SIGUE" },
+    },
   },
   objeto: {
     cuenco: { oculto: "Cuenco de comida: arrástralo hasta un gatito" },

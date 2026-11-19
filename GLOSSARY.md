@@ -102,6 +102,13 @@ Sitio de la casa adonde se lleva a un gatito sucio, cogiéndolo con el dedo, par
 Escena en la que un gatito, metido en la bañera, se baña en cinco pasos guiados: mojar, enjabonar, aclarar, secar y peinar.
 _Avoid_: Ducha, baño (a secas es la necesidad)
 
+**Decorar**:
+Modo de la casa en el que la bandeja enseña los muebles y sus versiones, en lugar de los cuidados.
+
+**Mueble**:
+Pieza de la casa que se puede cambiar por otra versión al decorar (cama, alfombra, cuadro, planta y pared).
+_Avoid_: Objeto (son los de la bandeja), adorno
+
 **Huella de barro**:
 Mancha que deja en el suelo un gatito con la suciedad en «se nota» o «pide»; se barre con la escoba.
 

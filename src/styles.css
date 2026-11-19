@@ -640,6 +640,13 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 .round-history .history-boss b { color: #a02e42; }
 .duel-arena { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: clamp(8px, 3vw, 32px); min-height: 350px; margin: 14px 0 8px; }
 .duel-fighter { display: grid; justify-items: center; align-content: end; min-width: 0; transition: transform .18s ease; }
+/* Bocadillo del guardián: el dibujo del gesto que va a sacar, encima de su cabeza. */
+.duel-fighter { position: relative; }
+.boss-bocadillo { position: absolute; top: -8px; left: min(calc(50% + 28px), calc(100% - 70px)); z-index: 3; display: grid; place-items: center; width: 64px; height: 56px; border: 3px solid #2f1d33; border-radius: 50%; background: #fff8e9; box-shadow: 0 3px 0 #2f1d3355; animation: bocadillo-aparece .3s ease-out; }
+.boss-bocadillo::after { content: ""; position: absolute; bottom: -12px; left: 14px; width: 12px; height: 12px; border: 3px solid #2f1d33; border-radius: 50%; background: #fff8e9; }
+.boss-bocadillo .rps-icon { width: 40px; height: 40px; vertical-align: 0; }
+@keyframes bocadillo-aparece { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .boss-bocadillo { animation: none; } }
 .duel-fighter > strong { max-width: 100%; margin: 5px 0 8px; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .duel-fighter.round-winner { animation: duel-winner .5s steps(2, end) 2; }
 .duel-fighter.round-loser { animation: duel-loser .42s steps(3, end) 2; filter: saturate(.65); }

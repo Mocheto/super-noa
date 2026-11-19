@@ -328,6 +328,12 @@ _Avoid_: Espera, retardo
 Jabato pequeño que, con un «¡gru-gru!», pide dos bellotas en pulsos seguidos; solo aparece en la última fase de la merienda.
 _Avoid_: Doble, jabato doble
 
+## Piedra, papel o tijera
+
+**Bocadillo del guardián**:
+Dibujo del gesto que el guardián va a sacar en piedra, papel o tijera, antes de que Noa elija; siempre dice la verdad.
+_Avoid_: Pista, farol
+
 ## Avioneta
 
 **Avioneta**:

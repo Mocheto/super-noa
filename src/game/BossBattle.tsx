@@ -11,9 +11,10 @@ import { conTextos, t, tClave } from "../textos/index.ts";
 import { Boton, Texto } from "../textos/Texto";
 import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
 import { Ventana } from "./Ventana";
+import { ganadorRonda, gestoPensado, type GanadorRonda, type Gesto } from "./piedraPapelTijera";
 
-type Choice = "rock" | "paper" | "scissors";
-type RoundWinner = "noa" | "boss" | "tie";
+type Choice = Gesto;
+type RoundWinner = GanadorRonda;
 type BattleStatus = "choosing" | "countdown" | "revealed" | "won" | "lost";
 
 type BattleState = {
@@ -22,8 +23,18 @@ type BattleState = {
   noaChoice?: Choice;
   bossChoice?: Choice;
   roundWinner?: RoundWinner;
+  /** Gesto que el guardián enseña en su bocadillo y que sacará en esta ronda. */
+  pensado: Choice;
   status: BattleStatus;
 };
+
+const azar = () => {
+  const valor = new Uint32Array(1);
+  window.crypto.getRandomValues(valor);
+  return valor[0];
+};
+/** Empieza el duelo: sin gestos de Noa todavía, el guardián piensa uno al azar. */
+const nuevoDuelo = (): BattleState => ({ noaScore: 0, bossScore: 0, pensado: gestoPensado(undefined, azar()), status: "choosing" });
 
 type RoundRecord = { noaChoice: Choice; bossChoice: Choice; winner: RoundWinner };
 
@@ -51,16 +62,6 @@ const choiceById = Object.fromEntries(choices.map((choice) => [choice.id, choice
 
 function RpsIcon({ choice, small = false }: { choice: Choice; small?: boolean }) {
   return <span className={`rps-icon rps-${choice} ${small ? "is-small" : ""}`} style={{ backgroundImage: 'url("./assets/sprites/rps-icons-v1.png")' }} aria-hidden="true" />;
-}
-
-function getWinner(noa: Choice, boss: Choice): RoundWinner {
-  if (noa === boss) return "tie";
-  if (
-    (noa === "rock" && boss === "scissors") ||
-    (noa === "paper" && boss === "rock") ||
-    (noa === "scissors" && boss === "paper")
-  ) return "noa";
-  return "boss";
 }
 
 function getRuleText(noa: Choice, boss: Choice) {
@@ -98,7 +99,7 @@ function NoaDuelSprite({ frame, protectedByApple }: { frame: number | null; prot
 
 export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendApple, onRestartLevel, onAbandon, onWin, playSound, friendlyReplay = false }: BossBattleProps) {
   const boss = bossCatalog[bossId];
-  const [battle, setBattle] = useState<BattleState>({ noaScore: 0, bossScore: 0, status: "choosing" });
+  const [battle, setBattle] = useState<BattleState>(nuevoDuelo);
   const [countdown, setCountdown] = useState(3);
   const [history, setHistory] = useState<RoundRecord[]>([]);
   const [usedApple, setUsedApple] = useState(false);
@@ -131,24 +132,23 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
 
   const choose = (noaChoice: Choice) => {
     if (battle.status !== "choosing") return;
-    const randomValue = new Uint32Array(1);
-    window.crypto.getRandomValues(randomValue);
-    const bossChoice = choices[randomValue[0] % choices.length].id;
+    // El guardián saca lo que enseñaba su bocadillo: nunca hace trampa.
+    const bossChoice = battle.pensado;
     setCountdown(3);
-    setBattle((current) => ({ ...current, noaChoice, bossChoice, roundWinner: getWinner(noaChoice, bossChoice), status: "countdown" }));
+    setBattle((current) => ({ ...current, noaChoice, bossChoice, roundWinner: ganadorRonda(noaChoice, bossChoice), status: "countdown" }));
   };
 
-  const nextRound = () => setBattle((current) => ({ noaScore: current.noaScore, bossScore: current.bossScore, status: "choosing" }));
+  const nextRound = () => setBattle((current) => ({ noaScore: current.noaScore, bossScore: current.bossScore, pensado: gestoPensado(current.noaChoice, azar()), status: "choosing" }));
   const retryWithApple = () => {
     if (apples <= 0) return;
     onSpendApple();
     setUsedApple(true);
     setHistory([]);
-    setBattle({ noaScore: 0, bossScore: 0, status: "choosing" });
+    setBattle(nuevoDuelo());
   };
   const retryFriendly = () => {
     setHistory([]);
-    setBattle({ noaScore: 0, bossScore: 0, status: "choosing" });
+    setBattle(nuevoDuelo());
   };
   const abandonBattle = () => {
     if (friendlyReplay) onAbandon();
@@ -258,6 +258,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
           </div>
           <div className="duel-versus" aria-hidden="true"><Texto clave="duelos.vs.rotulo" /></div>
           <div className={`duel-fighter ${visibleWinner === "boss" ? "round-winner" : visibleWinner === "noa" ? "round-loser" : ""}`}>
+            {battle.status === "choosing" && empezado && <span className="boss-bocadillo" role="img" aria-label={t("duelos.bocadillo.oculto", { nombre: boss.name, gesto: choiceById[battle.pensado].label })}><RpsIcon choice={battle.pensado} /></span>}
             <BossSprite assetPrefix={boss.assetPrefix} assetAtlas={boss.assetAtlas} frame={bossFrame} name={boss.name} />
             <strong>{boss.name}</strong>
             <div className={`gesture-card ${battle.status === "countdown" ? "is-hidden" : ""}`}>
@@ -296,7 +297,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
       </Dialog>
       {!empezado && !paused && <PantallaPrevia id="boss-previa" nombre={friendlyReplay ? "duelos.titulo.amistoso.rotulo" : "duelos.titulo.final.rotulo"} nombreVariables={{ nombre: boss.name }}
         guardian={<BossSprite assetPrefix={boss.assetPrefix} assetAtlas={boss.assetAtlas} frame={0} name={boss.name} />}
-        regla={`${boss.intro} ${t("duelos.regla.elige.juntos")} ${boss.challenge.label}`}
+        regla={`${boss.intro} ${t("duelos.regla.elige.juntos")} ${t("duelos.regla.bocadillo.juntos")} ${boss.challenge.label}`}
         ayudaAdultos={[t("duelos.regla.mando")]} practicaPrimero={false} onJugar={() => setEmpezado(true)} onSalir={onAbandon} />}
 
       {battle.status === "won" && !paused && <ResultadoMinijuego id="boss-resultado" titulo="duelos.mensaje.gana.rotulo" tituloVariables={{ nombre: boss.name }} gano onSalir={() => { playSound("goal"); onWin(wonChallenge); }}

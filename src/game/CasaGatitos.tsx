@@ -313,10 +313,14 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setLamparaApagada(apagada);
     comprobarBuenasNoches(casaRef.current, apagada);
   };
+  /**
+   * Salir de la hora de dormir. Si por el reloj sigue siendo de noche, la lámpara se queda como estaba (apagada tras
+   * «¡BUENAS NOCHES!») y la ventana no vuelve a salir esta vez; de día, la lámpara vuelve a estar encendida.
+   */
   const terminarDeDormir = () => {
     setAcostando(false);
-    setLamparaApagada(false);
-    setBuenasNoches("no");
+    if (!nocheReloj) setLamparaApagada(false);
+    setBuenasNoches((actual) => actual === "no" ? "no" : "vista");
   };
   /** Soltar la mantita sobre un gatito: queda arropado esta noche y, si toca, gana su corazón. */
   const taparGatito = (indice: number) => {
@@ -519,6 +523,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       guardar(avanzar(casaRef.current, new Date()));
       setNocheReloj(esDeNoche(relojCasa(ajustes)));
       setHoraDeDormir(puedeDormir(relojCasa(ajustes)));
+      // Por la mañana la lámpara vuelve a estar encendida para la noche siguiente.
+      if (!puedeDormir(relojCasa(ajustes))) setLamparaApagada(false);
       setFechaCasa(relojCasa(ajustes));
     }, TIEMPO_CADA_MS);
     return () => { window.clearInterval(huellas); window.clearInterval(reloj); };

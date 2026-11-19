@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { avanzar, barrer, bocadilloDe, cuidar, dejarHuella, esDeNoche, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type NecesidadId, type RespuestaCuidado } from "./casa";
+import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, dejarHuella, elegirVida, esDeNoche, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
 import {
   aEscena, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, gatitoEn, gatitoMasCerca, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
-  SITIOS_CASA, SITIOS_NOCHE, type Frote, type Herramienta,
+  ALFOMBRA, SITIOS_CASA, SITIOS_NOCHE, type Frote, type Herramienta,
 } from "./casaInteraccion";
+import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, type AnimacionGato } from "./casaGatoArte";
 import { MUNDOS_CASA, prepararCasa } from "./casaRescate";
 import { cssAssetUrl } from "./assets";
 import { Ventana } from "./Ventana";
@@ -21,7 +22,11 @@ type Props = {
   onSalir: () => void;
 };
 
-const PUERTA_X = 120;
+const PUERTA_X = 140;
+/** Ventana de la habitación dibujada (`casa-habitacion-v1.webp`), donde se pone la ventana de noche. */
+const VENTANA = { left: 619, top: 39, width: 239, height: 234 } as const;
+/** Cada cuánto se redibujan las animaciones de los gatitos. */
+const PASO_ANIMACION_MS = 100;
 /** Duración de la llegada: la puerta se abre y los gatitos entran hasta su sitio. */
 const LLEGADA_MS = 2000;
 /** Lo que tarda el gatito en atrapar la pelota tras soltarla. */
@@ -70,7 +75,20 @@ function conNecesidadesDePrueba(casa: CasaProgress): CasaProgress {
 }
 
 type Arrastre = { herramienta: Herramienta; x: number; y: number };
-type Respuesta = { gatito: number; tipo: RespuestaCuidado; corazon: boolean; id: number };
+type Respuesta = { gatito: number; tipo: RespuestaCuidado; cuidado: Cuidado; corazon: boolean; id: number; desde: number };
+/** Lo que hace cada gatito por su cuenta: qué estado, desde cuándo y cuánto se ha movido sobre la alfombra. */
+type Vida = { estado: EstadoVida; desde: number; hasta: number; dx: number; mira: 1 | -1 };
+
+/** Animación de la hoja para la respuesta a un cuidado. */
+function animacionDeRespuesta(respuesta: Respuesta): AnimacionGato {
+  if (respuesta.tipo === "ahoraNo") return respuesta.cuidado === "esponja" ? "sacudirse" : "ahoraNo";
+  if (respuesta.cuidado === "comer") return "comer";
+  if (respuesta.cuidado === "esponja") return "bano";
+  if (respuesta.cuidado === "pelota") return "pelota";
+  return "ronronear";
+}
+
+const ANIMACION_DE_VIDA: Record<EstadoVida, AnimacionGato> = { andar: "andar", sentarse: "sentado", dormir: "dormir", jugarSolo: "jugarSolo", cantar: "cantar", pedir: "pedir" };
 type Pelota = { x: number; y: number; gatito: number; id: number };
 type Desliz = { clienteX: number; vista: number; moviendo: boolean };
 type Medidas = { escala: number; anchoVisor: number; vertical: boolean; medido: boolean };
@@ -92,6 +110,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
   const [frotando, setFrotando] = useState<number | null>(null);
   const [medidas, setMedidas] = useState<Medidas>({ escala: 0.75, anchoVisor: 600, vertical: false, medido: false });
   const [vista, setVista] = useState<number | null>(null);
+  const [vidas, setVidas] = useState<Record<number, Vida>>({});
+  const [hojas, setHojas] = useState<Record<string, string>>({});
+  const [ahora, setAhora] = useState(() => performance.now());
   const seccionRef = useRef<HTMLElement>(null);
   const visorRef = useRef<HTMLDivElement>(null);
   const escenaRef = useRef<HTMLDivElement>(null);
@@ -106,8 +127,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
   const presentes = MUNDOS_CASA.filter((mundo) => casa.gatitos[mundo]).join(",");
   const gatitos = useMemo(() => presentes ? presentes.split(",").map(Number) : [], [presentes]);
   // De día, sobre la alfombra; de noche, juntos en la cama (salvo mientras llegan por la puerta).
-  const sitios = useMemo(() => gatitos.map((mundo) => (noche && fase === "casa" ? SITIOS_NOCHE : SITIOS_CASA)[MUNDOS_CASA.indexOf(mundo)] ?? SITIOS_CASA[0]),
-    [gatitos, noche, fase]);
+  const sitios = useMemo(() => gatitos.map((mundo) => {
+    if (noche && fase === "casa") return SITIOS_NOCHE[MUNDOS_CASA.indexOf(mundo)] ?? SITIOS_NOCHE[0];
+    return (SITIOS_CASA[MUNDOS_CASA.indexOf(mundo)] ?? SITIOS_CASA[0]) + (vidas[mundo]?.dx ?? 0);
+  }), [gatitos, noche, fase, vidas]);
   const anchoVisible = medidas.anchoVisor / medidas.escala;
   const vistaX = limitarVista(vista ?? 0, anchoVisible);
 
@@ -149,9 +172,61 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
     const resultado = cuidar(casaRef.current, mundo, cuidado, new Date());
     guardar(resultado.casa);
     const id = ++idRef.current;
-    setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice), { gatito: indice, tipo: resultado.respuesta, corazon: resultado.corazon, id }]);
+    setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice), { gatito: indice, tipo: resultado.respuesta, cuidado, corazon: resultado.corazon, id, desde: performance.now() }]);
     window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
   }, [gatitos, guardar]);
+
+  // Reloj de las animaciones de la hoja del gato.
+  useEffect(() => {
+    if (reduceMotion) return;
+    const reloj = window.setInterval(() => setAhora(performance.now()), PASO_ANIMACION_MS);
+    return () => window.clearInterval(reloj);
+  }, [reduceMotion]);
+
+  // Hoja pintada de cada gatito, con su barro y su lazo de mejor amigo.
+  const variantes = gatitos.map((mundo) => {
+    const gatito = casa.gatitos[mundo];
+    return { mundo, sucio: estadoDe(gatito.necesidades.bano) !== "bien", mejorAmigo: esMejorAmigo(gatito) };
+  });
+  const claveVariantes = variantes.map((v) => `${v.mundo}-${v.sucio}-${v.mejorAmigo}`).join(",");
+  useEffect(() => {
+    let vivo = true;
+    for (const clave of claveVariantes.split(",").filter(Boolean)) {
+      const [mundo, sucio, mejorAmigo] = clave.split("-");
+      void hojaDeGatito(Number(mundo), { sucio: sucio === "true", mejorAmigo: mejorAmigo === "true" })
+        .then((url) => { if (vivo) setHojas((actuales) => actuales[clave] === url ? actuales : { ...actuales, [clave]: url }); });
+    }
+    return () => { vivo = false; };
+  }, [claveVariantes]);
+
+  // Vida propia: cada 4–10 s cada gatito elige qué hacer; al andar se mueve un poco por la alfombra.
+  useEffect(() => {
+    if (fase !== "casa") return;
+    const elegir = () => {
+      const momento = performance.now();
+      const actual = casaRef.current;
+      const alguienPide = gatitos.some((mundo) => bocadilloDe(actual.gatitos[mundo]));
+      setVidas((previas) => {
+        let cambio = false;
+        const siguientes = { ...previas };
+        gatitos.forEach((mundo, indice) => {
+          const previa = previas[mundo];
+          if (previa && momento < previa.hasta) return;
+          const eleccion = elegirVida(actual.gatitos[mundo], { noche, casaLimpia: casaLimpia(actual), alguienPide }, Math.random);
+          const base = SITIOS_CASA[MUNDOS_CASA.indexOf(mundo)] ?? SITIOS_CASA[indice];
+          let dx = previa?.dx ?? 0;
+          if (eleccion.estado === "andar") dx = Math.max(ALFOMBRA.desde, Math.min(ALFOMBRA.hasta, base + (Math.random() - 0.5) * 180)) - base;
+          const mira: 1 | -1 = dx > (previa?.dx ?? 0) ? 1 : dx < (previa?.dx ?? 0) ? -1 : previa?.mira ?? 1;
+          siguientes[mundo] = { estado: eleccion.estado, desde: momento, hasta: momento + eleccion.segundos * 1000, dx, mira };
+          cambio = true;
+        });
+        return cambio ? siguientes : previas;
+      });
+    };
+    elegir();
+    const temporizador = window.setInterval(elegir, 1000);
+    return () => window.clearInterval(temporizador);
+  }, [fase, gatitos, noche]);
 
   useEffect(() => {
     if (fase !== "entrando") return;
@@ -337,7 +412,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
   const quedaIzquierda = vistaX > 1;
   const quedaDerecha = vistaX < ESCENA_CASA.ancho - anchoVisible - 1;
 
-  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
+  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
   const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   return <section ref={seccionRef} className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}${medidas.vertical ? " is-vertical" : ""}`} aria-label={t("casa.titulo.oculto")}>
@@ -346,32 +421,36 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, onGuarda
       <div className="casa-visor" ref={visorRef} style={{ width: medidas.anchoVisor, height: ESCENA_CASA.alto * medidas.escala }}>
         <div className={`casa-escena${noche ? " is-noche" : ""}`} ref={escenaRef} style={estiloEscena}
           onPointerDown={empezarDedo} onPointerMove={moverDedo} onPointerUp={acabarDedo} onPointerCancel={acabarDedo}>
-          <div className="casa-pared" />
-          <div className="casa-ventana" />
-          <div className="casa-cuadro" />
-          <div className="casa-estanteria" />
-          <div className="casa-rascador" />
-          <div className="casa-banera" />
-          <div className="casa-lampara" />
-          <div className="casa-suelo" style={{ top: porcentajeY(ESCENA_CASA.suelo) }} />
-          <div className="casa-alfombra" />
-          <div className="casa-cama" />
-          <div className={`casa-puerta${fase === "entrando" ? " is-abierta" : ""}`} style={{ left: porcentajeX(PUERTA_X - 70) }} />
-          {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className="casa-huella" style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
+          <img className="casa-fondo" src="./assets/worlds/casa-habitacion-v1.webp" alt="" draggable={false} />
+          <img className="casa-ventana-noche" src="./assets/sprites/casa-ventana-noche-v1.webp" alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} />
+          {fase === "entrando" && <div className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
+          {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
           {gatitos.map((mundo, indice) => {
             const llegando = llegan.includes(mundo) && fase === "entrando";
             const gatito = casa.gatitos[mundo];
             const pide = fase === "casa" ? bocadilloDe(gatito) : null;
             const respuesta = respuestas.find((r) => r.gatito === indice);
-            const sucio = estadoDe(gatito.necesidades.bano) !== "bien";
             const dormido = noche && fase === "casa" && !respuesta && frotando !== indice;
-            const gato = worldCatalog.find((world) => world.id === mundo);
-            return <div key={mundo} className={`casa-gatito${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${frotando === indice ? " is-frotado" : ""}${dormido ? " is-dormido" : ""}`}
+            const vida = vidas[mundo];
+            const animacion: AnimacionGato = llegando ? "andar" : respuesta ? animacionDeRespuesta(respuesta)
+              : frotando === indice ? (arrastre?.herramienta === "esponja" ? "bano" : "ronronear")
+                : dormido ? "dormir" : pide ? "pedir" : vida ? ANIMACION_DE_VIDA[vida.estado] : "sentado";
+            const desde = respuesta?.desde ?? vida?.desde ?? 0;
+            const { fila } = ANIMACIONES_GATO[animacion];
+            const cuadro = reduceMotion ? 0 : cuadroDe(animacion, (ahora - desde) / 1000);
+            const variante = variantes[indice];
+            const hoja = hojas[`${variante.mundo}-${variante.sucio}-${variante.mejorAmigo}`];
+            const mira = vida?.mira ?? 1;
+            return <div key={mundo} role="img" aria-label={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })}
+              className={`casa-gatito${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${dormido ? " is-dormido" : ""}`}
               style={{ "--desde": porcentajeX(PUERTA_X), left: porcentajeX(sitios[indice]) } as CSSProperties}>
-              <img src={gato?.catAsset} alt={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })} draggable={false} />
-              {sucio && <span className="casa-barro" aria-hidden="true" />}
+              <span className="casa-gatito-dibujo" style={{
+                backgroundImage: hoja ? `url("${hoja}")` : undefined,
+                backgroundSize: `${COLUMNAS_GATO * CUADRO_GATO}px ${FILAS_GATO * CUADRO_GATO}px`,
+                backgroundPosition: `${-cuadro * CUADRO_GATO}px ${-fila * CUADRO_GATO}px`,
+                transform: mira < 0 && animacion === "andar" ? "scaleX(-1)" : undefined,
+              }} />
               {pide && !respuesta && !dormido && <span className="casa-bocadillo" aria-hidden="true"><i className={`casa-objeto is-${OBJETO_DE[pide]}`} /></span>}
-              {dormido && <span className="casa-zzz" aria-hidden="true" />}
               {respuesta?.corazon && <span className="casa-corazon" aria-hidden="true" />}
             </div>;
           })}

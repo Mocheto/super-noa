@@ -3,7 +3,7 @@ import { mechanicSpriteSheets, type MechanicSprite } from "./mechanicSprites.ts"
 
 export type RasterAssets = {
   worldBackground: HTMLImageElement;
-  waterBackground: HTMLImageElement; waterTerrain: HTMLImageElement; seaWall: HTMLImageElement;
+  waterBackground: HTMLImageElement; waterTerrain: HTMLImageElement; seaWall: HTMLImageElement; seaRock: HTMLImageElement;
   waterEnemies: HTMLImageElement; swim: HTMLImageElement; waterCat: HTMLImageElement;
   enemies: HTMLImageElement; castleEnemies: HTMLImageElement; boar: HTMLImageElement;
   dinosaurEnemies: HTMLImageElement; dinosaurTerrain: HTMLImageElement;
@@ -109,6 +109,7 @@ export function getLevelAssets(level: Level): RasterAssets {
     get waterBackground() { return when(world === 8, "./assets/worlds/world-8.webp"); },
     get waterTerrain() { return when(world === 8, "./assets/atlases/water-terrain-v1.png"); },
     get seaWall() { return when(world === 8, "./assets/sprites/sea-reef-wall-v2.png"); },
+    get seaRock() { return when(world === 8 && level.platforms.some((platform) => platform.asoma), "./assets/sprites/roca-asoma-v1.webp"); },
     get waterEnemies() { return when(world === 8, "./assets/atlases/water-enemies-v1.png"); },
     get swim() { return when(world === 8, "./assets/sprites/noa-swim-v1.png"); },
     get waterCat() { return when(world === 8, "./assets/sprites/world-cat-8-v1.png"); },

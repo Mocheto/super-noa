@@ -30,41 +30,23 @@
 
 .casa-escena > * { position: absolute; }
 
-.casa-pared { inset: 0; background: repeating-linear-gradient(90deg, #f7e6c8 0 48px, #f2dcb8 48px 96px); }
-
-.casa-ventana { top: 70px; left: 660px; width: 240px; height: 190px; border: 8px solid #8a5a3b; border-radius: 10px; background: linear-gradient(#a9dcf5, #d9f1fb); box-shadow: inset 0 0 0 5px #fff8e9; }
-.casa-escena.is-noche .casa-ventana { background: radial-gradient(circle at 70% 30%, #fff3b0 0 12px, transparent 13px), radial-gradient(circle at 30% 60%, #fff 0 2px, transparent 3px), radial-gradient(circle at 50% 20%, #fff 0 2px, transparent 3px), linear-gradient(#1d2a6b, #3b4a9a); }
-
-.casa-cuadro { top: 140px; left: 935px; width: 60px; height: 60px; border: 6px solid #8a5a3b; background: radial-gradient(circle at 50% 60%, #c98e5a 0 12px, transparent 13px), #fff8e9; }
-.casa-estanteria { top: 330px; left: 915px; width: 100px; height: 140px; border: 5px solid #5c3a26; border-radius: 6px 6px 0 0; background: linear-gradient(#a8693a 0 46%, #5c3a26 46% 50%, #a8693a 50%); }
-.casa-estanteria::before { content: ""; position: absolute; left: 30px; top: -46px; width: 40px; height: 46px; border-radius: 50% 50% 8px 8px; background: radial-gradient(circle at 50% 30%, #5aa85a 0 18px, transparent 19px), linear-gradient(transparent 60%, #d9774a 60%); }
-.casa-rascador { top: 330px; left: 520px; width: 34px; height: 140px; border: 4px solid #5c3a26; background: repeating-linear-gradient(#e9cf9a 0 8px, #d4b37a 8px 16px); }
-.casa-rascador::before { content: ""; position: absolute; left: -24px; top: -16px; width: 74px; height: 18px; border: 4px solid #5c3a26; border-radius: 6px; background: #a8693a; }
-.casa-banera { top: 380px; left: 1035px; width: 160px; height: 90px; border: 5px solid #2f1d33; border-radius: 10px 10px 50% 50% / 10px 10px 60% 60%; background: linear-gradient(#bfe9ff 0 18%, #fff 18%); }
-.casa-lampara { top: 200px; left: 1215px; width: 40px; height: 270px; background: linear-gradient(90deg, transparent 16px, #5c3a26 16px 24px, transparent 24px); }
-.casa-lampara::before { content: ""; position: absolute; left: -22px; top: 0; width: 84px; height: 54px; border: 5px solid #2f1d33; border-radius: 40% 40% 8px 8px; background: #ffd27a; }
-
-.casa-suelo { right: 0; bottom: 0; left: 0; background: repeating-linear-gradient(90deg, #c98e5a 0 64px, #bd8250 64px 128px); border-top: 6px solid #8a5a3b; }
-.casa-alfombra { top: 486px; left: 360px; width: 580px; height: 44px; border-radius: 50%; background: radial-gradient(ellipse, #f4a6b8 0 55%, #e58aa0 56% 70%, #f4a6b8 71%); box-shadow: 0 0 0 4px #2f1d3333; }
-.casa-cama { top: 418px; left: 165px; width: 240px; height: 72px; border: 5px solid #5c3a26; border-radius: 50% 50% 40% 40% / 60% 60% 40% 40%; background: radial-gradient(ellipse at 50% 70%, #f7b6c8 0 48%, #c98e5a 50%); }
-
-.casa-puerta { top: 184px; width: 140px; height: 290px; border: 6px solid #5c3a26; border-bottom: 0; border-radius: 70px 70px 0 0; background: linear-gradient(90deg, #a8693a, #8f5630); transform-origin: left center; transition: transform .5s ease-out, filter .5s; }
-.casa-puerta.is-abierta { transform: perspective(600px) rotateY(-62deg); filter: brightness(1.15); box-shadow: -30px 0 40px #fff1a8aa; }
+/* Habitación dibujada (casa-habitacion-v1.webp) y la ventana de noche encima de la de día. */
+.casa-fondo { inset: 0; width: 1280px; height: 540px; image-rendering: pixelated; pointer-events: none; }
+.casa-ventana-noche { opacity: 0; transition: opacity 1s; image-rendering: pixelated; pointer-events: none; }
+.casa-escena.is-noche .casa-ventana-noche { opacity: 1; }
+/* Durante la llegada, luz por la puerta. */
+.casa-luz-puerta { top: 120px; width: 220px; height: 280px; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(ellipse, #fff1a8aa, transparent 70%); pointer-events: none; animation: casa-luz-puerta 2s ease-out forwards; }
+@keyframes casa-luz-puerta { from { opacity: 0; } 30% { opacity: 1; } to { opacity: 0; } }
 
 /* Noche (21–8 h): tono azul, lámpara encendida y ventana con luna. */
-.casa-luz-noche { inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at 1235px 230px, #ffe7a066 0 120px, transparent 260px), #1e2a6e59; }
+.casa-luz-noche { inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at 1215px 175px, #ffe7a077 0 110px, transparent 260px), #1e2a6e59; }
 .casa-escena.is-noche .casa-luz-noche { opacity: 1; }
 
-.casa-gatito { bottom: 40px; width: 140px; height: 140px; transform: translateX(-50%); transform-origin: 50% 100%; z-index: 1; transition: left .8s ease-in-out; }
-.casa-gatito img { display: block; height: 100%; margin: 0 auto; image-rendering: pixelated; filter: drop-shadow(0 4px 2px #2f1d3355); pointer-events: none; }
-.casa-gatito.is-dormido { bottom: 52px; transform: translateX(-50%) scale(.72); }
-.casa-gatito.is-dormido img { filter: drop-shadow(0 4px 2px #2f1d3355) brightness(.92); }
-.casa-zzz { position: absolute; right: 6%; top: 0; width: 40px; height: 40px; background: linear-gradient(135deg, transparent 40%, #fff8e9 40% 52%, transparent 52%), linear-gradient(#fff8e9 0 0) top / 70% 5px no-repeat, linear-gradient(#fff8e9 0 0) bottom / 70% 5px no-repeat; opacity: .9; animation: casa-zzz 2s ease-in-out infinite; }
-@keyframes casa-zzz { 50% { transform: translateY(-10px); opacity: .5; } }
-
-/* Barro provisional: manchas encima del dibujo hasta que el gato base las lleve en su paleta. */
-.casa-barro { position: absolute; left: 30%; bottom: 8%; width: 40%; height: 30%; pointer-events: none;
-  background: radial-gradient(circle at 25% 60%, #8b5a2bcc 0 14%, transparent 15%), radial-gradient(circle at 70% 30%, #8b5a2bcc 0 11%, transparent 12%), radial-gradient(circle at 55% 85%, #8b5a2bcc 0 9%, transparent 10%); }
+/* Gatito: cuadro de 160 × 160 de la hoja pintada con su paleta; los pies (fila 152) sobre la alfombra (y = 470). */
+.casa-gatito { bottom: 62px; width: 160px; height: 160px; transform: translateX(-50%); transform-origin: 50% 95%; z-index: 1; transition: left 1.6s ease-in-out; }
+.casa-gatito-dibujo { position: absolute; inset: 0; background-repeat: no-repeat; image-rendering: pixelated; filter: drop-shadow(0 4px 2px #2f1d3355); pointer-events: none; }
+/* De noche, dormidos en la cama redonda (fondo de la cama en y = 425). */
+.casa-gatito.is-dormido { bottom: 107px; }
 
 /* Bocadillo de «pide»: solo el dibujo de lo que quiere. */
 .casa-bocadillo { position: absolute; left: 62%; top: -34%; display: grid; place-items: center; width: 72px; height: 64px; border: 4px solid #2f1d33; border-radius: 50%; background: #fff8e9; animation: casa-bocadillo 1s ease-in-out infinite alternate; }
@@ -74,28 +56,27 @@
 /* Respuestas a los cuidados. */
 .casa-gatito.is-gracias { animation: casa-salto .5s ease-out 2; }
 .casa-gatito.is-sigueJugando, .casa-gatito.is-juegaIgual { animation: casa-salto .35s ease-out 1; }
-.casa-gatito.is-ronronea, .casa-gatito.is-frotado { animation: casa-ronroneo .18s linear infinite alternate; }
-.casa-gatito.is-ahoraNo { animation: casa-ahora-no .3s ease-in-out 3; }
+/* El ronroneo, el baño y el «ahora no» ya los anima la hoja del gato. */
 @keyframes casa-salto { 50% { transform: translateX(-50%) translateY(-18%); } }
-@keyframes casa-ronroneo { from { transform: translateX(-50%) rotate(-2deg); } to { transform: translateX(-50%) rotate(2deg) scaleY(.97); } }
-@keyframes casa-ahora-no { 25% { transform: translateX(-50%) skewX(-6deg); } 75% { transform: translateX(-50%) skewX(6deg); } }
 
 .casa-corazon { position: absolute; left: 40%; top: -10%; width: 28px; height: 28px; background: var(--corazon) center / contain no-repeat; animation: casa-corazon 1.2s ease-out forwards; }
 @keyframes casa-corazon { from { transform: translateY(0) scale(.6); opacity: 1; } to { transform: translateY(-120%) scale(1.2); opacity: 0; } }
 
-.casa-huella { width: 44px; height: 36px; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(circle at 50% 70%, #6b4423 0 34%, transparent 36%), radial-gradient(circle at 18% 25%, #6b4423 0 14%, transparent 16%), radial-gradient(circle at 50% 12%, #6b4423 0 14%, transparent 16%), radial-gradient(circle at 82% 25%, #6b4423 0 14%, transparent 16%); }
+.casa-escena .casa-objeto.casa-huella { width: 46px; transform: translate(-50%, -50%); opacity: .9; pointer-events: none; }
 
 /* Objetos, dibujados por ahora con CSS. Dentro de la escena miden --objeto-escena (px de escena); en la bandeja,
    --objeto (px de pantalla). Su tamaño se ajusta con ?casaObjeto=. */
 .casa-objeto { position: relative; display: block; width: var(--objeto, 64px); aspect-ratio: 1; }
 .casa-escena .casa-objeto { width: var(--objeto-escena, 96px); }
 .casa-escena .casa-bocadillo .casa-objeto { width: 52px; }
-.casa-objeto.is-cuenco::before { content: ""; position: absolute; inset: 40% 6% 12%; border: 3px solid #2f1d33; border-radius: 6px 6px 50% 50% / 6px 6px 100% 100%; background: #4f9be0; }
-.casa-objeto.is-cuenco::after { content: ""; position: absolute; inset: 28% 18% 54%; border-radius: 50% 50% 10% 10%; background: #b5703a; box-shadow: 0 0 0 3px #2f1d33; }
-.casa-objeto.is-pelota::before { content: ""; position: absolute; inset: 14%; border: 3px solid #2f1d33; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff9aa8 0 18%, #e4505f 20%); }
-.casa-objeto.is-esponja::before { content: ""; position: absolute; inset: 26% 10%; border: 3px solid #2f1d33; border-radius: 22%; background: radial-gradient(circle at 30% 40%, #e0c23a 0 6%, transparent 7%), radial-gradient(circle at 65% 60%, #e0c23a 0 6%, transparent 7%), #ffe066; }
-.casa-objeto.is-escoba::before { content: ""; position: absolute; left: 46%; top: 4%; width: 10%; height: 58%; border: 3px solid #2f1d33; border-radius: 4px; background: #a8693a; }
-.casa-objeto.is-escoba::after { content: ""; position: absolute; left: 20%; top: 58%; width: 60%; height: 36%; border: 3px solid #2f1d33; border-radius: 4px 4px 30% 30%; background: repeating-linear-gradient(90deg, #f2c35b 0 4px, #d9a43a 4px 8px); }
+/* Dibujos de casa-objetos-v1.webp: siete celdas en fila. */
+.casa-objeto.is-cuenco, .casa-objeto.is-cuenco-vacio, .casa-objeto.is-pelota, .casa-objeto.is-esponja, .casa-objeto.is-escoba, .casa-objeto.is-huella, .casa-objeto.is-huella-2 { background: var(--objetos) no-repeat 0 0 / 700% 100%; image-rendering: pixelated; }
+.casa-objeto.is-cuenco-vacio { background-position-x: calc(100% / 6); }
+.casa-objeto.is-pelota { background-position-x: calc(200% / 6); }
+.casa-objeto.is-esponja { background-position-x: calc(300% / 6); }
+.casa-objeto.is-escoba { background-position-x: calc(400% / 6); }
+.casa-objeto.is-huella { background-position-x: calc(500% / 6); }
+.casa-objeto.is-huella-2 { background-position-x: 100%; }
 .casa-objeto.is-mano::before { content: ""; position: absolute; inset: 20%; border: 3px solid #2f1d33; border-radius: 40% 40% 45% 45%; background: #ffd9c2; }
 
 .casa-arrastrado, .casa-pelota-lanzada { z-index: 4; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 6px 4px #2f1d3366); }
@@ -130,12 +111,12 @@
 .casa-llegada-dibujo { display: flex; justify-content: center; gap: 12px; }
 .casa-llegada-dibujo img { height: 96px; image-rendering: pixelated; }
 
-.casa-gatitos.is-quieta .casa-puerta, .casa-gatitos.is-quieta .casa-gatito { transition: none; }
+.casa-gatitos.is-quieta .casa-gatito { transition: none; }
 .casa-gatitos.is-quieta .casa-gatito.is-llegando { animation: none; }
 
 @media (prefers-reduced-motion: reduce) {
-  .casa-puerta, .casa-gatito, .casa-luz-noche { transition: none; }
-  .casa-gatito.is-llegando, .casa-zzz, .casa-borde::after { animation: none; }
+  .casa-gatito, .casa-luz-noche, .casa-ventana-noche { transition: none; }
+  .casa-gatito.is-llegando, .casa-borde::after, .casa-luz-puerta { animation: none; }
 }
 
 /* Móvil vertical: la vista arriba y la bandeja debajo, dentro del marco. */

@@ -27,7 +27,7 @@ test("la habitación cabe a lo alto y en el móvil vertical no baja de 0,75: ent
 test("soltar o frotar cuenta sobre el gatito más cercano dentro del radio", () => {
   assert.equal(gatitoEn(SITIOS_CASA[1] + 30, 400, SITIOS_CASA), 1);
   assert.equal(gatitoEn(SITIOS_CASA[1], 100, SITIOS_CASA), -1, "en la pared, lejos del gatito");
-  assert.equal(gatitoEn((SITIOS_CASA[0] + SITIOS_CASA[1]) / 2, 400, SITIOS_CASA), -1, "entre dos gatitos, fuera del radio");
+  assert.equal(gatitoEn(SITIOS_CASA[0] - 150, 400, SITIOS_CASA), -1, "lejos de cualquier gatito");
   assert.equal(gatitoMasCerca(SITIOS_CASA[2] - 20, SITIOS_CASA), 2);
 });
 

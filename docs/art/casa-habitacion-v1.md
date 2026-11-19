@@ -4,7 +4,7 @@ Dossier del fondo de la casa y de los objetos de la bandeja. Ticket: [La habitac
 
 ## Estado
 
-- **Pendiente:** generar las tres láminas y pasármelas tal cual salgan.
+- **Hecho (19-11-2026):** recortadas con `prototypes/tools/casa-recorte.py`. La habitación salió en 16:9 y se recorta por arriba y por la banda oscura de abajo hasta 1280 × 540; la ventana de noche se coloca en x = 619, y = 39 (239 × 234).
 
 ## Qué hace falta
 

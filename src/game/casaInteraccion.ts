@@ -10,9 +10,11 @@ import type { Cuidado } from "./casa.ts";
 /** La habitación mide 1280 × 540 y se desliza con el dedo («La habitación de la casa»). */
 export const ESCENA_CASA = { ancho: 1280, alto: 540, suelo: 470 } as const;
 /** Sitio de cada gatito sobre la alfombra, por su orden en `MUNDOS_CASA`. */
-export const SITIOS_CASA = [440, 640, 840] as const;
+export const SITIOS_CASA = [600, 735, 870] as const;
 /** De noche duermen juntos en la cama redonda. */
-export const SITIOS_NOCHE = [215, 285, 355] as const;
+export const SITIOS_NOCHE = [310, 365, 420] as const;
+/** Por dónde pueden andar solos sobre la alfombra. */
+export const ALFOMBRA = { desde: 560, hasta: 910 } as const;
 /** Al llevar un objeto a menos de esta distancia del borde de la vista, la habitación se desliza sola. */
 export const BORDE_AUTODESLIZAR = 40;
 /** Alto de un gatito sentado en la escena. */

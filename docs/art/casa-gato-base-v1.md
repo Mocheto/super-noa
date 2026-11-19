@@ -5,7 +5,7 @@ Dossier del gato base de la casa: un solo gato con todas las animaciones, que el
 ## Estado
 
 - Todos los prompts pendientes, completos y en orden, están también en [prompts-pendientes.md](prompts-pendientes.md).
-- **Pendiente:** generar la lámina de referencia y las cinco láminas de animación, y pasármelas tal cual salgan.
+- **Hecho (19-11-2026):** las seis láminas están generadas y recortadas con `prototypes/tools/casa-recorte.py` en `sprites/gato-casa-v1.webp` (sin pérdida). Cambios: «jugar solo» se queda en 3 cuadros (el de espaldas salió casi negro), del baño y del «ahora no» se usan 2 de los 3 que dio el generador, y las rayas de suelo se borran al recortar.
 
 ## Cómo funciona
 

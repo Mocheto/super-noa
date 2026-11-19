@@ -5,7 +5,7 @@ Arte de la **roca que asoma** de las pantallas acuáticas A-1, A-2 y A-3. Ticket
 ## Estado
 
 - **Provisional (19-11-2026):** el juego dibuja la roca con el arrecife `sprites/sea-reef-wall-v2.png` estirado hacia arriba, con sus algas fuera del agua.
-- **Pendiente:** generar la lámina de abajo y pasármela tal cual salga.
+- **Hecho (19-11-2026):** recortada con `prototypes/tools/casa-recorte.py` en `sprites/roca-asoma-v1.webp` (180 de ancho: cima de 135 con la espuma a 86 y cuerpo de 127). La cima es más alta que lo pedido: se dibuja con la espuma en la línea del agua y asoma más que la colisión.
 
 ## Qué hace falta
 

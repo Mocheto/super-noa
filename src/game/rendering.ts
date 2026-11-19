@@ -1082,6 +1082,10 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
   }
   if (platform.kind === "sea-ground" || platform.kind === "sea-ledge" || platform.kind === "sea-wall") {
     if (platform.kind === "sea-wall") {
+      if (platform.asoma && raster.seaRock.complete && raster.seaRock.naturalWidth) {
+        drawSeaRock(context, raster.seaRock, x, platform);
+        return;
+      }
       if (raster.seaWall.complete && raster.seaWall.naturalWidth) {
         context.drawImage(raster.seaWall, x, platform.y, platform.width, platform.height);
       } else {
@@ -2331,4 +2335,28 @@ export function drawBossGate(context: CanvasRenderingContext2D, worldX: number, 
   }
   drawTinySparkle(context, x + 60, 344, "#fff0a1");
   context.textAlign = "start";
+}
+
+
+/**
+ * Roca que asoma (`roca-asoma-v1.webp`, de `prototypes/tools/casa-recorte.py`): la cima, con la línea de espuma
+ * sobre la superficie del agua, y debajo el cuerpo repetido hasta el fondo de la roca. La cima puede asomar más que
+ * la colisión, que sigue siendo `platform.y`: el dibujo es más alto, pero nadie llega a subirse.
+ */
+const ROCA_ASOMA = { ancho: 180, altoCima: 135, espuma: 86, altoCuerpo: 127 } as const;
+/** La línea del agua queda 30 px por debajo de la cima de colisión de la roca (`rocaQueAsoma` en `levels.ts`). */
+const ROCA_ASOMA_AGUA = 30;
+
+function drawSeaRock(context: CanvasRenderingContext2D, image: HTMLImageElement, x: number, platform: { y: number; width: number; height: number }) {
+  const escala = platform.width / ROCA_ASOMA.ancho;
+  const fuente = image.naturalWidth / ROCA_ASOMA.ancho;
+  const altoCima = ROCA_ASOMA.altoCima * escala;
+  const cimaY = platform.y + ROCA_ASOMA_AGUA - ROCA_ASOMA.espuma * escala;
+  const fondo = platform.y + platform.height;
+  const altoCuerpo = ROCA_ASOMA.altoCuerpo * escala;
+  for (let y = cimaY + altoCima; y < fondo; y += altoCuerpo) {
+    const tramo = Math.min(altoCuerpo, fondo - y);
+    context.drawImage(image, 0, ROCA_ASOMA.altoCima * fuente, image.naturalWidth, (tramo / escala) * fuente, x, y, platform.width, tramo);
+  }
+  context.drawImage(image, 0, 0, image.naturalWidth, ROCA_ASOMA.altoCima * fuente, x, cimaY, platform.width, altoCima);
 }

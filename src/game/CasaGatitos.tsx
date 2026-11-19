@@ -7,6 +7,7 @@ import {
 import { crearSonidoCasa, type SonidoCasa } from "./casaSonido";
 import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, type AnimacionGato } from "./casaGatoArte";
 import { MUNDOS_CASA, prepararCasa } from "./casaRescate";
+import { HABITACION_CASA } from "./casaHabitacion";
 import { cssAssetUrl } from "./assets";
 import { Ventana } from "./Ventana";
 import { worldCatalog } from "./worldMapData";
@@ -26,9 +27,10 @@ type Props = {
   onSalir: () => void;
 };
 
-const PUERTA_X = 140;
-/** Ventana de la habitación dibujada (`casa-habitacion-v1.webp`), donde se pone la ventana de noche. */
-const VENTANA = { left: 619, top: 39, width: 239, height: 234 } as const;
+const HABITACION = HABITACION_CASA;
+const PUERTA_X = HABITACION.sitios.puerta.x;
+/** Ventana de la habitación dibujada, donde se pone la ventana de noche. */
+const VENTANA = HABITACION.ventanaNoche;
 /** Cada cuánto se redibujan las animaciones de los gatitos. */
 const PASO_ANIMACION_MS = 100;
 /** Cuánto brilla la bandeja tras la primera llegada. */
@@ -457,7 +459,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const quedaDerecha = vistaX < ESCENA_CASA.ancho - anchoVisible - 1;
 
   const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
-  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
+  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   return <section ref={seccionRef} onPointerDownCapture={() => sonidoRef.current?.despertar()} className={`casa-gatitos${reduceMotion ? " is-quieta" : ""}${arrastre ? " is-arrastrando" : ""}${medidas.vertical ? " is-vertical" : ""}`} aria-label={t("casa.titulo.oculto")}>
     <BotonControl className="casa-salir" pictograma="mapa" etiqueta="casa.salir.oculto" onClick={salir} disabled={fase === "hola"} />
@@ -465,8 +467,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       <div className="casa-visor" ref={visorRef} style={{ width: medidas.anchoVisor, height: ESCENA_CASA.alto * medidas.escala }}>
         <div className={`casa-escena${noche ? " is-noche" : ""}`} ref={escenaRef} style={estiloEscena}
           onPointerDown={empezarDedo} onPointerMove={moverDedo} onPointerUp={acabarDedo} onPointerCancel={acabarDedo}>
-          <img className="casa-fondo" src="./assets/worlds/casa-habitacion-v1.webp" alt="" draggable={false} />
-          <img className="casa-ventana-noche" src="./assets/sprites/casa-ventana-noche-v1.webp" alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} />
+          <img className="casa-fondo" src={HABITACION.fondo} alt="" draggable={false} />
+          <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} />
           {fase === "entrando" && <div className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
           {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
           {gatitos.map((mundo, indice) => {

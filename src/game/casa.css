@@ -39,7 +39,7 @@
 @keyframes casa-luz-puerta { from { opacity: 0; } 30% { opacity: 1; } to { opacity: 0; } }
 
 /* Noche (21–8 h): tono azul, lámpara encendida y ventana con luna. */
-.casa-luz-noche { inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at 1215px 175px, #ffe7a077 0 110px, transparent 260px), #1e2a6e59; }
+.casa-luz-noche { inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at var(--lampara, 1215px 175px), #ffe7a077 0 110px, transparent 260px), #1e2a6e59; }
 .casa-escena.is-noche .casa-luz-noche { opacity: 1; }
 
 /* Gatito: cuadro de 160 × 160 de la hoja pintada con su paleta; los pies (fila 152) sobre la alfombra (y = 470). */

@@ -42,6 +42,17 @@ export const casa = {
       pared: { oculto: "La pared" },
     },
   },
+  enCasa: {
+    boton: { oculto: "Elegir qué gatitos están en casa" },
+    titulo: { rotulo: "{pictograma:inicio} EN CASA" },
+    cuantos: { oculto: "{cuantos} de {maximo} gatitos en casa" },
+    ficha: {
+      dentro: { oculto: "{nombre} está en casa. Tócalo para mandarlo de paseo." },
+      paseo: { oculto: "{nombre} está de paseo. Tócalo para traerlo a casa." },
+    },
+    frase: { juntos: "Toca un gatito para que entre en casa o se vaya de paseo. En casa caben {maximo}." },
+    sigue: { rotulo: "{pictograma:jugar} SIGUE" },
+  },
   llegada: {
     titulo: { rotulo: "{pictograma:gato} ¡HOLA!" },
     uno: { juntos: "¡{nombre} ya tiene casa! Dale muchos mimos." },

@@ -125,6 +125,8 @@
 /* Decorar: el botón de la bandeja, los muebles (cada uno en su versión, de su lámina), las zonas que brillan al
    decorar y el destello al cambiar uno. */
 .casa-bandeja-modo { width: 44px; height: 44px; }
+.casa-bandeja-modos { display: flex; gap: 4px; justify-content: center; }
+.casa-gatitos.is-vertical .casa-bandeja-modos { flex-direction: column; }
 /* Decorando caben el botón y cinco versiones: en columna, de dos en dos; en el móvil vertical, en fila. */
 .casa-bandeja.is-decorar { display: grid; grid-template-columns: repeat(2, auto); place-items: center; }
 .casa-bandeja.is-decorar .casa-bandeja-modo { grid-column: 1 / -1; }
@@ -196,3 +198,24 @@
 .casa-prueba-paletas { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 16px; background: #fbead2; }
 .casa-prueba-paletas figure { margin: 0; text-align: center; color: #2f1d33; }
 .casa-prueba-paletas span { display: block; width: 160px; height: 160px; background-repeat: no-repeat; image-rendering: pixelated; }
+
+/* Ventana de quién está en casa: cinco huellas arriba (parpadean si ya no cabe nadie) y las fichas de los gatitos en
+   una rejilla que se desplaza; los de paseo, más claros y con una mochilita. */
+.casa-huellas-en-casa { display: flex; justify-content: center; gap: 6px; margin: 0 0 8px; }
+.casa-huellas-en-casa .casa-objeto { width: 34px; }
+.casa-huellas-en-casa .is-vacia { opacity: .22; }
+.casa-huellas-en-casa.is-llena { animation: casa-llena .25s ease-in-out 4 alternate; }
+@keyframes casa-llena { to { transform: scale(1.15); filter: drop-shadow(0 0 6px #ffd76a); } }
+.casa-fichas { align-self: stretch; box-sizing: border-box; width: 100%; min-width: min(78vw, 520px); display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; max-height: min(46dvh, 330px); overflow-y: auto; padding: 4px; overscroll-behavior: contain; }
+.casa-ficha { position: relative; display: grid; justify-items: center; gap: 2px; padding: 4px 2px 6px; border: 3px solid #2f1d33; border-radius: 14px; background: #fff8e9; cursor: pointer; color: #2f1d33; }
+.casa-ficha:focus-visible { outline: 4px solid #ffd76a; }
+.casa-ficha-dibujo { display: block; width: 80px; height: 80px; background-repeat: no-repeat; image-rendering: pixelated; }
+.casa-ficha.is-de-paseo { background: #efe6d6; }
+.casa-ficha.is-de-paseo .casa-ficha-dibujo { opacity: .55; }
+.casa-mochila { position: absolute; top: 8px; right: 8px; width: 22px; height: 26px; border: 3px solid #2f1d33; border-radius: 8px 8px 6px 6px; background: linear-gradient(#e07b3c 0 45%, #c2622a 45% 55%, #e07b3c 55%); box-sizing: border-box; }
+.casa-mochila::before { content: ""; position: absolute; left: 3px; right: 3px; top: -9px; height: 9px; border: 3px solid #2f1d33; border-bottom: 0; border-radius: 8px 8px 0 0; }
+@media (prefers-reduced-motion: reduce) { .casa-huellas-en-casa.is-llena { animation: none; outline: 3px solid #ffd76a; } }
+@media (orientation: landscape) and (max-height: 540px) {
+  .casa-fichas { min-width: min(50vw, 420px); max-height: calc(100dvh - 190px); grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  .casa-ficha-dibujo { width: 64px; height: 64px; }
+}

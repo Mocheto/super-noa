@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, decoracionDe, dejarHuella, enCasaDe, esDeNoche, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
+import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, decoracionDe, dejarHuella, dePaseoDe, enCasaDe, esDeNoche, mandarDePaseo, MAX_EN_CASA, traerACasa, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
 import {
   aEscena, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
   MANTENER_PARA_COGER_MS, MOVER_PARA_FROTAR, SITIOS_CASA, type Frote, type Herramienta,
@@ -150,6 +150,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [elegido, setElegido] = useState<MuebleId | null>(null);
   const [destello, setDestello] = useState<{ mueble: MuebleId; id: number } | null>(null);
   const [fondo, setFondo] = useState(HABITACION.fondo);
+  // Ventana de quién está en casa, y el parpadeo de las huellas cuando ya no cabe nadie más.
+  // Orden de las fichas, fijado al abrir (en casa primero, luego de paseo) para que no salten al tocarlas.
+  const [eligiendo, setEligiendo] = useState<number[] | null>(null);
+  const [llena, setLlena] = useState(0);
   const seccionRef = useRef<HTMLElement>(null);
   const visorRef = useRef<HTMLDivElement>(null);
   const escenaRef = useRef<HTMLDivElement>(null);
@@ -247,6 +251,15 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setElegido(null);
     setArrastre(null);
   };
+  /** En la ventana de quién está en casa: tocar a un gatito lo manda de paseo o lo trae, si cabe. */
+  const cambiarDeSitio = (mundo: number) => {
+    const actual = casaRef.current;
+    if (enCasaDe(actual).includes(mundo)) { guardar(mandarDePaseo(actual, mundo)); return; }
+    const traida = traerACasa(actual, mundo);
+    if (traida === actual) { setLlena((veces) => veces + 1); return; }
+    guardar(traida);
+  };
+
   /** Cambia el mueble elegido a `version` en el momento `momento` (el del toque): destello, campanita y el gatito más cercano va a olerlo. */
   const ponerVersion = (mueble: MuebleId, version: Version, momento: number) => {
     if (decoracionDe(casaRef.current)[mueble] === version) return;
@@ -301,11 +314,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   }, [reduceMotion]);
 
   // Hoja pintada de cada gatito, con su barro y su lazo de mejor amigo.
-  const variantes = gatitos.map((mundo) => {
+  // Hojas de todos los gatitos de la casa (también los de paseo, para la ventana de quién está en casa).
+  const variantes = Object.keys(casa.gatitos).map(Number).sort((a, b) => a - b).map((mundo) => {
     const gatito = casa.gatitos[mundo];
     return { mundo, sucio: estadoDe(gatito.necesidades.bano) !== "bien", mejorAmigo: esMejorAmigo(gatito) };
   });
   const claveVariantes = variantes.map((v) => `${v.mundo}-${v.sucio}-${v.mejorAmigo}`).join(",");
+  const hojaDe = (mundo: number) => {
+    const variante = variantes.find((v) => v.mundo === mundo);
+    return variante && hojas[`${variante.mundo}-${variante.sucio}-${variante.mejorAmigo}`];
+  };
   useEffect(() => {
     let vivo = true;
     for (const clave of claveVariantes.split(",").filter(Boolean)) {
@@ -595,8 +613,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
-  const varianteBano = bano !== null ? variantes[gatitos.indexOf(bano)] : undefined;
-  const hojaBano = varianteBano && hojas[`${varianteBano.mundo}-${varianteBano.sucio}-${varianteBano.mejorAmigo}`];
+  const hojaBano = bano !== null ? hojaDe(bano) : undefined;
   /** Sonido del baño: bucle de agua o secador, golpes cortos y maullidos del gatito que se baña. */
   const sonarBano = (evento: Parameters<typeof sonidoDelBano>[0], utensilio: Parameters<typeof sonidoDelBano>[1]) => {
     const sonido = sonidoRef.current;
@@ -659,8 +676,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             const desde = respuesta?.desde ?? andante.desde;
             const { fila } = ANIMACIONES_GATO[animacion];
             const cuadro = reduceMotion ? 0 : cuadroDe(animacion, (ahora - desde) / 1000);
-            const variante = variantes[indice];
-            const hoja = hojas[`${variante.mundo}-${variante.sucio}-${variante.mejorAmigo}`];
+            const hoja = hojaDe(mundo);
             const mira = andante.mira;
             const escala = escalaDe(andante.y);
             return <div key={mundo} role="img" aria-label={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })}
@@ -685,7 +701,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         {fuera.map((aviso) => <span key={aviso.mundo} className={`casa-aviso is-${aviso.lado}`} aria-hidden="true"><i className={`casa-objeto is-${aviso.objeto}`} /></span>)}
       </div>
       {fase === "casa" && bano === null && decorando && <div className="casa-bandeja is-decorar" aria-label={t("casa.decorar.bandeja.oculto")} role="toolbar">
-        <BotonControl className="casa-bandeja-modo" pictograma="gato" etiqueta="casa.decorar.cuidar.oculto" onClick={cambiarDecorar} />
+        <BotonControl className="casa-bandeja-modo" pictograma="vuelve" etiqueta="casa.decorar.cuidar.oculto" onClick={cambiarDecorar} />
         {elegido && VERSIONES.map((version) => <button key={version} type="button" className={`casa-bandeja-objeto casa-version${decoracion[elegido] === version ? " is-puesta" : ""}`}
           aria-label={t("casa.decorar.version.oculto", { mueble: tClave(`casa.decorar.mueble.${elegido}.oculto`), numero: version + 1 })} aria-pressed={decoracion[elegido] === version}
           onClick={(event) => ponerVersion(elegido, version, event.timeStamp)}>
@@ -693,7 +709,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         </button>)}
       </div>}
       {fase === "casa" && bano === null && !decorando && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
-        <BotonControl className="casa-bandeja-modo" pictograma="flor" etiqueta="casa.decorar.boton.oculto" onClick={cambiarDecorar} />
+        <span className="casa-bandeja-modos">
+          <BotonControl className="casa-bandeja-modo" pictograma="flor" etiqueta="casa.decorar.boton.oculto" onClick={cambiarDecorar} />
+          <BotonControl className="casa-bandeja-modo" pictograma="gato" etiqueta="casa.enCasa.boton.oculto" onClick={() => setEligiendo([...enCasaDe(casaRef.current), ...dePaseoDe(casaRef.current)])} />
+        </span>
         {HERRAMIENTAS.map((herramienta) => <button key={herramienta} type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === herramienta ? " is-cogido" : ""}`}
           aria-label={tClave(`casa.objeto.${herramienta}.oculto`)} onPointerDown={cogerObjeto(herramienta)} onClick={(event) => { if (event.detail === 0) usarConTeclado(herramienta); }}>
           <i className={`casa-objeto is-${herramienta}`} />
@@ -701,6 +720,24 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       </div>}
     </div>
     {bano !== null && <BanoGatito nombre={nombreDe(bano)} hoja={hojaBano} reduceMotion={reduceMotion} onSalir={() => { sonidoRef.current?.bucleBano(null); setBano(null); }} onTerminar={terminarBano} onSonido={sonarBano} />}
+    {eligiendo && <Ventana id="casa-en-casa" titulo="casa.enCasa.titulo.rotulo" className="casa-eligiendo" onClose={() => setEligiendo(null)}
+      botones={<Boton tipo="seguir" clave="casa.enCasa.sigue.rotulo" data-gamepad-default onClick={() => setEligiendo(null)} />}>
+      <p key={llena} className={`casa-huellas-en-casa${llena ? " is-llena" : ""}`} style={{ "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp") } as CSSProperties} role="img" aria-label={t("casa.enCasa.cuantos.oculto", { cuantos: enCasaDe(casa).length, maximo: MAX_EN_CASA })}>
+        {Array.from({ length: MAX_EN_CASA }, (_, indice) => <i key={indice} className={`casa-objeto is-huella${indice < enCasaDe(casa).length ? "" : " is-vacia"}`} />)}
+      </p>
+      <div className="casa-fichas">
+        {eligiendo.map((mundo) => {
+          const dentro = enCasaDe(casa).includes(mundo);
+          return <button key={mundo} type="button" className={`casa-ficha${dentro ? "" : " is-de-paseo"}`} aria-pressed={dentro}
+            aria-label={t(dentro ? "casa.enCasa.ficha.dentro.oculto" : "casa.enCasa.ficha.paseo.oculto", { nombre: nombreDe(mundo) })} onClick={() => cambiarDeSitio(mundo)}>
+            <span className="casa-ficha-dibujo" style={{ backgroundImage: hojaDe(mundo) ? `url("${hojaDe(mundo)}")` : undefined, backgroundSize: `${COLUMNAS_GATO * 100}% ${FILAS_GATO * 100}%`, backgroundPosition: `0 ${(ANIMACIONES_GATO.sentado.fila / (FILAS_GATO - 1)) * 100}%` }} />
+            {!dentro && <i className="casa-mochila" aria-hidden="true" />}
+            <span className="texto-noa pequeno">{nombreDe(mundo)}</span>
+          </button>;
+        })}
+      </div>
+      <p className="juntos">{t("casa.enCasa.frase.juntos", { maximo: MAX_EN_CASA })}</p>
+    </Ventana>}
     {fase === "hola" && <Ventana id="casa-llegada" titulo="casa.llegada.titulo.rotulo" celebracion onClose={seguir}
       botones={<Boton tipo="seguir" clave="casa.llegada.sigue.rotulo" data-gamepad-default onClick={seguir} />}>
       <div className="ventana-dibujo casa-llegada-dibujo">{llegan.map((mundo) => <img key={mundo} src={worldCatalog.find((world) => world.id === mundo)?.catAsset} alt="" />)}</div>

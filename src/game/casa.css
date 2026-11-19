@@ -1,0 +1,97 @@
+/* Casa de los gatitos: habitación provisional de 960 × 540 hasta que llegue su arte («La habitación de la casa»).
+   Todo se coloca en porcentajes de la escena, así se ve igual en el móvil vertical, el apaisado y la tableta. */
+.casa-gatitos {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 100%;
+  padding: 56px 16px 16px;
+  box-sizing: border-box;
+}
+
+.casa-salir { position: absolute; top: 8px; left: 16px; z-index: 3; }
+
+.casa-escena {
+  position: relative;
+  width: min(100%, calc((100dvh - 96px) * 16 / 9), 1200px);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 4px solid #2f1d33;
+  border-radius: 16px;
+  box-shadow: 0 6px 0 #2f1d3355;
+}
+
+.casa-escena > * { position: absolute; }
+
+.casa-pared {
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, #f7e6c8 0 48px, #f2dcb8 48px 96px);
+}
+
+.casa-ventana {
+  top: 12%;
+  left: 58%;
+  width: 22%;
+  height: 34%;
+  border: 6px solid #8a5a3b;
+  border-radius: 8px;
+  background: linear-gradient(#a9dcf5, #d9f1fb);
+  box-shadow: inset 0 0 0 4px #fff8e9;
+}
+
+.casa-suelo {
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: repeating-linear-gradient(90deg, #c98e5a 0 64px, #bd8250 64px 128px);
+  border-top: 6px solid #8a5a3b;
+}
+
+.casa-puerta {
+  top: 34%;
+  width: 14.5%;
+  height: 54%;
+  border: 5px solid #5c3a26;
+  border-bottom: 0;
+  border-radius: 40px 40px 0 0;
+  background: linear-gradient(90deg, #a8693a, #8f5630);
+  transform-origin: left center;
+  transition: transform .5s ease-out, filter .5s;
+}
+
+/* Abierta: la hoja gira hacia dentro y deja ver la luz de fuera. */
+.casa-puerta.is-abierta { transform: perspective(600px) rotateY(-62deg); filter: brightness(1.15); box-shadow: -30px 0 40px #fff1a8aa; }
+
+.casa-gatito {
+  bottom: 6%;
+  width: auto;
+  height: 26%;
+  transform: translateX(-50%);
+  image-rendering: pixelated;
+  filter: drop-shadow(0 4px 2px #2f1d3355);
+}
+
+.casa-gatito.is-llegando { animation: casa-entra 1.6s .4s ease-out backwards; }
+
+@keyframes casa-entra {
+  from { left: var(--desde); opacity: 0; }
+  20% { opacity: 1; }
+}
+
+.casa-llegada-dibujo { display: flex; justify-content: center; gap: 12px; }
+.casa-llegada-dibujo img { height: 96px; image-rendering: pixelated; }
+
+.casa-gatitos.is-quieta .casa-puerta { transition: none; }
+.casa-gatitos.is-quieta .casa-gatito.is-llegando { animation: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .casa-puerta { transition: none; }
+  .casa-gatito.is-llegando { animation: none; }
+}
+
+/* Móvil vertical: la escena ocupa el ancho, arriba, y deja sitio debajo para la bandeja. */
+@media (orientation: portrait) and (max-width: 600px) {
+  .casa-gatitos { align-content: start; }
+}

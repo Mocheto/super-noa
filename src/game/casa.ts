@@ -43,6 +43,8 @@ export type CasaProgress = {
   huellas: HuellaDeBarro[];
   /** Momento del último cálculo de las necesidades (ISO). */
   calculadoEn: string;
+  /** Gatitos cuya llegada a la casa ya se ha visto. */
+  presentados: number[];
 };
 
 const HORA_MS = 3_600_000;
@@ -52,7 +54,7 @@ export const fechaLocal = (fecha: Date) =>
 
 export const esDeNoche = (fecha: Date) => fecha.getHours() >= NOCHE_DESDE || fecha.getHours() < NOCHE_HASTA;
 
-export const casaVacia = (ahora: Date): CasaProgress => ({ gatitos: {}, huellas: [], calculadoEn: ahora.toISOString() });
+export const casaVacia = (ahora: Date): CasaProgress => ({ gatitos: {}, huellas: [], calculadoEn: ahora.toISOString(), presentados: [] });
 
 export const gatitoNuevo = (ahora: Date): GatitoCasa => ({
   necesidades: { comer: 0, mimos: 0, bano: 0, jugar: 0 }, corazones: 0, corazonesHoy: 0, dia: fechaLocal(ahora), lanzamientos: 0,
@@ -102,6 +104,14 @@ export function avanzar(casa: CasaProgress, ahora: Date): CasaProgress {
   const calculadoEn = Number.isFinite(antes) && ahora.getTime() < antes ? casa.calculadoEn : ahora.toISOString();
   return { ...casa, gatitos, calculadoEn };
 }
+
+/** Gatitos que están en la casa pero cuya llegada aún no se ha visto, en orden de mundo. */
+export const llegadasPendientes = (casa: CasaProgress): number[] =>
+  Object.keys(casa.gatitos).map(Number).filter((mundo) => !casa.presentados.includes(mundo)).sort((a, b) => a - b);
+
+/** Tras ver la llegada, esos gatitos quedan presentados. */
+export const presentar = (casa: CasaProgress, mundos: readonly number[]): CasaProgress =>
+  ({ ...casa, presentados: [...new Set([...casa.presentados, ...mundos])].sort((a, b) => a - b) });
 
 /** Mete en la casa a los gatitos rescatados que aún no estaban, con todo «bien». */
 export function asegurarGatitos(casa: CasaProgress, mundos: readonly number[], ahora: Date): CasaProgress {
@@ -232,5 +242,6 @@ export function normalizeCasa(raw: unknown): CasaProgress | undefined {
     .filter((huella): huella is Record<string, unknown> => esRegistro(huella) && Boolean(gatitos[String(huella.mundo)]) && Number.isFinite(Number(huella.x)))
     .slice(0, MAX_HUELLAS)
     .map((huella) => ({ x: Math.max(0, Math.min(ANCHO_CASA, Math.round(Number(huella.x)))), mundo: Number(huella.mundo) }));
-  return { gatitos, huellas, calculadoEn: fecha };
+  const presentados = [...new Set((Array.isArray(raw.presentados) ? raw.presentados : []).map(Number).filter((mundo) => Boolean(gatitos[mundo])))].sort((a, b) => a - b);
+  return { gatitos, huellas, calculadoEn: fecha, presentados };
 }

@@ -4,13 +4,15 @@
  *
  * - `amigos`: pestaña Amigos de la colección.
  * - `paseos`: paseo de los amigos tras cada guardián (botón PASEO del mundo y de la ventana del guardián).
+ * - `casa`: la casa de los gatitos (botón CASA del mapa y A CASA de la ventana de mundo completado), hasta que esté
+ *   entera.
  *
- * Están apagadas mientras se rehace la parte de amigos. En desarrollo se encienden con
- * `?funciones=amigos,paseos`.
+ * Están apagadas mientras se rehace la parte de amigos y se construye la casa. En desarrollo se encienden con
+ * `?funciones=amigos,paseos,casa`.
  */
-export type Funcion = "amigos" | "paseos";
+export type Funcion = "amigos" | "paseos" | "casa";
 
-export const FUNCIONES_POR_DEFECTO: Readonly<Record<Funcion, boolean>> = { amigos: false, paseos: false };
+export const FUNCIONES_POR_DEFECTO: Readonly<Record<Funcion, boolean>> = { amigos: false, paseos: false, casa: false };
 
 /** Funciones activas: las de por defecto más las que pide `?funciones=` (solo se usa en desarrollo). */
 export function leerFunciones(busqueda: string | null, base: Readonly<Record<Funcion, boolean>> = FUNCIONES_POR_DEFECTO): Record<Funcion, boolean> {

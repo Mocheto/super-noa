@@ -33,9 +33,11 @@ type WorldMapProps = {
   reduceMotion: boolean;
   onDetourReveal: (ids: DetourId[]) => void;
   onOpenAvioneta?: () => void;
+  /** Abre la casa de los gatitos; sin él, no hay botón CASA. */
+  onOpenCasa?: () => void;
 };
 
-export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal, onOpenAvioneta }: WorldMapProps) {
+export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal, onOpenAvioneta, onOpenCasa }: WorldMapProps) {
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedWorld, setSelectedWorld] = useState<WorldId | null>(null);
   const [openObjectives, setOpenObjectives] = useState<{ levelId: string; pinned: boolean } | null>(null);
@@ -194,6 +196,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
           <button type="button" aria-pressed={camera.atMin} onClick={camera.showAll}><Texto clave="mapa.verTodo.rotulo" /></button>
           <button type="button" onClick={() => camera.showNear(noaPosition)}><Texto clave="mapa.volverANoa.rotulo" /></button>
         </div>}
+        {onOpenCasa && <Boton tipo="seguir" className="map-casa" clave="casa.boton.rotulo" onClick={onOpenCasa} />}
       </div>
       <div className="map-scroll" inert={selectedWorld !== null} hidden={view !== "map"} role="region" aria-label={t("mapa.mapaIlustrado.oculto")}
         ref={viewportRef} {...camera.viewportEvents}>

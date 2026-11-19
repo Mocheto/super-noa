@@ -14,7 +14,7 @@ import { testScreens } from "./game/testScreens";
 /** Solo en desarrollo: `?prueba=salas` abre una pantalla de prueba de los motores de formato y `?prueba=12-2`, una
  * pantalla de la campaña, para revisarlas sin recorrer el mapa. */
 const devTestName = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("prueba") ?? "" : "";
-/** En desarrollo, `?prueba=<pantalla>&duelo` abre directamente el duelo del guardián de esa pantalla y `?prueba=fiesta`, la fiesta de los gatitos. */
+/** En desarrollo, `?prueba=<pantalla>&duelo` abre directamente el duelo del guardián de esa pantalla, `?prueba=fiesta` la fiesta de los gatitos y `?prueba=casa` la casa de los gatitos. */
 const devDuel = import.meta.env.DEV && new URLSearchParams(window.location.search).has("duelo");
 const devTestLevel = devTestName ? testScreens[devTestName] ?? [...levels, ...detourLevels, ...restStopLevels].find((level) => level.id === devTestName) : undefined;
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
@@ -35,6 +35,7 @@ import { greetFriend, visitRestStop } from "./game/restStopProgress";
 import { addHeart } from "./game/friendProgress";
 import { FriendsTab } from "./game/FriendsTab";
 import { funciones } from "./game/funciones";
+import { casaAbierta, llegadasPorVer } from "./game/casaRescate";
 import { recordFlight } from "./game/avioneta";
 import { puntos, sinPictogramas, t } from "./textos";
 import { Boton, BotonControl, PalabraConDibujo, Pictograma, Texto } from "./textos/Texto";
@@ -49,13 +50,14 @@ const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((modu
 const ArmoniaDrumGame = lazy(() => import("./game/ArmoniaDrumGame").then((module) => ({ default: module.ArmoniaDrumGame })));
 const MeriendaJabatosGame = lazy(() => import("./game/MeriendaJabatosGame").then((module) => ({ default: module.MeriendaJabatosGame })));
 const BeeNinjaGame = lazy(() => import("./game/BeeNinjaGame").then((module) => ({ default: module.BeeNinjaGame })));
+const CasaGatitos = lazy(() => import("./game/CasaGatitos").then((module) => ({ default: module.CasaGatitos })));
 const CatParty = lazy(() => import("./game/CatPartyGame").then((module) => ({ default: module.CatParty })));
 const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module) => ({ default: module.SantaBossBattle })));
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
 const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
 
-type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition" | "cat-party" | "avioneta";
+type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition" | "cat-party" | "avioneta" | "casa";
 const isTimedScreen = (screen: Screen) => screen === "game" || screen === "boss" || screen === "secret-transition" || screen === "cat-party" || screen === "avioneta";
 
 type CollectionTab = "stickers" | "bosses" | "memories" | "friends";
@@ -85,7 +87,7 @@ function rankingErrorMessage(error: unknown, fallback: string) {
 
 export default function App() {
   const [progress, setProgress] = useState<Progress>(readProgress);
-  const [screen, setScreen] = useState<Screen>(devTestLevel ? (devDuel && devTestLevel.boss ? "boss" : "game") : devTestName === "fiesta" ? "cat-party" : "home");
+  const [screen, setScreen] = useState<Screen>(devTestLevel ? (devDuel && devTestLevel.boss ? "boss" : "game") : devTestName === "fiesta" ? "cat-party" : devTestName === "casa" ? "casa" : "home");
   const [activeIndex, setActiveIndex] = useState(0);
   const [levelRun, setLevelRun] = useState(0);
   const [avionetaGift, setAvionetaGift] = useState(false);
@@ -837,7 +839,8 @@ export default function App() {
             </div>
           </header>
           <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
-            <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} onOpenAvioneta={() => void requestAdventure(() => { setAvionetaGift(false); setPaused(false); setScreen("avioneta"); })} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal} />
+            <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} onOpenAvioneta={() => void requestAdventure(() => { setAvionetaGift(false); setPaused(false); setScreen("avioneta"); })} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal}
+              onOpenCasa={funciones.casa && casaAbierta(progress.levelStats) ? () => setScreen("casa") : undefined} />
           </Suspense>
           <button className="text-button reset-button" type="button" onClick={resetProgress}>{t("mapa.borrarProgreso")}</button>
         </section>
@@ -854,6 +857,10 @@ export default function App() {
             setPaused(false);
             setScreen("map");
           }} />
+      </Suspense>}
+      {screen === "casa" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
+        <CasaGatitos casa={progress.casa} levelStats={progress.levelStats} reduceMotion={reduceMotion}
+          onGuardar={(casa) => setProgress((current) => ({ ...current, casa }))} onSalir={() => setScreen("map")} />
       </Suspense>}
       {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
         <CatParty paused={paused} muted={muted} musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotion}
@@ -951,6 +958,7 @@ export default function App() {
               botones={<>
                 {showCatPartyInvite && <Boton tipo="seguir" clave="ventanas.completada.fiesta.rotulo" data-gamepad-default onClick={openCatParty} />}
                 {!showCatPartyInvite && activeLevel.world !== 7 && <Boton tipo="seguir" clave="ventanas.completada.siguiente.rotulo" data-gamepad-default onClick={nextLevel} />}
+                {funciones.casa && llegadasPorVer(progress.casa, progress.levelStats).includes(activeLevel.world) && <Boton clave="ventanas.completada.casa.rotulo" onClick={() => setScreen("casa")} />}
                 {funciones.paseos && activeLevel.boss && restStopFor(activeLevel.world) && <Boton clave="ventanas.completada.paseo.rotulo" onClick={() => beginLevel(levels.length + detourLevels.length + restStopIndex(activeLevel.world))} />}
                 <Boton tipo={activeLevel.world === 7 ? "seguir" : "secundario"} clave="ventanas.completada.mapa.rotulo" data-gamepad-back onClick={() => setScreen("map")} />
               </>}>

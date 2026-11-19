@@ -10,6 +10,7 @@ export const ventanas = {
     guardian: { juntos: "El guardián deja libre el camino." },
     siguienteAventura: { juntos: "¡La siguiente aventura ya está abierta!" },
     medallas: { oculto: "Medallas de esta pantalla" },
+    casa: { rotulo: "{pictograma:inicio} A CASA" },
     meta: { rotulo: "{pictograma:estrella} META" },
     pegatina: { rotulo: "{pictograma:pegatina} PEGATINA" },
     sinCaer: { rotulo: "{pictograma:vidas} SIN CAER" },

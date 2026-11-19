@@ -4,7 +4,9 @@ Dossier del arte de la pantalla de baño. Ticket: [Prompts del arte del baño](h
 
 ## Estado
 
-- **Pendiente:** generar las cuatro láminas ([Generar las láminas del baño](https://github.com/Mocheto/super-noa/issues/195)) y pasármelas tal cual salgan.
+- **Montado** ([Montar el arte del baño](https://github.com/Mocheto/super-noa/issues/198)): las originales están en `../super-noa-arte-original/casa-bano-v1/` y se recortan con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-bano-recorte.py ../super-noa-arte-original/casa-bano-v1`.
+- El fondo salió 16:9: el recorte quita cinco columnas de azulejos para dejarlo en 4:3 con la balda, la ventana y el espejo.
+- La bañera se exporta en dos capas del mismo tamaño (`casa-banera-atras-v1.webp` y `casa-banera-delante-v1.webp`) para ponerlas una sobre otra con el gatito en medio.
 
 ## Qué hace falta
 
@@ -16,7 +18,7 @@ Dossier del arte de la pantalla de baño. Ticket: [Prompts del arte del baño](h
 | # | Lámina | Adjuntar | Archivo final |
 |---|---|---|---|
 | 1 | Fondo del baño | La lámina 0 del gato elegida (para que el estilo case). | `worlds/casa-bano-v1.webp` (960 × 720) |
-| 2 | Bañera en dos piezas | El fondo del baño elegido. | `sprites/casa-banera-v1.webp` |
+| 2 | Bañera en dos piezas | El fondo del baño elegido. | `sprites/casa-banera-atras-v1.webp` y `casa-banera-delante-v1.webp` |
 | 3 | Utensilios del baño | La lámina 0 del gato elegida. | `sprites/casa-bano-utensilios-v1.webp` (cuatro celdas) |
 | 4 | Espuma, gotas, aire y brillos | Los utensilios elegidos. | `sprites/casa-bano-efectos-v1.webp` (cuatro filas) |
 

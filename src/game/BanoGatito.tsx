@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as R
 import { aspectoDelGatito, banoNuevo, frotarBano, terminado, UTENSILIOS, utensilioQueToca, type Bano, type RespuestaBano, type Utensilio } from "./casaBano";
 import { ANIMACIONES_GATO, cuadroDe, type AnimacionGato } from "./casaGatoArte";
 import { Ventana } from "./Ventana";
+import { cssAssetUrl } from "./assets";
 import { t, tClave } from "../textos/index.ts";
 import { Boton, BotonControl } from "../textos/Texto";
 
@@ -21,10 +22,19 @@ const TODAVIA_NO_MS = 900;
 const CANTA_MS = 1600;
 const PASO_ANIMACION_MS = 100;
 
+/** Arte del baño (docs/art/casa-bano-v1.md): fondo, bañera en dos capas, utensilios y efectos. */
+const ARTE_BANO = {
+  "--fondo-bano": cssAssetUrl("./assets/worlds/casa-bano-v1.webp"),
+  "--banera-atras": cssAssetUrl("./assets/sprites/casa-banera-atras-v1.webp"),
+  "--banera-delante": cssAssetUrl("./assets/sprites/casa-banera-delante-v1.webp"),
+  "--utensilios-bano": cssAssetUrl("./assets/sprites/casa-bano-utensilios-v1.webp"),
+  "--efectos-bano": cssAssetUrl("./assets/sprites/casa-bano-efectos-v1.webp"),
+} as CSSProperties;
+
 /**
  * Pantalla de baño: el gatito en la bañera y la bandeja de utensilios. Se arrastra el utensilio que brilla sobre el
  * gatito y se frota; cada paso se ve (mojado, espuma, esponjoso, brillo) y al acabar el gatito canta y sale la
- * ventana común. Los dibujos son provisionales hasta que llegue su arte («Montar el arte del baño»).
+ * ventana común.
  */
 export function BanoGatito({ nombre, hoja, reduceMotion, onSalir, onTerminar, onSonido }: Props) {
   const [bano, setBano] = useState<Bano>(banoNuevo);
@@ -100,7 +110,7 @@ export function BanoGatito({ nombre, hoja, reduceMotion, onSalir, onTerminar, on
   const cuadro = reduceMotion ? 0 : cuadroDe(animacion, (ahora - desde) / 1000);
   const efecto = arrastre && toca === arrastre.utensilio ? arrastre.utensilio : null;
 
-  return <div className="casa-bano" role="dialog" aria-label={t("casa.bano.titulo.oculto", { nombre })}>
+  return <div className="casa-bano" style={ARTE_BANO} role="dialog" aria-label={t("casa.bano.titulo.oculto", { nombre })}>
     <BotonControl className="casa-bano-salir" pictograma="vuelve" etiqueta="casa.bano.salir.oculto" onClick={onSalir} disabled={fin} />
     <div className="casa-bano-escena" ref={escenaRef}>
       <span className="casa-bano-trasera" />

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
-import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, decoracionDe, dejarHuella, esDeNoche, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
+import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, decoracionDe, dejarHuella, enCasaDe, esDeNoche, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
 import {
   aEscena, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
   MANTENER_PARA_COGER_MS, MOVER_PARA_FROTAR, SITIOS_CASA, type Frote, type Herramienta,
@@ -7,7 +7,7 @@ import {
 import { crearSonidoCasa, sonidoDelBano, type SonidoCasa } from "./casaSonido";
 import { crearNana, type Nana } from "./casaNana";
 import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, type AnimacionGato } from "./casaGatoArte";
-import { MUNDOS_CASA, prepararCasa } from "./casaRescate";
+import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreLaBanera } from "./casaHabitacion";
 import { cambiarMueble, muebleEn, MUEBLES_CASA, PARED_HASTA, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
@@ -184,11 +184,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // Durante el baño, la nana suena a la mitad para que se oigan el agua y el secador.
   useEffect(() => { nanaRef.current?.ajustar({ silencio: muted, volumen: (musicVolume / 100) * (bano !== null ? 0.5 : 1), noche }); }, [muted, musicVolume, noche, bano]);
 
-  const presentes = MUNDOS_CASA.filter((mundo) => casa.gatitos[mundo]).join(",");
+  // Solo los gatitos en casa (cinco como mucho); los de paseo no están en la habitación.
+  const presentes = enCasaDe(casa).join(",");
   const gatitos = useMemo(() => presentes ? presentes.split(",").map(Number) : [], [presentes]);
   // Dónde está cada gatito ahora (deambulan por todo el suelo); sin andante aún, en su sitio de día.
-  const sitioDia = (mundo: number) => HABITACION.sitiosDia[MUNDOS_CASA.indexOf(mundo)] ?? HABITACION.sitiosDia[0];
-  const sitioNoche = (mundo: number) => HABITACION.sitiosNoche[MUNDOS_CASA.indexOf(mundo)] ?? HABITACION.sitiosNoche[0];
+  const sitioDia = (mundo: number) => HABITACION.sitiosDia[Math.max(0, gatitos.indexOf(mundo)) % HABITACION.sitiosDia.length];
+  const sitioNoche = (mundo: number) => HABITACION.sitiosNoche[Math.max(0, gatitos.indexOf(mundo)) % HABITACION.sitiosNoche.length];
   const lista = gatitos.map((mundo) => andantes[mundo] ?? nuevoAndante(llegan.includes(mundo) && fase === "entrando" ? HABITACION.sitios.puerta : sitioDia(mundo), 0));
   const sitios = lista.map((andante) => andante.x);
   const escalaDe = (y: number) => escalaEnSuelo(HABITACION, y);

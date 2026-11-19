@@ -10,7 +10,7 @@ import { HABITACION_CASA } from "./casaHabitacion.ts";
 
 /** La habitación mide 1280 × 540 y se desliza con el dedo («La habitación de la casa»). */
 export const ESCENA_CASA = { ancho: HABITACION_CASA.ancho, alto: HABITACION_CASA.alto, suelo: HABITACION_CASA.sitiosDia[0].y } as const;
-/** Sitio de cada gatito sobre la alfombra, por su orden en `MUNDOS_CASA` (de los datos de la habitación). */
+/** Sitio de cada gatito sobre la alfombra, por su orden entre los gatitos en casa (de los datos de la habitación). */
 export const SITIOS_CASA = HABITACION_CASA.sitiosDia.map((sitio) => sitio.x);
 /** De noche duermen juntos en la cama redonda. */
 export const SITIOS_NOCHE = HABITACION_CASA.sitiosNoche.map((sitio) => sitio.x);

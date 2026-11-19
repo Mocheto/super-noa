@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  asegurarGatitos, avanzar, barrer, bocadilloDe, casaLimpia, casaVacia, cuidar, dejarHuella, elegirVida, estadosDe, horasDespierto,
-  MAX_HUELLAS, normalizeCasa, pistasDe, saludoAlEntrar, type CasaProgress,
+  asegurarGatitos, avanzar, barrer, bocadilloDe, casaLimpia, casaVacia, cuidar, dejarHuella, dePaseoDe, elegirVida, enCasaDe, estadosDe, horasDespierto,
+  mandarDePaseo, MAX_HUELLAS, normalizeCasa, pistasDe, saludoAlEntrar, traerACasa, type CasaProgress,
 } from "./casa.ts";
 import { parseProgress, serializeProgress, emptyProgress } from "./progress.ts";
 
@@ -155,4 +155,34 @@ test("el campo «casa» del progreso es opcional, tolerante y se guarda", () => 
   assert.equal(antiguo.casa, undefined, "un guardado sin casa sigue cargando");
   const conCasa = { ...emptyProgress, casa: avanzar(conGatitos(a(18, 8), 1, 2), a(18, 12)) };
   assert.deepEqual(parseProgress(serializeProgress(conCasa)).casa, conCasa.casa);
+});
+
+test("cinco gatitos en casa como mucho; los demás de paseo, con las necesidades quietas", () => {
+  const manana = a(19, 9);
+  const llena = asegurarGatitos(casaVacia(manana), [1, 2, 3, 4, 5, 6, 7], manana);
+  assert.deepEqual(enCasaDe(llena), [1, 2, 3, 4, 5], "entran mientras hay sitio");
+  assert.deepEqual(dePaseoDe(llena), [6, 7]);
+  // Lleno: traer a uno de paseo no hace nada.
+  assert.equal(traerACasa(llena, 6), llena);
+  // Se manda a uno de paseo y entra otro.
+  const cambio = traerACasa(mandarDePaseo(llena, 2), 7);
+  assert.deepEqual(enCasaDe(cambio), [1, 3, 4, 5, 7]);
+  assert.deepEqual(dePaseoDe(cambio), [2, 6]);
+  // Seis horas después, el de casa tiene hambre y el de paseo sigue igual.
+  const tarde = avanzar(cambio, a(19, 15));
+  assert.equal(necesidades(tarde, 1).comer, 1);
+  assert.equal(necesidades(tarde, 2).comer, 0);
+  // El de paseo no deja huellas.
+  const sucio = { ...tarde, gatitos: { ...tarde.gatitos, 2: { ...tarde.gatitos[2], necesidades: { ...tarde.gatitos[2].necesidades, bano: 1 } } } };
+  assert.equal(dejarHuella(sucio, 2, 100), sucio);
+});
+
+test("quién está en casa se guarda con tolerancia y sin él salen los cinco primeros", () => {
+  const manana = a(19, 9);
+  const casa = asegurarGatitos(casaVacia(manana), [1, 2, 3, 4, 5, 6, 7], manana);
+  const antigua = { ...casa, enCasa: undefined };
+  assert.deepEqual(enCasaDe(antigua), [1, 2, 3, 4, 5], "un guardado sin elegir saca los cinco primeros");
+  assert.deepEqual(normalizeCasa({ ...casa, enCasa: [7, 7, 99, "3", 1, 2, 4, 5, 6] })?.enCasa, [1, 2, 3, 4, 5]);
+  const leida = parseProgress(serializeProgress({ ...emptyProgress, casa: traerACasa(mandarDePaseo(casa, 1), 6) }));
+  assert.deepEqual(leida.casa && enCasaDe(leida.casa), [2, 3, 4, 5, 6]);
 });

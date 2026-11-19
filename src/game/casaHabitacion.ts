@@ -18,7 +18,7 @@ export type Habitacion = {
   /** Escala del gatito al fondo y delante: más lejos, más pequeño. */
   escala: { fondo: number; delante: number };
   sitios: Record<SitioId, SitioInteres>;
-  /** Sitio de cada gatito de día (sobre la alfombra) y de noche (en la cama), por su orden en `MUNDOS_CASA`. */
+  /** Sitio de cada gatito de día (sobre la alfombra) y de noche (en la cama), por su orden entre los gatitos en casa. */
   sitiosDia: readonly { x: number; y: number }[];
   sitiosNoche: readonly { x: number; y: number }[];
   ventanaNoche: { imagen: string; left: number; top: number; width: number; height: number };

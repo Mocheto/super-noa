@@ -1,13 +1,13 @@
 /**
  * Quién vive en la casa (decisión «Llegar a la casa y llegar un gatito nuevo»): un gatito está rescatado cuando su
- * mundo está completo, el mismo criterio que la postal del álbum. En la v1 solo caben los de los mundos 1, 2 y 3; el
- * botón CASA aparece al rescatar al del mundo 1.
+ * mundo está completo, el mismo criterio que la postal del álbum. Se mudan los diecisiete gatitos (mapa «Más gatitos en
+ * la casa»), cinco como mucho en casa a la vez; el botón CASA aparece al rescatar al del mundo 1.
  */
 import { asegurarGatitos, avanzar, casaVacia, llegadasPendientes, type CasaProgress } from "./casa.ts";
 import { levels } from "./levels.ts";
 
-/** Mundos cuyos gatitos caben en la casa de la v1: los que tienen paleta del gato base. */
-export const MUNDOS_CASA: readonly number[] = [1, 2, 3];
+/** Mundos cuyos gatitos se mudan a la casa: todos los que tienen gatito (y paleta del gato base). */
+export const MUNDOS_CASA: readonly number[] = Array.from({ length: 17 }, (_, i) => i + 1);
 
 type Estadisticas = Record<string, { completed?: boolean } | undefined>;
 

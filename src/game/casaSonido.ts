@@ -7,8 +7,14 @@ import type { SampleBank } from "./catPartySamples";
 
 export type Maullido = "pide" | "gracias" | "ahoraNo";
 
-/** Tono de cada gatito (velocidad de reproducción del maullido): Miel en medio, Bruma más grave y Pino más agudo. */
-export const TONO_GATITO: Readonly<Record<number, number>> = { 1: 1, 2: 0.84, 3: 1.2 };
+/**
+ * Tono de cada gatito (velocidad de reproducción del maullido): Miel en medio, Bruma más grave y Pino más agudo; los
+ * demás, repartidos entre 0,8 y 1,26 para que no haya dos iguales.
+ */
+export const TONO_GATITO: Readonly<Record<number, number>> = {
+  1: 1, 2: 0.84, 3: 1.2, 4: 1.06, 5: 0.88, 6: 0.92, 7: 1.14, 8: 1.1, 9: 1.03, 10: 0.96,
+  11: 1.08, 12: 1.24, 13: 0.9, 14: 1.12, 15: 0.8, 16: 1.17, 17: 1.26,
+};
 export const tonoDe = (mundo: number) => TONO_GATITO[mundo] ?? 1;
 
 /** Cada maullido usa su sample y un ajuste de tono: «gracias» sube, «ahora no» baja. */

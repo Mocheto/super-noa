@@ -49,7 +49,40 @@ export type CasaProgress = {
   presentados: number[];
   /** Versión elegida de cada mueble; si falta, la decoración de siempre (`decoracionDe`). */
   decoracion?: Decoracion;
+  /** Gatitos en casa (cinco como mucho); los demás están de paseo. Si falta, los primeros cinco por mundo (`enCasaDe`). */
+  enCasa?: number[];
 };
+
+/** Como mucho, estos gatitos en casa a la vez (mapa «Más gatitos en la casa»); los demás están de paseo. */
+export const MAX_EN_CASA = 5;
+
+const porMundo = (a: number, b: number) => a - b;
+
+/** Gatitos en casa, por orden de mundo: los elegidos o, si nunca se eligió, los primeros cinco. */
+export function enCasaDe(casa: CasaProgress): number[] {
+  const todos = Object.keys(casa.gatitos).map(Number).sort(porMundo);
+  if (!casa.enCasa) return todos.slice(0, MAX_EN_CASA);
+  return casa.enCasa.filter((mundo) => casa.gatitos[mundo]).sort(porMundo).slice(0, MAX_EN_CASA);
+}
+
+/** Gatitos de paseo, por orden de mundo. */
+export const dePaseoDe = (casa: CasaProgress): number[] => {
+  const dentro = enCasaDe(casa);
+  return Object.keys(casa.gatitos).map(Number).filter((mundo) => !dentro.includes(mundo)).sort(porMundo);
+};
+
+export const estaEnCasa = (casa: CasaProgress, mundo: number) => enCasaDe(casa).includes(mundo);
+
+/** Manda de paseo a un gatito que estaba en casa. */
+export const mandarDePaseo = (casa: CasaProgress, mundo: number): CasaProgress =>
+  estaEnCasa(casa, mundo) ? { ...casa, enCasa: enCasaDe(casa).filter((otro) => otro !== mundo) } : casa;
+
+/** Trae a casa a un gatito de paseo, si hay sitio; si la casa está llena, todo se queda igual. */
+export function traerACasa(casa: CasaProgress, mundo: number): CasaProgress {
+  const dentro = enCasaDe(casa);
+  if (!casa.gatitos[mundo] || dentro.includes(mundo) || dentro.length >= MAX_EN_CASA) return casa;
+  return { ...casa, enCasa: [...dentro, mundo].sort(porMundo) };
+}
 
 const HORA_MS = 3_600_000;
 
@@ -99,9 +132,13 @@ export function avanzar(casa: CasaProgress, ahora: Date): CasaProgress {
   const transcurrido = Number.isFinite(antes) ? Math.min(TOPE_HORAS * HORA_MS, Math.max(0, ahora.getTime() - antes)) : 0;
   const horas = transcurrido > 0 ? horasDespierto(new Date(ahora.getTime() - transcurrido), ahora) : 0;
   const hoy = fechaLocal(ahora);
+  // De paseo, las necesidades se quedan como estaban.
+  const dentro = enCasaDe(casa);
   const gatitos = Object.fromEntries(Object.entries(casa.gatitos).map(([mundo, gatito]) => [mundo, {
     ...gatito,
-    necesidades: Object.fromEntries(NECESIDADES.map((id) => [id, Math.min(1, gatito.necesidades[id] + horas / HORAS_HASTA_PIDE[id])])) as Record<NecesidadId, number>,
+    necesidades: dentro.includes(Number(mundo))
+      ? Object.fromEntries(NECESIDADES.map((id) => [id, Math.min(1, gatito.necesidades[id] + horas / HORAS_HASTA_PIDE[id])])) as Record<NecesidadId, number>
+      : gatito.necesidades,
     ...(gatito.dia === hoy ? {} : { dia: hoy, corazonesHoy: 0 }),
   }]));
   // Si el reloj va hacia atrás, el cálculo se queda donde estaba para no regalar horas al volver a la hora buena.
@@ -117,11 +154,20 @@ export const llegadasPendientes = (casa: CasaProgress): number[] =>
 export const presentar = (casa: CasaProgress, mundos: readonly number[]): CasaProgress =>
   ({ ...casa, presentados: [...new Set([...casa.presentados, ...mundos])].sort((a, b) => a - b) });
 
-/** Mete en la casa a los gatitos rescatados que aún no estaban, con todo «bien». */
+/**
+ * Mete en la casa a los gatitos rescatados que aún no estaban, con todo «bien». Entran en casa mientras haya sitio;
+ * los que no caben se quedan de paseo (la llegada deja elegir a quién mandar de paseo).
+ */
 export function asegurarGatitos(casa: CasaProgress, mundos: readonly number[], ahora: Date): CasaProgress {
-  const faltan = mundos.filter((mundo) => !casa.gatitos[mundo]);
+  const faltan = mundos.filter((mundo) => !casa.gatitos[mundo]).sort(porMundo);
   if (!faltan.length) return casa;
-  return { ...casa, gatitos: { ...casa.gatitos, ...Object.fromEntries(faltan.map((mundo) => [mundo, gatitoNuevo(ahora)])) } };
+  const dentro = enCasaDe(casa);
+  const caben = faltan.slice(0, Math.max(0, MAX_EN_CASA - dentro.length));
+  return {
+    ...casa,
+    gatitos: { ...casa.gatitos, ...Object.fromEntries(faltan.map((mundo) => [mundo, gatitoNuevo(ahora)])) },
+    enCasa: [...dentro, ...caben].sort(porMundo),
+  };
 }
 
 export const estadosDe = (gatito: GatitoCasa) =>
@@ -177,7 +223,7 @@ export function cuidar(casa: CasaProgress, mundo: number, cuidado: Cuidado, ahor
 /** Un gatito con el baño en «se nota» o «pide» deja una huella al andar, hasta seis en la casa. */
 export function dejarHuella(casa: CasaProgress, mundo: number, x: number): CasaProgress {
   const gatito = casa.gatitos[mundo];
-  if (!gatito || estadoDe(gatito.necesidades.bano) === "bien" || casa.huellas.length >= MAX_HUELLAS) return casa;
+  if (!gatito || !estaEnCasa(casa, mundo) || estadoDe(gatito.necesidades.bano) === "bien" || casa.huellas.length >= MAX_HUELLAS) return casa;
   return { ...casa, huellas: [...casa.huellas, { x: Math.max(0, Math.min(ANCHO_CASA, Math.round(x))), mundo }] };
 }
 
@@ -248,7 +294,10 @@ export function normalizeCasa(raw: unknown): CasaProgress | undefined {
     .map((huella) => ({ x: Math.max(0, Math.min(ANCHO_CASA, Math.round(Number(huella.x)))), mundo: Number(huella.mundo) }));
   const presentados = [...new Set((Array.isArray(raw.presentados) ? raw.presentados : []).map(Number).filter((mundo) => Boolean(gatitos[mundo])))].sort((a, b) => a - b);
   const decoracion = raw.decoracion === undefined ? undefined : normalizeDecoracion(raw.decoracion);
-  return { gatitos, huellas, calculadoEn: fecha, presentados, ...(decoracion && !esDeSiempre(decoracion) ? { decoracion } : {}) };
+  const enCasa = Array.isArray(raw.enCasa)
+    ? [...new Set(raw.enCasa.map(Number).filter((mundo) => Boolean(gatitos[mundo])))].sort(porMundo).slice(0, MAX_EN_CASA)
+    : undefined;
+  return { gatitos, huellas, calculadoEn: fecha, presentados, ...(decoracion && !esDeSiempre(decoracion) ? { decoracion } : {}), ...(enCasa ? { enCasa } : {}) };
 }
 
 /** La decoración de la casa: la guardada o, si no hay, la de siempre. */

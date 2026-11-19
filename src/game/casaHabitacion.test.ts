@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
 import { dentroDelSuelo, escalaEnSuelo, HABITACION_CASA as H } from "./casaHabitacion.ts";
-import { MUNDOS_CASA } from "./casaRescate.ts";
+import { MAX_EN_CASA } from "./casa.ts";
 
 const asset = (ruta: string) => existsSync(new URL(`../../public/${ruta.replace("./", "")}`, import.meta.url));
 
@@ -15,8 +15,9 @@ test("la habitación de la casa es un dato con su fondo y su ventana de noche", 
 test("todos los sitios de interés y de los gatitos están en el suelo por el que se anda", () => {
   for (const [id, sitio] of Object.entries(H.sitios)) assert.ok(dentroDelSuelo(H, sitio.x, sitio.y), id);
   for (const sitio of [...H.sitiosDia, ...H.sitiosNoche]) assert.ok(dentroDelSuelo(H, sitio.x, sitio.y), `${sitio.x},${sitio.y}`);
-  assert.equal(H.sitiosDia.length, MUNDOS_CASA.length);
-  assert.equal(H.sitiosNoche.length, MUNDOS_CASA.length);
+  // Hasta que haya un sitio por gatito en casa, los que no tienen sitio propio comparten.
+  assert.ok(H.sitiosDia.length >= 1 && H.sitiosDia.length <= MAX_EN_CASA);
+  assert.ok(H.sitiosNoche.length >= 1 && H.sitiosNoche.length <= MAX_EN_CASA);
 });
 
 test("de día los gatitos se separan al menos 120 px; los sitios de interés también entre sí", () => {

@@ -9,11 +9,11 @@ import { t } from "../textos/index.ts";
 const completo = (...mundos: number[]) => Object.fromEntries(levels.filter((level) => mundos.includes(level.world)).map((level) => [level.id, { completed: true }]));
 const ahora = new Date(2026, 10, 19, 10);
 
-test("un gatito está rescatado con su mundo completo, como la postal, y solo caben los de los mundos 1–3", () => {
-  assert.deepEqual(MUNDOS_CASA, [1, 2, 3]);
+test("un gatito está rescatado con su mundo completo, como la postal, y se mudan los de los diecisiete mundos", () => {
+  assert.equal(MUNDOS_CASA.length, 17);
   const casi = { ...completo(1), [levels.find((level) => level.world === 1)!.id]: { completed: false } };
   assert.equal(mundoCompleto(casi, 1), false);
-  assert.deepEqual(gatitosRescatados(completo(1, 2, 3, 4, 8)), [1, 2, 3], "los demás esperan a tener paleta");
+  assert.deepEqual(gatitosRescatados(completo(1, 2, 3, 4, 8, 17)), [1, 2, 3, 4, 8, 17]);
   for (const mundo of MUNDOS_CASA) assert.ok(worldCatalog.some((world) => world.id === mundo && world.catAsset), `el mundo ${mundo} tiene gatito`);
 });
 

@@ -1,6 +1,6 @@
 # Prompts de arte pendientes
 
-Todos los prompts que faltan por generar, **completos**: cada bloque se copia y se pega tal cual, sin juntar trozos. Se generan a mano, sin servicios de pago. Los ya generados (gato base, habitación, objetos y roca que asoma) siguen en sus dossiers.
+Todos los prompts que faltan por generar, **completos**: cada bloque se copia y se pega tal cual, sin juntar trozos. Se generan a mano, sin servicios de pago. Los ya generados (gato base, habitación, objetos, roca que asoma y baño) siguen en sus dossiers.
 
 ## Cómo trabajar
 
@@ -10,51 +10,62 @@ Todos los prompts que faltan por generar, **completos**: cada bloque se copia y 
 4. Si algo no sale bien tras tres intentos, cambia de modelo antes de insistir.
 5. Guarda las originales fuera del repositorio, en `../super-noa-arte-original/`.
 
-El detalle está en [la pantalla de baño](casa-bano-v1.md).
+El detalle está en [decorar la casa](casa-decorar-v1.md).
 
 | # | Lámina | Para | Ticket |
 |---|---|---|---|
-| 1 | Fondo del baño | `worlds/casa-bano-v1.webp` (960 × 720) | [Generar las láminas del baño](https://github.com/Mocheto/super-noa/issues/195) |
-| 2 | Bañera en dos piezas | `sprites/casa-banera-v1.webp` | [Generar las láminas del baño](https://github.com/Mocheto/super-noa/issues/195) |
-| 3 | Utensilios del baño | `sprites/casa-bano-utensilios-v1.webp` (cuatro celdas) | [Generar las láminas del baño](https://github.com/Mocheto/super-noa/issues/195) |
-| 4 | Espuma, gotas, aire y brillos | `sprites/casa-bano-efectos-v1.webp` (cuatro filas) | [Generar las láminas del baño](https://github.com/Mocheto/super-noa/issues/195) |
+| 1 | Habitación vacía | `worlds/casa-habitacion-vacia-v1.webp` (1280 × 540) | [Generar las láminas de decorar](https://github.com/Mocheto/super-noa/issues/202) |
+| 2 | Camas | `sprites/casa-muebles-v1.webp` | [Generar las láminas de decorar](https://github.com/Mocheto/super-noa/issues/202) |
+| 3 | Alfombras | `sprites/casa-muebles-v1.webp` | [Generar las láminas de decorar](https://github.com/Mocheto/super-noa/issues/202) |
+| 4 | Cuadros | `sprites/casa-muebles-v1.webp` | [Generar las láminas de decorar](https://github.com/Mocheto/super-noa/issues/202) |
+| 5 | Plantas | `sprites/casa-muebles-v1.webp` | [Generar las láminas de decorar](https://github.com/Mocheto/super-noa/issues/202) |
 
-## 1. Fondo del baño
+## 1. Habitación vacía
 
-- **Adjuntar:** La lámina 0 del gato elegida (para que el estilo case).
-- **Formato:** Horizontal 4:3
-- **Será:** `worlds/casa-bano-v1.webp` (960 × 720)
+- **Adjuntar:** la habitación de ahora.
+- **Formato:** el mismo de la imagen adjunta (muy ancho, 1280 × 540).
+- **Será:** `worlds/casa-habitacion-vacia-v1.webp`
 
 ```text
-Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat warm colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients inside shapes. Everything original, simple and friendly, nothing copied from any game. A cozy little bathroom of a cat house, seen straight-on like a theater stage, with no people, no animals and NO bathtub. Pale aqua square wall tiles with one row of small fish-shaped tiles, a small round window showing a sunny sky with one cloud, a wooden shelf on the left with two folded towels (pink and yellow) and a little potted plant, a round mirror on the right wall, and a light honey-wood floor in the bottom fifth of the image. Leave the center and the bottom middle of the picture plain and empty, because a big bathtub will be placed there later. No text, no letters, no numbers, no watermark.
+Edit the attached image. Keep the exact same room, same size, same framing, same pixel art style, same colors and every other object in exactly the same place: the wooden door with the heart window, the cat scratching post, the big window, the empty wooden wall shelf, the white bathtub with little feet, the floor lamp, the striped cream wallpaper and the honey-wood floor. Remove only these four things and fill the space they leave with the wallpaper or the wood floor around them, continuing the stripes and the floor planks seamlessly: 1. the round cat bed with the pink cushion on the left of the floor; 2. the big round rug in the middle of the floor; 3. the potted plant standing on the wall shelf (keep the shelf itself, now empty); 4. the small framed paw picture hanging on the wall above the shelf. Chunky, readable pixel art for young children: bold dark-plum outlines (#2f1d33), flat warm colors, crisp hard pixel edges, no blur, no anti-aliasing. No people, no animals, no text, no letters, no numbers, no watermark.
 ```
 
-## 2. Bañera en dos piezas
+## 2. Camas
 
-- **Adjuntar:** El fondo del baño elegido.
-- **Formato:** Horizontal 16:9
-- **Será:** `sprites/casa-banera-v1.webp`
+- **Adjuntar:** la habitación de ahora.
+- **Formato:** horizontal 16:9.
+- **Será:** fila de la cama en `sprites/casa-muebles-v1.webp`.
 
 ```text
-Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat warm colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients inside shapes. Everything original, simple and friendly, nothing copied from any game. Two separate pieces of the same big, round, white clawfoot bathtub seen from the front, stacked one above the other, both exactly the same width. Piece 1 "back": the back rim and the inside of the bathtub seen slightly from above, filled two thirds with calm light-blue water with a few small highlights. Piece 2 "front": only the front wall of the bathtub, the part closest to the viewer, with its thick rounded top rim and four little golden feet, drawn as a separate piece that can cover the lower half of a kitten sitting inside the water. Plain flat solid pure green background (#00FF00) behind and between all elements, generous empty space between items, no floor, no cast shadow, no bright green anywhere in the items. No text, no letters, no numbers, no labels, no watermark.
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat warm colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients inside shapes. Everything original, simple and friendly, nothing copied from any game. A sprite sheet with exactly two separate cat beds side by side, each centered in its own half, both the same size, the same pixel scale and the same front view, slightly from above, as the round cat bed with the pink cushion in the attached room, so they can replace it on the floor: 1. a cozy round basket bed woven in light honey wicker with a soft mint-green cushion; 2. a plump lilac velvet cat bed shaped like a little cloud with a pale-yellow star-patterned cushion. Plain flat solid pure green background (#00FF00) behind and between both beds, generous empty space between them, no floor, no cast shadow, no bright green anywhere in the beds. No text, no letters, no numbers, no labels, no watermark.
 ```
 
-## 3. Utensilios del baño
+## 3. Alfombras
 
-- **Adjuntar:** La lámina 0 del gato elegida.
-- **Formato:** Horizontal 16:9
-- **Será:** `sprites/casa-bano-utensilios-v1.webp` (cuatro celdas)
+- **Adjuntar:** la habitación de ahora.
+- **Formato:** horizontal 16:9.
+- **Será:** fila de la alfombra en `sprites/casa-muebles-v1.webp`.
 
 ```text
-Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat warm colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients inside shapes. Everything original, simple and friendly, nothing copied from any game. A sprite sheet with exactly four separate bath tools in one row, each centered in its own cell, same pixel scale, front view: 1. a cute handheld shower head with a short coiled hose, pale blue, with three tiny water drops coming out; 2. a round pink soap bottle with a pump and two little bubbles floating; 3. a friendly yellow hair dryer with a round nozzle; 4. a small orange wide-tooth comb. Plain flat solid pure green background (#00FF00) behind and between all elements, generous empty space between items, no floor, no cast shadow, no bright green anywhere in the items. No text, no letters, no numbers, no labels, no watermark.
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat warm colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients inside shapes. Everything original, simple and friendly, nothing copied from any game. A sprite sheet with exactly two separate floor rugs stacked one above the other, each centered in its own half, both the same size, the same pixel scale and the same flat oval shape seen from the front and slightly from above, exactly like the big round cream rug in the middle of the floor of the attached room, so they can replace it: 1. a soft sky-blue oval rug with a ring of little white clouds around its edge; 2. a warm coral-pink oval rug with a border of small yellow paw prints. Both rugs very wide and flat, about three and a half times wider than tall. Plain flat solid pure green background (#00FF00) behind and between both rugs, generous empty space between them, no floor, no cast shadow, no bright green anywhere in the rugs. No text, no letters, no numbers, no labels, no watermark.
 ```
 
-## 4. Espuma, gotas, aire y brillos
+## 4. Cuadros
 
-- **Adjuntar:** Los utensilios elegidos.
-- **Formato:** Horizontal 16:9
-- **Será:** `sprites/casa-bano-efectos-v1.webp` (cuatro filas)
+- **Adjuntar:** la habitación de ahora.
+- **Formato:** horizontal 16:9.
+- **Será:** fila del cuadro en `sprites/casa-muebles-v1.webp`.
 
 ```text
-Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat warm colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients inside shapes. Everything original, simple and friendly, nothing copied from any game. A sprite sheet with four rows of small effects, each item centered in its own cell, same pixel scale: Row 1 "foam": four fluffy soap foam clumps of different sizes, made of round bubbles, white and light cyan only (#FFFFFF and #BFEFFF), from a small clump to a big one. Row 2 "water": three frames of a little cluster of light-blue water drops falling down. Row 3 "warm air": three frames of a soft swirl of warm air (pale yellow and white curved lines) blowing to the right. Row 4 "sparkles": three frames of a twinkling golden star sparkle growing and shrinking. Plain flat solid pure green background (#00FF00) behind and between all elements, generous empty space between items, no floor, no cast shadow, no bright green anywhere in the items. No text, no letters, no numbers, no labels, no watermark.
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat warm colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients inside shapes. Everything original, simple and friendly, nothing copied from any game. A sprite sheet with exactly two separate small framed pictures side by side, each centered in its own half, both the same size, the same pixel scale and the same tall rectangular shape with a little hanging string on top as the small framed paw picture on the wall of the attached room, so they can replace it: 1. a light wooden frame with a picture of a smiling yellow fish on a pale-blue background; 2. a pink frame with a picture of a red ball of yarn on a cream background. Plain flat solid pure green background (#00FF00) behind and between both pictures, generous empty space between them, no wall, no cast shadow, no bright green anywhere in the pictures. No text, no letters, no numbers, no labels, no watermark.
+```
+
+## 5. Plantas
+
+- **Adjuntar:** la habitación de ahora.
+- **Formato:** horizontal 16:9.
+- **Será:** fila de la planta en `sprites/casa-muebles-v1.webp`.
+
+```text
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat warm colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients inside shapes. Everything original, simple and friendly, nothing copied from any game. A sprite sheet with exactly two separate small potted plants side by side, each centered in its own half, both the same size, the same pixel scale and the same front view as the little potted plant standing on the wall shelf in the attached room, so they can replace it on that shelf, each with a flat pot bottom: 1. a round little cactus with a pink flower on top in a light-blue pot; 2. a small bunch of three yellow tulips in a white pot with a red heart. Plain flat solid pure green background (#00FF00) behind and between both plants, generous empty space between them, no shelf, no floor, no cast shadow, no bright green anywhere in the plants. No text, no letters, no numbers, no labels, no watermark.
 ```

@@ -4,6 +4,7 @@ Dossier del gato base de la casa: un solo gato con todas las animaciones, que el
 
 ## Estado
 
+- Todos los prompts pendientes, completos y en orden, están también en [prompts-pendientes.md](prompts-pendientes.md).
 - **Pendiente:** generar la lámina de referencia y las cinco láminas de animación, y pasármelas tal cual salgan.
 
 ## Cómo funciona
@@ -46,24 +47,16 @@ Velocidad: andar y correr a 8 cuadros por segundo; lo demás, a 4–6.
 ## Cómo trabajar
 
 1. Genera primero la **lámina 0** y elige la que más te guste: será la referencia de todas las demás.
-2. Para las láminas 1–5, copia el bloque común y después el bloque de la lámina, y adjunta la lámina 0 elegida.
+2. Para las láminas 1–5, copia su prompt entero (ya lleva el estilo y los colores) y adjunta la lámina 0 elegida.
 3. Todas van sobre **verde plano `#00FF00`**. Yo las recorto a transparente, ajusto los colores clave, alineo los pies en la misma línea y monto la hoja.
 4. Si un modelo estropea una lámina, genera cada animación por separado con el mismo prompt, dejando solo esa fila.
 5. Si algo no sale bien tras tres intentos, cambia de modelo antes de insistir.
 6. Guarda las originales fuera del repositorio, en `../super-noa-arte-original/casa-v1/`.
 
-## Bloque común
-
-Va al principio de cada prompt, tal cual:
-
-```text
-Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients. A small short-haired kitten seen from the side in three-quarter view, facing right, with a big round head, big round eyes and a short fluffy tail. Paint the kitten ONLY with these exact flat colors: fur #FF8A00, light fur #FFC266, fur shadow #C2410C, tabby stripes #7C2D12 (three stripes on the back, two on the tail, a small M on the forehead), belly and muzzle #FFF1D6, inner ears and nose #F9A8D4, eyes #1D4ED8 with a white highlight, a soft neckerchief tied at the neck #2563EB with shadow #1E3A8A, two small round mud spots on one front leg and on the side of the belly #8B5A2B, a small bow on top of the head between the ears #FFD700. Keep the same proportions, the same stripes, the same spots and the same bow in every frame, and the paws on the same invisible baseline. Plain flat solid pure green background (#00FF00) behind and between all elements, generous empty space between frames, no floor, no cast shadow, no text, no letters, no numbers, no watermark.
-```
-
 ## Lámina 0: referencia
 
 ```text
-[bloque común]
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients. A small short-haired kitten seen from the side in three-quarter view, facing right, with a big round head, big round eyes and a short fluffy tail. Paint the kitten ONLY with these exact flat colors: fur #FF8A00, light fur #FFC266, fur shadow #C2410C, tabby stripes #7C2D12 (three stripes on the back, two on the tail, a small M on the forehead), belly and muzzle #FFF1D6, inner ears and nose #F9A8D4, eyes #1D4ED8 with a white highlight, a soft neckerchief tied at the neck #2563EB with shadow #1E3A8A, two small round mud spots on one front leg and on the side of the belly #8B5A2B, a small bow on top of the head between the ears #FFD700. Keep the same proportions, the same stripes, the same spots and the same bow in every frame, and the paws on the same invisible baseline. Plain flat solid pure green background (#00FF00) behind and between all elements, generous empty space between frames, no floor, no cast shadow, no text, no letters, no numbers, no watermark.
 A single large reference drawing of the kitten sitting calmly, side three-quarter view facing right, tail curled around its front paws, looking at the viewer with a gentle smile. Only this one pose, centered.
 ```
 
@@ -72,7 +65,7 @@ A single large reference drawing of the kitten sitting calmly, side three-quarte
 Adjunta la lámina 0 elegida.
 
 ```text
-[bloque común]
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients. A small short-haired kitten seen from the side in three-quarter view, facing right, with a big round head, big round eyes and a short fluffy tail. Paint the kitten ONLY with these exact flat colors: fur #FF8A00, light fur #FFC266, fur shadow #C2410C, tabby stripes #7C2D12 (three stripes on the back, two on the tail, a small M on the forehead), belly and muzzle #FFF1D6, inner ears and nose #F9A8D4, eyes #1D4ED8 with a white highlight, a soft neckerchief tied at the neck #2563EB with shadow #1E3A8A, two small round mud spots on one front leg and on the side of the belly #8B5A2B, a small bow on top of the head between the ears #FFD700. Keep the same proportions, the same stripes, the same spots and the same bow in every frame, and the paws on the same invisible baseline. Plain flat solid pure green background (#00FF00) behind and between all elements, generous empty space between frames, no floor, no cast shadow, no text, no letters, no numbers, no watermark.
 Match the kitten in the attached image exactly. A sprite sheet with three rows, each frame the same size, frames evenly spaced:
 Row 1 "walk": 4 frames of a cheerful walking cycle to the right, legs alternating, tail up with a soft curve.
 Row 2 "sit and blink": 2 frames sitting like the reference; frame 1 eyes open, frame 2 eyes closed in a happy blink.
@@ -84,7 +77,7 @@ Row 3 "sit and wag": 1 frame sitting, looking forward, tail raised and swishing 
 Adjunta la lámina 0 elegida.
 
 ```text
-[bloque común]
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients. A small short-haired kitten seen from the side in three-quarter view, facing right, with a big round head, big round eyes and a short fluffy tail. Paint the kitten ONLY with these exact flat colors: fur #FF8A00, light fur #FFC266, fur shadow #C2410C, tabby stripes #7C2D12 (three stripes on the back, two on the tail, a small M on the forehead), belly and muzzle #FFF1D6, inner ears and nose #F9A8D4, eyes #1D4ED8 with a white highlight, a soft neckerchief tied at the neck #2563EB with shadow #1E3A8A, two small round mud spots on one front leg and on the side of the belly #8B5A2B, a small bow on top of the head between the ears #FFD700. Keep the same proportions, the same stripes, the same spots and the same bow in every frame, and the paws on the same invisible baseline. Plain flat solid pure green background (#00FF00) behind and between all elements, generous empty space between frames, no floor, no cast shadow, no text, no letters, no numbers, no watermark.
 Match the kitten in the attached image exactly. A sprite sheet with two rows, each frame the same size:
 Row 1 "sleep": 2 frames curled up asleep in a round ball, eyes closed, tail over the nose; frame 2 slightly rounder as it breathes in, with a tiny "z" shape made of pixels (not a letter, a small zigzag) above the head in frame 2 only.
 Row 2 "play alone": 4 frames chasing its own tail, spinning in place: frame 1 looking back at the tail, frame 2 pouncing with front paws up, frame 3 turned around with the tail in front, frame 4 landing happily.
@@ -95,7 +88,7 @@ Row 2 "play alone": 4 frames chasing its own tail, spinning in place: frame 1 lo
 Adjunta la lámina 0 elegida.
 
 ```text
-[bloque común]
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients. A small short-haired kitten seen from the side in three-quarter view, facing right, with a big round head, big round eyes and a short fluffy tail. Paint the kitten ONLY with these exact flat colors: fur #FF8A00, light fur #FFC266, fur shadow #C2410C, tabby stripes #7C2D12 (three stripes on the back, two on the tail, a small M on the forehead), belly and muzzle #FFF1D6, inner ears and nose #F9A8D4, eyes #1D4ED8 with a white highlight, a soft neckerchief tied at the neck #2563EB with shadow #1E3A8A, two small round mud spots on one front leg and on the side of the belly #8B5A2B, a small bow on top of the head between the ears #FFD700. Keep the same proportions, the same stripes, the same spots and the same bow in every frame, and the paws on the same invisible baseline. Plain flat solid pure green background (#00FF00) behind and between all elements, generous empty space between frames, no floor, no cast shadow, no text, no letters, no numbers, no watermark.
 Match the kitten in the attached image exactly. A sprite sheet with three rows, each frame the same size:
 Row 1 "sing": 2 frames sitting tall with head tilted up and eyes closed happily, mouth open in a little round "meow"; frame 2 head tilted the other way. Two tiny pixel music notes float near the mouth.
 Row 2 "ask": 2 frames sitting at the front, ears slightly down, big shiny pleading eyes, one front paw raised, mouth open in a small "mew"; frame 2 paw lower. Cute and gentle, never sad or crying tears.
@@ -107,7 +100,7 @@ Row 3 "eat": 3 frames eating from an invisible bowl on the ground: frame 1 head 
 Adjunta la lámina 0 elegida.
 
 ```text
-[bloque común]
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients. A small short-haired kitten seen from the side in three-quarter view, facing right, with a big round head, big round eyes and a short fluffy tail. Paint the kitten ONLY with these exact flat colors: fur #FF8A00, light fur #FFC266, fur shadow #C2410C, tabby stripes #7C2D12 (three stripes on the back, two on the tail, a small M on the forehead), belly and muzzle #FFF1D6, inner ears and nose #F9A8D4, eyes #1D4ED8 with a white highlight, a soft neckerchief tied at the neck #2563EB with shadow #1E3A8A, two small round mud spots on one front leg and on the side of the belly #8B5A2B, a small bow on top of the head between the ears #FFD700. Keep the same proportions, the same stripes, the same spots and the same bow in every frame, and the paws on the same invisible baseline. Plain flat solid pure green background (#00FF00) behind and between all elements, generous empty space between frames, no floor, no cast shadow, no text, no letters, no numbers, no watermark.
 Match the kitten in the attached image exactly. A sprite sheet with three rows, each frame the same size:
 Row 1 "purr": 2 frames sitting with eyes closed in bliss, leaning its head into an invisible hand, tiny pink blush on the cheeks; frame 2 leaning a bit more, with two small pixel hearts above the head.
 Row 2 "bath": 2 frames sitting covered in fluffy white and light-cyan soap foam bubbles (foam colors #FFFFFF and #BFEFFF only) on the back and head, eyes squeezed shut, smiling; frame 2 with the bubbles in different places.
@@ -119,7 +112,7 @@ Row 3 "shake": 3 frames shaking off water like a wet kitten: frame 1 starting to
 Adjunta la lámina 0 elegida.
 
 ```text
-[bloque común]
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients. A small short-haired kitten seen from the side in three-quarter view, facing right, with a big round head, big round eyes and a short fluffy tail. Paint the kitten ONLY with these exact flat colors: fur #FF8A00, light fur #FFC266, fur shadow #C2410C, tabby stripes #7C2D12 (three stripes on the back, two on the tail, a small M on the forehead), belly and muzzle #FFF1D6, inner ears and nose #F9A8D4, eyes #1D4ED8 with a white highlight, a soft neckerchief tied at the neck #2563EB with shadow #1E3A8A, two small round mud spots on one front leg and on the side of the belly #8B5A2B, a small bow on top of the head between the ears #FFD700. Keep the same proportions, the same stripes, the same spots and the same bow in every frame, and the paws on the same invisible baseline. Plain flat solid pure green background (#00FF00) behind and between all elements, generous empty space between frames, no floor, no cast shadow, no text, no letters, no numbers, no watermark.
 Match the kitten in the attached image exactly. A sprite sheet with two rows, each frame the same size:
 Row 1 "catch the ball": 4 frames: frame 1 running fast to the right, body stretched; frame 2 crouching low, ready to pounce, tail up; frame 3 leaping up with front paws reaching forward; frame 4 landing, sitting proudly with its front paws together as if holding something. Do not draw any ball.
 Row 2 "not now": 2 frames sitting, politely turning the head away with eyes closed and nose up, as if saying "no, thank you"; frame 2 head turned further, one ear flicked. Friendly and calm, not angry.

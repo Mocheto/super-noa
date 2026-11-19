@@ -47,3 +47,20 @@ test("frotar suma el tiempo moviéndose sobre el mismo gatito; un parón o cambi
   assert.equal(frotar(estado.frote, 1, 500, 500).frote?.ms, 0, "otro gatito empieza de cero");
   assert.equal(frotar(estado.frote, -1, 500, 500).frote, estado.frote, "fuera de un gatito no cambia");
 });
+
+test("con el dedo quieto medio segundo se coge al gatito; si se mueve antes, es frotar", async () => {
+  const { seCoge, MANTENER_PARA_COGER_MS, HERRAMIENTAS } = await import("./casaInteraccion.ts");
+  assert.equal(seCoge(MANTENER_PARA_COGER_MS, 2), true);
+  assert.equal(seCoge(MANTENER_PARA_COGER_MS - 50, 0), false, "aún no");
+  assert.equal(seCoge(MANTENER_PARA_COGER_MS, 20), false, "se ha movido: frota");
+  assert.ok(!HERRAMIENTAS.includes("esponja"), "la esponja sale de la bandeja");
+});
+
+test("el gatito se suelta sobre la bañera o aterriza en el suelo", async () => {
+  const { HABITACION_CASA: H, sobreLaBanera, aterrizar, dentroDelSuelo } = await import("./casaHabitacion.ts");
+  assert.equal(sobreLaBanera(H, H.sitios.banera.x, H.sitios.banera.y), true);
+  assert.equal(sobreLaBanera(H, 400, 450), false);
+  const suelo = aterrizar(H, 300, 100);
+  assert.ok(dentroDelSuelo(H, suelo.x, suelo.y), "soltado en la pared, aterriza en el suelo");
+  assert.deepEqual(aterrizar(H, 600, 470), { x: 600, y: 470 });
+});

@@ -8,10 +8,13 @@ export const casa = {
   gatito: { oculto: "{nombre}, en la casa" },
   salir: { oculto: "Volver al mapa" },
   bandeja: { oculto: "Cosas para cuidar a los gatitos" },
+  bano: {
+    titulo: { oculto: "Baño de {nombre}" },
+    salir: { oculto: "Volver a la habitación" },
+  },
   objeto: {
     cuenco: { oculto: "Cuenco de comida: arrástralo hasta un gatito" },
     pelota: { oculto: "Pelota: suéltala en la habitación para que un gatito la atrape" },
-    esponja: { oculto: "Esponja: frota con ella a un gatito sucio" },
     escoba: { oculto: "Escoba: pásala por las huellas de barro" },
   },
   llegada: {

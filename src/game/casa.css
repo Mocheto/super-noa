@@ -220,11 +220,10 @@
   .casa-ficha-dibujo { width: 64px; height: 64px; }
 }
 
-/* Hora de dormir: la mantita (dibujo provisional hasta su arte), el gatito arropado con la mantita del color de su
-   collar, la lámpara que se toca y la habitación con la lámpara apagada (solo la luna de la ventana). */
-.casa-objeto.is-mantita { position: relative; display: block; width: var(--objeto, 56px); aspect-ratio: 1; }
-.casa-objeto.is-mantita::before { content: ""; position: absolute; inset: 22% 12%; border: 3px solid #2f1d33; border-radius: 8px; background: repeating-linear-gradient(180deg, #b48ce6 0 30%, #8e63c9 30% 36%), #b48ce6; box-shadow: inset 0 0 0 3px #fff; }
-.casa-mantita-puesta { position: absolute; left: 50%; bottom: 6%; width: 64%; height: 30%; transform: translateX(-36%); border: 3px solid #2f1d33; border-radius: 55% 45% 18% 18% / 70% 70% 30% 30%; background: var(--mantita, #b48ce6); box-shadow: inset 0 -5px 0 #0003, inset 0 0 0 3px #ffffffaa; pointer-events: none; }
+/* Hora de dormir: la mantita (casa-mantita-v1.webp: doblada y extendida; la del gatito, teñida del color de su collar)
+   tapando al gatito dormido con la cabeza fuera, la lámpara que se toca y la habitación con la lámpara apagada. */
+.casa-objeto.is-mantita { display: block; width: var(--objeto, 56px); aspect-ratio: 1; background: var(--hoja-mantita) 0 50% / 200% auto no-repeat; image-rendering: pixelated; }
+.casa-mantita-puesta { position: absolute; left: 54%; bottom: 3%; width: 76%; aspect-ratio: 128 / 67; transform: translateX(-50%); background: 100% 100% / 200% 100% no-repeat; image-rendering: pixelated; pointer-events: none; }
 .casa-lampara { position: absolute; z-index: 1001; padding: 0; border: 0; border-radius: 40px; background: transparent; cursor: pointer; }
 .casa-lampara:focus-visible { outline: 4px solid #ffd76a; }
 .casa-escena.is-noche.is-apagada .casa-luz-noche { background: #0d1440a8; }

@@ -11,7 +11,7 @@ import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreLaBanera } from "./casaHabitacion";
 import { arropadosDe, arropar, puedeDormir, todosArropados } from "./casaDormir";
-import { PALETAS_GATITOS } from "./casaGatoArte";
+import { HOJA_MANTITA, mantitaDe } from "./casaDormirArte";
 import { cambiarMueble, muebleEn, MUEBLES_CASA, PARED_HASTA, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
 import { fondoConPared } from "./casaDecoracionArte";
 import { cssAssetUrl } from "./assets";
@@ -143,6 +143,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const noche = nocheReloj || acostando;
   const [fechaCasa, setFechaCasa] = useState(() => relojCasa(ajustes));
   const arropados = noche ? arropadosDe(casa, fechaCasa) : [];
+  // Mantita de cada gatito en casa, teñida del color de su collar.
+  const [mantitas, setMantitas] = useState<Record<number, string>>({});
   const [arrastre, setArrastre] = useState<Arrastre | null>(null);
   const [respuestas, setRespuestas] = useState<Respuesta[]>([]);
   const [pelota, setPelota] = useState<Pelota | null>(null);
@@ -425,6 +427,14 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     return { mundo, sucio: estadoDe(gatito.necesidades.bano) !== "bien", mejorAmigo: esMejorAmigo(gatito) };
   });
   const claveVariantes = variantes.map((v) => `${v.mundo}-${v.sucio}-${v.mejorAmigo}`).join(",");
+  const clavesMantitas = Object.keys(casa.gatitos).join(",");
+  useEffect(() => {
+    let vivo = true;
+    for (const mundo of clavesMantitas.split(",").filter(Boolean).map(Number)) {
+      void mantitaDe(mundo).then((url) => { if (vivo) setMantitas((actuales) => actuales[mundo] === url ? actuales : { ...actuales, [mundo]: url }); });
+    }
+    return () => { vivo = false; };
+  }, [clavesMantitas]);
   const hojaDe = (mundo: number) => {
     const variante = variantes.find((v) => v.mundo === mundo);
     return variante && hojas[`${variante.mundo}-${variante.sucio}-${variante.mejorAmigo}`];
@@ -729,7 +739,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const quedaIzquierda = vistaX > 1;
   const quedaDerecha = vistaX < ESCENA_CASA.ancho - anchoVisible - 1;
 
-  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
+  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
   const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
@@ -810,7 +820,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
                 transform: mira < 0 ? "scaleX(-1)" : undefined,
               }} />
               {pide && !respuesta && !dormido && <span className="casa-bocadillo" aria-hidden="true"><i className={`casa-objeto is-${OBJETO_DE[pide]}`} /></span>}
-              {tapado && <span className="casa-mantita-puesta" aria-hidden="true" style={{ "--mantita": colorCollar(mundo) } as CSSProperties} />}
+              {tapado && <span className="casa-mantita-puesta" aria-hidden="true" style={{ backgroundImage: `url("${mantitas[mundo] ?? HOJA_MANTITA}")` }} />}
               {respuesta?.corazon && <span className="casa-corazon" aria-hidden="true" />}
             </div>;
           })}
@@ -917,5 +927,3 @@ function Muestra({ mueble, version }: { mueble: MuebleId; version: Version }) {
 const LAMPARA = { x: HABITACION.lampara.x - 50, y: HABITACION.lampara.y - 50, ancho: 100, alto: 250 };
 const enLaLampara = (punto: { x: number; y: number }) =>
   punto.x >= LAMPARA.x && punto.x <= LAMPARA.x + LAMPARA.ancho && punto.y >= LAMPARA.y && punto.y <= LAMPARA.y + LAMPARA.alto;
-/** Color del collar del gatito, para su mantita. */
-const colorCollar = (mundo: number) => `rgb(${(PALETAS_GATITOS[mundo] ?? PALETAS_GATITOS[1]).collar.join(", ")})`;

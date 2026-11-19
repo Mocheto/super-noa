@@ -4,7 +4,7 @@ Dossier del arte de la hora de dormir. Ticket: [Prompt de la mantita](https://gi
 
 ## Estado
 
-- **Pendiente:** generar la lámina ([Generar la lámina de la mantita](https://github.com/Mocheto/super-noa/issues/226)) y pasármela tal cual salga.
+- **Montado** ([Montar el arte de la mantita](https://github.com/Mocheto/super-noa/issues/229)): la original está en `../super-noa-arte-original/casa-dormir-v1/` y se recorta con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-dormir-recorte.py ../super-noa-arte-original/casa-dormir-v1`. El juego la tiñe del color del collar de cada gatito (`casaDormirArte.ts`).
 
 ## Qué hace falta
 

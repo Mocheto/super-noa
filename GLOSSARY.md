@@ -73,6 +73,10 @@ _Avoid_: Bloque, muro
 Gatito de un mundo, ya rescatado, que vive en la casa y al que Noa cuida.
 _Avoid_: Mascota, tamagotchi
 
+**Llegada**:
+Escena corta en que un gatito recién rescatado entra en la casa por primera vez.
+_Avoid_: Bienvenida, intro
+
 **Necesidad**:
 Cada una de las cuatro cosas que un gatito de la casa va necesitando con el paso del tiempo: comer, mimos, baño y jugar. Se ve en tres estados: bien, se nota y pide.
 _Avoid_: Barra, estadística

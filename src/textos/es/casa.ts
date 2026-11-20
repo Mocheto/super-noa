@@ -48,8 +48,17 @@ export const casa = {
     },
     listo: { rotulo: "{pictograma:jugar} ¡LISTO!" },
   },
+  comida: {
+    abanico: { oculto: "Comidas: arrastra una hasta un gatito" },
+    pescado: { oculto: "Cuenco de pescado" },
+    leche: { oculto: "Cuenco de leche" },
+    galletas: { oculto: "Cuenco de galletas" },
+    pollo: { oculto: "Cuenco de pollo" },
+    nam: { rotulo: "{pictograma:estrella} ¡ÑAM!" },
+    favorita: { oculto: "Su comida favorita: {comida}" },
+  },
   objeto: {
-    cuenco: { oculto: "Cuenco de comida: arrástralo hasta un gatito" },
+    cuenco: { oculto: "Cuenco de comida: tócalo para elegir la comida" },
     pelota: { oculto: "Pelota: suéltala en la habitación para que un gatito la atrape" },
     escoba: { oculto: "Escoba: pásala por las huellas de barro" },
   },

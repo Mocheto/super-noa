@@ -6,6 +6,8 @@
 import { cuidar, type CasaProgress, type ResultadoCuidado } from "./casa.ts";
 
 export const COMIDAS = ["pescado", "leche", "galletas", "pollo"] as const;
+/** Lámina de las cuatro comidas en su cuenco, en el orden de `COMIDAS` (docs/art/casa-comida-v1.md). */
+export const HOJA_COMIDAS = "./assets/sprites/casa-comidas-v1.webp";
 export type Comida = (typeof COMIDAS)[number];
 
 /** Favorita de cada gatito por número de mundo: repartidas para que dos mundos seguidos no tengan la misma. */

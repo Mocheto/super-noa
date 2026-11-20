@@ -23,7 +23,8 @@ import { Ventana } from "./Ventana";
 import { BanoGatito } from "./BanoGatito";
 import { worldCatalog } from "./worldMapData";
 import { t, tClave } from "../textos/index.ts";
-import { Boton, BotonControl } from "../textos/Texto";
+import { Boton, BotonControl, Texto } from "../textos/Texto";
+import { COMIDAS, darDeComer, favoritaDescubierta, HOJA_COMIDAS, type Comida } from "./casaComida";
 import "./casa.css";
 
 type Props = {
@@ -106,12 +107,12 @@ function conNecesidadesDePrueba(casa: CasaProgress): CasaProgress {
     [mundo, { ...gatito, necesidades: Object.fromEntries(NECESIDADES.map((id) => [id, valor])) as Record<NecesidadId, number> }])) };
 }
 
-type Arrastre = { herramienta: Herramienta | "mantita"; x: number; y: number };
+type Arrastre = { herramienta: Herramienta | "mantita"; x: number; y: number; /** Con el cuenco: la comida elegida en el abanico. */ comida?: Comida };
 /** Gatito cogido con el dedo: cuelga del dedo (`x`, `y` en la escena) hasta que se suelta. */
 type Cogido = { indice: number; x: number; y: number };
 /** Distancia del dedo a los pies del gatito que cuelga. */
 const COGIDO_PIES = 130;
-type Respuesta = { gatito: number; tipo: RespuestaCuidado; cuidado: Cuidado; corazon: boolean; id: number; desde: number; dormido?: boolean };
+type Respuesta = { gatito: number; tipo: RespuestaCuidado; cuidado: Cuidado; corazon: boolean; id: number; desde: number; dormido?: boolean; /** Comió su comida favorita: «¡ÑAM!». */ favorita?: boolean };
 
 /** Animación de la hoja para la respuesta a un cuidado. */
 function animacionDeRespuesta(respuesta: Respuesta): AnimacionGato {
@@ -165,6 +166,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const pendienteRef = useRef<{ clienteX: number; clienteY: number; indice: number; temporizador: number } | null>(null);
   /** Gatito que está en la pantalla de baño, o `null`. */
   const [bano, setBano] = useState<number | null>(null);
+  // Abanico de comidas sobre el cuenco de la bandeja (se abre al tocarlo).
+  const [abanico, setAbanico] = useState(false);
   // Gatito en el vestidor (se le lleva al armario).
   const [vestidor, setVestidor] = useState<number | null>(null);
   const frotandoRef = useRef<number | null>(null);
@@ -416,6 +419,23 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
   }, [gatitos, guardar, pararGatito]);
 
+  /** Darle una comida del abanico: como el cuenco de siempre y, si es su favorita con hambre, «¡ÑAM!» (y queda descubierta). */
+  const atenderComida = (indice: number, comida: Comida) => {
+    const mundo = gatitos[indice];
+    if (mundo === undefined) return;
+    pararGatito(indice);
+    const resultado = darDeComer(casaRef.current, mundo, comida, new Date());
+    guardar(resultado.casa);
+    const sonido = sonidoRef.current;
+    if (resultado.respuesta === "gracias") sonido?.maullar(mundo, "gracias");
+    else if (resultado.respuesta === "ahoraNo") sonido?.maullar(mundo, "ahoraNo");
+    if (resultado.favorita) sonido?.golpeBano("campanita");
+    const id = ++idRef.current;
+    setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice),
+      { gatito: indice, tipo: resultado.respuesta, cuidado: "comer", corazon: resultado.corazon, id, desde: performance.now(), favorita: resultado.favorita }]);
+    window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
+  };
+
   // Ronroneo mientras se frota con el dedo (con la esponja no ronronea).
   const ronronea = frotando !== null && arrastre?.herramienta !== "esponja";
   useEffect(() => { sonidoRef.current?.ronronear(ronronea); }, [ronronea]);
@@ -610,8 +630,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         const indice = tocar(punto);
         if (indice >= 0) taparGatito(indice);
       } else if (arrastre.herramienta === "cuenco") {
+        setAbanico(false);
         const indice = tocar(punto);
-        if (indice >= 0) atender(indice, "comer");
+        if (indice >= 0) {
+          if (arrastre.comida) atenderComida(indice, arrastre.comida);
+          else atender(indice, "comer");
+        }
       } else if (arrastre.herramienta === "pelota") {
         lanzar(punto.x, punto.y);
       }
@@ -626,16 +650,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     };
   });
 
-  const cogerObjeto = (herramienta: Herramienta | "mantita") => (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const cogerObjeto = (herramienta: Herramienta | "mantita", comida?: Comida) => (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (fase !== "casa" || event.button !== 0) return;
     event.preventDefault();
     const punto = enEscena(event) ?? { x: 0, y: 0 };
     froteRef.current = null;
-    setArrastre({ herramienta, ...punto });
+    setArrastre({ herramienta, ...punto, ...(comida ? { comida } : {}) });
   };
 
   /** Con el teclado (o un lector de pantalla), el objeto va al gatito que lo pide, o al primero. */
-  const usarConTeclado = (herramienta: Herramienta) => {
+  const usarConTeclado = (herramienta: Herramienta, comida?: Comida) => {
     if (fase !== "casa" || !gatitos.length) return;
     if (herramienta === "escoba") { if (casaRef.current.huellas.length) guardar(barrer(casaRef.current, 0)); return; }
     const cuidado = CUIDADO_DE[herramienta];
@@ -643,6 +667,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const indice = Math.max(0, gatitos.findIndex((mundo) => estadoDe(casaRef.current.gatitos[mundo].necesidades[necesidad]) !== "bien"));
     setVista(centrarEn(sitios[indice], anchoVisible));
     if (herramienta === "pelota") lanzar(lista[indice].x, lista[indice].y - 40);
+    else if (comida) { setAbanico(false); atenderComida(indice, comida); }
     else atender(indice, cuidado);
   };
 
@@ -818,7 +843,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setFlash((veces) => veces + 1);
   };
 
-  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
+  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
   const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--accesorios": cssAssetUrl(HOJA_ACCESORIOS), "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
@@ -888,7 +913,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               ? { backgroundImage: `url("${arropado}")`, backgroundSize: `${CUADROS_ARROPADO * CUADRO_GATO}px ${CUADRO_GATO}px`, backgroundPosition: `${-(cuadro % CUADROS_ARROPADO) * CUADRO_GATO}px 0` }
               : { backgroundImage: hoja ? `url("${hoja}")` : undefined, backgroundSize: `${COLUMNAS_GATO * CUADRO_GATO}px ${FILAS_GATO * CUADRO_GATO}px`, backgroundPosition: `${-cuadro * CUADRO_GATO}px ${-fila * CUADRO_GATO}px` };
             return <div key={mundo} role="img" aria-label={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })}
-              className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${dormido ? " is-dormido" : ""}`}
+              className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${respuesta?.favorita ? " is-favorita" : ""}${dormido ? " is-dormido" : ""}`}
               style={{ left: andante.x, top: andante.y - PIES_GATITO, zIndex: enBrazos ? 1500 : Math.round(andante.y), "--escala": escala } as CSSProperties}>
               <span className="casa-gatito-dibujo" style={{ ...dibujo, transform: mira < 0 ? "scaleX(-1)" : undefined }}>
                 {/* Sus accesorios, en su sitio en este cuadro; arropado, no se ven. */}
@@ -896,7 +921,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
                   <i key={tipo} className="casa-gatito-pieza" style={{ left: `${caja.left}%`, top: `${caja.top}%`, width: `${caja.width}%`, height: `${caja.height}%`,
                     backgroundPosition: fondoDePieza(tipo, pieza) }} />)}
               </span>
-              {pide && !respuesta && !dormido && <span className="casa-bocadillo" aria-hidden="true"><i className={`casa-objeto is-${OBJETO_DE[pide]}`} /></span>}
+              {pide && !respuesta && !dormido && <span className="casa-bocadillo" aria-hidden="true">{pide === "comer" && favoritaDescubierta(casa, mundo)
+                ? <i className={`casa-comida is-${favoritaDescubierta(casa, mundo)}`} /> : <i className={`casa-objeto is-${OBJETO_DE[pide]}`} />}</span>}
+              {respuesta?.favorita && <span className="casa-nam texto-noa" aria-hidden="true"><Texto clave="casa.comida.nam.rotulo" /></span>}
               {respuesta?.corazon && <span className="casa-corazon" aria-hidden="true" />}
             </div>;
           })}
@@ -905,7 +932,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             aria-label={t("casa.dormir.lampara.oculto")} style={{ left: LAMPARA.x, top: LAMPARA.y, width: LAMPARA.ancho, height: LAMPARA.alto }}
             onClick={(event) => { if (event.detail === 0) cambiarLampara(); }} />}
           {pelota && <i key={pelota.id} className="casa-objeto is-pelota casa-pelota-lanzada" style={{ left: porcentajeX(pelota.x), top: porcentajeY(pelota.y), "--hasta": porcentajeX(lista[pelota.gatito]?.x ?? pelota.x), "--hasta-y": porcentajeY((lista[pelota.gatito]?.y ?? pelota.y) - 30) } as CSSProperties} />}
-          {arrastre && <i className={`casa-objeto is-${arrastre.herramienta} casa-arrastrado`} style={{ left: porcentajeX(arrastre.x), top: porcentajeY(arrastre.y) }} />}
+          {arrastre && <i className={`${arrastre.comida ? `casa-comida is-${arrastre.comida}` : `casa-objeto is-${arrastre.herramienta}`} casa-arrastrado`} style={{ left: porcentajeX(arrastre.x), top: porcentajeY(arrastre.y) }} />}
         </div>
         {quedaIzquierda && <span className="casa-borde is-izquierda" aria-hidden="true" />}
         {quedaDerecha && <span className="casa-borde is-derecha" aria-hidden="true" />}
@@ -945,10 +972,25 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
           <BotonControl className="casa-bandeja-modo" pictograma="gato" etiqueta="casa.enCasa.boton.oculto" onClick={() => setEligiendo({ orden: [...enCasaDe(casaRef.current), ...dePaseoDe(casaRef.current)], antes: enCasaDe(casaRef.current) })} />
         </span>
-        {HERRAMIENTAS.map((herramienta) => <button key={herramienta} type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === herramienta ? " is-cogido" : ""}`}
-          aria-label={tClave(`casa.objeto.${herramienta}.oculto`)} onPointerDown={cogerObjeto(herramienta)} onClick={(event) => { if (event.detail === 0) usarConTeclado(herramienta); }}>
-          <i className={`casa-objeto is-${herramienta}`} />
-        </button>)}
+        {HERRAMIENTAS.map((herramienta) => herramienta === "cuenco"
+          // El cuenco: al tocarlo se abre encima el abanico de las cuatro comidas, y se arrastra la elegida.
+          ? <span key={herramienta} className="casa-cuenco-sitio">
+            {abanico && <span className="casa-abanico" role="group" aria-label={t("casa.comida.abanico.oculto")}>
+              {COMIDAS.map((comida, orden) => <button key={comida} type="button" className={`casa-abanico-comida${arrastre?.comida === comida ? " is-cogido" : ""}`}
+                style={{ "--orden": orden } as CSSProperties} aria-label={tClave(`casa.comida.${comida}.oculto`)}
+                onPointerDown={cogerObjeto("cuenco", comida)} onClick={(event) => { if (event.detail === 0) usarConTeclado("cuenco", comida); }}>
+                <i className={`casa-comida is-${comida}`} />
+              </button>)}
+            </span>}
+            <button type="button" className={`casa-bandeja-objeto${abanico ? " is-abierto" : ""}`} aria-expanded={abanico}
+              aria-label={tClave("casa.objeto.cuenco.oculto")} onClick={() => setAbanico((abierto) => !abierto)}>
+              <i className="casa-objeto is-cuenco" />
+            </button>
+          </span>
+          : <button key={herramienta} type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === herramienta ? " is-cogido" : ""}`}
+            aria-label={tClave(`casa.objeto.${herramienta}.oculto`)} onPointerDown={cogerObjeto(herramienta)} onClick={(event) => { if (event.detail === 0) usarConTeclado(herramienta); }}>
+            <i className={`casa-objeto is-${herramienta}`} />
+          </button>)}
       </div>}
     </div>
     {vestidor !== null && <VestidorGatito nombre={nombreDe(vestidor)} mundo={vestidor} reduceMotion={reduceMotion} ropa={ropaDe(casa, vestidor)}
@@ -964,12 +1006,14 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       <p key={llena} className={`casa-huellas-en-casa${llena ? " is-llena" : ""}`} style={{ "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp") } as CSSProperties} role="img" aria-label={t("casa.enCasa.cuantos.oculto", { cuantos: enCasaDe(casa).length, maximo: MAX_EN_CASA })}>
         {Array.from({ length: MAX_EN_CASA }, (_, indice) => <i key={indice} className={`casa-objeto is-huella${indice < enCasaDe(casa).length ? "" : " is-vacia"}`} />)}
       </p>
-      <div className="casa-fichas">
+      <div className="casa-fichas" style={{ "--comidas": cssAssetUrl(HOJA_COMIDAS) } as CSSProperties}>
         {eligiendo.orden.map((mundo) => {
           const dentro = enCasaDe(casa).includes(mundo);
           return <button key={mundo} type="button" className={`casa-ficha${dentro ? "" : " is-de-paseo"}`} aria-pressed={dentro}
             aria-label={t(dentro ? "casa.enCasa.ficha.dentro.oculto" : "casa.enCasa.ficha.paseo.oculto", { nombre: nombreDe(mundo) })} onClick={() => cambiarDeSitio(mundo)}>
             <span className="casa-ficha-dibujo" style={{ backgroundImage: hojaDe(mundo) ? `url("${hojaDe(mundo)}")` : undefined, backgroundSize: `${COLUMNAS_GATO * 100}% ${FILAS_GATO * 100}%`, backgroundPosition: `0 ${(ANIMACIONES_GATO.sentado.fila / (FILAS_GATO - 1)) * 100}%` }} />
+            {favoritaDescubierta(casa, mundo) && <i className={`casa-comida casa-ficha-comida is-${favoritaDescubierta(casa, mundo)}`} role="img"
+              aria-label={t("casa.comida.favorita.oculto", { comida: tClave(`casa.comida.${favoritaDescubierta(casa, mundo)}.oculto`) })} />}
             {!dentro && <i className="casa-mochila" aria-hidden="true" />}
             <span className="texto-noa pequeno">{nombreDe(mundo)}</span>
           </button>;

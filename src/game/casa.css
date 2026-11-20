@@ -75,6 +75,30 @@
 .casa-objeto { position: relative; display: block; width: var(--objeto, 64px); aspect-ratio: 1; }
 .casa-escena .casa-objeto { width: var(--objeto-escena, 96px); }
 .casa-escena .casa-bocadillo .casa-objeto { width: 52px; }
+/* Comidas (casa-comidas-v1.webp, cuatro celdas en el orden de COMIDAS): el abanico del cuenco, el arrastre, el
+   bocadillo y la ficha. */
+.casa-comida { position: relative; display: block; width: var(--objeto, 64px); aspect-ratio: 1; background: var(--comidas) no-repeat 0 0 / 400% 100%; image-rendering: pixelated; }
+.casa-comida.is-leche { background-position-x: calc(100% / 3); }
+.casa-comida.is-galletas { background-position-x: calc(200% / 3); }
+.casa-comida.is-pollo { background-position-x: 100%; }
+.casa-escena .casa-comida { width: var(--objeto-escena, 96px); }
+.casa-escena .casa-bocadillo .casa-comida { width: 52px; }
+.casa-cuenco-sitio { position: relative; display: grid; }
+.casa-bandeja-objeto.is-abierto { box-shadow: 0 0 0 4px #ffd76a; }
+.casa-abanico { position: absolute; left: 50%; bottom: calc(100% + 6px); z-index: 20; display: flex; gap: 4px; padding: 4px; transform: translateX(-50%); border: 3px solid #2f1d33; border-radius: 18px; background: #fff8e9; box-shadow: 0 6px 0 #2f1d3333; }
+.casa-abanico-comida { display: grid; place-items: center; min-width: 52px; min-height: 52px; padding: 0; border: 0; border-radius: 14px; background: transparent; cursor: grab; touch-action: none; animation: casa-abanico-sale .25s ease-out backwards; animation-delay: calc(var(--orden) * 40ms); }
+.casa-abanico-comida .casa-comida { width: 52px; }
+.casa-abanico-comida.is-cogido { opacity: .35; }
+.casa-abanico-comida:focus-visible { outline: 4px solid #ffd76a; }
+@keyframes casa-abanico-sale { from { transform: translateY(40%) scale(.5); opacity: 0; } }
+.casa-ficha-comida { position: absolute; right: 2px; top: 2px; width: 34px; }
+/* Su comida favorita: salta tres veces con brillo dorado y sale «¡ÑAM!». */
+.casa-gatito.is-favorita { animation: casa-salto .45s ease-out 3; }
+.casa-gatito.is-favorita .casa-gatito-dibujo { filter: drop-shadow(0 0 8px #ffd76a) drop-shadow(0 4px 2px #2f1d3355); }
+.casa-nam { position: absolute; left: 50%; top: -18%; z-index: 2; padding: 4px 10px; transform: translateX(-50%); white-space: nowrap; border: 3px solid #2f1d33; border-radius: 12px; background: #ffd76a; color: #2f1d33; font-size: 20px; animation: casa-nam .9s ease-out both; }
+@keyframes casa-nam { from { transform: translateX(-50%) scale(.3); opacity: 0; } 30% { transform: translateX(-50%) scale(1.15); opacity: 1; } to { transform: translateX(-50%) translateY(-30%); } }
+@media (prefers-reduced-motion: reduce) { .casa-gatito.is-favorita, .casa-nam, .casa-abanico-comida { animation: none; } }
+
 /* Dibujos de casa-objetos-v1.webp: siete celdas en fila. */
 .casa-objeto.is-cuenco, .casa-objeto.is-cuenco-vacio, .casa-objeto.is-pelota, .casa-objeto.is-esponja, .casa-objeto.is-escoba, .casa-objeto.is-huella, .casa-objeto.is-huella-2 { background: var(--objetos) no-repeat 0 0 / 700% 100%; image-rendering: pixelated; }
 .casa-objeto.is-cuenco-vacio { background-position-x: calc(100% / 6); }

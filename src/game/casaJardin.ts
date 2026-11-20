@@ -207,6 +207,22 @@ export function posicionPosada(posada: Posada, ms: number, vuelo: { x: number; y
   return null;
 }
 
+// --- Luciérnagas ----------------------------------------------------------------------------------------------------
+
+/** De noche, en lugar de las mariposas, unas luciérnagas que brillan sobre la hierba (dibujadas por código). */
+export const LUCIERNAGAS = 7;
+
+/** Dónde está la luciérnaga `indice` a los `ms`: deriva despacio cerca de la hierba, cada una en su zona. */
+export function luciernagaEn(indice: number, ms: number): { x: number; y: number } {
+  const t = ms / 1000;
+  const fase = indice * 1.7;
+  const centro = 200 + (indice * 740) / (LUCIERNAGAS - 1);
+  return {
+    x: centro + 70 * Math.sin(t * 0.37 + fase) + 25 * Math.sin(t * 1.3 + fase * 2),
+    y: 360 + 70 * Math.sin(t * 0.29 + fase * 1.3) + 15 * Math.sin(t * 1.7 + fase),
+  };
+}
+
 // --- Maceteros -------------------------------------------------------------------------------------------------------
 
 export const ETAPAS = ["semilla", "brote", "capullo", "flor"] as const;

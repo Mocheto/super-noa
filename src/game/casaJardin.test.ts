@@ -154,3 +154,13 @@ test("cada macetero se dibuja con su celda: semilla, brote y, por color, capullo
   casa = regar(casa, 0, ahora).casa;
   assert.equal(maceteroPorRegar(casa, ahora), 1);
 });
+
+test("las luciérnagas brillan repartidas por el jardín, sobre la hierba", async () => {
+  const { LUCIERNAGAS, luciernagaEn } = await import("./casaJardin.ts");
+  for (let indice = 0; indice < LUCIERNAGAS; indice += 1) {
+    for (let ms = 0; ms < 120_000; ms += 900) {
+      const { x, y } = luciernagaEn(indice, ms);
+      assert.ok(x > 80 && x < 1060 && y > 260 && y < 460, `luciérnaga ${indice}: ${x}, ${y}`);
+    }
+  }
+});

@@ -10,7 +10,7 @@ import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hoj
 import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
-import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, CELDAS_MACETEROS, HOJA_MACETEROS, jardinDe, maceteroBajo, maceteroPorRegar, regar, REGADERA, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
+import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, CELDAS_MACETEROS, HOJA_MACETEROS, jardinDe, LUCIERNAGAS, luciernagaEn, maceteroBajo, maceteroPorRegar, regar, REGADERA, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
 import { fondoDePieza, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte";
@@ -255,7 +255,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const sitios = donde === "jardin" ? JARDIN.sitiosDia : HABITACION.sitiosDia;
     return sitios[Math.max(0, ordenEnCasa.indexOf(mundo)) % sitios.length];
   };
-  const sitioNoche = (mundo: number) => HABITACION.sitiosNoche[Math.max(0, ordenEnCasa.indexOf(mundo)) % HABITACION.sitiosNoche.length];
+  // En el jardín (de noche, antes de la hora de dormir), duermen sobre la hierba, en su sitio de día.
+  const sitioNocheEnCasa = (mundo: number) => HABITACION.sitiosNoche[Math.max(0, ordenEnCasa.indexOf(mundo)) % HABITACION.sitiosNoche.length];
+  const sitioNoche = (mundo: number) => estanciaDe(casa, mundo) === "jardin" ? sitioDia(mundo, "jardin") : sitioNocheEnCasa(mundo);
   const lista = gatitos.map((mundo) => andantes[mundo] ?? nuevoAndante(llegan.includes(mundo) && fase === "entrando" ? HABITACION.sitios.puerta : sitioDia(mundo), 0));
   const sitios = lista.map((andante) => andante.x);
   const escalaDe = (y: number) => escalaEnSuelo(HABITACION, y);
@@ -439,7 +441,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setElegido(null);
     const momento = performance.now();
     setAndantes((actuales) => Object.fromEntries(Object.entries(actuales).map(([mundo, andante]) =>
-      [mundo, ir({ ...andante, destino: null }, sitioNoche(Number(mundo)), "dormir", 30, momento)])));
+      [mundo, ir({ ...andante, destino: null }, sitioNocheEnCasa(Number(mundo)), "dormir", 30, momento)])));
   };
   /** Con todos los de casa arropados y la lámpara apagada, una vez: «¡BUENAS NOCHES!». */
   const comprobarBuenasNoches = (actual: CasaProgress, apagada: boolean) => {
@@ -1037,7 +1039,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     <BotonControl className="casa-salir" pictograma="mapa" etiqueta="casa.salir.oculto" onClick={salir} disabled={fase === "hola"} />
     <div className="casa-marco game-frame" style={estiloMarco}>
       <div className="casa-visor" ref={visorRef} style={{ width: medidas.anchoVisor, height: ESCENA_CASA.alto * medidas.escala }}>
-        <div className={`casa-escena${noche ? " is-noche" : ""}${noche && lamparaApagada ? " is-apagada" : ""}`} ref={escenaRef} style={estiloEscena}
+        <div className={`casa-escena${noche ? " is-noche" : ""}${enJardin ? " is-jardin" : ""}${noche && lamparaApagada ? " is-apagada" : ""}`} ref={escenaRef} style={estiloEscena}
           onPointerDown={empezarDedo} onPointerMove={moverDedo} onPointerUp={acabarDedo} onPointerCancel={acabarDedo}>
           <img className="casa-fondo" src={enJardin ? JARDIN.fondo : fondo} alt="" draggable={false} />
           {/* Muebles, cada uno en la versión elegida, sobre la habitación vacía. */}
@@ -1079,6 +1081,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           })}
           {enJardin && riego && riego.efecto !== "espera" && <i key={`destello-${riego.id}`} className="casa-destello" aria-hidden="true"
             style={{ left: JARDIN.maceteros[riego.indice].left + JARDIN.maceteros[riego.indice].width / 2, top: JARDIN.maceteros[riego.indice].top + 30 }} />}
+          {/* De noche en el jardín, luciérnagas por encima de la capa de noche. */}
+          {enJardin && noche && Array.from({ length: LUCIERNAGAS }, (_, indice) => {
+            const { x, y } = luciernagaEn(indice, reduceMotion ? indice * 7000 : ahora);
+            return <i key={indice} className="casa-luciernaga" aria-hidden="true" style={{ left: x, top: y, animationDelay: `${-indice * 0.37}s` }} />;
+          })}
           {mariposasVisibles && mariposasEn(ahora).map((mariposa, indice) => <button key={indice} type="button" aria-label={t("casa.jardin.mariposa.oculto")}
             className={`casa-mariposa${mariposa.quieta ? " is-posada" : ""}${indice % 2 ? " is-otra" : ""}`} style={{ left: mariposa.x, top: mariposa.y }}
             data-indice={indice} onClick={mariposaConTeclado} />)}

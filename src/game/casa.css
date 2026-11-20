@@ -273,6 +273,10 @@
 .casa-riego { position: absolute; left: 20%; top: -10%; width: 60%; height: 50%; background: radial-gradient(circle, #6ec3ff 0 3px, transparent 4px) 0 0 / 14px 16px; opacity: 0; animation: casa-riego 1.2s ease-in forwards; }
 @keyframes casa-riego { 10% { opacity: 1; } 80% { opacity: 1; transform: translateY(40%); } to { opacity: 0; transform: translateY(60%); } }
 @media (prefers-reduced-motion: reduce) { .casa-macetero.is-brilla, .casa-riego { animation: none; } }
+.casa-escena.is-jardin .casa-luz-noche { background: radial-gradient(ellipse at 50% 100%, #2a3c7a40, transparent 70%), #141d5aa6; }
+.casa-luciernaga { position: absolute; z-index: 1001; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #fff6a8; box-shadow: 0 0 8px 4px #ffe96acc, 0 0 22px 10px #ffe96a55; pointer-events: none; transition: left 100ms linear, top 100ms linear; animation: casa-luciernaga 2.4s ease-in-out infinite; }
+@keyframes casa-luciernaga { 0%, 100% { opacity: .25; transform: scale(.7); } 50% { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .casa-luciernaga { animation: none; transition: none; } }
 .casa-puerta { position: absolute; z-index: 1; padding: 0; border: 0; border-radius: 90px 90px 8px 8px; background: transparent; pointer-events: none; }
 .casa-puerta:focus-visible { outline: 4px solid #ffd76a; }
 .casa-puerta.is-brilla { box-shadow: 0 0 0 4px #ffd76a, 0 0 26px 10px #ffe7a0aa; }

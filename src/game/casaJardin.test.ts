@@ -141,3 +141,16 @@ test("los sitios de día del jardín están en su suelo, lejos de la colchoneta,
   }
   for (const caja of JARDIN.maceteros) assert.ok(caja.left >= JARDIN.suelo.derecha && caja.left + caja.width <= JARDIN.ancho);
 });
+
+test("cada macetero se dibuja con su celda: semilla, brote y, por color, capullo y flor", async () => {
+  const { celdaDeMacetero, CELDAS_MACETEROS, maceteroPorRegar } = await import("./casaJardin.ts");
+  assert.equal(celdaDeMacetero({ etapa: "semilla" }), 0);
+  assert.equal(celdaDeMacetero({ etapa: "brote", color: "azul" }), 1);
+  assert.equal(celdaDeMacetero({ etapa: "capullo", color: "roja" }), 2);
+  assert.equal(celdaDeMacetero({ etapa: "flor", color: "roja" }), 3);
+  assert.equal(celdaDeMacetero({ etapa: "flor", color: "rosa" }), CELDAS_MACETEROS - 1);
+  let casa = casaCon(1);
+  assert.equal(maceteroPorRegar(casa, ahora), 0);
+  casa = regar(casa, 0, ahora).casa;
+  assert.equal(maceteroPorRegar(casa, ahora), 1);
+});

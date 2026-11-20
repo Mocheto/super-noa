@@ -4,7 +4,7 @@ Dossier del arte del jardín. Ticket: [Prompts del arte del jardín](https://git
 
 ## Estado
 
-- **Recortadas** (20-11-2026): las originales están en `../super-noa-arte-original/casa-jardin-v1/` y se recortan con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-jardin-recorte.py ../super-noa-arte-original/casa-jardin-v1`, que imprime las medidas. Se terminan de montar en [Montar el arte del jardín](https://github.com/Mocheto/super-noa/issues/264) cuando estén los maceteros y la regadera en el juego.
+- **Recortadas** (20-11-2026): las originales están en `../super-noa-arte-original/casa-jardin-v1/` y se recortan con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-jardin-recorte.py ../super-noa-arte-original/casa-jardin-v1`, que imprime las medidas. Montadas en [Montar el arte del jardín](https://github.com/Mocheto/super-noa/issues/264).
 - **Jardín** (`worlds/casa-jardin-v1.webp`, 1280 × 540): salió en 16:9 con marco oscuro; sin el marco, a 1280 de ancho y desde la fila 30. La puerta va de (65, 93) a (278, 445), la hierba empieza en la fila 428 y la jardinera de la valla va de x = 996 al borde, filas 423–487: los maceteros van encima.
 - **Colchoneta** (`sprites/casa-colchoneta-v1.webp`): 200 × 96.
 - **Maceteros** (`sprites/casa-maceteros-v1.webp`): diez celdas de 100 × 128 en fila: semilla, brote y, por color (roja, amarilla, azul y rosa), capullo y flor, a la misma escala y apoyados abajo. El rosa de las flores está cerca del magenta: el recorte solo quita el magenta saturado.

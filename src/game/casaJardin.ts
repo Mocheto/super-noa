@@ -215,6 +215,12 @@ export const COLORES_FLOR = ["roja", "amarilla", "azul", "rosa"] as const;
 export type ColorFlor = (typeof COLORES_FLOR)[number];
 
 /** Un macetero: su etapa y, desde que brota, el color de su flor (al azar, distinto de los otros si se puede). */
+/** Lámina de los maceteros: diez celdas de 100 × 128 en fila (semilla, brote y, por color, capullo y flor). */
+export const HOJA_MACETEROS = "./assets/sprites/casa-maceteros-v1.webp";
+export const CELDAS_MACETEROS = 10;
+/** La regadera de la bandeja, en una celda de 128 × 128. */
+export const REGADERA = "./assets/sprites/casa-regadera-v1.webp";
+
 export type Macetero = { color?: ColorFlor; etapa: Etapa; /** Día local del último riego (AAAA-MM-DD). */ regado?: string };
 export type JardinProgress = { maceteros: Macetero[] };
 
@@ -248,6 +254,20 @@ export function regar(casa: CasaProgress, indice: number, ahora: Date, azar: () 
   const color = macetero.color ?? entre[Math.min(entre.length - 1, Math.floor(azar() * entre.length))];
   const maceteros = jardin.maceteros.map((m, i) => (i === indice ? { color, etapa, regado: hoy } : m));
   return { casa: { ...casa, jardin: { maceteros } }, crecio: true, brillitos: false, yaRegado: false };
+}
+
+/** Celda de la lámina de los maceteros que toca a un macetero. */
+export function celdaDeMacetero(macetero: Macetero): number {
+  if (macetero.etapa === "semilla") return 0;
+  if (macetero.etapa === "brote" || !macetero.color) return 1;
+  return 2 + COLORES_FLOR.indexOf(macetero.color) * 2 + (macetero.etapa === "flor" ? 1 : 0);
+}
+
+/** El primer macetero que aún se puede regar hoy (para regar con el teclado), o el primero. */
+export function maceteroPorRegar(casa: CasaProgress, ahora: Date): number {
+  const hoy = fechaLocal(ahora);
+  const indice = jardinDe(casa).maceteros.findIndex((m) => m.etapa !== "flor" && m.regado !== hoy);
+  return Math.max(0, indice);
 }
 
 /** Lectura tolerante del jardín: tres maceteros con color y etapa conocidos; lo que no se entiende, como de siempre. */

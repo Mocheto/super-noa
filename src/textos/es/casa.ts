@@ -61,6 +61,7 @@ export const casa = {
     cuenco: { oculto: "Cuenco de comida: tócalo para elegir la comida" },
     pelota: { oculto: "Pelota: suéltala en la habitación para que un gatito la atrape" },
     escoba: { oculto: "Escoba: pásala por las huellas de barro" },
+    regadera: { oculto: "Regadera: llévala a un macetero para regarlo" },
   },
   decorar: {
     boton: { oculto: "Decorar la casa" },
@@ -80,6 +81,12 @@ export const casa = {
   },
   jardin: {
     mariposa: { oculto: "Mariposa: tócala para que se pose junto a un gatito" },
+    macetero: {
+      semilla: { oculto: "Macetero con una semilla" },
+      brote: { oculto: "Macetero con un brote" },
+      capullo: { oculto: "Macetero con un capullo" },
+      flor: { oculto: "Macetero con una flor abierta" },
+    },
   },
   puerta: {
     jardin: { oculto: "Puerta: sal al jardín" },

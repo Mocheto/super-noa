@@ -10,7 +10,7 @@ import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hoj
 import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
-import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
+import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, CELDAS_MACETEROS, HOJA_MACETEROS, jardinDe, maceteroBajo, maceteroPorRegar, regar, REGADERA, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
 import { fondoDePieza, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte";
@@ -108,7 +108,7 @@ function conNecesidadesDePrueba(casa: CasaProgress): CasaProgress {
     [mundo, { ...gatito, necesidades: Object.fromEntries(NECESIDADES.map((id) => [id, valor])) as Record<NecesidadId, number> }])) };
 }
 
-type Arrastre = { herramienta: Herramienta | "mantita"; x: number; y: number; /** Con el cuenco: la comida elegida en el abanico. */ comida?: Comida };
+type Arrastre = { herramienta: Herramienta | "mantita" | "regadera"; x: number; y: number; /** Con el cuenco: la comida elegida en el abanico. */ comida?: Comida };
 /** Gatito cogido con el dedo: cuelga del dedo (`x`, `y` en la escena) hasta que se suelta. */
 type Cogido = { indice: number; x: number; y: number };
 /** Distancia del dedo a los pies del gatito que cuelga. */
@@ -178,6 +178,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [botando, setBotando] = useState<number[]>([]);
   const botandoRef = useRef<number[]>([]);
   /** Mariposas del jardín que Noa ha hecho posarse junto a un gatito. */
+  /** El último riego: a qué macetero y qué ha pasado (crece, brillitos en flor, o ya regado hoy). */
+  const [riego, setRiego] = useState<{ indice: number; id: number; efecto: "crece" | "brilla" | "espera" } | null>(null);
   const [toqueMariposa, setToqueMariposa] = useState<{ punto: { x: number; y: number }; ms: number } | null>(null);
   const [posadas, setPosadas] = useState<(Posada | null)[]>(() => Array.from({ length: MARIPOSAS }, () => null));
   useEffect(() => { botandoRef.current = botando; }, [botando]);
@@ -409,6 +411,21 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (event.detail !== 0) return;
     const mariposa = mariposasEn(event.timeStamp)[Number(event.currentTarget.dataset.indice)];
     if (mariposa) tocarMariposa(mariposa, event.timeStamp);
+  };
+
+  /** Regar un macetero: cae el agua y, una vez al día, crece; en flor, brillitos. */
+  const regarMacetero = (indice: number) => {
+    const resultado = regar(casaRef.current, indice, new Date());
+    if (resultado.casa !== casaRef.current) guardar(resultado.casa);
+    if (resultado.crecio || resultado.brillitos) sonidoRef.current?.golpeBano("campanita");
+    const id = ++idRef.current;
+    setRiego({ indice, id, efecto: resultado.crecio ? "crece" : resultado.brillitos ? "brilla" : "espera" });
+    window.setTimeout(() => setRiego((actual) => actual?.id === id ? null : actual), 1400);
+  };
+  /** Con el teclado, la regadera riega el primer macetero que aún se puede regar hoy. */
+  const regarConTeclado = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (event.detail !== 0) return;
+    regarMacetero(maceteroPorRegar(casaRef.current, new Date()));
   };
 
   /** La estrella de la bandeja: empieza la hora de dormir y cada gatito en casa va a su sitio de noche a dormir. */
@@ -767,6 +784,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         }
       } else if (arrastre.herramienta === "pelota") {
         lanzar(punto.x, punto.y);
+      } else if (arrastre.herramienta === "regadera") {
+        const indice = maceteroBajo(punto.x, punto.y);
+        if (indice !== null) regarMacetero(indice);
       }
     };
     window.addEventListener("pointermove", mover);
@@ -779,7 +799,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     };
   });
 
-  const cogerObjeto = (herramienta: Herramienta | "mantita", comida?: Comida) => (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const cogerObjeto = (herramienta: Herramienta | "mantita" | "regadera", comida?: Comida) => (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (fase !== "casa" || event.button !== 0) return;
     event.preventDefault();
     const punto = enEscena(event) ?? { x: 0, y: 0 };
@@ -981,8 +1001,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setFlash((veces) => veces + 1);
   };
 
-  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
-  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--accesorios": cssAssetUrl(HOJA_ACCESORIOS), "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
+  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--regadera": cssAssetUrl(REGADERA), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
+  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--maceteros": cssAssetUrl(HOJA_MACETEROS), "--regadera": cssAssetUrl(REGADERA), "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--accesorios": cssAssetUrl(HOJA_ACCESORIOS), "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
   const hojaBano = bano !== null ? hojaDe(bano) : undefined;
@@ -1049,6 +1069,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(enJardin ? JARDIN.sitios.puerta.x : PUERTA_X) }} />}
           {enJardin && <img className={`casa-colchoneta${cogido ? " is-brilla" : ""}${botando.length ? " is-bota" : ""}`} src={JARDIN.colchoneta.imagen} alt="" draggable={false}
             style={{ left: JARDIN.colchoneta.left, top: JARDIN.colchoneta.top, width: JARDIN.colchoneta.width, height: JARDIN.colchoneta.height, "--bote": `${BOTAR_MS / BOTES}ms` } as CSSProperties} />}
+          {enJardin && jardinDe(casa).maceteros.map((macetero, indice) => {
+            const caja = JARDIN.maceteros[indice];
+            return <i key={indice} role="img" aria-label={tClave(`casa.jardin.macetero.${macetero.etapa}.oculto`)}
+              className={`casa-macetero${arrastre?.herramienta === "regadera" ? " is-brilla" : ""}`}
+              style={{ left: caja.left, top: caja.top, width: caja.width, height: caja.height, backgroundPositionX: `${(celdaDeMacetero(macetero) / (CELDAS_MACETEROS - 1)) * 100}%` }}>
+              {riego?.indice === indice && <i key={riego.id} className="casa-riego" aria-hidden="true" />}
+            </i>;
+          })}
+          {enJardin && riego && riego.efecto !== "espera" && <i key={`destello-${riego.id}`} className="casa-destello" aria-hidden="true"
+            style={{ left: JARDIN.maceteros[riego.indice].left + JARDIN.maceteros[riego.indice].width / 2, top: JARDIN.maceteros[riego.indice].top + 30 }} />}
           {mariposasVisibles && mariposasEn(ahora).map((mariposa, indice) => <button key={indice} type="button" aria-label={t("casa.jardin.mariposa.oculto")}
             className={`casa-mariposa${mariposa.quieta ? " is-posada" : ""}${indice % 2 ? " is-otra" : ""}`} style={{ left: mariposa.x, top: mariposa.y }}
             data-indice={indice} onClick={mariposaConTeclado} />)}
@@ -1139,6 +1169,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             aria-label={tClave(`casa.objeto.${herramienta}.oculto`)} onPointerDown={cogerObjeto(herramienta)} onClick={(event) => { if (event.detail === 0) usarConTeclado(herramienta); }}>
             <i className={`casa-objeto is-${herramienta}`} />
           </button>)}
+        {/* En el jardín, la regadera para los maceteros. */}
+        {enJardin && <button type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === "regadera" ? " is-cogido" : ""}`}
+          aria-label={tClave("casa.objeto.regadera.oculto")} onPointerDown={cogerObjeto("regadera")} onClick={regarConTeclado}>
+          <i className="casa-objeto is-regadera" />
+        </button>}
       </div>}
     </div>
     {vestidor !== null && <VestidorGatito nombre={nombreDe(vestidor)} mundo={vestidor} reduceMotion={reduceMotion} ropa={ropaDe(casa, vestidor)}

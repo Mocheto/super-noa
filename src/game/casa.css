@@ -267,6 +267,12 @@
 .casa-mariposa:focus-visible { outline: 4px solid #ffd76a; border-radius: 50%; }
 @keyframes casa-mariposa-aletea { to { background-position-x: 133.333%; } }
 @media (prefers-reduced-motion: reduce) { .casa-mariposa { animation: none; transition: none; } }
+.casa-objeto.is-regadera { background: var(--regadera) center / contain no-repeat; image-rendering: pixelated; }
+.casa-macetero { position: absolute; z-index: 380; display: block; background: var(--maceteros) 0 0 / 1000% 100% no-repeat; image-rendering: pixelated; pointer-events: none; }
+.casa-macetero.is-brilla { animation: casa-armario-brilla 1s ease-in-out infinite; }
+.casa-riego { position: absolute; left: 20%; top: -10%; width: 60%; height: 50%; background: radial-gradient(circle, #6ec3ff 0 3px, transparent 4px) 0 0 / 14px 16px; opacity: 0; animation: casa-riego 1.2s ease-in forwards; }
+@keyframes casa-riego { 10% { opacity: 1; } 80% { opacity: 1; transform: translateY(40%); } to { opacity: 0; transform: translateY(60%); } }
+@media (prefers-reduced-motion: reduce) { .casa-macetero.is-brilla, .casa-riego { animation: none; } }
 .casa-puerta { position: absolute; z-index: 1; padding: 0; border: 0; border-radius: 90px 90px 8px 8px; background: transparent; pointer-events: none; }
 .casa-puerta:focus-visible { outline: 4px solid #ffd76a; }
 .casa-puerta.is-brilla { box-shadow: 0 0 0 4px #ffd76a, 0 0 26px 10px #ffe7a0aa; }

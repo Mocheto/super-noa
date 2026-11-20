@@ -133,3 +133,11 @@ test("las mariposas vuelan por el aire del jardín, se tocan cerca y se posan ju
   assert.deepEqual(posicionPosada(posada, 1000 + POSARSE_MS + 10, posiciones[0]), { ...posada.a, quieta: true });
   assert.equal(posicionPosada(posada, 1000 + POSARSE_MS + POSADA_MS + VOLVER_MS, posiciones[0]), null);
 });
+
+test("los sitios de día del jardín están en su suelo, lejos de la colchoneta, y los maceteros sobre la jardinera", () => {
+  for (const sitio of JARDIN.sitiosDia) {
+    assert.ok(dentroDelSuelo(JARDIN, sitio.x, sitio.y), `${sitio.x}, ${sitio.y}`);
+    assert.ok(!sobreLaColchoneta(sitio.x, sitio.y - 30));
+  }
+  for (const caja of JARDIN.maceteros) assert.ok(caja.left >= JARDIN.suelo.derecha && caja.left + caja.width <= JARDIN.ancho);
+});

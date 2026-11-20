@@ -10,7 +10,7 @@ import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hoj
 import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
-import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, sobreLaPuerta, todosALaHabitacion, ZONA_PUERTA_HABITACION, type Estancia } from "./casaJardin";
+import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
 import { fondoDePieza, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte";
@@ -249,7 +249,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // Dónde está cada gatito ahora (deambulan por todo el suelo); sin andante aún, en su sitio de día.
   // Cada gatito en casa tiene su sitio de día y de noche, por su orden entre los de casa.
   const ordenEnCasa = enCasaDe(casa);
-  const sitioDia = (mundo: number) => HABITACION.sitiosDia[Math.max(0, ordenEnCasa.indexOf(mundo)) % HABITACION.sitiosDia.length];
+  const sitioDia = (mundo: number, donde: Estancia = estanciaDe(casa, mundo)) => {
+    const sitios = donde === "jardin" ? JARDIN.sitiosDia : HABITACION.sitiosDia;
+    return sitios[Math.max(0, ordenEnCasa.indexOf(mundo)) % sitios.length];
+  };
   const sitioNoche = (mundo: number) => HABITACION.sitiosNoche[Math.max(0, ordenEnCasa.indexOf(mundo)) % HABITACION.sitiosNoche.length];
   const lista = gatitos.map((mundo) => andantes[mundo] ?? nuevoAndante(llegan.includes(mundo) && fase === "entrando" ? HABITACION.sitios.puerta : sitioDia(mundo), 0));
   const sitios = lista.map((andante) => andante.x);
@@ -321,8 +324,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   /** Lleva a un gatito a la otra estancia: allí entra por la puerta, con su luz, y va hacia su sitio. */
   const cambiarDeEstancia = (mundo: number, momento: number) => {
     const actual = casaRef.current;
-    guardar(llevarA(actual, mundo, estanciaDe(actual, mundo) === "jardin" ? "habitacion" : "jardin"));
-    setAndantes((actuales) => ({ ...actuales, [mundo]: ir(nuevoAndante({ x: PUERTA_X, y: HABITACION.sitios.puerta.y }, momento), sitioDia(mundo), "sentarse", 2, momento) }));
+    const otra: Estancia = estanciaDe(actual, mundo) === "jardin" ? "habitacion" : "jardin";
+    guardar(llevarA(actual, mundo, otra));
+    setAndantes((actuales) => ({ ...actuales, [mundo]: ir(nuevoAndante(puertaDe(otra, HABITACION), momento), sitioDia(mundo, otra), "sentarse", 2, momento) }));
     setLuzPuerta((veces) => veces + 1);
   };
   /**
@@ -628,7 +632,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             // De vez en cuando, uno se va solo a la otra estancia: anda hasta la puerta y sale.
             if (!seVanRef.current.has(mundo) && cambiaSolo(Math.random, noche)) {
               seVanRef.current.add(mundo);
-              siguientes[mundo] = ir(andante, { x: PUERTA_X, y: HABITACION.sitios.puerta.y }, "sentarse", 0.2, momento);
+              siguientes[mundo] = ir(andante, puertaDe(enJardin ? "jardin" : "habitacion", HABITACION), "sentarse", 0.2, momento);
               return;
             }
             if (seVanRef.current.has(mundo)) { siguientes[mundo] = andante; return; }
@@ -1040,9 +1044,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} /></>}
           {/* La puerta del corazón lleva a la otra estancia; con el dedo se toca en la escena, aquí para el teclado. */}
           {fase === "casa" && !acostando && <button type="button" className={`casa-puerta${cogido ? " is-brilla" : ""}`} aria-label={tClave(enJardin ? "casa.puerta.casa.oculto" : "casa.puerta.jardin.oculto")}
-            style={{ left: ZONA_PUERTA_HABITACION.izquierda, top: ZONA_PUERTA_HABITACION.arriba, width: ZONA_PUERTA_HABITACION.derecha - ZONA_PUERTA_HABITACION.izquierda, height: ZONA_PUERTA_HABITACION.abajo - ZONA_PUERTA_HABITACION.arriba }}
+            style={{ left: zonaPuertaDe(estancia).izquierda, top: zonaPuertaDe(estancia).arriba, width: zonaPuertaDe(estancia).derecha - zonaPuertaDe(estancia).izquierda, height: zonaPuertaDe(estancia).abajo - zonaPuertaDe(estancia).arriba }}
             onClick={(event) => { if (event.detail === 0) cruzarPuerta(); }} />}
-          {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
+          {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(enJardin ? JARDIN.sitios.puerta.x : PUERTA_X) }} />}
           {enJardin && <img className={`casa-colchoneta${cogido ? " is-brilla" : ""}${botando.length ? " is-bota" : ""}`} src={JARDIN.colchoneta.imagen} alt="" draggable={false}
             style={{ left: JARDIN.colchoneta.left, top: JARDIN.colchoneta.top, width: JARDIN.colchoneta.width, height: JARDIN.colchoneta.height, "--bote": `${BOTAR_MS / BOTES}ms` } as CSSProperties} />}
           {mariposasVisibles && mariposasEn(ahora).map((mariposa, indice) => <button key={indice} type="button" aria-label={t("casa.jardin.mariposa.oculto")}

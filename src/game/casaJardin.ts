@@ -23,33 +23,44 @@ export type Jardin = SueloDeEstancia & {
   /** Colchoneta: su dibujo y la zona donde se suelta a un gatito para que bote. */
   colchoneta: Caja & { imagen: string };
   zonaColchoneta: Zona;
-  /** Los tres maceteros junto a la valla, de izquierda a derecha: dónde se dibuja cada uno (con su flor encima). */
+  /** Los tres maceteros sobre la jardinera de la valla, de izquierda a derecha: su celda de 100 × 128 (con su flor encima). */
   maceteros: readonly Caja[];
+  /** Sitio de cada gatito del jardín cuando llega, por su orden: por la hierba, lejos de la colchoneta. */
+  sitiosDia: readonly { x: number; y: number }[];
 };
 
-/** Jardín de 1280 × 540, como la habitación: la pared de la casa con su puerta a la izquierda, la colchoneta en el centro y los maceteros junto a la valla a la derecha. */
+/**
+ * Jardín de 1280 × 540, como la habitación (medidas del arte, `casa-jardin-recorte.py`): la pared de la casa con su
+ * puerta a la izquierda, la hierba desde la fila 428, el árbol, la colchoneta en el centro y la jardinera de la valla a
+ * la derecha (de x = 996 en adelante), con los maceteros encima.
+ */
 export const JARDIN: Jardin = {
   id: "jardin",
   ancho: 1280,
   alto: 540,
   fondo: "./assets/worlds/casa-jardin-v1.webp",
-  suelo: { fondo: 405, delante: 520, izquierda: 110, derecha: 1170 },
-  escala: { fondo: 0.8, delante: 1 },
+  suelo: { fondo: 445, delante: 528, izquierda: 110, derecha: 975 },
+  escala: { fondo: 0.85, delante: 1 },
   sitios: {
-    puerta: { x: 140, y: 420, para: null },
-    colchoneta: { x: 600, y: 470, para: null },
-    arbol: { x: 830, y: 410, para: "dormir" },
-    hierba: { x: 420, y: 500, para: "cantar" },
+    puerta: { x: 171, y: 455, para: null },
+    colchoneta: { x: 600, y: 485, para: null },
+    arbol: { x: 880, y: 465, para: "dormir" },
+    hierba: { x: 420, y: 512, para: "cantar" },
   },
-  zonaPuerta: { izquierda: 50, derecha: 240, arriba: 100, abajo: 430 },
-  colchoneta: { imagen: "./assets/sprites/casa-colchoneta-v1.webp", left: 500, top: 410, width: 200, height: 90 },
-  zonaColchoneta: { izquierda: 490, derecha: 710, arriba: 340, abajo: 510 },
+  zonaPuerta: { izquierda: 60, derecha: 285, arriba: 90, abajo: 460 },
+  colchoneta: { imagen: "./assets/sprites/casa-colchoneta-v1.webp", left: 500, top: 440, width: 200, height: 96 },
+  zonaColchoneta: { izquierda: 490, derecha: 710, arriba: 380, abajo: 540 },
   maceteros: [
-    { left: 935, top: 300, width: 90, height: 120 },
-    { left: 1035, top: 300, width: 90, height: 120 },
-    { left: 1135, top: 300, width: 90, height: 120 },
+    { left: 1003, top: 340, width: 100, height: 128 },
+    { left: 1090, top: 340, width: 100, height: 128 },
+    { left: 1177, top: 340, width: 100, height: 128 },
   ],
+  sitiosDia: [{ x: 330, y: 490 }, { x: 420, y: 515 }, { x: 770, y: 480 }, { x: 860, y: 510 }, { x: 940, y: 480 }],
 };
+
+/** El sitio de la puerta en cada estancia: por donde se entra y adonde se va para salir. */
+export const puertaDe = (estancia: Estancia, habitacion: { sitios: { puerta: { x: number; y: number } } }) =>
+  estancia === "jardin" ? JARDIN.sitios.puerta : habitacion.sitios.puerta;
 
 /** La puerta del corazón de la habitación (dibujada en su fondo): lleva al jardín. */
 export const ZONA_PUERTA_HABITACION: Zona = { izquierda: 50, derecha: 240, arriba: 100, abajo: 430 };
@@ -57,8 +68,10 @@ export const ZONA_PUERTA_HABITACION: Zona = { izquierda: 50, derecha: 240, arrib
 const dentro = (zona: Zona, x: number, y: number) => x >= zona.izquierda && x <= zona.derecha && y >= zona.arriba && y <= zona.abajo;
 
 /** ¿Está el punto sobre la puerta que lleva a la otra estancia? */
-export const sobreLaPuerta = (estancia: Estancia, x: number, y: number) =>
-  dentro(estancia === "jardin" ? JARDIN.zonaPuerta : ZONA_PUERTA_HABITACION, x, y);
+export const sobreLaPuerta = (estancia: Estancia, x: number, y: number) => dentro(zonaPuertaDe(estancia), x, y);
+
+/** La zona de la puerta en cada estancia. */
+export const zonaPuertaDe = (estancia: Estancia): Zona => estancia === "jardin" ? JARDIN.zonaPuerta : ZONA_PUERTA_HABITACION;
 
 /** ¿Está el punto sobre la colchoneta? */
 export const sobreLaColchoneta = (x: number, y: number) => dentro(JARDIN.zonaColchoneta, x, y);

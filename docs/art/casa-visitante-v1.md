@@ -4,8 +4,8 @@ Dossier del arte de los visitantes. Ticket: [Prompt de las comidas de los amigos
 
 ## Estado
 
-- **Prompt listo**, falta generar la lámina. Se monta en [Montar el arte de las comidas de los amigos](https://github.com/Mocheto/super-noa/issues/272).
-- Mientras tanto, el juego usa unas comidas provisionales hechas por código con el mismo archivo y las mismas celdas.
+- **Montada** en [Montar el arte de las comidas de los amigos](https://github.com/Mocheto/super-noa/issues/272): la original está en `../super-noa-arte-original/casa-visitante-v1/` y se recorta con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-visitante-recorte.py ../super-noa-arte-original/casa-visitante-v1`.
+- `sprites/casa-comidas-amigos-v1.webp`: tres celdas de 128 × 128 (manzana, bellota y flor), a la misma escala y apoyadas en la misma fila.
 
 ## Qué hace falta
 

@@ -87,7 +87,9 @@
 .casa-bandeja-objeto.is-abierto { box-shadow: 0 0 0 4px #ffd76a; }
 .casa-abanico { position: absolute; left: 50%; bottom: calc(100% + 6px); z-index: 20; display: flex; gap: 4px; padding: 4px; transform: translateX(-50%); border: 3px solid #2f1d33; border-radius: 18px; background: #fff8e9; box-shadow: 0 6px 0 #2f1d3333; }
 .casa-abanico-comida { display: grid; place-items: center; min-width: 52px; min-height: 52px; padding: 0; border: 0; border-radius: 14px; background: transparent; cursor: grab; touch-action: none; animation: casa-abanico-sale .25s ease-out backwards; animation-delay: calc(var(--orden) * 40ms); }
-.casa-abanico-comida .casa-comida { width: 52px; }
+.casa-abanico-comida .casa-comida, .casa-abanico-comida .casa-comida-amigo { width: 52px; }
+/* El plato del visitante va al final de la bandeja: su abanico se abre hacia la izquierda. */
+.casa-abanico.is-plato { left: auto; right: 0; transform: none; }
 .casa-abanico-comida.is-cogido { opacity: .35; }
 .casa-abanico-comida:focus-visible { outline: 4px solid #ffd76a; }
 @keyframes casa-abanico-sale { from { transform: translateY(40%) scale(.5); opacity: 0; } }
@@ -293,6 +295,21 @@
 @keyframes casa-toc-puerta { 0% { scale: .4; } 60% { scale: 1.15; } 100% { scale: 1; } }
 .casa-puerta.is-llama { animation: casa-puerta-llama .25s ease-in-out 4 alternate, casa-armario-brilla 1s ease-in-out infinite; }
 @keyframes casa-puerta-llama { from { translate: -3px 0; } to { translate: 3px 0; } }
+.casa-comida-amigo { position: relative; display: block; width: var(--objeto, 64px); aspect-ratio: 1; background: var(--comidas-amigos) 0 0 / 300% 100% no-repeat; image-rendering: pixelated; }
+.casa-comida-amigo.is-acorn { background-position-x: 50%; }
+.casa-comida-amigo.is-flower { background-position-x: 100%; }
+.casa-escena .casa-comida-amigo { width: var(--objeto-escena, 96px); }
+.casa-bocadillo-visitante { left: 70%; top: -40%; }
+.casa-escena .casa-bocadillo-visitante .casa-comida-amigo { width: 56px; }
+.casa-visitante.is-saluda .casa-visitante-dibujo, .casa-visitante.is-come .casa-visitante-dibujo { animation: casa-visitante-salta .35s ease-out 2 alternate; }
+.casa-visitante.is-favorita .casa-visitante-dibujo { animation: casa-visitante-salta .3s ease-out 6 alternate; filter: drop-shadow(0 0 10px #ffd76a); }
+@keyframes casa-visitante-salta { from { translate: 0 0; } to { translate: 0 -34px; } }
+.casa-visitante.is-espera .casa-visitante-dibujo { filter: drop-shadow(0 0 10px #ffd76a); }
+.casa-visitante .casa-nam { position: absolute; left: 50%; bottom: 105%; transform: translateX(-50%); }
+.casa-visitante .casa-corazon { position: absolute; left: 50%; top: 0; width: 56px; height: 56px; margin-left: -28px; }
+/* Al despedirse, vuelve andando a la valla. */
+.casa-visitante.is-seva { animation: casa-visitante-sale 2.5s ease-in-out .5s forwards; }
+@keyframes casa-visitante-sale { from { translate: -170px 19px; opacity: 1; } to { translate: 0 0; opacity: 0; } }
 .casa-aviso-visita { padding: 0; pointer-events: auto; cursor: pointer; box-shadow: 0 0 0 3px #ffd76a; }
 .casa-aviso-visita .friend-sprite { width: 40px; height: 32px; image-rendering: pixelated; }
 @media (prefers-reduced-motion: reduce) { .casa-visitante, .casa-visitante-dibujo, .casa-toc, .casa-toc-puerta .casa-toc, .casa-puerta.is-llama { animation: none; transition: none; } }

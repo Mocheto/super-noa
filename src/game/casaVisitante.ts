@@ -9,6 +9,10 @@ import { levels, waterLevels } from "./levels.ts";
 
 /** Las tres comidas de los amigos, en el orden de su lámina (docs/art/casa-visitante-v1.md). */
 export const COMIDAS_AMIGOS: readonly FriendFood[] = ["apple", "acorn", "flower"];
+/** Lámina de las tres comidas en su plato: tres celdas de 128 × 128 (`casa-visitante-recorte.py`). */
+export const HOJA_COMIDAS_AMIGOS = "./assets/sprites/casa-comidas-amigos-v1.webp";
+/** Cuánto dura la despedida: dice adiós y vuelve andando a la valla. */
+export const DESPEDIDA_MS = 3000;
 /** Llaman entre las 9 y las 19 h. */
 export const VISITA_DESDE = 9;
 export const VISITA_HASTA = 19;

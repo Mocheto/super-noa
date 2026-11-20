@@ -92,6 +92,16 @@ export const casa = {
     toc: { rotulo: "{pictograma:sala} TOC TOC" },
     llama: { oculto: "{nombre} llama a la puerta" },
     dentro: { oculto: "{nombre} ha venido de visita" },
+    adios: { rotulo: "{pictograma:amigos} ¡ADIOS!" },
+    plato: {
+      oculto: "Plato del visitante: tócalo para elegir su comida",
+      abanico: { oculto: "Comidas para el visitante" },
+    },
+    comida: {
+      apple: { oculto: "Plato con una manzana" },
+      acorn: { oculto: "Plato con bellotas" },
+      flower: { oculto: "Plato con una flor" },
+    },
   },
   puerta: {
     jardin: { oculto: "Puerta: sal al jardín" },

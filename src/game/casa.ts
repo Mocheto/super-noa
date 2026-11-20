@@ -11,6 +11,7 @@ import { DECORACION_DE_SIEMPRE, esDeSiempre, normalizeDecoracion, type Decoracio
 import { normalizeFotos, type FotoCasa } from "./casaFoto.ts";
 import { normalizeRopaCasa, type Ropa } from "./casaRopa.ts";
 import { normalizeFavoritas } from "./casaComida.ts";
+import { normalizeEnJardin, normalizeJardin, type JardinProgress } from "./casaJardin.ts";
 
 export type NecesidadId = "comer" | "mimos" | "bano" | "jugar";
 export type EstadoNecesidad = "bien" | "seNota" | "pide";
@@ -62,6 +63,10 @@ export type CasaProgress = {
   ropa?: Record<string, Ropa>;
   /** Gatitos cuya comida favorita ya ha descubierto Noa (`favoritaDescubierta`). */
   favoritas?: number[];
+  /** Gatitos en casa que están en el jardín; los demás, en la habitación (`estanciaDe`). */
+  enJardin?: number[];
+  /** Los maceteros del jardín; si falta, los tres con su semilla (`jardinDe`). */
+  jardin?: JardinProgress;
 };
 
 /** Como mucho, estos gatitos en casa a la vez (mapa «Más gatitos en la casa»); los demás están de paseo. */
@@ -92,7 +97,11 @@ export const mandarDePaseo = (casa: CasaProgress, mundo: number): CasaProgress =
 export function traerACasa(casa: CasaProgress, mundo: number): CasaProgress {
   const dentro = enCasaDe(casa);
   if (!casa.gatitos[mundo] || dentro.includes(mundo) || dentro.length >= MAX_EN_CASA) return casa;
-  return { ...casa, enCasa: [...dentro, mundo].sort(porMundo) };
+  // Vuelve de paseo por la puerta: entra en la habitación.
+  const enJardin = casa.enJardin?.filter((otro) => otro !== mundo);
+  const resto = { ...casa };
+  delete resto.enJardin;
+  return { ...resto, ...(enJardin?.length ? { enJardin } : {}), enCasa: [...dentro, mundo].sort(porMundo) };
 }
 
 const HORA_MS = 3_600_000;
@@ -317,11 +326,13 @@ export function normalizeCasa(raw: unknown): CasaProgress | undefined {
     : undefined;
   const ropa = normalizeRopaCasa(raw.ropa, (mundo) => Boolean(gatitos[mundo]));
   const favoritas = normalizeFavoritas(raw.favoritas, (mundo) => Boolean(gatitos[mundo]));
+  const enJardin = normalizeEnJardin(raw.enJardin, (mundo) => Boolean(gatitos[mundo]));
+  const jardin = normalizeJardin(raw.jardin);
   return {
     gatitos, huellas, calculadoEn: fecha, presentados,
     ...(decoracion && !esDeSiempre(decoracion) ? { decoracion } : {}), ...(enCasa ? { enCasa } : {}), ...(dormir ? { dormir } : {}),
     ...(normalizeFotos(raw.fotos).length ? { fotos: normalizeFotos(raw.fotos) } : {}),
-    ...(ropa ? { ropa } : {}), ...(favoritas ? { favoritas } : {}),
+    ...(ropa ? { ropa } : {}), ...(favoritas ? { favoritas } : {}), ...(enJardin ? { enJardin } : {}), ...(jardin ? { jardin } : {}),
   };
 }
 

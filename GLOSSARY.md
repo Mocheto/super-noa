@@ -147,6 +147,25 @@ _Avoid_: Probador, tienda
 Prenda que lleva un gatito de la casa: un sombrero, unas gafas o una bufanda, como mucho uno de cada a la vez. Cada gatito conserva los suyos.
 _Avoid_: Ropa (a secas), disfraz, objeto (son los de la bandeja)
 
+**Estancia**:
+Cada sitio de la casa por el que andan los gatitos: la habitación y el jardín. Cada gatito en casa está en una de las dos.
+_Avoid_: Sala, cuarto, nivel
+
+**Jardín**:
+Estancia al aire libre de la casa, con mariposas, maceteros y la colchoneta. De noche tiene luciérnagas y, a la hora de dormir, todos vuelven a la habitación.
+_Avoid_: Patio, exterior
+
+**Colchoneta**:
+Sitio del jardín adonde se lleva a un gatito cogido para que dé unos saltos y vuelva a bajar. Es una forma de jugar.
+_Avoid_: Cama elástica, trampolín (ese es el de las pantallas)
+
+**Mariposa**:
+Bicho del jardín que Noa hace posarse cerca de un gatito para que salte a por ella sin cogerla nunca. Es una forma de jugar.
+
+**Macetero**:
+Sitio del jardín donde crece una flor que Noa riega con la regadera, una vez al día, de brote a capullo y a flor.
+_Avoid_: Maceta, jardinera
+
 **Huella de barro**:
 Mancha que deja en el suelo un gatito con la suciedad en «se nota» o «pide»; se barre con la escoba.
 

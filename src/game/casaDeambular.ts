@@ -4,7 +4,7 @@
  * decidido (sentarse, cantar, jugar solo, dormir, pedir…). Solo lógica: el componente la llama en cada paso.
  */
 import { bocadilloDe, elegirVida, type EstadoVida, type GatitoCasa } from "./casa.ts";
-import { dentroDelSuelo, type Habitacion } from "./casaHabitacion.ts";
+import { dentroDelSuelo, type SueloDeEstancia } from "./casaHabitacion.ts";
 
 /** Velocidad al andar, en px de escena por segundo, en cualquier dirección. */
 export const VELOCIDAD_GATITO = 70;
@@ -68,7 +68,7 @@ export function libre(punto: Punto, otros: readonly Andante[]) {
 }
 
 /** Un punto libre del suelo, cerca de `cerca` si se da (a como mucho `radio`). Si no encuentra, se queda donde está. */
-export function puntoLibre(habitacion: Habitacion, desde: Punto, otros: readonly Andante[], azar: () => number, cerca?: { radio: number }): Punto {
+export function puntoLibre(habitacion: SueloDeEstancia, desde: Punto, otros: readonly Andante[], azar: () => number, cerca?: { radio: number }): Punto {
   const { izquierda, derecha, fondo, delante } = habitacion.suelo;
   for (let intento = 0; intento < 24; intento++) {
     const punto = cerca
@@ -84,7 +84,7 @@ export function puntoLibre(habitacion: Habitacion, desde: Punto, otros: readonly
   return { x: desde.x, y: desde.y };
 }
 
-export type ContextoDecision = { habitacion: Habitacion; noche: boolean; casaLimpia: boolean; alguienPide: boolean; sitioNoche: Punto; azar: () => number; ahora: number };
+export type ContextoDecision = { habitacion: SueloDeEstancia; noche: boolean; casaLimpia: boolean; alguienPide: boolean; sitioNoche: Punto; azar: () => number; ahora: number };
 
 /**
  * Decide qué hace un gatito que ha acabado lo que hacía:
@@ -110,7 +110,7 @@ export function decidir(andante: Andante, gatito: GatitoCasa, otros: readonly An
   if (eleccion.estado === "andar") {
     return ir(andante, puntoLibre(habitacion, andante, otros, azar), "sentarse", eleccion.segundos, ahora);
   }
-  const sitio = Object.values(habitacion.sitios).find((s) => s.para === eleccion.estado);
+  const sitio = Object.values(habitacion.sitios).find((s) => s?.para === eleccion.estado);
   if (sitio && azar() < IR_AL_SITIO && libre(sitio, otros)) return ir(andante, { x: sitio.x, y: sitio.y }, eleccion.estado, eleccion.segundos, ahora);
   return quedarse(andante, eleccion.estado, eleccion.segundos, ahora);
 }

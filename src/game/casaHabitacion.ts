@@ -31,6 +31,12 @@ export type Habitacion = {
   zonaArmario: { izquierda: number; derecha: number; arriba: number; abajo: number };
 };
 
+/**
+ * Lo que necesita una estancia de la casa (la habitación o el jardín, mapa «Jardín de la casa») para que los gatitos
+ * anden por ella: su suelo con la escala de profundidad y sus sitios de interés.
+ */
+export type SueloDeEstancia = Pick<Habitacion, "suelo" | "escala"> & { sitios: Readonly<Partial<Record<string, SitioInteres>>> };
+
 export const HABITACION_CASA: Habitacion = {
   id: "salon",
   ancho: 1280,
@@ -67,18 +73,18 @@ export const sobreElArmario = (habitacion: Habitacion, x: number, y: number) =>
   x >= habitacion.zonaArmario.izquierda && x <= habitacion.zonaArmario.derecha && y >= habitacion.zonaArmario.arriba && y <= habitacion.zonaArmario.abajo;
 
 /** Punto del suelo donde aterriza un gatito soltado en (x, y): el más cercano dentro del suelo. */
-export const aterrizar = (habitacion: Habitacion, x: number, y: number) => ({
+export const aterrizar = (habitacion: Pick<Habitacion, "suelo">, x: number, y: number) => ({
   x: Math.max(habitacion.suelo.izquierda, Math.min(habitacion.suelo.derecha, x)),
   y: Math.max(habitacion.suelo.fondo, Math.min(habitacion.suelo.delante, y)),
 });
 
 /** Escala de profundidad de un gatito con los pies en `y`: 0,8 al fondo del suelo y 1 delante. */
-export function escalaEnSuelo(habitacion: Habitacion, y: number): number {
+export function escalaEnSuelo(habitacion: Pick<Habitacion, "suelo" | "escala">, y: number): number {
   const { fondo, delante } = habitacion.suelo;
   const t = Math.max(0, Math.min(1, (y - fondo) / (delante - fondo)));
   return habitacion.escala.fondo + (habitacion.escala.delante - habitacion.escala.fondo) * t;
 }
 
 /** ¿Está el punto dentro del suelo por el que se anda? */
-export const dentroDelSuelo = (habitacion: Habitacion, x: number, y: number) =>
+export const dentroDelSuelo = (habitacion: Pick<Habitacion, "suelo">, x: number, y: number) =>
   x >= habitacion.suelo.izquierda && x <= habitacion.suelo.derecha && y >= habitacion.suelo.fondo && y <= habitacion.suelo.delante;

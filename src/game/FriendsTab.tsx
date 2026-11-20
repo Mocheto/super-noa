@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { getImage, getLevelAssets } from "./assets";
-import { drawEnemy } from "./rendering";
+import { FriendSprite, sample } from "./DibujoAmigo";
 import { heartsOf, isBestFriend, isFriend } from "./friendProgress";
 import { foodNames, friendCatalog, MAX_HEARTS, type FriendEntry, type FriendFood } from "./friends";
-import { levels, waterLevels } from "./levels";
+import { levels } from "./levels";
 import type { Progress } from "./progress";
 import { GameAssetIcon } from "./GameAssetIcon";
 import "./friends.css";
@@ -12,42 +12,6 @@ import { Pictogramas, Texto } from "../textos/Texto";
 
 /** La manzana sale del atlas de objetos; la bellota y la flor, de sus dibujos de la merienda y el valle. */
 const FOOD_ICONS: Record<Exclude<FriendFood, "apple">, string> = { acorn: "./assets/sprites/bellota-v1.webp", flower: "./assets/sprites/bloom-flower-v1.png" };
-
-/** Nivel y enemigo de muestra de un amigo: dan el arte de su mundo y sus medidas. */
-function sample(entry: FriendEntry) {
-  for (const level of [...levels, ...waterLevels]) {
-    const enemy = level.enemies.find((candidate) => candidate.kind === entry.kind);
-    if (enemy) return { level, enemy };
-  }
-  return null;
-}
-
-/** Dibuja el amigo con el mismo arte del juego. Vuelve a pintar mientras cargan las imágenes. */
-function FriendSprite({ entry, size, silhouette }: { entry: FriendEntry; size: number; silhouette?: boolean }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-  useEffect(() => {
-    const found = sample(entry);
-    const canvas = ref.current;
-    const context = canvas?.getContext("2d");
-    if (!found || !canvas || !context) return;
-    const raster = getLevelAssets(found.level);
-    let tries = 0;
-    const paint = () => {
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      const { enemy } = found;
-      const scale = Math.min(canvas.width / (enemy.width + 40), canvas.height / (enemy.height + 40));
-      context.save();
-      context.translate(canvas.width / 2, canvas.height - 8);
-      context.scale(scale, scale);
-      drawEnemy(context, { ...enemy, x: -enemy.width / 2, y: -enemy.height, vx: 1, active: true, phase: 0 }, 0, false, raster);
-      context.restore();
-    };
-    paint();
-    const timer = window.setInterval(() => { paint(); if (++tries > 8) window.clearInterval(timer); }, 400);
-    return () => window.clearInterval(timer);
-  }, [entry]);
-  return <canvas ref={ref} className={`friend-sprite ${silhouette ? "is-silhouette" : ""}`} width={size} height={Math.round(size * .8)} aria-hidden="true" />;
-}
 
 const worldAvailable = (world: number, progress: Progress) => {
   if (world === 7) return progress.secretUnlocked;

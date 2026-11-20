@@ -88,6 +88,11 @@ export const casa = {
       flor: { oculto: "Macetero con una flor abierta" },
     },
   },
+  visitante: {
+    toc: { rotulo: "{pictograma:sala} TOC TOC" },
+    llama: { oculto: "{nombre} llama a la puerta" },
+    dentro: { oculto: "{nombre} ha venido de visita" },
+  },
   puerta: {
     jardin: { oculto: "Puerta: sal al jardín" },
     casa: { oculto: "Puerta: vuelve a casa" },

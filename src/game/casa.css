@@ -277,6 +277,25 @@
 .casa-luciernaga { position: absolute; z-index: 1001; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: #fff6a8; box-shadow: 0 0 8px 4px #ffe96acc, 0 0 22px 10px #ffe96a55; pointer-events: none; transition: left 100ms linear, top 100ms linear; animation: casa-luciernaga 2.4s ease-in-out infinite; }
 @keyframes casa-luciernaga { 0%, 100% { opacity: .25; transform: scale(.7); } 50% { opacity: 1; transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .casa-luciernaga { animation: none; transition: none; } }
+.casa-visitante { position: absolute; width: 200px; height: 160px; transform: translate(-50%, -100%); pointer-events: none; }
+/* Al entrar, llega andando desde la valla (de donde asoma a donde se queda). */
+.casa-visitante.is-dentro { animation: casa-visitante-entra 2.5s ease-in-out; }
+@keyframes casa-visitante-entra { from { translate: 170px -19px; } to { translate: 0 0; } }
+.casa-visitante-dibujo { display: block; width: 100%; height: 100%; image-rendering: pixelated; animation: casa-visitante-bota .8s ease-in-out infinite alternate; }
+.casa-visitante.is-llama .casa-visitante-dibujo { animation-duration: .4s; }
+@keyframes casa-visitante-bota { to { translate: 0 -6px; } }
+.casa-toc { position: absolute; left: 50%; bottom: 100%; padding: 4px 10px; border: 3px solid #2f1d33; border-radius: 14px; background: #fff8e9; color: #2f1d33; font-size: 18px; white-space: nowrap; transform: translateX(-50%); animation: casa-toc .5s ease-out; }
+@keyframes casa-toc { 0% { transform: translateX(-50%) scale(.4); } 60% { transform: translateX(-50%) scale(1.15); } 100% { transform: translateX(-50%) scale(1); } }
+.casa-toc-puerta { position: absolute; z-index: 900; display: grid; justify-items: center; gap: 4px; padding: 10px 14px 12px; border: 4px solid #2f1d33; border-radius: 28px; background: #fff8e9; transform: translateX(-50%); pointer-events: none; }
+.casa-toc-puerta::before { content: ""; position: absolute; left: -22px; top: 46%; border: 12px solid transparent; border-right: 18px solid #2f1d33; }
+.casa-toc-puerta .friend-sprite { width: 150px; height: 120px; image-rendering: pixelated; }
+.casa-toc-puerta .casa-toc { position: static; border: 0; padding: 0; font-size: 26px; transform: none; animation: casa-toc-puerta .5s ease-out; }
+@keyframes casa-toc-puerta { 0% { scale: .4; } 60% { scale: 1.15; } 100% { scale: 1; } }
+.casa-puerta.is-llama { animation: casa-puerta-llama .25s ease-in-out 4 alternate, casa-armario-brilla 1s ease-in-out infinite; }
+@keyframes casa-puerta-llama { from { translate: -3px 0; } to { translate: 3px 0; } }
+.casa-aviso-visita { padding: 0; pointer-events: auto; cursor: pointer; box-shadow: 0 0 0 3px #ffd76a; }
+.casa-aviso-visita .friend-sprite { width: 40px; height: 32px; image-rendering: pixelated; }
+@media (prefers-reduced-motion: reduce) { .casa-visitante, .casa-visitante-dibujo, .casa-toc, .casa-toc-puerta .casa-toc, .casa-puerta.is-llama { animation: none; transition: none; } }
 .casa-puerta { position: absolute; z-index: 1; padding: 0; border: 0; border-radius: 90px 90px 8px 8px; background: transparent; pointer-events: none; }
 .casa-puerta:focus-visible { outline: 4px solid #ffd76a; }
 .casa-puerta.is-brilla { box-shadow: 0 0 0 4px #ffd76a, 0 0 26px 10px #ffe7a0aa; }

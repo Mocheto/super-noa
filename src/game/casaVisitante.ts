@@ -20,6 +20,14 @@ export const LLAMA_A_LOS_MS = 4000;
 export const SE_VA_TRAS_COMER_MS = 20_000;
 export const SE_VA_SIN_COMER_MS = 180_000;
 
+/** En el jardín: dónde asoma junto a la valla mientras llama, y adónde va al entrar (pies, en px de la escena). */
+export const VISITANTE_ASOMA = { x: 960, y: 486 };
+export const VISITANTE_SITIO = { x: 790, y: 505 };
+/** Radio de toque del visitante alrededor de su cuerpo (px de la escena). */
+export const TOQUE_VISITANTE = 90;
+/** Centro del cuerpo del visitante con los pies en `pies`: para tocarlo. */
+export const cuerpoDelVisitante = (pies: { x: number; y: number }) => ({ x: pies.x, y: pies.y - 50 });
+
 export type VisitanteProgress = { /** Día local de la última visita (AAAA-MM-DD). */ dia: string; /** Animal (tipo del catálogo de amigos). */ animal: string };
 
 type Estadisticas = Record<string, { completed?: boolean } | undefined>;

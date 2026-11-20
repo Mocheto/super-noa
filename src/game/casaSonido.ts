@@ -232,6 +232,24 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
       osc.start(inicio);
       osc.stop(inicio + 0.4);
     },
+    /** «Toc, toc» en la puerta: dos golpes graves de madera. */
+    toc() {
+      const ctx = listo();
+      if (!ctx || !salida) return;
+      [0, 0.22].forEach((retraso) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const inicio = ctx.currentTime + retraso;
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(220, inicio);
+        osc.frequency.exponentialRampToValueAtTime(110, inicio + 0.08);
+        gain.gain.setValueAtTime(0.35, inicio);
+        gain.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.12);
+        osc.connect(gain).connect(salida!);
+        osc.start(inicio);
+        osc.stop(inicio + 0.14);
+      });
+    },
     /** El «clic» de la cámara: dos chasquidos cortos. */
     clic() {
       const ctx = listo();

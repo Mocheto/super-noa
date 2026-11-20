@@ -44,6 +44,8 @@ export type AjustesCasa = {
   toque: number;
   /** Para probar: necesidades al entrar. */
   necesidades: "pide" | "senota" | null;
+  /** Para probar: este animal llama a la puerta al entrar, a cualquier hora (`?casaVisita=wolf`). */
+  visita?: string | null;
   /** Para probar: la hora que cree la casa (0–23), para ver la hora de dormir de día. */
   hora: number | null;
 };
@@ -64,6 +66,7 @@ export function leerAjustesCasa(busqueda: string | null): AjustesCasa {
     toque: numero(parametros.get("casaToque"), 40, 200, AJUSTES_CASA.toque),
     necesidades: necesidades === "pide" || necesidades === "senota" ? necesidades : null,
     hora: parametros.has("casaHora") ? Math.round(numero(parametros.get("casaHora"), 0, 23, 12)) : null,
+    visita: parametros.get("casaVisita"),
   };
 }
 

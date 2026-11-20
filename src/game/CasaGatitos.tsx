@@ -10,6 +10,9 @@ import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hoj
 import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
+import { apuntarVisita, cuerpoDelVisitante, elegirVisitante, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";
+import { DibujoAmigo } from "./DibujoAmigo";
+import { friendCatalog } from "./friends";
 import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, CELDAS_MACETEROS, HOJA_MACETEROS, jardinDe, LUCIERNAGAS, luciernagaEn, maceteroBajo, maceteroPorRegar, regar, REGADERA, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
@@ -92,6 +95,7 @@ const ajustes = leerAjustesCasa(window.location.search);
 const porcentajeX = (x: number) => `${(x / ESCENA_CASA.ancho) * 100}%`;
 const porcentajeY = (y: number) => `${(y / ESCENA_CASA.alto) * 100}%`;
 const nombreDe = (mundo: number) => tClave(`mundos.${mundo}.gato.rotulo`);
+const nombreDeAmigo = (animal: string) => friendCatalog.find((amigo) => amigo.kind === animal)?.name ?? animal;
 
 /** «MIEL», «MIEL y BRUMA» o «MIEL, BRUMA y PINO». */
 function nombresJuntos(mundos: readonly number[]): string {
@@ -180,6 +184,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   /** Mariposas del jardín que Noa ha hecho posarse junto a un gatito. */
   /** El último riego: a qué macetero y qué ha pasado (crece, brillitos en flor, o ya regado hoy). */
   const [riego, setRiego] = useState<{ indice: number; id: number; efecto: "crece" | "brilla" | "espera" } | null>(null);
+  /** El visitante de hoy (mapa «Visitas de los amigos a la casa»): llamando a la puerta o ya en el jardín. */
+  const [visita, setVisita] = useState<{ animal: string; fase: "llama" | "dentro"; llamadas: number } | null>(null);
+  const visitaPensadaRef = useRef(false);
   const [toqueMariposa, setToqueMariposa] = useState<{ punto: { x: number; y: number }; ms: number } | null>(null);
   const [posadas, setPosadas] = useState<(Posada | null)[]>(() => Array.from({ length: MARIPOSAS }, () => null));
   useEffect(() => { botandoRef.current = botando; }, [botando]);
@@ -360,6 +367,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const cruzarPuerta = () => {
     // Mientras uno bota en la colchoneta, se espera a que baje.
     if (acostando || botando.length) return;
+    // Si llamaba un visitante, al abrir pasa al jardín.
+    if (!enJardin && visita?.fase === "llama") setVisita({ ...visita, fase: "dentro" });
     setEstancia(enJardin ? "habitacion" : "jardin");
     setVista(0);
     setAbanico(false);
@@ -408,6 +417,42 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     tocarMariposa(toqueMariposa.punto, toqueMariposa.ms);
   }, [toqueMariposa]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Una vez por visita a la casa, a los pocos segundos: si toca, un amigo llama a la puerta (y queda apuntado hoy).
+  useEffect(() => {
+    if (fase !== "casa" || visitaPensadaRef.current) return;
+    const espera = window.setTimeout(() => {
+      // Solo se piensa una vez por visita a la casa (apuntado al vencer la espera, para que el modo estricto no la pierda).
+      if (visitaPensadaRef.current) return;
+      visitaPensadaRef.current = true;
+      const actual = casaRef.current;
+      const reloj = relojCasa(ajustes);
+      const forzada = ajustes.visita && friendCatalog.some((amigo) => amigo.kind === ajustes.visita) ? ajustes.visita : null;
+      if (!forzada && !tocaVisita(actual, reloj)) return;
+      const animal = forzada ?? elegirVisitante(actual, levelStats);
+      if (!animal) return;
+      guardar(apuntarVisita(actual, animal, reloj));
+      sonidoRef.current?.toc();
+      setVisita({ animal, fase: "llama", llamadas: 1 });
+    }, LLAMA_A_LOS_MS);
+    return () => window.clearTimeout(espera);
+  }, [fase]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Mientras espera, vuelve a llamar cada 10 s.
+  const llamando = visita?.fase === "llama";
+  useEffect(() => {
+    if (!llamando) return;
+    const reloj = window.setInterval(() => {
+      sonidoRef.current?.toc();
+      setVisita((actual) => actual?.fase === "llama" ? { ...actual, llamadas: actual.llamadas + 1 } : actual);
+    }, TOC_CADA_MS);
+    return () => window.clearInterval(reloj);
+  }, [llamando]);
+  // Si nadie le abre o no come, a los 3 minutos se va (y vuelve otro día).
+  useEffect(() => {
+    if (!visita) return;
+    const reloj = window.setTimeout(() => setVisita(null), SE_VA_SIN_COMER_MS);
+    return () => window.clearTimeout(reloj);
+  }, [visita?.animal, visita?.fase]); // eslint-disable-line react-hooks/exhaustive-deps
+
   /** Con el teclado (o un lector de pantalla), la mariposa elegida se posa igual que al tocarla. */
   const mariposaConTeclado = (event: ReactMouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0) return;
@@ -428,6 +473,18 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const regarConTeclado = (event: ReactMouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0) return;
     regarMacetero(maceteroPorRegar(casaRef.current, new Date()));
+  };
+
+  /** Dónde está el visitante en el jardín: asomando por la valla mientras llama, o dentro. */
+  const piesVisitante = visita?.fase === "dentro" ? VISITANTE_SITIO : VISITANTE_ASOMA;
+  const sobreVisitante = (punto: { x: number; y: number }) => {
+    if (!visita || !enJardin) return false;
+    const cuerpo = cuerpoDelVisitante(piesVisitante);
+    return Math.hypot(punto.x - cuerpo.x, punto.y - cuerpo.y) <= TOQUE_VISITANTE;
+  };
+  /** Tocar al visitante: si llamaba desde la valla, entra. */
+  const tocarVisitante = () => {
+    if (visita?.fase === "llama") setVisita({ ...visita, fase: "dentro" });
   };
 
   /** La estrella de la bandeja: empieza la hora de dormir y cada gatito en casa va a su sitio de noche a dormir. */
@@ -835,7 +892,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }
     // Una mariposa delante de un gatito se toca antes que el gatito.
     const sobreMariposa = mariposasVisibles && mariposaBajo(punto, mariposasEn(event.timeStamp).map((m) => m.activa ? null : m)) >= 0;
-    const indice = sobreMariposa ? -1 : tocar(punto);
+    const indice = sobreMariposa || sobreVisitante(punto) ? -1 : tocar(punto);
     if (indice >= 0) pararGatito(indice);
     try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* sin captura, el deslizar sigue funcionando dentro de la escena */ }
     if (indice < 0) {
@@ -891,6 +948,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const tocado = deslizRef.current;
     if (decorando && tocado?.punto && !tocado.moviendo) setElegido(muebleEn(tocado.punto.x, tocado.punto.y));
     else if (noche && !enJardin && tocado?.punto && !tocado.moviendo && enLaLampara(tocado.punto)) cambiarLampara();
+    else if (tocado?.punto && !tocado.moviendo && sobreVisitante(tocado.punto)) tocarVisitante();
     else if (mariposasVisibles && tocado?.punto && !tocado.moviendo && mariposaBajo(tocado.punto, mariposasEn(event.timeStamp).map((m) => m.activa ? null : m)) >= 0) setToqueMariposa({ punto: tocado.punto, ms: event.timeStamp });
     else if (tocado?.punto && !tocado.moviendo && sobreLaPuerta(estancia, tocado.punto.x, tocado.punto.y)) cruzarPuerta();
     deslizRef.current = null;
@@ -1067,7 +1125,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             style={{ left: HABITACION.armario.left, top: HABITACION.armario.top, width: HABITACION.armario.width, height: HABITACION.armario.height }} />
           <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} /></>}
           {/* La puerta del corazón lleva a la otra estancia; con el dedo se toca en la escena, aquí para el teclado. */}
-          {fase === "casa" && !acostando && <button type="button" className={`casa-puerta${cogido ? " is-brilla" : ""}`} aria-label={tClave(enJardin ? "casa.puerta.casa.oculto" : "casa.puerta.jardin.oculto")}
+          {fase === "casa" && !acostando && <button type="button" className={`casa-puerta${cogido || (llamando && !enJardin) ? " is-brilla" : ""}${llamando && !enJardin ? " is-llama" : ""}`} aria-label={tClave(enJardin ? "casa.puerta.casa.oculto" : "casa.puerta.jardin.oculto")}
             style={{ left: zonaPuertaDe(estancia).izquierda, top: zonaPuertaDe(estancia).arriba, width: zonaPuertaDe(estancia).derecha - zonaPuertaDe(estancia).izquierda, height: zonaPuertaDe(estancia).abajo - zonaPuertaDe(estancia).arriba }}
             onClick={(event) => { if (event.detail === 0) cruzarPuerta(); }} />}
           {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(enJardin ? JARDIN.sitios.puerta.x : PUERTA_X) }} />}
@@ -1083,6 +1141,17 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           })}
           {enJardin && riego && riego.efecto !== "espera" && <i key={`destello-${riego.id}`} className="casa-destello" aria-hidden="true"
             style={{ left: JARDIN.maceteros[riego.indice].left + JARDIN.maceteros[riego.indice].width / 2, top: JARDIN.maceteros[riego.indice].top + 30 }} />}
+          {/* El visitante: en el jardín, asomando por la valla o dentro; en la habitación, su bocadillo sobre la puerta. */}
+          {enJardin && visita && <div className={`casa-visitante is-${visita.fase}`} role="img" aria-label={t(visita.fase === "llama" ? "casa.visitante.llama.oculto" : "casa.visitante.dentro.oculto", { nombre: nombreDeAmigo(visita.animal) })}
+            style={{ left: piesVisitante.x, top: piesVisitante.y, zIndex: Math.round(piesVisitante.y) }}>
+            <DibujoAmigo animal={visita.animal} size={200} className="casa-visitante-dibujo" />
+            {visita.fase === "llama" && <span key={visita.llamadas} className="casa-toc texto-noa" aria-hidden="true"><Texto clave="casa.visitante.toc.rotulo" /></span>}
+          </div>}
+          {!enJardin && visita?.fase === "llama" && <div key={visita.llamadas} className="casa-toc-puerta" role="img" aria-label={t("casa.visitante.llama.oculto", { nombre: nombreDeAmigo(visita.animal) })}
+            style={{ left: zonaPuertaDe("habitacion").derecha + 90, top: zonaPuertaDe("habitacion").arriba + 30 }}>
+            <DibujoAmigo animal={visita.animal} size={150} />
+            <span className="casa-toc texto-noa"><Texto clave="casa.visitante.toc.rotulo" /></span>
+          </div>}
           {/* De noche en el jardín, luciérnagas por encima de la capa de noche. */}
           {enJardin && noche && Array.from({ length: LUCIERNAGAS }, (_, indice) => {
             const { x, y } = luciernagaEn(indice, reduceMotion ? indice * 7000 : ahora);
@@ -1122,6 +1191,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         </div>
         {quedaIzquierda && <span className="casa-borde is-izquierda" aria-hidden="true" />}
         {quedaDerecha && <span className="casa-borde is-derecha" aria-hidden="true" />}
+        {llamando && visita && (enJardin ? VISITANTE_ASOMA.x > vistaX + anchoVisible - 40 : zonaPuertaDe("habitacion").derecha < vistaX + 20) &&
+          <button type="button" key={`visita-${visita.llamadas}`} className={`casa-aviso casa-aviso-visita is-${enJardin ? "derecha" : "izquierda"}`}
+            aria-label={t("casa.visitante.llama.oculto", { nombre: nombreDeAmigo(visita.animal) })}
+            onClick={() => setVista(enJardin ? centrarEn(VISITANTE_ASOMA.x, anchoVisible) : 0)}><DibujoAmigo animal={visita.animal} size={64} /></button>}
         {fuera.map((aviso) => <span key={aviso.mundo} className={`casa-aviso is-${aviso.lado}`} aria-hidden="true"><i className={`casa-objeto is-${aviso.objeto}`} /></span>)}
         {flash > 0 && <span key={flash} className="casa-flash" aria-hidden="true"><i className="casa-foto-vuela" /></span>}
       </div>

@@ -997,6 +997,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           return { mundo, x: Math.round(andante.x), y: Math.round(andante.y), animacion, cuadro, mira, sucio: variante?.sucio ?? false, mejorAmigo: variante?.mejorAmigo ?? false, arropado: tapado,
             ...(!tapado && Object.keys(ropa).length ? { ropa } : {}) };
         }),
+      // En el jardín, la foto guarda cómo estaba cada macetero.
+      ...(enJardin ? { jardin: { maceteros: jardinDe(casa).maceteros.map(celdaDeMacetero) } } : {}),
     };
     guardar(guardarFoto(casaRef.current, foto));
     sonidoRef.current?.clic();
@@ -1152,9 +1154,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       {fase === "casa" && bano === null && !decorando && !acostando && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
         <span className="casa-bandeja-modos">
           {horaDeDormir && <BotonControl className="casa-bandeja-modo casa-dormir" pictograma="estrella" etiqueta="casa.dormir.empezar.oculto" onClick={empezarADormir} />}
-          {/* Decorar y las fotos, de momento, solo en la habitación. */}
+          {/* Decorar, solo en la habitación. */}
           {!enJardin && <BotonControl className="casa-bandeja-modo" pictograma="flor" etiqueta="casa.decorar.boton.oculto" onClick={cambiarDecorar} />}
-          {!enJardin && <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />}
+          <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
           <BotonControl className="casa-bandeja-modo" pictograma="gato" etiqueta="casa.enCasa.boton.oculto" onClick={() => setEligiendo({ orden: [...enCasaDe(casaRef.current), ...dePaseoDe(casaRef.current)], antes: enCasaDe(casaRef.current) })} />
         </span>
         {HERRAMIENTAS.filter((herramienta) => !enJardin || herramienta !== "escoba").map((herramienta) => herramienta === "cuenco"

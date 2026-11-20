@@ -164,3 +164,12 @@ test("las luciérnagas brillan repartidas por el jardín, sobre la hierba", asyn
     }
   }
 });
+
+test("una foto del jardín guarda sus maceteros y se lee de vuelta; sin jardín es de la habitación", async () => {
+  const { normalizeFotos } = await import("./casaFoto.ts");
+  const base = { hecha: new Date(2026, 10, 20, 12).toISOString(), vista: { x: 0, ancho: 640 }, decoracion: {}, noche: false, apagada: false, gatitos: [] };
+  const [delJardin] = normalizeFotos([{ ...base, jardin: { maceteros: [0, 3, 99] } }]);
+  assert.deepEqual(delJardin.jardin, { maceteros: [0, 3, 9] });
+  const [deCasa] = normalizeFotos([base]);
+  assert.equal(deCasa.jardin, undefined);
+});

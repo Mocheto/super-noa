@@ -11,6 +11,7 @@ import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
 import { CELDA_ACCESORIO, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte.ts";
 import { celdaDe, type Accesorio } from "./casaRopa.ts";
+import { CELDAS_MACETEROS, HOJA_MACETEROS, JARDIN, LUCIERNAGAS, luciernagaEn } from "./casaJardin.ts";
 
 /** Fila de los pies dentro del cuadro del gato (la misma que en la casa). */
 export const PIES_GATITO = 152;
@@ -23,8 +24,8 @@ export type Caja = { x: number; y: number; ancho: number; alto: number };
  * Caja del cuadro del gato en la escena, como la dibuja la casa: el cuadro de 160 × 160 con los pies en su sitio,
  * centrado en `x` y escalado por la profundidad desde el 95 % de su alto.
  */
-export function cajaDeGatito(gatito: Pick<GatitoEnFoto, "x" | "y">): Caja {
-  const escala = escalaEnSuelo(HABITACION, gatito.y);
+export function cajaDeGatito(gatito: Pick<GatitoEnFoto, "x" | "y">, enJardin = false): Caja {
+  const escala = escalaEnSuelo(enJardin ? JARDIN : HABITACION, gatito.y);
   const lado = CUADRO_GATO * escala;
   const arriba = gatito.y - PIES_GATITO + CUADRO_GATO * 0.95 * (1 - escala);
   return { x: gatito.x - lado / 2, y: arriba, ancho: lado, alto: lado };
@@ -74,12 +75,28 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     contexto.restore();
   };
 
+  const enJardin = Boolean(foto.jardin);
+  if (foto.jardin) {
+    // En el jardín: su fondo, la colchoneta y cada macetero como estaba.
+    const fondo = await cargar(JARDIN.fondo);
+    contexto.drawImage(fondo, foto.vista.x, 0, foto.vista.ancho, ALTO, 0, 0, ancho, ALTO * escala);
+    const colchoneta = await cargar(JARDIN.colchoneta.imagen);
+    const { left, top, width, height } = JARDIN.colchoneta;
+    pintar(colchoneta, { x: 0, y: 0, ancho: colchoneta.naturalWidth, alto: colchoneta.naturalHeight }, { x: left, y: top, ancho: width, alto: height });
+    const lamina = await cargar(HOJA_MACETEROS);
+    const celda = lamina.naturalWidth / CELDAS_MACETEROS;
+    foto.jardin.maceteros.forEach((indice, i) => {
+      const caja = JARDIN.maceteros[i];
+      if (caja) pintar(lamina, { x: celda * indice, y: 0, ancho: celda, alto: lamina.naturalHeight }, { x: caja.left, y: caja.top, ancho: caja.width, alto: caja.height });
+    });
+  }
+
   // Fondo con la pared de su tono.
-  const fondo = await cargar(await fondoConPared(HABITACION.fondo, foto.decoracion.pared));
-  contexto.drawImage(fondo, foto.vista.x, 0, foto.vista.ancho, ALTO, 0, 0, ancho, ALTO * escala);
+  const fondo = enJardin ? null : await cargar(await fondoConPared(HABITACION.fondo, foto.decoracion.pared));
+  if (fondo) contexto.drawImage(fondo, foto.vista.x, 0, foto.vista.ancho, ALTO, 0, 0, ancho, ALTO * escala);
 
   // Muebles en su versión.
-  for (const mueble of MUEBLES) {
+  for (const mueble of enJardin ? [] : MUEBLES) {
     const dibujo = MUEBLES_CASA[mueble].dibujo;
     if (!dibujo) continue;
     const hoja = await cargar(dibujo.imagen);
@@ -88,7 +105,7 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
   }
 
   // De noche, la ventana de noche encima de la de día.
-  if (foto.noche) {
+  if (foto.noche && !enJardin) {
     const ventana = HABITACION.ventanaNoche;
     const imagen = await cargar(ventana.imagen);
     pintar(imagen, { x: 0, y: 0, ancho: imagen.naturalWidth, alto: imagen.naturalHeight }, { x: ventana.left, y: ventana.top, ancho: ventana.width, alto: ventana.height });
@@ -97,7 +114,7 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
   // Gatitos, de atrás adelante; los arropados, con su pose propia (cabeza fuera y mantita de su color).
   for (const gatito of [...foto.gatitos].sort((a, b) => a.y - b.y)) {
     const variante = { sucio: gatito.sucio, mejorAmigo: gatito.mejorAmigo };
-    const caja = cajaDeGatito(gatito);
+    const caja = cajaDeGatito(gatito, enJardin);
     if (gatito.arropado) {
       const hoja = await cargar(await arropadoDe(gatito.mundo, variante));
       pintar(hoja, { x: (gatito.cuadro % CUADROS_ARROPADO) * CUADRO_GATO, y: 0, ancho: CUADRO_GATO, alto: CUADRO_GATO }, caja, gatito.mira < 0);
@@ -120,6 +137,23 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     }
   }
 
+  // De noche en el jardín: su capa oscura y las luciérnagas donde estaban al hacerla.
+  if (foto.noche && enJardin) {
+    contexto.fillStyle = "rgba(20, 29, 90, 0.65)";
+    contexto.fillRect(0, 0, ancho, lienzo.height);
+    const momento = Date.parse(foto.hecha);
+    for (let i = 0; i < LUCIERNAGAS; i += 1) {
+      const { x, y } = luciernagaEn(i, momento);
+      const centro = { x: (x - foto.vista.x) * escala, y: y * escala };
+      const brillo = contexto.createRadialGradient(centro.x, centro.y, 0, centro.x, centro.y, 16 * escala);
+      brillo.addColorStop(0, "rgba(255, 246, 168, 1)");
+      brillo.addColorStop(0.3, "rgba(255, 233, 106, 0.7)");
+      brillo.addColorStop(1, "rgba(255, 233, 106, 0)");
+      contexto.fillStyle = brillo;
+      contexto.fillRect(centro.x - 16 * escala, centro.y - 16 * escala, 32 * escala, 32 * escala);
+    }
+    return;
+  }
   // Capa de noche: azul con el halo de la lámpara, o más oscura con la lámpara apagada.
   if (foto.noche) {
     if (foto.apagada) {

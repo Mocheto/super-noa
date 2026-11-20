@@ -39,7 +39,20 @@ export type FotoCasa = {
   /** De noche, con la lámpara apagada. */
   apagada: boolean;
   gatitos: GatitoEnFoto[];
+  /** Hecha en el jardín (mapa «Jardín de la casa»): la celda de cada macetero tal como estaba. Si falta, en la habitación. */
+  jardin?: { maceteros: number[] };
 };
+
+/** Celdas de la lámina de los maceteros (`CELDAS_MACETEROS` de `casaJardin.ts`). */
+const CELDAS_MACETEROS = 10;
+const MACETEROS = 3;
+
+function normalizeJardinEnFoto(raw: unknown): FotoCasa["jardin"] | undefined {
+  if (!registro(raw) || !Array.isArray(raw.maceteros)) return undefined;
+  const leidos: unknown[] = raw.maceteros;
+  const maceteros = Array.from({ length: MACETEROS }, (_, i) => Math.floor(entre(leidos[i], 0, CELDAS_MACETEROS - 1) ?? 0));
+  return { maceteros };
+}
 
 /** Guarda la foto delante de las demás; con más de doce, se va la más antigua. */
 export const guardarFoto = (casa: CasaProgress, foto: FotoCasa): CasaProgress =>
@@ -73,6 +86,7 @@ export function normalizeFotos(raw: unknown): FotoCasa[] {
     const ancho = entre(foto.vista.ancho, 100, ANCHO);
     const x = entre(foto.vista.x, 0, ANCHO);
     if (ancho === null || x === null) return [];
+    const jardin = normalizeJardinEnFoto(foto.jardin);
     const gatitos = (Array.isArray(foto.gatitos) ? foto.gatitos : []).map(normalizeGatito).filter((g): g is GatitoEnFoto => g !== null).slice(0, MAX_GATITOS);
     return [{
       hecha: new Date(foto.hecha).toISOString(),
@@ -81,6 +95,7 @@ export function normalizeFotos(raw: unknown): FotoCasa[] {
       noche: foto.noche === true,
       apagada: foto.noche === true && foto.apagada === true,
       gatitos,
+      ...(jardin ? { jardin } : {}),
     }];
   }).slice(0, MAX_FOTOS);
 }

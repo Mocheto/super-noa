@@ -66,7 +66,7 @@ export function leerAjustesCasa(busqueda: string | null): AjustesCasa {
     toque: numero(parametros.get("casaToque"), 40, 200, AJUSTES_CASA.toque),
     necesidades: necesidades === "pide" || necesidades === "senota" ? necesidades : null,
     hora: parametros.has("casaHora") ? Math.round(numero(parametros.get("casaHora"), 0, 23, 12)) : null,
-    visita: parametros.get("casaVisita"),
+    ...(parametros.has("casaVisita") ? { visita: parametros.get("casaVisita") } : {}),
   };
 }
 

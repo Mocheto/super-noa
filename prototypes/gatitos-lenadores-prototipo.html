@@ -107,7 +107,7 @@
       <div class="stump"><div class="side"></div><div class="top"></div></div>
       <div class="ring" id="ring"></div>
       <div class="now" id="now">¡Ahora!</div>
-      <div class="lumber"><img src="../public/assets/sprites/noa-cat-yarn-v2.png" alt="Noa leñadora">
+      <div class="lumber"><img src="../public/assets/sprites/noa-cat-yarn-v2.webp" alt="Noa leñadora">
         <svg class="axe" id="axe" viewBox="0 0 74 120" aria-hidden="true">
           <rect x="32" y="22" width="10" height="96" rx="4" fill="#9a6338" stroke="#2f1d33" stroke-width="3"/>
           <path d="M40 8 Q70 10 70 34 Q60 46 40 40 Z" fill="#cfd6dd" stroke="#2f1d33" stroke-width="3"/>
@@ -283,7 +283,7 @@ function buildPieces(score) {
 }
 function makeEl(p) {
   const el = document.createElement("div"); el.className = "piece";
-  if (p.type === Y) { el.style.width = "62px"; el.style.height = "56px"; el.innerHTML = `<img src="../public/assets/sprites/yarn-ball-v1.png" alt="Ovillo">`; }
+  if (p.type === Y) { el.style.width = "62px"; el.style.height = "56px"; el.innerHTML = `<img src="../public/assets/sprites/yarn-ball-v1.webp" alt="Ovillo">`; }
   else { const w = p.type === S ? 118 : 200; el.style.width = w + "px"; el.style.height = Math.round(w * 180 / 640) + "px";
     el.innerHTML = `<img src="../public/assets/sprites/gatitos-tronco.png" alt="Tronco"><span class="marks">${p.hits.map(() => "<b></b>").join("")}</span>`; }
   piecesEl.appendChild(el); p.el = el;

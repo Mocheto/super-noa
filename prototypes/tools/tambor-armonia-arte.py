@@ -1,6 +1,6 @@
 """Arte v0 del tambor de Armonía: Noa tamborilera, los dos tambores, el atril y el fondo del teatro.
 
-Como el v0 de la abeja ninja, compone poses existentes de Noa (public/assets/sprites/noa-sprite-sheet.png)
+Como el v0 de la abeja ninja, compone poses existentes de Noa (public/assets/sprites/noa-sprite-sheet.webp)
 con un disfraz de banda de música (chaqueta turquesa con cordones dorados, gorro alto con pompón y dos
 baquetas). Los añadidos, los tambores, el atril y el teatro se dibujan a un cuarto de resolución y se
 escalan sin suavizado para conservar el aspecto pixelado con contorno marcado. Todo es original.
@@ -23,7 +23,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
-SHEET = ROOT / "public/assets/sprites/noa-sprite-sheet.png"
+SHEET = ROOT / "public/assets/sprites/noa-sprite-sheet.webp"
 OUT = ROOT / "public/assets"
 PREVIEW = len(sys.argv) > 1 and sys.argv[1] == "--preview"
 WITH_NOA = "--noa" in sys.argv

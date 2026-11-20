@@ -11,7 +11,7 @@ Los recursos siguientes se generaron con la herramienta de imágenes integrada, 
 | Archivo | Brief visual final |
 | --- | --- |
 | `public/assets/sprites/noa-swim-v1.png` | Hoja 2 × 3 de Noa nadando en pixel art: dos brazadas normal, dos con la coraza dorada y dos en modo gatita. Mantener pelo castaño, clip de manzana, vestido morado, zapatos y silueta de la versión existente; celdas separadas, cuerpo entero, transparencia. |
-| `public/assets/atlases/boss-don-aleta-v1.png` y `public/assets/sprites/boss-don-aleta-0.png` a `-5.png` | Tiburón humanoide original, amistoso y reconocible, azul, con chaleco de capitán marino. Seis gestos completos en cuadrícula 3 × 2: reposo, piedra, papel, tijera, derrota respetuosa y saludo; fondo transparente. |
+| `public/assets/sprites/boss-don-aleta-0.png` a `-4.png` | Tiburón humanoide original, amistoso y reconocible, azul, con chaleco de capitán marino. Cinco gestos sueltos: reposo, piedra, papel, tijera y derrota respetuosa; fondo transparente. El atlas original de seis gestos (`boss-don-aleta-v1.png`) y el saludo (`-5.png`) se retiraron porque el juego no los usa; quedan en el historial de git. |
 | `public/assets/atlases/water-enemies-v1.png` | Dos enemigos originales y separados: pez naranja con aletas turquesa y erizo de mar morado de púas claras; pixel art colorido, transparencia. |
 | `public/assets/atlases/water-terrain-v1.png` | Atlas de arena marina, plataforma de coral, pared de arrecife y puerta palaciega de conchas; motivos separados para componer niveles de plataformas. |
 | `public/assets/stickers/world-8-v1.webp` | Tres pegatinas coleccionables troqueladas: concha de Perla, pez aventurero y corona de coral de Don Aleta, una por cada columna, bordes completos y fondo transparente. |

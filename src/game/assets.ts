@@ -26,7 +26,7 @@ export type RasterAssets = {
 const cache = new Map<string, HTMLImageElement>();
 let unloaded: HTMLImageElement | undefined;
 
-// Lossless gameplay variants; original PNG URLs remain available to other screens.
+// Solo existe el WebP sin pérdida: el código pide la ruta .png y getImage/optimizedAssetSource la cambian por .webp.
 const optimizedImages = new Set([
   "home-adventure-v3",
   "atlases/collectibles-v1", "atlases/enemies-v1", "atlases/platform-tiles-v1", "atlases/world-1-tiles-v1",

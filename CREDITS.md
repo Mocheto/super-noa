@@ -82,7 +82,7 @@ El primer comando genera las once pistas y las verifica; el segundo solo verific
 - Mundo acuático: fondos, terreno, peces, erizos, gatita Perla, pegatinas, gestos de nado de Noa y Don Aleta son recursos originales creados para Super Noa.
 - El muro de arrecife transparente `sea-reef-wall-v2.png` es un recorte original generado para este proyecto a partir del atlas acuático propio; el proceso y el prompt están en `WATER_ART.md`.
 - Las nuevas ilustraciones panorámicas del mapa para los mundos 1–5 son versiones originales de las escenas de Super Noa; sus descripciones de generación están en `MAP_ART.md`.
-- El paisaje continuo `noa-adventure-map-v1.webp` es una ilustración original generada para el mapa interactivo de Super Noa. Los caminos, marcadores y cuadros de mundo son interfaz del juego, no elementos copiados ni incrustados en la imagen. Su descripción de generación está en `MAP_ART.md`.
+- El paisaje continuo `noa-adventure-map-v2.webp` (y antes `noa-adventure-map-v1.webp`, ya retirado) es una ilustración original generada para el mapa interactivo de Super Noa. Los caminos, marcadores y cuadros de mundo son interfaz del juego, no elementos copiados ni incrustados en la imagen. Su descripción de generación está en `MAP_ART.md`.
 
 ## Tipografía
 

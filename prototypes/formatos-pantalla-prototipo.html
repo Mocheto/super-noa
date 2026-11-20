@@ -61,9 +61,9 @@
 const A = "../public/assets/";
 const IMG = {};
 for (const [name, src] of Object.entries({
-  noa: "sprites/noa-sprite-sheet.png", noaJump: "sprites/noa-jump-v2.png", tiles: "atlases/world-1-tiles-v1.png",
-  coll: "atlases/collectibles-v1.png", switches: "atlases/detour-switches-v1.png", cat: "sprites/world-cat-1-v1.png",
-  yarn: "sprites/yarn-ball-v1.png", forest: "worlds/world-1-hd-v1.webp", castle: "worlds/castle-interior-background-v1.webp",
+  noa: "sprites/noa-sprite-sheet.webp", noaJump: "sprites/noa-jump-v2.webp", tiles: "atlases/world-1-tiles-v1.webp",
+  coll: "atlases/collectibles-v1.webp", switches: "atlases/detour-switches-v1.png", cat: "sprites/world-cat-1-v1.png",
+  yarn: "sprites/yarn-ball-v1.webp", forest: "worlds/world-1-hd-v1.webp", castle: "worlds/castle-interior-background-v1.webp",
   meadow: "worlds/world-2-hd-v1.webp",
 })) { IMG[name] = new Image(); IMG[name].src = A + src; }
 const ready = (img) => img.complete && img.naturalWidth > 0;

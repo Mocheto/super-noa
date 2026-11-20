@@ -1,6 +1,6 @@
 """Sprites provisionales de Noa-abeja y del tarro de miel para el boceto de la abeja ninja.
 
-Compone poses existentes de Noa (public/assets/sprites/noa-sprite-sheet.png) con un disfraz de abeja
+Compone poses existentes de Noa (public/assets/sprites/noa-sprite-sheet.webp) con un disfraz de abeja
 (peto a rayas, antenas y alas) y la varita-aguijón sujeta en la mano de cada pose. Los añadidos se
 dibujan a un cuarto de resolución y se escalan sin suavizado para que conserven el aspecto pixelado.
 
@@ -13,7 +13,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[2]
-SHEET = ROOT / "public/assets/sprites/noa-sprite-sheet.png"
+SHEET = ROOT / "public/assets/sprites/noa-sprite-sheet.webp"
 OUT = ROOT / "prototypes/assets"
 
 INK = (47, 29, 51, 255)

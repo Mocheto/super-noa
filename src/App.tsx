@@ -1001,7 +1001,7 @@ export default function App() {
                 <img src="./assets/sprites/world-cat-1-v1.png" alt="" />
                 <GameAssetIcon kind="apple" />
                 <img src="./assets/sprites/world-cat-2-v1.png" alt="" />
-                <img className="party-yarn" src="./assets/sprites/yarn-ball-v1.png" alt="" />
+                <img className="party-yarn" src={optimizedAssetSource("./assets/sprites/yarn-ball-v1.png")} alt="" />
                 <img src="./assets/sprites/world-cat-6-v1.png" alt="" />
               </div>
               <p className="juntos">{t("ventanas.final.amigos.juntos")}</p>

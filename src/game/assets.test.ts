@@ -143,11 +143,10 @@ test("la interfaz y el motor comparten una fuente optimizada y la misma imagen",
     const source = optimizedAssetSource(original);
     assert.equal(source, original.replace(/\.png$/, ".webp"));
     assert.equal(optimizedAssetSource(source), source);
-    const png = readFileSync(new URL(`../../public/${original.slice(2)}`, import.meta.url));
     const webp = readFileSync(new URL(`../../public/${source.slice(2)}`, import.meta.url));
     assert.equal(webp.toString("ascii", 0, 4), "RIFF");
-    assert.equal(webp.toString("ascii", 8, 12), "WEBP");
-    assert.ok(webp.length < png.length);
+    assert.equal(webp.toString("ascii", 8, 16), "WEBPVP8L", `${source} debe ser WebP sin pérdida`);
+    assert.equal(existsSync(new URL(`../../public/${original.slice(2)}`, import.meta.url)), false, `${original} no se publica: solo se pide su WebP`);
   }
   assert.equal(optimizedAssetSource("./assets/worlds/world-8.webp"), "./assets/worlds/world-8.webp");
   const originalImage = globalThis.Image;

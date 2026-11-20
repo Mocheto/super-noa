@@ -102,7 +102,7 @@
       <div class="ring" id="ring"></div>
       <div class="now" id="now">¡Ahora!</div>
       <div class="lumber" id="lumber">
-        <img id="lumberImg" src="../public/assets/sprites/noa-cat-yarn-v2.png" alt="Leñadora">
+        <img id="lumberImg" src="../public/assets/sprites/noa-cat-yarn-v2.webp" alt="Leñadora">
         <svg class="axe" id="axe" viewBox="0 0 74 120" aria-hidden="true">
           <rect x="32" y="22" width="10" height="96" rx="4" fill="#9a6338" stroke="#2f1d33" stroke-width="3"/>
           <path d="M40 8 Q70 10 70 34 Q60 46 40 40 Z" fill="#cfd6dd" stroke="#2f1d33" stroke-width="3"/>
@@ -231,7 +231,7 @@ function itemState(inst) {
 }
 function makeEl(s) {
   const el = document.createElement("div"); el.className = "piece";
-  if (s.k === "d") { el.innerHTML = `<img class="yarn" src="../public/assets/sprites/yarn-ball-v1.png" alt="Ovillo">`; el.style.width = "62px"; el.style.height = "56px"; }
+  if (s.k === "d") { el.innerHTML = `<img class="yarn" src="../public/assets/sprites/yarn-ball-v1.webp" alt="Ovillo">`; el.style.width = "62px"; el.style.height = "56px"; }
   else {
     const w = s.k === "s" ? 118 : 200; el.style.width = w + "px"; el.style.height = Math.round(w * 180 / 640) + "px";
     el.innerHTML = `<img src="../public/assets/sprites/gatitos-tronco.png" alt="Tronco"><span class="marks">${s.hits.map(() => "<b></b>").join("")}</span>`;
@@ -366,7 +366,7 @@ function group(attr, key, after) {
   }));
 }
 group("layout", "layout", () => { applyLayout(); if (state.running) reset(); });
-group("hero", "hero", () => { $("lumberImg").src = state.hero === "noa" ? "../public/assets/sprites/noa-cat-yarn-v2.png" : "../public/assets/sprites/world-cat-1-v1.png"; });
+group("hero", "hero", () => { $("lumberImg").src = state.hero === "noa" ? "../public/assets/sprites/noa-cat-yarn-v2.webp" : "../public/assets/sprites/world-cat-1-v1.png"; });
 group("mode", "mode", () => { $("hit").hidden = state.mode !== "play"; if (state.running) reset(); });
 $("sound").addEventListener("click", (e) => { state.sound = !state.sound; e.currentTarget.setAttribute("aria-pressed", String(state.sound)); });
 $("hit").addEventListener("pointerdown", (e) => { e.preventDefault(); playerHit(); });

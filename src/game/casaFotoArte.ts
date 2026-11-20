@@ -1,7 +1,7 @@
 /**
  * Dibujar una foto de la casa (mapa «Cámara de fotos de la casa»): se vuelve a pintar en un lienzo con las mismas piezas
  * que la casa (fondo vacío con la pared de su tono, muebles en su versión, gatitos con su hoja y su cuadro o su pose de
- * arropado, y noche). Las cuentas de dónde va cada cosa son puras; el dibujo usa el lienzo del navegador.
+ * arropado, sus accesorios, y noche). Las cuentas de dónde va cada cosa son puras; el dibujo usa el lienzo del navegador.
  */
 import type { FotoCasa, GatitoEnFoto } from "./casaFoto.ts";
 import { MUEBLES, MUEBLES_CASA, VERSIONES } from "./casaDecoracion.ts";
@@ -9,6 +9,8 @@ import { fondoConPared } from "./casaDecoracionArte.ts";
 import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito } from "./casaGatoArte.ts";
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
+import { CELDA_ACCESORIO, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte.ts";
+import { celdaDe, type Accesorio } from "./casaRopa.ts";
 
 /** Fila de los pies dentro del cuadro del gato (la misma que en la casa). */
 export const PIES_GATITO = 152;
@@ -104,6 +106,18 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     const hoja = await cargar(await hojaDeGatito(gatito.mundo, variante));
     const { fila } = ANIMACIONES_GATO[gatito.animacion];
     pintar(hoja, { x: gatito.cuadro * CUADRO_GATO, y: fila * CUADRO_GATO, ancho: CUADRO_GATO, alto: CUADRO_GATO }, caja, gatito.mira < 0);
+    // Sus accesorios, en su sitio de ese cuadro (como en la casa).
+    const piezas = gatito.ropa ? piezasEnCuadro(gatito.ropa, gatito.animacion, gatito.cuadro) : [];
+    if (piezas.length) {
+      const lamina = await cargar(HOJA_ACCESORIOS);
+      for (const { tipo, pieza, caja: enCuadro } of piezas) {
+        const { fila: f, columna } = celdaDe(tipo, pieza as Accesorio);
+        const ancho = caja.ancho * enCuadro.width / 100;
+        const izquierda = gatito.mira < 0 ? caja.x + caja.ancho * (1 - (enCuadro.left + enCuadro.width) / 100) : caja.x + caja.ancho * enCuadro.left / 100;
+        pintar(lamina, { x: columna * CELDA_ACCESORIO.ancho, y: f * CELDA_ACCESORIO.alto, ancho: CELDA_ACCESORIO.ancho, alto: CELDA_ACCESORIO.alto },
+          { x: izquierda, y: caja.y + caja.alto * enCuadro.top / 100, ancho, alto: caja.alto * enCuadro.height / 100 }, gatito.mira < 0);
+      }
+    }
   }
 
   // Capa de noche: azul con el halo de la lámpara, o más oscura con la lámpara apagada.

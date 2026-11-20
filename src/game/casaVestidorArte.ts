@@ -3,7 +3,9 @@
  * el gatito grande con sus anclas, la lámina de las piezas y las baldas del armario abierto. Las cuentas de dónde va
  * cada pieza son puras; se dan en % de la caja que las contiene, así escalan con la pantalla.
  */
-import { celdaDe, type Accesorio, type TipoAccesorio } from "./casaRopa.ts";
+import { ANCLAS_GATO } from "./casaGatoAnclas.ts";
+import { CUADRO_GATO, type AnimacionGato } from "./casaGatoArte.ts";
+import { celdaDe, TIPOS_ACCESORIO, type Accesorio, type Ropa, type TipoAccesorio } from "./casaRopa.ts";
 
 export const FONDO_VESTIDOR = "./assets/worlds/casa-vestidor-v1.webp";
 export const ARMARIO_ABIERTO = "./assets/sprites/casa-armario-abierto-v1.webp";
@@ -43,18 +45,18 @@ export type CajaPorcentaje = { left: number; top: number; width: number; height:
  * con sus anclas: en % de esa caja (puede salirse, como el sombrero por arriba).
  */
 export function cajaSobreElGatito(tipo: TipoAccesorio, anclas: Record<"cabeza" | "ojos" | "cuello", Punto> = ANCLAS_VESTIDOR,
-  cuadro: { ancho: number; alto: number } = CUADRO_VESTIDOR): CajaPorcentaje {
+  cuadro: { ancho: number; alto: number } = CUADRO_VESTIDOR, factor = 1): CajaPorcentaje {
   const { ancla, escala, punto, bajar } = ENCAJE[tipo];
-  const ancho = CELDA_ACCESORIO.ancho * escala;
-  const alto = CELDA_ACCESORIO.alto * escala;
+  const ancho = CELDA_ACCESORIO.ancho * escala * factor;
+  const alto = CELDA_ACCESORIO.alto * escala * factor;
   const x = anclas[ancla].x - ancho * punto.x;
-  const y = anclas[ancla].y + bajar - alto * punto.y;
+  const y = anclas[ancla].y + bajar * factor - alto * punto.y;
   return { left: (x / cuadro.ancho) * 100, top: (y / cuadro.alto) * 100, width: (ancho / cuadro.ancho) * 100, height: (alto / cuadro.alto) * 100 };
 }
 
 /** Posición CSS de una pieza dentro de la lámina (`background-size: 400% 300%`). */
-export function fondoDePieza<T extends TipoAccesorio>(tipo: T, pieza: Accesorio<T>): string {
-  const { fila, columna } = celdaDe(tipo, pieza);
+export function fondoDePieza(tipo: TipoAccesorio, pieza: string): string {
+  const { fila, columna } = celdaDe(tipo, pieza as Accesorio);
   return `${(columna / 3) * 100}% ${(fila / 2) * 100}%`;
 }
 
@@ -71,3 +73,26 @@ export const BALDAS: Record<TipoAccesorio, { arriba: number; apoyo: number; abaj
 };
 export const FILA_DE_PIEZAS = { izquierda: 15, derecha: 85 };
 export const MEDIDAS_ARMARIO = { ancho: 615, alto: 488 };
+
+/**
+ * Tamaño del gato de la casa frente al gatito grande del vestidor: la distancia del lazo al pañuelo sentado (64 px en
+ * la hoja de la casa, 146 en el vestidor). Las piezas se reducen así para la habitación y las fotos.
+ */
+export const ESCALA_EN_CASA = 64 / 146;
+
+export type PiezaEnCuadro = { tipo: TipoAccesorio; pieza: string; caja: CajaPorcentaje };
+
+/**
+ * Las piezas que lleva un gatito de la casa en un cuadro de su hoja, con su caja en % del cuadro de 160 × 160, en orden
+ * de dibujo (bufanda, gafas, sombrero). Las que no tienen sitio en ese cuadro (gafas de espaldas, bufanda dormido) no salen.
+ */
+export function piezasEnCuadro(ropa: Ropa, animacion: AnimacionGato, cuadro: number): PiezaEnCuadro[] {
+  const anclas = ANCLAS_GATO[animacion][cuadro] ?? ANCLAS_GATO[animacion][0];
+  return [...TIPOS_ACCESORIO].reverse().flatMap((tipo): PiezaEnCuadro[] => {
+    const pieza = ropa[tipo];
+    const punto = anclas?.[ENCAJE[tipo].ancla];
+    if (!pieza || !punto) return [];
+    const caja = cajaSobreElGatito(tipo, { cabeza: punto, ojos: punto, cuello: punto }, { ancho: CUADRO_GATO, alto: CUADRO_GATO }, ESCALA_EN_CASA);
+    return [{ tipo, pieza, caja }];
+  });
+}

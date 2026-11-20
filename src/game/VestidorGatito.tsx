@@ -70,7 +70,7 @@ export function VestidorGatito({ nombre, mundo, variante, ropa: inicial, reduceM
           const caja = cajaSobreElGatito(tipo);
           return <i key={tipo} className={`casa-vestidor-puesta is-${tipo}`} aria-hidden="true" style={{
             left: `${caja.left}%`, top: `${caja.top}%`, width: `${caja.width}%`, height: `${caja.height}%`,
-            ...estiloPieza(tipo, pieza as Accesorio<typeof tipo>),
+            backgroundPosition: fondoDePieza(tipo, pieza),
           }} />;
         })}
       </span>

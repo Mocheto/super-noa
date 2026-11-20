@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ANCLAS_VESTIDOR, BALDAS, cajaSobreElGatito, CUADRO_VESTIDOR, fondoDePieza } from "./casaVestidorArte.ts";
+import { ANCLAS_VESTIDOR, BALDAS, cajaSobreElGatito, CUADRO_VESTIDOR, ESCALA_EN_CASA, fondoDePieza, piezasEnCuadro } from "./casaVestidorArte.ts";
+import { normalizeFotos } from "./casaFoto.ts";
 import { HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion.ts";
 
 const centro = (caja: ReturnType<typeof cajaSobreElGatito>) => ({ x: (caja.left + caja.width / 2) / 100 * CUADRO_VESTIDOR.ancho, y: (caja.top + caja.height / 2) / 100 * CUADRO_VESTIDOR.alto });
@@ -36,4 +37,23 @@ test("el armario de la habitación no pisa la bañera y tiene los pies en el sue
   for (let x = zonaArmario.izquierda; x <= zonaArmario.derecha; x += 10) {
     assert.equal(sobreLaBanera(HABITACION_CASA, x, 400), false);
   }
+});
+
+test("en la casa, cada cuadro pone las piezas que tienen sitio, de la bufanda al sombrero", () => {
+  const ropa = { sombrero: "fiesta", gafas: "corazon", bufanda: "copos" } as const;
+  assert.deepEqual(piezasEnCuadro(ropa, "sentado", 0).map((p) => p.tipo), ["bufanda", "gafas", "sombrero"]);
+  assert.deepEqual(piezasEnCuadro(ropa, "dormir", 1).map((p) => p.tipo), ["sombrero"], "dormido sin mantita, solo el sombrero");
+  assert.deepEqual(piezasEnCuadro(ropa, "jugarSolo", 0).map((p) => p.tipo), ["bufanda", "sombrero"], "de espaldas, sin gafas");
+  assert.deepEqual(piezasEnCuadro({}, "sentado", 0), []);
+  const [sombrero] = piezasEnCuadro({ sombrero: "paja" }, "sentado", 0);
+  assert.ok(sombrero.caja.width < 100 * ESCALA_EN_CASA * 2, "más pequeño que en el vestidor");
+});
+
+test("las fotos guardan los accesorios de cada gatito y quitan los que no entienden", () => {
+  const [foto] = normalizeFotos([{ hecha: "2026-11-20T10:00:00.000Z", vista: { x: 0, ancho: 640 }, gatitos: [
+    { mundo: 1, x: 400, y: 450, animacion: "sentado", cuadro: 0, ropa: { gafas: "buceo", capa: "roja" } },
+    { mundo: 2, x: 500, y: 450, animacion: "sentado", cuadro: 0, ropa: { sombrero: "corona" } },
+  ] }]);
+  assert.deepEqual(foto.gatitos[0].ropa, { gafas: "buceo" });
+  assert.equal("ropa" in foto.gatitos[1], false);
 });

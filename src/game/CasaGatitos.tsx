@@ -12,6 +12,7 @@ import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, 
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
+import { fondoDePieza, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte";
 import { arropadosDe, arropar, puedeDormir, todosArropados } from "./casaDormir";
 import { arropadoDe, CUADROS_ARROPADO, HOJA_MANTITA } from "./casaDormirArte";
 import { guardarFoto, type FotoCasa } from "./casaFoto";
@@ -807,7 +808,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         .filter(({ andante }) => andante.x >= vistaX - margen && andante.x <= vistaX + anchoVisible + margen)
         .map(({ mundo, andante, animacion, cuadro, mira, tapado }) => {
           const variante = variantes.find((v) => v.mundo === mundo);
-          return { mundo, x: Math.round(andante.x), y: Math.round(andante.y), animacion, cuadro, mira, sucio: variante?.sucio ?? false, mejorAmigo: variante?.mejorAmigo ?? false, arropado: tapado };
+          const ropa = ropaDe(casa, mundo);
+          return { mundo, x: Math.round(andante.x), y: Math.round(andante.y), animacion, cuadro, mira, sucio: variante?.sucio ?? false, mejorAmigo: variante?.mejorAmigo ?? false, arropado: tapado,
+            ...(!tapado && Object.keys(ropa).length ? { ropa } : {}) };
         }),
     };
     guardar(guardarFoto(casaRef.current, foto));
@@ -816,7 +819,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   };
 
   const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
-  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
+  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--accesorios": cssAssetUrl(HOJA_ACCESORIOS), "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
   const hojaBano = bano !== null ? hojaDe(bano) : undefined;
@@ -878,7 +881,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} />
           {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
           {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
-          {aspectos.map(({ mundo, enBrazos, andante, llegando, pide, respuesta, tapado, dormido, fila, cuadro, hoja, mira, escala }) => {
+          {aspectos.map(({ mundo, enBrazos, andante, llegando, pide, respuesta, tapado, dormido, animacion, fila, cuadro, hoja, mira, escala }) => {
             // Arropado: su pose propia (cabeza fuera, mantita de su color); mientras se pinta, la de dormir.
             const arropado = tapado ? arropadoHoja(mundo) : undefined;
             const dibujo = arropado
@@ -887,7 +890,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             return <div key={mundo} role="img" aria-label={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })}
               className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${dormido ? " is-dormido" : ""}`}
               style={{ left: andante.x, top: andante.y - PIES_GATITO, zIndex: enBrazos ? 1500 : Math.round(andante.y), "--escala": escala } as CSSProperties}>
-              <span className="casa-gatito-dibujo" style={{ ...dibujo, transform: mira < 0 ? "scaleX(-1)" : undefined }} />
+              <span className="casa-gatito-dibujo" style={{ ...dibujo, transform: mira < 0 ? "scaleX(-1)" : undefined }}>
+                {/* Sus accesorios, en su sitio en este cuadro; arropado, no se ven. */}
+                {!tapado && piezasEnCuadro(ropaDe(casa, mundo), animacion, cuadro).map(({ tipo, pieza, caja }) =>
+                  <i key={tipo} className="casa-gatito-pieza" style={{ left: `${caja.left}%`, top: `${caja.top}%`, width: `${caja.width}%`, height: `${caja.height}%`,
+                    backgroundPosition: fondoDePieza(tipo, pieza) }} />)}
+              </span>
               {pide && !respuesta && !dormido && <span className="casa-bocadillo" aria-hidden="true"><i className={`casa-objeto is-${OBJETO_DE[pide]}`} /></span>}
               {respuesta?.corazon && <span className="casa-corazon" aria-hidden="true" />}
             </div>;

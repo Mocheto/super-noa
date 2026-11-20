@@ -6,6 +6,7 @@
 import type { CasaProgress } from "./casa.ts";
 import { normalizeDecoracion, type Decoracion } from "./casaDecoracion.ts";
 import { ANIMACIONES_GATO, type AnimacionGato } from "./casaGatoArte.ts";
+import { normalizeRopa, type Ropa } from "./casaRopa.ts";
 
 export const MAX_FOTOS = 12;
 /** Medidas de la escena de la casa (px). */
@@ -24,6 +25,8 @@ export type GatitoEnFoto = {
   sucio: boolean;
   mejorAmigo: boolean;
   arropado: boolean;
+  /** Accesorios que llevaba (si llevaba alguno y no estaba arropado). */
+  ropa?: Ropa;
 };
 
 export type FotoCasa = {
@@ -58,7 +61,8 @@ function normalizeGatito(raw: unknown): GatitoEnFoto | null {
   if (!Number.isInteger(mundo) || mundo < 1 || mundo > 17 || x === null || y === null) return null;
   const animacion = typeof raw.animacion === "string" && Object.hasOwn(ANIMACIONES_GATO, raw.animacion) ? raw.animacion as AnimacionGato : "sentado";
   const cuadro = Math.floor(entre(raw.cuadro, 0, ANIMACIONES_GATO[animacion].cuadros - 1) ?? 0);
-  return { mundo, x, y, animacion, cuadro, mira: raw.mira === -1 ? -1 : 1, sucio: raw.sucio === true, mejorAmigo: raw.mejorAmigo === true, arropado: raw.arropado === true };
+  const ropa = normalizeRopa(raw.ropa);
+  return { mundo, x, y, animacion, cuadro, mira: raw.mira === -1 ? -1 : 1, sucio: raw.sucio === true, mejorAmigo: raw.mejorAmigo === true, arropado: raw.arropado === true, ...(ropa ? { ropa } : {}) };
 }
 
 /** Lectura tolerante de las fotos guardadas: las que no se entienden se quitan. */

@@ -78,6 +78,10 @@ export const casa = {
   foto: {
     boton: { oculto: "Hacer una foto de la casa" },
   },
+  puerta: {
+    jardin: { oculto: "Puerta: sal al jardín" },
+    casa: { oculto: "Puerta: vuelve a casa" },
+  },
   dormir: {
     empezar: { oculto: "Hora de dormir: acostar a los gatitos" },
     salir: { oculto: "Terminar la hora de dormir" },

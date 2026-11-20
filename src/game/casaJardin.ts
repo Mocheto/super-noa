@@ -96,7 +96,7 @@ export function llevarA(casa: CasaProgress, mundo: number, estancia: Estancia): 
 export const todosALaHabitacion = (casa: CasaProgress): CasaProgress => (casa.enJardin ? conJardin(casa, []) : casa);
 
 /** Cada vez que un gatito decide qué hacer, esta probabilidad de que se vaya solo a la otra estancia. */
-export const CAMBIAR_SOLO = 0.06;
+export const CAMBIAR_SOLO = 0.03;
 
 /** ¿Se va solo a la otra estancia esta vez? (de noche, nunca). */
 export const cambiaSolo = (azar: () => number, noche: boolean) => !noche && azar() < CAMBIAR_SOLO;

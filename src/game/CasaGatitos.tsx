@@ -10,6 +10,7 @@ import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hoj
 import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
+import { cambiaSolo, estanciaDe, JARDIN, llevarA, sobreLaPuerta, todosALaHabitacion, ZONA_PUERTA_HABITACION, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
 import { fondoDePieza, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte";
@@ -168,6 +169,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [bano, setBano] = useState<number | null>(null);
   // Abanico de comidas sobre el cuenco de la bandeja (se abre al tocarlo).
   const [abanico, setAbanico] = useState(false);
+  /** Estancia que se ve: la habitación o el jardín (mapa «Jardín de la casa»). */
+  const [estancia, setEstancia] = useState<Estancia>("habitacion");
+  const enJardin = estancia === "jardin";
+  /** Gatitos que van solos hacia la puerta para cambiar de estancia. */
+  const seVanRef = useRef(new Set<number>());
   // Gatito en el vestidor (se le lleva al armario).
   const [vestidor, setVestidor] = useState<number | null>(null);
   const frotandoRef = useRef<number | null>(null);
@@ -228,8 +234,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // Tras «¡BUENAS NOCHES!», más bajita todavía.
   useEffect(() => { nanaRef.current?.ajustar({ silencio: muted, volumen: (musicVolume / 100) * (bano !== null ? 0.5 : 1) * (buenasNoches !== "no" ? 0.4 : 1), noche }); }, [muted, musicVolume, noche, bano, buenasNoches]);
 
-  // Solo los gatitos en casa (cinco como mucho); los de paseo no están en la habitación.
-  const presentes = [...new Set([...enCasaDe(casa).filter((mundo) => !esperando.includes(mundo)), ...saliendo])].sort((a, b) => a - b).join(",");
+  // Solo los gatitos en casa (cinco como mucho) que están en esta estancia; los de paseo no están.
+  const presentes = [...new Set([...enCasaDe(casa).filter((mundo) => !esperando.includes(mundo) && estanciaDe(casa, mundo) === estancia), ...(enJardin ? [] : saliendo)])].sort((a, b) => a - b).join(",");
   const gatitos = useMemo(() => presentes ? presentes.split(",").map(Number) : [], [presentes]);
   // Dónde está cada gatito ahora (deambulan por todo el suelo); sin andante aún, en su sitio de día.
   // Cada gatito en casa tiene su sitio de día y de noche, por su orden entre los de casa.
@@ -303,8 +309,29 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     guardar(traida);
   };
 
+  /** Lleva a un gatito a la otra estancia: allí entra por la puerta, con su luz, y va hacia su sitio. */
+  const cambiarDeEstancia = (mundo: number, momento: number) => {
+    const actual = casaRef.current;
+    guardar(llevarA(actual, mundo, estanciaDe(actual, mundo) === "jardin" ? "habitacion" : "jardin"));
+    setAndantes((actuales) => ({ ...actuales, [mundo]: ir(nuevoAndante({ x: PUERTA_X, y: HABITACION.sitios.puerta.y }, momento), sitioDia(mundo), "sentarse", 2, momento) }));
+    setLuzPuerta((veces) => veces + 1);
+  };
+  /** Tocar la puerta del corazón: pasa a la otra estancia, con la vista junto a la puerta. */
+  const cruzarPuerta = () => {
+    if (acostando) return;
+    setEstancia(enJardin ? "habitacion" : "jardin");
+    setVista(0);
+    setAbanico(false);
+    setArrastre(null);
+    setLuzPuerta((veces) => veces + 1);
+  };
+
   /** La estrella de la bandeja: empieza la hora de dormir y cada gatito en casa va a su sitio de noche a dormir. */
   const empezarADormir = () => {
+    // A la hora de dormir, todos vuelven del jardín a la habitación.
+    if (casaRef.current.enJardin) guardar(todosALaHabitacion(casaRef.current));
+    seVanRef.current.clear();
+    setEstancia("habitacion");
     setAcostando(true);
     setDecorando(false);
     setElegido(null);
@@ -517,8 +544,15 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           andante = avanzarAndante(andante, rapidosRef.current.has(mundo) ? ms * RAPIDO_PUERTA : ms, momento);
           if (fase === "casa" && !andando(andante) && momento >= andante.hasta && frotandoRef.current !== indice && !saliendoRef.current.includes(mundo)) {
             const otros = gatitos.filter((otro) => otro !== mundo).map((otro) => siguientes[otro]).filter((otro): otro is Andante => Boolean(otro));
+            // De vez en cuando, uno se va solo a la otra estancia: anda hasta la puerta y sale.
+            if (!seVanRef.current.has(mundo) && cambiaSolo(Math.random, noche)) {
+              seVanRef.current.add(mundo);
+              siguientes[mundo] = ir(andante, { x: PUERTA_X, y: HABITACION.sitios.puerta.y }, "sentarse", 0.2, momento);
+              return;
+            }
+            if (seVanRef.current.has(mundo)) { siguientes[mundo] = andante; return; }
             andante = decidir(andante, actual.gatitos[mundo], otros, {
-              habitacion: HABITACION, noche, casaLimpia: casaLimpia(actual), alguienPide, sitioNoche: sitioNoche(mundo), azar: Math.random, ahora: momento,
+              habitacion: enJardin ? JARDIN : HABITACION, noche, casaLimpia: casaLimpia(actual), alguienPide, sitioNoche: sitioNoche(mundo), azar: Math.random, ahora: momento,
             });
           }
           siguientes[mundo] = andante;
@@ -528,7 +562,17 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }, PASO_ANIMACION_MS);
     return () => window.clearInterval(paso);
     // `sitioDia`, `sitioNoche` y `llegan` no cambian durante la visita.
-  }, [fase, gatitos, noche, reduceMotion, bano]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fase, gatitos, noche, reduceMotion, bano, enJardin]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Los que se iban solos, al llegar a la puerta, pasan a la otra estancia.
+  useEffect(() => {
+    for (const mundo of seVanRef.current) {
+      const andante = andantes[mundo];
+      if (!andante || andando(andante) || !gatitos.includes(mundo)) continue;
+      seVanRef.current.delete(mundo);
+      cambiarDeEstancia(mundo, performance.now());
+    }
+  }, [andantes, gatitos]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (fase !== "entrando") return;
@@ -733,30 +777,35 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setFrotando(frote?.gatito ?? null);
     if (listo) { dedoRef.current = false; atender(indice, "frotar"); }
   };
-  const acabarDedo = () => {
+  const acabarDedo = (event: ReactPointerEvent<HTMLDivElement>) => {
     dedoRef.current = false;
     const tocado = deslizRef.current;
     if (decorando && tocado?.punto && !tocado.moviendo) setElegido(muebleEn(tocado.punto.x, tocado.punto.y));
-    else if (noche && tocado?.punto && !tocado.moviendo && enLaLampara(tocado.punto)) cambiarLampara();
+    else if (noche && !enJardin && tocado?.punto && !tocado.moviendo && enLaLampara(tocado.punto)) cambiarLampara();
+    else if (tocado?.punto && !tocado.moviendo && sobreLaPuerta(estancia, tocado.punto.x, tocado.punto.y)) cruzarPuerta();
     deslizRef.current = null;
     if (pendienteRef.current) { window.clearTimeout(pendienteRef.current.temporizador); pendienteRef.current = null; }
     if (!arrastre) { froteRef.current = null; setFrotando(null); }
     const suelto = cogidoRef.current;
-    if (suelto) soltarGatito(suelto);
+    if (suelto) soltarGatito(suelto, event.timeStamp);
   };
 
   /** Suelta al gatito cogido: en la bañera, si está sucio, se abre su baño; en el armario, el vestidor; si no, aterriza en el suelo. */
-  const soltarGatito = (suelto: Cogido) => {
+  const soltarGatito = (suelto: Cogido, momento: number) => {
     setCogido(null);
     const mundo = gatitos[suelto.indice];
     if (mundo === undefined) return;
-    const momento = performance.now();
-    const enBanera = sobreLaBanera(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
-    const enArmario = !enBanera && sobreElArmario(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
+    // Soltado en la puerta (y fuera de la hora de dormir): se va a la otra estancia.
+    if (!acostando && sobreLaPuerta(estancia, suelto.x, suelto.y + COGIDO_PIES)) {
+      cambiarDeEstancia(mundo, momento);
+      return;
+    }
+    const enBanera = !enJardin && sobreLaBanera(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
+    const enArmario = !enJardin && !enBanera && sobreElArmario(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
     const sucio = estadoDe(casaRef.current.gatitos[mundo].necesidades.bano) !== "bien";
     const dondeCae = enBanera ? aterrizar(HABITACION, HABITACION.zonaBanera.izquierda - 40, HABITACION.suelo.delante - 20)
       : enArmario ? aterrizar(HABITACION, HABITACION.armario.left + HABITACION.armario.width / 2, HABITACION.suelo.fondo + 30)
-        : aterrizar(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
+        : aterrizar(enJardin ? JARDIN : HABITACION, suelto.x, suelto.y + COGIDO_PIES);
     setAndantes((actuales) => ({ ...actuales, [mundo]: { ...(actuales[mundo] ?? nuevoAndante(dondeCae, momento)), ...dondeCae, destino: null, pose: "sentarse", desde: momento, hasta: momento + 1500 } }));
     // En el armario, cualquiera (también sucio) va al vestidor.
     if (enArmario) { setVestidor(mundo); return; }
@@ -881,9 +930,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       <div className="casa-visor" ref={visorRef} style={{ width: medidas.anchoVisor, height: ESCENA_CASA.alto * medidas.escala }}>
         <div className={`casa-escena${noche ? " is-noche" : ""}${noche && lamparaApagada ? " is-apagada" : ""}`} ref={escenaRef} style={estiloEscena}
           onPointerDown={empezarDedo} onPointerMove={moverDedo} onPointerUp={acabarDedo} onPointerCancel={acabarDedo}>
-          <img className="casa-fondo" src={fondo} alt="" draggable={false} />
+          <img className="casa-fondo" src={enJardin ? JARDIN.fondo : fondo} alt="" draggable={false} />
           {/* Muebles, cada uno en la versión elegida, sobre la habitación vacía. */}
-          {MUEBLES_DECORABLES.map((mueble) => {
+          {!enJardin && MUEBLES_DECORABLES.map((mueble) => {
             const dibujo = MUEBLES_CASA[mueble].dibujo!;
             return <i key={mueble} className="casa-mueble" aria-hidden="true"
               style={{ left: dibujo.x, top: dibujo.y, width: dibujo.ancho, height: dibujo.alto, ...celdaDeMueble(mueble, decoracion[mueble]) }} />;
@@ -901,11 +950,15 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             const caja = MUEBLES_CASA[destello.mueble].caja ?? { x: 0, y: 0, ancho: HABITACION.ancho, alto: PARED_HASTA };
             return <i key={destello.id} className="casa-destello" aria-hidden="true" style={{ left: caja.x + caja.ancho / 2, top: caja.y + caja.alto / 2 }} />;
           })()}
-          <img className={`casa-armario${cogido ? " is-brilla" : ""}`} src={HABITACION.armario.imagen} alt="" draggable={false}
+          {!enJardin && <><img className={`casa-armario${cogido ? " is-brilla" : ""}`} src={HABITACION.armario.imagen} alt="" draggable={false}
             style={{ left: HABITACION.armario.left, top: HABITACION.armario.top, width: HABITACION.armario.width, height: HABITACION.armario.height }} />
-          <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} />
+          <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} /></>}
+          {/* La puerta del corazón lleva a la otra estancia; con el dedo se toca en la escena, aquí para el teclado. */}
+          {fase === "casa" && !acostando && <button type="button" className={`casa-puerta${cogido ? " is-brilla" : ""}`} aria-label={tClave(enJardin ? "casa.puerta.casa.oculto" : "casa.puerta.jardin.oculto")}
+            style={{ left: ZONA_PUERTA_HABITACION.izquierda, top: ZONA_PUERTA_HABITACION.arriba, width: ZONA_PUERTA_HABITACION.derecha - ZONA_PUERTA_HABITACION.izquierda, height: ZONA_PUERTA_HABITACION.abajo - ZONA_PUERTA_HABITACION.arriba }}
+            onClick={(event) => { if (event.detail === 0) cruzarPuerta(); }} />}
           {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
-          {casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
+          {!enJardin && casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
           {aspectos.map(({ mundo, enBrazos, andante, llegando, pide, respuesta, tapado, dormido, animacion, fila, cuadro, hoja, mira, escala }) => {
             // Arropado: su pose propia (cabeza fuera, mantita de su color); mientras se pinta, la de dormir.
             const arropado = tapado ? arropadoHoja(mundo) : undefined;
@@ -928,7 +981,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             </div>;
           })}
           <div className="casa-luz-noche" aria-hidden="true" />
-          {noche && <button type="button" className={`casa-lampara${lamparaApagada ? " is-apagada" : ""}`} aria-pressed={!lamparaApagada}
+          {noche && !enJardin && <button type="button" className={`casa-lampara${lamparaApagada ? " is-apagada" : ""}`} aria-pressed={!lamparaApagada}
             aria-label={t("casa.dormir.lampara.oculto")} style={{ left: LAMPARA.x, top: LAMPARA.y, width: LAMPARA.ancho, height: LAMPARA.alto }}
             onClick={(event) => { if (event.detail === 0) cambiarLampara(); }} />}
           {pelota && <i key={pelota.id} className="casa-objeto is-pelota casa-pelota-lanzada" style={{ left: porcentajeX(pelota.x), top: porcentajeY(pelota.y), "--hasta": porcentajeX(lista[pelota.gatito]?.x ?? pelota.x), "--hasta-y": porcentajeY((lista[pelota.gatito]?.y ?? pelota.y) - 30) } as CSSProperties} />}
@@ -968,11 +1021,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       {fase === "casa" && bano === null && !decorando && !acostando && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
         <span className="casa-bandeja-modos">
           {horaDeDormir && <BotonControl className="casa-bandeja-modo casa-dormir" pictograma="estrella" etiqueta="casa.dormir.empezar.oculto" onClick={empezarADormir} />}
-          <BotonControl className="casa-bandeja-modo" pictograma="flor" etiqueta="casa.decorar.boton.oculto" onClick={cambiarDecorar} />
-          <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
+          {/* Decorar y las fotos, de momento, solo en la habitación. */}
+          {!enJardin && <BotonControl className="casa-bandeja-modo" pictograma="flor" etiqueta="casa.decorar.boton.oculto" onClick={cambiarDecorar} />}
+          {!enJardin && <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />}
           <BotonControl className="casa-bandeja-modo" pictograma="gato" etiqueta="casa.enCasa.boton.oculto" onClick={() => setEligiendo({ orden: [...enCasaDe(casaRef.current), ...dePaseoDe(casaRef.current)], antes: enCasaDe(casaRef.current) })} />
         </span>
-        {HERRAMIENTAS.map((herramienta) => herramienta === "cuenco"
+        {HERRAMIENTAS.filter((herramienta) => !enJardin || herramienta !== "escoba").map((herramienta) => herramienta === "cuenco"
           // El cuenco: al tocarlo se abre encima el abanico de las cuatro comidas, y se arrastra la elegida.
           ? <span key={herramienta} className="casa-cuenco-sitio">
             {abanico && <span className="casa-abanico" role="group" aria-label={t("casa.comida.abanico.oculto")}>

@@ -12,6 +12,7 @@ import { normalizeFotos, type FotoCasa } from "./casaFoto.ts";
 import { normalizeRopaCasa, type Ropa } from "./casaRopa.ts";
 import { normalizeFavoritas } from "./casaComida.ts";
 import { normalizeEnJardin, normalizeJardin, type JardinProgress } from "./casaJardin.ts";
+import { normalizeVisitante, type VisitanteProgress } from "./casaVisitante.ts";
 
 export type NecesidadId = "comer" | "mimos" | "bano" | "jugar";
 export type EstadoNecesidad = "bien" | "seNota" | "pide";
@@ -67,6 +68,8 @@ export type CasaProgress = {
   enJardin?: number[];
   /** Los maceteros del jardín; si falta, los tres con su semilla (`jardinDe`). */
   jardin?: JardinProgress;
+  /** Última visita de un animal amigo (`tocaVisita`): como mucho una al día. */
+  visitante?: VisitanteProgress;
 };
 
 /** Como mucho, estos gatitos en casa a la vez (mapa «Más gatitos en la casa»); los demás están de paseo. */
@@ -328,11 +331,13 @@ export function normalizeCasa(raw: unknown): CasaProgress | undefined {
   const favoritas = normalizeFavoritas(raw.favoritas, (mundo) => Boolean(gatitos[mundo]));
   const enJardin = normalizeEnJardin(raw.enJardin, (mundo) => Boolean(gatitos[mundo]));
   const jardin = normalizeJardin(raw.jardin);
+  const visitante = normalizeVisitante(raw.visitante);
   return {
     gatitos, huellas, calculadoEn: fecha, presentados,
     ...(decoracion && !esDeSiempre(decoracion) ? { decoracion } : {}), ...(enCasa ? { enCasa } : {}), ...(dormir ? { dormir } : {}),
     ...(normalizeFotos(raw.fotos).length ? { fotos: normalizeFotos(raw.fotos) } : {}),
     ...(ropa ? { ropa } : {}), ...(favoritas ? { favoritas } : {}), ...(enJardin ? { enJardin } : {}), ...(jardin ? { jardin } : {}),
+    ...(visitante ? { visitante } : {}),
   };
 }
 

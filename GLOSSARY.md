@@ -166,6 +166,10 @@ Bicho del jardín que Noa hace posarse cerca de un gatito para que salte a por e
 Sitio del jardín donde crece una flor que Noa riega con la regadera, una vez al día, de brote a capullo y a flor.
 _Avoid_: Maceta, jardinera
 
+**Visitante**:
+Animal amigo, de una pantalla que Noa ya ha completado, que llama a la puerta de la casa y pasa un rato en el jardín. Noa lo saluda y le da de comer; con su comida favorita gana un corazón de amistad. Como mucho uno al día.
+_Avoid_: Visita (es la vista de la pestaña Amigos), invitado, mascota
+
 **Huella de barro**:
 Mancha que deja en el suelo un gatito con la suciedad en «se nota» o «pide»; se barre con la escoba.
 

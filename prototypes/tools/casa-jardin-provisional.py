@@ -53,6 +53,22 @@ def jardin():
     img.convert("RGB").save(RAIZ / "public/assets/worlds/casa-jardin-v1.webp", "WEBP", quality=90)
 
 
+def colchoneta():
+    """La colchoneta: 200 × 90, un cojín redondo y gordito, coral con rayas crema y una huella encima."""
+    img = Image.new("RGBA", (200, 90), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle([6, 26, 194, 84], radius=26, fill=(232, 120, 110, 255), outline=CONTORNO, width=4)
+    for x in range(30, 180, 30):
+        d.line([x, 52, x, 80], fill=(255, 236, 214, 255), width=4)
+    d.ellipse([6, 6, 194, 56], fill=(250, 150, 136, 255), outline=CONTORNO, width=4)
+    d.ellipse([30, 14, 120, 34], fill=(255, 186, 170, 255))
+    d.ellipse([90, 24, 110, 40], fill=(255, 236, 214, 255))
+    for dx in (-14, -5, 5, 14):
+        d.ellipse([96 + dx, 14, 104 + dx, 22], fill=(255, 236, 214, 255))
+    img.save(SPRITES / "casa-colchoneta-v1.webp", "WEBP", lossless=True)
+
+
 if __name__ == "__main__":
     jardin()
+    colchoneta()
     print("escrito el jardín provisional")

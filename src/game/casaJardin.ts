@@ -3,7 +3,7 @@
  * cada gatito en casa (campo opcional `casa.enJardin`) y los tres maceteros que Noa riega (campo opcional
  * `casa.jardin`). Solo lógica.
  */
-import { enCasaDe, fechaLocal, type CasaProgress } from "./casa.ts";
+import { cuidar, enCasaDe, fechaLocal, LANZAMIENTOS_PARA_JUGAR, type CasaProgress, type ResultadoCuidado } from "./casa.ts";
 import type { SitioInteres, SueloDeEstancia } from "./casaHabitacion.ts";
 
 export const ESTANCIAS = ["habitacion", "jardin"] as const;
@@ -107,6 +107,29 @@ export function normalizeEnJardin(raw: unknown, esGatito: (mundo: number) => boo
   const mundos = [...new Set(raw.map(Number).filter((mundo) => Number.isInteger(mundo) && esGatito(mundo)))].sort((a, b) => a - b);
   return mundos.length ? mundos : undefined;
 }
+
+// --- Colchoneta ------------------------------------------------------------------------------------------------------
+
+/** Cuánto bota un gatito en la colchoneta antes de bajar de un salto, y cuántos botes da. */
+export const BOTAR_MS = 3000;
+export const BOTES = 4;
+
+/**
+ * Un gatito ha botado en la colchoneta: cuenta como una partida entera de pelota. Con ganas de jugar («se nota» o
+ * «pide») queda contento y, si toca, gana su corazón; sin ganas ha botado igual, sin «ahora no» y sin que cambie nada.
+ */
+export function botar(casa: CasaProgress, mundo: number, ahora: Date): ResultadoCuidado {
+  const gatito = casa.gatitos[mundo];
+  if (!gatito) return { casa, respuesta: "juegaIgual", corazon: false };
+  const listo = { ...casa, gatitos: { ...casa.gatitos, [mundo]: { ...gatito, lanzamientos: LANZAMIENTOS_PARA_JUGAR - 1 } } };
+  const resultado = cuidar(listo, mundo, "pelota", ahora);
+  return resultado.respuesta === "gracias" ? resultado : { casa, respuesta: "juegaIgual", corazon: false };
+}
+
+/** Dónde baja de un salto, a la hierba de al lado de la colchoneta. */
+export const BAJA_EN = { x: JARDIN.colchoneta.left + JARDIN.colchoneta.width + 60, y: 500 };
+/** Dónde bota: los pies sobre el centro de la colchoneta. */
+export const BOTA_EN = { x: JARDIN.colchoneta.left + JARDIN.colchoneta.width / 2, y: JARDIN.colchoneta.top + 30 };
 
 // --- Maceteros -------------------------------------------------------------------------------------------------------
 

@@ -10,7 +10,7 @@ import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hoj
 import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
-import { cambiaSolo, estanciaDe, JARDIN, llevarA, sobreLaPuerta, todosALaHabitacion, ZONA_PUERTA_HABITACION, type Estancia } from "./casaJardin";
+import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, estanciaDe, JARDIN, llevarA, sobreLaColchoneta, sobreLaPuerta, todosALaHabitacion, ZONA_PUERTA_HABITACION, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
 import { fondoDePieza, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte";
@@ -174,6 +174,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const enJardin = estancia === "jardin";
   /** Gatitos que van solos hacia la puerta para cambiar de estancia. */
   const seVanRef = useRef(new Set<number>());
+  /** Gatitos que botan en la colchoneta del jardín ahora mismo. */
+  const [botando, setBotando] = useState<number[]>([]);
+  const botandoRef = useRef<number[]>([]);
+  useEffect(() => { botandoRef.current = botando; }, [botando]);
   // Gatito en el vestidor (se le lleva al armario).
   const [vestidor, setVestidor] = useState<number | null>(null);
   const frotandoRef = useRef<number | null>(null);
@@ -316,9 +320,33 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setAndantes((actuales) => ({ ...actuales, [mundo]: ir(nuevoAndante({ x: PUERTA_X, y: HABITACION.sitios.puerta.y }, momento), sitioDia(mundo), "sentarse", 2, momento) }));
     setLuzPuerta((veces) => veces + 1);
   };
+  /**
+   * Soltado en la colchoneta: da unos botes y baja de un salto a la hierba de al lado. Al bajar cuenta como jugar: con
+   * ganas, contento y su corazón; sin ganas, ha botado igual.
+   */
+  const empezarABotar = (mundo: number, momento: number) => {
+    setBotando((antes) => [...antes, mundo]);
+    setAndantes((actuales) => ({ ...actuales, [mundo]: { ...(actuales[mundo] ?? nuevoAndante(BOTA_EN, momento)), ...BOTA_EN, destino: null, pose: "sentarse", desde: momento, hasta: momento + BOTAR_MS } }));
+    const duracion = reduceMotion ? 400 : BOTAR_MS;
+    Array.from({ length: BOTES }, (_, bote) => window.setTimeout(() => sonidoRef.current?.bote(), (duracion / BOTES) * (bote + 0.5)));
+    window.setTimeout(() => {
+      setBotando((antes) => antes.filter((otro) => otro !== mundo));
+      const resultado = botar(casaRef.current, mundo, new Date());
+      guardar(resultado.casa);
+      if (resultado.respuesta === "gracias") sonidoRef.current?.maullar(mundo, "gracias");
+      const ya = performance.now();
+      setAndantes((actuales) => actuales[mundo] ? { ...actuales, [mundo]: ir({ ...actuales[mundo], ...BOTA_EN, destino: null }, BAJA_EN, "sentarse", 2, ya) } : actuales);
+      const indice = gatitos.indexOf(mundo);
+      if (indice < 0) return;
+      const id = ++idRef.current;
+      setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice), { gatito: indice, tipo: resultado.respuesta, cuidado: "pelota", corazon: resultado.corazon, id, desde: ya }]);
+      window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
+    }, duracion);
+  };
   /** Tocar la puerta del corazón: pasa a la otra estancia, con la vista junto a la puerta. */
   const cruzarPuerta = () => {
-    if (acostando) return;
+    // Mientras uno bota en la colchoneta, se espera a que baje.
+    if (acostando || botando.length) return;
     setEstancia(enJardin ? "habitacion" : "jardin");
     setVista(0);
     setAbanico(false);
@@ -540,7 +568,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               ? ir(nuevoAndante({ x: PUERTA_X, y: HABITACION.sitios.puerta.y }, momento), sitioDia(mundo), "sentarse", 2, momento)
               : nuevoAndante(noche ? sitioNoche(mundo) : sitioDia(mundo), momento, noche ? "dormir" : "sentarse");
           }
-          if (cogidoRef.current?.indice === indice || bano === mundo) { siguientes[mundo] = andante; return; }
+          if (cogidoRef.current?.indice === indice || bano === mundo || botandoRef.current.includes(mundo)) { siguientes[mundo] = andante; return; }
           andante = avanzarAndante(andante, rapidosRef.current.has(mundo) ? ms * RAPIDO_PUERTA : ms, momento);
           if (fase === "casa" && !andando(andante) && momento >= andante.hasta && frotandoRef.current !== indice && !saliendoRef.current.includes(mundo)) {
             const otros = gatitos.filter((otro) => otro !== mundo).map((otro) => siguientes[otro]).filter((otro): otro is Andante => Boolean(otro));
@@ -800,6 +828,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       cambiarDeEstancia(mundo, momento);
       return;
     }
+    if (enJardin && sobreLaColchoneta(suelto.x, suelto.y + COGIDO_PIES)) { empezarABotar(mundo, momento); return; }
     const enBanera = !enJardin && sobreLaBanera(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
     const enArmario = !enJardin && !enBanera && sobreElArmario(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
     const sucio = estadoDe(casaRef.current.gatitos[mundo].necesidades.bano) !== "bien";
@@ -958,6 +987,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             style={{ left: ZONA_PUERTA_HABITACION.izquierda, top: ZONA_PUERTA_HABITACION.arriba, width: ZONA_PUERTA_HABITACION.derecha - ZONA_PUERTA_HABITACION.izquierda, height: ZONA_PUERTA_HABITACION.abajo - ZONA_PUERTA_HABITACION.arriba }}
             onClick={(event) => { if (event.detail === 0) cruzarPuerta(); }} />}
           {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
+          {enJardin && <img className={`casa-colchoneta${cogido ? " is-brilla" : ""}${botando.length ? " is-bota" : ""}`} src={JARDIN.colchoneta.imagen} alt="" draggable={false}
+            style={{ left: JARDIN.colchoneta.left, top: JARDIN.colchoneta.top, width: JARDIN.colchoneta.width, height: JARDIN.colchoneta.height, "--bote": `${BOTAR_MS / BOTES}ms` } as CSSProperties} />}
           {!enJardin && casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
           {aspectos.map(({ mundo, enBrazos, andante, llegando, pide, respuesta, tapado, dormido, animacion, fila, cuadro, hoja, mira, escala }) => {
             // Arropado: su pose propia (cabeza fuera, mantita de su color); mientras se pinta, la de dormir.
@@ -966,8 +997,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               ? { backgroundImage: `url("${arropado}")`, backgroundSize: `${CUADROS_ARROPADO * CUADRO_GATO}px ${CUADRO_GATO}px`, backgroundPosition: `${-(cuadro % CUADROS_ARROPADO) * CUADRO_GATO}px 0` }
               : { backgroundImage: hoja ? `url("${hoja}")` : undefined, backgroundSize: `${COLUMNAS_GATO * CUADRO_GATO}px ${FILAS_GATO * CUADRO_GATO}px`, backgroundPosition: `${-cuadro * CUADRO_GATO}px ${-fila * CUADRO_GATO}px` };
             return <div key={mundo} role="img" aria-label={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })}
-              className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${respuesta?.favorita ? " is-favorita" : ""}${dormido ? " is-dormido" : ""}`}
-              style={{ left: andante.x, top: andante.y - PIES_GATITO, zIndex: enBrazos ? 1500 : Math.round(andante.y), "--escala": escala } as CSSProperties}>
+              className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${respuesta?.favorita ? " is-favorita" : ""}${dormido ? " is-dormido" : ""}${botando.includes(mundo) ? " is-botando" : ""}`}
+              style={{ left: andante.x, top: andante.y - PIES_GATITO, zIndex: enBrazos ? 1500 : Math.round(andante.y), "--escala": escala, "--bote": `${BOTAR_MS / BOTES}ms` } as CSSProperties}>
               <span className="casa-gatito-dibujo" style={{ ...dibujo, transform: mira < 0 ? "scaleX(-1)" : undefined }}>
                 {/* Sus accesorios, en su sitio en este cuadro; arropado, no se ven. */}
                 {!tapado && piezasEnCuadro(ropaDe(casa, mundo), animacion, cuadro).map(({ tipo, pieza, caja }) =>

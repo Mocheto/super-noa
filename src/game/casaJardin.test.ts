@@ -96,3 +96,20 @@ test("el progreso guarda el jardín de ida y vuelta", () => {
   assert.deepEqual(progreso.casa?.enJardin, [1]);
   assert.deepEqual(progreso.casa?.jardin, casa.jardin);
 });
+
+test("botar en la colchoneta: con ganas de jugar, contento y corazón de una vez; sin ganas, bota igual sin cambiar nada", async () => {
+  const { botar, BAJA_EN, BOTA_EN } = await import("./casaJardin.ts");
+  const conGanas = (casa: CasaProgress): CasaProgress =>
+    ({ ...casa, gatitos: { ...casa.gatitos, 1: { ...casa.gatitos[1], necesidades: { ...casa.gatitos[1].necesidades, jugar: 1 } } } });
+  const casa = conGanas(casaCon(1));
+  const con = botar(casa, 1, ahora);
+  assert.equal(con.respuesta, "gracias");
+  assert.ok(con.corazon);
+  assert.equal(con.casa.gatitos[1].necesidades.jugar, 0);
+  const sin = botar(con.casa, 1, ahora);
+  assert.equal(sin.respuesta, "juegaIgual");
+  assert.ok(!sin.corazon);
+  assert.equal(sin.casa, con.casa);
+  assert.ok(sobreLaColchoneta(BOTA_EN.x, BOTA_EN.y));
+  assert.ok(dentroDelSuelo(JARDIN, BAJA_EN.x, BAJA_EN.y) && !sobreLaColchoneta(BAJA_EN.x, BAJA_EN.y));
+});

@@ -254,6 +254,13 @@
 /* Hora de dormir: la mantita doblada de la bandeja (casa-mantita-v1.webp), la lámpara que se toca y la habitación con la
    lámpara apagada. El gatito arropado tiene su propia pose (gato-casa-arropado-v1.webp), ya con la mantita. */
 .casa-objeto.is-mantita { display: block; width: var(--objeto, 56px); aspect-ratio: 1; background: var(--hoja-mantita) 0 50% / 200% auto no-repeat; image-rendering: pixelated; }
+.casa-colchoneta { position: absolute; z-index: 400; image-rendering: pixelated; pointer-events: none; transform-origin: 50% 100%; }
+.casa-colchoneta.is-brilla { animation: casa-armario-brilla 1s ease-in-out infinite; }
+.casa-colchoneta.is-bota { animation: casa-colchoneta-bota var(--bote, 750ms) ease-in-out infinite; }
+@keyframes casa-colchoneta-bota { 0%, 100% { transform: scaleY(0.82); } 45%, 55% { transform: scaleY(1.04); } }
+.casa-gatito.is-botando .casa-gatito-dibujo { animation: casa-gatito-bota var(--bote, 750ms) ease-in-out infinite; }
+@keyframes casa-gatito-bota { 0%, 100% { translate: 0 10px; } 50% { translate: 0 -70px; } }
+@media (prefers-reduced-motion: reduce) { .casa-colchoneta.is-bota, .casa-gatito.is-botando .casa-gatito-dibujo { animation: none; } }
 .casa-puerta { position: absolute; z-index: 1; padding: 0; border: 0; border-radius: 90px 90px 8px 8px; background: transparent; pointer-events: none; }
 .casa-puerta:focus-visible { outline: 4px solid #ffd76a; }
 .casa-puerta.is-brilla { box-shadow: 0 0 0 4px #ffd76a, 0 0 26px 10px #ffe7a0aa; }

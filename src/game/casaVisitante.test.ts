@@ -59,3 +59,23 @@ test("la última visita se guarda y se lee de forma tolerante", () => {
   assert.equal(normalizeCasa({ ...casa, visitante: { dia: "hoy", animal: "wolf" } })?.visitante, undefined);
   assert.equal(normalizeCasa({ ...casa, visitante: { dia: "2026-11-20", animal: "dragon-gigante" } })?.visitante, undefined);
 });
+
+test("los sitios para olerlo están en la hierba del jardín, fuera de la colchoneta", async () => {
+  const { SITIOS_PARA_OLER, VISITANTE_SITIO } = await import("./casaVisitante.ts");
+  const { JARDIN, sobreLaColchoneta } = await import("./casaJardin.ts");
+  const { dentroDelSuelo } = await import("./casaHabitacion.ts");
+  assert.ok(dentroDelSuelo(JARDIN, VISITANTE_SITIO.x, VISITANTE_SITIO.y));
+  for (const sitio of SITIOS_PARA_OLER) {
+    assert.ok(dentroDelSuelo(JARDIN, sitio.x, sitio.y), `${sitio.x}, ${sitio.y}`);
+    assert.ok(!sobreLaColchoneta(sitio.x, sitio.y - 30), `${sitio.x}, ${sitio.y}`);
+  }
+});
+
+test("una foto del jardín guarda al visitante y se lee de forma tolerante", async () => {
+  const { normalizeFotos } = await import("./casaFoto.ts");
+  const base = { hecha: new Date(2026, 10, 20, 12).toISOString(), vista: { x: 0, ancho: 640 }, decoracion: {}, noche: false, apagada: false, gatitos: [] };
+  const [conVisitante] = normalizeFotos([{ ...base, jardin: { maceteros: [0, 0, 0], visitante: { animal: "wolf", x: 840, y: 505 } } }]);
+  assert.deepEqual(conVisitante.jardin?.visitante, { animal: "wolf", x: 840, y: 505 });
+  const [rara] = normalizeFotos([{ ...base, jardin: { maceteros: [0, 0, 0], visitante: { animal: "<script>", x: 1, y: 1 } } }]);
+  assert.equal(rara.jardin?.visitante, undefined);
+});

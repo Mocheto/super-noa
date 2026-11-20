@@ -46,3 +46,22 @@ export function DibujoAmigo({ animal, size, className }: { animal: string; size:
   const entry = friendCatalog.find((amigo) => amigo.kind === animal);
   return entry ? <FriendSprite entry={entry} size={size} className={className} /> : null;
 }
+
+/**
+ * Pinta un animal amigo en un lienzo como lo dibuja `DibujoAmigo` en la escena: en una caja de `ancho` × `ancho`·0,8
+ * con el centro de abajo en `pies` (para las fotos del jardín). Devuelve si se ha podido.
+ */
+export function pintarAmigo(context: CanvasRenderingContext2D, animal: string, pies: { x: number; y: number }, ancho: number): boolean {
+  const entry = friendCatalog.find((amigo) => amigo.kind === animal);
+  const found = entry ? sample(entry) : null;
+  if (!found) return false;
+  const { enemy } = found;
+  const alto = ancho * 0.8;
+  const scale = Math.min(ancho / (enemy.width + 40), alto / (enemy.height + 40));
+  context.save();
+  context.translate(pies.x, pies.y - 8);
+  context.scale(scale, scale);
+  drawEnemy(context, { ...enemy, x: -enemy.width / 2, y: -enemy.height, vx: 1, active: true, phase: 0 }, 0, false, getLevelAssets(found.level));
+  context.restore();
+  return true;
+}

@@ -10,7 +10,7 @@ import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hoj
 import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
-import { apuntarVisita, comidaFavoritaDe, COMIDAS_AMIGOS, cuerpoDelVisitante, darDeComerAlVisitante, DESPEDIDA_MS, elegirVisitante, HOJA_COMIDAS_AMIGOS, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, SE_VA_TRAS_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";
+import { apuntarVisita, comidaFavoritaDe, OLER_TRAS_ENTRAR_MS, SITIOS_PARA_OLER, COMIDAS_AMIGOS, cuerpoDelVisitante, darDeComerAlVisitante, DESPEDIDA_MS, elegirVisitante, HOJA_COMIDAS_AMIGOS, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, SE_VA_TRAS_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";
 import { DibujoAmigo } from "./DibujoAmigo";
 import { friendCatalog, type FriendFood } from "./friends";
 import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, CELDAS_MACETEROS, HOJA_MACETEROS, jardinDe, LUCIERNAGAS, luciernagaEn, maceteroBajo, maceteroPorRegar, regar, REGADERA, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
@@ -451,6 +451,22 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }, TOC_CADA_MS);
     return () => window.clearInterval(reloj);
   }, [llamando]);
+  // Cuando el visitante ha entrado en el jardín, los gatitos de allí se acercan a olerlo y luego siguen a lo suyo.
+  const visitanteDentro = enJardin && visita?.fase === "dentro";
+  useEffect(() => {
+    if (!visitanteDentro || noche) return;
+    const espera = window.setTimeout(() => {
+      const momento = performance.now();
+      setAndantes((actuales) => {
+        const siguientes = { ...actuales };
+        gatitos.filter((mundo, indice) => actuales[mundo] && cogidoRef.current?.indice !== indice && !botandoRef.current.includes(mundo))
+          .slice(0, SITIOS_PARA_OLER.length)
+          .forEach((mundo, orden) => { siguientes[mundo] = ir(actuales[mundo], SITIOS_PARA_OLER[orden], "sentarse", OLER_S, momento); });
+        return siguientes;
+      });
+    }, reduceMotion ? 0 : OLER_TRAS_ENTRAR_MS);
+    return () => window.clearTimeout(espera);
+  }, [visitanteDentro]); // eslint-disable-line react-hooks/exhaustive-deps
   // Si nadie le abre o no come, a los 3 minutos se va (y vuelve otro día); 20 s después de comer, se despide.
   // Al despedirse dice adiós, vuelve andando a la valla y se va.
   useEffect(() => {
@@ -1092,7 +1108,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             ...(!tapado && Object.keys(ropa).length ? { ropa } : {}) };
         }),
       // En el jardín, la foto guarda cómo estaba cada macetero.
-      ...(enJardin ? { jardin: { maceteros: jardinDe(casa).maceteros.map(celdaDeMacetero) } } : {}),
+      ...(enJardin ? { jardin: { maceteros: jardinDe(casa).maceteros.map(celdaDeMacetero), ...(visita ? { visitante: { animal: visita.animal, ...piesVisitante } } : {}) } } : {}),
     };
     guardar(guardarFoto(casaRef.current, foto));
     sonidoRef.current?.clic();
@@ -1179,7 +1195,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             style={{ left: JARDIN.maceteros[riego.indice].left + JARDIN.maceteros[riego.indice].width / 2, top: JARDIN.maceteros[riego.indice].top + 30 }} />}
           {/* El visitante: en el jardín, asomando por la valla o dentro; en la habitación, su bocadillo sobre la puerta. */}
           {enJardin && visita && <div className={`casa-visitante is-${visita.fase}${reaccion ? ` is-${reaccion.tipo}` : ""}${arrastre?.herramienta === "plato" ? " is-espera" : ""}`} role="img" aria-label={t(visita.fase === "llama" ? "casa.visitante.llama.oculto" : "casa.visitante.dentro.oculto", { nombre: nombreDeAmigo(visita.animal) })}
-            style={{ left: piesVisitante.x, top: piesVisitante.y, zIndex: Math.round(piesVisitante.y) }}>
+            style={{ left: piesVisitante.x, top: piesVisitante.y, zIndex: 900 }}>
             <DibujoAmigo animal={visita.animal} size={200} className="casa-visitante-dibujo" />
             {visita.fase === "llama" && <span key={visita.llamadas} className="casa-toc texto-noa" aria-hidden="true"><Texto clave="casa.visitante.toc.rotulo" /></span>}
             {reaccion?.tipo === "saluda" && <span key={reaccion.id} className="casa-bocadillo casa-bocadillo-visitante" aria-hidden="true"><i className={`casa-comida-amigo is-${comidaFavoritaDe(visita.animal)}`} /></span>}

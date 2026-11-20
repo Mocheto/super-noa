@@ -137,6 +137,20 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     }
   }
 
+  // El visitante del jardín, delante de los gatitos (que se le acercan a olerlo), con su dibujo de amigo (como en la escena: 200 px de ancho, los pies abajo en el centro).
+  const visitante = foto.jardin?.visitante;
+  if (visitante) {
+    const { pintarAmigo } = await import("./DibujoAmigo.tsx");
+    const prueba = document.createElement("canvas").getContext("2d");
+    // La primera vez carga las imágenes de su mundo: se espera un momento antes de pintarlo de verdad.
+    if (prueba && pintarAmigo(prueba, visitante.animal, { x: 100, y: 160 }, 200)) await new Promise((listo) => window.setTimeout(listo, 400));
+    contexto.save();
+    contexto.setTransform(escala, 0, 0, escala, -foto.vista.x * escala, 0);
+    pintarAmigo(contexto, visitante.animal, visitante, 200);
+    contexto.restore();
+    contexto.imageSmoothingEnabled = false;
+  }
+
   // De noche en el jardín: su capa oscura y las luciérnagas donde estaban al hacerla.
   if (foto.noche && enJardin) {
     contexto.fillStyle = "rgba(20, 29, 90, 0.65)";

@@ -40,7 +40,7 @@ export type FotoCasa = {
   apagada: boolean;
   gatitos: GatitoEnFoto[];
   /** Hecha en el jardín (mapa «Jardín de la casa»): la celda de cada macetero tal como estaba. Si falta, en la habitación. */
-  jardin?: { maceteros: number[] };
+  jardin?: { maceteros: number[]; /** El visitante que había (mapa «Visitas de los amigos a la casa»): su animal y sus pies. */ visitante?: { animal: string; x: number; y: number } };
 };
 
 /** Celdas de la lámina de los maceteros (`CELDAS_MACETEROS` de `casaJardin.ts`). */
@@ -51,7 +51,10 @@ function normalizeJardinEnFoto(raw: unknown): FotoCasa["jardin"] | undefined {
   if (!registro(raw) || !Array.isArray(raw.maceteros)) return undefined;
   const leidos: unknown[] = raw.maceteros;
   const maceteros = Array.from({ length: MACETEROS }, (_, i) => Math.floor(entre(leidos[i], 0, CELDAS_MACETEROS - 1) ?? 0));
-  return { maceteros };
+  const visitante = registro(raw.visitante) && typeof raw.visitante.animal === "string" && /^[a-z-]{2,40}$/.test(raw.visitante.animal)
+    ? { animal: raw.visitante.animal, x: entre(raw.visitante.x, 0, ANCHO), y: entre(raw.visitante.y, 0, ALTO) }
+    : null;
+  return { maceteros, ...(visitante && visitante.x !== null && visitante.y !== null ? { visitante: { animal: visitante.animal, x: visitante.x, y: visitante.y } } : {}) };
 }
 
 /** Guarda la foto delante de las demás; con más de doce, se va la más antigua. */

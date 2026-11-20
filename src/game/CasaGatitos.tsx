@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, decoracionDe, dejarHuella, dePaseoDe, enCasaDe, esDeNoche, llegadasDePaseo, mandarDePaseo, MAX_EN_CASA, traerACasa, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
 import {
   aEscena, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
@@ -10,7 +10,7 @@ import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hoj
 import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
-import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, estanciaDe, JARDIN, llevarA, sobreLaColchoneta, sobreLaPuerta, todosALaHabitacion, ZONA_PUERTA_HABITACION, type Estancia } from "./casaJardin";
+import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, sobreLaPuerta, todosALaHabitacion, ZONA_PUERTA_HABITACION, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
 import { fondoDePieza, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte";
@@ -177,6 +177,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   /** Gatitos que botan en la colchoneta del jardín ahora mismo. */
   const [botando, setBotando] = useState<number[]>([]);
   const botandoRef = useRef<number[]>([]);
+  /** Mariposas del jardín que Noa ha hecho posarse junto a un gatito. */
+  const [toqueMariposa, setToqueMariposa] = useState<{ punto: { x: number; y: number }; ms: number } | null>(null);
+  const [posadas, setPosadas] = useState<(Posada | null)[]>(() => Array.from({ length: MARIPOSAS }, () => null));
   useEffect(() => { botandoRef.current = botando; }, [botando]);
   // Gatito en el vestidor (se le lleva al armario).
   const [vestidor, setVestidor] = useState<number | null>(null);
@@ -238,6 +241,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // Tras «¡BUENAS NOCHES!», más bajita todavía.
   useEffect(() => { nanaRef.current?.ajustar({ silencio: muted, volumen: (musicVolume / 100) * (bano !== null ? 0.5 : 1) * (buenasNoches !== "no" ? 0.4 : 1), noche }); }, [muted, musicVolume, noche, bano, buenasNoches]);
 
+  // Las mariposas revolotean por el jardín de día; de noche, las luciérnagas.
+  const mariposasVisibles = enJardin && !noche && fase === "casa";
   // Solo los gatitos en casa (cinco como mucho) que están en esta estancia; los de paseo no están.
   const presentes = [...new Set([...enCasaDe(casa).filter((mundo) => !esperando.includes(mundo) && estanciaDe(casa, mundo) === estancia), ...(enJardin ? [] : saliendo)])].sort((a, b) => a - b).join(",");
   const gatitos = useMemo(() => presentes ? presentes.split(",").map(Number) : [], [presentes]);
@@ -352,6 +357,54 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setAbanico(false);
     setArrastre(null);
     setLuzPuerta((veces) => veces + 1);
+  };
+
+  /** Dónde se ve cada mariposa a los `ms` (`activa`: posada o volviendo, no se puede tocar). */
+  const mariposasEn = (ms: number) => Array.from({ length: MARIPOSAS }, (_, indice) => {
+    const vuelo = vueloDeMariposa(indice, reduceMotion ? indice * 9000 : ms);
+    const posada = posadas[indice];
+    const posicion = posada ? posicionPosada(posada, ms, vuelo) : null;
+    return posicion ? { ...posicion, activa: true } : { ...vuelo, quieta: false, activa: false };
+  });
+  /**
+   * Tocar una mariposa: se posa junto al gatito más cercano. Con ganas de jugar, el gatito salta a por ella (nunca la
+   * coge: se escapa) y cuenta como jugar; sin ganas, solo la mira. Devuelve si se ha tocado una.
+   */
+  const tocarMariposa = (punto: { x: number; y: number }, ms: number) => {
+    const ahoraMismo = mariposasEn(ms);
+    const indice = mariposaBajo(punto, ahoraMismo.map((m) => m.activa ? null : m));
+    if (indice < 0) return false;
+    const cercano = masCercano(ahoraMismo[indice], lista);
+    if (cercano < 0) return true;
+    const mundo = gatitos[cercano];
+    pararGatito(cercano);
+    setPosadas((antes) => antes.map((p, i) => i === indice ? { desde: ms, de: ahoraMismo[indice], a: dondeSePosa(lista[cercano]) } : p));
+    window.setTimeout(() => {
+      const gatito = casaRef.current.gatitos[mundo];
+      if (!gatito || estadoDe(gatito.necesidades.jugar) === "bien") return;
+      const resultado = jugarDeUnaVez(casaRef.current, mundo, new Date());
+      guardar(resultado.casa);
+      sonidoRef.current?.maullar(mundo, "gracias");
+      const id = ++idRef.current;
+      setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== cercano), { gatito: cercano, tipo: resultado.respuesta, cuidado: "pelota", corazon: resultado.corazon, id, desde: performance.now() }]);
+      window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
+    }, reduceMotion ? 0 : POSARSE_MS);
+    return true;
+  };
+
+  // El toque a una mariposa se atiende fuera del manejador del dedo.
+  const toqueAtendidoRef = useRef(0);
+  useEffect(() => {
+    if (!toqueMariposa || toqueMariposa.ms === toqueAtendidoRef.current) return;
+    toqueAtendidoRef.current = toqueMariposa.ms;
+    tocarMariposa(toqueMariposa.punto, toqueMariposa.ms);
+  }, [toqueMariposa]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** Con el teclado (o un lector de pantalla), la mariposa elegida se posa igual que al tocarla. */
+  const mariposaConTeclado = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (event.detail !== 0) return;
+    const mariposa = mariposasEn(event.timeStamp)[Number(event.currentTarget.dataset.indice)];
+    if (mariposa) tocarMariposa(mariposa, event.timeStamp);
   };
 
   /** La estrella de la bandeja: empieza la hora de dormir y cada gatito en casa va a su sitio de noche a dormir. */
@@ -754,7 +807,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       deslizRef.current = { clienteX: event.clientX, vista: vistaX, moviendo: false, punto };
       return;
     }
-    const indice = tocar(punto);
+    // Una mariposa delante de un gatito se toca antes que el gatito.
+    const sobreMariposa = mariposasVisibles && mariposaBajo(punto, mariposasEn(event.timeStamp).map((m) => m.activa ? null : m)) >= 0;
+    const indice = sobreMariposa ? -1 : tocar(punto);
     if (indice >= 0) pararGatito(indice);
     try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* sin captura, el deslizar sigue funcionando dentro de la escena */ }
     if (indice < 0) {
@@ -810,6 +865,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const tocado = deslizRef.current;
     if (decorando && tocado?.punto && !tocado.moviendo) setElegido(muebleEn(tocado.punto.x, tocado.punto.y));
     else if (noche && !enJardin && tocado?.punto && !tocado.moviendo && enLaLampara(tocado.punto)) cambiarLampara();
+    else if (mariposasVisibles && tocado?.punto && !tocado.moviendo && mariposaBajo(tocado.punto, mariposasEn(event.timeStamp).map((m) => m.activa ? null : m)) >= 0) setToqueMariposa({ punto: tocado.punto, ms: event.timeStamp });
     else if (tocado?.punto && !tocado.moviendo && sobreLaPuerta(estancia, tocado.punto.x, tocado.punto.y)) cruzarPuerta();
     deslizRef.current = null;
     if (pendienteRef.current) { window.clearTimeout(pendienteRef.current.temporizador); pendienteRef.current = null; }
@@ -922,7 +978,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   };
 
   const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.png"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
-  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--accesorios": cssAssetUrl(HOJA_ACCESORIOS), "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
+  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--accesorios": cssAssetUrl(HOJA_ACCESORIOS), "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
   const hojaBano = bano !== null ? hojaDe(bano) : undefined;
@@ -989,6 +1045,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(PUERTA_X) }} />}
           {enJardin && <img className={`casa-colchoneta${cogido ? " is-brilla" : ""}${botando.length ? " is-bota" : ""}`} src={JARDIN.colchoneta.imagen} alt="" draggable={false}
             style={{ left: JARDIN.colchoneta.left, top: JARDIN.colchoneta.top, width: JARDIN.colchoneta.width, height: JARDIN.colchoneta.height, "--bote": `${BOTAR_MS / BOTES}ms` } as CSSProperties} />}
+          {mariposasVisibles && mariposasEn(ahora).map((mariposa, indice) => <button key={indice} type="button" aria-label={t("casa.jardin.mariposa.oculto")}
+            className={`casa-mariposa${mariposa.quieta ? " is-posada" : ""}${indice % 2 ? " is-otra" : ""}`} style={{ left: mariposa.x, top: mariposa.y }}
+            data-indice={indice} onClick={mariposaConTeclado} />)}
           {!enJardin && casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
           {aspectos.map(({ mundo, enBrazos, andante, llegando, pide, respuesta, tapado, dormido, animacion, fila, cuadro, hoja, mira, escala }) => {
             // Arropado: su pose propia (cabeza fuera, mantita de su color); mientras se pinta, la de dormir.

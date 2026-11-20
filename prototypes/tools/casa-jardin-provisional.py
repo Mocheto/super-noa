@@ -68,7 +68,29 @@ def colchoneta():
     img.save(SPRITES / "casa-colchoneta-v1.webp", "WEBP", lossless=True)
 
 
+def mariposa():
+    """La mariposa: cuatro cuadros de 64 × 64 (abiertas, medio, casi cerradas, medio), azul cielo con lunares lila."""
+    hoja = Image.new("RGBA", (64 * 4, 64), (0, 0, 0, 0))
+    for cuadro, abierta in enumerate((1.0, 0.6, 0.25, 0.6)):
+        img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+        d = ImageDraw.Draw(img)
+        ancho = round(26 * abierta) + 3
+        for lado in (-1, 1):
+            x0, x1 = sorted((32, 32 + lado * ancho))
+            d.ellipse([x0, 12, x1, 34], fill=(150, 210, 245, 255), outline=CONTORNO, width=3)
+            d.ellipse([x0 + 2, 30, x1 - 2, 48], fill=(150, 210, 245, 255), outline=CONTORNO, width=3)
+            if ancho > 12:
+                cx = 32 + lado * ancho // 2
+                d.ellipse([cx - 4, 19, cx + 4, 27], fill=(196, 160, 232, 255))
+        d.rounded_rectangle([29, 16, 35, 48], radius=3, fill=(70, 50, 80, 255), outline=CONTORNO, width=2)
+        d.line([31, 16, 26, 6], fill=CONTORNO, width=2)
+        d.line([33, 16, 38, 6], fill=CONTORNO, width=2)
+        hoja.alpha_composite(img, (cuadro * 64, 0))
+    hoja.save(SPRITES / "casa-mariposa-v1.webp", "WEBP", lossless=True)
+
+
 if __name__ == "__main__":
     jardin()
     colchoneta()
+    mariposa()
     print("escrito el jardín provisional")

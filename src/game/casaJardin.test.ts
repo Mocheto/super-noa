@@ -113,3 +113,23 @@ test("botar en la colchoneta: con ganas de jugar, contento y corazón de una vez
   assert.ok(sobreLaColchoneta(BOTA_EN.x, BOTA_EN.y));
   assert.ok(dentroDelSuelo(JARDIN, BAJA_EN.x, BAJA_EN.y) && !sobreLaColchoneta(BAJA_EN.x, BAJA_EN.y));
 });
+
+test("las mariposas vuelan por el aire del jardín, se tocan cerca y se posan junto al gatito más cercano", async () => {
+  const { dondeSePosa, mariposaBajo, masCercano, MARIPOSAS, POSADA_MS, POSARSE_MS, posicionPosada, VOLVER_MS, vueloDeMariposa } = await import("./casaJardin.ts");
+  for (let indice = 0; indice < MARIPOSAS; indice += 1) {
+    for (let ms = 0; ms < 120_000; ms += 700) {
+      const { x, y } = vueloDeMariposa(indice, ms);
+      assert.ok(x > 300 && x < 1120 && y > 130 && y < 390, `mariposa ${indice} a los ${ms} ms: ${x}, ${y}`);
+    }
+  }
+  const posiciones = [{ x: 500, y: 300 }, { x: 900, y: 250 }];
+  assert.equal(mariposaBajo({ x: 520, y: 290 }, posiciones), 0);
+  assert.equal(mariposaBajo({ x: 700, y: 300 }, posiciones), -1);
+  assert.equal(mariposaBajo({ x: 520, y: 290 }, [null, posiciones[1]]), -1);
+  assert.equal(masCercano({ x: 880, y: 450 }, [{ x: 300, y: 450 }, { x: 860, y: 470 }]), 1);
+  assert.equal(masCercano({ x: 0, y: 0 }, []), -1);
+  const posada = { desde: 1000, de: posiciones[0], a: dondeSePosa({ x: 860, y: 470 }) };
+  assert.deepEqual(posicionPosada(posada, 1000, posiciones[0]), { ...posiciones[0], quieta: false });
+  assert.deepEqual(posicionPosada(posada, 1000 + POSARSE_MS + 10, posiciones[0]), { ...posada.a, quieta: true });
+  assert.equal(posicionPosada(posada, 1000 + POSARSE_MS + POSADA_MS + VOLVER_MS, posiciones[0]), null);
+});

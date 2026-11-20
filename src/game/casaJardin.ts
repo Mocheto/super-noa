@@ -115,10 +115,10 @@ export const BOTAR_MS = 3000;
 export const BOTES = 4;
 
 /**
- * Un gatito ha botado en la colchoneta: cuenta como una partida entera de pelota. Con ganas de jugar («se nota» o
+ * Una partida de juego de una vez (la colchoneta o saltar a por una mariposa): cuenta como una partida entera de pelota. Con ganas de jugar («se nota» o
  * «pide») queda contento y, si toca, gana su corazón; sin ganas ha botado igual, sin «ahora no» y sin que cambie nada.
  */
-export function botar(casa: CasaProgress, mundo: number, ahora: Date): ResultadoCuidado {
+export function jugarDeUnaVez(casa: CasaProgress, mundo: number, ahora: Date): ResultadoCuidado {
   const gatito = casa.gatitos[mundo];
   if (!gatito) return { casa, respuesta: "juegaIgual", corazon: false };
   const listo = { ...casa, gatitos: { ...casa.gatitos, [mundo]: { ...gatito, lanzamientos: LANZAMIENTOS_PARA_JUGAR - 1 } } };
@@ -126,10 +126,73 @@ export function botar(casa: CasaProgress, mundo: number, ahora: Date): Resultado
   return resultado.respuesta === "gracias" ? resultado : { casa, respuesta: "juegaIgual", corazon: false };
 }
 
+/** Un gatito ha botado en la colchoneta. */
+export const botar = jugarDeUnaVez;
+
 /** Dónde baja de un salto, a la hierba de al lado de la colchoneta. */
 export const BAJA_EN = { x: JARDIN.colchoneta.left + JARDIN.colchoneta.width + 60, y: 500 };
 /** Dónde bota: los pies sobre el centro de la colchoneta. */
 export const BOTA_EN = { x: JARDIN.colchoneta.left + JARDIN.colchoneta.width / 2, y: JARDIN.colchoneta.top + 30 };
+
+// --- Mariposas ------------------------------------------------------------------------------------------------------
+
+/** Dos mariposas revolotean por el jardín de día. */
+export const MARIPOSAS = 2;
+/** Cuánto tarda en llegar junto al gatito, cuánto se queda posada y cuánto en volver a su vuelo. */
+export const POSARSE_MS = 800;
+export const POSADA_MS = 1200;
+export const VOLVER_MS = 700;
+/** Radio de toque de una mariposa, en px de la escena. */
+export const TOQUE_MARIPOSA = 60;
+
+/** Dónde está la mariposa `indice` a los `ms` de su vuelo: ondas lentas por el aire del jardín, entre la casa y la valla. */
+export function vueloDeMariposa(indice: number, ms: number): { x: number; y: number } {
+  const t = ms / 1000;
+  const fase = indice * 2.3;
+  return {
+    x: 720 + 380 * Math.sin(t * 0.23 + fase),
+    y: 260 + 90 * Math.sin(t * 0.61 + fase * 1.7) + 20 * Math.sin(t * 2.1 + fase),
+  };
+}
+
+/** La mariposa bajo el punto (entre las que se pueden tocar), o -1. */
+export function mariposaBajo(punto: { x: number; y: number }, posiciones: readonly ({ x: number; y: number } | null)[]): number {
+  let mejor = -1;
+  let distancia = TOQUE_MARIPOSA;
+  posiciones.forEach((posicion, indice) => {
+    if (!posicion) return;
+    const d = Math.hypot(posicion.x - punto.x, posicion.y - punto.y);
+    if (d <= distancia) { mejor = indice; distancia = d; }
+  });
+  return mejor;
+}
+
+/** Dónde se posa junto a un gatito (con los pies en `gatito`): a su lado, a la altura de la cabeza. */
+export const dondeSePosa = (gatito: { x: number; y: number }) => ({ x: gatito.x + 55, y: gatito.y - 80 });
+
+/** El gatito más cercano a un punto (índice en `gatitos`), o -1 si no hay ninguno. */
+export function masCercano(punto: { x: number; y: number }, gatitos: readonly { x: number; y: number }[]): number {
+  return gatitos.reduce((mejor, gatito, i) =>
+    mejor < 0 || Math.hypot(gatito.x - punto.x, gatito.y - punto.y) < Math.hypot(gatitos[mejor].x - punto.x, gatitos[mejor].y - punto.y) ? i : mejor, -1);
+}
+
+export type Posada = { desde: number; de: { x: number; y: number }; a: { x: number; y: number } };
+
+/**
+ * Dónde se ve una mariposa que se ha posado: va hasta el gatito, se queda y vuelve a su vuelo. `null` cuando ya ha
+ * vuelto (vuela otra vez sola).
+ */
+export function posicionPosada(posada: Posada, ms: number, vuelo: { x: number; y: number }): { x: number; y: number; quieta: boolean } | null {
+  const t = ms - posada.desde;
+  const entre = (a: { x: number; y: number }, b: { x: number; y: number }, f: number) => {
+    const suave = f * f * (3 - 2 * f);
+    return { x: a.x + (b.x - a.x) * suave, y: a.y + (b.y - a.y) * suave };
+  };
+  if (t < POSARSE_MS) return { ...entre(posada.de, posada.a, Math.max(0, t) / POSARSE_MS), quieta: false };
+  if (t < POSARSE_MS + POSADA_MS) return { ...posada.a, quieta: true };
+  if (t < POSARSE_MS + POSADA_MS + VOLVER_MS) return { ...entre(posada.a, vuelo, (t - POSARSE_MS - POSADA_MS) / VOLVER_MS), quieta: false };
+  return null;
+}
 
 // --- Maceteros -------------------------------------------------------------------------------------------------------
 

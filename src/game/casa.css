@@ -305,7 +305,7 @@
 .casa-visitante.is-favorita .casa-visitante-dibujo { animation: casa-visitante-salta .3s ease-out 6 alternate; filter: drop-shadow(0 0 10px #ffd76a); }
 @keyframes casa-visitante-salta { from { translate: 0 0; } to { translate: 0 -34px; } }
 .casa-visitante.is-espera .casa-visitante-dibujo { filter: drop-shadow(0 0 10px #ffd76a); }
-.casa-visitante .casa-nam { position: absolute; left: 50%; bottom: 105%; transform: translateX(-50%); }
+.casa-visitante .casa-nam { position: absolute; left: 50%; top: auto; bottom: 100%; font-size: 24px; }
 .casa-visitante .casa-corazon { position: absolute; left: 50%; top: 0; width: 56px; height: 56px; margin-left: -28px; }
 /* Al despedirse, vuelve andando a la valla. */
 .casa-visitante.is-seva { animation: casa-visitante-sale 2.5s ease-in-out .5s forwards; }

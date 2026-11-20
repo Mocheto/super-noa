@@ -127,6 +127,10 @@ _Avoid_: Ducha, baño (a secas es la necesidad)
 **Decorar**:
 Modo de la casa en el que la bandeja enseña los muebles y sus versiones, en lugar de los cuidados.
 
+**Comida favorita**:
+La comida que más le gusta a un gatito de la casa: pescado, leche, galletas o pollo. Con hambre, cualquier comida le vale, pero con su favorita se pone más contento. Empieza sin saberse y Noa la descubre al dársela.
+_Avoid_: Comida preferida, plato
+
 **Mueble**:
 Pieza de la casa que se puede cambiar por otra versión al decorar (cama, alfombra, cuadro, planta y pared).
 _Avoid_: Objeto (son los de la bandeja), adorno

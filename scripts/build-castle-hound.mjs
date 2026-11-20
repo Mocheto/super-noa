@@ -1,6 +1,6 @@
 // Original clockwork canine guardian, drawn entirely from authored geometry.
 // No source images, commercial character references, dependencies, or import-time writes.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { comoWebp, escribirPngComoWebp, webpIgualAPng } from './webp.mjs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync } from 'node:zlib';
@@ -353,10 +353,10 @@ function main() {
   const bytes = outputs.reduce((sum, [, data]) => sum + data.length, 0);
   if (bytes >= 60 * 1024) throw new Error('Castle sprites exceed the 60 KiB budget');
   for (const [name, data] of outputs) {
-    const path = fileURLToPath(new URL(`../public/assets/sprites/${name}`, import.meta.url));
+    const path = comoWebp(fileURLToPath(new URL(`../public/assets/sprites/${name}`, import.meta.url)));
     if (process.argv.includes('--check')) {
-      if (!readFileSync(path).equals(data)) throw new Error(`${name} is stale; regenerate castle sprites`);
-    } else writeFileSync(path, data);
+      if (!webpIgualAPng(path, data)) throw new Error(`${name} is stale; regenerate castle sprites`);
+    } else escribirPngComoWebp(path, data);
     const c = sprites[name];
     console.log(`${process.argv.includes('--check') ? 'OK' : 'Wrote'} ${name}: ${c.width}x${c.height}, ${data.length} bytes`);
   }

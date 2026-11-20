@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readRgbaPng } from "./pngTestUtils.ts";
+import { readRgbaImage } from "./imagenTestUtils.ts";
 import { ATLAS_PICTOGRAMAS, celdaPictograma, pictogramas, type Pictograma } from "../textos/pictogramas.ts";
 import { pictogramasDibujados } from "../textos/pictogramasDibujados.ts";
 
 const CELDA = 96;
 
 test("los atlas de pictogramas miden lo previsto, son transparentes y cada pictograma dibujado tiene su celda llena", () => {
-  const atlas = { color: readRgbaPng(ATLAS_PICTOGRAMAS.color), controles: readRgbaPng(ATLAS_PICTOGRAMAS.controles) };
+  const atlas = { color: readRgbaImage(ATLAS_PICTOGRAMAS.color), controles: readRgbaImage(ATLAS_PICTOGRAMAS.controles) };
   assert.deepEqual([atlas.color.width, atlas.color.height], [576, 576]);
   assert.deepEqual([atlas.controles.width, atlas.controles.height], [480, 288]);
   for (const nombre of pictogramasDibujados) {

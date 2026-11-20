@@ -3,7 +3,7 @@
 Entrada: una o varias láminas, cada una con una fila de dibujos en orden de izquierda a derecha, y el nombre del
 pictograma de cada dibujo (o «-» para saltarlo). Las láminas a color tienen fondo blanco (con o sin marcos finos
 alrededor de cada dibujo); las de controles, fondo negro y dibujos en blanco.
-Salida: public/assets/sprites/pictogramas-v1.png (6 × 6 celdas de 96 px) y pictogramas-controles-v1.png
+Salida: public/assets/sprites/pictogramas-v1.webp (6 × 6 celdas de 96 px) y pictogramas-controles-v1.webp
 (5 × 3 celdas), y src/textos/pictogramasDibujados.ts con los nombres que ya tienen dibujo. Si los atlas existen,
 solo se sustituyen las celdas indicadas: el atlas se completa poco a poco.
 
@@ -24,8 +24,8 @@ from PIL import Image
 from scipy import ndimage
 
 RAIZ = pathlib.Path(__file__).resolve().parents[2]
-ATLAS_COLOR = RAIZ / "public/assets/sprites/pictogramas-v1.png"
-ATLAS_CONTROLES = RAIZ / "public/assets/sprites/pictogramas-controles-v1.png"
+ATLAS_COLOR = RAIZ / "public/assets/sprites/pictogramas-v1.webp"
+ATLAS_CONTROLES = RAIZ / "public/assets/sprites/pictogramas-controles-v1.webp"
 DIBUJADOS = RAIZ / "src/textos/pictogramasDibujados.ts"
 
 # El orden es estable: coincide con docs/interfaz/pictogramas.md y con ATLAS_PICTOGRAMAS en src/textos/pictogramas.ts.
@@ -122,7 +122,7 @@ def montar(destino: pathlib.Path, orden: list[str], columnas: int, filas: int, e
             atlas.alpha_composite(celda(lamina, caja, controles), (x, y))
             montados.append(nombre)
     destino.parent.mkdir(parents=True, exist_ok=True)
-    atlas.save(destino, optimize=True)
+    atlas.save(destino, "WEBP", lossless=True, method=6)
     return montados
 
 

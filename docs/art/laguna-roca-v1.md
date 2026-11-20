@@ -4,7 +4,7 @@ Arte de la **roca que asoma** de las pantallas acuáticas A-1, A-2 y A-3. Ticket
 
 ## Estado
 
-- **Provisional (19-11-2026):** el juego dibuja la roca con el arrecife `sprites/sea-reef-wall-v2.png` estirado hacia arriba, con sus algas fuera del agua.
+- **Provisional (19-11-2026):** el juego dibuja la roca con el arrecife `sprites/sea-reef-wall-v2.webp` estirado hacia arriba, con sus algas fuera del agua.
 - **Hecho (19-11-2026):** recortada con `prototypes/tools/casa-recorte.py` en `sprites/roca-asoma-v1.webp` (180 de ancho: cima de 135 con la espuma a 86 y cuerpo de 127). La cima es más alta que lo pedido: se dibuja con la espuma en la línea del agua y asoma más que la colisión.
 
 ## Qué hace falta
@@ -21,7 +21,7 @@ Archivo final: `sprites/roca-asoma-v1.webp` (cima arriba, cuerpo debajo), con fo
 ## Cómo trabajar
 
 1. Copia el prompt entero.
-2. Adjunta `public/assets/sprites/sea-reef-wall-v2.png` (acabado de la piedra del arrecife) y `public/assets/worlds/world-8.webp` (fondo de la laguna, para el color del agua).
+2. Adjunta `public/assets/sprites/sea-reef-wall-v2.webp` (acabado de la piedra del arrecife) y `public/assets/worlds/world-8.webp` (fondo de la laguna, para el color del agua).
 3. La lámina va sobre **verde plano `#00FF00`**. Yo la recorto a transparente, la alineo y la exporto.
 4. Si tras tres intentos no sale bien, cambia de modelo antes de insistir con el prompt.
 5. Guarda la original fuera del repositorio, en `../super-noa-arte-original/laguna-v1/`.

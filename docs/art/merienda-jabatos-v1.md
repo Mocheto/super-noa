@@ -6,7 +6,7 @@ Dossier del arte de **La merienda de los jabatos**, el duelo rítmico del Gran J
 
 - **Hecho:** las cinco láminas están generadas, recortadas a transparente y exportadas como WebP en `public/assets/sprites/` (ver [Archivos finales](#archivos-finales)).
 - **Se reutilizan:**
-  - el Gran Jabalí, con sus cinco poses `public/assets/sprites/boss-gran-jabali-0..4.png`;
+  - el Gran Jabalí, con sus cinco poses `public/assets/sprites/boss-gran-jabali-0..4.webp`;
   - el fondo del bosque, `public/assets/worlds/world-4-hd-v1.webp`.
 
 ## Cómo trabajar
@@ -46,15 +46,15 @@ Las hojas verdes del arbusto chocan con el fondo `#00FF00`. Para esa lámina se 
 
 | Pieza | Imagen base | Referencia de estilo | Archivo final | Tamaño en escena (960 × 540) |
 |---|---|---|---|---|
-| Noa guarda del bosque, 4 poses | `escena-composicion.png` | `public/assets/sprites/noa-rps-0.png` y `noa-lenadora-v1.webp` | `sprites/noa-guarda-v1.webp` | 186 × 257 por pose |
-| Jabato pequeño, 5 poses | `jabato-poses-base.png` | `public/assets/sprites/enemy-boar-v2.png` | `sprites/jabato-pequeno-v1.webp` | 140 × 120 por pose |
-| Jabato grande, 5 poses | `jabato-poses-base.png` | `public/assets/sprites/enemy-boar-v2.png` | `sprites/jabato-grande-v1.webp` | 190 × 160 por pose |
-| Comida y cesta | `objetos-base.png` | `public/assets/sprites/boss-gran-jabali-0.png` (bellotas de su traje) | `bellota-v1`, `castana-v1`, `cesta-v1`, `bellota-brillo-v1` (`.webp`) | bellota 40 × 40, castaña 40 × 40, cesta 96 × 64 |
+| Noa guarda del bosque, 4 poses | `escena-composicion.png` | `public/assets/sprites/noa-rps-0.webp` y `noa-lenadora-v1.webp` | `sprites/noa-guarda-v1.webp` | 186 × 257 por pose |
+| Jabato pequeño, 5 poses | `jabato-poses-base.png` | `public/assets/sprites/enemy-boar-v2.webp` | `sprites/jabato-pequeno-v1.webp` | 140 × 120 por pose |
+| Jabato grande, 5 poses | `jabato-poses-base.png` | `public/assets/sprites/enemy-boar-v2.webp` | `sprites/jabato-grande-v1.webp` | 190 × 160 por pose |
+| Comida y cesta | `objetos-base.png` | `public/assets/sprites/boss-gran-jabali-0.webp` (bellotas de su traje) | `bellota-v1`, `castana-v1`, `cesta-v1`, `bellota-brillo-v1` (`.webp`) | bellota 40 × 40, castaña 40 × 40, cesta 96 × 64 |
 | Arbusto, roca y rama | `objetos-base.png` y `escena-composicion.png` | `public/assets/worlds/world-4-hd-v1.webp` | `arbusto-merienda-v1`, `roca-merienda-v1`, `rama-bellotas-vacia-v1`, `rama-bellotas-llena-v1` (`.webp`) | arbusto 210 × 82, roca 175 × 40, rama 230 × 40 |
 
 ### 1. Noa guarda del bosque
 
-Adjunta `noa-rps-0.png` como referencia del personaje, `noa-lenadora-v1.webp` como referencia de lámina y `escena-composicion.png` para la escala.
+Adjunta `noa-rps-0.webp` como referencia del personaje, `noa-lenadora-v1.webp` como referencia de lámina y `escena-composicion.png` para la escala.
 
 Prompt (ESTILO + este texto + FONDO, formato 16:9):
 
@@ -68,7 +68,7 @@ Pose 4 "celebrate": jumping with joy, both arms raised, eyes closed in a big smi
 
 ### 2. Jabato pequeño
 
-Adjunta `jabato-poses-base.png` como imagen base de las poses y `enemy-boar-v2.png` como referencia de estilo del jabalí del mundo.
+Adjunta `jabato-poses-base.png` como imagen base de las poses y `enemy-boar-v2.webp` como referencia de estilo del jabalí del mundo.
 
 Prompt (ESTILO + este texto + FONDO, formato 21:9 o 16:9):
 

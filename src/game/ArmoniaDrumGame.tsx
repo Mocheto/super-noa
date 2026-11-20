@@ -452,19 +452,19 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
     <h2 id="armonia-drum-title" className="sr-only"><Texto clave="minijuegos.tambor.previa.nombre.rotulo" /></h2>
     <div className={`armonia-drum-frame${reduceMotion ? " is-still" : ""}`} ref={frameRef} onPointerDown={(event) => { if (event.button === 0 && mode && mode !== "demo") strike(); }}>
       <div className="armonia-drum-stage" style={{ transform: `scale(${scale})` }} aria-hidden="true">
-        <img className="armonia-drum-background" src="./assets/worlds/teatro-armonia-v0.png" alt="" />
+        <img className="armonia-drum-background" src="./assets/worlds/teatro-armonia-v0.webp" alt="" />
         <div className={`armonia-drum-spot is-armonia${mode && view.turn === "call" ? " is-on" : ""}`} />
         <div className={`armonia-drum-spot is-noa${mode && view.turn === "response" ? " is-on" : ""}`} />
         <div className={`armonia-drum-lamps${view.turn ? ` is-${view.turn}` : ""}`}>{[0, 1, 2, 3].map((index) => <span key={index} className={mode && view.lamp === index ? "is-on" : undefined} />)}</div>
         <div className={`armonia-drum-armonia${view.armoniaHit && mode ? " is-hit" : ""}`} style={{ backgroundImage: `url("${boss.assetAtlas}")`, backgroundPosition: `${armoniaPose * 25}% 100%` }} />
-        <div className={`armonia-drum-drum${view.armoniaHit && mode ? " is-hit" : ""}`} style={{ ...ARMONIA_DRUM, backgroundImage: 'url("./assets/sprites/tambor-armonia-v0.png")' }} />
-        <div className="armonia-drum-noa" style={{ ...NOA, "--noa-sprite": cssAssetUrl("./assets/sprites/noa-tambor-v0.png"), backgroundPosition: `${NOA_POSES[noaPose]} 0` } as CSSProperties} />
-        <div className={`armonia-drum-drum${view.noaHit && mode ? " is-hit" : ""}${view.noaGlow && mode ? " is-glow" : ""}`} style={{ ...NOA_DRUM, backgroundImage: 'url("./assets/sprites/tambor-noa-v0.png")' }} />
+        <div className={`armonia-drum-drum${view.armoniaHit && mode ? " is-hit" : ""}`} style={{ ...ARMONIA_DRUM, backgroundImage: 'url("./assets/sprites/tambor-armonia-v0.webp")' }} />
+        <div className="armonia-drum-noa" style={{ ...NOA, "--noa-sprite": cssAssetUrl("./assets/sprites/noa-tambor-v0.webp"), backgroundPosition: `${NOA_POSES[noaPose]} 0` } as CSSProperties} />
+        <div className={`armonia-drum-drum${view.noaHit && mode ? " is-hit" : ""}${view.noaGlow && mode ? " is-glow" : ""}`} style={{ ...NOA_DRUM, backgroundImage: 'url("./assets/sprites/tambor-noa-v0.webp")' }} />
         {prints && <Prints view={prints} className="armonia-drum-prints" style={prints.drum === "armonia" ? { left: armoniaPrints.x, top: armoniaPrints.y } : { left: noaPrints.x, top: noaPrints.y }} />}
         {mode && view.armoniaBubble && <span className="armonia-drum-bubble is-armonia">{view.armoniaBubble}</span>}
         {mode && view.noaBubble && <span className="armonia-drum-bubble is-noa">{view.noaBubble}</span>}
         {view.feedback && mode && <div className={`armonia-drum-feedback${view.feedback.miss ? " is-miss" : ""}`}>{view.feedback.text}</div>}
-        <div className={`armonia-drum-stand${showGoal && got >= WIN_AT ? " is-reached" : ""}`} style={{ "--atril": cssAssetUrl("./assets/sprites/atril-armonia-v0.png") } as CSSProperties}>
+        <div className={`armonia-drum-stand${showGoal && got >= WIN_AT ? " is-reached" : ""}`} style={{ "--atril": cssAssetUrl("./assets/sprites/atril-armonia-v0.webp") } as CSSProperties}>
           <div className="armonia-drum-staff">
             {Array.from({ length: total }, (_, index) => <i key={index} className={index < got ? "is-got" : undefined} />)}
             {showGoal && <b className="armonia-drum-line" style={{ left: `calc(${WIN_AT / total * 100}% - 3px)` }} />}
@@ -501,7 +501,7 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
   </Ventana>}
 
   {result && !showLeave && <ResultadoMinijuego informe={informe} id="armonia-drum-resultado" titulo={RESULT_TEXT[result.result].title} gano={result.won} onSalir={leave}
-    dibujo={<div className="armonia-drum-staff armonia-drum-staff-resultado" role="img" aria-label={t("minijuegos.tambor.resultado.atril.oculto")} style={{ "--atril": cssAssetUrl("./assets/sprites/atril-armonia-v0.png") } as CSSProperties}>
+    dibujo={<div className="armonia-drum-staff armonia-drum-staff-resultado" role="img" aria-label={t("minijuegos.tambor.resultado.atril.oculto")} style={{ "--atril": cssAssetUrl("./assets/sprites/atril-armonia-v0.webp") } as CSSProperties}>
       {Array.from({ length: total }, (_, index) => <i key={index} className={index < got ? "is-got" : undefined} />)}
       <b className="armonia-drum-line" style={{ left: `calc(${WIN_AT / total * 100}% - 3px)` }} />
     </div>}

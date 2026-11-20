@@ -109,8 +109,8 @@
           <path d="M36 12 Q12 18 14 34 Q24 38 36 34 Z" fill="#b5bec7" stroke="#2f1d33" stroke-width="3"/>
         </svg>
       </div>
-      <div class="kitten" id="kittenA"><img src="../public/assets/sprites/world-cat-2-v1.png" alt=""><span class="bubble" id="bubbleA">¡miau!</span></div>
-      <div class="kitten" id="kittenB"><img src="../public/assets/sprites/world-cat-4-v1.png" alt=""><span class="bubble" id="bubbleB">¡miau!</span></div>
+      <div class="kitten" id="kittenA"><img src="../public/assets/sprites/world-cat-2-v1.webp" alt=""><span class="bubble" id="bubbleA">¡miau!</span></div>
+      <div class="kitten" id="kittenB"><img src="../public/assets/sprites/world-cat-4-v1.webp" alt=""><span class="bubble" id="bubbleB">¡miau!</span></div>
       <div class="feedback" id="feedback">¡Toc!</div>
       <div id="pieces"></div>
       <span class="label" id="label"></span>
@@ -366,7 +366,7 @@ function group(attr, key, after) {
   }));
 }
 group("layout", "layout", () => { applyLayout(); if (state.running) reset(); });
-group("hero", "hero", () => { $("lumberImg").src = state.hero === "noa" ? "../public/assets/sprites/noa-cat-yarn-v2.webp" : "../public/assets/sprites/world-cat-1-v1.png"; });
+group("hero", "hero", () => { $("lumberImg").src = state.hero === "noa" ? "../public/assets/sprites/noa-cat-yarn-v2.webp" : "../public/assets/sprites/world-cat-1-v1.webp"; });
 group("mode", "mode", () => { $("hit").hidden = state.mode !== "play"; if (state.running) reset(); });
 $("sound").addEventListener("click", (e) => { state.sound = !state.sound; e.currentTarget.setAttribute("aria-pressed", String(state.sound)); });
 $("hit").addEventListener("pointerdown", (e) => { e.preventDefault(); playerHit(); });

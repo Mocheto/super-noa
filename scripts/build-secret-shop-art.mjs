@@ -1,5 +1,6 @@
 // Original, geometry-authored Super Noa artwork; no images, fonts or dependencies.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
+import { comoWebp, escribirPngComoWebp, webpIgualAPng } from './webp.mjs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, inflateSync } from 'node:zlib';
@@ -378,11 +379,10 @@ export function buildSecretShopArt({ check = false } = {}) {
   assert(total < 150 * 1024, 'Combined PNG budget exceeded');
   const root = fileURLToPath(new URL('../public/assets/', import.meta.url));
   for (const { path, c, bytes } of rendered) {
-    const target = resolve(root, path);
-    if (check) {
-      const actual = readFileSync(target); validatePng(actual, c);
-      assert(actual.equals(bytes), `${path} differs; run node scripts/build-secret-shop-art.mjs`);
-    } else if (!existsSync(target) || !readFileSync(target).equals(bytes)) writeFileSync(target, bytes);
+    const target = comoWebp(resolve(root, path));
+    const igual = existsSync(target) && webpIgualAPng(target, bytes);
+    if (check) assert(igual, `${path} differs; run node scripts/build-secret-shop-art.mjs`);
+    else if (!igual) escribirPngComoWebp(target, bytes);
     console.log(`${check ? 'Verified' : 'Wrote'} ${path}: ${c.w}x${c.h} RGBA, ${bytes.length} bytes`);
   }
   console.log(`Total ${total} bytes; door baseline y=79; aura anchor (64,64), clear center x=36..91 y=24..103.`);

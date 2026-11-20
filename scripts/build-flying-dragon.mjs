@@ -1,11 +1,11 @@
 // Original Super Noa art: the volcano baby dragon, with new articulated flight wings.
 // Only the baby in the atlas's top-left corner is sampled; the boss row is never sampled.
-import { readFileSync, writeFileSync } from 'node:fs';
-import { deflateSync, inflateSync } from 'node:zlib';
+import { escribirPngComoWebp, leerWebp, webpIgualAPng } from './webp.mjs';
+import { deflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 
-const sourcePath = fileURLToPath(new URL('../public/assets/atlases/volcano-characters-v1.png', import.meta.url));
-const outputPath = fileURLToPath(new URL('../public/assets/sprites/enemy-flying-dragon-v1.png', import.meta.url));
+const sourcePath = fileURLToPath(new URL('../public/assets/atlases/volcano-characters-v1.webp', import.meta.url));
+const outputPath = fileURLToPath(new URL('../public/assets/sprites/enemy-flying-dragon-v1.webp', import.meta.url));
 const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const frameWidth = 128;
 const frameHeight = 112;
@@ -29,52 +29,6 @@ function chunk(type, data) {
   const crc = Buffer.alloc(4);
   crc.writeUInt32BE(crc32(Buffer.concat([name, data])));
   return Buffer.concat([length, name, data, crc]);
-}
-
-function decodeRgbaPng(bytes) {
-  if (!bytes.subarray(0, 8).equals(signature)) throw new Error('Dragon source is not a PNG.');
-  let w, h;
-  const compressed = [];
-  for (let at = 8; at < bytes.length;) {
-    const length = bytes.readUInt32BE(at);
-    const type = bytes.toString('ascii', at + 4, at + 8);
-    const data = bytes.subarray(at + 8, at + 8 + length);
-    if (at + length + 12 > bytes.length) throw new Error('Truncated dragon source PNG.');
-    if (crc32(bytes.subarray(at + 4, at + 8 + length)) !== bytes.readUInt32BE(at + 8 + length))
-      throw new Error(`Invalid source PNG checksum: ${type}.`);
-    if (type === 'IHDR') {
-      w = data.readUInt32BE(0); h = data.readUInt32BE(4);
-      if (data[8] !== 8 || data[9] !== 6 || data[10] || data[11] || data[12])
-        throw new Error('Dragon source must be a non-interlaced, 8-bit RGBA PNG.');
-    } else if (type === 'IDAT') compressed.push(data);
-    at += length + 12;
-    if (type === 'IEND') break;
-  }
-  if (w !== 1983 || h !== 793) throw new Error('Unexpected volcano character atlas dimensions.');
-  const packed = inflateSync(Buffer.concat(compressed));
-  const stride = w * 4;
-  if (packed.length !== (stride + 1) * h) throw new Error('Invalid dragon source scanlines.');
-  const pixels = Buffer.alloc(stride * h);
-  for (let y = 0; y < h; y++) {
-    const filter = packed[y * (stride + 1)];
-    if (filter > 4) throw new Error(`Unsupported PNG filter ${filter}.`);
-    for (let x = 0; x < stride; x++) {
-      const left = x >= 4 ? pixels[y * stride + x - 4] : 0;
-      const up = y ? pixels[(y - 1) * stride + x] : 0;
-      const corner = y && x >= 4 ? pixels[(y - 1) * stride + x - 4] : 0;
-      let prediction = 0;
-      if (filter === 1) prediction = left;
-      if (filter === 2) prediction = up;
-      if (filter === 3) prediction = Math.floor((left + up) / 2);
-      if (filter === 4) {
-        const p = left + up - corner;
-        const a = Math.abs(p - left), b = Math.abs(p - up), c = Math.abs(p - corner);
-        prediction = a <= b && a <= c ? left : b <= c ? up : corner;
-      }
-      pixels[y * stride + x] = (packed[y * (stride + 1) + x + 1] + prediction) & 255;
-    }
-  }
-  return { w, pixels };
 }
 
 function encodePng(pixels) {
@@ -206,7 +160,7 @@ function wing(canvas, pose, far = false) {
   }
 }
 
-const source = decodeRgbaPng(readFileSync(sourcePath));
+const source = leerWebp(sourcePath);
 const scale = 0.28, dx = 23, dy = 7;
 function sourcePart(canvas, polygon, pivot = [0, 0], angle = 0, tint = 1) {
   if (polygon.some(([x, y]) => x < 44 || x > 342 || y < 65 || y >= 330))
@@ -274,10 +228,10 @@ if (args.length > 1 || (args.length === 1 && args[0] !== '--check'))
   throw new Error('Usage: node scripts/build-flying-dragon.mjs [--check]');
 if (args[0] === '--check') {
   // Missing files intentionally throw ENOENT rather than passing or regenerating.
-  if (!readFileSync(outputPath).equals(expected))
-    throw new Error('Flying dragon PNG is stale. Run node scripts/build-flying-dragon.mjs');
+  if (!webpIgualAPng(outputPath, expected))
+    throw new Error('Flying dragon WebP is stale. Run node scripts/build-flying-dragon.mjs');
   console.log(`Flying dragon is current: ${width}×${height} RGBA, ${expected.length} bytes.`);
 } else {
-  writeFileSync(outputPath, expected);
+  escribirPngComoWebp(outputPath, expected);
   console.log(`Generated ${outputPath}: ${width}×${height} RGBA, ${expected.length} bytes.`);
 }

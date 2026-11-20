@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CAT_PARTY_LEVEL_ID } from "./catParty";
 import { LevelSelectCard } from "./LevelSelectCard";
 import { PixelIcon } from "./PixelIcon";
-import { optimizedAssetSource } from "./assets";
 import { levels } from "./levels";
 import { campaignLevels } from "./routes";
 import type { Progress } from "./progress";
@@ -222,7 +221,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
             {shortcutRoutes.filter((route) => mapRouteState(route, progress) === "open").map((route) =>
               <path key={route.detour} className={`map-detour-path map-shortcut${route.detour === "mine" ? " is-tunnel" : ""}`} d={route.path} />)}
           </svg>
-          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: `url('${optimizedAssetSource("./assets/sprites/noa-sprite-sheet.png")}')` }} role="img" aria-label={t("mapa.noaEsta.oculto", { lugar: noaLocation.name })} />
+          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: `url('${"./assets/sprites/noa-sprite-sheet.webp"}')` }} role="img" aria-label={t("mapa.noaEsta.oculto", { lugar: noaLocation.name })} />
           {worldCatalog.map((world) => {
             if (world.id === 7 && !progress.secretUnlocked) return null;
             const available = worldAvailable(world.id, progress);
@@ -242,7 +241,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
               <span className="map-node-badge" aria-hidden="true">{available ? world.id === 7 ? "✦" : world.id === 8 ? "≈" : world.id : <PixelIcon kind="lock" />}</span>
               <span className="map-node-name">{world.shortName}</span>
               {available && <span className="map-node-count">{summary.complete}/{summary.total}</span>}
-              {shop && <span className={`shop-visit-badge map-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.png')" }} role="img" aria-label={shop.label} title={shop.label} />}
+              {shop && <span className={`shop-visit-badge map-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.webp')" }} role="img" aria-label={shop.label} title={shop.label} />}
             </button>;
           })}
           {discoveredDetours.map((entry) => <button key={entry.id} type="button"

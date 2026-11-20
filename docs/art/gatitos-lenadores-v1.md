@@ -32,14 +32,14 @@ Pégalos al principio (estilo) y al final (fondo) de cada prompt de personaje o 
 
 | Pieza | Referencia que adjuntar | Archivo final | Tamaño en escena (960 × 540) |
 |---|---|---|---|
-| Noa leñadora, 4 poses | `public/assets/sprites/noa-cat-yarn-v2.png` | `sprites/noa-lenadora-v1.png` | 170 × 190 por pose |
-| Gatito gris, 3 poses | `public/assets/sprites/world-cat-2-v1.png` | `sprites/gatito-gris-empuja-v1.png` | 110 × 110 por pose |
-| Gatito naranja, 3 poses | `public/assets/sprites/world-cat-4-v1.png` | `sprites/gatito-naranja-empuja-v1.png` | 110 × 110 por pose |
+| Noa leñadora, 4 poses | `public/assets/sprites/noa-cat-yarn-v2.webp` | `sprites/noa-lenadora-v1.webp` | 170 × 190 por pose |
+| Gatito gris, 3 poses | `public/assets/sprites/world-cat-2-v1.webp` | `sprites/gatito-gris-empuja-v1.webp` | 110 × 110 por pose |
+| Gatito naranja, 3 poses | `public/assets/sprites/world-cat-4-v1.webp` | `sprites/gatito-naranja-empuja-v1.webp` | 110 × 110 por pose |
 | Troncos, mitades y grieta | `public/assets/sprites/gatitos-tronco.png` | `sprites/troncos-v1.png` | pequeño 118 × 33, mediano 200 × 56 |
-| Cinta de troncos | ninguna | `sprites/cinta-v1.png` | 600 × 34, más rodillos |
-| Tajo | ninguna | `sprites/tajo-v1.png` | 110 × 70 |
-| Montón de leña | `public/assets/sprites/gatitos-tronco.png` | `sprites/lena-v1.png` | leño 74 × 21; montón 220 × 120 |
-| Hoguera, 4 imágenes | ninguna | `sprites/hoguera-v1.png` | 120 × 110 |
+| Cinta de troncos | ninguna | `sprites/cinta-v1.webp` | 600 × 34, más rodillos |
+| Tajo | ninguna | `sprites/tajo-v1.webp` | 110 × 70 |
+| Montón de leña | `public/assets/sprites/gatitos-tronco.png` | `sprites/lena-v1.webp` | leño 74 × 21; montón 220 × 120 |
+| Hoguera, 4 imágenes | ninguna | `sprites/hoguera-v1.webp` | 120 × 110 |
 | Fondo del claro | ninguna | `worlds/claro-fiesta-v1.webp` | 960 × 540 (genera a 1920 × 1080) |
 
 ### 1. Noa leñadora

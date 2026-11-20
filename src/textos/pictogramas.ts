@@ -36,4 +36,4 @@ export function celdaPictograma(nombre: Pictograma): CeldaPictograma {
   const control = ORDEN_CONTROLES.indexOf(nombre);
   return { atlas: "controles", columna: control % 5, fila: Math.floor(control / 5), columnas: 5, filas: 3 };
 }
-export const ATLAS_PICTOGRAMAS = { color: "./assets/sprites/pictogramas-v1.png", controles: "./assets/sprites/pictogramas-controles-v1.png" } as const;
+export const ATLAS_PICTOGRAMAS = { color: "./assets/sprites/pictogramas-v1.webp", controles: "./assets/sprites/pictogramas-controles-v1.webp" } as const;

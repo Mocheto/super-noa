@@ -1,7 +1,8 @@
 // Original Super Noa pixel art. No downloaded art, fonts, or runtime dependencies.
 // Coordinates are authored on a 2x pixel grid; frame origins are never inset.
 import { deflateSync } from 'node:zlib';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { comoWebp, escribirPngComoWebp, webpIgualAPng } from './webp.mjs';
+import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../public/assets/sprites/', import.meta.url));
@@ -462,13 +463,13 @@ for (const [name, width, height, count, draw] of specs) {
   total += bytes.length;
   if (args.has('--check')) {
     let actual;
-    try { actual = readFileSync(root + name); }
+    try { actual = webpIgualAPng(comoWebp(root + name), bytes); }
     catch (error) {
       if (error.code === 'ENOENT') throw new Error(`Missing sprite: ${name}. Run node scripts/build-mechanic-sprites.mjs`, { cause: error });
       throw error;
     }
-    if (!bytes.equals(actual)) throw new Error(`Stale sprite: ${name}. Run node scripts/build-mechanic-sprites.mjs`);
-  } else writeFileSync(root + name, bytes);
+    if (!actual) throw new Error(`Stale sprite: ${name}. Run node scripts/build-mechanic-sprites.mjs`);
+  } else escribirPngComoWebp(comoWebp(root + name), bytes);
   sheets.push(sheet);
   console.log(`${name}: ${sheet.w}x${sheet.h}, ${bytes.length} bytes${args.has('--check') ? ' OK' : ''}`);
 }

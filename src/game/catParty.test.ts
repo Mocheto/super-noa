@@ -15,7 +15,7 @@ test("la fiesta sigue al duelo del bosque y sus recursos existen", () => {
   assert.equal(forestFinal?.world, 2);
   assert.equal(forestFinal?.boss, "mist-countess");
   assert.ok(asset("sprites/yarn-ball-v1.webp"), "el ovillo conserva su arte");
-  for (const retired of ["sprites/gatitos-ramita.png", "sprites/gatitos-tronco.png", "music/gatitos-fiesta.mp3", "audio/gatitos-casi.wav"]) assert.equal(asset(retired), false, retired);
+  for (const retired of ["sprites/gatitos-ramita.webp", "sprites/gatitos-tronco.webp", "music/gatitos-fiesta.mp3", "audio/gatitos-casi.wav"]) assert.equal(asset(retired), false, retired);
 });
 
 test("las tres partituras cumplen las reglas y la canción tiene la forma acordada", () => {

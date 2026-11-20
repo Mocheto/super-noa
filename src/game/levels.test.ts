@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { webpSinPerdida } from "./imagenTestUtils.ts";
 import { levels } from "./levels.ts";
 import { GRAVITY, JUMP_SPEED, SKY_BOUNCE_SPEED, SPRING_SPEED } from "./gameplay.ts";
 import { getStickerSprite, stickerCatalog } from "./stickers.ts";
@@ -133,8 +134,8 @@ test("los diecisiete jefes del álbum tienen retrato y duelo", () => {
     assert.ok(level.boss);
     const boss = bossCatalog[level.boss];
     assert.ok(boss?.name);
-    const portrait = readFileSync(new URL(`../../public/${boss.assetAtlas?.slice(2) ?? `${boss.assetPrefix.slice(2)}-0.png`}`, import.meta.url));
-    assert.equal(portrait.toString("ascii", 1, 4), "PNG", `Falta el retrato de ${boss.name}`);
+    const portrait = readFileSync(new URL(`../../public/${boss.assetAtlas?.slice(2) ?? `${boss.assetPrefix.slice(2)}-0.webp`}`, import.meta.url));
+    assert.ok(webpSinPerdida(portrait).width > 0, `Falta el retrato de ${boss.name}`);
   }
 });
 
@@ -153,9 +154,8 @@ test("los muelles grandes llegan más alto que el doble salto y tienen destinos"
         spring.y - platform.y < springRise), `Sin destino alto para el muelle de ${level.id}`);
     }
   }
-  const png = readFileSync(new URL("../../public/assets/sprites/spring-large-v1.png", import.meta.url));
-  assert.equal(png.toString("ascii", 1, 4), "PNG");
-  assert.equal(png[25], 6, "El muelle debe tener transparencia RGBA");
+  const muelle = webpSinPerdida(readFileSync(new URL("../../public/assets/sprites/spring-large-v1.webp", import.meta.url)));
+  assert.ok(muelle.alpha, "El muelle debe tener transparencia RGBA");
 });
 
 test("la plataforma secreta de los jabalíes exige el muelle", () => {

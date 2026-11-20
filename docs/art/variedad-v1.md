@@ -16,9 +16,9 @@ Dossier del arte nuevo del plan de variedad: la sala-rompecabezas, la exploraci�
 |---|---|---|
 | Sala-rompecabezas ([decisión](https://github.com/Mocheto/super-noa/issues/67)) | 3 láminas del atlas `puzzle-pieces`: activadores, puertas y emblemas, cajón y plataformas de color | El suelo, las paredes y el fondo de cada mundo |
 | Exploración ([decisión](https://github.com/Mocheto/super-noa/issues/66)) | 1 lámina: la puerta de los gatitos, cerrada y abierta | Los gatitos (`sprites/world-cat-*-v1.png`), el terreno y los enemigos de cada mundo |
-| Persecución amable ([decisión](https://github.com/Mocheto/super-noa/issues/68)) | Ninguno | Los recortes de enemigos y `sprites/yarn-ball-v1.png` |
-| Avioneta de las nubes ([decisión](https://github.com/Mocheto/super-noa/issues/61)) | 5 láminas: avioneta (una pose), pompa, nubarrón, arcoíris final y fondo de cielo | La estrella de `atlases/collectibles-v1.png`, `sprites/secret-star-aura-v1.png`, `sprites/enemy-bird-v2.png` y los unicornios |
-| Paseo de los amigos ([decisión](https://github.com/Mocheto/super-noa/issues/64)) | 1 lámina: el bocadillo | El corazón: `sprites/ui-heart-v1.png` ya existe |
+| Persecución amable ([decisión](https://github.com/Mocheto/super-noa/issues/68)) | Ninguno | Los recortes de enemigos y `sprites/yarn-ball-v1.webp` |
+| Avioneta de las nubes ([decisión](https://github.com/Mocheto/super-noa/issues/61)) | 5 láminas: avioneta (una pose), pompa, nubarrón, arcoíris final y fondo de cielo | La estrella de `atlases/collectibles-v1.webp`, `sprites/secret-star-aura-v1.webp`, `sprites/enemy-bird-v2.webp` y los unicornios |
+| Paseo de los amigos ([decisión](https://github.com/Mocheto/super-noa/issues/64)) | 1 lámina: el bocadillo | El corazón: `sprites/ui-heart-v1.webp` ya existe |
 | Pestaña Amigos ([decisión](https://github.com/Mocheto/super-noa/issues/69)) | Ninguno | Los recortes de enemigos, la manzana, `bellota-v1` y `bloom-flower-v1` |
 
 Total: **10 láminas**.
@@ -40,16 +40,16 @@ Cada prompt ya lleva incorporados el estilo común y el fondo verde: copia el bl
 
 | # | Lámina | Referencias que adjuntar | Archivo final | Tamaño en escena |
 |---|---|---|---|---|
-| 1 | Activadores de sala | `atlases/detour-switches-v1.png`, `atlases/platform-tiles-v1.png` | `atlases/puzzle-pieces-v1.webp` (fila 1–2) | botón 72 × 28, placa 104 × 20 |
-| 2 | Puertas y emblemas | `atlases/platform-tiles-v1.png`, `atlases/detour-switches-v1.png` | `atlases/puzzle-pieces-v1.webp` (fila 3) | puerta 64 × 180, emblema 32 × 32 |
-| 3 | Cajón y plataformas de color | `atlases/platform-tiles-v1.png` | `atlases/puzzle-pieces-v1.webp` (fila 4) | cajón 96 × 96, plataforma 24 de alto |
-| 4 | Puerta de los gatitos | `atlases/platform-tiles-v1.png`, `sprites/world-cat-1-v1.png` | `sprites/kitten-gate-v1.webp` | 140 × 200 |
-| 5 | Avioneta, 1 pose (las demás, por código) | `sprites/noa-rps-0.png`, `sprites/world-cat-1-v1.png` | `sprites/avioneta-v1.webp` | 180 × 180 |
-| 6 | Pompa | `atlases/collectibles-v1.png` | `sprites/pompa-v1.webp` | 40 × 40 |
+| 1 | Activadores de sala | `atlases/detour-switches-v1.png`, `atlases/platform-tiles-v1.webp` | `atlases/puzzle-pieces-v1.webp` (fila 1–2) | botón 72 × 28, placa 104 × 20 |
+| 2 | Puertas y emblemas | `atlases/platform-tiles-v1.webp`, `atlases/detour-switches-v1.png` | `atlases/puzzle-pieces-v1.webp` (fila 3) | puerta 64 × 180, emblema 32 × 32 |
+| 3 | Cajón y plataformas de color | `atlases/platform-tiles-v1.webp` | `atlases/puzzle-pieces-v1.webp` (fila 4) | cajón 96 × 96, plataforma 24 de alto |
+| 4 | Puerta de los gatitos | `atlases/platform-tiles-v1.webp`, `sprites/world-cat-1-v1.webp` | `sprites/kitten-gate-v1.webp` | 140 × 200 |
+| 5 | Avioneta, 1 pose (las demás, por código) | `sprites/noa-rps-0.webp`, `sprites/world-cat-1-v1.webp` | `sprites/avioneta-v1.webp` | 180 × 180 |
+| 6 | Pompa | `atlases/collectibles-v1.webp` | `sprites/pompa-v1.webp` | 40 × 40 |
 | 7 | Nubarrón, 2 caras | `worlds/sky-kingdom-background-v1.webp` | `sprites/nubarron-v1.webp` | 128 × 96 |
 | 8 | Arcoíris final | `worlds/sky-kingdom-background-v1.webp` | `sprites/arcoiris-final-v1.webp` | 1040 × 300 |
 | 9 | Fondo de cielo vertical | `worlds/sky-kingdom-background-v1.webp` | `worlds/cielo-avioneta-v1.webp` | 960 × 1080, se repite en vertical |
-| 10 | Bocadillo | `sprites/ui-heart-v1.png` | `sprites/bocadillo-v1.webp` | 9-slice, de 120 × 60 en adelante |
+| 10 | Bocadillo | `sprites/ui-heart-v1.webp` | `sprites/bocadillo-v1.webp` | 9-slice, de 120 × 60 en adelante |
 
 Todas las rutas son relativas a `public/assets/`.
 
@@ -57,7 +57,7 @@ Todas las rutas son relativas a `public/assets/`.
 
 La sala tiene tres activadores: el **botón de huella** (se pisa una vez y se queda hundido), la **placa** (abre solo mientras algo pesa encima) y los **botones de color** rosa y azul. Cada uno va en dos estados: arriba y abajo.
 
-Adjunta `detour-switches-v1.png` (la placa con la huella del centro es el símbolo que queremos) y `platform-tiles-v1.png` (acabado de la piedra y la madera).
+Adjunta `detour-switches-v1.png` (la placa con la huella del centro es el símbolo que queremos) y `platform-tiles-v1.webp` (acabado de la piedra y la madera).
 
 Prompt completo (formato 16:9), listo para copiar:
 
@@ -77,7 +77,7 @@ Plain flat solid pure green background (#00FF00) behind and between all elements
 
 Cada puerta comparte símbolo y color con su activador: **huella**, **estrella** o **luna**. El juego dibuja el emblema encima de la puerta, en su hueco redondo, así que la puerta va sin símbolo y los emblemas van sueltos.
 
-Adjunta `platform-tiles-v1.png` y `detour-switches-v1.png`.
+Adjunta `platform-tiles-v1.webp` y `detour-switches-v1.png`.
 
 Prompt completo (formato 16:9), listo para copiar:
 
@@ -97,7 +97,7 @@ Plain flat solid pure green background (#00FF00) behind and between all elements
 
 El **cajón** se empuja y sirve de escalón. Las **plataformas de color** se vuelven sólidas o transparentes al pisar los botones de su color; la versión transparente se pinta como contorno y el juego le baja la opacidad.
 
-Adjunta `platform-tiles-v1.png`.
+Adjunta `platform-tiles-v1.webp`.
 
 Prompt completo (formato 16:9), listo para copiar:
 
@@ -115,7 +115,7 @@ Plain flat solid pure green background (#00FF00) behind and between all elements
 
 Meta de las pantallas de exploración (3-2 bosque, 9-2 isla y 14-2 desierto): tiene **tres huecos** donde se sientan los gatitos perdidos al encontrarlos. El juego dibuja cada gatito dentro de su hueco, así que los huecos van vacíos. La puerta debe quedar bien en los tres mundos: madera y piedra neutras, sin plantas propias de ningún bioma.
 
-Adjunta `platform-tiles-v1.png` (piedra y madera) y `world-cat-1-v1.png` (para el tamaño de los gatitos que caben en los huecos).
+Adjunta `platform-tiles-v1.webp` (piedra y madera) y `world-cat-1-v1.webp` (para el tamaño de los gatitos que caben en los huecos).
 
 Prompt completo (formato 16:9), listo para copiar:
 
@@ -134,7 +134,7 @@ La pantalla avanza hacia arriba, así que la avioneta tiene que **apuntar hacia 
 
 Se genera **una sola pose**, la recta. La inclinación a izquierda y derecha la hace el juego girando el sprite unos 12°, y la voltereta, encogiéndolo y volteándolo en horizontal con una estela dibujada por código. Así las cuatro poses son la misma avioneta y no hay que pelear con el modelo para que las haga distintas.
 
-Adjunta `noa-rps-0.png` (Noa) y `world-cat-1-v1.png` (el gatito copiloto).
+Adjunta `noa-rps-0.webp` (Noa) y `world-cat-1-v1.webp` (el gatito copiloto).
 
 Prompt completo (formato 1:1), listo para copiar:
 
@@ -151,7 +151,7 @@ Si el modelo insiste en ponerla de lado, añade al final: `The airplane must poi
 
 Lo que lanza la avioneta: una pompa de arcoíris que limpia los nubarrones.
 
-Adjunta `collectibles-v1.png` (acabado de los objetos brillantes).
+Adjunta `collectibles-v1.webp` (acabado de los objetos brillantes).
 
 Prompt completo (formato 16:9), listo para copiar:
 
@@ -214,7 +214,7 @@ A tall vertical pixel-art sky background for a children's flying game, seen as i
 
 El bocadillo del paseo de los amigos («¡Aquí no muerde!») y de las visitas de la pestaña Amigos. El texto lo pone el juego; se estira como 9-slice, así que el centro debe ser liso.
 
-Adjunta `ui-heart-v1.png` (mismo grosor de contorno y acabado).
+Adjunta `ui-heart-v1.webp` (mismo grosor de contorno y acabado).
 
 Prompt completo (formato 16:9), listo para copiar:
 

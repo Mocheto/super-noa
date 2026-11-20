@@ -7,8 +7,8 @@ Generado con la herramienta integrada de imágenes. Sin fotografías privadas ni
 - `public/assets/worlds/winter-village-background-v1.webp`: pueblo nevado, separado del mundo de hielo.
 - `public/assets/worlds/toy-factory-background-v2.webp`: taller de madera con ventanas y juguetes.
 - `public/assets/worlds/gift-warehouse-background-v2.webp`: almacén con estanterías, regalos y luces cálidas.
-- `public/assets/atlases/winter-village-terrain-v1.png`: suelo de tierra nevada y tronco flotante, en dos zonas separadas.
-- `public/assets/atlases/winter-village-enemies-v1.png`: muñeco de nieve, reno mecánico y petirrojo, tres celdas horizontales.
+- `public/assets/atlases/winter-village-terrain-v1.webp`: suelo de tierra nevada y tronco flotante, en dos zonas separadas.
+- `public/assets/atlases/winter-village-enemies-v1.webp`: muñeco de nieve, reno mecánico y petirrojo, tres celdas horizontales.
 
 ## Prompts
 

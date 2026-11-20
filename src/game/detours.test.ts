@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { webpSinPerdida } from "./imagenTestUtils.ts";
 import { detourArtwork, detourCatalog, detourLevel, detourLevels, detourScenery } from "./detours.ts";
 import { createDetourClock, advanceDetourClock, detourSupports } from "./detourMechanics.ts";
 import { normalizeDetours, visitDetour } from "./detourProgress.ts";
@@ -37,13 +38,12 @@ test("cinco desvíos declarativos separados de campaña, insignias y guardianes"
   }
   const png = (path: string) => readFileSync(new URL(`../../public/assets/${path}`, import.meta.url));
   for (const [path, width, height] of [
-    ["atlases/secret-detours-v2.png", 1280, 512],
-    ["atlases/detour-switches-v2.png", 768, 192],
+    ["atlases/secret-detours-v2.webp", 1280, 512],
+    ["atlases/detour-switches-v2.webp", 768, 192],
   ] as const) {
-    const bytes = png(path);
-    assert.equal(bytes.subarray(1, 4).toString("ascii"), "PNG");
-    assert.equal(bytes.readUInt32BE(16), width);
-    assert.equal(bytes.readUInt32BE(20), height);
+    const medidas = webpSinPerdida(png(path));
+    assert.equal(medidas.width, width);
+    assert.equal(medidas.height, height);
   }
   // Fondos pixel art que se repiten sin costura (issue 157): uno por camino con escenario propio.
   for (const fondo of Object.values(detourScenery)) assert.equal(png(fondo.replace("./assets/", "")).subarray(8, 12).toString("ascii"), "WEBP");

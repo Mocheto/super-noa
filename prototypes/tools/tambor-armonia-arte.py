@@ -5,15 +5,15 @@ con un disfraz de banda de música (chaqueta turquesa con cordones dorados, gorr
 baquetas). Los añadidos, los tambores, el atril y el teatro se dibujan a un cuarto de resolución y se
 escalan sin suavizado para conservar el aspecto pixelado con contorno marcado. Todo es original.
 
-Noa tamborilera definitiva del v0: sprites/noa-tambor-v0.png es la ilustración que aportó la persona
+Noa tamborilera definitiva del v0: sprites/noa-tambor-v0.webp es la ilustración que aportó la persona
 usuaria (4 poses sobre fondo negro), recortada a transparente en celdas de 520×521 con el pompón del
 gorro centrado. Este script no la sobrescribe salvo con --noa, que vuelve a la composición por código.
 
 Uso: python3 prototypes/tools/tambor-armonia-arte.py [--noa]   (requiere Pillow)
-Salida en public/assets/: sprites/noa-tambor-v0.png (solo con --noa; 4 poses mirando a la izquierda:
-espera, golpe, escucha, celebra), sprites/tambor-armonia-v0.png, sprites/tambor-noa-v0.png,
-sprites/atril-armonia-v0.png (atril y, a la derecha, nota vacía y nota dorada) y
-worlds/teatro-armonia-v0.png (960×540).
+Salida en public/assets/: sprites/noa-tambor-v0.webp (solo con --noa; 4 poses mirando a la izquierda:
+espera, golpe, escucha, celebra), sprites/tambor-armonia-v0.webp, sprites/tambor-noa-v0.webp,
+sprites/atril-armonia-v0.webp (atril y, a la derecha, nota vacía y nota dorada) y
+worlds/teatro-armonia-v0.webp (960×540).
 """
 import colorsys
 import math
@@ -300,18 +300,18 @@ def theatre():
 
 def main():
     out = {
-        "sprites/tambor-armonia-v0.png": drum("armonia"),
-        "sprites/tambor-noa-v0.png": drum("noa"),
-        "sprites/atril-armonia-v0.png": stand(),
-        "worlds/teatro-armonia-v0.png": theatre(),
+        "sprites/tambor-armonia-v0.webp": drum("armonia"),
+        "sprites/tambor-noa-v0.webp": drum("noa"),
+        "sprites/atril-armonia-v0.webp": stand(),
+        "worlds/teatro-armonia-v0.webp": theatre(),
     }
     if WITH_NOA or PREVIEW:
-        out["sprites/noa-tambor-v0.png"] = noa()
+        out["sprites/noa-tambor-v0.webp"] = noa()
     base = Path(sys.argv[2]) if PREVIEW else OUT
     for name, img in out.items():
         path = base / name
         path.parent.mkdir(parents=True, exist_ok=True)
-        img.save(path, optimize=True)
+        img.save(path, "WEBP", lossless=True, method=6)
         print(name, img.size)
 
 

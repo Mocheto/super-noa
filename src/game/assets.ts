@@ -26,17 +26,6 @@ export type RasterAssets = {
 const cache = new Map<string, HTMLImageElement>();
 let unloaded: HTMLImageElement | undefined;
 
-// Solo existe el WebP sin pérdida: el código pide la ruta .png y getImage/optimizedAssetSource la cambian por .webp.
-const optimizedImages = new Set([
-  "home-adventure-v3",
-  "atlases/collectibles-v1", "atlases/enemies-v1", "atlases/platform-tiles-v1", "atlases/world-1-tiles-v1",
-  "sprites/checkpoint-v1", "sprites/goal-flag-v1", "sprites/goal-rescue-v1",
-  "sprites/noa-sprite-sheet", "sprites/noa-sprite-sheet-gold-armor-v1",
-  "sprites/noa-jump-v2", "sprites/noa-jump-gold-armor-v1",
-  "sprites/noa-cat-jump-v2", "sprites/noa-cat-yarn-v2", "sprites/noa-cat-throw-v1",
-  "sprites/noa-cat-run-v2", "sprites/yarn-ball-v1",
-].map((name) => `./assets/${name}.png`));
-
 /**
  * `url()` para pasar arte a una hoja de estilos mediante variables CSS. Una ruta relativa dentro de una variable se
  * resuelve contra la hoja compilada (que vive en `assets/`), no contra la página; por eso se resuelve aquí contra la
@@ -47,17 +36,12 @@ export function cssAssetUrl(src: string): string {
   return `url("${resolved}")`;
 }
 
-export function optimizedAssetSource(src: string): string {
-  return optimizedImages.has(src) ? src.replace(/\.png$/, ".webp") : src;
-}
-
 export function getImage(src: string): HTMLImageElement {
-  const source = optimizedAssetSource(src);
-  let image = cache.get(source);
+  let image = cache.get(src);
   if (!image) {
     image = new Image();
-    image.src = source;
-    cache.set(source, image);
+    image.src = src;
+    cache.set(src, image);
   }
   return image;
 }
@@ -67,11 +51,11 @@ const when = (needed: boolean, src: string) => needed ? getImage(src) : (unloade
 export function getLevelAssets(level: Level): RasterAssets {
   const world = level.world;
   const tileImages = {
-    1: "world-1-tiles-v1.png", 2: "world-2-tiles-v1.png", 3: "world-3-tiles-v1.png",
-    4: "world-4-tiles-v1.png", 5: "world-5-tiles-v1.png", 6: "castle-v1.png",
-    7: "secret-sky-v1.png", 8: "water-terrain-v1.png", 9: "dinosaur-island-v1.png",
-    10: "platform-tiles-v1.png", 11: "platform-tiles-v1.png", 12: "platform-tiles-v1.png", 13: "platform-tiles-v1.png",
-    14: "platform-tiles-v1.png", 15: "platform-tiles-v1.png", 16: "platform-tiles-v1.png", 17: "sky-kingdom-terrain-v1.png",
+    1: "world-1-tiles-v1.webp", 2: "world-2-tiles-v1.webp", 3: "world-3-tiles-v1.webp",
+    4: "world-4-tiles-v1.webp", 5: "world-5-tiles-v1.webp", 6: "castle-v1.webp",
+    7: "secret-sky-v1.webp", 8: "water-terrain-v1.webp", 9: "dinosaur-island-v1.webp",
+    10: "platform-tiles-v1.webp", 11: "platform-tiles-v1.webp", 12: "platform-tiles-v1.webp", 13: "platform-tiles-v1.webp",
+    14: "platform-tiles-v1.webp", 15: "platform-tiles-v1.webp", 16: "platform-tiles-v1.webp", 17: "sky-kingdom-terrain-v1.webp",
   } as const;
   const tiles = {} as RasterAssets["tiles"];
   const stickerSheets = {} as RasterAssets["stickerSheets"];
@@ -107,38 +91,38 @@ export function getLevelAssets(level: Level): RasterAssets {
       return when(world <= 12 && world !== 8, source);
     },
     get waterBackground() { return when(world === 8, "./assets/worlds/world-8.webp"); },
-    get waterTerrain() { return when(world === 8, "./assets/atlases/water-terrain-v1.png"); },
-    get seaWall() { return when(world === 8, "./assets/sprites/sea-reef-wall-v2.png"); },
+    get waterTerrain() { return when(world === 8, "./assets/atlases/water-terrain-v1.webp"); },
+    get seaWall() { return when(world === 8, "./assets/sprites/sea-reef-wall-v2.webp"); },
     get seaRock() { return when(world === 8 && level.platforms.some((platform) => platform.asoma), "./assets/sprites/roca-asoma-v1.webp"); },
-    get waterEnemies() { return when(world === 8, "./assets/atlases/water-enemies-v1.png"); },
-    get swim() { return when(world === 8, "./assets/sprites/noa-swim-v1.png"); },
-    get waterCat() { return when(world === 8, "./assets/sprites/world-cat-8-v1.png"); },
-    get enemies() { return getImage("./assets/atlases/enemies-v1.png"); },
-    get castleEnemies() { return when(world === 6, "./assets/atlases/castle-enemies-v1.png"); },
-    get dinosaurEnemies() { return when(world === 9, "./assets/atlases/dinosaur-enemies-v1.png"); },
-    get dinosaurTerrain() { return when(world === 9, "./assets/atlases/dinosaur-island-v1.png"); },
+    get waterEnemies() { return when(world === 8, "./assets/atlases/water-enemies-v1.webp"); },
+    get swim() { return when(world === 8, "./assets/sprites/noa-swim-v1.webp"); },
+    get waterCat() { return when(world === 8, "./assets/sprites/world-cat-8-v1.webp"); },
+    get enemies() { return getImage("./assets/atlases/enemies-v1.webp"); },
+    get castleEnemies() { return when(world === 6, "./assets/atlases/castle-enemies-v1.webp"); },
+    get dinosaurEnemies() { return when(world === 9, "./assets/atlases/dinosaur-enemies-v1.webp"); },
+    get dinosaurTerrain() { return when(world === 9, "./assets/atlases/dinosaur-island-v1.webp"); },
     get holidayBackground() { return when(world === 13, `./assets/worlds/${level.theme === "winter-snow" ? "winter-village-background-v1" : level.theme === "toy-factory" ? "toy-factory-background-v2" : "gift-warehouse-background-v2"}.webp`); },
     get adventureBackground() { return when(world >= 14, `./assets/worlds/${world === 14 ? "desert" : world === 15 ? "train" : world === 16 ? "music" : "sky-kingdom"}-background-v1.webp`); },
-    get adventurePrecipices() { return when(world >= 14 && world <= 16, "./assets/atlases/adventure-precipices-v1.png"); },
-    get skyLift() { return when(Boolean(level.skyLifts?.length), "./assets/atlases/sky-lift-v1.png"); },
-    get worldCharacters() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert-enemies-v1" : world === 15 ? "train-enemies-v1" : world === 16 ? "music-characters-v1" : world === 17 ? "sky-kingdom-characters-v1" : level.theme === "winter-snow" ? "winter-village-enemies-v1" : level.theme === "toy-factory" ? "toy-factory-enemies-v1" : level.theme === "gift-warehouse" ? "gift-warehouse-enemies-v1" : world === 10 ? "volcano-characters-v1" : world === 11 ? "giant-valley-characters-v1" : "ice-mountain-characters-v1"}.png`); },
-    get worldTerrain() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert" : world === 15 ? "train" : world === 16 ? "music" : world === 17 ? "sky-kingdom" : level.theme === "winter-snow" ? "winter-village" : level.theme === "toy-factory" ? "toy-factory" : level.theme === "gift-warehouse" ? "gift-warehouse" : world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-terrain-v1.png`); },
-    get dewTrampoline() { return when(world === 11, "./assets/sprites/dew-trampoline-v1.png"); },
-    get jumpingFish() { return when(Boolean(level.waterJumpers?.length), "./assets/sprites/enemy-jumping-fish-v1.png"); },
-    get boar() { return when(world === 4, "./assets/sprites/enemy-boar-v2.png"); },
-    get bird() { return when(level.enemies.some((enemy) => enemy.kind === "bird"), "./assets/sprites/enemy-bird-v2.png"); },
-    get collectibles() { return getImage("./assets/atlases/collectibles-v1.png"); },
-    get cave() { return when(level.theme === "crystal-cave" || level.id === "2-1", "./assets/atlases/cave-v1.png"); },
-    get castle() { return when(world === 6, "./assets/atlases/castle-v1.png"); },
-    get secret() { return when(world === 7 || level.rewardBlocks.some((block) => block.reward === "secret-vine"), "./assets/atlases/secret-sky-v1.png"); },
-    get cannon() { return when(Boolean(level.cannons?.length), "./assets/sprites/cannon-v1.png"); },
-    get cannonball() { return when(Boolean(level.cannons?.length), "./assets/sprites/cannonball-v1.png"); },
-    get checkpoint() { return getImage("./assets/sprites/checkpoint-v1.png"); },
-    get goalFlag() { return getImage("./assets/sprites/goal-flag-v1.png"); },
-    get goalRescue() { return getImage("./assets/sprites/goal-rescue-v1.png"); },
-    get bossGate() { return when(Boolean(level.boss), "./assets/sprites/boss-gate-v1.png"); },
-    get spring() { return when(level.platforms.some((platform) => platform.kind === "spring"), "./assets/sprites/spring-large-v1.png"); },
-    get platformTiles() { return getImage("./assets/atlases/platform-tiles-v1.png"); },
+    get adventurePrecipices() { return when(world >= 14 && world <= 16, "./assets/atlases/adventure-precipices-v1.webp"); },
+    get skyLift() { return when(Boolean(level.skyLifts?.length), "./assets/atlases/sky-lift-v1.webp"); },
+    get worldCharacters() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert-enemies-v1" : world === 15 ? "train-enemies-v1" : world === 16 ? "music-characters-v1" : world === 17 ? "sky-kingdom-characters-v1" : level.theme === "winter-snow" ? "winter-village-enemies-v1" : level.theme === "toy-factory" ? "toy-factory-enemies-v1" : level.theme === "gift-warehouse" ? "gift-warehouse-enemies-v1" : world === 10 ? "volcano-characters-v1" : world === 11 ? "giant-valley-characters-v1" : "ice-mountain-characters-v1"}.webp`); },
+    get worldTerrain() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert" : world === 15 ? "train" : world === 16 ? "music" : world === 17 ? "sky-kingdom" : level.theme === "winter-snow" ? "winter-village" : level.theme === "toy-factory" ? "toy-factory" : level.theme === "gift-warehouse" ? "gift-warehouse" : world === 10 ? "volcano" : world === 11 ? "giant-valley" : "ice-mountain"}-terrain-v1.webp`); },
+    get dewTrampoline() { return when(world === 11, "./assets/sprites/dew-trampoline-v1.webp"); },
+    get jumpingFish() { return when(Boolean(level.waterJumpers?.length), "./assets/sprites/enemy-jumping-fish-v1.webp"); },
+    get boar() { return when(world === 4, "./assets/sprites/enemy-boar-v2.webp"); },
+    get bird() { return when(level.enemies.some((enemy) => enemy.kind === "bird"), "./assets/sprites/enemy-bird-v2.webp"); },
+    get collectibles() { return getImage("./assets/atlases/collectibles-v1.webp"); },
+    get cave() { return when(level.theme === "crystal-cave" || level.id === "2-1", "./assets/atlases/cave-v1.webp"); },
+    get castle() { return when(world === 6, "./assets/atlases/castle-v1.webp"); },
+    get secret() { return when(world === 7 || level.rewardBlocks.some((block) => block.reward === "secret-vine"), "./assets/atlases/secret-sky-v1.webp"); },
+    get cannon() { return when(Boolean(level.cannons?.length), "./assets/sprites/cannon-v1.webp"); },
+    get cannonball() { return when(Boolean(level.cannons?.length), "./assets/sprites/cannonball-v1.webp"); },
+    get checkpoint() { return getImage("./assets/sprites/checkpoint-v1.webp"); },
+    get goalFlag() { return getImage("./assets/sprites/goal-flag-v1.webp"); },
+    get goalRescue() { return getImage("./assets/sprites/goal-rescue-v1.webp"); },
+    get bossGate() { return when(Boolean(level.boss), "./assets/sprites/boss-gate-v1.webp"); },
+    get spring() { return when(level.platforms.some((platform) => platform.kind === "spring"), "./assets/sprites/spring-large-v1.webp"); },
+    get platformTiles() { return getImage("./assets/atlases/platform-tiles-v1.webp"); },
     tiles,
     stickerSheets,
   };

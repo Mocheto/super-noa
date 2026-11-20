@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
 import { actionBossBackgrounds, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets.ts";
-import { readRgbaPng } from "./pngTestUtils.ts";
+import { readRgbaImage } from "./imagenTestUtils.ts";
 import { SANTA_ARENA, SANTA_PLATFORMS } from "./santaBattle.ts";
 
 test("el atlas nuevo conserva cinco poses completas, regalo y transparencia sin mezclar vecinos", () => {
@@ -10,7 +10,7 @@ test("el atlas nuevo conserva cinco poses completas, regalo y transparencia sin 
     assert.ok(source.startsWith("./assets/"));
     assert.ok(existsSync(new URL(`../../public/${source.slice(2)}`, import.meta.url)));
   }
-  const {width,height,pixels} = readRgbaPng(santaBattleAssets.characters);
+  const {width,height,pixels} = readRgbaImage(santaBattleAssets.characters);
   const crops = [...santaSpriteFrames.map((frame) => frame.source), santaGiftSource];
   for (let index = 0; index < crops.length; index++) {
     const [x,y,w,h] = crops[index];
@@ -41,7 +41,7 @@ test("cada jefe de acción carga su propia sala ilustrada", () => {
 });
 
 test("el terreno nuevo alinea la nieve con la colisión y deja pasar a Noa completa por debajo", () => {
-  const {width,height} = readRgbaPng(santaBattleAssets.terrain);
+  const {width,height} = readRgbaImage(santaBattleAssets.terrain);
   for (const [x,y,w,h] of Object.values(santaTerrainSources)) assert.ok(x >= 0 && y >= 0 && x + w <= width && y + h <= height);
   for (const platform of SANTA_PLATFORMS) assert.ok(SANTA_ARENA.floor - platform.y - 40 >= 110);
 });

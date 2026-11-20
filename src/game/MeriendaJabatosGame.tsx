@@ -478,7 +478,7 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
   const noaPose: NoaPose = result?.won ? 3 : result ? 2 : mode ? view.noaPose : 0;
   const jabato = mode ? view.jabato : null;
 
-  const retrato = <img className="merienda-retrato" src={`${boss.assetPrefix}-0.png`} alt="" />;
+  const retrato = <img className="merienda-retrato" src={`${boss.assetPrefix}-0.webp`} alt="" />;
   const enPrevia = !mode && (!finished || finished.mode !== "song");
 
   return <><Dialog labelledBy="merienda-title" backdropClassName="boss-backdrop" className="boss-battle merienda-game" gamepad={interactionPaused || !mode}>
@@ -487,7 +487,7 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
       <div className="merienda-stage" style={{ transform: `scale(${scale})`, ...STAGE_ART }} aria-hidden="true">
         <img className="merienda-background" src="./assets/worlds/world-4-hd-v1.webp" alt="" />
         <img className="merienda-rock" src="./assets/sprites/roca-merienda-v1.webp" alt="" />
-        <img className={`merienda-boss${view.bossCall && mode ? " is-call" : ""}`} src={`${boss.assetPrefix}-${bossPose}.png`} alt="" />
+        <img className={`merienda-boss${view.bossCall && mode ? " is-call" : ""}`} src={`${boss.assetPrefix}-${bossPose}.webp`} alt="" />
         {mode && view.bossBubble && <span className={`merienda-bubble${view.bossBubble.big ? " is-big" : ""}`}>{view.bossBubble.text}</span>}
 
         <div className="merienda-noa" style={{ backgroundPosition: `${noaPose * 100 / 3}% 0` }} />

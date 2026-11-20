@@ -28,10 +28,10 @@ const ART = {
   cloud: "./assets/sprites/nubarron-v1.webp",
   rainbow: "./assets/sprites/arcoiris-final-v1.webp",
   sky: "./assets/worlds/cielo-avioneta-v1.webp",
-  star: "./assets/atlases/collectibles-v1.png",
-  aura: "./assets/sprites/secret-star-aura-v1.png",
-  bird: "./assets/sprites/enemy-bird-v2.png",
-  unicorn: "./assets/atlases/secret-sky-v1.png",
+  star: "./assets/atlases/collectibles-v1.webp",
+  aura: "./assets/sprites/secret-star-aura-v1.webp",
+  bird: "./assets/sprites/enemy-bird-v2.webp",
+  unicorn: "./assets/atlases/secret-sky-v1.webp",
 };
 const SOUNDS: Partial<Record<FlightEvent, SoundKind>> = { pop: "yarn", clean: "apple", star: "sticker", bump: "hurt", "shield-lost": "block", bubble: "cat", end: "goal" };
 const ready = (image: HTMLImageElement) => image.complete && image.naturalWidth > 0;

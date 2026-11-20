@@ -1,8 +1,8 @@
 import type { DetourId, Level, Platform } from "./types.ts";
 import { conTextos } from "../textos/index.ts";
 
-export const detourArtwork = "./assets/atlases/secret-detours-v2.png";
-export const detourSwitchArtwork = "./assets/atlases/detour-switches-v2.png";
+export const detourArtwork = "./assets/atlases/secret-detours-v2.webp";
+export const detourSwitchArtwork = "./assets/atlases/detour-switches-v2.webp";
 /** Fondo de los caminos con escenario propio; se repite sin costura a 540 px de alto (prototypes/tools/caminos-recorte.py). */
 export const detourScenery: Partial<Record<DetourId, string>> = {
   mill: "./assets/worlds/camino-molino-v2.webp",

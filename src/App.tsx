@@ -1,7 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CAT_PARTY_LEVEL_ID } from "./game/catParty";
 import { Dialog } from "./game/Dialog";
-import { optimizedAssetSource } from "./game/assets";
 import { bossCatalog } from "./game/bosses";
 import { isGuardianGameId } from "./game/guardianGames";
 import { GameAssetIcon } from "./game/GameAssetIcon";
@@ -813,7 +812,7 @@ export default function App() {
           </div>
           <div className="inicio-arte">
             <div className="hero-scene" aria-hidden="true">
-              <img className="hero-backdrop" src={optimizedAssetSource("./assets/home-adventure-v3.png")} alt="" />
+              <img className="hero-backdrop" src={"./assets/home-adventure-v3.webp"} alt="" />
             </div>
             <div className="inicio-baldosas">
               <button type="button" className="baldosa" aria-label={t("inicio.album.oculto", { n: albumFound, total: albumStickers.length })} onClick={() => openCollection("stickers")}><span className="texto-noa pictograma-doble"><Texto clave="inicio.album.rotulo" /></span><span className="baldosa-cuenta">{albumFound}/{albumStickers.length}</span></button>
@@ -874,7 +873,7 @@ export default function App() {
 
       {screen === "secret-transition" && (
         <section className="secret-transition" aria-live="polite">
-          <img className="secret-vine-rise" src="./assets/sprites/secret-vine-transition-v1.png" alt="" aria-hidden="true" />
+          <img className="secret-vine-rise" src="./assets/sprites/secret-vine-transition-v1.webp" alt="" aria-hidden="true" />
           <p className="eyebrow texto-noa"><Texto clave="ventanas.subidaSecreta.secreto.rotulo" /></p>
           <h2 className="texto-noa titulo pictograma-doble"><Texto clave="ventanas.subidaSecreta.arriba.rotulo" /></h2>
           <p className="juntos">{t("ventanas.subidaSecreta.arriba.juntos")}</p>
@@ -967,7 +966,7 @@ export default function App() {
                 {funciones.paseos && activeLevel.boss && restStopFor(activeLevel.world) && <Boton clave="ventanas.completada.paseo.rotulo" onClick={() => beginLevel(levels.length + detourLevels.length + restStopIndex(activeLevel.world))} />}
                 <Boton tipo={activeLevel.world === 7 ? "seguir" : "secundario"} clave="ventanas.completada.mapa.rotulo" data-gamepad-back onClick={() => setScreen("map")} />
               </>}>
-              <div className="ventana-dibujo">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.png" alt={t("ventanas.completada.trofeo.oculto")} /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.png"} alt={t("ventanas.completada.gatito.oculto")} />}</div>
+              <div className="ventana-dibujo">{activeLevel.boss ? <img className="completion-trophy" src="./assets/sprites/completion-trophy-v1.webp" alt={t("ventanas.completada.trofeo.oculto")} /> : <img className="completion-cat" src={worldCatalog.find((world) => world.id === activeLevel.world)?.catAsset ?? "./assets/sprites/completion-cat-v1.webp"} alt={t("ventanas.completada.gatito.oculto")} />}</div>
               <div className="medallas" role="group" aria-label={t("ventanas.completada.medallas.oculto")}>
                 <Medalla clave="ventanas.completada.meta.rotulo" conseguida />
                 <Medalla clave="ventanas.completada.pegatina.rotulo" conseguida={snapshot.stickers.length > 0 || progress.stickers.includes(activeLevel.items.find((item) => item.kind === "sticker")?.id ?? "")} />
@@ -998,11 +997,11 @@ export default function App() {
                 <Boton clave="ventanas.final.inicio.rotulo" data-gamepad-back onClick={() => setScreen("home")} />
               </>}>
               <div className="ventana-dibujo cat-party" aria-hidden="true">
-                <img src="./assets/sprites/world-cat-1-v1.png" alt="" />
+                <img src="./assets/sprites/world-cat-1-v1.webp" alt="" />
                 <GameAssetIcon kind="apple" />
-                <img src="./assets/sprites/world-cat-2-v1.png" alt="" />
-                <img className="party-yarn" src={optimizedAssetSource("./assets/sprites/yarn-ball-v1.png")} alt="" />
-                <img src="./assets/sprites/world-cat-6-v1.png" alt="" />
+                <img src="./assets/sprites/world-cat-2-v1.webp" alt="" />
+                <img className="party-yarn" src={"./assets/sprites/yarn-ball-v1.webp"} alt="" />
+                <img src="./assets/sprites/world-cat-6-v1.webp" alt="" />
               </div>
               <p className="juntos">{t("ventanas.final.amigos.juntos")}</p>
             </Ventana>
@@ -1096,7 +1095,7 @@ export default function App() {
                 const hintVisible = albumHints.includes(sticker.id);
                 return (
                   <article className={`sticker-card ${found ? "is-found" : "is-locked"}`} key={sticker.id}>
-                    <span className="sticker-frame" aria-hidden="true">{found && sprite ? <span className="sticker-sprite" style={{ backgroundImage: `url(${optimizedAssetSource(sprite.src)})`, backgroundPosition: `${sprite.column * 50}% center` }} /> : "?"}</span>
+                    <span className="sticker-frame" aria-hidden="true">{found && sprite ? <span className="sticker-sprite" style={{ backgroundImage: `url(${sprite.src})`, backgroundPosition: `${sprite.column * 50}% center` }} /> : "?"}</span>
                     <strong className="texto-noa pequeno">{found ? sticker.name : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: sticker.world }} />}</strong>
                     <small>{stickerLevel ? stickerLevel.id : ""} · <Texto clave={found ? "coleccion.pegatinas.encontrada.rotulo" : "coleccion.pegatinas.pendiente.rotulo"} /></small>
                     {!found && available && <><button className="level-hint-toggle" type="button" aria-expanded={hintVisible} aria-controls={`album-hint-${sticker.id}`} onClick={() => setAlbumHints((current) => hintVisible ? current.filter((id) => id !== sticker.id) : [...current, sticker.id])}><Texto clave="coleccion.pegatinas.pista.rotulo" /></button><p className="album-sticker-hint" id={`album-hint-${sticker.id}`} hidden={!hintVisible}>{sticker.hint}</p></>}
@@ -1118,7 +1117,7 @@ export default function App() {
                     <div className="boss-friend-portrait" aria-hidden="true">
                       {known ? boss.assetAtlas
                         ? <span className={`boss-friend-atlas ${level.boss === "santa-claus" ? "boss-friend-atlas-santa" : ""}`} style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />
-                        : <img src={`${boss.assetPrefix}-0.png`} alt="" />
+                        : <img src={`${boss.assetPrefix}-0.webp`} alt="" />
                         : <span className="boss-mystery-shape">?</span>}
                     </div>
                     <strong className="texto-noa pequeno" aria-label={known ? undefined : t("coleccion.jefes.porDescubrir.oculto")}>{known ? boss.name : <Texto clave="coleccion.jefes.porDescubrir.rotulo" />}</strong>

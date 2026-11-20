@@ -69,8 +69,8 @@
 const A = "../public/assets/";
 const IMG = {};
 for (const [name, src] of Object.entries({
-  bird: "sprites/enemy-bird-v2.png", secret: "atlases/secret-sky-v1.png",
-  aura: "sprites/secret-star-aura-v1.png", coll: "atlases/collectibles-v1.webp", noa: "sprites/noa-jump-v2.webp",
+  bird: "sprites/enemy-bird-v2.webp", secret: "atlases/secret-sky-v1.webp",
+  aura: "sprites/secret-star-aura-v1.webp", coll: "atlases/collectibles-v1.webp", noa: "sprites/noa-jump-v2.webp",
 })) { IMG[name] = new Image(); IMG[name].src = A + src; }
 const ready = (img) => img.complete && img.naturalWidth > 0;
 const canvas = document.getElementById("c"), ctx = canvas.getContext("2d");

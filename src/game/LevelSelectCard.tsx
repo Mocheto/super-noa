@@ -75,7 +75,7 @@ export function LevelSelectCard({ level, index, unlocked, suggested, progress, d
     }}>
     <div className={`level-card-row ${stats?.completed ? "is-complete" : ""} ${unlocked ? "" : "is-locked"}`}>
       <span className="level-id">{unlocked ? level.id : <PixelIcon kind="lock" />}
-        {shop && <span className={`shop-visit-badge level-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.png')" }} role="img" aria-label={shop.label} title={shop.label} />}
+        {shop && <span className={`shop-visit-badge level-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.webp')" }} role="img" aria-label={shop.label} title={shop.label} />}
       </span>
       <span className="tarjeta-nombre">
         <span className="texto-noa">{!unlocked && level.world === 7 ? <Texto clave="mapa.tarjeta.sorpresa.rotulo" /> : level.title}</span>

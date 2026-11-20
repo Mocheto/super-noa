@@ -24,7 +24,7 @@ test("el tambor de Armonía es el duelo de la Maestra Armonía y sus recursos ex
   const final = levels.find((level) => level.id === ARMONIA_DRUM_LEVEL_ID);
   assert.equal(final?.world, 16);
   assert.equal(final?.boss, "maestra-armonia");
-  for (const path of ["sprites/noa-tambor-v0.png", "sprites/tambor-armonia-v0.png", "sprites/tambor-noa-v0.png", "sprites/atril-armonia-v0.png", "worlds/teatro-armonia-v0.png", "atlases/music-characters-v1.png"]) assert.ok(asset(path), path);
+  for (const path of ["sprites/noa-tambor-v0.webp", "sprites/tambor-armonia-v0.webp", "sprites/tambor-noa-v0.webp", "sprites/atril-armonia-v0.webp", "worlds/teatro-armonia-v0.webp", "atlases/music-characters-v1.webp"]) assert.ok(asset(path), path);
   const app = readFileSync(new URL("../App.tsx", import.meta.url), "utf8");
   assert.match(app, /activeLevel\.boss === "maestra-armonia" \? <ArmoniaDrumGame/);
   assert.match(app, /armoniaDrumDuel/, "la música del mundo se silencia durante el duelo");
@@ -34,7 +34,7 @@ test("el duelo de polillas y El eco musical se retiran y el reto pide no dejar e
   assert.equal(isGuardianGameId("maestra-armonia"), false);
   assert.equal("maestra-armonia" in guardianGames, false);
   for (const path of ["./ArmoniaRhythmGame.tsx", "./armoniaRhythm.ts"]) assert.equal(source(path), false, path);
-  for (const path of ["worlds/armonia-rhythm-background-v1.png", "atlases/armonia-rhythm-sprites-v1.png"]) assert.equal(asset(path), false, path);
+  for (const path of ["worlds/armonia-rhythm-background-v1.webp", "atlases/armonia-rhythm-sprites-v1.webp"]) assert.equal(asset(path), false, path);
   const armonia = bossCatalog["maestra-armonia"];
   assert.equal(armonia.challenge.id, "perfect-game");
   assert.equal(armonia.challenge.label, "Repite todos los golpes de Armonía sin que se escape ninguno para conseguir su marco de notas.");

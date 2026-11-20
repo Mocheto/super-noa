@@ -3,7 +3,7 @@ import test from "node:test";
 import { engineModules, mountEngine } from "./engineTestHarness.ts";
 import { enemyY } from "./gameState.ts";
 import { levels } from "./levels.ts";
-import { readRgbaPng } from "./pngTestUtils.ts";
+import { readRgbaImage } from "./imagenTestUtils.ts";
 import { worldEnemySpriteSources } from "./worldEnemySprites.ts";
 import type { RasterAssets } from "./assets";
 import type { LiveEnemy } from "./gameState";
@@ -18,10 +18,10 @@ const worlds: Record<WorldSpecies, "volcano" | "giant-valley" | "ice-mountain"> 
 };
 
 test("los recortes contienen la silueta completa sin incluir la fila de los guardianes", () => {
-  const pngs = new Map<string, ReturnType<typeof readRgbaPng>>();
+  const pngs = new Map<string, ReturnType<typeof readRgbaImage>>();
   for (const kind of Object.keys(worldEnemySpriteSources) as WorldSpecies[]) {
     const name = worlds[kind];
-    if (!pngs.has(name)) pngs.set(name, readRgbaPng(`./assets/atlases/${name}-characters-v1.png`));
+    if (!pngs.has(name)) pngs.set(name, readRgbaImage(`./assets/atlases/${name}-characters-v1.webp`));
     const { width, pixels } = pngs.get(name)!;
     const source = worldEnemySpriteSources[kind];
     const [sx, sy, sw, sh] = source;

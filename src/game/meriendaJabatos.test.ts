@@ -29,7 +29,7 @@ test("la merienda de los jabatos es el duelo del Gran Jabalí en la 4-3 y sus re
   for (const path of [
     "sprites/noa-guarda-v1.webp", "sprites/jabato-pequeno-v1.webp", "sprites/jabato-grande-v1.webp", "sprites/bellota-v1.webp", "sprites/castana-v1.webp",
     "sprites/cesta-v1.webp", "sprites/arbusto-merienda-v1.webp", "sprites/roca-merienda-v1.webp", "sprites/rama-bellotas-vacia-v1.webp", "worlds/world-4-hd-v1.webp",
-    ...[0, 1, 2, 3, 4].map((pose) => `sprites/boss-gran-jabali-${pose}.png`),
+    ...[0, 1, 2, 3, 4].map((pose) => `sprites/boss-gran-jabali-${pose}.webp`),
   ]) assert.ok(asset(path), path);
   const component = read("./MeriendaJabatosGame.tsx") + read("./meriendaJabatos.css");
   for (const match of component.matchAll(/\.\/assets\/([\w/.-]+\.(?:webp|png))/g)) assert.ok(asset(match[1]), match[1]);
@@ -45,7 +45,7 @@ test("«Esquiva la carrera» se retira y el reto pide que ningún jabato se qued
   assert.equal("great-boar" in guardianGames, false);
   assert.doesNotMatch(read("./guardianGames.ts"), /dodgeOptions|choiceAnswer|Esquiva la carrera/);
   assert.doesNotMatch(read("./GuardianMiniGame.tsx"), /great-boar|choiceAnswer/);
-  assert.ok(asset("sprites/guardian-game-icons-v1.png"), "se conserva el atlas de iconos");
+  assert.ok(asset("sprites/guardian-game-icons-v1.webp"), "se conserva el atlas de iconos");
   const boar = bossCatalog["great-boar"];
   assert.equal(boar.challenge.id, "perfect-game");
   assert.equal(boar.challenge.label, "Dale de comer a todos los jabatos sin que ninguno se quede con hambre para conseguir su marco de bellotas.");

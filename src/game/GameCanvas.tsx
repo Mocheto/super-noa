@@ -1014,12 +1014,12 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       const usesCatRunSprite = player.power === "cat" && player.grounded && Math.abs(player.vx) > 25;
       const usesCleanCatJump = player.power === "cat" && !player.grounded;
       const usesCleanJump = player.power !== "cat" && !player.grounded;
-      const activeSprite = getImage(usesCatThrowSprite ? "./assets/sprites/noa-cat-throw-v1.png"
-        : usesCatYarnSprite ? "./assets/sprites/noa-cat-yarn-v2.png"
-        : usesCatRunSprite ? "./assets/sprites/noa-cat-run-v2.png"
-        : usesCleanCatJump ? "./assets/sprites/noa-cat-jump-v2.png"
-        : usesCleanJump ? (protectedByApple ? "./assets/sprites/noa-jump-gold-armor-v1.png" : "./assets/sprites/noa-jump-v2.png")
-        : protectedByApple ? "./assets/sprites/noa-sprite-sheet-gold-armor-v1.png" : "./assets/sprites/noa-sprite-sheet.png");
+      const activeSprite = getImage(usesCatThrowSprite ? "./assets/sprites/noa-cat-throw-v1.webp"
+        : usesCatYarnSprite ? "./assets/sprites/noa-cat-yarn-v2.webp"
+        : usesCatRunSprite ? "./assets/sprites/noa-cat-run-v2.webp"
+        : usesCleanCatJump ? "./assets/sprites/noa-cat-jump-v2.webp"
+        : usesCleanJump ? (protectedByApple ? "./assets/sprites/noa-jump-gold-armor-v1.webp" : "./assets/sprites/noa-jump-v2.webp")
+        : protectedByApple ? "./assets/sprites/noa-sprite-sheet-gold-armor-v1.webp" : "./assets/sprites/noa-sprite-sheet.webp");
       if (activeSprite.complete && activeSprite.naturalWidth) {
         const cellWidth = activeSprite.naturalWidth / 4;
         context.save();
@@ -1186,7 +1186,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       projectiles.forEach((ball) => {
         const x = Math.round(ball.x - cameraX);
         const y = Math.round(ball.y);
-        const yarnBallSprite = getImage("./assets/sprites/yarn-ball-v1.png");
+        const yarnBallSprite = getImage("./assets/sprites/yarn-ball-v1.webp");
         if (yarnBallSprite.complete && yarnBallSprite.naturalWidth) {
           // El ovillo es un recurso independiente para conservar su silueta redonda.
           const pulse = frame % 8 < 4 ? 0 : 1;
@@ -1221,9 +1221,9 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         // Al final del paseo espera el guardián del mundo para despedirse.
         const boss = guardianOf(restStop.world);
         const definition = boss ? bossCatalog[boss] : undefined;
-        // Retrato suelto (-0.png) o, en los guardianes nuevos, la primera pose de su atlas (fila de abajo de una
+        // Retrato suelto (-0.webp) o, en los guardianes nuevos, la primera pose de su atlas (fila de abajo de una
         // cuadrícula de 5 × 2) o de su hoja de poses (cinco en fila).
-        const image = definition ? getImage(definition.assetPrefix ? `${definition.assetPrefix}-0.png` : definition.assetAtlas ?? "") : null;
+        const image = definition ? getImage(definition.assetPrefix ? `${definition.assetPrefix}-0.webp` : definition.assetAtlas ?? "") : null;
         if (definition && image?.complete && image.naturalWidth) {
           const atlas = !definition.assetPrefix;
           const grid = atlas && (definition.assetAtlas ?? "").includes("characters");

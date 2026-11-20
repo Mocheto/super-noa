@@ -35,7 +35,7 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
       ctx.fillStyle = "#fff6e7"; ctx.fillRect(support.x, support.y, support.width, 7);
     }
   }
-  const sheet = getImage(bossId === "santa-claus" ? santaBattleAssets.characters : `./assets/sprites/boss-${bossId === "siroco" ? "siroco" : "don-silbato"}-sheet-v1.png`);
+  const sheet = getImage(bossId === "santa-claus" ? santaBattleAssets.characters : `./assets/sprites/boss-${bossId === "siroco" ? "siroco" : "don-silbato"}-sheet-v1.webp`);
   for (const gift of state.gifts) {
     if (bossId === "santa-claus" && sheet.complete && sheet.naturalWidth) ctx.drawImage(sheet, ...santaGiftSource, gift.x, gift.y, gift.width, gift.height);
     else {
@@ -75,7 +75,7 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
   ctx.save();
   if (p.invincible > 0 && Math.floor(p.invincible * 12) % 2 === 0) ctx.globalAlpha = .4;
   if (p.facing === -1) { ctx.translate(p.x + p.width / 2, 0); ctx.scale(-1, 1); ctx.translate(-p.x - p.width / 2, 0); }
-  const image = getImage(p.grounded ? "./assets/sprites/noa-sprite-sheet.png" : "./assets/sprites/noa-jump-v2.png");
+  const image = getImage(p.grounded ? "./assets/sprites/noa-sprite-sheet.webp" : "./assets/sprites/noa-jump-v2.webp");
   if (image.complete && image.naturalWidth) {
     if (p.grounded) {
       const cell = image.naturalWidth / 4;

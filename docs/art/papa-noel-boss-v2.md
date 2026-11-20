@@ -4,9 +4,9 @@ Creado con el generador integrado de imágenes. Los PNG conservan transparencia 
 
 ## Recursos guardados
 
-- `public/assets/sprites/boss-papa-noel-sheet-v2.png`: cinco poses y el regalo, en una cuadrícula de tres columnas por dos filas.
+- `public/assets/sprites/boss-papa-noel-sheet-v2.webp`: cinco poses y el regalo, en una cuadrícula de tres columnas por dos filas.
 - `public/assets/worlds/santa-boss-courtyard-v1.webp`: patio nevado del taller de regalos.
-- `public/assets/atlases/santa-boss-terrain-v1.png`: suelo y repisas propios de la arena.
+- `public/assets/atlases/santa-boss-terrain-v1.webp`: suelo y repisas propios de la arena.
 
 Los recortes y los anclajes a las botas están registrados en `src/game/santaBattleAssets.ts`. El cuerpo mantiene la misma altura al aturdirse; las estrellas se dibujan encima sin encoger al personaje. La nieve empieza en la superficie de colisión y las repisas dejan sitio para dibujar a Noa completa debajo.
 

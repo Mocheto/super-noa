@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { SoundKind } from "./GameCanvas";
 import { GameAssetIcon } from "./GameAssetIcon";
 import { Dialog } from "./Dialog";
-import { optimizedAssetSource } from "./assets";
 import { bossCatalog, type BossChallengeId } from "./bosses";
 import { justPressed, readDuelPad, type DuelPadButtons } from "./duelGamepad";
 import { firstConnectedGamepad } from "./gamepad";
@@ -61,7 +60,7 @@ const gestoDe = (choice: Choice) => choice === "rock" ? "piedra" : choice === "p
 const choiceById = Object.fromEntries(choices.map((choice) => [choice.id, choice])) as Record<Choice, (typeof choices)[number]>;
 
 function RpsIcon({ choice, small = false }: { choice: Choice; small?: boolean }) {
-  return <span className={`rps-icon rps-${choice} ${small ? "is-small" : ""}`} style={{ backgroundImage: 'url("./assets/sprites/rps-icons-v1.png")' }} aria-hidden="true" />;
+  return <span className={`rps-icon rps-${choice} ${small ? "is-small" : ""}`} style={{ backgroundImage: 'url("./assets/sprites/rps-icons-v1.webp")' }} aria-hidden="true" />;
 }
 
 function getRuleText(noa: Choice, boss: Choice) {
@@ -79,7 +78,7 @@ function BossSprite({ assetPrefix, assetAtlas, frame, name }: { assetPrefix: str
     <div className={`boss-sprite-window ${isWideSprite ? "is-wide-sprite" : ""} ${assetAtlas ? "is-atlas-sprite" : ""}`} role="img" aria-label={t("duelos.haceGesto.oculto", { nombre: name, gesto: gesture })}>
       {assetAtlas
         ? <span className="boss-sprite-frame boss-atlas-frame" style={{ backgroundImage: `url("${assetAtlas}")`, backgroundPosition: `${frame * 25}% 100%` }} />
-        : <img className="boss-sprite-frame" src={`${assetPrefix}-${frame}.png`} alt="" />}
+        : <img className="boss-sprite-frame" src={`${assetPrefix}-${frame}.webp`} alt="" />}
     </div>
   );
 }
@@ -87,12 +86,12 @@ function BossSprite({ assetPrefix, assetAtlas, frame, name }: { assetPrefix: str
 function NoaDuelSprite({ frame, protectedByApple }: { frame: number | null; protectedByApple: boolean }) {
   const gesture = tClave(`duelos.gesto.${frame === 0 ? "piedra" : frame === 1 ? "papel" : frame === 2 ? "tijera" : frame === 3 ? "victoria" : "preparada"}.juntos`);
   const armorSuffix = protectedByApple ? "-gold-armor-v1" : "";
-  const idleSource = optimizedAssetSource(`./assets/sprites/noa-sprite-sheet${armorSuffix}.png`);
+  const idleSource = `./assets/sprites/noa-sprite-sheet${armorSuffix}.webp`;
   return (
     <div className="duel-noa-sprite" role="img" aria-label={t("duelos.haceGesto.oculto", { nombre: tClave("duelos.noa.rotulo"), gesto: gesture })}>
       {frame === null
         ? <div className="duel-noa-idle" style={{ backgroundImage: `url("${idleSource}")` }} />
-        : <img src={`./assets/sprites/noa-rps-${frame}${armorSuffix}.png`} alt="" />}
+        : <img src={`./assets/sprites/noa-rps-${frame}${armorSuffix}.webp`} alt="" />}
     </div>
   );
 }

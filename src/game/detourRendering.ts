@@ -70,7 +70,7 @@ export function drawDetourMechanisms(context: CanvasRenderingContext2D, level: L
         context.beginPath(); context.moveTo(mechanism.x - cameraX, y); context.lineTo(mechanism.x + mechanism.travel + mechanism.width - cameraX, y); context.stroke();
       }
       sprite(context, 1, 0, mechanism.x - cameraX - 5, mechanism.y - 150, 110, 110);
-      const cat = getImage("./assets/sprites/world-cat-2-v1.png");
+      const cat = getImage("./assets/sprites/world-cat-2-v1.webp");
       if (cat.complete && cat.naturalWidth) {
         const x = mechanism.x - cameraX - 150;
         context.drawImage(cat, x, 336, 120, 120);

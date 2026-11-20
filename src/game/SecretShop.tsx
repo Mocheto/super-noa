@@ -128,7 +128,7 @@ export function SecretShop({ world, paused, reduceMotion, onResult, onLeave, pla
           if ((event.key === "Enter" || event.key === " ") && event.repeat) event.preventDefault();
         }}
       >
-        {!roomFailed && <img className="secret-shop-room" src="./assets/worlds/secret-shop-room-v1.png" alt="" onError={() => setRoomFailed(true)} />}
+        {!roomFailed && <img className="secret-shop-room" src="./assets/worlds/secret-shop-room-v1.webp" alt="" onError={() => setRoomFailed(true)} />}
         <h2 id={titleId} className="sr-only">{t("minijuegos.tienda.previa.nombre.rotulo")}</h2>
         <img key={kittenSource} className="secret-shop-preload" src={kittenSource} alt="" onLoad={() => setLoadedSource(kittenSource)} onError={() => setFailedSource(kittenSource)} />
         <div className="secret-shop-bands" aria-label={t("minijuegos.tienda.retrato.oculto")}>

@@ -1,7 +1,7 @@
 // Normalize the project's actual world kittens, without drawing replacement cats.
 // Run with Node 22: node --experimental-strip-types scripts/build-shop-world-cats.mjs [--check]
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { escribirPngComoWebp, leerWebp, webpIgualAPng } from './webp.mjs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, inflateSync } from 'node:zlib';
@@ -131,8 +131,8 @@ export async function buildShopWorldCats({ check = false } = {}) {
     assert.equal(kittens.length, 3);
     const portraits = kittens.map((cat, index) => {
       assert.equal(cat.world, set.cats[index]);
-      assert.equal(cat.source, `./assets/sprites/world-cat-${cat.world}-v1.png`, 'Use actual world-cat source');
-      if (!cache.has(cat.source)) cache.set(cat.source, normalize(decode(readFileSync(resolve(root, cat.source)))));
+      assert.equal(cat.source, `./assets/sprites/world-cat-${cat.world}-v1.webp`, 'Use actual world-cat source');
+      if (!cache.has(cat.source)) cache.set(cat.source, normalize(leerWebp(resolve(root, cat.source))));
       return cache.get(cat.source);
     });
     const pixels = Buffer.alloc(width * height * 4);
@@ -150,10 +150,10 @@ export async function buildShopWorldCats({ check = false } = {}) {
   for (const { source, bytes, portraits } of outputs) {
     const target = resolve(root, source);
     if (check) {
-      const actual = readFileSync(target), decoded = decode(actual);
+      const decoded = leerWebp(target);
       assert.equal(decoded.w, width); assert.equal(decoded.h, height);
-      validate(decoded.pixels, portraits); assert(actual.equals(bytes), `${source} differs; regenerate`);
-    } else writeFileSync(target, bytes);
+      validate(decoded.pixels, portraits); assert(webpIgualAPng(target, bytes), `${source} differs; regenerate`);
+    } else escribirPngComoWebp(target, bytes);
     console.log(`${check ? 'Verified' : 'Wrote'} ${source}: ${width}x${height} RGBA, ${bytes.length} bytes`);
   }
   console.log(`Total ${total} bytes; columns 128x192; vertical band cuts y=0,64,128.`);

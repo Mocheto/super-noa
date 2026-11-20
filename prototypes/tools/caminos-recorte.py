@@ -5,10 +5,10 @@ se repite sin costura; se guarda en public/assets/worlds/camino-<id>-v2.webp. El
 
 Atlas: cada lámina tiene una fila de dibujos sobre fondo blanco, en orden. El blanco unido al borde pasa a
 transparente y cada dibujo se encaja en su celda sin deformarlo:
-  - entradas → fila 1 de secret-detours-v2.png (5 × 2 celdas de 256 px), apoyadas abajo;
+  - entradas → fila 1 de secret-detours-v2.webp (5 × 2 celdas de 256 px), apoyadas abajo;
   - piezas → fila 2: la luciérnaga centrada y las plataformas (vagoneta, tablón, libro, hoja) a todo el ancho y
     pegadas arriba, de modo que la superficie que se pisa es el borde superior de la celda;
-  - interruptores → detour-switches-v2.png (3 celdas de 256 × 192), apoyados abajo.
+  - interruptores → detour-switches-v2.webp (3 celdas de 256 × 192), apoyados abajo.
 
 Uso:
   uv run --with pillow --with numpy --with scipy python3 prototypes/tools/caminos-recorte.py \\
@@ -23,8 +23,8 @@ from scipy import ndimage
 
 RAIZ = pathlib.Path(__file__).resolve().parents[2]
 FONDOS = RAIZ / "public/assets/worlds"
-ATLAS = RAIZ / "public/assets/atlases/secret-detours-v2.png"
-INTERRUPTORES = RAIZ / "public/assets/atlases/detour-switches-v2.png"
+ATLAS = RAIZ / "public/assets/atlases/secret-detours-v2.webp"
+INTERRUPTORES = RAIZ / "public/assets/atlases/detour-switches-v2.webp"
 VENTANA = 12  # columnas a cada lado del corte que deben parecerse
 
 
@@ -110,13 +110,13 @@ def main() -> None:
             for columna, dibujo in enumerate(dibujos(args.piezas, 5)):
                 atlas.paste((0, 0, 0, 0), (columna * 256, 256, columna * 256 + 256, 512))
                 atlas.alpha_composite(encajar(dibujo, 256, 256, "centro" if columna == 0 else "arriba"), (columna * 256, 256))
-        atlas.save(ATLAS, optimize=True)
+        atlas.save(ATLAS, "WEBP", lossless=True, method=6)
         print(ATLAS.name, "listo")
     if args.interruptores:
         atlas = Image.new("RGBA", (768, 192), (0, 0, 0, 0))
         for columna, dibujo in enumerate(dibujos(args.interruptores, 3)):
             atlas.alpha_composite(encajar(dibujo, 256, 192, "abajo"), (columna * 256, 0))
-        atlas.save(INTERRUPTORES, optimize=True)
+        atlas.save(INTERRUPTORES, "WEBP", lossless=True, method=6)
         print(INTERRUPTORES.name, "listo")
 
 

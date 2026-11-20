@@ -6,7 +6,7 @@ Dossier del arte de **La abeja ninja**, el duelo rítmico de la Reina Melisa. El
 
 - **Hecho:** las cuatro láminas están generadas, recortadas a transparente y exportadas como WebP en `public/assets/sprites/` (ver [Archivos finales](#archivos-finales)). Los samples del «jardín ninja» están en `public/assets/audio/abeja-ninja/`.
 - **Se reutilizan:**
-  - la Reina Melisa, con sus poses de `public/assets/atlases/giant-valley-characters-v1.png`;
+  - la Reina Melisa, con sus poses de `public/assets/atlases/giant-valley-characters-v1.webp`;
   - el fondo del valle gigante, `public/assets/worlds/world-11.webp`.
 - El arte provisional (`noa-abeja-v0.png`, `tarro-miel-v0.png`) se conserva solo para los prototipos.
 
@@ -44,14 +44,14 @@ Pega **ESTILO** al principio y **FONDO** al final de cada prompt.
 
 | Pieza | Imagen base | Referencia de estilo | Archivo final | Tamaño en escena (960 × 540) |
 |---|---|---|---|---|
-| Noa-abeja, 4 poses | `noa-abeja-poses-base.png` | `public/assets/sprites/noa-rps-0.png` y `public/assets/atlases/giant-valley-characters-v1.png` (traje de abeja) | `sprites/noa-abeja-v1.webp` | 216 × 207 por pose |
+| Noa-abeja, 4 poses | `noa-abeja-poses-base.png` | `public/assets/sprites/noa-rps-0.webp` y `public/assets/atlases/giant-valley-characters-v1.webp` (traje de abeja) | `sprites/noa-abeja-v1.webp` | 216 × 207 por pose |
 | Flores enteras, partidas y pétalos | `flores-mariquita-base.png` (abajo) | `public/assets/worlds/world-11.webp` (flores del valle) | `sprites/flores-abeja-v1.webp` | flor 64 × 64, pétalo 16 × 20 |
 | Mariquita, 2 poses | `flores-mariquita-base.png` (arriba a la derecha) | `public/assets/worlds/world-11.webp` (la mariquita del fondo) | `sprites/mariquita-v1.webp` | 64 × 64 por pose |
-| Tarro de miel, 5 niveles | `tarro-niveles-base.png` | `public/assets/atlases/giant-valley-characters-v1.png` (miel y dorados) | `sprites/tarro-miel-v1.webp` | 104 × 120 por nivel |
+| Tarro de miel, 5 niveles | `tarro-niveles-base.png` | `public/assets/atlases/giant-valley-characters-v1.webp` (miel y dorados) | `sprites/tarro-miel-v1.webp` | 104 × 120 por nivel |
 
 ### 1. Noa-abeja
 
-Adjunta `noa-abeja-poses-base.png` como imagen base de las poses, `noa-rps-0.png` como referencia del personaje y `giant-valley-characters-v1.png` como referencia del traje de abeja.
+Adjunta `noa-abeja-poses-base.png` como imagen base de las poses, `noa-rps-0.webp` como referencia del personaje y `giant-valley-characters-v1.webp` como referencia del traje de abeja.
 
 Prompt (ESTILO + este texto + FONDO, formato 16:9 o 21:9):
 
@@ -91,7 +91,7 @@ Pose 2 "hello": same flight pose but waving one tiny front leg towards the viewe
 
 ### 4. Tarro de miel
 
-Adjunta `tarro-niveles-base.png` y `giant-valley-characters-v1.png` como referencia de la miel y los dorados.
+Adjunta `tarro-niveles-base.png` y `giant-valley-characters-v1.webp` como referencia de la miel y los dorados.
 
 Prompt (ESTILO + este texto + FONDO, formato 21:9 o 16:9):
 

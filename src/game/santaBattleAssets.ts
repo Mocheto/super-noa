@@ -1,7 +1,7 @@
 export const santaBattleAssets = {
   background: "./assets/worlds/santa-boss-courtyard-v1.webp",
-  characters: "./assets/sprites/boss-papa-noel-sheet-v2.png",
-  terrain: "./assets/atlases/santa-boss-terrain-v1.png",
+  characters: "./assets/sprites/boss-papa-noel-sheet-v2.webp",
+  terrain: "./assets/atlases/santa-boss-terrain-v1.webp",
 } as const;
 
 // Las tres salas de acción necesitan fondos propios: son panoramas separados

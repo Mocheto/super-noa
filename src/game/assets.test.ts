@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import test from "node:test";
-import { cssAssetUrl, getImage, getLevelAssets, optimizedAssetSource } from "./assets.ts";
+import { cssAssetUrl, getImage, getLevelAssets } from "./assets.ts";
 import { levels } from "./levels.ts";
 import { mechanicSpriteSheets, type MechanicSprite } from "./mechanicSprites.ts";
-import { readRgbaPng } from "./pngTestUtils.ts";
+import { readRgbaImage, webpSinPerdida } from "./imagenTestUtils.ts";
 
 test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
   const originalImage = globalThis.Image;
@@ -42,21 +42,21 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
     assert.equal(getLevelAssets(levels.find((level) => level.id === "6-1")!).worldBackground.src, "./assets/worlds/castle-interior-background-v1.webp");
     assert.equal(getLevelAssets(levels.find((level) => level.world === 8)!).worldBackground.src, "");
     const birds = getLevelAssets(levels.find((level) => level.id === "4-2")!);
-    assert.equal(birds.bird.src, "./assets/sprites/enemy-bird-v2.png");
+    assert.equal(birds.bird.src, "./assets/sprites/enemy-bird-v2.webp");
     const cave = getLevelAssets(levels.find((level) => level.id === "2-1")!);
-    assert.equal(cave.cave.src, "./assets/atlases/cave-v1.png");
+    assert.equal(cave.cave.src, "./assets/atlases/cave-v1.webp");
     const dinosaurs = getLevelAssets(levels.find((level) => level.id === "9-1")!);
-    assert.equal(dinosaurs.dinosaurTerrain.src, "./assets/atlases/dinosaur-island-v1.png");
-    assert.equal(dinosaurs.dinosaurEnemies.src, "./assets/atlases/dinosaur-enemies-v1.png");
+    assert.equal(dinosaurs.dinosaurTerrain.src, "./assets/atlases/dinosaur-island-v1.webp");
+    assert.equal(dinosaurs.dinosaurEnemies.src, "./assets/atlases/dinosaur-enemies-v1.webp");
     const jumpingFish = getLevelAssets(levels.find((level) => level.id === "9-2")!);
-    assert.equal(jumpingFish.jumpingFish.src, "./assets/sprites/enemy-jumping-fish-v1.png");
-    assert.equal(getLevelAssets(levels.find((level) => level.id === "10-1")!).worldCharacters.src, "./assets/atlases/volcano-characters-v1.png");
-    assert.equal(getLevelAssets(levels.find((level) => level.id === "11-1")!).worldCharacters.src, "./assets/atlases/giant-valley-characters-v1.png");
-    assert.equal(getLevelAssets(levels.find((level) => level.id === "12-1")!).worldCharacters.src, "./assets/atlases/ice-mountain-characters-v1.png");
-    assert.equal(getLevelAssets(levels.find((level) => level.id === "10-1")!).worldTerrain.src, "./assets/atlases/volcano-terrain-v1.png");
+    assert.equal(jumpingFish.jumpingFish.src, "./assets/sprites/enemy-jumping-fish-v1.webp");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "10-1")!).worldCharacters.src, "./assets/atlases/volcano-characters-v1.webp");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "11-1")!).worldCharacters.src, "./assets/atlases/giant-valley-characters-v1.webp");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "12-1")!).worldCharacters.src, "./assets/atlases/ice-mountain-characters-v1.webp");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "10-1")!).worldTerrain.src, "./assets/atlases/volcano-terrain-v1.webp");
     const giants = getLevelAssets(levels.find((level) => level.id === "11-1")!);
-    assert.equal(giants.worldTerrain.src, "./assets/atlases/giant-valley-terrain-v1.png");
-    assert.equal(giants.dewTrampoline.src, "./assets/sprites/dew-trampoline-v1.png");
+    assert.equal(giants.worldTerrain.src, "./assets/atlases/giant-valley-terrain-v1.webp");
+    assert.equal(giants.dewTrampoline.src, "./assets/sprites/dew-trampoline-v1.webp");
     const mechanicLevels: Record<MechanicSprite, string> = {
       secretShopDoor: "1-3", starAura: "1-3",
       castleHound: "6-1", castleChainLink: "6-1", castleChainPost: "6-1",
@@ -70,35 +70,35 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
       assert.equal(assets[name].src, mechanicSpriteSheets[name].source);
       assert.equal(assets[name], getLevelAssets(level)[name], "los fotogramas comparten la imagen en caché");
     }
-    assert.equal(getLevelAssets(levels.find((level) => level.id === "12-1")!).worldTerrain.src, "./assets/atlases/ice-mountain-terrain-v1.png");
+    assert.equal(getLevelAssets(levels.find((level) => level.id === "12-1")!).worldTerrain.src, "./assets/atlases/ice-mountain-terrain-v1.webp");
     for (const [id, background] of [["13-1", "winter-village-background-v1"], ["13-2", "toy-factory-background-v2"], ["13-3", "gift-warehouse-background-v2"]]) {
       const holiday = getLevelAssets(levels.find((level) => level.id === id)!);
       assert.equal(holiday.holidayBackground.src, `./assets/worlds/${background}.webp`);
       if (id === "13-1") {
-        assert.equal(holiday.worldTerrain.src, "./assets/atlases/winter-village-terrain-v1.png");
-        assert.equal(holiday.worldCharacters.src, "./assets/atlases/winter-village-enemies-v1.png");
+        assert.equal(holiday.worldTerrain.src, "./assets/atlases/winter-village-terrain-v1.webp");
+        assert.equal(holiday.worldCharacters.src, "./assets/atlases/winter-village-enemies-v1.webp");
       }
     }
     const desert = getLevelAssets(levels.find((level) => level.id === "14-1")!);
     assert.equal(desert.adventureBackground.src, "./assets/worlds/desert-background-v1.webp");
-    assert.equal(desert.worldCharacters.src, "./assets/atlases/desert-enemies-v1.png");
-    assert.equal(desert.worldTerrain.src, "./assets/atlases/desert-terrain-v1.png");
-    assert.equal(desert.adventurePrecipices.src, "./assets/atlases/adventure-precipices-v1.png");
+    assert.equal(desert.worldCharacters.src, "./assets/atlases/desert-enemies-v1.webp");
+    assert.equal(desert.worldTerrain.src, "./assets/atlases/desert-terrain-v1.webp");
+    assert.equal(desert.adventurePrecipices.src, "./assets/atlases/adventure-precipices-v1.webp");
     assert.equal(desert.stickerSheets[14].src, "./assets/stickers/world-14-v1.webp");
     const train = getLevelAssets(levels.find((level) => level.id === "15-1")!);
     assert.equal(train.adventureBackground.src, "./assets/worlds/train-background-v1.webp");
-    assert.equal(train.worldCharacters.src, "./assets/atlases/train-enemies-v1.png");
-    assert.equal(train.worldTerrain.src, "./assets/atlases/train-terrain-v1.png");
+    assert.equal(train.worldCharacters.src, "./assets/atlases/train-enemies-v1.webp");
+    assert.equal(train.worldTerrain.src, "./assets/atlases/train-terrain-v1.webp");
     assert.equal(train.stickerSheets[15].src, "./assets/stickers/world-15-v1.webp");
     const music = getLevelAssets(levels.find((level) => level.id === "16-1")!);
     assert.equal(music.adventureBackground.src, "./assets/worlds/music-background-v1.webp");
-    assert.equal(music.worldCharacters.src, "./assets/atlases/music-characters-v1.png");
-    assert.equal(music.worldTerrain.src, "./assets/atlases/music-terrain-v1.png");
-    assert.equal(music.adventurePrecipices.src, "./assets/atlases/adventure-precipices-v1.png");
+    assert.equal(music.worldCharacters.src, "./assets/atlases/music-characters-v1.webp");
+    assert.equal(music.worldTerrain.src, "./assets/atlases/music-terrain-v1.webp");
+    assert.equal(music.adventurePrecipices.src, "./assets/atlases/adventure-precipices-v1.webp");
     assert.equal(music.stickerSheets[16].src, "./assets/stickers/world-16-v1.webp");
     const sky = getLevelAssets(levels.find((level) => level.id === "17-1")!);
-    assert.equal(sky.skyLift.src, "./assets/atlases/sky-lift-v1.png");
-    assert.equal(sky.worldTerrain.src, "./assets/atlases/sky-kingdom-terrain-v1.png");
+    assert.equal(sky.skyLift.src, "./assets/atlases/sky-lift-v1.webp");
+    assert.equal(sky.worldTerrain.src, "./assets/atlases/sky-kingdom-terrain-v1.webp");
     assert.equal(first.holidayBackground.src, "");
     for (const level of levels) {
       const assets = getLevelAssets(level);
@@ -117,7 +117,7 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
 });
 
 test("el ascensor celeste usa un atlas RGBA completo para nube, palancas, guía, estación y flecha", () => {
-  const atlas = readRgbaPng("./assets/atlases/sky-lift-v1.png");
+  const atlas = readRgbaImage("./assets/atlases/sky-lift-v1.webp");
   assert.deepEqual([atlas.width, atlas.height], [1536, 1024]);
   const crops = [
     [0, 90, 870, 420], [850, 35, 330, 475], [1175, 35, 361, 475],
@@ -135,29 +135,29 @@ test("el ascensor celeste usa un atlas RGBA completo para nube, palancas, guía,
   }
 });
 
-test("la interfaz y el motor comparten una fuente optimizada y la misma imagen", () => {
-  for (const original of [
-    "./assets/home-adventure-v3.png",
-    "./assets/sprites/noa-sprite-sheet.png", "./assets/atlases/collectibles-v1.png",
-  ]) {
-    const source = optimizedAssetSource(original);
-    assert.equal(source, original.replace(/\.png$/, ".webp"));
-    assert.equal(optimizedAssetSource(source), source);
-    const webp = readFileSync(new URL(`../../public/${source.slice(2)}`, import.meta.url));
-    assert.equal(webp.toString("ascii", 0, 4), "RIFF");
-    assert.equal(webp.toString("ascii", 8, 16), "WEBPVP8L", `${source} debe ser WebP sin pérdida`);
-    assert.equal(existsSync(new URL(`../../public/${original.slice(2)}`, import.meta.url)), false, `${original} no se publica: solo se pide su WebP`);
+test("el arte de public es WebP sin PNG y cada ruta se pide una sola vez", () => {
+  const pendientes = ["public/assets"];
+  const png: string[] = [];
+  while (pendientes.length) {
+    const carpeta = pendientes.pop()!;
+    for (const entrada of readdirSync(carpeta, { withFileTypes: true })) {
+      if (entrada.isDirectory()) pendientes.push(`${carpeta}/${entrada.name}`);
+      else if (entrada.name.endsWith(".png")) png.push(`${carpeta}/${entrada.name}`);
+    }
   }
-  assert.equal(optimizedAssetSource("./assets/worlds/world-8.webp"), "./assets/worlds/world-8.webp");
+  assert.deepEqual(png, [], "el arte se publica como WebP sin pérdida: npm run recursos:webp");
+  for (const source of ["./assets/home-adventure-v3.webp", "./assets/sprites/noa-sprite-sheet.webp", "./assets/atlases/collectibles-v1.webp"]) {
+    webpSinPerdida(readFileSync(new URL(`../../public/${source.slice(2)}`, import.meta.url)));
+  }
   const originalImage = globalThis.Image;
   const requested: string[] = [];
   globalThis.Image = class {
     set src(value: string) { requested.push(value); }
   } as unknown as typeof Image;
   try {
-    const source = "./assets/home-adventure-v3.png";
-    assert.equal(getImage(source), getImage(optimizedAssetSource(source)));
-    assert.deepEqual(requested, ["./assets/home-adventure-v3.webp"]);
+    const source = "./assets/home-adventure-v3.webp";
+    assert.equal(getImage(source), getImage(source));
+    assert.deepEqual(requested, [source]);
   } finally {
     globalThis.Image = originalImage;
   }

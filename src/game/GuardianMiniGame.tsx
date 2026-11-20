@@ -19,7 +19,7 @@ type Phase = "watch" | "play" | "feedback" | "won" | "lost";
 
 function GuardianGameIcon({ option }: { option: GuardianOption }) {
   const [row, column] = option.sprite;
-  return <span className="guardian-game-icon" style={{ backgroundImage: 'url("./assets/sprites/guardian-game-icons-v1.png")', backgroundPosition: `${column * 50}% ${row * (100 / 6)}%` }} aria-hidden="true" />;
+  return <span className="guardian-game-icon" style={{ backgroundImage: 'url("./assets/sprites/guardian-game-icons-v1.webp")', backgroundPosition: `${column * 50}% ${row * (100 / 6)}%` }} aria-hidden="true" />;
 }
 
 function randomSequence(gameId: GuardianGameId, round: number) {
@@ -35,7 +35,7 @@ function GuardianPortrait({ bossId, won }: { bossId: GuardianGameId; won: boolea
   return <div className={`guardian-game-portrait ${boss.assetAtlas ? "is-atlas" : ""}`} role="img" aria-label={`${boss.name} ${won ? "sonríe" : "prepara su juego"}`}>
     {boss.assetAtlas
       ? <span style={{ backgroundImage: `url("${boss.assetAtlas}")`, backgroundPosition: `${frame * 25}% 100%` }} />
-      : <img src={`${boss.assetPrefix}-${frame}.png`} alt="" />}
+      : <img src={`${boss.assetPrefix}-${frame}.webp`} alt="" />}
   </div>;
 }
 

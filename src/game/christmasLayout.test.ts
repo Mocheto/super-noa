@@ -3,7 +3,7 @@ import test from "node:test";
 import { textoLienzo } from "../textos/index.ts";
 import { levels } from "./levels.ts";
 import { mountEngine } from "./engineTestHarness.ts";
-import { readRgbaPng } from "./pngTestUtils.ts";
+import { readRgbaImage } from "./imagenTestUtils.ts";
 
 for (const level of levels.filter((l) => l.world === 13)) {
   for (const box of level.rewardBlocks) {
@@ -22,7 +22,7 @@ for (const level of levels.filter((l) => l.world === 13)) {
 
 test("los atlas propios de la aldea tienen transparencia y dos zonas de terreno separadas", () => {
   for (const name of ["winter-village-terrain-v1", "winter-village-enemies-v1"]) {
-    const {width,height,pixels} = readRgbaPng(`./assets/atlases/${name}.png`);
+    const {width,height,pixels} = readRgbaImage(`./assets/atlases/${name}.webp`);
     assert.ok(width >= 1024 && height >= 512);
     let transparent = 0, opaque = 0;
     for (let i = 3; i < pixels.length; i += 4) {

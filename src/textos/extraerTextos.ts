@@ -11,12 +11,12 @@ const llamadasTecnicas = /^(console\.|new Error|Error|querySelector|document\.|c
 
 /**
  * Excepciones fijas: archivos cuyas cadenas no son texto para la niña ni para la persona adulta.
- * - `pngTestUtils.ts`: mensajes de utilidades de prueba.
+ * - `imagenTestUtils.ts`: mensajes de utilidades de prueba.
  * - `levelBeats.ts`: mensajes de validación para quien programa.
  * - `input.ts`: códigos de tecla («ArrowLeft», «KeyA»).
  * - `testScreens.ts`: pantallas de prueba de los motores, que solo se abren en desarrollo.
  */
-export const excepcionesFijas = ["pngTestUtils.ts", "levelBeats.ts", "input.ts", "testScreens.ts"] as const;
+export const excepcionesFijas = ["imagenTestUtils.ts", "levelBeats.ts", "input.ts", "testScreens.ts"] as const;
 
 /** Archivos de partituras: sus cadenas sin propiedad son mensajes de validación, no texto visible. */
 const archivosDePartitura = /(beeNinja|catParty|armoniaDrum|meriendaJabatos)\.ts$/;

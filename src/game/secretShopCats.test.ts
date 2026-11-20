@@ -10,7 +10,7 @@ test("cada tienda ofrece tres gatitos existentes en el orden de su atlas", () =>
   ]);
   for (const definition of secretShopCatSets) {
     const set = getSecretShopCatSet(definition.world);
-    assert.equal(set.source, `./assets/sprites/shop-world-cats-${definition.world}-v1.png`);
+    assert.equal(set.source, `./assets/sprites/shop-world-cats-${definition.world}-v1.webp`);
     assert.equal(new Set(set.kittens.map(({ world }) => world)).size, 3);
     for (const [column, kitten] of set.kittens.entries()) {
       const original = worldCatalog.find(({ id }) => id === definition.cats[column]);

@@ -17,14 +17,14 @@ const datosGuardianes: Record<BossId, BossDatos> = {
   "vampire-count": { assetPrefix: "./assets/sprites/boss-conde-vampiro", challenge: { id: "clean-sweep" } },
   "rainbow-queen": { assetPrefix: "./assets/sprites/boss-reina-arcoiris-v2", challenge: { id: "perfect-game" } },
   "triceratops-queen": { assetPrefix: "./assets/sprites/boss-reina-tricera", challenge: { id: "perfect-game" } },
-  "ruby-dragon": { assetPrefix: "", assetAtlas: "./assets/atlases/volcano-characters-v1.png", challenge: { id: "finish-rock" } },
-  "queen-bee": { assetPrefix: "", assetAtlas: "./assets/atlases/giant-valley-characters-v1.png", challenge: { id: "perfect-game" } },
-  "polar-bear": { assetPrefix: "", assetAtlas: "./assets/atlases/ice-mountain-characters-v1.png", challenge: { id: "clean-sweep" } },
-  "santa-claus": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-papa-noel-sheet-v2.png", challenge: { id: "clean-sweep" } },
-  "siroco": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-siroco-sheet-v1.png", challenge: { id: "clean-sweep" } },
-  "don-silbato": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-don-silbato-sheet-v1.png", challenge: { id: "clean-sweep" } },
-  "maestra-armonia": { assetPrefix: "", assetAtlas: "./assets/atlases/music-characters-v1.png", challenge: { id: "perfect-game" } },
-  "aurora-celeste": { assetPrefix: "", assetAtlas: "./assets/atlases/sky-kingdom-characters-v1.png", challenge: { id: "perfect-game" } },
+  "ruby-dragon": { assetPrefix: "", assetAtlas: "./assets/atlases/volcano-characters-v1.webp", challenge: { id: "finish-rock" } },
+  "queen-bee": { assetPrefix: "", assetAtlas: "./assets/atlases/giant-valley-characters-v1.webp", challenge: { id: "perfect-game" } },
+  "polar-bear": { assetPrefix: "", assetAtlas: "./assets/atlases/ice-mountain-characters-v1.webp", challenge: { id: "clean-sweep" } },
+  "santa-claus": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-papa-noel-sheet-v2.webp", challenge: { id: "clean-sweep" } },
+  "siroco": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-siroco-sheet-v1.webp", challenge: { id: "clean-sweep" } },
+  "don-silbato": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-don-silbato-sheet-v1.webp", challenge: { id: "clean-sweep" } },
+  "maestra-armonia": { assetPrefix: "", assetAtlas: "./assets/atlases/music-characters-v1.webp", challenge: { id: "perfect-game" } },
+  "aurora-celeste": { assetPrefix: "", assetAtlas: "./assets/atlases/sky-kingdom-characters-v1.webp", challenge: { id: "perfect-game" } },
 };
 
 export const bossCatalog = Object.fromEntries(Object.entries(datosGuardianes).map(([id, guardian]) => [id, conTextos({ ...guardian, challenge: conTextos({ ...guardian.challenge }, { label: `guardianes.${id}.reto.juntos` }) }, {

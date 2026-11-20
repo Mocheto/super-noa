@@ -186,12 +186,12 @@ def main():
     strip = Image.new("RGBA", (FRAME_W * len(frames), FRAME_H), (0, 0, 0, 0))
     for i, f in enumerate(frames):
         strip.alpha_composite(f, (i * FRAME_W, 0))
-    strip.save(OUT / "noa-abeja-v0.png")
+    strip.save(OUT / "noa-abeja-v0.webp", "WEBP", lossless=True, method=6)
     jars = [jar(level) for level in range(5)]
     js = Image.new("RGBA", (jars[0].width * 5, jars[0].height), (0, 0, 0, 0))
     for i, j in enumerate(jars):
         js.alpha_composite(j, (i * j.width, 0))
-    js.save(OUT / "tarro-miel-v0.png")
+    js.save(OUT / "tarro-miel-v0.webp", "WEBP", lossless=True, method=6)
     print("poses:", ", ".join(POSES), "| frame", FRAME_W, "x", FRAME_H, "| tarro", jars[0].size)
 
 

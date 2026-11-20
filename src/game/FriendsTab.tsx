@@ -11,7 +11,7 @@ import { t } from "../textos";
 import { Pictogramas, Texto } from "../textos/Texto";
 
 /** La manzana sale del atlas de objetos; la bellota y la flor, de sus dibujos de la merienda y el valle. */
-const FOOD_ICONS: Record<Exclude<FriendFood, "apple">, string> = { acorn: "./assets/sprites/bellota-v1.webp", flower: "./assets/sprites/bloom-flower-v1.png" };
+const FOOD_ICONS: Record<Exclude<FriendFood, "apple">, string> = { acorn: "./assets/sprites/bellota-v1.webp", flower: "./assets/sprites/bloom-flower-v1.webp" };
 
 const worldAvailable = (world: number, progress: Progress) => {
   if (world === 7) return progress.secretUnlocked;

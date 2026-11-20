@@ -5,7 +5,7 @@ import type { Level, LostKitten } from "./types";
 import { textoLienzo } from "../textos/index.ts";
 
 const GATE = "./assets/sprites/kitten-gate-v1.webp";
-const catSprite = (kitten: LostKitten) => getImage(`./assets/sprites/world-cat-${kitten.cat}-v1.png`);
+const catSprite = (kitten: LostKitten) => getImage(`./assets/sprites/world-cat-${kitten.cat}-v1.webp`);
 /** Huecos de la puerta (fracción del dibujo): izquierdo, central y derecho. */
 const NICHES = [[.31, .33], [.5, .25], [.69, .33]] as const;
 

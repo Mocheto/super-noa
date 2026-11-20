@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test:logic": "node --experimental-strip-types --test src/game/*.test.ts src/textos/*.test.ts server/*.test.mjs",
     "textos:json": "node --experimental-strip-types scripts/textos-json.ts",
+    "recursos:webp": "node scripts/webp.mjs",
     "lint": "eslint . --ignore-pattern dist-pages"
   },
   "dependencies": {

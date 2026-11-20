@@ -30,10 +30,10 @@ test("la abeja ninja es el duelo de la Reina Melisa y sus recursos existen", () 
   const final = levels.find((level) => level.id === BEE_NINJA_LEVEL_ID);
   assert.equal(final?.world, 11);
   assert.equal(final?.boss, "queen-bee");
-  for (const path of ["sprites/noa-abeja-v1.webp", "sprites/tarro-miel-v1.webp", "sprites/flores-abeja-v1.webp", "sprites/mariquita-v1.webp", "atlases/giant-valley-characters-v1.png", "worlds/world-11.webp"]) assert.ok(asset(path), path);
+  for (const path of ["sprites/noa-abeja-v1.webp", "sprites/tarro-miel-v1.webp", "sprites/flores-abeja-v1.webp", "sprites/mariquita-v1.webp", "atlases/giant-valley-characters-v1.webp", "worlds/world-11.webp"]) assert.ok(asset(path), path);
   const component = readFileSync(new URL("./BeeNinjaGame.tsx", import.meta.url), "utf8") + readFileSync(new URL("./beeNinja.css", import.meta.url), "utf8");
   for (const match of component.matchAll(/\.\/assets\/([\w/.-]+\.(?:webp|png))/g)) assert.ok(asset(match[1]), match[1]);
-  assert.doesNotMatch(component, /-v0\.png|<svg/, "el arte provisional se ha sustituido");
+  assert.doesNotMatch(component, /-v0\.webp|<svg/, "el arte provisional se ha sustituido");
 });
 
 test("el punto de corte es la punta del aguijón de Noa-abeja, reflejada para mirar a Melisa", () => {

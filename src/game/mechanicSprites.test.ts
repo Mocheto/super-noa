@@ -6,13 +6,13 @@ import { engineModules } from "./engineTestHarness.ts";
 import { lavaJetState } from "./gameState.ts";
 import type { RasterAssets } from "./assets";
 import type { BloomBridge, LavaJet } from "./types";
-import { readRgbaPng } from "./pngTestUtils.ts";
+import { readRgbaImage } from "./imagenTestUtils.ts";
 
 test("los sprites tienen tamaño, transparencia, detalle y fotogramas propios", () => {
   let bytes = 0;
   const tileNames: MechanicSprite[] = ["bloomBridge", "lavaSurface", "waterSurface", "airPlank", "mistPlatform"];
   for (const [name, sheet] of Object.entries(mechanicSpriteSheets)) {
-    const png = readRgbaPng(sheet.source);
+    const png = readRgbaImage(sheet.source);
     assert.equal(png.width, sheet.columns * sheet.frameWidth, name);
     assert.equal(png.height, sheet.frameHeight, name);
     bytes += png.bytes;
@@ -45,7 +45,7 @@ test("los sprites tienen tamaño, transparencia, detalle y fotogramas propios", 
 
 test("las estrellas son destellos separados, nunca una burbuja o un aro alrededor de Noa", () => {
   const sheet = mechanicSpriteSheets.starAura;
-  const png = readRgbaPng(sheet.source);
+  const png = readRgbaImage(sheet.source);
   for (let frame = 0; frame < sheet.columns; frame++) {
     const visible = (x: number, y: number) => png.pixels[(y * png.width + frame * sheet.frameWidth + x) * 4 + 3] > 0;
     for (let y = 36; y < 92; y++) for (let x = 48; x < 80; x++) {
@@ -80,7 +80,7 @@ test("las estrellas son destellos separados, nunca una burbuja o un aro alrededo
 test("los puentes, tablones y barcos conservan la superficie transitable en su recorte", () => {
   for (const [name, deckY] of [["bloomBridge", 0], ["airPlank", 0], ["flyingShip", 144]] as const) {
     const sheet = mechanicSpriteSheets[name];
-    const { width, pixels } = readRgbaPng(sheet.source);
+    const { width, pixels } = readRgbaImage(sheet.source);
     for (let column = 0; column < sheet.columns; column++) {
       for (let x = 0; x < sheet.frameWidth; x++) {
         assert.ok(pixels[(deckY * width + column * sheet.frameWidth + x) * 4 + 3] > 0, `${name}: apoyo visible en x=${x}`);

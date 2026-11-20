@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { readRgbaPng } from "./pngTestUtils.ts";
+import { readRgbaImage } from "./imagenTestUtils.ts";
 
 for (const world of ["desert", "train", "music"] as const) {
   test(`el terreno de ${world} conserva transparencia y tres piezas separadas`, () => {
-    const { width, height, pixels } = readRgbaPng(`./assets/atlases/${world}-terrain-v1.png`);
+    const { width, height, pixels } = readRgbaImage(`./assets/atlases/${world}-terrain-v1.webp`);
     assert.ok(width >= (world === "music" ? 1500 : 1700) && height >= 850);
     let transparent = 0;
     let opaque = 0;

@@ -9,7 +9,7 @@ Resolución de [Palabras con dibujo y estilo del atlas de pictogramas](https://g
 - **Contorno ciruela** (`#3d1430`) de 1 píxel.
 - Tres tonos con la luz arriba a la izquierda y un brillo blanco de 2 × 2.
 - Carita amable (ojos cerrados y felices, mejillas rosas) solo en lo que tiene vida: gato, manzana, estrella, nube, flor, animales.
-- Es el estilo de la manzana, el gato y el corazón que ya hay en `collectibles-v1.png` y `ui-heart-v1.png`.
+- Es el estilo de la manzana, el gato y el corazón que ya hay en `collectibles-v1.webp` y `ui-heart-v1.webp`.
 
 **Controles en un solo color**:
 - Misma rejilla de 24 × 24, en blanco sobre transparente, sin contorno ni sombras.
@@ -33,7 +33,7 @@ El pictograma va **delante** de la palabra, centrado en vertical, con 8 px de se
 
 51 en total: 36 objetos a color y 15 controles. Sale de la lista base de la [guía de escritura](guia-texto-noa.md). Una palabra nueva entra en la lista solo cuando tiene su dibujo en el atlas.
 
-### Atlas a color: `public/assets/sprites/pictogramas-v1.png`
+### Atlas a color: `public/assets/sprites/pictogramas-v1.webp`
 
 Seis columnas por seis filas. Cada celda mide 96 × 96 px en el archivo, es decir, la rejilla de 24 con cada píxel a 4 × 4. Fondo transparente. El orden es estable: el código recorta por posición.
 
@@ -46,7 +46,7 @@ Seis columnas por seis filas. Cada celda mide 96 × 96 px en el archivo, es deci
 | 5 | ENREDADERA | TREN (vagón) | MAPA | INICIO (casa) | ALBUM | AMIGOS (huella) |
 | 6 | POSTAL (sobre) | FIESTA (confeti) | SECRETO (destello de cuatro puntas) | NO MUERDE (cara sonriente) | PISTA (bombilla) | CERRADO (candado) |
 
-### Atlas de controles: `public/assets/sprites/pictogramas-controles-v1.png`
+### Atlas de controles: `public/assets/sprites/pictogramas-controles-v1.webp`
 
 Cinco columnas por tres filas, con celdas de 96 × 96 px en blanco puro sobre transparente.
 

@@ -29,11 +29,11 @@ export function MuestraInterfaz() {
   if (ventana === "abeja") return <BeeNinjaGame paused={false} muted musicVolume={0} effectsVolume={0} reduceMotion={false} levelCompleted={false} onAbandon={nada} onWin={nada} playSound={nada} />;
   return <main className="muestra-interfaz">
     {ventana === "previa" && <PantallaPrevia id="muestra-previa" nombre="minijuegos.abeja.previa.nombre.rotulo"
-      guardian={<div className="bee-ninja-retrato" style={{ backgroundImage: "url(./assets/atlases/giant-valley-characters-v1.png)" }} />} regla={t("minijuegos.abeja.previa.regla.juntos")}
+      guardian={<div className="bee-ninja-retrato" style={{ backgroundImage: "url(./assets/atlases/giant-valley-characters-v1.webp)" }} />} regla={t("minijuegos.abeja.previa.regla.juntos")}
       ayudaAdultos={[t("adultos.minijuegos.abeja.controles")]} practicaPrimero onPracticar={nada} onJugar={nada} onSalir={nada} />}
     {ventana === "resultado" && <Ventana id="muestra-resultado" titulo="ventanas.completada.titulo.rotulo" celebracion
       botones={<><Boton tipo="seguir" clave="ventanas.completada.siguiente.rotulo" /><Boton clave="ventanas.completada.mapa.rotulo" /></>}>
-      <div className="ventana-dibujo"><img className="completion-cat" src="./assets/sprites/world-cat-1-v1.png" alt={t("ventanas.completada.gatito.oculto")} /></div>
+      <div className="ventana-dibujo"><img className="completion-cat" src="./assets/sprites/world-cat-1-v1.webp" alt={t("ventanas.completada.gatito.oculto")} /></div>
       <div className="medallas"><Medalla clave="ventanas.completada.meta.rotulo" conseguida /><Medalla clave="ventanas.completada.pegatina.rotulo" conseguida /><Medalla clave="ventanas.completada.sinCaer.rotulo" conseguida={false} /></div>
       <div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="ventanas.completada.insignia.rotulo" /></p><p className="juntos">{t("ventanas.completada.insignia.juntos", { n: 1 })}</p></div>
       <p className="juntos">{t("ventanas.completada.manzanas.juntos", { n: 4 })} {t("ventanas.completada.siguienteAventura.juntos")}</p>

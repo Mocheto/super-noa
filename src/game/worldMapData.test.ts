@@ -27,7 +27,7 @@ test("los cinco mundos nuevos tienen gatitos propios en finales y postales", () 
   const newWorlds = worldCatalog.filter((world) => world.id >= 13 && world.id <= 17);
   assert.equal(newWorlds.length, 5);
   assert.equal(new Set(newWorlds.map((world) => world.catAsset)).size, 5);
-  for (const world of newWorlds) assert.equal(world.catAsset, `./assets/sprites/world-cat-${world.id}-v1.png`);
+  for (const world of newWorlds) assert.equal(world.catAsset, `./assets/sprites/world-cat-${world.id}-v1.webp`);
 });
 
 test("los caminos se iluminan con el progreso sin adelantar la salida de la laguna", () => {

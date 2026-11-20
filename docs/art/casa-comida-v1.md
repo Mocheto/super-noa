@@ -4,8 +4,8 @@ Dossier del arte de la comida favorita. Ticket: [Prompt del arte de las comidas]
 
 ## Estado
 
-- **Prompt listo**, falta generar la lámina. Se monta en [Montar el arte de las comidas](https://github.com/Mocheto/super-noa/issues/252).
-- **Provisional:** mientras llega la lámina, `prototypes/tools/casa-comidas-provisional.py` dibuja por código las cuatro comidas sobre el cuenco vacío de la bandeja, en `sprites/casa-comidas-v1.webp`: cuatro celdas de 128 × 128 en el orden de `COMIDAS`. El recorte de la lámina buena debe dejar el mismo archivo con las mismas celdas.
+- **Montada** en [Montar el arte de las comidas](https://github.com/Mocheto/super-noa/issues/252). La original está en `../super-noa-arte-original/casa-comida-v1/casa-comidas.jpg`.
+- `prototypes/tools/casa-comida-recorte.py` la recorta en `sprites/casa-comidas-v1.webp`: cuatro celdas de 128 × 128 en el orden de `COMIDAS`, las cuatro a la misma escala (la más grande cabe en 120 px) y apoyadas en la misma fila.
 
 ## Qué hace falta
 

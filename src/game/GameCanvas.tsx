@@ -43,7 +43,7 @@ import {
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
 import { t, textoLienzo } from "../textos";
-import { Texto } from "../textos/Texto";
+import { BotonControl, Texto } from "../textos/Texto";
 import { conveyorSpeed, boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SKY_BOUNCE_SPEED, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
 
 const MOVE_SPEED = 250;
@@ -1353,7 +1353,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />
         {hud}
         {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label={t(`partida.lienzo.interaccion.${interaction}.oculto`)} onClick={() => { inputRef.current.enterQueued = true; }}>↑ <Texto clave={`partida.lienzo.interaccion.${interaction}.rotulo`} /></button>}
-        {level.puzzleRooms && <button className={`room-restart${roomHint ? " is-hinting" : ""}`} type="button" disabled={!running} onClick={(event) => { event.currentTarget.blur(); restartRoomRef.current?.(); }}><Texto clave="partida.lienzo.empezarSala.rotulo" /></button>}
+        {level.puzzleRooms && <BotonControl className={`hud-pausa room-restart${roomHint ? " is-hinting" : ""}`} pictograma="otra-vez" etiqueta="partida.lienzo.empezarSala.oculto" disabled={!running} onClick={(event) => { event.currentTarget.blur(); restartRoomRef.current?.(); }} />}
         {level.detour && onReturn && <button className="detour-return" type="button" disabled={!running} onClick={onReturn}><Texto clave="partida.lienzo.volverCamino.rotulo" /></button>}
       </div>
       {shopOpen && <SecretShop world={level.world} paused={!running} reduceMotion={reduceMotion} playSound={playSound} onResult={(matches) => {

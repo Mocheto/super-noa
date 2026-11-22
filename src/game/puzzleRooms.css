@@ -1,6 +1,10 @@
-/* Botón «Empezar la sala» de las salas-rompecabezas: arriba a la derecha, fácil de tocar. */
-.room-restart { position: absolute; top: 10px; right: 10px; z-index: 3; min-height: 44px; padding: 8px 14px; border: 3px solid #624659; border-radius: 12px; color: #3d294a; background: #fff2d2; font: inherit; font-weight: 800; cursor: pointer; }
+/* Botón «Empezar la sala» de las salas-rompecabezas (issue 318): redondo como la pausa del HUD y a su izquierda, en la
+   misma fila del HUD de esquinas, para que la pausa no lo tape. */
+.room-restart { position: absolute; z-index: 5; top: 10px; right: calc(10px + var(--control) + 8px); }
+@media (orientation: portrait), (orientation: landscape) and (max-height: 540px) {
+  .room-restart { top: 4px; right: calc(4px + var(--control) + 6px); }
+}
 .room-restart:focus-visible { outline: 4px solid #fff4a5; outline-offset: 2px; }
 .room-restart.is-hinting { animation: room-restart-beat 1.2s ease-in-out infinite; }
-@keyframes room-restart-beat { 50% { transform: scale(1.08); background: #ffe58f; } }
+@keyframes room-restart-beat { 50% { transform: scale(1.08); background: #ffd45f; } }
 @media (prefers-reduced-motion: reduce) { .room-restart.is-hinting { animation: none; outline: 4px solid #ffe58f; } }

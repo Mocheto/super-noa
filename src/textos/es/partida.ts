@@ -100,7 +100,7 @@ export const partida = {
       subir: { rotulo: "SUBE", oculto: "Activar el ascensor de nubes" },
       activar: { rotulo: "TOCA", oculto: "Activar mecanismo" },
     },
-    empezarSala: { rotulo: "{pictograma:otra-vez} OTRA VEZ" },
+    empezarSala: { oculto: "Empezar la sala otra vez" },
     volverCamino: { rotulo: "{pictograma:vuelve} VUELVE" },
   },
   /** Avisos que oye una persona con lector de pantalla. Frase normal, con tildes. */

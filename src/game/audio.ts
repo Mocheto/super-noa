@@ -1,3 +1,5 @@
+import type { MusicAudio } from "./music.ts";
+
 // Un solo AudioContext para el juego (decisión de «Un AudioContext para todo el juego o uno por pantalla»): cada zona
 // (efectos, música, casa, avioneta, minijuegos) cuelga de él su propio bus y lo desconecta al salir, en lugar de crear
 // y cerrar contextos. Así hay un único desbloqueo por gesto y un único sitio para suspender y reanudar.
@@ -67,4 +69,61 @@ export function vigilarAudio(): void {
     suspendidoAlOcultar = false;
     window.setTimeout(() => { if (document.visibilityState === "visible") void context.resume().catch(() => {}); }, 300);
   });
+}
+
+/** ¿Este navegador respeta `HTMLAudioElement.volume`? iOS lo ignora: siempre lee 1. */
+export function volumenDeElementoFunciona(): boolean {
+  if (typeof Audio === "undefined") return true;
+  try {
+    const prueba = new Audio();
+    prueba.volume = 0.5;
+    return Math.abs(prueba.volume - 0.5) < 0.01;
+  } catch {
+    return true;
+  }
+}
+
+let volumenNativo: boolean | null = null;
+const musicaEnrutada = new Map<string, MusicAudio & { reiniciar: () => void }>();
+
+/**
+ * Pista de música para `createMusicPlayer`. Donde `volume` funciona es un `<audio>` normal; en iOS, que lo ignora, el
+ * elemento pasa por el contexto compartido y el volumen lo pone una ganancia. Se reutiliza una por pista, porque un
+ * elemento solo se puede enrutar una vez.
+ */
+export function pistaDeMusica(source: string): MusicAudio {
+  volumenNativo ??= volumenDeElementoFunciona();
+  if (volumenNativo) return new Audio(source);
+  const guardada = musicaEnrutada.get(source);
+  if (guardada) {
+    // Como un `<audio>` nuevo: la pista vuelve a empezar.
+    guardada.pause();
+    guardada.reiniciar();
+    return guardada;
+  }
+  const audio = new Audio(source);
+  const context = contextoAudio();
+  if (!context) return audio;
+  let bus: GainNode;
+  try {
+    bus = busDeZona(context, 0);
+    context.createMediaElementSource(audio).connect(bus);
+  } catch {
+    return audio;
+  }
+  const pista: MusicAudio & { reiniciar: () => void } = {
+    get loop() { return audio.loop; },
+    set loop(valor: boolean) { audio.loop = valor; },
+    get volume() { return bus.gain.value; },
+    set volume(valor: number) { bus.gain.value = valor; },
+    get paused() { return audio.paused; },
+    play() {
+      if (context.state !== "running") void context.resume().catch(() => {});
+      return audio.play();
+    },
+    pause() { audio.pause(); },
+    reiniciar() { audio.currentTime = 0; },
+  };
+  musicaEnrutada.set(source, pista);
+  return pista;
 }

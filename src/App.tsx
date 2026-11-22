@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { CAT_PARTY_LEVEL_ID } from "./game/catPartyNivel";
-import { busDeZona, contextoAudio, vigilarAudio } from "./game/audio";
+import { busDeZona, contextoAudio, pistaDeMusica, vigilarAudio } from "./game/audio";
 import { Dialog } from "./game/Dialog";
 import { bossCatalog } from "./game/bosses";
 import { isGuardianGameId } from "./game/guardianGames";
@@ -337,7 +337,7 @@ export default function App() {
 
   useEffect(() => {
     const createPlayer = () => createMusicPlayer(
-      (source) => new Audio(source),
+      pistaDeMusica,
       (error) => {
         console.warn("No se pudo reproducir la música.", error);
         setAudioMessage(t("adultos.app.la-musica-no-ha"));

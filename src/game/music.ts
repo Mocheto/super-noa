@@ -20,7 +20,7 @@ export const musicTracks: Record<Level["world"], string> = {
   17: "./assets/music/reino-celeste.mp3",
 };
 
-type MusicAudio = Pick<HTMLAudioElement, "loop" | "volume" | "paused" | "play" | "pause">;
+export type MusicAudio = Pick<HTMLAudioElement, "loop" | "volume" | "paused" | "play" | "pause">;
 type MusicSettings = { source: string; volume: number; playing: boolean };
 
 export function createMusicPlayer(

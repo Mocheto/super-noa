@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { cajaRedondeada, drawCartel, medirCartel, medirTexto } from "./cartelLienzo";
 import { CARTEL_ARRIBA, colocarCarteles, pistaDeLaPartida, techoCarteles, type Caja } from "./carteles";
-import { acentoMundo, emblemaMundo } from "./worldMapData";
+import { acentoMundo } from "./worldMapData";
+import { Emblema } from "./Emblema";
 import { SecretShop } from "./SecretShop";
 import "./secretDoors.css";
 import { TouchControls } from "./TouchControls";
@@ -1349,7 +1350,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
   return (
     <>
     <div className="game-frame" hidden={Boolean(excursion)} style={marcoMundo(level.world)}>
-      <span className="marco-emblema" aria-hidden="true">{emblemaMundo(level.world)}</span>
+      <span className="marco-emblema" aria-hidden="true"><Emblema world={level.world} /></span>
       <div className="game-stage">
         <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={t("partida.lienzo.pantalla.oculto", { id: level.id, titulo: level.title })} />
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />

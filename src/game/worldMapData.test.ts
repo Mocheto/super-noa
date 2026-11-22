@@ -130,7 +130,7 @@ test("cada mundo declara los tres colores de acento de su marco y se distinguen 
 });
 
 test("el emblema del marco es el mismo distintivo que el marcador del mapa", () => {
-  assert.equal(emblemaMundo(7), "✦");
-  assert.equal(emblemaMundo(8), "≈");
+  assert.deepEqual(emblemaMundo(7), { pictograma: "nube" });
+  assert.deepEqual(emblemaMundo(8), { pictograma: "agua" });
   assert.equal(emblemaMundo(12), "12");
 });

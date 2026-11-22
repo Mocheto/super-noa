@@ -160,6 +160,11 @@
     0 0 0 4px var(--ciruela), 8px 8px 0 4px rgba(0, 0, 0, .45);
 }
 .game-frame > .game-stage { border: 0; box-shadow: 0 0 0 4px var(--ciruela), 0 0 0 8px var(--dorado), 0 0 0 12px var(--ciruela); }
+/* Escritorio y tableta apaisada (issue 320): el marco cabe en el alto de la ventana con el emblema, que sobresale 22 px
+   por abajo; 134 px = relleno de la pantalla (32), emblema (22), sombra (8) y el grosor del marco arriba y abajo (72). */
+@media (orientation: landscape) and (min-height: 541px) {
+  .play-screen .game-frame { width: min(1200px, calc(100vw - 32px), calc((100dvh - 134px) * 16 / 9 + 72px)); margin-bottom: 22px; }
+}
 .marco-emblema {
   position: absolute;
   z-index: 6;
@@ -176,6 +181,7 @@
   font-size: 20px;
   pointer-events: none;
 }
+.marco-emblema .pictograma { --icon-size: 32px; font-size: 28px; margin: 0; }
 @media (orientation: portrait), (orientation: landscape) and (max-height: 540px) {
   .game-frame { --grosor-marco: 8px; background: var(--acento, #68aa5c); box-shadow: inset 0 0 0 2px var(--ciruela), 0 0 0 2px var(--ciruela); }
   .game-frame > .game-stage { box-shadow: 0 0 0 2px var(--dorado); }

@@ -7,6 +7,7 @@ import { campaignLevels } from "./routes";
 import type { Progress } from "./progress";
 import { getWorldSecretShopBadge } from "./secretShopProgress";
 import { findMapJourney, MAP_HEIGHT, MAP_WIDTH, mapLandscape, mapRoutes, mapRouteState, shortcutRoutes, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
+import { Emblema } from "./Emblema";
 import { detourArtwork, detourCatalog, detourLevels } from "./detours";
 import { restStopCatalog, restStopUnlocked } from "./restStops";
 import { funciones } from "./funciones";
@@ -238,7 +239,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
               disabled={moving}
               key={world.id}
             >
-              <span className="map-node-badge" aria-hidden="true">{available ? world.id === 7 ? "✦" : world.id === 8 ? "≈" : world.id : <PixelIcon kind="lock" />}</span>
+              <span className="map-node-badge" aria-hidden="true">{available ? <Emblema world={world.id} /> : <PixelIcon kind="lock" />}</span>
               <span className="map-node-name">{world.shortName}</span>
               {available && <span className="map-node-count">{summary.complete}/{summary.total}</span>}
               {shop && <span className={`shop-visit-badge map-shop-badge is-${shop.state}`} style={{ backgroundImage: "url('./assets/sprites/secret-shop-door-v1.webp')" }} role="img" aria-label={shop.label} title={shop.label} />}

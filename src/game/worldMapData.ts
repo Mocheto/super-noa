@@ -4,6 +4,7 @@ import { campaignLevels } from "./routes.ts";
 import { detourCatalog } from "./detours.ts";
 import type { DetourId } from "./types.ts";
 import { conTextos } from "../textos/index.ts";
+import type { Pictograma } from "../textos/pictogramas.ts";
 
 export const MAP_WIDTH = 3000;
 export const MAP_HEIGHT = 2000;
@@ -46,7 +47,9 @@ const datosMundos: MundoDatos[] = [
 export const acentoMundo = (world: WorldId): AcentoMundo => (datosMundos.find((mundo) => mundo.id === world) ?? datosMundos[0]).acento;
 
 /** Emblema del marco: el mismo distintivo que el mapa pone en el marcador del mundo. */
-export const emblemaMundo = (world: WorldId) => world === 7 ? "✦" : world === 8 ? "≈" : String(world);
+/** Distintivo del mundo en el marco caramelo y en el marcador del mapa: su número, o un pictograma para el reino de las
+ * nubes (7) y la laguna (8), que no tienen número de campaña. */
+export const emblemaMundo = (world: WorldId): string | { pictograma: Pictograma } => world === 7 ? { pictograma: "nube" } : world === 8 ? { pictograma: "agua" } : String(world);
 
 export const worldCatalog: Mundo[] = datosMundos.map((mundo) => conTextos(mundo, {
   name: `mundos.${mundo.id}.nombre.rotulo`, shortName: `mundos.${mundo.id}.nombre.rotulo`,

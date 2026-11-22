@@ -525,6 +525,22 @@ _Avoid_: Ranking (en textos visibles), marcador
 Inscripción de un dispositivo en el tablón: un alias y su progreso. Se puede borrar desde el juego o desde una página web.
 _Avoid_: Cuenta, perfil, usuario
 
+**Alias**:
+Nombre de fantasía, escrito libremente, con el que una tarjeta aparece en el tablón. Solo lo ven los demás cuando está aprobado.
+_Avoid_: Nombre de usuario, nick, apodo
+
+**Alias pendiente**:
+Alias que todavía no ha revisado quien administra el tablón. Lo ve su propio dispositivo; los demás ven el nombre provisional.
+_Avoid_: Alias sin moderar, alias en cola
+
+**Nombre provisional**:
+Animal del juego con un número («Pingüino 12») con el que los demás ven una tarjeta cuyo alias está pendiente, rechazado u oculto. No cambia para ese dispositivo.
+_Avoid_: Alias genérico, anónimo, invitado
+
+**Revisión de alias**:
+Aprobación, rechazo u ocultación de alias por quien administra el tablón, después del filtro automático de palabras.
+_Avoid_: Moderación (demasiado amplio), censura
+
 **Puerta para adultos**:
 Pregunta sencilla para una persona adulta y difícil para una niña de cinco años que protege acciones con datos: apuntarse al tablón o borrar la tarjeta.
 _Avoid_: Control parental, contraseña

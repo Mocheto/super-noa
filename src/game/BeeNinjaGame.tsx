@@ -1,22 +1,21 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { crearEquipo, despertar, liberarEquipo, ponerVolumenes, tocarNota, tocarYa, tramoNuevo, type EquipoAudio } from "./ritmoAudio";
+import { useState, type CSSProperties } from "react";
+import type { Tempo } from "./ritmoNucleo";
+import { useMinijuegoRitmico, type SesionRitmo } from "./useMinijuegoRitmico";
 import { bossCatalog } from "./bosses";
 import { cssAssetUrl } from "./assets";
 import { Dialog } from "./Dialog";
 import type { SoundKind } from "./GameCanvas";
-import { firstConnectedGamepad } from "./gamepad";
 import {
-  COUNT_PULSES, CUT_POINT, HERO, PERFIL_ABEJA, PLOF_SOUND, PULSE_MS, UY_SOUND, cutSound, RESUME_COUNT_PULSES, WIN_AT, advanceFrameClock, audioPulse, autoCuts, barOfPulse, beeScores,
-  collectFalls, COUNT_TICK, createRun, flowersIn, jarLevel, leadNote, musicForEighth, nextOpenCut, outcomeOf, outputLatencySeconds,
-  practiceFirst, pressAt, risingEdge, scoreLength, songStartAfterPause, targetPlacement, targetVisible, throwPulses,
-  type BeeMode, type BeeNote, type BeeRun, type Outcome, type PressResult,
+  COUNT_PULSES, CUT_POINT, HERO, PERFIL_ABEJA, PLOF_SOUND, PULSE_MS, UY_SOUND, cutSound, RESUME_COUNT_PULSES, WIN_AT, autoCuts, barOfPulse, beeScores,
+  collectFalls, COUNT_TICK, createRun, flowersIn, jarLevel, leadNote, musicForEighth, nextOpenCut, outcomeOf, practiceFirst, pressAt, scoreLength, targetPlacement, targetVisible, throwPulses,
+  type BeeMode, type BeeNote, type BeeRun, type Outcome, type PressResult, type SampleId,
 } from "./beeNinja";
-import { loadBeeSamples, type SampleBank } from "./beeNinjaSamples";
+import { loadBeeSamples } from "./beeNinjaSamples";
 import "./beeNinja.css";
 import { t } from "../textos/index.ts";
 import { Boton, BotonControl, Pictograma, Texto } from "../textos/Texto";
 import { informeRitmo, PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
-import { createPracticaConPausas, type ParadaPractica } from "./practicaPausas";
+import type { ParadaPractica } from "./practicaPausas";
 import { Ventana } from "./Ventana";
 
 type Props = {
@@ -33,17 +32,7 @@ type Props = {
 };
 
 type Half = { id: number; color: number; start: number };
-type Session = {
-  run: BeeRun;
-  clock: "audio" | "frame";
-  songStart: number;
-  frameMs: number;
-  countMs: number;
-  countUntil: number | null;
-  pausedAt: number | null;
-  frozenPulse: number;
-  lastPulse: number;
-  nextEighth: number;
+type Session = SesionRitmo<BeeRun> & {
   cutUntil: number;
   greet: { x: number; y: number; until: number } | null;
   feedback: { text: string; miss: boolean; until: number } | null;
@@ -56,7 +45,6 @@ type Session = {
   demoVacia: boolean;
   halves: Half[];
   halfId: number;
-  ended: boolean;
 };
 type TargetView = { id: number; kind: "flower" | "ladybug"; color: number; x: number; y: number; rotation: number; opacity: number };
 type View = {
@@ -77,8 +65,8 @@ type View = {
   counting: number;
 };
 
-const START_DELAY_S = 0.15;
 const STAGE_WIDTH = 960;
+const TEMPO: Tempo = { pulsoMs: PULSE_MS, pulsosCuenta: RESUME_COUNT_PULSES };
 const emptyView: View = { pulse: -1, targets: [], halves: [], jar: 0, gota: false, ring: null, lamp: -1, heroPose: "espera", melisaPose: 0, melisaThrowing: false, melisaBubble: null, greet: null, feedback: null, phase: null, counting: 0 };
 
 /** La demostración enseña una pulsación vacía en este pulso, sin flor delante, y se para medio pulso después. */
@@ -142,85 +130,47 @@ function snapshot(session: Session, pulse: number, counting: number, reduceMotio
 }
 
 export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduceMotion, levelCompleted, onAbandon, onWin, playSound, friendlyReplay = false }: Props) {
-  const sessionRef = useRef<Session | null>(null);
   const [informe, setInforme] = useState<string>();
-  const audioRef = useRef<EquipoAudio | null>(null);
-  const samplesRef = useRef<SampleBank | null>(null);
-  const frameRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(1);
-  const [mode, setMode] = useState<BeeMode | null>(null);
   const [finished, setFinished] = useState<{ mode: BeeMode; outcome: Outcome } | null>(null);
   const [attempted, setAttempted] = useState(false);
-  const [clockKind, setClockKind] = useState<"audio" | "frame" | null>(null);
-  const [view, setView] = useState<View>(emptyView);
-  const [showLeave, setShowLeave] = useState(false);
-  const [parada, setParada] = useState<ParadaPractica | null>(null);
-  const practicaRef = useRef<ReturnType<typeof createPracticaConPausas> | null>(null);
-  const interactionPaused = paused || showLeave || parada !== null;
-  const wasPausedRef = useRef(false);
   const boss = bossCatalog["queen-bee"];
 
-  useLayoutEffect(() => {
-    const element = frameRef.current;
-    if (!element) return;
-    const update = () => setScale(element.clientWidth / STAGE_WIDTH);
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
+  const { frameRef, scale, mode, clockKind, view, parada, seguirParada, showLeave, setShowLeave, interactionPaused, begin, strike, finish, playCue, sessionRef } = useMinijuegoRitmico<BeeMode, BeeRun, Session, BeeNote, View, SampleId>({
+    tempo: TEMPO, perfil: PERFIL_ABEJA, muestras: loadBeeSamples, paused, muted, musicVolume, effectsVolume, anchoEscena: STAGE_WIDTH, paradas: PARADAS,
+    crearSesion: (nextMode, base) => ({
+      ...base, run: createRun(nextMode), cutUntil: -Infinity, greet: null, feedback: null, applaudFrom: null, celebrateUntil: -Infinity, lastJar: 0, gotaUntil: -Infinity,
+      demoVacia: false, halves: [], halfId: 0,
+    }),
+    largo: (run) => scoreLength(run.score),
+    musicaDeCorchea: musicForEighth,
+    cuenta: COUNT_TICK,
+    sePuedePulsar: (session, pulse) => session.run.mode !== "demo" && pulse >= 0,
+    alPulsar: (session, pulse) => react(session, pressAt(session.run, pulse), pulse),
+    alFotograma: (session, pulse) => {
+      if (session.run.mode === "demo") {
+        for (const result of autoCuts(session.run, pulse)) react(session, result, pulse);
+        if (!session.demoVacia && pulse >= DEMO_VACIA_PULSO) { session.demoVacia = true; react(session, { kind: "empty", resta: false }, pulse); }
+      } else if (collectFalls(session.run, pulse).length) {
+        playCue(PLOF_SOUND);
+        session.feedback = { text: t("minijuegos.abeja.compas.plof.rotulo"), miss: true, until: pulse + 0.6 };
+      }
+    },
+    vista: (session, pulse, counting) => snapshot(session, pulse, counting, reduceMotion),
+    vistaVacia: emptyView,
+    alEmpezar: (nextMode) => {
+      if (nextMode === "song") setAttempted(true);
+      setFinished(null);
+    },
+    alTerminar: (session) => {
+      const outcome = outcomeOf(session.run);
+      setFinished({ mode: session.run.mode, outcome });
+      setInforme(session.run.mode === "song" ? informeRitmo({ aciertos: session.run.cut, total: flowersIn(session.run.score), vacias: session.run.cuenta.vacias, raya: session.run.cuenta.raya, meta: WIN_AT }) : undefined);
+      if (session.run.mode === "song") playSound(outcome.won ? "checkpoint" : "hurt");
+    },
+    claseBotonGolpe: "bee-ninja-cut",
+  });
 
-  // Los sonidos definitivos se cargan al entrar; hasta que estén (o si fallan) suenan los osciladores de respaldo.
-  useEffect(() => {
-    let alive = true;
-    void loadBeeSamples().then((bank) => { if (alive) samplesRef.current = bank; });
-    return () => { alive = false; };
-  }, []);
-
-  useEffect(() => () => {
-    sessionRef.current = null;
-    liberarEquipo(audioRef.current);
-    audioRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    ponerVolumenes(audio, muted ? 0 : musicVolume / 100, muted ? 0 : effectsVolume / 100);
-  }, [effectsVolume, musicVolume, muted, mode]);
-
-  /** Cada tramo de canción va por su propio bus: al pausar o terminar, las notas ya programadas se cortan. */
-  const freshSegment = useCallback(() => {
-    if (audioRef.current) tramoNuevo(audioRef.current);
-  }, []);
-
-  const ensureAudio = useCallback(async () => {
-    if (muted) return false;
-    try {
-      audioRef.current ??= crearEquipo(PERFIL_ABEJA, musicVolume / 100, effectsVolume / 100);
-      return audioRef.current ? await despertar(audioRef.current) : false;
-    } catch {
-      return false;
-    }
-  }, [effectsVolume, musicVolume, muted]);
-
-  const playNote = useCallback((note: BeeNote, when: number) => {
-    if (audioRef.current) tocarNota(audioRef.current, note, when, samplesRef.current);
-  }, []);
-
-  const playCue = useCallback((notes: BeeNote[]) => tocarYa(audioRef.current, notes, samplesRef.current), []);
-
-  const pulseNow = useCallback((session: Session) => {
-    if (session.countUntil !== null || session.countMs > 0 || session.pausedAt !== null) return session.frozenPulse;
-    const audio = audioRef.current;
-    if (session.clock === "audio" && audio && audio.context.state === "running") {
-      return audioPulse(audio.context.currentTime, session.songStart, outputLatencySeconds(audio.context));
-    }
-    if (session.clock === "audio") return session.lastPulse;
-    return session.frameMs / PULSE_MS;
-  }, []);
-
-  const react = useCallback((session: Session, result: PressResult, pulse: number) => {
+  function react(session: Session, result: PressResult, pulse: number) {
     session.cutUntil = pulse + 0.3;
     if (result.kind === "cut") {
       playCue(cutSound(leadNote(session.run)));
@@ -244,158 +194,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
       session.gotaUntil = pulse + 0.6;
       session.lastJar = Math.min(session.lastJar, jarLevel(session.run.cuenta.raya));
     } else session.cutUntil = -Infinity;
-  }, [playCue, reduceMotion]);
-
-  const finish = useCallback((session: Session) => {
-    session.ended = true;
-    if (audioRef.current) freshSegment();
-    const outcome = outcomeOf(session.run);
-    setMode(null);
-    setFinished({ mode: session.run.mode, outcome });
-    setInforme(session.run.mode === "song" ? informeRitmo({ aciertos: session.run.cut, total: flowersIn(session.run.score), vacias: session.run.cuenta.vacias, raya: session.run.cuenta.raya, meta: WIN_AT }) : undefined);
-    setParada(null);
-    if (session.run.mode === "song") playSound(outcome.won ? "checkpoint" : "hurt");
-  }, [freshSegment, playSound]);
-
-  const strike = useCallback(() => {
-    const session = sessionRef.current;
-    if (!session || session.ended || interactionPaused || session.run.mode === "demo" || session.countUntil !== null || session.countMs > 0) return;
-    const pulse = pulseNow(session);
-    if (pulse < 0) return;
-    react(session, pressAt(session.run, pulse), pulse);
-  }, [interactionPaused, pulseNow, react]);
-
-  const begin = async (nextMode: BeeMode) => {
-    const session: Session = {
-      run: createRun(nextMode), clock: "frame", songStart: 0, frameMs: -START_DELAY_S * 1000, countMs: 0, countUntil: null, pausedAt: null, frozenPulse: 0,
-      lastPulse: -1, nextEighth: 0, cutUntil: -Infinity, greet: null, feedback: null, applaudFrom: null, celebrateUntil: -Infinity, lastJar: 0, gotaUntil: -Infinity, demoVacia: false, halves: [], halfId: 0, ended: false,
-    };
-    sessionRef.current = session;
-    practicaRef.current = createPracticaConPausas(PARADAS[nextMode]);
-    setParada(null);
-    if (nextMode === "song") setAttempted(true);
-    setFinished(null);
-    setView(emptyView);
-    const audioReady = await ensureAudio();
-    if (sessionRef.current !== session) return;
-    if (audioReady && audioRef.current) {
-      freshSegment();
-      session.clock = "audio";
-      session.songStart = audioRef.current.context.currentTime + START_DELAY_S;
-    }
-    setClockKind(session.clock);
-    setMode(nextMode);
-  };
-
-  // Pausa (de App o al preguntar si volvemos al mapa): todo se congela; al seguir, Melisa cuenta cuatro pulsos.
-  useEffect(() => {
-    const session = sessionRef.current;
-    const audio = audioRef.current;
-    if (!mode || !session || session.ended) { wasPausedRef.current = interactionPaused; return; }
-    if (interactionPaused && !wasPausedRef.current) {
-      session.frozenPulse = pulseNow(session);
-      if (session.clock === "audio" && audio) {
-        session.pausedAt = audio.context.currentTime;
-        freshSegment();
-        void audio.context.suspend().catch(() => {});
-      } else session.pausedAt = 0;
-    } else if (!interactionPaused && wasPausedRef.current && session.pausedAt !== null) {
-      const pausedAt = session.pausedAt;
-      if (session.clock === "audio" && audio) {
-        void audio.context.resume().then(() => {
-          if (sessionRef.current !== session) return;
-          const countStart = audio.context.currentTime + 0.05;
-          for (let index = 0; index < RESUME_COUNT_PULSES; index++) for (const note of COUNT_TICK(index === 0)) playNote(note, countStart + index * PULSE_MS / 1000);
-          session.songStart = songStartAfterPause(session.songStart, pausedAt, countStart);
-          session.countUntil = countStart + RESUME_COUNT_PULSES * PULSE_MS / 1000;
-          session.nextEighth = Math.max(0, Math.ceil(session.frozenPulse * 2));
-          session.pausedAt = null;
-        }).catch(() => { session.pausedAt = null; });
-      } else {
-        session.countMs = RESUME_COUNT_PULSES * PULSE_MS;
-        session.pausedAt = null;
-      }
-    }
-    wasPausedRef.current = interactionPaused;
-  }, [freshSegment, interactionPaused, mode, playNote, pulseNow]);
-
-  useEffect(() => {
-    if (!mode || interactionPaused) return;
-    let frame = 0;
-    let last: number | null = null;
-    let padDown = Boolean(firstConnectedGamepad()?.buttons[0]?.pressed);
-    const update = (now: number) => {
-      const session = sessionRef.current;
-      if (!session || session.ended) return;
-      const delta = last === null ? 0 : now - last;
-      last = now;
-      if (session.clock === "frame" && session.pausedAt === null) {
-        const next = advanceFrameClock({ frameMs: session.frameMs, countMs: session.countMs }, delta);
-        session.frameMs = next.frameMs;
-        session.countMs = next.countMs;
-      }
-      const audio = audioRef.current;
-      let counting = 0;
-      if (session.countUntil !== null && audio) {
-        const left = session.countUntil - audio.context.currentTime;
-        if (left <= 0) session.countUntil = null;
-        else counting = RESUME_COUNT_PULSES - Math.floor(left * 1000 / PULSE_MS);
-      } else if (session.countMs > 0) counting = RESUME_COUNT_PULSES - Math.floor(session.countMs / PULSE_MS);
-      if (session.clock === "audio" && audio && audio.context.state === "running" && session.pausedAt === null) {
-        const horizon = audio.context.currentTime + 0.25;
-        const total = scoreLength(session.run.score) * 2;
-        while (session.nextEighth < total) {
-          const when = session.songStart + session.nextEighth * PULSE_MS / 2000;
-          if (when > horizon) break;
-          const eighth = session.nextEighth++;
-          if (when < audio.context.currentTime - 0.02) continue;
-          for (const note of musicForEighth(session.run, eighth)) playNote(note, when);
-        }
-      }
-      const pulse = pulseNow(session);
-      session.lastPulse = pulse;
-      // Práctica: al llegar una pieza nueva se detiene y la explica; sigue al tocar SIGUE (con la cuenta de Melisa).
-      const nueva = !counting && session.run.mode !== "song" ? practicaRef.current?.llegar(pulse) : undefined;
-      if (nueva) {
-        setView(snapshot(session, pulse, 0, reduceMotion));
-        setParada(nueva);
-        return;
-      }
-      if (!counting) {
-        if (session.run.mode === "demo") {
-          for (const result of autoCuts(session.run, pulse)) react(session, result, pulse);
-          if (!session.demoVacia && pulse >= DEMO_VACIA_PULSO) { session.demoVacia = true; react(session, { kind: "empty", resta: false }, pulse); }
-        }
-        else if (collectFalls(session.run, pulse).length) {
-          playCue(PLOF_SOUND);
-          session.feedback = { text: t("minijuegos.abeja.compas.plof.rotulo"), miss: true, until: pulse + 0.6 };
-        }
-      }
-      const down = Boolean(firstConnectedGamepad()?.buttons[0]?.pressed);
-      if (risingEdge(padDown, down)) strike();
-      padDown = down;
-      if (!counting && pulse >= scoreLength(session.run.score)) {
-        setView(snapshot(session, pulse, 0, reduceMotion));
-        finish(session);
-        return;
-      }
-      setView(snapshot(session, pulse, counting, reduceMotion));
-      frame = requestAnimationFrame(update);
-    };
-    frame = requestAnimationFrame(update);
-    const onKey = (event: KeyboardEvent) => {
-      if (event.code !== "Space" || mode === "demo") return;
-      const button = event.target instanceof Element ? event.target.closest("button") : null;
-      if (button && !button.classList.contains("bee-ninja-cut")) return;
-      event.preventDefault();
-      if (!event.repeat) strike();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [finish, interactionPaused, mode, playCue, playNote, pulseNow, react, reduceMotion, strike]);
+  }
 
   const confirmWin = (challengeCompleted: boolean) => {
     playSound("goal");
@@ -459,7 +258,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
     onPracticar={() => void begin(finished?.mode === "demo" ? "practice" : "demo")} onJugar={() => void begin("song")} onSalir={leave} />}
 
   {parada && !paused && <Ventana id="bee-ninja-parada" titulo={CLAVE_PARADA[parada.pieza as keyof typeof CLAVE_PARADA].rotulo}
-    botones={<Boton tipo="seguir" clave="minijuegos.abeja.practica.sigue.rotulo" data-gamepad-default onClick={() => { practicaRef.current?.seguir(); setParada(null); }} />}>
+    botones={<Boton tipo="seguir" clave="minijuegos.abeja.practica.sigue.rotulo" data-gamepad-default onClick={seguirParada} />}>
     <p className="juntos">{t(CLAVE_PARADA[parada.pieza as keyof typeof CLAVE_PARADA].juntos)}</p>
   </Ventana>}
 

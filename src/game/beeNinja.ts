@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import { avanzarRelojFotogramas, flanco, inicioTrasPausa, practicaPrimero, pulsoDeAudio, type Tempo } from "./ritmoNucleo.ts";
 import type { PerfilSintesis } from "./ritmoAudio.ts";
 import { ajustesRitmo, anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
@@ -215,34 +216,11 @@ export function outcomeOf(run: BeeRun): Outcome {
 /** Nivel del tarro de miel (0–4). El nivel 2 es la raya dorada. */
 export const jarLevel = (cut: number) => cut >= 41 ? 4 : cut >= 31 ? 3 : cut >= WIN_AT ? 2 : cut >= 8 ? 1 : 0;
 
-/** «Practicar» se destaca la primera vez: Melisa aún no vencida, sin revancha y sin intentos en esta visita. */
-export const practiceFirst = (levelCompleted: boolean, friendlyReplay: boolean, attempted: boolean) => !levelCompleted && !friendlyReplay && !attempted;
-
-/** Una pulsación cuenta solo al bajar: mantener la tecla o el botón cuenta una vez. */
-export const risingEdge = (previous: boolean, current: boolean) => current && !previous;
-
-// ---------------------------------------------------------------- relojes
-
-/** Pulso actual a partir del reloj de audio, descontando la latencia de salida. */
-export const audioPulse = (currentTime: number, songStart: number, latencySeconds: number) =>
-  (currentTime - songStart - latencySeconds) * 1000 / PULSE_MS;
-
-/**
- * Al seguir tras una pausa, Melisa cuenta cuatro pulsos con la escena quieta. Devuelve el nuevo inicio de la
- * canción para que, al acabar la cuenta, el reloj de audio marque el mismo pulso en que se pausó.
- */
-export const songStartAfterPause = (songStart: number, pausedAt: number, countStart: number) =>
-  songStart + (countStart - pausedAt) + RESUME_COUNT_PULSES * PULSE_MS / 1000;
-
-/** Reloj de fotogramas (sin audio): no avanza mientras dura la cuenta de reanudación. */
-export function advanceFrameClock(clock: { frameMs: number; countMs: number }, deltaMs: number) {
-  const step = Math.min(100, Math.max(0, deltaMs));
-  if (clock.countMs > 0) {
-    const used = Math.min(clock.countMs, step);
-    return { frameMs: clock.frameMs + (step - used), countMs: clock.countMs - used };
-  }
-  return { frameMs: clock.frameMs + step, countMs: 0 };
-}
+// Relojes y cuenta al seguir: los comunes de los duelos rítmicos, ligados al tempo de este juego.
+const TEMPO: Tempo = { pulsoMs: PULSE_MS, pulsosCuenta: RESUME_COUNT_PULSES };
+export { practicaPrimero as practiceFirst, flanco as risingEdge, avanzarRelojFotogramas as advanceFrameClock };
+export const audioPulse = (currentTime: number, songStart: number, latencySeconds: number) => pulsoDeAudio(TEMPO, currentTime, songStart, latencySeconds);
+export const songStartAfterPause = (songStart: number, pausedAt: number, countStart: number) => inicioTrasPausa(TEMPO, songStart, pausedAt, countStart);
 
 // ---------------------------------------------------------------- escena (coordenadas de 960 × 540)
 

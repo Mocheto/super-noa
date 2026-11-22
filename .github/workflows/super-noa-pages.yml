@@ -32,6 +32,10 @@ jobs:
         run: npm ci
       - name: Comprobar código
         run: npm run lint
+      - name: Instalar libwebp para las pruebas
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq webp
+      - name: Comprobar reglas, niveles, recursos y textos
+        run: npm run test:logic
       - name: Comprobar tipos y generar sitio estático
         run: npm run build:pages
       - name: Preparar GitHub Pages

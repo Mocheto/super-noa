@@ -3,12 +3,12 @@ import { PixelIcon } from "./PixelIcon";
 import { getLevelObjectives } from "./levelObjectives";
 import type { Progress } from "./progress";
 import { getSecretShopBadge } from "./secretShopProgress";
-import type { Level } from "./types";
+import type { NivelResumen } from "./nivelesIndice";
 import { puntos, sinPictogramas, t, tClave } from "../textos";
 import { Pictograma, Pictogramas, Texto } from "../textos/Texto";
 
 type LevelSelectCardProps = {
-  level: Level;
+  level: NivelResumen;
   index: number;
   unlocked: boolean;
   suggested: boolean;

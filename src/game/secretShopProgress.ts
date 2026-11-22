@@ -1,4 +1,4 @@
-import { levels } from "./levels.ts";
+import { nivelesCampana as levels } from "./nivelesIndice.ts";
 import type { Progress } from "./progress.ts";
 import type { Level } from "./types.ts";
 import { worldAvailable } from "./worldMapData.ts";
@@ -31,7 +31,7 @@ export function completeSecretShop(progress: Progress, id: string): Progress {
   return { ...progress, secretShops: { ...progress.secretShops, [id]: { visited: true, completed: true } } };
 }
 
-export function getSecretShopBadge(level: Level, progress: Progress): SecretShopBadge | null {
+export function getSecretShopBadge(level: Pick<Level, "id" | "world"> & { secretShop?: { id: string } }, progress: Progress): SecretShopBadge | null {
   if (!level.secretShop || !worldAvailable(level.world, progress)) return null;
   const visit = progress.secretShops?.[level.secretShop.id];
   const state = visit?.completed ? "completed" : visit?.visited ? "visited" : "available";

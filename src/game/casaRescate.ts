@@ -4,7 +4,7 @@
  * la casa»), cinco como mucho en casa a la vez; el botón CASA aparece al rescatar al del mundo 1.
  */
 import { asegurarGatitos, avanzar, casaVacia, llegadasPendientes, type CasaProgress } from "./casa.ts";
-import { levels } from "./levels.ts";
+import { nivelesCampana as levels } from "./nivelesIndice.ts";
 
 /** Mundos cuyos gatitos se mudan a la casa: todos los que tienen gatito (y paleta del gato base). */
 export const MUNDOS_CASA: readonly number[] = Array.from({ length: 17 }, (_, i) => i + 1);

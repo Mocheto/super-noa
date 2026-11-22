@@ -1,4 +1,4 @@
-import { levels } from "./levels.ts";
+import { nivelesCampana as levels } from "./nivelesIndice.ts";
 import { campaignLevels, campaignUnlockIndex } from "./routes.ts";
 import { readStorage, writeStorage } from "./storage.ts";
 import { normalizeSecretShops, type SecretShopVisits } from "./secretShopProgress.ts";

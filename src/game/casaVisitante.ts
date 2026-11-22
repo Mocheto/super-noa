@@ -5,7 +5,7 @@
  */
 import { fechaLocal, type CasaProgress } from "./casa.ts";
 import { friendCatalog, type FriendFood } from "./friends.ts";
-import { levels, waterLevels } from "./levels.ts";
+import { nivelesCampana as levels, nivelesAgua as waterLevels } from "./nivelesIndice.ts";
 
 /** Las tres comidas de los amigos, en el orden de su lámina (docs/art/casa-visitante-v1.md). */
 export const COMIDAS_AMIGOS: readonly FriendFood[] = ["apple", "acorn", "flower"];

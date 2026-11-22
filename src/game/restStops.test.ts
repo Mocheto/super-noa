@@ -4,7 +4,8 @@ import { levels } from "./levels.ts";
 import { reachable } from "./levelBeats.ts";
 import { emptyProgress, parseProgress, serializeProgress } from "./progress.ts";
 import { greetFriend, normalizeRestStops, visitRestStop } from "./restStopProgress.ts";
-import { REST_STOP_WIDTH, guardianOf, restStopCatalog, restStopLevels, restStopUnlocked } from "./restStops.ts";
+import { REST_STOP_WIDTH, guardianOf, restStopCatalog, restStopUnlocked } from "./restStops.ts";
+import { restStopLevels } from "./restStopNiveles.ts";
 
 test("hay un paseo por cada mundo de campaña del 1 al 16", () => {
   assert.deepEqual(restStopCatalog.map((stop) => stop.world), [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16]);

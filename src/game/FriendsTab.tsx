@@ -3,7 +3,7 @@ import { getImage, getLevelAssets } from "./assets";
 import { FriendSprite, sample } from "./DibujoAmigo";
 import { heartsOf, isBestFriend, isFriend } from "./friendProgress";
 import { foodNames, friendCatalog, MAX_HEARTS, type FriendEntry, type FriendFood } from "./friends";
-import { levels } from "./levels";
+import { nivelesCampana as levels } from "./nivelesIndice";
 import type { Progress } from "./progress";
 import { GameAssetIcon } from "./GameAssetIcon";
 import "./friends.css";

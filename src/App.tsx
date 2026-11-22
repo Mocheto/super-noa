@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { CAT_PARTY_LEVEL_ID } from "./game/catPartyNivel";
 import { Dialog } from "./game/Dialog";
 import { bossCatalog } from "./game/bosses";
@@ -6,7 +6,7 @@ import { isGuardianGameId } from "./game/guardianGames";
 import { GameAssetIcon } from "./game/GameAssetIcon";
 import { PixelIcon } from "./game/PixelIcon";
 import type { SoundKind } from "./game/GameCanvas";
-import { levels } from "./game/levels";
+import { nivelesCampana as levels, type NivelResumen } from "./game/nivelesIndice";
 import { campaignLevels, campaignUnlockIndex, levelIndex, nextLevelIndex } from "./game/routes";
 import { testScreens } from "./game/testScreens";
 
@@ -26,10 +26,10 @@ import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
 import { worldArtwork, worldCatalog, type WorldId } from "./game/worldMapData";
 import { checkRankingAvailability, loadRanking, rankingConnectionMessage, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
 import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnrolled, safeEnrollmentMoment } from "./game/rankingOnboarding";
-import type { GameSnapshot } from "./game/types";
+import type { GameSnapshot, Level } from "./game/types";
 import type { DetourId } from "./game/types";
 import { detourLevel, detourLevels } from "./game/detours";
-import { restStopFor, restStopIndex, restStopLevels, restStopUnlocked } from "./game/restStops";
+import { restStopFor, restStopIndex, restStopResumenes as restStopLevels, restStopUnlocked } from "./game/restStops";
 import { greetFriend, visitRestStop } from "./game/restStopProgress";
 import { addHeart } from "./game/friendProgress";
 import { funciones } from "./game/funciones";
@@ -48,7 +48,12 @@ const cargarFotosCasa = () => import("./game/FotosCasa");
 const FriendsTab = lazy(() => cargarFriendsTab().then((module) => ({ default: module.FriendsTab })));
 const FotosCasa = lazy(() => cargarFotosCasa().then((module) => ({ default: module.FotosCasa })));
 const WorldMap = lazy(() => import("./game/WorldMap").then((module) => ({ default: module.WorldMap })));
-const GameCanvas = lazy(() => import("./game/GameCanvas").then((module) => ({ default: module.GameCanvas })));
+// La partida recibe el resumen de la pantalla y busca su geometría completa en un bloque que se carga con ella.
+const GameCanvas = lazy(() => Promise.all([import("./game/GameCanvas"), import("./game/nivelCompleto")]).then(([juego, niveles]) => ({
+  default: function GameCanvasConNivel({ level, ...props }: Omit<ComponentProps<typeof juego.GameCanvas>, "level"> & { level: NivelResumen | Level }) {
+    return <juego.GameCanvas {...props} level={niveles.nivelCompleto(level)} />;
+  },
+})));
 const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
 const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((module) => ({ default: module.GuardianMiniGame })));
 const ArmoniaDrumGame = lazy(() => import("./game/ArmoniaDrumGame").then((module) => ({ default: module.ArmoniaDrumGame })));

@@ -1,5 +1,5 @@
 import { friendCatalog, MAX_HEARTS, type FriendEntry } from "./friends.ts";
-import { levels, waterLevels } from "./levels.ts";
+import { nivelesCampana as levels, nivelesAgua as waterLevels } from "./nivelesIndice.ts";
 import { restStopFor } from "./restStops.ts";
 import type { RestStopProgress } from "./restStopProgress.ts";
 

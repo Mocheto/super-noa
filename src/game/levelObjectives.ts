@@ -3,7 +3,7 @@ import type { Progress } from "./progress.ts";
 import { campaignLevels } from "./routes.ts";
 import { stickerCatalog } from "./stickers.ts";
 import { t } from "../textos/index.ts";
-import type { Level } from "./types.ts";
+import type { NivelResumen } from "./nivelesIndice.ts";
 
 export type LevelObjective = {
   id: string;
@@ -21,7 +21,7 @@ export type LevelObjectives = {
   totalCount: number;
 };
 
-export function getLevelObjectives(level: Level, progress: Progress): LevelObjectives {
+export function getLevelObjectives(level: NivelResumen, progress: Progress): LevelObjectives {
   const campaignIndex = campaignLevels.findIndex((candidate) => candidate.id === level.id);
   const available = level.world === 7 ? progress.secretUnlocked
     : level.world === 8 ? progress.waterUnlocked && (!level.route?.required || progress.levelStats[level.route.required]?.completed === true)

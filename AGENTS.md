@@ -16,7 +16,7 @@ Super Noa es un juego React/Vite de plataformas dibujado sobre Canvas 2D.
 - `src/game/GameCanvas.tsx`: coordinación de la partida, física y estado de cada pantalla.
 - `src/game/gameState.ts`, `src/game/gameplay.ts` y `src/game/constants.ts`: tipos de estado (`Rect`, `Theme`, `Level`), reglas de movimiento y dimensiones del Canvas.
 - `src/game/input.ts`: teclado y controles táctiles; `src/game/gameLoop.ts`: física en pasos fijos y pausa del renderizado.
-- `src/game/levels.ts`: definición declarativa de los trece mundos de campaña, tres acuáticas y una pantalla secreta de las nubes, rutas especiales, cajas, cañones y encuentros; `src/game/routes.ts`: resolución del avance y desbloqueo a partir de esos datos.
+- `src/game/levels.ts`: definición declarativa de los trece mundos de campaña, tres acuáticas y una pantalla secreta de las nubes, rutas especiales, cajas, cañones y encuentros; `src/game/routes.ts`: resolución del avance y desbloqueo a partir de esos datos. La interfaz (mapa, progreso, casa, amigos) usa el resumen de cada pantalla de `src/game/nivelesIndice.ts`, sin geometría; sus datos (`nivelesIndiceDatos.ts`) se generan con `npm run niveles:indice` tras cambiar `levels.ts` y su prueba falla si se desfasan. La geometría completa llega con la partida a través de `nivelCompleto.ts` (y los paseos jugables, de `restStopNiveles.ts`).
 - `src/game/WorldMap.tsx` y `src/game/worldMapData.ts`: mapa ilustrado, mecánicas, marcadores, caminos según el progreso, cuadros de resumen y coordenadas del mapa; cada mundo declara además los tres colores de acento de su marco (`acento`: base, oscuro y claro) y el marco caramelo de la partida los lee con `acentoMundo()` y `emblemaMundo()`.
 - `src/game/rendering.ts`: dibujo de escenarios, objetos, terreno, enemigos, jefe y efectos sobre Canvas 2D.
 - `src/game/assets.ts`: carga diferida por mundo y reutilización de imágenes, atlas, sprites y música.
@@ -97,7 +97,7 @@ Antes de publicar comprueba las cuarenta y cinco pantallas de campaña, las tres
 
 ## Cómo añadir un mundo
 
-1. Añade el identificador del mundo y sus variantes a `types.ts` (`Theme`, `Level.world`, enemigos, terreno y jefe si procede). Mantén los niveles, peligros, rutas y recompensas como datos declarativos en `levels.ts`. Registra el arte y la música en `assets.ts` y `App.tsx`.
+1. Añade el identificador del mundo y sus variantes a `types.ts` (`Theme`, `Level.world`, enemigos, terreno y jefe si procede). Mantén los niveles, peligros, rutas y recompensas como datos declarativos en `levels.ts` y regenera el índice con `npm run niveles:indice`. Registra el arte y la música en `assets.ts` y `App.tsx`.
 2. Crea tres pantallas con identificadores estables, una pegatina por pantalla, checkpoints sobre suelo seguro y una ruta explícita desde el final del mundo anterior.
    - **Tramos:** ordena cada pantalla en cuatro tramos en `Level.beats`, con la mecánica del mundo necesaria en el giro y el remate, y un tipo de giro distinto en cada pantalla.
    - **Formato de la pantalla 2:** elige uno distinto del último mundo que tuvo formato y, entre los demás, el menos usado en la campaña; si empatan, el que mejor encaje con la mecánica.

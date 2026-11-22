@@ -7,11 +7,21 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 const eslintConfig = defineConfig([
+  // Lo generado y las carpetas locales que .gitignore ya excluye: las copias de trabajo de .claude/worktrees
+  // repiten el repositorio entero y multiplicaban el tiempo del lint.
   globalIgnores([
     "dist/**",
     "dist-pages/**",
+    "dist-textos/**",
     "out/**",
     "build/**",
+    "work/**",
+    "outputs/**",
+    ".claude/**",
+    ".codex-attachments/**",
+    ".junie/**",
+    ".idea/**",
+    ".wrangler/**",
   ]),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

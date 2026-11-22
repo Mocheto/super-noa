@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { cajaRedondeada, drawCartel, medirTexto } from "./cartelLienzo";
+import { cajaRedondeada, drawCartel, medirCartel, medirTexto } from "./cartelLienzo";
+import { CARTEL_ARRIBA, colocarCarteles, pistaDeLaPartida, techoCarteles, type Caja } from "./carteles";
 import { acentoMundo, emblemaMundo } from "./worldMapData";
 import { SecretShop } from "./SecretShop";
 import "./secretDoors.css";
@@ -96,12 +97,6 @@ function createInitialPlayer(level: Level): Player {
   };
 }
 
-/** Primera fila libre bajo el HUD de esquinas, en unidades del lienzo. */
-const CARTEL_ARRIBA = 66;
-
-function drawDoubleJumpTip(context: CanvasRenderingContext2D) {
-  drawCartel(context, [textoLienzo("partida.lienzo.dobleSalto.rotulo"), textoLienzo("partida.lienzo.dobleSaltoComo.rotulo")], VIEW_WIDTH / 2, CARTEL_ARRIBA);
-}
 
 type Interaccion = "entrar" | "explorar" | "subir" | "activar";
 
@@ -109,7 +104,7 @@ type Interaccion = "entrar" | "explorar" | "subir" | "activar";
 const CLAVE_PALABRA = { apple: "partida.lienzo.recoger.manzana.rotulo", sticker: "partida.lienzo.recoger.pegatina.rotulo", cat: "partida.lienzo.recoger.gato.rotulo", flag: "partida.lienzo.recoger.bandera.rotulo" } as const;
 
 /** Etiqueta crema con el dibujo y la palabra del objeto recogido, sobre la cabeza de Noa sin salirse de la pantalla. */
-function drawPalabraRecogida(context: CanvasRenderingContext2D, capa: CapaPalabra, x: number, cabeza: number) {
+function drawPalabraRecogida(context: CanvasRenderingContext2D, capa: CapaPalabra, x: number, cabeza: number, techo = CARTEL_ARRIBA) {
   context.save();
   context.globalAlpha = capa.alfa;
   context.font = `${Math.round(24 * capa.escala)}px "Press Start 2P", monospace`;
@@ -117,7 +112,7 @@ function drawPalabraRecogida(context: CanvasRenderingContext2D, capa: CapaPalabr
   const ancho = medirTexto(context, texto, 24 * capa.escala) + 32;
   const alto = 48 * capa.escala;
   const centro = Math.max(ancho / 2 + 8, Math.min(VIEW_WIDTH - ancho / 2 - 8, x));
-  const y = Math.max(CARTEL_ARRIBA, cabeza - 64 - capa.subida) - alto / 2;
+  const y = Math.max(techo + alto / 2, cabeza - 64 - capa.subida) - alto / 2;
   context.fillStyle = "rgba(0, 0, 0, .3)";
   cajaRedondeada(context, centro - ancho / 2 + 4, y + 5, ancho, alto, 10); context.fill();
   context.fillStyle = "#fff8e9"; context.strokeStyle = "#3d1430"; context.lineWidth = 4;
@@ -1088,21 +1083,20 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       context.globalAlpha = 1;
     };
 
+    // Techo de los carteles: bajo el HUD de esquinas, que no escala con el lienzo (en el móvil ocupa más del lienzo).
+    const medirTechoCartel = () => {
+      const hud = canvas.parentElement?.querySelector?.(".hud-centro");
+      const lienzo = canvas.getBoundingClientRect?.();
+      if (!hud || !lienzo?.width) return CARTEL_ARRIBA;
+      return techoCarteles(hud.getBoundingClientRect().bottom - lienzo.top, lienzo.width / VIEW_WIDTH);
+    };
+    let techoCartel = CARTEL_ARRIBA;
+    const cartelesDeCaja: { lineas: string[]; centroX: number; arriba: number; color?: string }[] = [];
+
     const render = () => {
+      const desplazaY = level.orientation === "vertical" || explore ? cameraY : 0;
       drawBackground(context, level, cameraX, frame, raster, cameraY);
       drawDetourScenery(context, level, cameraX);
-      if (level.orientation !== "vertical" && !level.detour && level.screen === 1 && cameraX < 520 && level.world >= 10 && !(level.world === 11 && level.bloomBridges?.length)) {
-        const hint = textoLienzo(level.world === 10 ? "partida.lienzo.ayudaMundo.lava.rotulo" : level.world === 11 ? "partida.lienzo.ayudaMundo.rocio.rotulo" : level.world === 13 ? "partida.lienzo.ayudaMundo.regalo.rotulo" : level.world === 14 ? "partida.lienzo.ayudaMundo.arena.rotulo" : level.world === 15 ? "partida.lienzo.ayudaMundo.vagones.rotulo" : level.world === 16 ? "partida.lienzo.ayudaMundo.musica.rotulo" : "partida.lienzo.ayudaMundo.hielo.rotulo");
-        drawCartel(context, [hint], 480 - cameraX * .22, CARTEL_ARRIBA + 20);
-      }
-      if (hasWorldMechanics(level) && levelAge < 7 && cameraX < 360 && player.y > 150 && !completed) {
-        const hint = textoLienzo(level.world === 3 ? "partida.lienzo.ayudaInicio.lobos.rotulo"
-          : level.world === 11 ? "partida.lienzo.ayudaInicio.petalos.rotulo"
-          : level.world === 6 ? "partida.lienzo.ayudaInicio.perrito.rotulo"
-          : level.world === 16 ? "partida.lienzo.ayudaInicio.compas.rotulo"
-          : "partida.lienzo.ayudaInicio.aire.rotulo");
-        drawCartel(context, [hint], VIEW_WIDTH / 2, CARTEL_ARRIBA);
-      }
       context.save();
       if (level.orientation === "vertical" || explore) context.translate(0, -cameraY);
       // Ráfagas y géiseres van con el mundo: en subidas y exploraciones se mueven con la cámara vertical.
@@ -1156,10 +1150,11 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         } else {
           drawRewardBlock(context, x, block.y, hitBlocks.has(block.id), raster.collectibles);
         }
+        // Los carteles de las cajas se dibujan al final, encima de objetos y decorado (issue 317).
         if (!hitBlocks.has(block.id) && Math.abs(player.x - block.x) < 230) {
-          drawCartel(context, [textoLienzo(block.reward === "secret-vine" ? "partida.lienzo.bloque.queHay.rotulo" : "partida.lienzo.bloque.debajo.rotulo")], x + 24, block.y - 50, { alfa: palabras.capa(false) ? 0.35 : 1 });
+          cartelesDeCaja.push({ lineas: [textoLienzo(block.reward === "secret-vine" ? "partida.lienzo.bloque.queHay.rotulo" : "partida.lienzo.bloque.debajo.rotulo")], centroX: x + 24, arriba: block.y - 50 - desplazaY });
         } else if (block.reward === "secret-vine" && vineStartedFrame >= 0 && !completed && Math.abs(player.x - block.x) < 250) {
-          drawCartel(context, [textoLienzo("partida.lienzo.enredadera.rotulo")], x + 24, block.y - 54, { color: "#3f7651", alfa: palabras.capa(false) ? 0.35 : 1 });
+          cartelesDeCaja.push({ lineas: [textoLienzo("partida.lienzo.enredadera.rotulo")], centroX: x + 24, arriba: block.y - 54 - desplazaY, color: "#3f7651" });
         }
       });
       cannons.forEach((cannon) => drawCannon(context, cannon, cameraX, raster.cannon));
@@ -1286,16 +1281,29 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         if (depth > 0) { context.fillStyle = `rgba(40,24,18,${depth})`; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT); }
         drawExploreOverlay(context, level, explore, player, hintTarget(level, explore, player), { x: cameraX, y: cameraY }, frame);
       }
-      if (level.id === "1-1" && player.x >= 130 && player.x < 1120) drawDoubleJumpTip(context);
-      if (level.world === 17 && levelAge < 8) {
-        drawCartel(context, [textoLienzo("partida.lienzo.vertical.sube.rotulo"), textoLienzo("partida.lienzo.vertical.bordes.rotulo"), textoLienzo("partida.lienzo.vertical.supersalto.rotulo")], VIEW_WIDTH / 2, CARTEL_ARRIBA);
+      // Carteles encima de todo: una sola pista bajo el HUD y, debajo, los de las cajas sin pisarse (issue 317).
+      if (frame % 30 === 0) techoCartel = medirTechoCartel();
+      const ocupadas: Caja[] = [];
+      const pista = pistaDeLaPartida({
+        levelId: level.id, world: level.world, screen: level.screen, vertical: level.orientation === "vertical", detour: Boolean(level.detour),
+        bloomBridges: Boolean(level.bloomBridges?.length), mecanicas: hasWorldMechanics(level), cameraX, levelAge, playerX: player.x, playerY: player.y, completed,
+      });
+      if (pista) {
+        const lineas = pista.claves.map((clave) => textoLienzo(clave));
+        const { ancho, alto } = medirCartel(context, lineas);
+        drawCartel(context, lineas, pista.centroX, techoCartel);
+        ocupadas.push({ x: pista.centroX - ancho / 2, y: techoCartel, ancho, alto });
       }
-      if (level.world === 8 && player.x < 650) {
-        drawCartel(context, [textoLienzo("partida.lienzo.nadar.nada.rotulo"), textoLienzo("partida.lienzo.nadar.erizos.rotulo")], VIEW_WIDTH / 2, CARTEL_ARRIBA);
+      if (cartelesDeCaja.length) {
+        const medidas = cartelesDeCaja.map((cartel) => ({ ...cartel, ...medirCartel(context, cartel.lineas) }));
+        const arribas = colocarCarteles(medidas, techoCartel, ocupadas);
+        const alfa = palabras.capa(false) ? 0.35 : 1;
+        medidas.forEach((cartel, indice) => drawCartel(context, cartel.lineas, cartel.centroX, arribas[indice], { alfa, color: cartel.color }));
+        cartelesDeCaja.length = 0;
       }
 
       const palabra = palabras.capa(motionRef.current);
-      if (palabra) drawPalabraRecogida(context, palabra, player.x + player.width / 2 - cameraX, player.y - cameraY);
+      if (palabra) drawPalabraRecogida(context, palabra, player.x + player.width / 2 - cameraX, player.y - cameraY, techoCartel);
       const radioMaximo = Math.hypot(VIEW_WIDTH, VIEW_HEIGHT);
       const salida = transition.remaining();
       const capa = salida !== undefined ? capaTransicion("salida", salida, radioMaximo, motionRef.current)

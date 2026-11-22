@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CAT_PARTY_LEVEL_ID } from "./catParty";
+import { CAT_PARTY_LEVEL_ID } from "./catPartyNivel";
 import { LevelSelectCard } from "./LevelSelectCard";
 import { PixelIcon } from "./PixelIcon";
 import { levels } from "./levels";

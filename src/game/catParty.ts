@@ -6,7 +6,7 @@ export { outputLatencySeconds };
 
 // «La fiesta de los gatitos»: los gatitos empujan piezas por la cinta y Noa, la leñadora,
 // las golpea en el tajo al compás. Todo se mide en pulsos sobre una rejilla a tempo fijo.
-export const CAT_PARTY_LEVEL_ID = "2-3";
+export { CAT_PARTY_LEVEL_ID } from "./catPartyNivel.ts";
 export const PARTY_BPM = 100;
 export const PULSE_MS = 60_000 / PARTY_BPM;
 export const PULSES_PER_BAR = 4;

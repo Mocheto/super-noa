@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CAT_PARTY_LEVEL_ID } from "./game/catParty";
+import { CAT_PARTY_LEVEL_ID } from "./game/catPartyNivel";
 import { Dialog } from "./game/Dialog";
 import { bossCatalog } from "./game/bosses";
 import { isGuardianGameId } from "./game/guardianGames";
@@ -32,9 +32,6 @@ import { detourLevel, detourLevels } from "./game/detours";
 import { restStopFor, restStopIndex, restStopLevels, restStopUnlocked } from "./game/restStops";
 import { greetFriend, visitRestStop } from "./game/restStopProgress";
 import { addHeart } from "./game/friendProgress";
-import { FriendsTab } from "./game/FriendsTab";
-import { FotosCasa } from "./game/FotosCasa";
-import { fotosDe } from "./game/casaFoto";
 import { funciones } from "./game/funciones";
 import { casaAbierta, llegadasPorVer } from "./game/casaRescate";
 import { recordFlight } from "./game/avioneta";
@@ -44,6 +41,12 @@ import { Medalla, Ventana } from "./game/Ventana";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
 import { visitDetour } from "./game/detourProgress";
 
+// La pestaña Amigos (que arrastra rendering.ts) y las fotos de la casa van en su propio bloque; se precargan en reposo
+// desde el mapa para que el álbum las abra sin espera.
+const cargarFriendsTab = () => import("./game/FriendsTab");
+const cargarFotosCasa = () => import("./game/FotosCasa");
+const FriendsTab = lazy(() => cargarFriendsTab().then((module) => ({ default: module.FriendsTab })));
+const FotosCasa = lazy(() => cargarFotosCasa().then((module) => ({ default: module.FotosCasa })));
 const WorldMap = lazy(() => import("./game/WorldMap").then((module) => ({ default: module.WorldMap })));
 const GameCanvas = lazy(() => import("./game/GameCanvas").then((module) => ({ default: module.GameCanvas })));
 const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
@@ -150,6 +153,17 @@ export default function App() {
   const displayedLevel = activeDetour ? detourLevel(activeDetour) : activeLevel;
 
   useEffect(() => { screenRef.current = screen; }, [screen]);
+  // En el mapa, cuando el navegador está libre, se descargan la pestaña Amigos y las fotos para que el álbum no espere.
+  useEffect(() => {
+    if (screen !== "map") return;
+    const precargar = () => { void cargarFriendsTab().catch(() => {}); void cargarFotosCasa().catch(() => {}); };
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(precargar, { timeout: 4000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(precargar, 1500);
+    return () => window.clearTimeout(id);
+  }, [screen]);
 
   const finishEnrollment = useCallback(() => {
     enrollmentRequiredRef.current = false;
@@ -1084,7 +1098,7 @@ export default function App() {
             <button className={`pestana texto-noa ${collectionTab === "memories" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "memories"} aria-label={sinPictogramas(t("coleccion.pestana.postales.rotulo"))} onClick={() => setCollectionTab("memories")}><PalabraConDibujo clave="coleccion.pestana.postales.rotulo" /></button>
             {funciones.casa && progress.casa && <button className={`pestana texto-noa ${collectionTab === "photos" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "photos"} aria-label={sinPictogramas(t("coleccion.pestana.fotos.rotulo"))} onClick={() => setCollectionTab("photos")}><PalabraConDibujo clave="coleccion.pestana.fotos.rotulo" /></button>}
           </div>
-          {collectionTab === "photos" ? <FotosCasa fotos={fotosDe(progress.casa)} /> : funciones.amigos && collectionTab === "friends" ? <FriendsTab progress={progress} onHeart={(kind) => setProgress((current) => addHeart(current, kind))} /> : collectionTab === "stickers" ? <>
+          {collectionTab === "photos" ? <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}><FotosCasa fotos={progress.casa?.fotos ?? []} /></Suspense> : funciones.amigos && collectionTab === "friends" ? <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}><FriendsTab progress={progress} onHeart={(kind) => setProgress((current) => addHeart(current, kind))} /></Suspense> : collectionTab === "stickers" ? <>
             <p className="juntos">{t(progress.secretUnlocked ? "coleccion.pegatinas.introConSecreto.juntos" : "coleccion.pegatinas.introSinSecreto.juntos")}</p>
             <div className="sticker-grid">
               {albumStickers.map((sticker) => {

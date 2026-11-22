@@ -1,4 +1,4 @@
-import { contextoAudio, despertarAudio } from "./audio.ts";
+import { busDeZona, contextoAudio, despertarAudio, soltarBus } from "./audio.ts";
 
 // Núcleo de audio de los cuatro minijuegos rítmicos (abeja ninja, tambor de Armonía, merienda de los jabatos y fiesta
 // de los gatitos). Antes cada uno copiaba su `playNote`; lo único que cambiaba eran unos números, que ahora son el
@@ -63,11 +63,10 @@ export type EquipoAudio = {
 /** Crea los buses del minijuego en el contexto compartido. `null` si no hay Web Audio. */
 export function crearEquipo(perfil: PerfilSintesis, musica: number, efectos: number, context: AudioContext | null = contextoAudio()): EquipoAudio | null {
   if (!context) return null;
-  const zona = context.createGain();
+  const zona = busDeZona(context);
   const music = context.createGain();
   const cue = context.createGain();
   const segment = context.createGain();
-  zona.connect(context.destination);
   music.connect(zona);
   cue.connect(zona);
   segment.connect(music);
@@ -82,7 +81,7 @@ export function crearEquipo(perfil: PerfilSintesis, musica: number, efectos: num
 /** Desconecta el minijuego del contexto compartido: lo que tuviera programado deja de oírse. */
 export function liberarEquipo(equipo: EquipoAudio | null): void {
   if (!equipo) return;
-  try { equipo.zona.disconnect(); } catch { /* ya desconectado */ }
+  soltarBus(equipo.zona);
 }
 
 /** Volúmenes de 0 a 1 de la música y los efectos. */

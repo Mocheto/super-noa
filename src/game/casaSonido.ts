@@ -4,6 +4,7 @@
  * cuando un gatito canta (si cantan dos a la vez, suenan a coro). Respeta el silencio y el volumen de efectos.
  */
 import type { SampleBank } from "./catPartySamples";
+import { busDeZona, contextoAudio, soltarBus } from "./audio.ts";
 
 export type Maullido = "pide" | "gracias" | "ahoraNo";
 
@@ -73,12 +74,9 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
 
   const preparar = () => {
     if (contexto) return contexto;
-    const Constructor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!Constructor) return null;
-    contexto = new Constructor();
-    salida = contexto.createGain();
-    salida.gain.value = ajustes.volumen;
-    salida.connect(contexto.destination);
+    contexto = contextoAudio();
+    if (!contexto) return null;
+    salida = busDeZona(contexto, ajustes.volumen);
     // Se cargan al usarse por primera vez (así las pruebas pueden leer los tonos sin cargar audio).
     void import("./catPartySamples").then(({ loadPartySamples }) => loadPartySamples()).then((banco) => { samples = banco; });
     return contexto;
@@ -272,7 +270,8 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
       ronroneo = null;
       bucle?.parar();
       bucle = null;
-      void contexto?.close();
+      soltarBus(salida);
+      salida = null;
       contexto = null;
     },
   };

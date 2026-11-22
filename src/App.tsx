@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { CAT_PARTY_LEVEL_ID } from "./game/catPartyNivel";
+import { busDeZona, contextoAudio, vigilarAudio } from "./game/audio";
 import { Dialog } from "./game/Dialog";
 import { bossCatalog } from "./game/bosses";
 import { isGuardianGameId } from "./game/guardianGames";
@@ -80,16 +81,7 @@ const MAX_LIVES = 3;
 // Los índices del guardado conservan las 18 pantallas originales y continúan con las nuevas aventuras.
 const campaignLevelCount = campaignLevels.length;
 const bossLevels = levels.flatMap((level, index) => level.boss ? [{ level, index, boss: bossCatalog[level.boss] }] : []);
-declare global {
-  interface Window {
-    webkitAudioContext?: typeof AudioContext;
-  }
-}
-
-function createAudioContext() {
-  const AudioContextClass = window.AudioContext ?? window.webkitAudioContext;
-  return AudioContextClass ? new AudioContextClass() : null;
-}
+vigilarAudio();
 
 function rankingErrorMessage(error: unknown, fallback: string) {
   return error instanceof TypeError || (error instanceof DOMException && error.name === "TimeoutError")
@@ -150,7 +142,7 @@ export default function App() {
   const enrollmentRetryAtRef = useRef(0);
   const adventureActionRef = useRef<(() => void) | null>(null);
   const secretTransitionRef = useRef({ target: -1, remaining: 1800 });
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const effectsBusRef = useRef<GainNode | null>(null);
   const playScreenRef = useRef<HTMLElement | null>(null);
   const screenRef = useRef(screen);
   const activeLevel = devTestLevel ?? levels[activeIndex] ?? detourLevels[activeIndex - levels.length] ?? restStopLevels[activeIndex - levels.length - detourLevels.length];
@@ -481,9 +473,9 @@ export default function App() {
 
   const playSound = useCallback((kind: SoundKind) => {
     if (muted || effectsVolume === 0) return;
-    const audioContext = audioContextRef.current ?? createAudioContext();
+    const audioContext = contextoAudio();
     if (!audioContext) return;
-    audioContextRef.current = audioContext;
+    effectsBusRef.current ??= busDeZona(audioContext);
     if (audioContext.state === "suspended") void audioContext.resume();
     const oscillator = audioContext.createOscillator();
     const gain = audioContext.createGain();
@@ -501,7 +493,7 @@ export default function App() {
     oscillator.frequency.exponentialRampToValueAtTime(kind === "hurt" || kind === "howl" || kind === "snort" ? 70 : frequency * 1.35, now + duration);
     gain.gain.setValueAtTime(0.075 * Math.min(1, Math.max(0, effectsVolume / 100)), now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-    oscillator.connect(gain).connect(audioContext.destination);
+    oscillator.connect(gain).connect(effectsBusRef.current);
     oscillator.start(now);
     oscillator.stop(now + duration);
   }, [effectsVolume, muted]);

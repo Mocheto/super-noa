@@ -1,3 +1,4 @@
+import { busDeZona, contextoAudio, soltarBus } from "./audio.ts";
 /**
  * Música de fondo de la casa de los gatitos (mapa «La casa viva»): una nana original y tranquila en 3/4, generada por
  * código con un sonido de caja de música y un bajo suave. Suena en bucle, más lenta y más bajita de noche (21–8 h),
@@ -78,12 +79,9 @@ export function crearNana(inicial: Ajustes) {
     /** Empieza (o retoma) la nana; llamar tras un gesto de la jugadora para que el navegador deje sonar. */
     empezar() {
       if (!contexto) {
-        const Constructor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-        if (!Constructor) return;
-        contexto = new Constructor();
-        salida = contexto.createGain();
-        salida.gain.value = volumen();
-        salida.connect(contexto.destination);
+        contexto = contextoAudio();
+        if (!contexto) return;
+        salida = busDeZona(contexto, volumen());
         siguienteTiempo = contexto.currentTime + 0.1;
         temporizador = window.setInterval(programar, 100);
       }
@@ -95,7 +93,7 @@ export function crearNana(inicial: Ajustes) {
     },
     cerrar() {
       window.clearInterval(temporizador);
-      void contexto?.close();
+      soltarBus(salida);
       contexto = null;
       salida = null;
     },

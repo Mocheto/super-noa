@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getImage } from "./assets";
+import { busDeZona, contextoAudio, soltarBus } from "./audio";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createFlight, FLIGHT_SECONDS, PLANE_Y, SKY_HEIGHT, SKY_WIDTH, stepFlight, TOTAL_STARS, type Flight, type FlightEvent } from "./avioneta";
 import "./avioneta.css";
@@ -44,12 +45,21 @@ const BASS = [48, 53, 48, 55, 53, 53, 55, 48];
 const midi = (note: number) => 440 * 2 ** ((note - 69) / 12);
 
 function useWaltz(playing: boolean, volume: number) {
+  const gainRef = useRef<GainNode | null>(null);
+  const volumeRef = useRef(volume);
+  const audible = volume > 0;
+  // Cambiar el volumen solo mueve la ganancia: el vals sigue donde iba, sin crear otro contexto.
   useEffect(() => {
-    if (!playing || volume <= 0 || typeof AudioContext === "undefined") return;
-    const audio = new AudioContext();
-    const gain = audio.createGain();
-    gain.gain.value = .18 * volume;
-    gain.connect(audio.destination);
+    volumeRef.current = volume;
+    if (gainRef.current) gainRef.current.gain.value = .18 * volume;
+  }, [volume]);
+  useEffect(() => {
+    if (!playing || !audible) return;
+    const audio = contextoAudio();
+    if (!audio) return;
+    if (audio.state === "suspended") void audio.resume().catch(() => {});
+    const gain = busDeZona(audio, .18 * volumeRef.current);
+    gainRef.current = gain;
     const beat = .42;
     let next = audio.currentTime + .1;
     let step = 0;
@@ -76,8 +86,8 @@ function useWaltz(playing: boolean, volume: number) {
         step += 1;
       }
     }, 120);
-    return () => { window.clearInterval(timer); void audio.close(); };
-  }, [playing, volume]);
+    return () => { window.clearInterval(timer); soltarBus(gain); gainRef.current = null; };
+  }, [audible, playing]);
 }
 
 function drawFlight(context: CanvasRenderingContext2D, flight: Flight, scroll: number) {

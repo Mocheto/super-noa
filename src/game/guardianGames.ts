@@ -1,10 +1,8 @@
-import type { BossId } from "./types";
+import "../textos/zonas/juegos.ts";
 import { conTextos } from "../textos/index.ts";
+import type { GuardianGameId } from "./guardianGameIds.ts";
 
-export type GuardianGameId = Extract<BossId,
-  "triceratops-queen" | "sky-captain" |
-  "aurora-celeste" | "rainbow-queen"
->;
+export { isGuardianGameId, type GuardianGameId } from "./guardianGameIds.ts";
 
 type OpcionDatos = { id: string; sprite: readonly [row: number, column: number]; color: string };
 export type GuardianOption = OpcionDatos & { label: string };
@@ -54,10 +52,6 @@ export const guardianGames = Object.fromEntries(Object.entries(datosJuegos).map(
   ...juego,
   options: juego.options.map((opcion) => conTextos({ ...opcion }, { label: `juegos.${id}.opciones.${opcion.id}.rotulo` })),
 }, { title: `juegos.${id}.titulo.rotulo`, instruction: `juegos.${id}.instruccion.juntos`, prompt: `juegos.${id}.pista.rotulo`, success: `juegos.${id}.exito.rotulo` })])) as unknown as Record<GuardianGameId, GuardianGame>;
-
-export function isGuardianGameId(id: BossId): id is GuardianGameId {
-  return id in guardianGames;
-}
 
 export function makeGuardianSequence(game: GuardianGame, round: number, randomValues: ArrayLike<number>) {
   const length = game.kind === "sequence" ? (game.sequenceLengths?.[round] ?? 3) : 1;

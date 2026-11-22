@@ -23,6 +23,12 @@ export const mapa = {
   explorarSendero: { oculto: "Explorar {titulo}" },
   noaEsta: { oculto: "Noa está en {lugar}" },
   avioneta: { oculto: "La avioneta de las nubes: mejor marca {n} de {total} estrellas" },
+  /** Título y pista de la pantalla del paseo: los enseñan la tarjeta del mapa y la partida. */
+  pantallaPaseo: {
+    titulo: { rotulo: "PASEO", juntos: "El paseo de los amigos." },
+    pista: { rotulo: "{pictograma:no-muerde} ¡NO MUERDE!", juntos: "Saluda a los amigos del mundo: aquí nadie muerde." },
+  },
+  casa: { rotulo: "{pictograma:inicio} CASA" },
   paseo: { rotulo: "{pictograma:amigos} PASEO", oculto: "Paseo de los amigos de {mundo}", visitado: "Paseo de los amigos de {mundo}: visitado, volver a pasear" },
   mundos: { oculto: "Mundos de Noa" },
   mundo: {

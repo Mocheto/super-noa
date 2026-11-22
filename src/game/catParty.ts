@@ -1,3 +1,4 @@
+import "../textos/zonas/minijuegos.gatitos.ts";
 import { outputLatencySeconds } from "./rhythmEngine.ts";
 import type { PerfilSintesis } from "./ritmoAudio.ts";
 import { ajustesRitmo, anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";

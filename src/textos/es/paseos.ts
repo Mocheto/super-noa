@@ -1,11 +1,9 @@
 /**
- * Textos del paseo de los amigos: título, pista, lo que dice cada amigo y la despedida del guardián, por mundo y tipo de amigo.
+ * Textos del paseo de los amigos: lo que dice cada amigo y la despedida del guardián, por mundo y tipo de amigo. El título y la pista de la pantalla están en `mapa.pantallaPaseo`, porque los enseña el mapa.
  * Hojas reservadas: `rotulo` (texto para Noa), `juntos` (para leer juntos) y `oculto` (lector de pantalla).
  */
 
 export const paseos = {
-  titulo: { rotulo: "PASEO", juntos: "El paseo de los amigos." },
-  pista: { rotulo: "{pictograma:no-muerde} ¡NO MUERDE!", juntos: "Saluda a los amigos del mundo: aquí nadie muerde." },
   "1": {
     amigos: {
       "slime": { rotulo: "¡SOY BLANDITA Y SALTARINA!", juntos: "¡Soy blandita y saltarina!" },

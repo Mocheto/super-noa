@@ -1,3 +1,4 @@
+import "../textos/zonas/minijuegos.comun";
 import type { ReactNode } from "react";
 import { t, type ClaveTexto, type Variables } from "../textos";
 import { Boton, BotonControl } from "../textos/Texto";

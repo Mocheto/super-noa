@@ -1,3 +1,4 @@
+import "../textos/zonas/minijuegos.merienda.ts";
 import { outputLatencySeconds } from "./rhythmEngine.ts";
 import { avanzarRelojFotogramas, flanco, inicioTrasPausa, practicaPrimero, pulsoDeAudio, type Tempo } from "./ritmoNucleo.ts";
 import type { PerfilSintesis } from "./ritmoAudio.ts";

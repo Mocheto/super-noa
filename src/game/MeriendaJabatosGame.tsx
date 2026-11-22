@@ -1,3 +1,4 @@
+import "../textos/zonas/minijuegos.merienda";
 import { useState, type CSSProperties } from "react";
 import type { Tempo } from "./ritmoNucleo";
 import { useMinijuegoRitmico, type SesionRitmo } from "./useMinijuegoRitmico";

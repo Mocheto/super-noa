@@ -1,4 +1,5 @@
-import { es } from "./es/index.ts";
+import type { es } from "./es/index.ts";
+import { base } from "./es/base.ts";
 import { esPictograma, pictogramas, type Pictograma } from "./pictogramas.ts";
 
 /** Plural por categorías de Intl.PluralRules; en español bastan `one` y `other`. */
@@ -17,28 +18,62 @@ type Rutas<T, P extends string = ""> = {
 export type ClaveTexto = Rutas<typeof es>;
 export type Variables = Readonly<Record<string, string | number>>;
 
-const idiomas: Record<string, Catalogo> = { es };
-let actual: Catalogo = es;
-let reglas = new Intl.PluralRules("es");
+type Nodo = { [clave: string]: Nodo | Hoja };
+/**
+ * Catálogo activo. Empieza con las zonas del bloque principal (`es/base.ts`); las zonas diferidas las añade
+ * `registrarZona` cuando se evalúa el bloque de la pantalla que las usa (`src/textos/zonas/<ruta>.ts`).
+ */
+const actual: Nodo = { ...(base as unknown as Nodo), minijuegos: { ...(base.minijuegos as unknown as Nodo) } };
+const reglas = new Intl.PluralRules("es");
+const registradas = new Set<string>();
 
-/** Cambia el idioma activo. Hoy solo existe "es"; los demás se añadirán con import() dinámico. */
-export function usarIdioma(codigo: string) {
-  const catalogo = idiomas[codigo];
-  if (!catalogo) throw new Error(`Idioma sin catálogo: ${codigo}`);
-  actual = catalogo;
-  reglas = new Intl.PluralRules(codigo);
+/**
+ * Añade al catálogo activo una zona diferida (`duelos`) o una parte de una zona (`minijuegos.abeja`). La llaman solo los
+ * módulos de `src/textos/zonas/`, que importa con `import` estático el módulo que usa sus claves: así, la zona queda
+ * registrada antes de que se ejecute cualquier código de ese módulo, y `t()` puede seguir siendo síncrono.
+ */
+export function registrarZona(ruta: string, textos: object) {
+  const partes = ruta.split(".");
+  let nodo = actual;
+  for (const parte of partes.slice(0, -1)) nodo = (nodo[parte] ??= {}) as Nodo;
+  nodo[partes[partes.length - 1]] = textos as Nodo;
+  registradas.add(ruta);
 }
 
-function buscar(clave: string): Hoja {
+/** Zonas diferidas registradas hasta ahora, para las pruebas. */
+export const zonasRegistradas = () => [...registradas];
+
+const avisadas = new Set<string>();
+let enSilencio = false;
+
+/** En producción (lo llama `main.tsx`), una clave sin hoja no rompe la pantalla: se ve un hueco y se avisa en la consola. */
+export function clavesSinHojaEnSilencio() {
+  enSilencio = true;
+}
+
+function buscar(clave: string): Hoja | undefined {
   let nodo: unknown = actual;
   for (const parte of clave.split(".")) nodo = (nodo as Record<string, unknown> | undefined)?.[parte];
   if (typeof nodo === "string" || (nodo && typeof nodo === "object" && "other" in nodo)) return nodo as Hoja;
-  throw new Error(`Clave de texto sin hoja: ${clave}`);
+  return undefined;
+}
+
+/**
+ * Hoja de una clave. Sin hoja, en desarrollo y en las pruebas falla en el acto; en producción devuelve una cadena
+ * vacía y lo avisa una vez en la consola: Noa ve un hueco, nunca la clave ni una pantalla rota.
+ */
+function hojaDe(clave: string): Hoja {
+  const hoja = buscar(clave);
+  if (hoja !== undefined) return hoja;
+  const mensaje = `Clave de texto sin hoja: ${clave} (¿falta importar su zona de src/textos/zonas/?)`;
+  if (!enSilencio) throw new Error(mensaje);
+  if (!avisadas.has(clave)) { avisadas.add(clave); console.error(mensaje); }
+  return "";
 }
 
 /** Devuelve el texto con sus variables puestas. Los pictogramas quedan como `{pictograma:nombre}` para que los pinte quien lo muestra. */
 export function t(clave: ClaveTexto, variables: Variables = {}): string {
-  const hoja = buscar(clave);
+  const hoja = hojaDe(clave);
   const plantilla = typeof hoja === "string" ? hoja : hoja[reglas.select(Number(variables.n ?? 0)) as keyof Plural] ?? hoja.other;
   return plantilla.replace(/\{(\w+)\}/g, (marca, nombre: string) => nombre in variables ? String(variables[nombre]) : marca);
 }
@@ -92,12 +127,7 @@ export function tClave(clave: string, variables: Variables = {}): string {
 
 /** Indica si una clave construida en tiempo de ejecución tiene hoja en el catálogo activo. */
 export function existeClave(clave: string): boolean {
-  try {
-    buscar(clave);
-    return true;
-  } catch {
-    return false;
-  }
+  return buscar(clave) !== undefined;
 }
 
 /**

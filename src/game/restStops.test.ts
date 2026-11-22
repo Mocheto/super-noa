@@ -5,7 +5,7 @@ import { reachable } from "./levelBeats.ts";
 import { emptyProgress, parseProgress, serializeProgress } from "./progress.ts";
 import { greetFriend, normalizeRestStops, visitRestStop } from "./restStopProgress.ts";
 import { REST_STOP_WIDTH, guardianOf, restStopCatalog, restStopUnlocked } from "./restStops.ts";
-import { restStopLevels } from "./restStopNiveles.ts";
+import { restStopConTextos, restStopLevels } from "./restStopNiveles.ts";
 
 test("hay un paseo por cada mundo de campaña del 1 al 16", () => {
   assert.deepEqual(restStopCatalog.map((stop) => stop.world), [1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 15, 16]);
@@ -20,10 +20,11 @@ test("cada paseo es de un mundo de campaña con guardián y saluda a sus propios
     const kinds = new Set(levels.filter((level) => level.world === stop.world).flatMap((level) => level.enemies.map((enemy) => enemy.kind)));
     for (const friend of stop.friends) {
       assert.ok(kinds.has(friend.kind), `mundo ${stop.world}: ${friend.kind} no vive en este mundo`);
-      assert.ok(friend.line.length >= 1 && friend.line.length <= 40);
+      const linea = restStopConTextos(stop.world)!.friends.find((amigo) => amigo.kind === friend.kind)!.line;
+      assert.ok(linea.length >= 1 && linea.length <= 40);
     }
     assert.equal(new Set(stop.friends.map((friend) => friend.kind)).size, stop.friends.length, "un amigo de cada tipo");
-    assert.ok(stop.farewell.length >= 1 && stop.farewell.length <= 40);
+    assert.ok(restStopConTextos(stop.world)!.farewell.length >= 1 && restStopConTextos(stop.world)!.farewell.length <= 40);
   }
 });
 

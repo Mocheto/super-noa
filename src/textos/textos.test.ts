@@ -1,3 +1,4 @@
+import "./todo.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { hojas, partes, t, textoLienzo, type Plural } from "./index.ts";

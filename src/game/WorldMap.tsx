@@ -195,7 +195,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
           <button type="button" aria-pressed={camera.atMin} onClick={camera.showAll}><Texto clave="mapa.verTodo.rotulo" /></button>
           <button type="button" onClick={() => camera.showNear(noaPosition)}><Texto clave="mapa.volverANoa.rotulo" /></button>
         </div>}
-        {onOpenCasa && <Boton tipo="seguir" className="map-casa" clave="casa.boton.rotulo" onClick={onOpenCasa} />}
+        {onOpenCasa && <Boton tipo="seguir" className="map-casa" clave="mapa.casa.rotulo" onClick={onOpenCasa} />}
       </div>
       <div className="map-scroll" inert={selectedWorld !== null} hidden={view !== "map"} role="region" aria-label={t("mapa.mapaIlustrado.oculto")}
         ref={viewportRef} {...camera.viewportEvents}>

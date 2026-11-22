@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { crearEquipo, despertar, liberarEquipo, ponerVolumenes, tocarNota, tocarYa, tramoNuevo, type EquipoAudio } from "./ritmoAudio";
 import { bossCatalog } from "./bosses";
 import { cssAssetUrl } from "./assets";
 import { Dialog } from "./Dialog";
 import type { SoundKind } from "./GameCanvas";
 import { firstConnectedGamepad } from "./gamepad";
 import {
-  COUNT_PULSES, CUT_POINT, HERO, PLOF_SOUND, PULSE_MS, UY_SOUND, cutSound, RESUME_COUNT_PULSES, WIN_AT, advanceFrameClock, audioPulse, autoCuts, barOfPulse, beeScores,
+  COUNT_PULSES, CUT_POINT, HERO, PERFIL_ABEJA, PLOF_SOUND, PULSE_MS, UY_SOUND, cutSound, RESUME_COUNT_PULSES, WIN_AT, advanceFrameClock, audioPulse, autoCuts, barOfPulse, beeScores,
   collectFalls, COUNT_TICK, createRun, flowersIn, jarLevel, leadNote, musicForEighth, nextOpenCut, outcomeOf, outputLatencySeconds,
   practiceFirst, pressAt, risingEdge, scoreLength, songStartAfterPause, targetPlacement, targetVisible, throwPulses,
   type BeeMode, type BeeNote, type BeeRun, type Outcome, type PressResult,
@@ -57,7 +58,6 @@ type Session = {
   halfId: number;
   ended: boolean;
 };
-type AudioRig = { context: AudioContext; music: GainNode; segment: GainNode; cue: GainNode; noise: AudioBuffer };
 type TargetView = { id: number; kind: "flower" | "ladybug"; color: number; x: number; y: number; rotation: number; opacity: number };
 type View = {
   pulse: number;
@@ -144,7 +144,7 @@ function snapshot(session: Session, pulse: number, counting: number, reduceMotio
 export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduceMotion, levelCompleted, onAbandon, onWin, playSound, friendlyReplay = false }: Props) {
   const sessionRef = useRef<Session | null>(null);
   const [informe, setInforme] = useState<string>();
-  const audioRef = useRef<AudioRig | null>(null);
+  const audioRef = useRef<EquipoAudio | null>(null);
   const samplesRef = useRef<SampleBank | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -179,111 +179,36 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
 
   useEffect(() => () => {
     sessionRef.current = null;
-    void audioRef.current?.context.close().catch(() => {});
+    liberarEquipo(audioRef.current);
+    audioRef.current = null;
   }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.music.gain.value = muted ? 0 : musicVolume / 100;
-    audio.cue.gain.value = muted ? 0 : effectsVolume / 100;
+    ponerVolumenes(audio, muted ? 0 : musicVolume / 100, muted ? 0 : effectsVolume / 100);
   }, [effectsVolume, musicVolume, muted, mode]);
 
   /** Cada tramo de canción va por su propio bus: al pausar o terminar, las notas ya programadas se cortan. */
   const freshSegment = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    try { audio.segment.disconnect(); } catch { /* ya desconectado */ }
-    audio.segment = audio.context.createGain();
-    audio.segment.connect(audio.music);
+    if (audioRef.current) tramoNuevo(audioRef.current);
   }, []);
 
   const ensureAudio = useCallback(async () => {
     if (muted) return false;
     try {
-      if (!audioRef.current) {
-        const context = new AudioContext();
-        const music = context.createGain();
-        const cue = context.createGain();
-        const segment = context.createGain();
-        music.connect(context.destination);
-        cue.connect(context.destination);
-        segment.connect(music);
-        music.gain.value = musicVolume / 100;
-        cue.gain.value = effectsVolume / 100;
-        const noise = context.createBuffer(1, Math.floor(context.sampleRate * 0.25), context.sampleRate);
-        const data = noise.getChannelData(0);
-        for (let index = 0; index < data.length; index++) data[index] = Math.random() * 2 - 1;
-        audioRef.current = { context, music, segment, cue, noise };
-      }
-      const { context } = audioRef.current;
-      if (context.state !== "running") await Promise.race([context.resume(), new Promise((resolve) => setTimeout(resolve, 400))]);
-      return context.state === "running";
+      audioRef.current ??= crearEquipo(PERFIL_ABEJA, musicVolume / 100, effectsVolume / 100);
+      return audioRef.current ? await despertar(audioRef.current) : false;
     } catch {
       return false;
     }
   }, [effectsVolume, musicVolume, muted]);
 
   const playNote = useCallback((note: BeeNote, when: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const { context } = audio;
-    const bus = note.bus === "music" ? audio.segment : audio.cue;
-    const start = when + note.offset;
-    const gain = context.createGain();
-    const bank = samplesRef.current;
-    if (bank) {
-      if (note.sample === null) return; // otro sample sustituye a esta nota
-      if (note.sample) {
-        const source = context.createBufferSource();
-        source.buffer = bank[note.sample.id];
-        source.playbackRate.value = note.sample.rate ?? 1;
-        gain.gain.value = note.sample.gain;
-        source.connect(gain).connect(bus);
-        source.start(start);
-        return;
-      }
-    }
-    if (note.volume === 0) return; // nota que solo existe como sample
-    if (note.noise) {
-      const source = context.createBufferSource();
-      const filter = context.createBiquadFilter();
-      source.buffer = audio.noise;
-      filter.type = note.noise === "high" ? "highpass" : note.noise === "low" ? "lowpass" : "bandpass";
-      filter.frequency.value = note.noise === "high" ? 6000 : note.noise === "low" ? 900 : 3000;
-      gain.gain.setValueAtTime(note.volume, start);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration);
-      source.connect(filter).connect(gain).connect(bus);
-      source.start(start);
-      source.stop(start + note.duration + 0.02);
-      return;
-    }
-    const oscillator = context.createOscillator();
-    oscillator.type = note.wave;
-    oscillator.frequency.setValueAtTime(note.frequency, start);
-    if (note.glideTo) oscillator.frequency.exponentialRampToValueAtTime(note.glideTo, start + note.duration);
-    if (note.vibrato) {
-      const lfo = context.createOscillator();
-      const depth = context.createGain();
-      lfo.frequency.value = 5.5;
-      depth.gain.value = note.frequency * 0.012;
-      lfo.connect(depth).connect(oscillator.frequency);
-      lfo.start(start);
-      lfo.stop(start + note.duration + 0.05);
-    }
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(note.volume, start + (note.vibrato ? 0.06 : 0.006));
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration);
-    oscillator.connect(gain).connect(bus);
-    oscillator.start(start);
-    oscillator.stop(start + note.duration + 0.03);
+    if (audioRef.current) tocarNota(audioRef.current, note, when, samplesRef.current);
   }, []);
 
-  const playCue = useCallback((notes: BeeNote[]) => {
-    const audio = audioRef.current;
-    if (!audio || audio.context.state !== "running") return;
-    for (const note of notes) playNote({ ...note, bus: "cue" }, audio.context.currentTime + 0.003);
-  }, [playNote]);
+  const playCue = useCallback((notes: BeeNote[]) => tocarYa(audioRef.current, notes, samplesRef.current), []);
 
   const pulseNow = useCallback((session: Session) => {
     if (session.countUntil !== null || session.countMs > 0 || session.pausedAt !== null) return session.frozenPulse;

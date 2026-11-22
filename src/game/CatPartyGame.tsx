@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { crearEquipo, despertar, liberarEquipo, ponerVolumenes, tocarNota, type EquipoAudio } from "./ritmoAudio";
 import { firstConnectedGamepad } from "./gamepad";
 import {
-  BELT_Y, HIT_WINDOW_PULSES, MISS_SAMPLE, PULSE_MS, ROLL_SAMPLE, STUMP_X, TRAVEL_PULSES, audioPulse, autoHits, barOfPulse, collectMisses, createRun, hitSamples, leadNote,
+  BELT_Y, HIT_WINDOW_PULSES, MISS_SAMPLE, PERFIL_FIESTA, PULSE_MS, ROLL_SAMPLE, STUMP_X, TRAVEL_PULSES, audioPulse, autoHits, barOfPulse, collectMisses, createRun, hitSamples, leadNote,
   goalOf, hitsIn, musicForEighth, nextOpenHit, outcomeOf, outputLatencySeconds, partyScores, pieceVisible, piecePlacement, pressAt, scoreLength,
   type Outcome, type PartyMode, type PartyNote, type PartyRun, type PartySample, type PressResult,
 } from "./catParty";
@@ -134,7 +135,7 @@ function snapshot(session: Session, pulse: number, reduceMotion: boolean): View 
 export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMotion, onPause, onExit }: Props) {
   const sessionRef = useRef<Session | null>(null);
   const [informe, setInforme] = useState<string>();
-  const audioRef = useRef<{ context: AudioContext; music: GainNode; cue: GainNode; noise: AudioBuffer } | null>(null);
+  const audioRef = useRef<EquipoAudio | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const samplesRef = useRef<SampleBank | null>(null);
   const [scale, setScale] = useState(1);
@@ -170,80 +171,27 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
 
   useEffect(() => () => {
     sessionRef.current = null;
-    void audioRef.current?.context.close().catch(() => {});
+    liberarEquipo(audioRef.current);
+    audioRef.current = null;
   }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.music.gain.value = soundOff ? 0 : musicVolume / 100;
-    audio.cue.gain.value = soundOff ? 0 : effectsVolume / 100;
+    ponerVolumenes(audio, soundOff ? 0 : musicVolume / 100, soundOff ? 0 : effectsVolume / 100);
   }, [effectsVolume, musicVolume, soundOff, mode]);
 
   const ensureAudio = useCallback(async () => {
     try {
-      if (!audioRef.current) {
-        const context = new AudioContext();
-        const music = context.createGain();
-        const cue = context.createGain();
-        music.connect(context.destination);
-        cue.connect(context.destination);
-        const noise = context.createBuffer(1, Math.floor(context.sampleRate * 0.2), context.sampleRate);
-        const data = noise.getChannelData(0);
-        for (let index = 0; index < data.length; index++) data[index] = Math.random() * 2 - 1;
-        audioRef.current = { context, music, cue, noise };
-      }
-      const { context } = audioRef.current;
-      if (context.state !== "running") await Promise.race([context.resume(), new Promise((resolve) => setTimeout(resolve, 400))]);
-      return context.state === "running";
+      audioRef.current ??= crearEquipo(PERFIL_FIESTA, soundOff ? 0 : musicVolume / 100, soundOff ? 0 : effectsVolume / 100);
+      return audioRef.current ? await despertar(audioRef.current) : false;
     } catch {
       return false;
     }
-  }, []);
+  }, [effectsVolume, musicVolume, soundOff]);
 
   const playNote = useCallback((note: PartyNote, when: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const { context } = audio;
-    const bus = note.bus === "music" ? audio.music : audio.cue;
-    const gain = context.createGain();
-    const bank = samplesRef.current;
-    if (bank) {
-      if (note.sample === null) return; // otro sample sustituye a esta nota
-      if (note.sample) {
-        const source = context.createBufferSource();
-        source.buffer = bank[note.sample.id];
-        source.playbackRate.value = note.sample.rate ?? 1;
-        gain.gain.value = note.sample.gain;
-        source.connect(gain).connect(bus);
-        source.start(when);
-        return;
-      }
-    }
-    if (note.volume === 0) return; // nota que solo existe como sample
-    if (note.noise) {
-      const source = context.createBufferSource();
-      const filter = context.createBiquadFilter();
-      source.buffer = audio.noise;
-      filter.type = "highpass";
-      filter.frequency.value = 6000;
-      gain.gain.setValueAtTime(note.volume, when);
-      gain.gain.exponentialRampToValueAtTime(0.0001, when + note.duration);
-      source.connect(filter).connect(gain).connect(bus);
-      source.start(when);
-      source.stop(when + note.duration + 0.01);
-      return;
-    }
-    const oscillator = context.createOscillator();
-    oscillator.type = note.wave;
-    oscillator.frequency.setValueAtTime(note.frequency, when);
-    if (note.glideTo) oscillator.frequency.exponentialRampToValueAtTime(note.glideTo, when + note.duration);
-    gain.gain.setValueAtTime(0.0001, when);
-    gain.gain.exponentialRampToValueAtTime(note.volume, when + 0.008);
-    gain.gain.exponentialRampToValueAtTime(0.0001, when + note.duration);
-    oscillator.connect(gain).connect(bus);
-    oscillator.start(when);
-    oscillator.stop(when + note.duration + 0.03);
+    if (audioRef.current) tocarNota(audioRef.current, note, when, samplesRef.current);
   }, []);
 
   const playNow = useCallback((frequency: number, duration: number, wave: OscillatorType, volume: number, glideTo?: number) => {
@@ -366,7 +314,7 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
           if (when > horizon) break;
           const eighth = session.nextEighth++;
           if (when < audio.context.currentTime - 0.02) continue;
-          for (const note of musicForEighth(session.run, eighth)) playNote(note, when + note.offset);
+          for (const note of musicForEighth(session.run, eighth)) playNote(note, when);
         }
       }
       const pulse = pulseNow(session);

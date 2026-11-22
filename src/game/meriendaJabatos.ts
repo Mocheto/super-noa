@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import type { PerfilSintesis } from "./ritmoAudio.ts";
 import { ajustesRitmo, anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
 
@@ -299,6 +300,12 @@ export const MISS: MeriendaNote[] = [
 ];
 /** «fsss»: la mano de Noa pasa vacía. */
 export const FSSS: MeriendaNote[] = [noise(0.12, 0.05, "highpass", 4000, "cue")];
+
+/** Síntesis del «merendero del bosque»: cada nota trae su filtro y la ocarina respira (5,2 Hz, sostenida al 70 %). */
+export const PERFIL_MERIENDA: PerfilSintesis = {
+  ataque: 0.006, colaRuido: 0.02, segundosRuido: 1.2, conTramo: true, filtrosRuido: {},
+  aliento: { hz: 5.2, profundidad: 0.006, cola: 0.03, sostener: 0.7 },
+};
 /** Pezuña del Gran Jabalí en la cuenta: más aguda en el primer pulso. */
 export const hoof = (first: boolean): MeriendaNote[] => [
   { offset: 0, frequency: first ? 300 : 220, duration: 0.07, wave: "triangle", volume: 0.12, bus: "cue" },

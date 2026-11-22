@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import type { PerfilSintesis } from "./ritmoAudio.ts";
 import { ajustesRitmo, anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
 
@@ -356,6 +357,13 @@ export const UY_SOUND: BeeNote[] = [{ offset: 0, frequency: 110, duration: 0.16,
 /** «plof»: una flor cae a la hierba. */
 export const PLOF_SOUND: BeeNote[] = [{ offset: 0, frequency: 200, duration: 0.2, wave: "triangle", volume: 0.06, bus: "cue", glideTo: 90, sample: sample("plof", 0.32) }];
 export const COUNT_TICK = (first: boolean): BeeNote[] => [{ offset: 0, frequency: first ? 1046.5 : 784, duration: 0.1, wave: "sine", volume: 0.09, bus: "cue" }];
+
+/** Síntesis del «jardín ninja»: ruidos de 6000/900/3000 Hz y vibrato de 5,5 Hz para la flauta. */
+export const PERFIL_ABEJA: PerfilSintesis = {
+  ataque: 0.006, colaRuido: 0.02, segundosRuido: 0.25, conTramo: true,
+  filtrosRuido: { high: { type: "highpass", frequency: 6000 }, low: { type: "lowpass", frequency: 900 }, band: { type: "bandpass", frequency: 3000 } },
+  vibrato: { hz: 5.5, profundidad: 0.012, ataque: 0.06, cola: 0.05 },
+};
 
 /** Notas de una corchea (medio pulso) de la canción, según la partitura. */
 export function musicForEighth(run: BeeRun, eighth: number): BeeNote[] {

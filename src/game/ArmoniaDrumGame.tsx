@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { crearEquipo, despertar, liberarEquipo, ponerVolumenes, tocarNota, tocarYa, tramoNuevo, type EquipoAudio } from "./ritmoAudio";
 import { bossCatalog } from "./bosses";
 import { cssAssetUrl } from "./assets";
 import { Dialog } from "./Dialog";
 import type { SoundKind } from "./GameCanvas";
 import { firstConnectedGamepad } from "./gamepad";
 import {
-  ARMONIA_DRUM, BATON, NOA, NOA_DRUM, NOISE_FILTERS, PHASE_NAMES, PULSE_MS, RESUME_COUNT_PULSES, WIN_AT, advanceFrameClock,
+  ARMONIA_DRUM, BATON, NOA, NOA_DRUM, PERFIL_TAMBOR, PHASE_NAMES, PULSE_MS, RESUME_COUNT_PULSES, WIN_AT, advanceFrameClock,
   audioPulse, autoHits, callStart, createRun, drumScores, hitsIn, musicForEighth, outcomeOf, outputLatencySeconds, partAt, practiceFirst,
   pressAt, printsAt, printsOrigin, responseNote, responseStart, risingEdge, scoreLength, snare, songStartAfterPause, xylophone,
   type DrumMode, type DrumNote, type DrumRun, type Outcome, type PressResult, type PrintsView,
@@ -51,7 +52,6 @@ type Session = {
   demoVacia: boolean;
   ended: boolean;
 };
-type AudioRig = { context: AudioContext; music: GainNode; segment: GainNode; cue: GainNode; noise: AudioBuffer };
 type NoaPose = "espera" | "golpe" | "escucha" | "celebra";
 type View = {
   pulse: number;
@@ -143,7 +143,7 @@ function Prints({ view, className, style }: { view: NonNullable<PrintsView>; cla
 export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, reduceMotion, levelCompleted, onAbandon, onWin, playSound, friendlyReplay = false }: Props) {
   const sessionRef = useRef<Session | null>(null);
   const [informe, setInforme] = useState<string>();
-  const audioRef = useRef<AudioRig | null>(null);
+  const audioRef = useRef<EquipoAudio | null>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [mode, setMode] = useState<DrumMode | null>(null);
@@ -171,88 +171,36 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
 
   useEffect(() => () => {
     sessionRef.current = null;
-    void audioRef.current?.context.close().catch(() => {});
+    liberarEquipo(audioRef.current);
+    audioRef.current = null;
   }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    audio.music.gain.value = muted ? 0 : musicVolume / 100;
-    audio.cue.gain.value = muted ? 0 : effectsVolume / 100;
+    ponerVolumenes(audio, muted ? 0 : musicVolume / 100, muted ? 0 : effectsVolume / 100);
   }, [effectsVolume, musicVolume, muted, mode]);
 
   /** Cada tramo de canción va por su propio bus: al pausar o terminar, las notas ya programadas se cortan. */
   const freshSegment = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    try { audio.segment.disconnect(); } catch { /* ya desconectado */ }
-    audio.segment = audio.context.createGain();
-    audio.segment.connect(audio.music);
+    if (audioRef.current) tramoNuevo(audioRef.current);
   }, []);
 
   const ensureAudio = useCallback(async () => {
     if (muted) return false;
     try {
-      if (!audioRef.current) {
-        const context = new AudioContext();
-        const music = context.createGain();
-        const cue = context.createGain();
-        const segment = context.createGain();
-        music.connect(context.destination);
-        cue.connect(context.destination);
-        segment.connect(music);
-        music.gain.value = musicVolume / 100;
-        cue.gain.value = effectsVolume / 100;
-        const noise = context.createBuffer(1, Math.floor(context.sampleRate * 1.2), context.sampleRate);
-        const data = noise.getChannelData(0);
-        for (let index = 0; index < data.length; index++) data[index] = Math.random() * 2 - 1;
-        audioRef.current = { context, music, segment, cue, noise };
-      }
-      const { context } = audioRef.current;
-      if (context.state !== "running") await Promise.race([context.resume(), new Promise((resolve) => setTimeout(resolve, 400))]);
-      return context.state === "running";
+      audioRef.current ??= crearEquipo(PERFIL_TAMBOR, musicVolume / 100, effectsVolume / 100);
+      return audioRef.current ? await despertar(audioRef.current) : false;
     } catch {
       return false;
     }
   }, [effectsVolume, musicVolume, muted]);
 
   const playNote = useCallback((note: DrumNote, when: number) => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const { context } = audio;
-    const bus = note.bus === "music" ? audio.segment : audio.cue;
-    const start = when + note.offset;
-    const gain = context.createGain();
-    if (note.noise) {
-      const source = context.createBufferSource();
-      const filter = context.createBiquadFilter();
-      source.buffer = audio.noise;
-      filter.type = NOISE_FILTERS[note.noise].type;
-      filter.frequency.value = NOISE_FILTERS[note.noise].frequency;
-      gain.gain.setValueAtTime(note.volume, start);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration);
-      source.connect(filter).connect(gain).connect(bus);
-      source.start(start);
-      source.stop(start + note.duration + 0.02);
-      return;
-    }
-    const oscillator = context.createOscillator();
-    oscillator.type = note.wave;
-    oscillator.frequency.setValueAtTime(note.frequency, start);
-    if (note.glideTo) oscillator.frequency.exponentialRampToValueAtTime(note.glideTo, start + note.duration);
-    gain.gain.setValueAtTime(0.0001, start);
-    gain.gain.exponentialRampToValueAtTime(note.volume, start + 0.006);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + note.duration);
-    oscillator.connect(gain).connect(bus);
-    oscillator.start(start);
-    oscillator.stop(start + note.duration + 0.03);
+    if (audioRef.current) tocarNota(audioRef.current, note, when, null);
   }, []);
 
-  const playCue = useCallback((notes: DrumNote[]) => {
-    const audio = audioRef.current;
-    if (!audio || audio.context.state !== "running") return;
-    for (const note of notes) playNote({ ...note, bus: "cue" }, audio.context.currentTime + 0.003);
-  }, [playNote]);
+  const playCue = useCallback((notes: DrumNote[]) => tocarYa(audioRef.current, notes, null), []);
 
   const pulseNow = useCallback((session: Session) => {
     if (session.countUntil !== null || session.countMs > 0 || session.pausedAt !== null) return session.frozenPulse;

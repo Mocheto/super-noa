@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import type { PerfilSintesis } from "./ritmoAudio.ts";
 import { ajustesRitmo, anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
 
@@ -288,6 +289,9 @@ export function musicForEighth(run: PartyRun, eighth: number): PartyNote[] {
 export const hitSamples = (frequency: number): PartySample[] => [sample("hachazo", 0.36), pitched("marimba-do5", frequency, 0.4)];
 export const MISS_SAMPLE: PartySample = sample("golpe-sordo", 0.3);
 export const ROLL_SAMPLE: PartySample = sample("golpe-sordo", 0.15);
+
+/** Síntesis de la fiesta: ataque de 8 ms, ruido corto en paso alto y la música directa, sin bus de tramo. */
+export const PERFIL_FIESTA: PerfilSintesis = { ataque: 0.008, colaRuido: 0.01, segundosRuido: 0.2, conTramo: false, filtrosRuido: { true: { type: "highpass", frequency: 6000 } } };
 
 /** Cada acierto toca la siguiente nota del acorde del compás en curso. */
 export function leadNote(run: PartyRun, pulse: number) {

@@ -1,4 +1,5 @@
 import { outputLatencySeconds } from "./rhythmEngine.ts";
+import type { PerfilSintesis } from "./ritmoAudio.ts";
 import { ajustesRitmo, anotarAcierto, anotarVacia, esRebote, nuevaRaya, type Raya } from "./pulsacionVacia.ts";
 import { t } from "../textos/index.ts";
 
@@ -315,3 +316,6 @@ export const NOISE_FILTERS: Record<NonNullable<DrumNote["noise"]>, { type: Biqua
   clap: { type: "bandpass", frequency: 1400 },
   brush: { type: "bandpass", frequency: 2500 },
 };
+
+/** Síntesis de la «marcha de teatro»: solo osciladores y los ruidos de `NOISE_FILTERS`. */
+export const PERFIL_TAMBOR: PerfilSintesis = { ataque: 0.006, colaRuido: 0.02, segundosRuido: 1.2, conTramo: true, filtrosRuido: NOISE_FILTERS };

@@ -263,4 +263,6 @@ export type GameSnapshot = {
   checkpoint: number;
   paused: boolean;
   starSeconds?: number;
+  /** Exploración: gatitos perdidos encontrados de los que hay en la pantalla. */
+  kittens?: { found: number; total: number };
 };

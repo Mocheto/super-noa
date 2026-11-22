@@ -21,6 +21,7 @@ export const partida = {
     salas: { oculto: "Sala {n} de {total}" },
     sala: { rotulo: "{pictograma:sala} {puntos}" },
     bandera: { rotulo: "{pictograma:bandera} {puntos}" },
+    gatitos: { rotulo: "{pictograma:gato} {puntos}", oculto: "Gatitos encontrados: {n} de {total}" },
     secreto: { rotulo: "{pictograma:secreto} SECRETO" },
     paseo: { rotulo: "{pictograma:amigos} PASEO" },
     cargando: { rotulo: "{pictograma:espera} ESPERA" },
@@ -60,7 +61,6 @@ export const partida = {
     duelo: { rotulo: "{pictograma:reto} RETO" },
     noMuerde: { rotulo: "{pictograma:no-muerde} ¡NO MUERDE!" },
     miau: { rotulo: "¡MIAU!" },
-    gatitos: { rotulo: "{pictograma:gato}" },
     tuLana: { rotulo: "{pictograma:lana} ¡TU LANA!" },
     /** Cartel que sale tras la tienda secreta, según el mundo. */
     ayudaMundo: {

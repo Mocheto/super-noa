@@ -797,6 +797,9 @@ export default function App() {
         : t("partida.hud.banderas.oculto", { n: snapshot.checkpoint, total: displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length })}>
         {displayedLevel.puzzleRooms ? <Texto clave="partida.hud.sala.rotulo" variables={{ puntos: puntos(snapshot.checkpoint + 1, displayedLevel.puzzleRooms.length) }} /> : <Texto clave="partida.hud.bandera.rotulo" variables={{ puntos: puntos(snapshot.checkpoint, displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length) }} />}
       </span>}
+      {snapshot.kittens && snapshot.kittens.total > 0 && <span className="hud-chip hud-banderas" role="img" aria-label={t("partida.hud.gatitos.oculto", { n: snapshot.kittens.found, total: snapshot.kittens.total })}>
+        <Texto clave="partida.hud.gatitos.rotulo" variables={{ puntos: puntos(snapshot.kittens.found, snapshot.kittens.total) }} />
+      </span>}
     </div>
     <div className="hud-derecha">
       {(screen === "game" || screen === "boss") && <BotonControl className="hud-pausa" pictograma="pausa" etiqueta="partida.hud.pausa.oculto" onClick={() => setPaused((value) => !value)} />}

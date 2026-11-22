@@ -74,18 +74,10 @@ export function drawExploreWorld(context: CanvasRenderingContext2D, level: Level
   });
 }
 
-/** Capa de pantalla: huecos de gatitos en el HUD y la flecha que señala el objetivo alrededor de Noa. */
-export function drawExploreOverlay(context: CanvasRenderingContext2D, level: Level, state: ExploreState, player: { x: number; y: number; width: number }, target: { x: number; y: number } | null, camera: { x: number; y: number }, frame: number) {
+/** Capa de pantalla: la flecha que señala el objetivo alrededor de Noa. Los gatitos encontrados se cuentan en el HUD
+ * de esquinas (issue 319). */
+export function drawExploreOverlay(context: CanvasRenderingContext2D, player: { x: number; y: number; width: number }, target: { x: number; y: number } | null, camera: { x: number; y: number }, frame: number) {
   context.save();
-  context.fillStyle = "rgba(42,24,55,.82)";
-  context.beginPath(); context.roundRect(12, 12, 190, 46, 10); context.fill();
-  context.fillStyle = "#fff6e3"; context.font = letraLienzo(14); context.fillText(textoLienzo("partida.lienzo.gatitos.rotulo"), 24, 40);
-  (level.lostKittens ?? []).forEach((kitten, index) => {
-    const x = 118 + index * 28;
-    context.fillStyle = "rgba(255,246,227,.35)";
-    context.beginPath(); context.arc(x, 35, 12, 0, Math.PI * 2); context.fill();
-    if (state.found.includes(kitten.id)) drawCat(context, kitten, x, 47, 26);
-  });
   if (target) {
     const px = player.x + player.width / 2 - camera.x;
     const py = player.y + 10 - camera.y;

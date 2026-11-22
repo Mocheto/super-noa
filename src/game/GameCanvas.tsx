@@ -269,6 +269,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       apples, stickers: [...collectedStickers], power: player.power,
       checkpoint: checkpointIndex + 1, paused: !runningRef.current,
       ...(starRemaining > 0 ? { starSeconds: starRemaining } : {}),
+      ...(explore ? { kittens: { found: explore.found.length, total: level.lostKittens?.length ?? 0 } } : {}),
     });
     returnFromDetourRef.current = () => {
       setExcursion(null);
@@ -916,6 +917,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
             callbacksRef.current.playSound("cat");
             bursts.push({ x: event.kitten!.x, y: event.kitten!.y - 30, life: .5, color: "#ffe477", kind: "stars" });
             if (statusRef.current) statusRef.current.textContent = t("partida.avisos.gatitoEncontrado.oculto", { n: explore.found.length, total: level.lostKittens?.length ?? 3 });
+            callbacksRef.current.onSnapshot(currentSnapshot());
           }
           if (event.kind === "open") {
             callbacksRef.current.playSound("checkpoint");
@@ -1279,7 +1281,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         // Más abajo, la cueva se oscurece un poco.
         const depth = Math.max(0, Math.min(.35, (cameraY - ((level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT) * .6) / 600));
         if (depth > 0) { context.fillStyle = `rgba(40,24,18,${depth})`; context.fillRect(0, 0, VIEW_WIDTH, VIEW_HEIGHT); }
-        drawExploreOverlay(context, level, explore, player, hintTarget(level, explore, player), { x: cameraX, y: cameraY }, frame);
+        drawExploreOverlay(context, player, hintTarget(level, explore, player), { x: cameraX, y: cameraY }, frame);
       }
       // Carteles encima de todo: una sola pista bajo el HUD y, debajo, los de las cajas sin pisarse (issue 317).
       if (frame % 30 === 0) techoCartel = medirTechoCartel();

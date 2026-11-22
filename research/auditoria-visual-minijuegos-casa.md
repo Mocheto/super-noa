@@ -5,7 +5,7 @@ Fecha: 22 de noviembre de 2026, sobre `main` en `ce738d5`. Continúa la [auditor
 
 ## Método
 
-- Servidor de desarrollo y Chromium sin interfaz (Playwright), tres tamaños: **móvil vertical** 375 × 812 (×2, táctil), **móvil apaisado** 740 × 340 (×2, táctil) y **escritorio** 1280 × 800.
+- Servidor de desarrollo y Chromium sin interfaz (Playwright), cuatro tamaños: **tableta vertical** 810 × 1080 (×2, táctil), que es el **tamaño principal** porque Noa suele jugar así (confirmado en [#279](https://github.com/Mocheto/super-noa/issues/279)); **móvil vertical** 375 × 812 (×2, táctil); **móvil apaisado** 740 × 340 (×2, táctil) y **escritorio** 1280 × 800.
 - Minijuegos y duelos, con `?prueba=interfaz&ventana=<juego>` (`abeja`, `tambor`, `merienda`, `gatitos`, `avioneta`, `duelo`, `guardian`, `saltos`): se captura la pantalla previa, la primera pieza de la práctica (PRACTICA), el juego tras «¡A JUGAR!» y unos segundos después tras pulsar seis veces. Para ver el duelo dentro de la partida, `?prueba=1-3&duelo` (piedra, papel o tijera), `?prueba=4-3&duelo` (merienda) y `?prueba=13-3&duelo` (Papá Noel).
 - Ventanas comunes: `?prueba=interfaz&ventana=resultado`, `&ventana=previa`, la muestra de `?prueba=interfaz` y la pausa de verdad en `?prueba=1-1`.
 - Casa: `?prueba=casa&casaHora=11` con la campaña completa (17 gatitos rescatados): ventana «¡HOLA!», habitación, habitación deslizada a la derecha, abanico de comidas, decorar, «EN CASA», foto, jardín y álbum (pestaña FOTOS y una foto en grande); `casaHora=20` para la hora de dormir; `casaVisita=wolf` para la visita; `casaNecesidades=pide` y arrastrar un gatito (mantener 0,6 s) a la bañera o al armario para el baño y el vestidor.
@@ -15,56 +15,92 @@ Fecha: 22 de noviembre de 2026, sobre `main` en `ce738d5`. Continúa la [auditor
 
 ## Capturas
 
-Todas en [`capturas/`](auditoria-visual-minijuegos-casa/capturas/) con el nombre `<escena>-<momento>-<tamaño>.webp` (`movil`, `apaisado`, `escritorio`). Hojas de contacto:
+Todas en [`capturas/`](auditoria-visual-minijuegos-casa/capturas/) con el nombre `<escena>-<momento>-<tamaño>.webp` (`tableta`, `movil`, `apaisado`, `escritorio`). Hojas de contacto:
 
-| Zona | Vertical 375 × 812 | Apaisado 740 × 340 | Escritorio |
-| --- | --- | --- | --- |
-| Rítmicos (abeja, tambor, merienda, fiesta) | [hoja](auditoria-visual-minijuegos-casa/hojas/ritmo-movil.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/ritmo-apaisado.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/ritmo-escritorio.webp) |
-| Duelos (piedra, papel o tijera, guardianes, saltos) | [hoja](auditoria-visual-minijuegos-casa/hojas/duelos-movil.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/duelos-apaisado.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/duelos-escritorio.webp) |
-| Avioneta y ventanas comunes | [hoja](auditoria-visual-minijuegos-casa/hojas/ventanas-movil.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/ventanas-apaisado.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/ventanas-escritorio.webp) |
-| Casa (habitación, jardín, noche, baño, vestidor, fotos) | [hoja](auditoria-visual-minijuegos-casa/hojas/casa-movil.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/casa-apaisado.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/casa-escritorio.webp) |
+| Zona | **Tableta 810 × 1080** | Vertical 375 × 812 | Apaisado 740 × 340 | Escritorio |
+| --- | --- | --- | --- | --- |
+| Rítmicos (abeja, tambor, merienda, fiesta) | [hoja](auditoria-visual-minijuegos-casa/hojas/ritmo-tableta.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/ritmo-movil.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/ritmo-apaisado.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/ritmo-escritorio.webp) |
+| Duelos (piedra, papel o tijera, guardianes, saltos) | [hoja](auditoria-visual-minijuegos-casa/hojas/duelos-tableta.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/duelos-movil.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/duelos-apaisado.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/duelos-escritorio.webp) |
+| Avioneta y ventanas comunes | [hoja](auditoria-visual-minijuegos-casa/hojas/ventanas-tableta.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/ventanas-movil.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/ventanas-apaisado.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/ventanas-escritorio.webp) |
+| Casa (habitación, jardín, noche, baño, vestidor, fotos) | [hoja](auditoria-visual-minijuegos-casa/hojas/casa-tableta.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/casa-movil.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/casa-apaisado.webp) | [hoja](auditoria-visual-minijuegos-casa/hojas/casa-escritorio.webp) |
 
 ## Resumen
 
-Lo que más pesa, en orden:
+**En la tableta vertical, el tamaño en que juega Noa**, lo que más pesa es:
+
+1. **Todo está maquetado para pantallas apaisadas** (T1). Rítmicos, duelos, avioneta y casa usan entre un tercio y la mitad de los 1080 px de alto y dejan franjas vacías.
+2. **Los botones son pequeños en la mano** (T2). En una tableta, 44 px son unos 8 mm, y la #278 pide unos 2 cm (~100 px).
+3. **Los fallos de duelos y textos también se ven en tableta**: el duelo de piedra, papel o tijera se sale por abajo (D1), con rótulos de 11 px (D2) y «MAPA» en la esquina inferior (D3); el «sin sonido» tapa a Noa (R2).
+
+El resto de la tableta va bien: las ventanas comunes, «¡HOLA!», «EN CASA», el álbum, el baño y el vestidor caben y se leen.
+
+En los demás tamaños, lo que más pesa, en orden:
 
 1. **Cosas cortadas o fuera de la pantalla**: la ventana «¡HOLA!» de la casa en vertical (CA1), el duelo de piedra, papel o tijera en escritorio, con «MAPA» por debajo del borde (D1), y la foto en grande del álbum en apaisado (V4).
 2. **Escenarios pequeños en vertical**, igual que en la campaña (C1 de la #275): rítmicos, avioneta, saltos y casa usan un tercio de la altura y dejan el resto vacío (R1, CA3).
 3. **Texto pequeño o largo para Noa**: rótulos de 9–11 px en los duelos (D2) y reglas de seis a ocho líneas en las pantallas previas (V1).
 4. **Iconos y menús que tapan lo importante**: el «sin sonido» sobre la cara de Noa (R2) y el abanico de comidas sobre los botones de la bandeja (CA2).
-5. **Cada juego con su propio estilo**: la fiesta, los duelos y la avioneta no usan el marco ni los botones comunes (R4, D4, V2).
+5. **Cada juego con su propio estilo**: la fiesta, los duelos y la avioneta no usan el marco ni los botones comunes (R4, D4, V3).
 
 ## Inventario
 
 Cada problema lleva su zona, dónde se ve, por qué importa y una idea de arreglo con su coste: **código** (CSS, lienzo o componente; barato), **datos** (textos, partituras) o **arte** (dibujo nuevo, más caro; sin Gemini de pago, con prompt). Los marcados con **⚑** son fallos claros que no dependen de la guía de estilo.
+
+### Tableta vertical (tamaño principal)
+
+Va primero porque es donde juega Noa. Los problemas de las prioridades de abajo llevan **(tableta)** cuando también se ven en este tamaño.
+
+**T1. En la tableta vertical, la pantalla se usa a medias.** Todas las zonas, 810 × 1080.
+- **Rítmicos:** el marco (~700 × 560 px, escena de 700 × 395) queda centrado con ~250 px vacíos arriba y otros tantos abajo ([abeja-juego-tableta](auditoria-visual-minijuegos-casa/capturas/abeja-juego-tableta.webp), [merienda-juego-tableta](auditoria-visual-minijuegos-casa/capturas/merienda-juego-tableta.webp)).
+- **Fiesta y avioneta:** van pegadas arriba y dejan vacía más de la mitad de abajo; el cielo de la avioneta mide unos 460 px ([fiesta-juego-tableta](auditoria-visual-minijuegos-casa/capturas/fiesta-juego-tableta.webp), [avioneta-vuelo-tableta](auditoria-visual-minijuegos-casa/capturas/avioneta-vuelo-tableta.webp)).
+- **Casa:** ocupa los 585 px de arriba (el 54 %); la habitación mide ~710 × 400 y enseña algo más de la mitad de su ancho. Debajo quedan ~500 px de fondo morado ([casa-habitacion-tableta](auditoria-visual-minijuegos-casa/capturas/casa-habitacion-tableta.webp), [noche-dormir-tableta](auditoria-visual-minijuegos-casa/capturas/noche-dormir-tableta.webp)).
+- **Batalla de saltos:** su escenario 16:9 queda arriba, con los controles debajo ([santa-juego-tableta](auditoria-visual-minijuegos-casa/capturas/santa-juego-tableta.webp)).
+
+Al tamaño de la tableta, lo que se toca ya tiene buen tamaño (la flor de la abeja mide ~40 px y los gatitos ~120 px). El problema es el hueco vacío y que la acción queda lejos de las manos.
+*Idea:* un diseño propio para pantalla alta, que la guía (#280) debería fijar primero:
+- escena más alta (4:3, ~700 × 525) y botón de acción ancho en el tercio de abajo, donde apoyan los pulgares;
+- en la casa, escena a ~560 px de alto (enseña ~780 de los 1280 px y se desliza menos) y bandeja más alta debajo;
+- en la avioneta, recorrido vertical o cielo a todo lo alto.
+
+Es la misma decisión que C1 de la #275 para la campaña. *Coste:* código, medio (CSS por orientación y relación de aspecto); arte solo si un fondo necesita un recorte vertical.
+
+**T2. Botones pequeños para el tamaño físico de una tableta.** Todas las zonas, 810 × 1080 (medido). En una tableta de 10″, 810 px de ancho son ~15,5 cm, así que 1 px ≈ 0,19 mm.
+- Los botones de 44 px (PRACTICA, ¡A JUGAR!, SIGUE, MAPA, salir) miden ~8 mm.
+- Los redondos de la bandeja de la casa (decorar, foto, EN CASA) también miden 44 px, y las cuatro herramientas del baño, unos 45 px.
+- Las flechas de la avioneta y los saltos miden ~40 px.
+
+La #278 recomienda unos 2 cm (~100 px aquí) para lo que se toca a menudo. Lo bien resuelto son los botones de acción de los rítmicos («¡CORTA!» mide ~480 × 70 px) y las prendas del vestidor. Ver [casa-habitacion-tableta](auditoria-visual-minijuegos-casa/capturas/casa-habitacion-tableta.webp), [bano-bano-tableta](auditoria-visual-minijuegos-casa/capturas/bano-bano-tableta.webp), [avioneta-vuelo-tableta](auditoria-visual-minijuegos-casa/capturas/avioneta-vuelo-tableta.webp).
+*Idea:* una escala de `interfaz.css` para tableta (botones de 64–80 px, redondos de 72 px, controles de 96 px), no la del móvil, y aprovechar el hueco de T1 para ponerlos. *Coste:* código, bajo; los números van en la guía.
+
+**T3. El duelo de piedra, papel o tijera se sale también en tableta.** Dentro de la partida mide 1111 px en 1080, con «MAPA» abajo a la izquierda; los rótulos («RONDA 1», «LISTA», «GANA A») miden 11,5 px, unos 2 mm en la tableta. Ver [ppt-en-partida-tableta](auditoria-visual-minijuegos-casa/capturas/ppt-en-partida-tableta.webp), [guardian-juego-tableta](auditoria-visual-minijuegos-casa/capturas/guardian-juego-tableta.webp). Es D1, D2 y D3 en el tamaño principal, así que suben de prioridad.
 
 ### Prioridad 1: claridad y lectura para Noa
 
 **CA1. ⚑ La ventana «¡HOLA!» de la casa sale recortada en vertical.** Casa, llegada de gatitos, 375 × 812. Los cinco dibujos (96 px de alto) van en una fila sin salto (`.casa-llegada-dibujo`, `display: flex` sin `flex-wrap`) que es más ancha que la ventana: se cortan el título («¡HO…»), la frase y el botón «SIG…». Es la primera pantalla de la casa. Ver [casa-hola-movil](auditoria-visual-minijuegos-casa/capturas/casa-hola-movil.webp); en apaisado y escritorio se ve bien ([casa-hola-apaisado](auditoria-visual-minijuegos-casa/capturas/casa-hola-apaisado.webp)).
 *Idea:* `flex-wrap: wrap` y dibujos de 64 px en pantallas estrechas, o solo los tres primeros con «+2». *Coste:* código, bajo.
 
-**D1. ⚑ El duelo de piedra, papel o tijera no cabe en escritorio ni en apaisado.** Duelos de guardián, dentro de la partida (`?prueba=1-3&duelo`). La página mide 831 px en una pantalla de 800 y el botón «MAPA» queda en y = 853, fuera de la vista; el cuadro «¡PUNTO PARA NOA!» sale cortado. En apaisado, 371 px en 340. Además, el dibujo del Rey Zarzal se corta en vertical por un lado (recorte de su celda del atlas). Ver [ppt-en-partida-escritorio](auditoria-visual-minijuegos-casa/capturas/ppt-en-partida-escritorio.webp), [ppt-ronda-escritorio](auditoria-visual-minijuegos-casa/capturas/ppt-ronda-escritorio.webp).
+**D1. ⚑ El duelo de piedra, papel o tijera no cabe en tableta, escritorio ni apaisado (tableta).** Duelos de guardián, dentro de la partida (`?prueba=1-3&duelo`). La página mide 831 px en una pantalla de 800 y el botón «MAPA» queda en y = 853, fuera de la vista; el cuadro «¡PUNTO PARA NOA!» sale cortado. En apaisado, 371 px en 340. Además, el dibujo del Rey Zarzal se corta en vertical por un lado (recorte de su celda del atlas). Ver [ppt-en-partida-escritorio](auditoria-visual-minijuegos-casa/capturas/ppt-en-partida-escritorio.webp), [ppt-ronda-escritorio](auditoria-visual-minijuegos-casa/capturas/ppt-ronda-escritorio.webp).
 *Idea:* el duelo dentro del marco de la partida con alto máximo `100dvh`, el resultado de la ronda como cartel superpuesto (no debajo) y revisar el recorte del sprite. *Coste:* código, bajo.
 
 **R1. Escenario diminuto en vertical en los minijuegos.** Rítmicos, avioneta y batalla de saltos, 375 × 812. La escena 16:9 mide unos 343 × 190 px y deja vacía la mitad de abajo; la flor de la abeja mide ~12 px, el avión ~20 px. Ver [abeja-juego-movil](auditoria-visual-minijuegos-casa/capturas/abeja-juego-movil.webp), [avioneta-vuelo-movil](auditoria-visual-minijuegos-casa/capturas/avioneta-vuelo-movil.webp), [santa-juego-movil](auditoria-visual-minijuegos-casa/capturas/santa-juego-movil.webp). Mismo problema que C1 de la #275.
 *Idea:* los rítmicos son escenas fijas: en vertical, recortar la escena a 4:3 o apilar guardián arriba y Noa abajo, y dejar crecer el botón de acción hacia abajo, en la zona del pulgar. La avioneta pide un recorrido vertical. Decidirlo en la guía junto con C1. *Coste:* código medio; arte si hace falta un recorte vertical del fondo.
 
-**R2. ⚑ El icono de «sin sonido» tapa la cara de Noa.** Rítmicos, todos los tamaños, cuando no hay audio (móvil en silencio, reproducción bloqueada). En la abeja se pinta en `CUT_POINT` + (40, −70), justo sobre la cabeza de Noa; en la merienda y la fiesta, un círculo a media escena junto al jabalí o el tajo. Ver [abeja-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/abeja-juego-escritorio.webp), [merienda-juego2-apaisado](auditoria-visual-minijuegos-casa/capturas/merienda-juego2-apaisado.webp), [fiesta-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/fiesta-juego-escritorio.webp).
+**R2. ⚑ El icono de «sin sonido» tapa la cara de Noa (tableta).** Rítmicos, todos los tamaños, cuando no hay audio (móvil en silencio, reproducción bloqueada). En la abeja se pinta en `CUT_POINT` + (40, −70), justo sobre la cabeza de Noa; en la merienda y la fiesta, un círculo a media escena junto al jabalí o el tajo. Ver [abeja-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/abeja-juego-escritorio.webp), [merienda-juego2-apaisado](auditoria-visual-minijuegos-casa/capturas/merienda-juego2-apaisado.webp), [fiesta-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/fiesta-juego-escritorio.webp).
 *Idea:* llevarlo al HUD de la esquina, junto a la pausa (la fiesta ya tiene ahí un botón de sonido). *Coste:* código, bajo.
 
-**R3. El objeto que marca el ritmo se pierde en el fondo.** Abeja y merienda. La flor que vuela hacia la varita es pequeña (~30 px en escritorio) y del mismo color que las flores pintadas del fondo; la bellota, igual en el bosque de otoño. Ver [abeja-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/abeja-juego-escritorio.webp), [merienda-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/merienda-juego-escritorio.webp). El tambor (teatro oscuro y liso) y la fiesta (cielo suave) se leen mejor.
+**R3. El objeto que marca el ritmo se pierde en el fondo (tableta).** Abeja y merienda. La flor que vuela hacia la varita es pequeña (~30 px en escritorio) y del mismo color que las flores pintadas del fondo; la bellota, igual en el bosque de otoño. Ver [abeja-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/abeja-juego-escritorio.webp), [merienda-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/merienda-juego-escritorio.webp). El tambor (teatro oscuro y liso) y la fiesta (cielo suave) se leen mejor.
 *Idea:* el velo del fondo de C4/C8 de la #275 y un contorno claro con halo en el objeto rítmico, un 50 % más grande. *Coste:* código, bajo.
 
-**D2. Texto diminuto y pictogramas pequeños en los duelos.** Piedra, papel o tijera y juegos de guardián, sobre todo en móvil. Rótulos de 9–11 px («LISTA», «ESPERA», «RONDA 1/5», «CESTA IZQUIERDA», la leyenda «GANA A» de abajo); la piedra, el papel y la tijera ocupan ~25 px dentro de botones de 200 px. Noa elige por el dibujo, no por la palabra. Ver [ppt-elige-movil](auditoria-visual-minijuegos-casa/capturas/ppt-elige-movil.webp), [ppt-elige-apaisado](auditoria-visual-minijuegos-casa/capturas/ppt-elige-apaisado.webp), [guardian-juego-movil](auditoria-visual-minijuegos-casa/capturas/guardian-juego-movil.webp).
+**D2. Texto diminuto y pictogramas pequeños en los duelos (tableta).** Piedra, papel o tijera y juegos de guardián, sobre todo en móvil. Rótulos de 9–11 px («LISTA», «ESPERA», «RONDA 1/5», «CESTA IZQUIERDA», la leyenda «GANA A» de abajo); la piedra, el papel y la tijera ocupan ~25 px dentro de botones de 200 px. Noa elige por el dibujo, no por la palabra. Ver [ppt-elige-movil](auditoria-visual-minijuegos-casa/capturas/ppt-elige-movil.webp), [ppt-elige-apaisado](auditoria-visual-minijuegos-casa/capturas/ppt-elige-apaisado.webp), [guardian-juego-movil](auditoria-visual-minijuegos-casa/capturas/guardian-juego-movil.webp).
 *Idea:* el dibujo llena el botón (×3) y el rótulo queda en una palabra de 14 px o más; «LISTA/ESPERA» como un pictograma; la leyenda «GANA A» solo en la práctica o con dibujos grandes. *Coste:* código, bajo.
 
-**D3. «MAPA» en la esquina inferior izquierda de los duelos.** Juegos de guardián y piedra, papel o tijera en vertical: el botón de salir está abajo a la izquierda, donde apoya la mano (la #278 pide que nada salga ni rinda desde las esquinas inferiores). Ver [guardian-juego-movil](auditoria-visual-minijuegos-casa/capturas/guardian-juego-movil.webp), [ppt-elige-movil](auditoria-visual-minijuegos-casa/capturas/ppt-elige-movil.webp). En apaisado ya va arriba a la derecha.
+**D3. «MAPA» en la esquina inferior izquierda de los duelos (tableta).** Juegos de guardián y piedra, papel o tijera en vertical: el botón de salir está abajo a la izquierda, donde apoya la mano (la #278 pide que nada salga ni rinda desde las esquinas inferiores). Ver [guardian-juego-movil](auditoria-visual-minijuegos-casa/capturas/guardian-juego-movil.webp), [ppt-elige-movil](auditoria-visual-minijuegos-casa/capturas/ppt-elige-movil.webp). En apaisado ya va arriba a la derecha.
 *Idea:* salir siempre desde la pausa común (arriba a la derecha), como en los rítmicos. *Coste:* código, bajo.
 
-**V1. Pantallas previas con párrafos largos.** Pantalla previa de los cuatro rítmicos, la avioneta, los duelos y los saltos. La regla «para leer juntos» ocupa de cinco a ocho líneas («La Reina Melisa te lanza flores. ¡Córtalas con tu varita cuando lleguen a la punta…»), y debajo van dos líneas de ayuda para adultos casi del mismo tamaño (13 px). En vertical empujan los botones a la mitad de abajo. El dibujo del guardián es pequeño en algunas (~40 px en piedra, papel o tijera y en «Salva el huevo»). Ver [abeja-previa-movil](auditoria-visual-minijuegos-casa/capturas/abeja-previa-movil.webp), [merienda-previa-movil](auditoria-visual-minijuegos-casa/capturas/merienda-previa-movil.webp), [ppt-inicio-escritorio](auditoria-visual-minijuegos-casa/capturas/ppt-inicio-escritorio.webp).
+**V1. Pantallas previas con párrafos largos (tableta).** Pantalla previa de los cuatro rítmicos, la avioneta, los duelos y los saltos. La regla «para leer juntos» ocupa de cinco a ocho líneas («La Reina Melisa te lanza flores. ¡Córtalas con tu varita cuando lleguen a la punta…»), y debajo van dos líneas de ayuda para adultos casi del mismo tamaño (13 px). En vertical empujan los botones a la mitad de abajo. El dibujo del guardián es pequeño en algunas (~40 px en piedra, papel o tijera y en «Salva el huevo»). Ver [abeja-previa-movil](auditoria-visual-minijuegos-casa/capturas/abeja-previa-movil.webp), [merienda-previa-movil](auditoria-visual-minijuegos-casa/capturas/merienda-previa-movil.webp), [ppt-inicio-escritorio](auditoria-visual-minijuegos-casa/capturas/ppt-inicio-escritorio.webp).
 *Idea:* una frase para leer juntos y tres pictogramas grandes (qué hacer, qué no tocar, qué se gana); la ayuda para adultos detrás de un botón «?»; el guardián a ×2. *Coste:* datos (textos) y código, bajo; encaja con la guía de escritura.
 
-**V2. Botones por debajo de 48 px.** Ventanas, previas y casa en móvil (medido): PRACTICA, ¡A JUGAR!, SIGUE y MAPA miden 44 px de alto; los de control (sonido, pantalla grande, pausa, cerrar, salir de la casa) 40 px; los redondos de la bandeja de la casa (decorar, foto, EN CASA) 44 px. La #278 pide 48 px, y 64 en lo que se toca a menudo. Ver [ventanas-resultado-movil](auditoria-visual-minijuegos-casa/capturas/ventanas-resultado-movil.webp), [casa-habitacion-movil](auditoria-visual-minijuegos-casa/capturas/casa-habitacion-movil.webp).
+**V2. Botones por debajo de 48 px (tableta).** Ventanas, previas y casa en móvil (medido): PRACTICA, ¡A JUGAR!, SIGUE y MAPA miden 44 px de alto; los de control (sonido, pantalla grande, pausa, cerrar, salir de la casa) 40 px; los redondos de la bandeja de la casa (decorar, foto, EN CASA) 44 px. La #278 pide 48 px, y 64 en lo que se toca a menudo. Ver [ventanas-resultado-movil](auditoria-visual-minijuegos-casa/capturas/ventanas-resultado-movil.webp), [casa-habitacion-movil](auditoria-visual-minijuegos-casa/capturas/casa-habitacion-movil.webp).
 *Idea:* subir las medidas de móvil de `interfaz.css` a 48/56 px y los redondos de la bandeja a 56 px. *Coste:* código, bajo; decidir los números en la guía.
 
 **CA2. ⚑ El abanico de comidas tapa los botones de la bandeja.** Casa, apaisado (y escritorio). Al tocar el cuenco, las cuatro comidas salen hacia arriba, fuera de la bandeja, sobre los botones redondos de decorar y foto; mientras está abierto, «EN CASA» no se abrió en la prueba. Ver [casa-abanico-apaisado](auditoria-visual-minijuegos-casa/capturas/casa-abanico-apaisado.webp).
@@ -92,13 +128,13 @@ Cada problema lleva su zona, dónde se ve, por qué importa y una idea de arregl
 
 ### Prioridad 3: coherencia y pulido
 
-**R4. Cada rítmico con su propia plantilla.** Abeja, tambor y merienda van sobre papel crema con marco y botón de acción amarillo; la fiesta, sin marco, con sonido y pausa fuera de la escena arriba a la izquierda y botón verde plano; el tambor añade en vertical un contador 1-2-3-4 que los otros no tienen. Ver [fiesta-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/fiesta-juego-escritorio.webp) frente a [tambor-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/tambor-juego-escritorio.webp), [tambor-juego2-movil](auditoria-visual-minijuegos-casa/capturas/tambor-juego2-movil.webp).
+**R4. Cada rítmico con su propia plantilla (tableta).** Abeja, tambor y merienda van sobre papel crema con marco y botón de acción amarillo; la fiesta, sin marco, con sonido y pausa fuera de la escena arriba a la izquierda y botón verde plano; el tambor añade en vertical un contador 1-2-3-4 que los otros no tienen. Ver [fiesta-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/fiesta-juego-escritorio.webp) frente a [tambor-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/tambor-juego-escritorio.webp), [tambor-juego2-movil](auditoria-visual-minijuegos-casa/capturas/tambor-juego2-movil.webp).
 *Idea:* llevar la fiesta al esqueleto común de los duelos rítmicos (`minijuegoComun`), con el mismo marco, HUD y botón. *Coste:* código, medio.
 
-**D4. Los duelos y la batalla de saltos no se parecen al resto.** Piedra, papel o tijera y juegos de guardián usan una letra monoespaciada con remates y cajas blancas de línea fina, no Press Start 2P ni el papel y la cinta de `<Ventana>`; detrás de Noa asoman dos rectángulos grises. La batalla de saltos de Siroco y Don Silbato usa el suelo nevado con guirnaldas y los copos de Papá Noel en el desierto, dentro de un marco verde navideño. Ver [ppt-elige-apaisado](auditoria-visual-minijuegos-casa/capturas/ppt-elige-apaisado.webp), [guardian-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/guardian-juego-escritorio.webp), [santa-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/santa-juego-escritorio.webp).
+**D4. Los duelos y la batalla de saltos no se parecen al resto (tableta).** Piedra, papel o tijera y juegos de guardián usan una letra monoespaciada con remates y cajas blancas de línea fina, no Press Start 2P ni el papel y la cinta de `<Ventana>`; detrás de Noa asoman dos rectángulos grises. La batalla de saltos de Siroco y Don Silbato usa el suelo nevado con guirnaldas y los copos de Papá Noel en el desierto, dentro de un marco verde navideño. Ver [ppt-elige-apaisado](auditoria-visual-minijuegos-casa/capturas/ppt-elige-apaisado.webp), [guardian-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/guardian-juego-escritorio.webp), [santa-juego-escritorio](auditoria-visual-minijuegos-casa/capturas/santa-juego-escritorio.webp).
 *Idea:* letra y colores de `interfaz.css` en los duelos; marco caramelo con el acento del mundo; suelo, partículas y marco por guardián en `santaBattleAssets.ts`. *Coste:* código bajo; arte si hacen falta suelos propios para el desierto y el tren.
 
-**V3. Dos estilos de botón principal en la pantalla previa.** Los rítmicos destacan PRACTICA (verde) y dejan «¡A JUGAR!» en blanco; avioneta, duelos y saltos ponen «¡A JUGAR!» en rojo. Ver [abeja-previa-escritorio](auditoria-visual-minijuegos-casa/capturas/abeja-previa-escritorio.webp), [santa-inicio-escritorio](auditoria-visual-minijuegos-casa/capturas/santa-inicio-escritorio.webp).
+**V3. Dos estilos de botón principal en la pantalla previa (tableta).** Los rítmicos destacan PRACTICA (verde) y dejan «¡A JUGAR!» en blanco; avioneta, duelos y saltos ponen «¡A JUGAR!» en rojo. Ver [abeja-previa-escritorio](auditoria-visual-minijuegos-casa/capturas/abeja-previa-escritorio.webp), [santa-inicio-escritorio](auditoria-visual-minijuegos-casa/capturas/santa-inicio-escritorio.webp).
 *Idea:* un único botón principal por pantalla con el mismo color en todas; decidirlo en la guía. *Coste:* código, bajo.
 
 **V5. Títulos que se parten en dos o tres líneas.** Pantallas previas en vertical: «RETO CON REY ZARZAL», «SALVA EL HUEVO», «JUEGA CON SIROCO» y «ABEJA NINJA» se parten y se acercan a la X de cerrar. Ver [ppt-inicio-movil](auditoria-visual-minijuegos-casa/capturas/ppt-inicio-movil.webp).
@@ -106,6 +142,7 @@ Cada problema lleva su zona, dónde se ve, por qué importa y una idea de arregl
 
 ## Sin problemas destacables
 
+- En la tableta caben y se leen bien las ventanas comunes, la pantalla previa, «¡HOLA!», «EN CASA», el álbum con la foto en grande, el baño y el vestidor ([casa-hola-tableta](auditoria-visual-minijuegos-casa/capturas/casa-hola-tableta.webp), [vestidor-vestidor-puesto-tableta](auditoria-visual-minijuegos-casa/capturas/vestidor-vestidor-puesto-tableta.webp), [ventanas-resultado-tableta](auditoria-visual-minijuegos-casa/capturas/ventanas-resultado-tableta.webp)). CA1, CA3, CA4, CA5 y V4 son solo de móvil.
 - La ventana común (pausa y resultado) se lee bien en los tres tamaños; en apaisado reparte los botones en fila o columna sin salirse ([ventanas-pausa-apaisado](auditoria-visual-minijuegos-casa/capturas/ventanas-pausa-apaisado.webp), [ventanas-resultado-apaisado](auditoria-visual-minijuegos-casa/capturas/ventanas-resultado-apaisado.webp)).
 - Baño y vestidor en apaisado y escritorio: dibujo grande, bandeja clara y «¡LISTO!» visible ([bano-bano-alcachofa-escritorio](auditoria-visual-minijuegos-casa/capturas/bano-bano-alcachofa-escritorio.webp), [vestidor-vestidor-puesto-escritorio](auditoria-visual-minijuegos-casa/capturas/vestidor-vestidor-puesto-escritorio.webp)).
 - La casa en apaisado y escritorio: bocadillos de necesidad con dibujo, bandeja con objetos grandes, decorar y noche legibles ([casa-decorar-apaisado](auditoria-visual-minijuegos-casa/capturas/casa-decorar-apaisado.webp), [noche-dormir-escritorio](auditoria-visual-minijuegos-casa/capturas/noche-dormir-escritorio.webp)).

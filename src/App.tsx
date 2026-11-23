@@ -14,7 +14,7 @@ import { testScreens } from "./game/testScreens";
 /** Solo en desarrollo: `?prueba=salas` abre una pantalla de prueba de los motores de formato y `?prueba=12-2`, una
  * pantalla de la campaña, para revisarlas sin recorrer el mapa. */
 const devTestName = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("prueba") ?? "" : "";
-/** En desarrollo, `?prueba=<pantalla>&duelo` abre directamente el duelo del guardián de esa pantalla, `?prueba=fiesta` la fiesta de los gatitos y `?prueba=casa` la casa de los gatitos (con `&paletas`, las paletas de sus gatitos). */
+/** En desarrollo, `?prueba=<pantalla>&duelo` abre directamente el duelo del guardián de esa pantalla, `?prueba=fiesta` la fiesta de los gatitos y `?prueba=casa` la casa de los gatitos (con `&paletas`, las paletas de sus gatitos, y con `&gatitos=6`, con los gatitos de los mundos 1 a 6). */
 const devDuel = import.meta.env.DEV && new URLSearchParams(window.location.search).has("duelo");
 const devTestLevel = devTestName ? testScreens[devTestName] ?? [...levels, ...detourLevels, ...restStopLevels].find((level) => level.id === devTestName) : undefined;
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
@@ -34,7 +34,7 @@ import { restStopFor, restStopIndex, restStopResumenes as restStopLevels, restSt
 import { greetFriend, visitRestStop } from "./game/restStopProgress";
 import { addHeart } from "./game/friendProgress";
 import { funciones } from "./game/funciones";
-import { casaAbierta, llegadasPorVer } from "./game/casaRescate";
+import { casaAbierta, conMundosCompletos, llegadasPorVer } from "./game/casaRescate";
 import { recordFlight } from "./game/avioneta";
 import { puntos, sinPictogramas, t } from "./textos";
 import { Boton, BotonControl, PalabraConDibujo, Pictograma, Texto } from "./textos/Texto";
@@ -65,6 +65,8 @@ const CasaGatitos = lazy(() => import("./game/CasaGatitos").then((module) => ({ 
 const PruebaPaletas = lazy(() => import("./game/PruebaPaletas").then((module) => ({ default: module.PruebaPaletas })));
 /** En desarrollo, `?prueba=casa&paletas` enseña los gatitos de la casa con su paleta, en vez de la casa. */
 const devPaletas = import.meta.env.DEV && new URLSearchParams(window.location.search).has("paletas");
+/** En desarrollo, `?prueba=casa&gatitos=6` abre la casa como si los mundos 1 a 6 estuvieran completos (y la casa lo guarda). */
+const devGatitos = import.meta.env.DEV ? Number(new URLSearchParams(window.location.search).get("gatitos")) || 0 : 0;
 const CatParty = lazy(() => import("./game/CatPartyGame").then((module) => ({ default: module.CatParty })));
 const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module) => ({ default: module.SantaBossBattle })));
 
@@ -916,7 +918,7 @@ export default function App() {
           }} />
       </Suspense>}
       {screen === "casa" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
-        {devPaletas ? <PruebaPaletas /> : <CasaGatitos casa={progress.casa} levelStats={progress.levelStats} reduceMotion={reduceMotion} muted={muted} effectsVolume={effectsVolume} musicVolume={musicVolume}
+        {devPaletas ? <PruebaPaletas /> : <CasaGatitos casa={progress.casa} levelStats={devGatitos ? conMundosCompletos(progress.levelStats, devGatitos) : progress.levelStats}reduceMotion={reduceMotion} muted={muted} effectsVolume={effectsVolume} musicVolume={musicVolume}
           onGuardar={(casa) => setProgress((current) => ({ ...current, casa }))} onAmistad={(kind) => setProgress((current) => addHeart(current, kind))} onSalir={() => setScreen("map")} />}
       </Suspense>}
       {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>

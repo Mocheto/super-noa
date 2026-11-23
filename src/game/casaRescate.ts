@@ -5,6 +5,7 @@
  */
 import { asegurarGatitos, avanzar, casaVacia, llegadasPendientes, type CasaProgress } from "./casa.ts";
 import { nivelesCampana as levels } from "./nivelesIndice.ts";
+import type { LevelStats } from "./progress.ts";
 
 /** Mundos cuyos gatitos se mudan a la casa: todos los que tienen gatito (y paleta del gato base). */
 export const MUNDOS_CASA: readonly number[] = Array.from({ length: 17 }, (_, i) => i + 1);
@@ -17,6 +18,12 @@ export function mundoCompleto(levelStats: Estadisticas, mundo: number): boolean 
 }
 
 export const gatitosRescatados = (levelStats: Estadisticas): number[] => MUNDOS_CASA.filter((mundo) => mundoCompleto(levelStats, mundo));
+
+/** Solo para probar en desarrollo (`?prueba=casa&gatitos=6`): las estadísticas con los mundos 1 a `hasta` completos. */
+export function conMundosCompletos(levelStats: LevelStats, hasta: number): LevelStats {
+  const completas = levels.filter((level) => level.world <= hasta).map((level) => [level.id, { ...levelStats[level.id], bestApples: levelStats[level.id]?.bestApples ?? 0, completed: true }]);
+  return { ...levelStats, ...Object.fromEntries(completas) };
+}
 
 /** El botón CASA aparece al rescatar al gatito del mundo 1. */
 export const casaAbierta = (levelStats: Estadisticas) => mundoCompleto(levelStats, MUNDOS_CASA[0]);

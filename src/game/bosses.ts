@@ -21,8 +21,8 @@ const datosGuardianes: Record<BossId, BossDatos> = {
   "queen-bee": { assetPrefix: "", assetAtlas: "./assets/atlases/giant-valley-characters-v1.webp", challenge: { id: "perfect-game" } },
   "polar-bear": { assetPrefix: "", assetAtlas: "./assets/atlases/ice-mountain-characters-v1.webp", challenge: { id: "clean-sweep" } },
   "santa-claus": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-papa-noel-sheet-v2.webp", challenge: { id: "clean-sweep" } },
-  "siroco": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-siroco-sheet-v1.webp", challenge: { id: "clean-sweep" } },
-  "don-silbato": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-don-silbato-sheet-v1.webp", challenge: { id: "clean-sweep" } },
+  "siroco": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-siroco-sheet-v2.webp", challenge: { id: "clean-sweep" } },
+  "don-silbato": { assetPrefix: "", assetAtlas: "./assets/sprites/boss-don-silbato-sheet-v2.webp", challenge: { id: "clean-sweep" } },
   "maestra-armonia": { assetPrefix: "", assetAtlas: "./assets/atlases/music-characters-v1.webp", challenge: { id: "perfect-game" } },
   "aurora-celeste": { assetPrefix: "", assetAtlas: "./assets/atlases/sky-kingdom-characters-v1.webp", challenge: { id: "perfect-game" } },
 };

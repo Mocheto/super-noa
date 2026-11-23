@@ -63,10 +63,71 @@ def guardian(folder, nombre):
     print(f'  "{nombre}": {json.dumps(fuentes)},')
 
 
+CELDA = 256
+PIES = 248
+CABE_ALTO = 236
+CABE_MEDIO = 122
+
+
+def sin_manchas(rgba):
+    """Quita los grumos que son casi verde de fondo (manchas borrosas del generador)."""
+    import numpy as np
+    from scipy import ndimage
+    labels, n = ndimage.label(rgba[..., 3] > 0)
+    for indice in range(1, n + 1):
+        zona = labels == indice
+        r, g, b = (rgba[..., c][zona].astype(int).mean() for c in range(3))
+        if g > r + 15 and g > b + 15:
+            rgba[..., 3][zona] = 0
+    return rgba
+
+
+def pies_x(img):
+    """Centro de los pies: la media de las columnas opacas en el 8 % de abajo."""
+    import numpy as np
+    a = np.array(img)[..., 3] > 0
+    ys, xs = np.nonzero(a)
+    abajo = ys >= ys.max() - max(2, int(img.height * .08))
+    return float(xs[abajo].mean())
+
+
+def morado_a_marron(img):
+    """La cartera de Don Silbato salió morada en dos poses: los morados pasan al marrón de las otras, con su luz."""
+    import numpy as np
+    hsv = np.array(img.convert("RGB").convert("HSV")).astype(int)
+    tono = hsv[..., 0] * 360 / 255
+    morado = (tono >= 255) & (tono <= 315) & (hsv[..., 1] > 70) & (np.array(img)[..., 3] > 0)
+    hsv[..., 0] = np.where(morado, round(28 * 255 / 360), hsv[..., 0])
+    rgb = Image.fromarray(hsv.astype(np.uint8), "HSV").convert("RGB")
+    salida = np.array(img).copy()
+    salida[..., :3] = np.where(morado[..., None], np.array(rgb), salida[..., :3])
+    return Image.fromarray(salida, "RGBA")
+
+
+def poses_del_jefe(folder, nombre):
+    rgba = sin_manchas(casa.key_out(casa.load(folder, f"{nombre}-poses")))
+    piezas = sorted(casa.poses(rgba, 5, min_area=6000), key=lambda p: p["cuerpo"][0])
+    imagenes = [casa.recorte(rgba, pieza) for pieza in piezas]
+    if nombre == "don-silbato":
+        imagenes = [morado_a_marron(img) for img in imagenes]
+    # Misma escala para las cinco: la más alta cabe de alto y ninguna se sale de lado desde sus pies.
+    factor = min(CABE_ALTO / max(img.height for img in imagenes),
+                 min(CABE_MEDIO / max(pies_x(img), img.width - pies_x(img)) for img in imagenes))
+    hoja = Image.new("RGBA", (CELDA * 5, CELDA * 2))
+    for i, img in enumerate(imagenes):
+        img = img.resize((max(1, round(img.width * factor)), max(1, round(img.height * factor))), Image.NEAREST)
+        x = i * CELDA + round(CELDA / 2 - pies_x(img))
+        hoja.alpha_composite(img, (x, CELDA + PIES - img.height))
+    salida = casa.SPRITES / f"boss-{nombre}-sheet-v2.webp"
+    hoja.save(salida, "WEBP", lossless=True, method=6)
+    print(f"escrita {salida.relative_to(casa.ROOT)} {hoja.size} (factor {factor:.3f})")
+
+
 def main():
     folder = Path(sys.argv[1])
     for nombre in ("siroco", "don-silbato"):
         guardian(folder, nombre)
+        poses_del_jefe(folder, nombre)
 
 
 if __name__ == "__main__":

@@ -45,3 +45,13 @@ export const bossTerrains = {
     projectile: [4, 377, 120, 97],
   },
 } as const;
+
+// Las cinco poses de Siroco y Don Silbato en pixel art (issue 355): cuadrícula común de 5 × 2 casillas de 256 px, con
+// las poses en la fila de abajo y los pies a 248 px de su casilla (prototypes/tools/batalla-saltos-recorte.py).
+export const bossPoseSheets = {
+  siroco: "./assets/sprites/boss-siroco-sheet-v2.webp",
+  "don-silbato": "./assets/sprites/boss-don-silbato-sheet-v2.webp",
+} as const;
+/** Lado al que se dibuja la casilla en la arena (la pose más alta mide unos 135 px, como Papá Noel) y dónde van los pies. */
+export const BOSS_POSE_DRAWN = 146;
+export const BOSS_POSE_FEET = 248 / 256;

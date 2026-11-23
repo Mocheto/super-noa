@@ -1,5 +1,5 @@
 import { getImage } from "./assets";
-import { actionBossBackgrounds, bossTerrains, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets";
+import { actionBossBackgrounds, BOSS_POSE_DRAWN, BOSS_POSE_FEET, bossPoseSheets, bossTerrains, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets";
 import { SANTA_ARENA, SANTA_PLATFORMS, type SantaBattle } from "./santaBattle";
 import type { BossId } from "./types";
 import { textoLienzo, tClave } from "../textos/index.ts";
@@ -62,7 +62,7 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
       ctx.fillStyle = "#fff6e7"; ctx.fillRect(support.x, support.y, support.width, 7);
     }
   }
-  const sheet = getImage(bossId === "santa-claus" ? santaBattleAssets.characters : `./assets/sprites/boss-${bossId === "siroco" ? "siroco" : "don-silbato"}-sheet-v1.webp`);
+  const sheet = getImage(bossId === "santa-claus" ? santaBattleAssets.characters : bossPoseSheets[bossId]);
   for (const gift of state.gifts) {
     if (bossId === "santa-claus" && sheet.complete && sheet.naturalWidth) ctx.drawImage(sheet, ...santaGiftSource, gift.x, gift.y, gift.width, gift.height);
     else if (own && terrain.complete && terrain.naturalWidth) {
@@ -94,12 +94,14 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
     ctx.drawImage(sheet, sx, sy, sw, sh, (sx - sprite.anchorX) * scale, boss.y + boss.height - sh * scale, sw * scale, sh * scale);
     ctx.restore();
   } else if (sheet.complete && sheet.naturalWidth) {
-    const cellWidth = sheet.naturalWidth / 5;
+    // Cuadrícula de 5 × 2 casillas cuadradas con las poses abajo (issue 355): sin deformar, con los pies en el suelo.
+    const cell = sheet.naturalWidth / 5;
+    const size = BOSS_POSE_DRAWN;
     ctx.save();
     const center = boss.x + boss.width / 2;
     ctx.translate(center, 0);
     if (state.player.x > center) ctx.scale(-1, 1);
-    ctx.drawImage(sheet, pose * cellWidth, 0, cellWidth, sheet.naturalHeight, -72, boss.y - 10, 144, boss.height + 18);
+    ctx.drawImage(sheet, pose * cell, cell, cell, cell, -size / 2, boss.y + boss.height - size * BOSS_POSE_FEET, size, size);
     ctx.restore();
   } else { ctx.fillStyle = "#bd3047"; ctx.fillRect(boss.x, boss.y, boss.width, boss.height); }
   if (boss.attackIn < .65 && !boss.stun && state.status === "playing") {

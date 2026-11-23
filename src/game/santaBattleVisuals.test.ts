@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
-import { actionBossBackgrounds, bossTerrains, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets.ts";
+import { actionBossBackgrounds, BOSS_POSE_FEET, bossPoseSheets, bossTerrains, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets.ts";
 import { readRgbaImage } from "./imagenTestUtils.ts";
 import { SANTA_ARENA, SANTA_PLATFORMS } from "./santaBattle.ts";
 
@@ -60,6 +60,30 @@ test("Siroco y Don Silbato tienen su terreno y su proyectil, con el borde donde 
       let opacos = 0;
       for (let px = x; px < x + w; px++) if (alfa(px, y + 2) >= 128) opacos++;
       assert.ok(opacos > w * .85, `${terreno.atlas} ${pieza}: borde de arriba recto`);
+    }
+  }
+});
+
+test("las poses de Siroco y Don Silbato van en la cuadrícula común, abajo, a la misma escala y con los pies alineados", () => {
+  for (const hoja of Object.values(bossPoseSheets)) {
+    const { width, height, pixels } = readRgbaImage(hoja);
+    assert.equal(width, height * 2.5, "cinco columnas por dos filas de casillas cuadradas");
+    const celda = width / 5;
+    const alfa = (x: number, y: number) => pixels[(y * width + x) * 4 + 3];
+    let arriba = 0;
+    for (let y = 0; y < celda; y++) for (let x = 0; x < width; x++) if (alfa(x, y) > 0) arriba++;
+    assert.equal(arriba, 0, `${hoja}: la fila de arriba está vacía`);
+    const pies = Math.round(celda + celda * BOSS_POSE_FEET) - 1;
+    for (let pose = 0; pose < 5; pose++) {
+      let suela = 0, debajo = 0, bordes = 0;
+      for (let x = pose * celda; x < (pose + 1) * celda; x++) {
+        if (alfa(x, pies) > 0) suela++;
+        for (let y = pies + 2; y < height; y++) if (alfa(x, y) > 0) debajo++;
+      }
+      for (let y = celda; y < height; y++) if (alfa(pose * celda, y) > 0 || alfa((pose + 1) * celda - 1, y) > 0) bordes++;
+      assert.ok(suela > 8, `${hoja} pose ${pose + 1}: apoya los pies en su fila`);
+      assert.equal(debajo, 0, `${hoja} pose ${pose + 1}: nada por debajo de los pies`);
+      assert.equal(bordes, 0, `${hoja} pose ${pose + 1}: no toca la casilla vecina`);
     }
   }
 });

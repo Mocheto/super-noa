@@ -452,6 +452,18 @@ _Avoid_: Demostración, turno del guardián
 Fase en que Noa toca los sitios en el orden del recorrido, sin reloj.
 _Avoid_: Respuesta (reservado al tambor de Armonía), turno de Noa
 
+**Vuelo de Aurora**:
+Duelo de memoria de Aurora Celeste en el que ella vuela de nube en nube despertando a las nubecitas y Noa repite el recorrido tocando las nubes.
+_Avoid_: Une las estrellas (el duelo anterior), Simon
+
+**Nubecita**:
+Pajarito-nube del cielo (el amigo del mundo 17); en el vuelo de Aurora duerme en cada sitio y canta su nota al despertar.
+_Avoid_: Pufflito, puffling (nombre interno)
+
+**Constelación del gatito**:
+Marcador del vuelo de Aurora: cada ronda ganada sube una estrella al cielo y las cinco dibujan un gatito.
+_Avoid_: Estrellas del marcador, raya
+
 ## Piedra, papel o tijera
 
 **Bocadillo del guardián**:

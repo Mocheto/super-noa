@@ -26,3 +26,22 @@ export const santaTerrainSources = {
   ground: [80, 360, 1090, 231],
   ledge: [38, 874, 1180, 179],
 } as const;
+
+// Terreno y proyectil propios de Siroco y Don Silbato (issue 355, docs/art/batalla-saltos-v1.md): un atlas por
+// guardián con el suelo, la repisa y el proyectil apilados, recortado con prototypes/tools/batalla-saltos-recorte.py.
+export const bossTerrains = {
+  siroco: {
+    atlas: "./assets/atlases/siroco-boss-terrain-v1.webp",
+    // Sin los bloques de los extremos, para que los tramos repetidos empalmen sin juntas.
+    ground: [80, 0, 992, 222],
+    ledge: [0, 230, 768, 193],
+    projectile: [4, 435, 120, 120],
+  },
+  "don-silbato": {
+    atlas: "./assets/atlases/don-silbato-boss-terrain-v1.webp",
+    // Sin las esquinas biseladas, que al repetir dejaban una muesca en cada unión.
+    ground: [70, 0, 1012, 189],
+    ledge: [0, 197, 768, 157],
+    projectile: [4, 377, 120, 97],
+  },
+} as const;

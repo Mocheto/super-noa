@@ -4,8 +4,10 @@ Dossier del arte propio de las batallas de saltos de Siroco (desierto) y Don Sil
 
 ## Estado
 
-- **Pendiente de generar.** Hoy las dos batallas usan su propio fondo (`worlds/desert-boss-arena-v1.webp` y `worlds/train-boss-arena-v1.webp`) y su propio personaje, pero el suelo y la repisa nevados de Papá Noel (`atlases/santa-boss-terrain-v1.webp`), los copos que caen y unos proyectiles dibujados con formas (un círculo y un rectángulo).
-- Se recortará con `prototypes/tools/batalla-saltos-recorte.py` en un atlas por guardián, `atlases/siroco-boss-terrain-v1.webp` y `atlases/don-silbato-boss-terrain-v1.webp`, con el suelo, la repisa y el proyectil, y sus recortes en `santaBattleAssets.ts`.
+- **Montada** en el mismo ticket. Las originales están en `../super-noa-arte-original/batalla-saltos-v1/` (`siroco-terreno.jpg` y `don-silbato-terreno.jpg`).
+- `prototypes/tools/batalla-saltos-recorte.py` las recorta en `atlases/siroco-boss-terrain-v1.webp` y `atlases/don-silbato-boss-terrain-v1.webp`: el suelo a 1152 px de ancho, la repisa a 768 y el proyectil en un cuadrado de 128, apilados. Imprime los recortes para `bossTerrains` de `src/game/santaBattleAssets.ts`.
+- El suelo se repite en tramos con su proporción, sin los extremos (los bloques de Siroco y las esquinas biseladas del andén), para que empalme sin juntas. La bola de arena rueda; la maleta va derecha.
+- Las partículas se dibujan por código en `santaBattleRendering.ts`: granitos de arena de lado (Siroco) y vapor que sube (Don Silbato). Papá Noel sigue con su nieve.
 
 ## Qué hace falta
 

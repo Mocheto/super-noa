@@ -1,10 +1,39 @@
 import { getImage } from "./assets";
-import { actionBossBackgrounds, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets";
+import { actionBossBackgrounds, bossTerrains, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets";
 import { SANTA_ARENA, SANTA_PLATFORMS, type SantaBattle } from "./santaBattle";
 import type { BossId } from "./types";
 import { textoLienzo, tClave } from "../textos/index.ts";
 
 type PlatformBossId = Extract<BossId, "santa-claus" | "siroco" | "don-silbato">;
+
+/**
+ * Lo que cae o vuela en la arena: copos para Papá Noel, granitos de arena que van de lado para Siroco y bocanadas de
+ * vapor que suben para Don Silbato (issue 355). Cuadraditos de pocos píxeles, sin sprites.
+ */
+function drawParticles(ctx: CanvasRenderingContext2D, bossId: PlatformBossId, elapsed: number) {
+  const { width, floor } = SANTA_ARENA;
+  if (bossId === "siroco") {
+    ctx.fillStyle = "#f6cf7a";
+    for (let i = 0; i < 40; i++) {
+      const x = (i * 131 + 27 + elapsed * (70 + (i % 4) * 15)) % width;
+      const y = (i * 79) % (floor - 25) + Math.sin(elapsed * 2 + i) * 6;
+      ctx.fillRect(x, y, 4, 2);
+    }
+  } else if (bossId === "don-silbato") {
+    ctx.fillStyle = "rgba(255, 255, 255, .22)";
+    for (let i = 0; i < 16; i++) {
+      const subida = (i * 53 + elapsed * 25) % (floor - 40);
+      const lado = 8 + (i % 3) * 4;
+      ctx.fillRect((i * 131 + 27) % width + Math.sin(elapsed + i) * 8, floor - 20 - subida, lado, lado);
+    }
+  } else {
+    ctx.fillStyle = "#fff6d2";
+    for (let i = 0; i < 40; i++) {
+      const x = (i * 131 + 27) % width, y = (i * 79 + elapsed * 12) % (floor - 25);
+      ctx.fillRect(x, y, 3, 3);
+    }
+  }
+}
 
 export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattle, bossId: PlatformBossId = "santa-claus") {
   const { width, height, floor } = SANTA_ARENA;
@@ -15,17 +44,15 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
   ctx.fillStyle = bossId === "siroco" ? "#d79b4d" : bossId === "don-silbato" ? "#6faed2" : "#284365"; ctx.fillRect(0, 0, width, height);
   if (background.complete && background.naturalWidth) ctx.drawImage(background, 0, 0, width, height);
   ctx.fillStyle = "rgba(22,26,48,.1)"; ctx.fillRect(0, 0, width, height);
-  ctx.fillStyle = "#fff6d2";
-  for (let i = 0; i < 40; i++) {
-    const x = (i * 131 + 27) % width, y = (i * 79 + state.elapsed * 12) % (floor - 25);
-    ctx.fillRect(x, y, 3, 3);
-  }
-  const terrain = getImage(santaBattleAssets.terrain);
+  drawParticles(ctx, bossId, state.elapsed);
+  const own = bossId === "santa-claus" ? null : bossTerrains[bossId];
+  const terrain = getImage(own ? own.atlas : santaBattleAssets.terrain);
   for (const support of [...SANTA_PLATFORMS, { x: 0, y: floor, width, height: height - floor }]) {
     const ground = support.y === floor;
     if (terrain.complete && terrain.naturalWidth) {
-      const [sx, sy, sw, sh] = santaTerrainSources[ground ? "ground" : "ledge"];
-      const tileWidth = ground ? 384 : support.width;
+      const [sx, sy, sw, sh] = own ? own[ground ? "ground" : "ledge"] : santaTerrainSources[ground ? "ground" : "ledge"];
+      // El suelo se repite en tramos con su proporción; el de Papá Noel, en tramos de 384 px.
+      const tileWidth = ground ? (own ? Math.round(support.height * sw / sh) : 384) : support.width;
       for (let offset = 0; offset < support.width; offset += tileWidth) {
         const drawnWidth = Math.min(tileWidth, support.width - offset);
         ctx.drawImage(terrain, sx, sy, sw * drawnWidth / tileWidth, sh, support.x + offset, support.y, drawnWidth, ground ? support.height : 40);
@@ -38,7 +65,16 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
   const sheet = getImage(bossId === "santa-claus" ? santaBattleAssets.characters : `./assets/sprites/boss-${bossId === "siroco" ? "siroco" : "don-silbato"}-sheet-v1.webp`);
   for (const gift of state.gifts) {
     if (bossId === "santa-claus" && sheet.complete && sheet.naturalWidth) ctx.drawImage(sheet, ...santaGiftSource, gift.x, gift.y, gift.width, gift.height);
-    else {
+    else if (own && terrain.complete && terrain.naturalWidth) {
+      // La bola de arena rueda; la maleta va derecha. Las dos guardan su proporción, centradas en su caja.
+      const [sx, sy, sw, sh] = own.projectile;
+      const scale = Math.max(gift.width, gift.height) * 1.15 / Math.max(sw, sh);
+      ctx.save();
+      ctx.translate(gift.x + gift.width / 2, gift.y + gift.height / 2);
+      if (bossId === "siroco") ctx.rotate(gift.x / 15);
+      ctx.drawImage(terrain, sx, sy, sw, sh, -sw * scale / 2, -sh * scale / 2, sw * scale, sh * scale);
+      ctx.restore();
+    } else {
       ctx.fillStyle = bossId === "siroco" ? "#d49a43" : "#a74a42";
       if (bossId === "siroco") { ctx.beginPath(); ctx.arc(gift.x + gift.width / 2, gift.y + gift.height / 2, gift.width / 2, 0, Math.PI * 2); ctx.fill(); }
       else { ctx.fillRect(gift.x, gift.y, gift.width, gift.height); ctx.fillStyle = "#f0c85b"; ctx.fillRect(gift.x + 12, gift.y, 6, gift.height); }

@@ -912,5 +912,7 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 .fotos-casa-foto:focus-visible { outline: 4px solid #ffd76a; }
 .fotos-casa-lienzo { display: block; width: 100%; height: auto; image-rendering: pixelated; }
 .fotos-casa-grande { position: relative; margin: 12px 0; padding: 8px 8px 24px; border: 3px solid #553264; border-radius: 6px; background: #fff; }
+/* En apaisado la foto en grande cabe en el alto libre de la ventana (issue 330). */
+@media (orientation: landscape) and (max-height: 540px) { .fotos-casa-grande .fotos-casa-lienzo { width: auto; max-width: 100%; max-height: calc(100dvh - 170px); margin: 0 auto; } }
 .fotos-casa-volver { position: absolute; top: -18px; left: -12px; z-index: 1; }
 .fotos-casa-vacio { margin: 24px 0; }

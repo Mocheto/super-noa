@@ -379,3 +379,22 @@
   .casa-vestidor-armario { width: auto; height: min(100%, 560px * 488 / 615); max-width: 56vw; }
 }
 @media (prefers-reduced-motion: reduce) { .casa-vestidor-gatito.is-contento { animation: none; } }
+
+/* Fallos de la casa (issue 330). */
+/* «¡HOLA!»: los dibujos de los que llegan saltan de fila y, en pantallas estrechas, son más pequeños. */
+.casa-llegada-dibujo { flex-wrap: wrap; }
+@media (max-width: 520px) { .casa-llegada-dibujo { gap: 8px; } .casa-llegada-dibujo img { height: 64px; } }
+/* El abanico de comidas: con la bandeja al lado de la habitación (columna), se abre hacia la habitación, a la izquierda,
+   y no tapa los botones de la bandeja. */
+.casa-gatitos:not(.is-vertical) .casa-abanico, .casa-gatitos:not(.is-vertical) .casa-abanico.is-plato { left: auto; right: calc(100% + 10px); bottom: auto; top: 50%; transform: translateY(-50%); }
+/* «EN CASA» en apaisado: un degradado al pie avisa de que hay más fichas para desplazar. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .casa-fichas { mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent); padding-bottom: 24px; }
+}
+/* Vestidor: cada pieza se toca en un área de 48 px aunque su dibujo sea más pequeño. */
+.casa-vestidor-pieza::after { content: ""; position: absolute; inset: min(0px, calc((100% - 48px) / 2)); }
+/* En apaisado bajo, el botón de salir va en el margen izquierdo y no se reserva su franja arriba: la casa cabe en el
+   alto de la pantalla sin que la página se mueva (issue 330). */
+@media (orientation: landscape) and (max-height: 540px) {
+  .casa-gatitos { padding: 8px 16px 8px 72px; }
+}

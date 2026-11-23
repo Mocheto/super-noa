@@ -191,6 +191,18 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   /** Reacción del visitante: saludo (bocadillo con su comida favorita) o comida (con su favorita, «¡ÑAM!» y corazón). */
   const [reaccion, setReaccion] = useState<{ id: number; tipo: "saluda" | "come" | "favorita"; corazon: boolean } | null>(null);
   const [abanicoAmigos, setAbanicoAmigos] = useState(false);
+  // El abanico abierto se cierra al tocar fuera de él o de su cuenco, por ejemplo otro botón de la bandeja (issue 330).
+  useEffect(() => {
+    if (!abanico && !abanicoAmigos) return;
+    const cerrar = (event: PointerEvent) => {
+      const tocado = event.target as Element | null;
+      if (tocado?.closest?.(".casa-abanico, .casa-bandeja-objeto[aria-expanded]")) return;
+      setAbanico(false);
+      setAbanicoAmigos(false);
+    };
+    document.addEventListener("pointerdown", cerrar, true);
+    return () => document.removeEventListener("pointerdown", cerrar, true);
+  }, [abanico, abanicoAmigos]);
   const visitaPensadaRef = useRef(false);
   const [toqueMariposa, setToqueMariposa] = useState<{ punto: { x: number; y: number }; ms: number } | null>(null);
   const [posadas, setPosadas] = useState<(Posada | null)[]>(() => Array.from({ length: MARIPOSAS }, () => null));

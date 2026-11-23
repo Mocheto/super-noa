@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hueco de la casa en vertical</title>
+<!--
+  Boceto de la issue 366 («Qué ocupa el hueco de arriba de la casa en la tableta vertical», mapa «Pulir la casa de los
+  gatitos en la tableta vertical»). Se abre con el servidor de prototipos (`prototypes` en .claude/launch.json):
+  http://127.0.0.1:8765/prototypes/casa-hueco-boceto.html  — con ?opcion=0..4 y ?movil para el móvil vertical.
+  Cada opción enseña la pantalla de la tableta vertical de Noa (800 × 1280) con el arte de ahora; lo que pediría arte
+  nuevo va marcado. No es código del juego.
+-->
+<style>
+  :root { --ciruela: #2f1d33; --crema: #fff8e9; --miel: #e0a452; --miel-oscura: #a8693a; color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.4 system-ui, sans-serif; background: #241a33; color: #fff8e9; }
+  header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; }
+  header h1 { margin: 0 12px 0 0; font-size: 17px; }
+  header button { padding: 8px 12px; border: 2px solid var(--crema); border-radius: 10px; background: transparent; color: var(--crema); font: inherit; cursor: pointer; }
+  header button[aria-pressed="true"] { background: var(--crema); color: var(--ciruela); font-weight: 700; }
+  .explica { max-width: 800px; margin: 0 16px 12px; color: #e8dcff; }
+  .explica b { color: #ffd76a; }
+  /* La pantalla de la tableta (800 × 1280), escalada para que quepa en la ventana. */
+  .pantalla { position: relative; width: 800px; height: 1280px; margin: 0 16px 24px; overflow: hidden; border: 6px solid #111; border-radius: 26px; background: #3c2a52;
+    transform-origin: 0 0; }
+  .pantalla.is-movil { width: 375px; height: 812px; }
+  .pantalla.is-movil .herramienta { width: 56px; height: 56px; }
+  .pantalla.is-movil .modo { width: 36px; height: 36px; }
+  .pantalla.is-movil .bandeja { gap: 6px; padding: 6px; }
+  .salir { position: absolute; top: 10px; left: 16px; z-index: 5; width: 52px; height: 52px; border: 4px solid var(--ciruela); border-radius: 50%; background: var(--crema); display: grid; place-items: center; color: var(--ciruela); font-weight: 900; }
+  /* El bloque de abajo, como ahora: marco miel, habitación 4:3 y bandeja de 130 px. */
+  .bloque { position: absolute; left: 8px; right: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 0; padding: 8px; border: 4px solid var(--ciruela); border-radius: 18px; background: var(--miel); box-shadow: inset 0 0 0 4px #f6d08f; }
+  .ventana-escena { position: relative; overflow: hidden; border-radius: 10px; border: 3px solid var(--ciruela); background: #fff; }
+  .ventana-escena img.fondo { position: absolute; image-rendering: pixelated; pointer-events: none; }
+  .gato { position: absolute; width: 160px; height: 160px; transform: translate(-50%, -95%); background: url("../public/assets/sprites/gato-casa-v1.webp") no-repeat; background-size: 400% 1300%; image-rendering: pixelated; }
+  .bocadillo { position: absolute; transform: translate(-50%, -100%); padding: 6px; border: 3px solid var(--ciruela); border-radius: 50%; background: var(--crema); }
+  .bocadillo i { display: block; width: 40px; height: 40px; background: url("../public/assets/sprites/casa-objetos-v1.webp") no-repeat; background-size: 700% 100%; }
+  .bandeja { display: flex; align-items: center; gap: 10px; height: 130px; margin-top: 8px; padding: 8px 12px; border: 3px solid var(--ciruela); border-radius: 16px; background: var(--crema); }
+  .modo { flex: none; width: 44px; height: 44px; border: 3px solid var(--ciruela); border-radius: 50%; background: var(--crema); box-shadow: 0 3px 0 var(--ciruela); }
+  .herramienta { flex: none; width: 100px; height: 100px; background: url("../public/assets/sprites/casa-objetos-v1.webp") no-repeat; background-size: 700% 100%; image-rendering: pixelated; }
+  .hueco { position: absolute; left: 8px; right: 8px; top: 72px; border: 3px dashed #ffd76a99; border-radius: 18px; display: grid; place-items: center; color: #ffd76acc; font-weight: 700; text-align: center; padding: 12px; }
+  .nota-arte { position: absolute; z-index: 6; right: 14px; padding: 6px 10px; border-radius: 10px; background: #ffd76a; color: var(--ciruela); font-weight: 800; font-size: 13px; }
+  /* Tablero de los gatitos. */
+  .tablero { position: absolute; left: 8px; right: 8px; top: 72px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; padding: 10px; border: 4px solid var(--ciruela); border-radius: 18px; background: var(--crema); }
+  .ficha { position: relative; display: grid; justify-items: center; gap: 4px; padding: 6px 2px 10px; border: 3px solid var(--ciruela); border-radius: 14px; background: #fff; color: var(--ciruela); }
+  .ficha .cara { width: 120px; height: 120px; margin: -10px -20px -4px; background: url("../public/assets/sprites/gato-casa-v1.webp") no-repeat; background-size: 400% 1300%; image-rendering: pixelated; }
+  .ficha .pide { width: 46px; height: 46px; border: 3px solid var(--ciruela); border-radius: 50%; background: var(--crema) url("../public/assets/sprites/casa-objetos-v1.webp") no-repeat; background-size: 700% 100%; }
+  .ficha .corazones { color: #e8545a; font-size: 18px; letter-spacing: 1px; }
+  .ficha .nombre { font: 800 13px ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>¿Qué va arriba en la tableta vertical?</h1>
+  <button data-opcion="0">Hoy</button>
+  <button data-opcion="1">1 · Habitación más alta</button>
+  <button data-opcion="2">2 · Tablero de gatitos</button>
+  <button data-opcion="3">3 · Jardín arriba</button>
+  <button data-opcion="4">4 · Escena más grande</button>
+  <button data-movil>Móvil 375 × 812</button>
+</header>
+<p class="explica" id="explica"></p>
+<div class="pantalla" id="pantalla"></div>
+
+<script>
+const params = new URLSearchParams(location.search);
+let opcion = Number(params.get("opcion") ?? 0);
+let movil = params.has("movil");
+const HABITACION = "../public/assets/worlds/casa-habitacion-v1.webp";
+const JARDIN = "../public/assets/worlds/casa-jardin-v1.webp";
+/** Gatitos de muestra: posición en la habitación (px de escena 1280 × 540), fila de la hoja (1 sentado) y lo que piden. */
+const GATOS = [
+  { x: 470, y: 505, fila: 1, pide: 0 }, { x: 620, y: 480, fila: 0, pide: null }, { x: 760, y: 512, fila: 1, pide: 2 },
+  { x: 900, y: 470, fila: 3, pide: null }, { x: 1030, y: 500, fila: 4, pide: 3 },
+];
+const NOMBRES = ["MIEL", "BRUMA", "PINO", "ROCIO", "LUNA"];
+const textos = [
+  "<b>Hoy:</b> la habitación es una ventana 4:3 de la escena (720 × 540) pegada abajo, encima de la bandeja; arriba queda el hueco (casi el 40 % de la pantalla), que no hace nada.",
+  "<b>1 · Habitación más alta.</b> La misma ventana 4:3 abajo, pero la pared sigue hacia arriba hasta llenar el hueco: techo, cuadro y ventana más grandes. Los gatitos y la bandeja no cambian. <b>Pide arte nuevo</b>: una habitación vacía más alta (o la parte de arriba de la pared) y quizá muebles altos.",
+  "<b>2 · Tablero de los gatitos.</b> Arriba, cinco fichas de los gatitos en casa: su cara, lo que piden y sus corazones. Tocar una lleva la habitación hasta ese gatito. Podría sustituir a la ventana «EN CASA». <b>Sin arte nuevo.</b>",
+  "<b>3 · Jardín arriba y habitación abajo.</b> Las dos estancias a la vez, cada una más pequeña (unos 520 px de alto). Los gatitos se ven más pequeños y la bandeja sirve para las dos. <b>Sin arte nuevo</b>, pero los gatitos encogen.",
+  "<b>4 · Escena más grande.</b> La habitación llena todo el alto y se recorta por los lados: se ve un trozo más estrecho (unos 420 px de escena) y hay que deslizar más. Gatitos enormes, muy fáciles de tocar. <b>Sin arte nuevo.</b>",
+];
+
+function gato(g, escala, dx, dy) {
+  const fila = g.fila;
+  return `<i class="gato" style="left:${(g.x - dx) * escala}px; top:${(g.y - dy) * escala}px; width:${160 * escala}px; height:${160 * escala}px; background-position: 0 ${fila * 100 / 12}%"></i>`
+    + (g.pide !== null ? `<span class="bocadillo" style="left:${(g.x - dx) * escala}px; top:${(g.y - dy - 140) * escala}px"><i style="background-position:${g.pide * 100 / 6}% 0"></i></span>` : "");
+}
+function escena(fondo, anchoPx, altoPx, vistaX, vistaAncho, vistaY = 0, vistaAlto = 540, conGatos = true) {
+  const escala = anchoPx / vistaAncho;
+  return `<div class="ventana-escena" style="width:${anchoPx}px; height:${altoPx}px">
+    <img class="fondo" src="${fondo}" style="left:${-vistaX * escala}px; top:${-vistaY * escala}px; width:${1280 * escala}px; height:${540 * escala}px">
+    ${conGatos ? GATOS.filter((g) => g.x > vistaX - 40 && g.x < vistaX + vistaAncho + 40).map((g) => gato(g, escala, vistaX, vistaY)).join("") : ""}
+  </div>`;
+}
+function bandeja() {
+  return `<div class="bandeja"><i class="modo"></i><i class="modo"></i><i class="modo"></i>
+    <span style="flex:1"></span>${[0, 2, 4, 3].map((c) => `<i class="herramienta" style="background-position:${c * 100 / 6}% 0"></i>`).join("")}</div>`;
+}
+
+function pinta() {
+  const p = document.getElementById("pantalla");
+  const W = movil ? 375 : 800, H = movil ? 812 : 1280;
+  p.classList.toggle("is-movil", movil);
+  const anchoBloque = W - 16 - 8 - 16;           // márgenes, borde y relleno del bloque
+  const altoBandeja = 130 + 8;
+  const ventana43 = Math.round(anchoBloque * 3 / 4);
+  const arribaLibre = H - 8 - 8 - 8 - altoBandeja - ventana43 - 72;
+  let html = `<div class="salir">⟵</div>`;
+  if (opcion === 0) {
+    html += `<div class="hueco" style="height:${arribaLibre}px">Hueco vacío (${Math.round(arribaLibre / H * 100)} % de la pantalla)</div>`;
+    html += `<div class="bloque">${escena(HABITACION, anchoBloque, ventana43, 280, 720)}${bandeja()}</div>`;
+  } else if (opcion === 1) {
+    // La pared sigue hacia arriba: se dibuja estirando la franja de pared de arriba de la habitación (sustituto del arte nuevo).
+    const alto = H - 72 - 8 - 8 - 8 - altoBandeja;
+    const escala = anchoBloque / 720;
+    html += `<span class="nota-arte" style="top:84px">Arte nuevo: pared más alta</span>`;
+    html += `<div class="bloque"><div class="ventana-escena" style="width:${anchoBloque}px; height:${alto}px">
+      <div style="position:absolute; inset:0 0 ${ventana43 - 2}px; background: linear-gradient(180deg, #c99a63 0 14px, #f3d9ae 14px 22px, transparent 22px), repeating-linear-gradient(90deg, #fbf0db 0 ${36 * escala}px, #f5e3c2 ${36 * escala}px ${72 * escala}px)"></div>
+      <div style="position:absolute; left:50%; top:60px; width:${150 * escala}px; height:${120 * escala}px; transform:translateX(-50%); border:6px solid #8a5a32; background:#bfe3f5; box-shadow: inset 0 0 0 4px #fff3"></div>
+      <img class="fondo" src="${HABITACION}" style="left:${-280 * escala}px; top:${alto - ventana43}px; width:${1280 * escala}px; height:${540 * escala}px">
+      ${GATOS.filter((g) => g.x > 240 && g.x < 1040).map((g) => gato(g, escala, 280, 540 - alto / escala)).join("")}
+    </div>${bandeja()}</div>`;
+  } else if (opcion === 2) {
+    html += `<div class="tablero" style="height:${Math.min(arribaLibre, movil ? 170 : 300)}px; ${movil ? "gap: 4px; padding: 6px;" : ""}">${GATOS.map((g, i) =>
+      `<div class="ficha"><i class="cara" style="${movil ? "width:60px;height:60px;margin:-6px -8px -2px;" : ""}background-position:0 ${100 / 12}%"></i>
+        ${g.pide !== null ? `<i class="pide" style="${movil ? "width:26px;height:26px;" : ""}background-position:${g.pide * 100 / 6}% 0"></i>` : `<i class="pide" style="${movil ? "width:26px;height:26px;" : ""}visibility:hidden"></i>`}
+        <span class="corazones" style="${movil ? "font-size:11px" : ""}">${"♥".repeat(1 + i % 4)}${"♡".repeat(4 - i % 4)}</span>${movil ? "" : `<span class="nombre">${NOMBRES[i]}</span>`}</div>`).join("")}</div>`;
+    html += `<div class="bloque">${escena(HABITACION, anchoBloque, ventana43, 280, 720)}${bandeja()}</div>`;
+  } else if (opcion === 3) {
+    const alto = Math.floor((H - 72 - 8 - 8 - 8 - altoBandeja - 8) / 2);
+    const anchoVista = Math.round(alto * 4 / 3);
+    const vistaAncho = Math.min(1280, anchoBloque / alto * 540);
+    html += `<div class="bloque">${escena(JARDIN, anchoBloque, alto, 300, vistaAncho, 0, 540, false)}<div style="height:8px"></div>${escena(HABITACION, anchoBloque, alto, 280, vistaAncho)}${bandeja()}</div>`;
+  } else {
+    const alto = H - 72 - 8 - 8 - 8 - altoBandeja;
+    const vistaAncho = anchoBloque / alto * 540;
+    html += `<div class="bloque">${escena(HABITACION, anchoBloque, alto, 420, vistaAncho)}${bandeja()}</div>`;
+  }
+  p.innerHTML = html;
+  document.getElementById("explica").innerHTML = textos[opcion];
+  document.querySelectorAll("[data-opcion]").forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.opcion) === opcion)));
+  document.querySelector("[data-movil]").setAttribute("aria-pressed", String(movil));
+  const escalaVista = Math.min(1, (innerHeight - 120) / H, (innerWidth - 40) / W);
+  p.style.transform = `scale(${escalaVista})`;
+  p.style.marginBottom = `${(escalaVista - 1) * H + 24}px`;
+}
+document.querySelectorAll("[data-opcion]").forEach((b) => b.addEventListener("click", () => { opcion = Number(b.dataset.opcion); pinta(); }));
+document.querySelector("[data-movil]").addEventListener("click", () => { movil = !movil; pinta(); });
+addEventListener("resize", pinta);
+pinta();
+</script>
+</body>
+</html>

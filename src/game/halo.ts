@@ -82,3 +82,13 @@ export function drawContornos(context: CanvasRenderingContext2D, plataformas: re
   context.stroke();
   context.restore();
 }
+
+/**
+ * Opacidad de Noa mientras es invencible tras un golpe (issue 336): parpadea 3 veces por segundo como mucho (WCAG 2.3.1;
+ * antes, 6), y con «reducir movimiento» no parpadea: se queda un poco transparente.
+ */
+export function opacidadInvencible(invencible: number, movimientoReducido: boolean): number {
+  if (invencible <= 0) return 1;
+  if (movimientoReducido) return 0.6;
+  return Math.floor(invencible * 6) % 2 === 0 ? 0.38 : 1;
+}

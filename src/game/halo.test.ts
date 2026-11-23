@@ -31,3 +31,18 @@ test("sin nada que pisar a la vista no se traza nada", () => {
   drawContornos(context, [{ x: 3000, y: 440, width: 600, height: 100, kind: "ground" }], 0, 960);
   assert.deepEqual(llamadas, []);
 });
+
+test("con reducir movimiento Noa no parpadea, y sin él parpadea 3 veces por segundo como mucho", async () => {
+  const { opacidadInvencible } = await import("./halo.ts");
+  assert.equal(opacidadInvencible(0, false), 1);
+  // Recorre 2 s de invencibilidad en pasos de 1/60 s y cuenta cuántas veces se apaga.
+  let apagados = 0;
+  let antes = opacidadInvencible(2, false);
+  for (let t = 2; t > 0; t -= 1 / 60) {
+    const ahora = opacidadInvencible(t, false);
+    if (ahora < 1 && antes === 1) apagados += 1;
+    antes = ahora;
+    assert.equal(opacidadInvencible(t, true), 0.6, "quieta con reducir movimiento");
+  }
+  assert.ok(apagados <= 6, `${apagados} destellos en 2 s`);
+});

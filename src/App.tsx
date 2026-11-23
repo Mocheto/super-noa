@@ -141,7 +141,17 @@ export default function App() {
   const [albumHints, setAlbumHints] = useState<string[]>([]);
   const [musicVolume, setMusicVolume] = useState(() => readSavedPercentage(MUSIC_VOLUME_KEY, 100));
   const [effectsVolume, setEffectsVolume] = useState(() => readSavedPercentage(EFFECTS_VOLUME_KEY, 100));
-  const [reduceMotion, setReduceMotion] = useState(() => readStorage("super-noa-reduce-motion") === "true");
+  const [reduceMotionAjuste, setReduceMotion] = useState(() => readStorage("super-noa-reduce-motion") === "true");
+  // «Reducir movimiento» vale tanto el ajuste del juego como el del sistema (issue 336).
+  const [movimientoSistema, setMovimientoSistema] = useState(() => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  useEffect(() => {
+    if (typeof matchMedia !== "function") return;
+    const consulta = matchMedia("(prefers-reduced-motion: reduce)");
+    const cambiar = () => setMovimientoSistema(consulta.matches);
+    consulta.addEventListener?.("change", cambiar);
+    return () => consulta.removeEventListener?.("change", cambiar);
+  }, []);
+  const reduceMotion = reduceMotionAjuste || movimientoSistema;
   const [touchControls, setTouchControls] = useState<TouchControlsMode>(() => readStorage("super-noa-touch-controls") === "always" ? "always" : "auto");
   const [mapReturnWorld, setMapReturnWorld] = useState<WorldId>();
   const [showCatPartyInvite, setShowCatPartyInvite] = useState(false);
@@ -349,9 +359,9 @@ export default function App() {
   useEffect(() => {
     writeStorage(MUSIC_VOLUME_KEY, String(musicVolume));
     writeStorage(EFFECTS_VOLUME_KEY, String(effectsVolume));
-    writeStorage("super-noa-reduce-motion", String(reduceMotion));
+    writeStorage("super-noa-reduce-motion", String(reduceMotionAjuste));
     writeStorage("super-noa-touch-controls", touchControls);
-  }, [effectsVolume, musicVolume, reduceMotion, touchControls]);
+  }, [effectsVolume, musicVolume, reduceMotionAjuste, touchControls]);
 
   useEffect(() => {
     const createPlayer = () => createMusicPlayer(
@@ -1073,7 +1083,7 @@ export default function App() {
             <label htmlFor="effects-volume">{t("adultos.app.efectos")} <output>{Math.round(effectsVolume)}%</output></label>
             <input id="effects-volume" type="range" min="0" max="100" value={effectsVolume} onChange={(event) => { writeStorage(`${EFFECTS_VOLUME_KEY}-configured`, "true"); setEffectsVolume(Number(event.target.value)); }} />
           </div>
-          <div className="settings-toggle"><input id="reduce-motion" type="checkbox" checked={reduceMotion} onChange={(event) => setReduceMotion(event.target.checked)} /><label htmlFor="reduce-motion"><strong>{t("adultos.app.movimiento-tranquilo")}</strong><small>{t("adultos.app.reduce-destellos-y-animaciones")}</small></label></div>
+          <div className="settings-toggle"><input id="reduce-motion" type="checkbox" checked={reduceMotionAjuste} onChange={(event) => setReduceMotion(event.target.checked)} /><label htmlFor="reduce-motion"><strong>{t("adultos.app.movimiento-tranquilo")}</strong><small>{t("adultos.app.reduce-destellos-y-animaciones")}</small></label></div>
           <fieldset className="settings-controls"><legend>{t("adultos.app.controles-tactiles")}</legend>
             <label><input type="radio" name="touch-controls" checked={touchControls === "auto"} onChange={() => setTouchControls("auto")} /> {t("adultos.app.automaticos-en-movil")}</label>
             <label><input type="radio" name="touch-controls" checked={touchControls === "always"} onChange={() => setTouchControls("always")} /> {t("adultos.app.siempre-visibles")}</label>

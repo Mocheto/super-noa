@@ -40,7 +40,7 @@ import { createExploreState, exploreCameraTarget, hintTarget, reachedGate, short
 import { drawExploreOverlay, drawExploreWorld, prepararExploracion } from "./exploreRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import { ANCHO_VERTICAL, ponerVista, recorteObjetivo, vista } from "./vista";
-import { drawContornos, drawHalo, drawVelo } from "./halo";
+import { drawContornos, drawHalo, drawVelo, opacidadInvencible } from "./halo";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
@@ -1009,8 +1009,8 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         row = 1;
         column = runningFrame;
       }
-      const flashing = starRemaining <= 0 && player.invincible > 0 && Math.floor(player.invincible * 12) % 2 === 0;
-      if (flashing) context.globalAlpha = 0.38;
+      const opacidad = starRemaining <= 0 ? opacidadInvencible(player.invincible, motionRef.current) : 1;
+      if (opacidad < 1) context.globalAlpha = opacidad;
       const usesCatThrowSprite = player.power === "cat" && player.shootFx > 0;
       const usesCatYarnSprite = player.power === "cat" && player.grounded && Math.abs(player.vx) <= 25;
       const usesCatRunSprite = player.power === "cat" && player.grounded && Math.abs(player.vx) > 25;
@@ -1128,7 +1128,8 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     const render = () => {
       moverVista();
       const desplazaY = level.orientation === "vertical" || explore ? cameraY : 0;
-      drawBackground(context, level, cameraX, frame, raster, cameraY);
+      // Con «reducir movimiento» el fondo no hace paralaje: se queda quieto detrás del juego (issue 336).
+      drawBackground(context, level, motionRef.current ? 0 : cameraX, frame, raster, cameraY);
       drawDetourScenery(context, level, cameraX);
       // Velo del color oscuro del mundo entre el fondo y el juego: el decorado baja y lo que se pisa destaca (issue 325).
       drawVelo(context, acentoMundo(level.world).oscuro, VIEW_WIDTH, VIEW_HEIGHT);

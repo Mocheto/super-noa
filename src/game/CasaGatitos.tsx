@@ -31,6 +31,8 @@ import { Boton, BotonControl, Texto } from "../textos/Texto";
 import { COMIDAS, darDeComer, favoritaDescubierta, HOJA_COMIDAS, type Comida } from "./casaComida";
 import { DESCANSO_MS, HUECO_PERSEGUIR, moverPluma, nuevaPluma, perseguir, plumaSoltada, puntaDeCana, quienAtrapa, quiereLaPluma, type Pluma } from "./casaPluma";
 import { CapaPluma, HOJA_PLUMA, IconoCanaPluma, pintarPluma } from "./casaPlumaArte";
+import { climaDelDia, climaDePrueba, climaQueSeVe, miranPorLaVentana } from "./casaClima";
+import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte";
 import "./casa.css";
 
 type Props = {
@@ -95,6 +97,8 @@ const OBJETO_DE: Record<NecesidadId, Herramienta | "mano"> = { comer: "cuenco", 
 
 // Los ajustes de prueba también se leen en la web publicada, para probar la casa con Noa en su móvil.
 const ajustes = leerAjustesCasa(window.location.search);
+/** `?casaClima=lluvia|nieve|arcoiris|sol` fuerza el clima (mapa «Idea: clima en la ventana»). */
+const climaForzado = climaDePrueba(window.location.search);
 
 const porcentajeX = (x: number) => `${(x / ESCENA_CASA.ancho) * 100}%`;
 const porcentajeY = (y: number) => `${(y / ESCENA_CASA.alto) * 100}%`;
@@ -162,6 +166,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [flash, setFlash] = useState(0);
   const noche = nocheReloj || acostando;
   const [fechaCasa, setFechaCasa] = useState(() => relojCasa(ajustes));
+  // El clima del día (mapa «Idea: clima en la ventana»): el mismo todo el día; de noche, sin arcoíris.
+  const clima = climaQueSeVe(climaForzado ?? climaDelDia(fechaCasa), noche);
   const arropados = noche ? arropadosDe(casa, fechaCasa) : [];
   // Pose «arropado» de cada gatito, con su paleta y la mantita del color de su collar.
   const [poseArropado, setPoseArropado] = useState<Record<string, string>>({});
@@ -216,6 +222,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const capaPlumaRef = useRef<SVGSVGElement | null>(null);
   /** Hasta cuándo descansa cada gatito (por mundo) tras atrapar la pluma. */
   const descansoRef = useRef(new Map<number, number>());
+  /** Lienzo del clima, sobre el fondo; y si con este clima los gatitos van a mirar por la ventana. */
+  const climaLienzoRef = useRef<HTMLCanvasElement | null>(null);
+  const miranFueraRef = useRef(false);
   const frotandoRef = useRef<number | null>(null);
   useEffect(() => { frotandoRef.current = frotando; }, [frotando]);
   const [medidas, setMedidas] = useState<Medidas>({ escala: 0.75, anchoVisor: 600, vertical: false, medido: false });
@@ -749,6 +758,28 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     return () => { vivo = false; };
   }, [claveVariantes]);
 
+  // El clima: en la ventana de la habitación o sobre el jardín, pintado en su lienzo. Lluvia y nieve se mueven en cada
+  // cuadro (salvo con «movimiento tranquilo»); el arcoíris se pinta una vez.
+  useEffect(() => {
+    miranFueraRef.current = miranPorLaVentana(clima) && !enJardin;
+    const lienzo = climaLienzoRef.current;
+    const contexto = lienzo?.getContext("2d");
+    if (!lienzo || !contexto) return;
+    const zona = enJardin ? ZONA_JARDIN : ZONA_HABITACION;
+    const pintar = (segundos: number) => {
+      contexto.clearRect(zona.caida.x, zona.caida.y, zona.caida.ancho, zona.caida.alto);
+      pintarClima(contexto, clima, zona, segundos, reduceMotion);
+    };
+    contexto.clearRect(0, 0, lienzo.width, lienzo.height);
+    pintar(0);
+    if (reduceMotion || (clima !== "lluvia" && clima !== "nieve")) return;
+    let fotograma = requestAnimationFrame(function paso(momento) {
+      pintar(momento / 1000);
+      fotograma = requestAnimationFrame(paso);
+    });
+    return () => cancelAnimationFrame(fotograma);
+  }, [clima, enJardin, reduceMotion]);
+
   // Deambular: cada paso, los gatitos que andan avanzan hacia su destino y los que acaban lo que hacían deciden otra
   // cosa (andar a un punto libre, ir a un sitio de interés, pedir…). Al llegar, los recién rescatados entran por la puerta.
   useEffect(() => {
@@ -791,6 +822,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             if (seVanRef.current.has(mundo)) { siguientes[mundo] = andante; return; }
             andante = decidir(andante, actual.gatitos[mundo], otros, {
               habitacion: enJardin ? JARDIN : HABITACION, noche, casaLimpia: casaLimpia(actual), alguienPide, sitioNoche: sitioNoche(mundo), azar: Math.random, ahora: momento,
+              miranFuera: miranFueraRef.current,
             });
           }
           siguientes[mundo] = andante;
@@ -1150,6 +1182,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const quedaIzquierda = vistaX > 1;
   const quedaDerecha = vistaX < ESCENA_CASA.ancho - anchoVisible - 1;
 
+  // Con nieve, el primer gatito sentado en la ventana se queda mirando moviendo la cola.
+  const ventanaSitio = HABITACION.sitios.ventana;
+  const mirandoLaNieve = clima === "nieve" && !enJardin && ventanaSitio
+    ? lista.findIndex((andante) => !andando(andante) && andante.pose === "sentarse" && Math.hypot(andante.x - ventanaSitio.x, andante.y - ventanaSitio.y) < 6) : -1;
   // Cómo se ve cada gatito en casa ahora mismo: lo usan el dibujo y las fotos.
   const aspectos = gatitos.map((mundo, indice) => {
     const quieto = lista[indice];
@@ -1165,7 +1201,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     // Anda o hace su pose; si pide algo y está quieto, lloriquea. El bocadillo se ve también andando.
     const animacion: AnimacionGato = respuesta ? animacionDeRespuesta(respuesta)
       : frotando === indice ? (arrastre?.herramienta === "esponja" ? "bano" : "ronronear")
-        : anda ? "andar" : dormido ? "dormir" : pide ? "pedir" : ANIMACION_DE_VIDA[andante.pose];
+        : anda ? "andar" : dormido ? "dormir" : pide ? "pedir" : mirandoLaNieve === indice ? "cola" : ANIMACION_DE_VIDA[andante.pose];
     const desde = respuesta?.desde ?? andante.desde;
     const { fila } = ANIMACIONES_GATO[animacion];
     const cuadro = reduceMotion ? 0 : cuadroDe(animacion, (ahora - desde) / 1000);
@@ -1188,6 +1224,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       decoracion,
       noche,
       apagada: noche && lamparaApagada,
+      ...(clima !== "sol" ? { clima } : {}),
       gatitos: aspectos
         .filter(({ andante }) => andante.x >= xFoto - margen && andante.x <= xFoto + anchoFoto + margen)
         .map(({ mundo, andante, animacion, cuadro, mira, tapado }) => {
@@ -1265,6 +1302,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           {!enJardin && <><img className={`casa-armario${cogido ? " is-brilla" : ""}`} src={HABITACION.armario.imagen} alt="" draggable={false}
             style={{ left: HABITACION.armario.left, top: HABITACION.armario.top, width: HABITACION.armario.width, height: HABITACION.armario.height }} />
           <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} /></>}
+          <canvas ref={climaLienzoRef} className="casa-clima" width={ESCENA_CASA.ancho} height={ESCENA_CASA.alto} aria-hidden="true" />
           {/* La puerta del corazón lleva a la otra estancia; con el dedo se toca en la escena, aquí para el teclado. */}
           {fase === "casa" && !acostando && <button type="button" className={`casa-puerta${cogido || (llamando && !enJardin) ? " is-brilla" : ""}${llamando && !enJardin ? " is-llama" : ""}`} aria-label={tClave(enJardin ? "casa.puerta.casa.oculto" : "casa.puerta.jardin.oculto")}
             style={{ left: zonaPuertaDe(estancia).izquierda, top: zonaPuertaDe(estancia).arriba, width: zonaPuertaDe(estancia).derecha - zonaPuertaDe(estancia).izquierda, height: zonaPuertaDe(estancia).abajo - zonaPuertaDe(estancia).arriba }}

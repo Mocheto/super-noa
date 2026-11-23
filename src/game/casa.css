@@ -407,3 +407,6 @@
 /* La caña de pluma (issue 342): icono de la bandeja y capa sobre la escena mientras se arrastra. */
 .casa-objeto.is-pluma { background: var(--pluma) no-repeat 0 0 / 300% 100%; image-rendering: pixelated; }
 .casa-pluma-capa { position: absolute; left: 0; top: 0; z-index: 2000; overflow: visible; pointer-events: none; filter: drop-shadow(0 6px 4px #2f1d3366); }
+
+/* El clima (issue 346): lienzo de la escena entera sobre el fondo y la ventana de noche. */
+.casa-clima { position: absolute; left: 0; top: 0; width: 1280px; height: 540px; image-rendering: pixelated; pointer-events: none; }

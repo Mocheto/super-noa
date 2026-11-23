@@ -6,6 +6,7 @@
 import type { FotoCasa, GatitoEnFoto } from "./casaFoto.ts";
 import { MUEBLES, MUEBLES_CASA, VERSIONES } from "./casaDecoracion.ts";
 import { fondoConPared } from "./casaDecoracionArte.ts";
+import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte.ts";
 import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito } from "./casaGatoArte.ts";
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
@@ -109,6 +110,15 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     const ventana = HABITACION.ventanaNoche;
     const imagen = await cargar(ventana.imagen);
     pintar(imagen, { x: 0, y: 0, ancho: imagen.naturalWidth, alto: imagen.naturalHeight }, { x: ventana.left, y: ventana.top, ancho: ventana.width, alto: ventana.height });
+  }
+
+  // El clima que se veía, quieto.
+  if (foto.clima) {
+    contexto.save();
+    contexto.scale(escala, escala);
+    contexto.translate(-foto.vista.x, 0);
+    pintarClima(contexto, foto.clima, enJardin ? ZONA_JARDIN : ZONA_HABITACION, 0, true);
+    contexto.restore();
   }
 
   // Gatitos, de atrás adelante; los arropados, con su pose propia (cabeza fuera y mantita de su color).

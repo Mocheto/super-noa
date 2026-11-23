@@ -97,6 +97,18 @@ export default function App() {
   const [levelRun, setLevelRun] = useState(0);
   const [avionetaGift, setAvionetaGift] = useState(false);
   const [lives, setLives] = useState(MAX_LIVES);
+  // Cada vida perdida hace latir una vez el chip de vidas (issue 327): la clave nueva reinicia la animación.
+  const [latidoVidas, setLatidoVidas] = useState(0);
+  const vidasAntes = useRef(lives);
+  useEffect(() => {
+    const perdida = lives < vidasAntes.current;
+    vidasAntes.current = lives;
+    if (!perdida) return;
+    setLatidoVidas((latido) => latido + 1);
+    // Después del latido se quita la marca, para que un HUD nuevo (otra pantalla) no lata al aparecer.
+    const fin = window.setTimeout(() => setLatidoVidas(0), 450);
+    return () => window.clearTimeout(fin);
+  }, [lives]);
   const [paused, setPaused] = useState(false);
   const [muted, setMuted] = useState(() => readStorage("super-noa-muted") === "true");
   const [saveError, setSaveError] = useState(false);
@@ -785,7 +797,7 @@ export default function App() {
   /** HUD de esquinas sobre el escenario (decisión «El HUD de la partida»): vidas y contadores a la izquierda, pantalla y banderas en el centro y la pausa a la derecha. */
   const hudEsquinas = !bossReplay && <div className="hud-esquinas">
     <div className="hud-izquierda">
-      <span className="hud-chip hud-vidas" role="img" aria-label={t("partida.hud.vidas.oculto", { n: lives })}>{Array.from({ length: MAX_LIVES }, (_, vida) => <GameAssetIcon key={vida} kind="heart" className={vida < lives ? "" : "vida-perdida"} />)}</span>
+      <span key={latidoVidas} className={`hud-chip hud-vidas${latidoVidas ? " late" : ""}`} role="img" aria-label={t("partida.hud.vidas.oculto", { n: lives })}>{Array.from({ length: MAX_LIVES }, (_, vida) => <GameAssetIcon key={vida} kind="heart" className={vida < lives ? "" : "vida-perdida"} />)}</span>
       <span className="hud-contadores">
         <span className="hud-chip" role="img" aria-label={t("partida.hud.manzanas.oculto", { n: snapshot.apples })}><GameAssetIcon kind="apple" /> {snapshot.apples}</span>
         <span className="hud-chip" role="img" aria-label={t("partida.hud.pegatinas.oculto", { n: snapshot.stickers.length })}><Pictograma nombre="pegatina" />{snapshot.stickers.length}</span>

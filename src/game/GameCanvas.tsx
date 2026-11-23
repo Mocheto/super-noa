@@ -1333,8 +1333,10 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       if (pista) {
         const lineas = pista.claves.map((clave) => textoLienzo(clave));
         const { ancho, alto } = medirCartel(context, lineas);
-        drawCartel(context, lineas, pista.centroX, techoCartel);
-        ocupadas.push({ x: pista.centroX - ancho / 2, y: techoCartel, ancho, alto });
+        // Dentro de la parte visible (en vertical, la ventana 4:3 que sigue a Noa).
+        const centroX = Math.max(vista.izquierda + ancho / 2 + 8, Math.min(vista.derecha - ancho / 2 - 8, pista.centroX));
+        drawCartel(context, lineas, centroX, techoCartel);
+        ocupadas.push({ x: centroX - ancho / 2, y: techoCartel, ancho, alto });
       }
       if (cartelesDeCaja.length) {
         // Solo el de la caja más cercana a Noa: como mucho dos carteles a la vez con la pista (guía de estilo visual),

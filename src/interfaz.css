@@ -226,7 +226,14 @@
 .hud-chip .pictograma { font-size: 18px; }
 .hud-vidas { gap: 4px; }
 .hud-vidas .game-asset-icon { --icon-size: 28px; }
-.hud-vidas .vida-perdida { filter: grayscale(1) brightness(.75); opacity: .55; }
+/* Corazón perdido (issue 327): vacío, una silueta oscura con contorno crema, claramente distinto del lleno. */
+.hud-vidas .vida-perdida {
+  filter: brightness(0) drop-shadow(1.5px 0 0 var(--crema)) drop-shadow(-1.5px 0 0 var(--crema)) drop-shadow(0 1.5px 0 var(--crema)) drop-shadow(0 -1.5px 0 var(--crema));
+  opacity: .9;
+}
+.hud-vidas.late { animation: vidas-late .4s ease-out; }
+@keyframes vidas-late { 35% { transform: scale(1.25); background: rgba(226, 49, 60, .85); } }
+@media (prefers-reduced-motion: reduce) { .hud-vidas.late { animation: none; } }
 .hud-pantalla { color: #352044; background: var(--dorado); border-color: var(--ciruela); }
 .hud-banderas { color: var(--dorado); letter-spacing: 2px; }
 .hud-pausa { --control: 52px; pointer-events: auto; border-radius: 16px; color: var(--crema); background: var(--lila-control); border-color: var(--crema); box-shadow: 0 4px 0 #1b1129; }

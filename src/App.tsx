@@ -61,6 +61,7 @@ const GameCanvas = lazy(() => Promise.all([import("./game/GameCanvas"), import("
 })));
 const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
 const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((module) => ({ default: module.GuardianMiniGame })));
+const NidoReinaGame = lazy(() => import("./game/NidoReinaGame").then((module) => ({ default: module.NidoReinaGame })));
 const VueloAuroraGame = lazy(() => import("./game/VueloAuroraGame").then((module) => ({ default: module.VueloAuroraGame })));
 const ArmoniaDrumGame = lazy(() => import("./game/ArmoniaDrumGame").then((module) => ({ default: module.ArmoniaDrumGame })));
 const MeriendaJabatosGame = lazy(() => import("./game/MeriendaJabatosGame").then((module) => ({ default: module.MeriendaJabatosGame })));
@@ -991,6 +992,18 @@ export default function App() {
               friendlyReplay={bossReplay}
             /> : activeLevel.boss === "aurora-celeste" && devMemoria === "aurora-celeste" ? <VueloAuroraGame
               key={`vuelo-aurora-${activeLevel.id}-${levelRun}`}
+              paused={paused}
+              muted={muted}
+              musicVolume={musicVolume}
+              effectsVolume={effectsVolume}
+              reduceMotion={reduceMotion}
+              levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
+              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
+              onWin={bossReplay ? finishBossReplay : handleComplete}
+              playSound={playSound}
+              friendlyReplay={bossReplay}
+            /> : activeLevel.boss === "triceratops-queen" && devMemoria === "triceratops-queen" ? <NidoReinaGame
+              key={`nido-reina-${activeLevel.id}-${levelRun}`}
               paused={paused}
               muted={muted}
               musicVolume={musicVolume}

@@ -1,0 +1,86 @@
+/* «El nido de la Reina» (issue 361): escena de 960 × 540 en apaisado y de 720 × 1080 en vertical, escalada a lo que
+   cabe. Arte provisional: las poses de la Reina Tricera; selva, volcán, nido, huevos, arbustos y pétalos por CSS. */
+.nido-juego { display: flex; flex-direction: column; width: min(1100px, 100%); height: min(760px, calc(100dvh - 24px)); padding: 10px; background: #1f3a24; }
+.nido-marco { position: relative; flex: 1; min-height: 0; overflow: hidden; border: 4px solid var(--ciruela, #2f1d33); border-radius: 14px; background: linear-gradient(180deg, #8fd3f4 50%, #5fa346 50%); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.nido-escena { position: absolute; top: 50%; left: 50%; transform-origin: 50% 50%; }
+.nido-escena > * { position: absolute; }
+
+/* La selva de día: cielo, volcán lejano con humito, helechos que se mecen, mariposas y un terodáctilo que cruza. */
+.nido-selva { inset: 0; overflow: hidden; background: linear-gradient(180deg, #8fd3f4 0%, #c9ecf7 55%, #e9f6d8 100%); }
+.nido-volcan { position: absolute; left: 6%; bottom: 30%; width: 220px; height: 140px; background: #7a9a6a; clip-path: polygon(0 100%, 38% 8%, 62% 8%, 100% 100%); }
+.nido-humo { position: absolute; left: 44%; top: -10px; width: 28px; height: 28px; border-radius: 50%; background: #f3f1ec; opacity: 0; animation: nido-humo 4.5s ease-out infinite; }
+.nido-humo:nth-child(2) { animation-delay: 1.5s; }
+.nido-humo:nth-child(3) { animation-delay: 3s; }
+@keyframes nido-humo { 0% { opacity: .8; transform: translate(0, 0) scale(.6); } 100% { opacity: 0; transform: translate(30px, -90px) scale(1.8); } }
+.nido-helecho { position: absolute; bottom: 24%; width: 120px; height: 190px; background: #3f8a4a; border-radius: 0 100% 0 100%; transform-origin: 50% 100%; animation: nido-mece 3.2s ease-in-out infinite alternate; }
+.nido-helecho.is-izquierda { left: -30px; }
+.nido-helecho.is-derecha { right: -30px; transform: scaleX(-1); animation-name: nido-mece-otro; }
+@keyframes nido-mece { from { rotate: -3deg; } to { rotate: 3deg; } }
+@keyframes nido-mece-otro { from { rotate: 3deg; } to { rotate: -3deg; } }
+.nido-mariposa { position: absolute; left: 40%; top: 30%; width: 18px; height: 12px; background: radial-gradient(circle at 25% 50%, #ff8fb1 0 45%, transparent 46%), radial-gradient(circle at 75% 50%, #ff8fb1 0 45%, transparent 46%); animation: nido-mariposa 7s ease-in-out infinite alternate; }
+.nido-mariposa.is-otra { left: 70%; top: 22%; filter: hue-rotate(160deg); animation-duration: 9s; animation-direction: alternate-reverse; }
+@keyframes nido-mariposa { 25% { translate: 60px -30px; } 50% { translate: 20px 20px; } 75% { translate: -50px -10px; } }
+.nido-terodactilo { position: absolute; left: -80px; top: 12%; width: 60px; height: 20px; background: #6d5a7e; clip-path: polygon(0 50%, 40% 0, 50% 40%, 60% 0, 100% 50%, 55% 70%, 45% 70%); animation: nido-planea 26s linear infinite; }
+@keyframes nido-planea { 0%, 70% { translate: 0 0; } 100% { translate: 1200px 30px; } }
+.nido-suelo { position: absolute; inset: auto 0 0; height: 28%; background: linear-gradient(180deg, #7ac25b, #5fa346); box-shadow: inset 0 6px 0 #9ad672; }
+
+/* La loma del nido en vertical, para que no flote: el nido arriba, sobre la hierba. */
+.nido-loma { width: 560px; height: 380px; transform: translate(-50%, -10%); border-radius: 50% 50% 0 0 / 40% 40% 0 0; background: linear-gradient(180deg, #7ac25b, #5fa346); box-shadow: inset 0 6px 0 #9ad672; }
+
+/* El nido y sus cinco huevos (los abiertos, partidos). */
+.nido-nido { width: 170px; height: 70px; transform: translate(-50%, -100%); border-radius: 0 0 90px 90px; background: repeating-linear-gradient(160deg, #8a5a32 0 6px, #a8743f 6px 12px); box-shadow: 0 0 0 4px var(--ciruela, #2f1d33); }
+.nido-huevo { position: absolute; width: 28px; height: 36px; margin-top: -24px; border-radius: 50% 50% 46% 46% / 60% 60% 40% 40%; background: radial-gradient(circle at 30% 35%, #8fd3c8 0 4px, transparent 5px), radial-gradient(circle at 65% 60%, #8fd3c8 0 3px, transparent 4px), #fff6df; box-shadow: 0 0 0 3px var(--ciruela, #2f1d33); }
+.nido-huevo.is-abierto { height: 20px; margin-top: -8px; clip-path: polygon(0 20%, 20% 0, 40% 25%, 60% 0, 80% 25%, 100% 0, 100% 100%, 0 100%); }
+
+/* Los arbustos de flores: se tocan enteros; el topetazo los sacude y suelta pétalos de su color. */
+.nido-arbusto { width: 200px; height: 170px; padding: 0; border: 0; background: none; transform: translate(-50%, -100%) scale(var(--escala, 1)); cursor: pointer; transform-origin: 50% 100%; }
+.nido-arbusto:disabled { cursor: default; }
+.nido-arbusto:focus-visible { outline: 5px solid #ffd76a; outline-offset: 4px; border-radius: 40px; }
+.nido-arbusto.is-rojo { --flor: #e8545a; }
+.nido-arbusto.is-amarillo { --flor: #ffd45f; }
+.nido-arbusto.is-morado { --flor: #9a7ad8; }
+.nido-arbusto-hojas { position: absolute; inset: 20px 0 0; border-radius: 50% 50% 18px 18px / 60% 60% 18px 18px; background: #2f7a3c; box-shadow: inset 0 -16px 0 #24622f, 0 0 0 4px var(--ciruela, #2f1d33); animation: nido-mece 2.6s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+.nido-flor { position: absolute; width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle, #fff3b0 0 22%, var(--flor) 24%); box-shadow: 0 0 0 3px var(--ciruela, #2f1d33); }
+.nido-flor:nth-of-type(1) { left: 30px; top: 50px; }
+.nido-flor:nth-of-type(2) { left: 85px; top: 30px; }
+.nido-flor:nth-of-type(3) { left: 140px; top: 55px; }
+.nido-flor:nth-of-type(4) { left: 55px; top: 100px; }
+.nido-flor:nth-of-type(5) { left: 115px; top: 95px; }
+.nido-arbusto.is-golpe { animation: nido-golpe .35s ease-out; }
+@keyframes nido-golpe { 30% { transform: translate(-50%, -100%) scale(var(--escala, 1)) rotate(5deg) scale(1.06); } 60% { transform: translate(-50%, -100%) scale(var(--escala, 1)) rotate(-3deg); } }
+.nido-arbusto.is-brilla .nido-arbusto-hojas { animation: nido-ayuda .45s ease-in-out infinite alternate; }
+@keyframes nido-ayuda { from { rotate: -7deg; } to { rotate: 7deg; } }
+.nido-petalo { position: absolute; left: 50%; top: 40%; width: 14px; height: 10px; border-radius: 50% 0; background: var(--flor); opacity: 0; animation: nido-petalo .8s ease-out; }
+@keyframes nido-petalo { 0% { opacity: 1; transform: rotate(var(--angulo)) translateX(0); } 100% { opacity: 0; transform: rotate(var(--angulo)) translateX(var(--distancia)) translateY(30px); } }
+
+/* La Reina y las crías (provisionales: sus poses de ahora; las crías, la Reina en pequeño). */
+.nido-reina { z-index: 3; width: 150px; transform-origin: 50% 100%; image-rendering: pixelated; filter: drop-shadow(0 6px 4px #0006); pointer-events: none; }
+.nido-cria { z-index: 2; width: 58px; transform-origin: 50% 100%; image-rendering: pixelated; filter: drop-shadow(0 3px 2px #0005); pointer-events: none; }
+.nido-reina.is-baila, .nido-cria.is-baila { animation: nido-baila .5s ease-in-out infinite alternate; }
+@keyframes nido-baila { to { margin-top: -14px; } }
+
+.nido-rotulo { left: 50%; top: 12px; z-index: 4; transform: translateX(-50%); padding: 6px 16px; border: 3px solid var(--ciruela, #2f1d33); border-radius: 14px; background: #fff6e3; color: var(--ciruela, #2f1d33); font-family: var(--letra-noa); font-size: 24px; white-space: nowrap; }
+.nido-rotulo.is-casi { background: #ffd6a0; }
+
+.nido-controles { display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding-top: 10px; }
+.nido-controles .nido-pausa { margin-right: auto; }
+.nido-retrato { display: block; width: 120px; height: auto; image-rendering: pixelated; }
+.nido-resultado-dibujo { position: relative; display: inline-block; }
+.nido-corona { position: absolute; left: 50%; top: -14px; width: 46px; height: 30px; transform: translateX(-50%); background: #ffd45f; clip-path: polygon(0 100%, 0 30%, 25% 60%, 50% 0, 75% 60%, 100% 30%, 100% 100%); }
+
+/* Con «movimiento tranquilo», solo se mueven la Reina y las crías. */
+.nido-marco.is-quieto .nido-humo, .nido-marco.is-quieto .nido-helecho, .nido-marco.is-quieto .nido-mariposa, .nido-marco.is-quieto .nido-terodactilo,
+.nido-marco.is-quieto .nido-arbusto-hojas, .nido-marco.is-quieto .nido-arbusto.is-golpe { animation: none; }
+.nido-marco.is-quieto .nido-terodactilo { display: none; }
+
+@media (orientation: portrait) {
+  .boss-battle.nido-juego { position: fixed; inset: 0; width: auto; height: auto; max-width: none; max-height: none; border: 0; border-radius: 0; box-shadow: none; padding: 8px 8px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .nido-controles .boton-control { --control: 64px; }
+}
+@media (orientation: landscape) and (max-height: 540px) {
+  .boss-battle.nido-juego { position: fixed; inset: 0; width: auto; height: auto; max-height: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr); column-gap: 8px; border: 0; border-radius: 0; box-shadow: none; padding: 6px max(8px, env(safe-area-inset-right, 0px)) 6px max(8px, env(safe-area-inset-left, 0px)); }
+  .boss-battle.nido-juego > .sr-only { position: absolute; }
+  .boss-battle.nido-juego .nido-marco { grid-column: 1; grid-row: 1; align-self: stretch; height: auto; }
+  .nido-controles { grid-column: 2; grid-row: 1; flex-direction: column; justify-content: center; padding-top: 0; }
+  .nido-controles .nido-pausa { margin-right: 0; }
+}

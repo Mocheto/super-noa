@@ -65,9 +65,9 @@ test("al fallar sale «CASI», se vuelve a enseñar y se repite desde el princip
   estado = empiezaARepetir(estado);
   const [primero, segundo] = recorridoDeRonda(estado);
   ({ estado } = tocar(estado, primero));
-  let evento;
-  ({ estado, evento } = tocar(estado, otro(segundo)));
-  assert.equal(evento, "casi");
+  const fallo = tocar(estado, otro(segundo));
+  estado = fallo.estado;
+  assert.equal(fallo.evento, "casi");
   assert.equal(estado.paso, 0);
   assert.ok(!estado.ayuda, "un fallo: aún sin ayuda");
   estado = empiezaARepetir(vuelveAEnsenar(estado));

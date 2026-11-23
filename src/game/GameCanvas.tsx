@@ -40,7 +40,7 @@ import { createExploreState, exploreCameraTarget, hintTarget, reachedGate, short
 import { drawExploreOverlay, drawExploreWorld, prepararExploracion } from "./exploreRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import { ANCHO_VERTICAL, ponerVista, recorteObjetivo, vista } from "./vista";
-import { drawHalo, drawVelo } from "./halo";
+import { drawContornos, drawHalo, drawVelo } from "./halo";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
@@ -1142,6 +1142,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       level.lavaJets?.forEach((jet) => drawLavaJet(context, jet, cameraX, levelAge, raster, level.world === 15));
       drawAdventurePrecipices(context, level, cameraX, raster.adventurePrecipices);
       level.platforms.forEach((platform) => drawPlatform(context, platform, cameraX, level.world, player.x, frame, raster, platform.x === lastSpringX && frame - lastSpringFrame < 9));
+      drawContornos(context, level.platforms, cameraX, VIEW_WIDTH);
       if (puzzle) drawPuzzleRooms(context, level, puzzle, cameraX, sparks, frame, levelAge);
       if (explore) drawExploreWorld(context, level, explore, cameraX, frame);
       level.beatPlatforms?.forEach((platform) => {

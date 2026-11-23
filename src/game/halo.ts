@@ -42,3 +42,43 @@ export function drawHalo(context: CanvasRenderingContext2D, x: number, y: number
   context.drawImage(imagen, x + ancho / 2 - lado / 2, y + alto / 2 - lado / 2, lado, lado);
   context.restore();
 }
+
+type Bloque = { x: number; y: number; width: number; height: number; kind?: string };
+
+/** Tipos que ya se distinguen por su dibujo o que no se pisan como suelo firme: no llevan contorno. */
+const SIN_CONTORNO = new Set(["spring", "gift-spring", "dew", "mist", "sky-lift-station", "sky-bounce", "puzzle-block", "puzzle-color"]);
+const esSuelo = (kind?: string) => !kind || kind === "ground" || kind.endsWith("-ground");
+
+/**
+ * Contorno oscuro de lo que se pisa (issue 326): todas las aristas de las plataformas visibles en un solo trazo. Los
+ * suelos llevan su borde de arriba y los lados que dan a un hueco; las plataformas flotantes, el contorno entero.
+ */
+export function drawContornos(context: CanvasRenderingContext2D, plataformas: readonly Bloque[], cameraX: number, ancho: number) {
+  const visibles = plataformas.filter((p) => !SIN_CONTORNO.has(p.kind ?? "") && p.x - cameraX < ancho + 4 && p.x + p.width - cameraX > -4);
+  if (!visibles.length) return;
+  const tocaPorLado = (p: Bloque, lado: number) => visibles.some((otra) => otra !== p && Math.abs(lado - (lado === p.x ? otra.x + otra.width : otra.x)) < 3 && otra.y <= p.y + 4 && otra.y + otra.height >= p.y);
+  context.save();
+  context.strokeStyle = "rgba(34, 18, 44, .85)";
+  context.lineWidth = 3;
+  context.lineJoin = "round";
+  context.beginPath();
+  for (const p of visibles) {
+    const x = Math.round(p.x - cameraX) + 1.5;
+    const y = Math.round(p.y) + 1.5;
+    const w = Math.round(p.width) - 3;
+    // Las nubes son blandas: solo la línea de arriba, que es lo que se pisa.
+    // Su dibujo empieza unas 5 unidades por debajo del borde de colisión.
+    if (p.kind?.startsWith("sky-") || p.kind?.startsWith("cloud")) { context.moveTo(x + 10, y + 5); context.lineTo(x + w - 10, y + 5); continue; }
+    if (!esSuelo(p.kind)) {
+      const alto = Math.max(4, Math.round(p.height) - 3);
+      if (typeof context.roundRect === "function") context.roundRect(x, y, w, alto, Math.min(8, alto / 2));
+      else context.rect(x, y, w, alto);
+      continue;
+    }
+    context.moveTo(x, y); context.lineTo(x + w, y);
+    if (!tocaPorLado(p, p.x)) { context.moveTo(x, y); context.lineTo(x, y + Math.min(p.height, 60)); }
+    if (!tocaPorLado(p, p.x + p.width)) { context.moveTo(x + w, y); context.lineTo(x + w, y + Math.min(p.height, 60)); }
+  }
+  context.stroke();
+  context.restore();
+}

@@ -40,6 +40,7 @@ import { createExploreState, exploreCameraTarget, hintTarget, reachedGate, short
 import { drawExploreOverlay, drawExploreWorld, prepararExploracion } from "./exploreRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import { ANCHO_VERTICAL, ponerVista, recorteObjetivo, vista } from "./vista";
+import { drawHalo, drawVelo } from "./halo";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
@@ -1098,7 +1099,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       return techoCarteles(hud.getBoundingClientRect().bottom - lienzo.top, lienzo.width / VIEW_WIDTH);
     };
     let techoCartel = CARTEL_ARRIBA;
-    const cartelesDeCaja: { lineas: string[]; centroX: number; arriba: number; color?: string }[] = [];
+    const cartelesDeCaja: { lineas: string[]; centroX: number; arriba: number; color?: string; distancia: number }[] = [];
 
     // En vertical se ve una ventana 4:3 del lienzo que sigue a Noa (issue 323); el CSS la recorta.
     const enVertical = typeof matchMedia === "function" ? matchMedia("(orientation: portrait)") : null;
@@ -1129,6 +1130,8 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       const desplazaY = level.orientation === "vertical" || explore ? cameraY : 0;
       drawBackground(context, level, cameraX, frame, raster, cameraY);
       drawDetourScenery(context, level, cameraX);
+      // Velo del color oscuro del mundo entre el fondo y el juego: el decorado baja y lo que se pisa destaca (issue 325).
+      drawVelo(context, acentoMundo(level.world).oscuro, VIEW_WIDTH, VIEW_HEIGHT);
       context.save();
       if (level.orientation === "vertical" || explore) context.translate(0, -cameraY);
       // Ráfagas y géiseres van con el mundo: en subidas y exploraciones se mueven con la cámara vertical.
@@ -1184,9 +1187,9 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         }
         // Los carteles de las cajas se dibujan al final, encima de objetos y decorado (issue 317).
         if (!hitBlocks.has(block.id) && Math.abs(player.x - block.x) < 230) {
-          cartelesDeCaja.push({ lineas: [textoLienzo(block.reward === "secret-vine" ? "partida.lienzo.bloque.queHay.rotulo" : "partida.lienzo.bloque.debajo.rotulo")], centroX: x + 24, arriba: block.y - 50 - desplazaY });
+          cartelesDeCaja.push({ lineas: [textoLienzo(block.reward === "secret-vine" ? "partida.lienzo.bloque.queHay.rotulo" : "partida.lienzo.bloque.debajo.rotulo")], centroX: x + 24, arriba: block.y - 50 - desplazaY, distancia: Math.abs(player.x - block.x) });
         } else if (block.reward === "secret-vine" && vineStartedFrame >= 0 && !completed && Math.abs(player.x - block.x) < 250) {
-          cartelesDeCaja.push({ lineas: [textoLienzo("partida.lienzo.enredadera.rotulo")], centroX: x + 24, arriba: block.y - 54 - desplazaY, color: "#3f7651" });
+          cartelesDeCaja.push({ lineas: [textoLienzo("partida.lienzo.enredadera.rotulo")], centroX: x + 24, arriba: block.y - 54 - desplazaY, color: "#3f7651", distancia: Math.abs(player.x - block.x) });
         }
       });
       cannons.forEach((cannon) => drawCannon(context, cannon, cameraX, raster.cannon));
@@ -1205,9 +1208,15 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       });
       enemies.forEach((enemy) => {
         const hop = restStop ? Math.sin(Math.min(1, (friendHops.get(enemy.id) ?? 0) / .5) * Math.PI) * 26 : 0;
+        // Halo rojizo en lo que hace daño (issue 325); en el paseo de los amigos nadie muerde.
+        const pantallaX = enemy.x - cameraX;
+        if (!restStop && enemy.active && pantallaX > -120 && pantallaX < VIEW_WIDTH + 120) drawHalo(context, pantallaX, enemy.y, enemy.width, enemy.height);
         drawEnemy(context, hop ? { ...enemy, y: enemy.y - hop } : enemy, cameraX, !restStop && (enemy.kind === "wolf" || enemy.kind === "boar") && Math.abs(player.x - enemy.x) < 360, raster, level.world === 3 && !restStop ? wolfSleepState(enemy, levelAge) : "awake", levelAge);
       });
-      chainGuardians.forEach((guardian) => drawChainGuardian(context, guardian, cameraX, raster));
+      chainGuardians.forEach((guardian) => {
+        drawHalo(context, guardian.x - cameraX, guardian.y, guardian.width, guardian.height);
+        drawChainGuardian(context, guardian, cameraX, raster);
+      });
       waterJumpers.forEach((jumper) => drawWaterJumper(context, jumper, cameraX, raster.jumpingFish));
       cannonballs.forEach((ball) => drawCannonball(context, ball, cameraX, raster.cannonball));
       projectiles.forEach((ball) => {
@@ -1327,8 +1336,10 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         ocupadas.push({ x: pista.centroX - ancho / 2, y: techoCartel, ancho, alto });
       }
       if (cartelesDeCaja.length) {
-        // Dentro de la parte visible del lienzo (en vertical, la ventana 4:3).
-        const medidas = cartelesDeCaja.map((cartel) => {
+        // Solo el de la caja más cercana a Noa: como mucho dos carteles a la vez con la pista (guía de estilo visual),
+        // y dentro de la parte visible del lienzo (en vertical, la ventana 4:3).
+        const cercano = cartelesDeCaja.reduce((mejor, cartel) => cartel.distancia < mejor.distancia ? cartel : mejor);
+        const medidas = [cercano].map((cartel) => {
           const medida = medirCartel(context, cartel.lineas);
           const centroX = Math.max(vista.izquierda + medida.ancho / 2 + 8, Math.min(vista.derecha - medida.ancho / 2 - 8, cartel.centroX));
           return { ...cartel, ...medida, centroX };

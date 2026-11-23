@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import type { SoundKind } from "./GameCanvas";
 import { createGameLoop } from "./gameLoop";
 import { firstConnectedGamepad, readGameplayPad } from "./gamepad";
 import { createSantaBattle, PLATFORM_BOSS_HITS, SANTA_ARENA, stepSantaBattle } from "./santaBattle";
 import { drawSantaBattle } from "./santaBattleRendering";
+import { actionBossBackgrounds } from "./santaBattleAssets";
+import { cssAssetUrl } from "./assets";
 import { TouchControls, type TouchControl } from "./TouchControls";
 import type { BossId } from "./types";
 import { t, tClave, type ClaveTexto } from "../textos/index.ts";
@@ -36,7 +38,9 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
     const context = canvasRef.current?.getContext("2d");
     if (!context) return;
     const resize = () => {
-      context.canvas.width = window.innerWidth <= 600 ? 640 : SANTA_ARENA.width;
+      // En vertical (y en pantallas estrechas) se ve una ventana 4:3 de la arena que sigue a Noa, como en la partida.
+      const vertical = typeof matchMedia === "function" && matchMedia("(orientation: portrait)").matches;
+      context.canvas.width = vertical || window.innerWidth <= 600 ? 640 : SANTA_ARENA.width;
       drawSantaBattle(context, battle.current, bossId);
     };
     resize(); window.addEventListener("resize", resize);
@@ -109,7 +113,8 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
   const retrato = <span className={`santa-retrato ${bossId === "santa-claus" ? "is-santa" : "is-cuadricula"}`} style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />;
   return <section className="santa-boss-battle" role="dialog" aria-modal="true" aria-labelledby="santa-boss-title">
     <h2 id="santa-boss-title" className="sr-only"><Texto clave={clave("titulo.rotulo") as ClaveTexto} /></h2>
-    <div className="santa-arena game-frame">
+    {/* En vertical, lo que sobra arriba es el fondo de la arena difuminado, como en la partida (`--fondo-mundo`). */}
+    <div className="santa-arena game-frame" style={{ "--fondo-mundo": cssAssetUrl(actionBossBackgrounds[bossId]) } as CSSProperties}>
       <div className="game-stage"><canvas ref={canvasRef} tabIndex={0} width={SANTA_ARENA.width} height={SANTA_ARENA.height} aria-label={t("duelos.santa.controles.oculto", { escena: tClave(clave("escena.oculto")) })} />
         {/* HUD de esquinas, como en la partida: vidas a la izquierda, saltos en el centro y el mapa a la derecha. */}
         <div className="hud-esquinas">

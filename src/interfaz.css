@@ -633,6 +633,14 @@
   .santa-retrato { width: 72px; height: 72px; }
 }
 .santa-boss-battle .game-stage { position: relative; }
+/* En vertical, la batalla de saltos se compone como la partida (issue 355): a toda la pantalla sin relleno que la
+   desplace, con el fondo de la arena difuminado arriba, el HUD encima del escenario 4:3 y los controles debajo. */
+@media (orientation: portrait) {
+  .santa-boss-battle { padding: 0; overflow: hidden; }
+  .santa-boss-battle .santa-arena { box-sizing: border-box; width: 100vw; max-width: none; height: 100dvh; margin: 0; border: 0; border-radius: 0; }
+  /* MAPA es más alto que la fila del HUD: crece hacia arriba y no pisa el escenario. */
+  .santa-boss-battle .hud-esquinas .hud-derecha .santa-exit { top: auto; bottom: 0; }
+}
 .santa-boss-battle .hud-derecha .santa-exit { position: absolute; top: 0; right: 0; left: auto; width: auto; min-width: 0; align-self: auto; margin: 0; }
 
 /* Pulsación vacía en los minijuegos rítmicos: cae una gota de la raya (miel, nota o bellota según el juego). */

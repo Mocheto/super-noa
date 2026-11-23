@@ -762,3 +762,29 @@
 .map-noa { transform: translate(-50%, calc(-100% - clamp(30px, 3vw, 44px))); }
 @media (prefers-reduced-motion: reduce) { .map-node.is-next { animation: none; } }
 .reduce-motion .map-node.is-next { animation: none; }
+
+/* Minijuegos y duelos con la misma ventana, letra y paleta (issue 334; guía de estilo visual). */
+/* Duelos de guardián: Press Start 2P para Noa (la del sistema solo en lo de adultos), y tarjetas y botones crema con
+   contorno ciruela grueso, como las ventanas comunes. El dibujo de fondo del guardián, más tenue. */
+.boss-battle[class*=" battle-"], .boss-battle.guardian-game { font-family: var(--letra-noa); }
+.boss-battle[class*=" battle-"] .boss-header h2, .boss-battle.guardian-game .boss-header h2 { letter-spacing: 0; }
+.boss-battle .gesture-card, .boss-battle .duel-choices button, .boss-battle .round-message, .boss-battle .guardian-options button,
+.boss-battle .guardian-game-board, .boss-battle .guardian-target {
+  border: 4px solid var(--ciruela); border-radius: 12px; background: var(--crema); box-shadow: 0 4px 0 var(--ciruela); color: var(--ciruela);
+}
+.boss-battle .duel-rules, .boss-battle .duel-attempts small, .boss-battle .guardian-game-status small, .boss-battle .guardian-target b { font-family: var(--letra-noa); }
+.boss-battle[class*=" battle-"]::before, .boss-battle.guardian-game::before { opacity: .08; }
+/* La fiesta de los gatitos, con el mismo papel, marco y botón de acción que los otros rítmicos. */
+.cat-party-screen { box-sizing: border-box; border: 6px solid #21132f; color: var(--ciruela); background: var(--papel); box-shadow: 13px 13px 0 rgba(6, 3, 12, .72); }
+.cat-party-screen .cat-party-strike { border: 4px solid #352044; border-bottom-width: 8px; color: #352044 !important; background: #ffe07d !important; }
+.cat-party-botones-control { left: auto; right: 10px; }
+@media (orientation: portrait) { .cat-party-screen { border: 0; box-shadow: none; } }
+@media (orientation: landscape) and (max-height: 540px) { .cat-party-screen { border-width: 3px; box-shadow: none; } }
+/* Press Start 2P es ancha: los títulos y el marcador de los duelos van con la escala de la interfaz. */
+.boss-battle[class*=" battle-"] .boss-header h2, .boss-battle.guardian-game .boss-header h2 { font-size: var(--rotulo-titulo); line-height: 1.25; }
+.boss-battle[class*=" battle-"] .duel-score, .boss-battle[class*=" battle-"] .duel-attempts, .boss-battle.guardian-game .guardian-game-status { font-size: max(14px, var(--rotulo-pequeno)); }
+.boss-battle .round-message span, .boss-battle .duel-choices strong, .boss-battle .gesture-card b { font-size: max(14px, var(--rotulo-pequeno)); }
+@media (orientation: landscape) and (max-height: 540px) {
+  .boss-battle[class*=" battle-"] .boss-header h2, .boss-battle.guardian-game .boss-header h2 { font-size: 14px; white-space: nowrap; }
+  .boss-battle[class*=" battle-"] .boss-header .eyebrow { display: none; }
+}

@@ -31,8 +31,10 @@ export function PantallaPrevia({ id, nombre, nombreVariables, guardian, regla, a
   const practica = Boolean(onPracticar) && practicaPrimero;
   return <Ventana id={id} titulo={nombre} tituloVariables={nombreVariables} className="pantalla-previa" onClose={onSalir}
     botones={<>
-      {onPracticar && <Boton tipo={practica ? "seguir" : "secundario"} clave="minijuegos.comun.previa.practica.rotulo" data-gamepad-default={practica || undefined} onClick={onPracticar} />}
-      <Boton tipo={practica ? "secundario" : "jugar"} clave="minijuegos.comun.previa.jugar.rotulo" data-gamepad-default={!practica || undefined} onClick={onJugar} />
+      {/* Un único botón principal en todas las previas: ¡A JUGAR!, rojo (issue 334). La primera vez, el mando empieza en
+          PRACTICA, pero los colores no cambian. */}
+      {onPracticar && <Boton tipo="secundario" clave="minijuegos.comun.previa.practica.rotulo" data-gamepad-default={practica || undefined} onClick={onPracticar} />}
+      <Boton tipo="jugar" clave="minijuegos.comun.previa.jugar.rotulo" data-gamepad-default={!practica || undefined} onClick={onJugar} />
     </>}>
     <BotonControl className="ventana-cerrar" pictograma="cerrar" etiqueta="minijuegos.comun.salir.mapa.oculto" data-gamepad-back onClick={onSalir} />
     <div className="ventana-dibujo previa-guardian">{guardian}</div>

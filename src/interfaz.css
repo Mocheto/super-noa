@@ -231,9 +231,16 @@
   filter: brightness(0) drop-shadow(1.5px 0 0 var(--crema)) drop-shadow(-1.5px 0 0 var(--crema)) drop-shadow(0 1.5px 0 var(--crema)) drop-shadow(0 -1.5px 0 var(--crema));
   opacity: .9;
 }
-.hud-vidas.late { animation: vidas-late .4s ease-out; }
-@keyframes vidas-late { 35% { transform: scale(1.25); background: rgba(226, 49, 60, .85); } }
-@media (prefers-reduced-motion: reduce) { .hud-vidas.late { animation: none; } }
+/* Al perder una vida (issue 338, «el corazón cae»): el corazón sale del chip girando y cae, y el chip tiembla 3 px; con
+   movimiento tranquilo solo queda el hueco vacío. */
+.hud-vida { position: relative; display: inline-flex; }
+.hud-vidas .vida-cae { position: absolute; inset: 0; animation: vida-cae .6s ease-in forwards; }
+@keyframes vida-cae { to { transform: translate(18px, 90px) rotate(90deg); opacity: 0; } }
+.hud-vidas.late { animation: vidas-tiembla .18s linear 1; }
+@keyframes vidas-tiembla { 25% { translate: -3px 0; } 75% { translate: 3px 0; } }
+@media (prefers-reduced-motion: reduce) { .hud-vidas.late { animation: none; } .hud-vidas .vida-cae { display: none; } }
+.reduce-motion .hud-vidas.late { animation: none; }
+.reduce-motion .hud-vidas .vida-cae { display: none; }
 .hud-pantalla { color: #352044; background: var(--dorado); border-color: var(--ciruela); }
 .hud-banderas { color: var(--dorado); letter-spacing: 2px; }
 .hud-pausa { --control: 52px; pointer-events: auto; border-radius: 16px; color: var(--crema); background: var(--lila-control); border-color: var(--crema); box-shadow: 0 4px 0 #1b1129; }

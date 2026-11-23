@@ -41,6 +41,7 @@ import { drawExploreOverlay, drawExploreWorld, prepararExploracion } from "./exp
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import { ANCHO_VERTICAL, ponerVista, recorteObjetivo, vista } from "./vista";
 import { drawContornos, drawHalo, drawVelo, opacidadInvencible } from "./halo";
+import { crearEfectos, drawEfectos } from "./efectos";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
@@ -217,6 +218,8 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     const hitBlocks = new Set<string>();
     const projectiles: Projectile[] = [];
     const bursts: PixelBurst[] = [];
+    // Respuesta al jugar (issue 338): polvo al aterrizar, estrellas al recoger y fuente al ganar.
+    const efectos = crearEfectos();
     const cannons: LiveCannon[] = (level.cannons ?? []).map((item, index) => ({ ...item, cooldown: 0.8 + index * 0.22 }));
     const cannonballs: Cannonball[] = [];
     const waterJumpers: LiveWaterJumper[] = (level.waterJumpers ?? []).map((jumper) => ({ ...jumper, age: 0 }));
@@ -294,6 +297,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     };
     const finishLevel = (delay: number, complete: (snapshot: GameSnapshot) => void) => {
       if (completed) return;
+      efectos.lanzar("fuente", player.x + player.width / 2, player.y + player.height - 30);
       transition.begin(currentSnapshot(), delay, complete);
       completed = true;
     };
@@ -544,6 +548,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       const previousY = player.y;
       const previousBottom = previousY + player.height;
       const wasGrounded = player.grounded;
+      const caida = player.vy;
       if (!swimming) player.vy += GRAVITY * delta;
       if (!swimming && liftZones?.length) {
         player.vy = updraftVelocity(player.vy, liftZones.filter((zone) => intersects(player, zone)), delta);
@@ -603,6 +608,8 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         }
       }
 
+      // Polvo al aterrizar tras un salto o una caída de verdad (no al pisar un escalón).
+      if (player.grounded && !wasGrounded && caida > 260 && !swimming) efectos.lanzar("polvo", player.x + player.width / 2, player.y + player.height);
       if (puzzle) {
         for (const event of stepTriggers(level, puzzle, player, player.grounded && !wasGrounded, levelAge)) {
           bursts.push({ x: event.from.x, y: event.from.y, life: 0.45, color: event.kind === "color" ? "#ffc4e1" : "#ffe477", kind: "stars" });
@@ -683,6 +690,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         const box = { x: item.x, y: itemY, width: 40, height: 40 };
         if (!intersects(player, box)) continue;
         collected.add(item.id);
+        efectos.lanzar("recoger", item.x + 20, itemY + 20);
         if (item.kind === "apple") {
           apples += 1;
           callbacksRef.current.onAppleCollected?.(1);
@@ -855,6 +863,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       for (let index = cannonballs.length - 1; index >= 0; index -= 1) {
         if (!cannonballs[index].active) cannonballs.splice(index, 1);
       }
+      efectos.avanzar(delta);
       for (let index = bursts.length - 1; index >= 0; index -= 1) {
         bursts[index].life -= delta;
         if (bursts[index].life <= 0) bursts.splice(index, 1);
@@ -1291,6 +1300,8 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       }
       drawPlayer();
       context.restore();
+      // Encima de Noa: las estrellas salen de donde estaba lo recogido, que es donde está ella.
+      drawEfectos(context, efectos.lista, cameraX, motionRef.current);
       if (starRemaining > 0) drawStarAura(context, player, cameraX, starRemaining, starDuration, levelAge, motionRef.current, raster);
       for (const zone of level.waterZones ?? []) {
         const left = Math.max(0, zone.x - cameraX);
@@ -1377,7 +1388,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       if (!runningRef.current || shopOpenRef.current) return;
       entradaSegundos += delta;
       palabras.avanzar(delta);
-      if (completed) transition.advance(delta, runningRef.current);
+      if (completed) { transition.advance(delta, runningRef.current); efectos.avanzar(delta); }
       else update(delta, now);
     }, render, () => { frame += 1; });
     gameLoopRef.current = gameLoop;

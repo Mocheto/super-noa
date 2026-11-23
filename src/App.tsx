@@ -99,7 +99,7 @@ export default function App() {
   const [lives, setLives] = useState(MAX_LIVES);
   // Menú para adultos del mapa (issue 333): ajustes, tablón, borrar progreso, lista, zoom y ayuda.
   const [menuMapa, setMenuMapa] = useState(false);
-  // Cada vida perdida hace latir una vez el chip de vidas (issue 327): la clave nueva reinicia la animación.
+  // Cada vida perdida hace caer su corazón del chip de vidas, que tiembla (issue 338): la clave nueva reinicia la animación.
   const [latidoVidas, setLatidoVidas] = useState(0);
   const vidasAntes = useRef(lives);
   useEffect(() => {
@@ -107,8 +107,8 @@ export default function App() {
     vidasAntes.current = lives;
     if (!perdida) return;
     setLatidoVidas((latido) => latido + 1);
-    // Después del latido se quita la marca, para que un HUD nuevo (otra pantalla) no lata al aparecer.
-    const fin = window.setTimeout(() => setLatidoVidas(0), 450);
+    // Después de la caída se quita la marca, para que un HUD nuevo (otra pantalla) no la repita al aparecer.
+    const fin = window.setTimeout(() => setLatidoVidas(0), 650);
     return () => window.clearTimeout(fin);
   }, [lives]);
   const [paused, setPaused] = useState(false);
@@ -809,7 +809,10 @@ export default function App() {
   /** HUD de esquinas sobre el escenario (decisión «El HUD de la partida»): vidas y contadores a la izquierda, pantalla y banderas en el centro y la pausa a la derecha. */
   const hudEsquinas = !bossReplay && <div className="hud-esquinas">
     <div className="hud-izquierda">
-      <span key={latidoVidas} className={`hud-chip hud-vidas${latidoVidas ? " late" : ""}`} role="img" aria-label={t("partida.hud.vidas.oculto", { n: lives })}>{Array.from({ length: MAX_LIVES }, (_, vida) => <GameAssetIcon key={vida} kind="heart" className={vida < lives ? "" : "vida-perdida"} />)}</span>
+      <span key={latidoVidas} className={`hud-chip hud-vidas${latidoVidas ? " late" : ""}`} role="img" aria-label={t("partida.hud.vidas.oculto", { n: lives })}>{Array.from({ length: MAX_LIVES }, (_, vida) => <span key={vida} className="hud-vida">
+        <GameAssetIcon kind="heart" className={vida < lives ? "" : "vida-perdida"} />
+        {latidoVidas > 0 && vida === lives && <GameAssetIcon kind="heart" className="vida-cae" />}
+      </span>)}</span>
       <span className="hud-contadores">
         <span className="hud-chip" role="img" aria-label={t("partida.hud.manzanas.oculto", { n: snapshot.apples })}><GameAssetIcon kind="apple" /> {snapshot.apples}</span>
         <span className="hud-chip" role="img" aria-label={t("partida.hud.pegatinas.oculto", { n: snapshot.stickers.length })}><Pictograma nombre="pegatina" />{snapshot.stickers.length}</span>

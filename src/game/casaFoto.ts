@@ -4,6 +4,7 @@
  * doce últimas, la más nueva primero. Solo lógica: sin dibujo.
  */
 import type { CasaProgress } from "./casa.ts";
+import { esClima, type Clima } from "./casaClima.ts";
 import { normalizeDecoracion, type Decoracion } from "./casaDecoracion.ts";
 import { ANIMACIONES_GATO, type AnimacionGato } from "./casaGatoArte.ts";
 import { normalizeRopa, type Ropa } from "./casaRopa.ts";
@@ -39,6 +40,8 @@ export type FotoCasa = {
   /** De noche, con la lámpara apagada. */
   apagada: boolean;
   gatitos: GatitoEnFoto[];
+  /** El clima que se veía (mapa «Idea: clima en la ventana»); si falta, sol. */
+  clima?: Clima;
   /** Hecha en el jardín (mapa «Jardín de la casa»): la celda de cada macetero tal como estaba. Si falta, en la habitación. */
   jardin?: { maceteros: number[]; /** El visitante que había (mapa «Visitas de los amigos a la casa»): su animal y sus pies. */ visitante?: { animal: string; x: number; y: number } };
 };
@@ -98,6 +101,7 @@ export function normalizeFotos(raw: unknown): FotoCasa[] {
       noche: foto.noche === true,
       apagada: foto.noche === true && foto.apagada === true,
       gatitos,
+      ...(esClima(foto.clima) && foto.clima !== "sol" ? { clima: foto.clima } : {}),
       ...(jardin ? { jardin } : {}),
     }];
   }).slice(0, MAX_FOTOS);

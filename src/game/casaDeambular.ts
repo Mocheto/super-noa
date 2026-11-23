@@ -5,6 +5,7 @@
  */
 import { bocadilloDe, elegirVida, type EstadoVida, type GatitoCasa } from "./casa.ts";
 import { dentroDelSuelo, type SueloDeEstancia } from "./casaHabitacion.ts";
+import { IR_A_LA_VENTANA } from "./casaClima.ts";
 
 /** Velocidad al andar, en px de escena por segundo, en cualquier dirección. */
 export const VELOCIDAD_GATITO = 70;
@@ -84,14 +85,15 @@ export function puntoLibre(habitacion: SueloDeEstancia, desde: Punto, otros: rea
   return { x: desde.x, y: desde.y };
 }
 
-export type ContextoDecision = { habitacion: SueloDeEstancia; noche: boolean; casaLimpia: boolean; alguienPide: boolean; sitioNoche: Punto; azar: () => number; ahora: number };
+export type ContextoDecision = { habitacion: SueloDeEstancia; noche: boolean; casaLimpia: boolean; alguienPide: boolean; sitioNoche: Punto; azar: () => number; ahora: number; /** Llueve o nieva: van más a mirar por la ventana. */ miranFuera?: boolean };
 
 /**
  * Decide qué hace un gatito que ha acabado lo que hacía:
  * - de noche, va a su sitio de la cama a dormir;
  * - si pide algo, alterna: tras pedir, anda 2–4 s y se para a pedir otra vez;
  * - si no, elige con la vida propia; al andar va a un punto libre del suelo, y para dormir, jugar solo, sentarse o
- *   cantar a veces va antes al sitio de interés de eso (cama, rascador, ventana, alfombra), si está libre.
+ *   cantar a veces va antes al sitio de interés de eso (cama, rascador, ventana, alfombra), si está libre;
+ * - con lluvia o nieve (`miranFuera`), a veces va a sentarse a la ventana a mirar.
  */
 export function decidir(andante: Andante, gatito: GatitoCasa, otros: readonly Andante[], contexto: ContextoDecision): Andante {
   const { habitacion, azar, ahora } = contexto;
@@ -105,6 +107,10 @@ export function decidir(andante: Andante, gatito: GatitoCasa, otros: readonly An
     const segundos = entre(ANDAR_PIDIENDO_S);
     const destino = puntoLibre(habitacion, andante, otros, azar, { radio: VELOCIDAD_GATITO * segundos });
     return ir(andante, destino, "pedir", entre(PEDIR_S), ahora);
+  }
+  const ventana = habitacion.sitios.ventana;
+  if (contexto.miranFuera && ventana && azar() < IR_A_LA_VENTANA && libre(ventana, otros)) {
+    return ir(andante, { x: ventana.x, y: ventana.y }, "sentarse", 6 + Math.floor(azar() * 6), ahora);
   }
   const eleccion = elegirVida(gatito, contexto, azar);
   if (eleccion.estado === "andar") {

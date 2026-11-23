@@ -39,6 +39,7 @@ import { recordFlight } from "./game/avioneta";
 import { puntos, sinPictogramas, t } from "./textos";
 import { Boton, BotonControl, PalabraConDibujo, Pictograma, Texto } from "./textos/Texto";
 import { Medalla, Ventana } from "./game/Ventana";
+import { Avisos } from "./game/Avisos";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
 import { visitDetour } from "./game/detourProgress";
 
@@ -119,6 +120,9 @@ export default function App() {
   const [enrollmentMessage, setEnrollmentMessage] = useState("");
   const [enrollmentStorageBlocked, setEnrollmentStorageBlocked] = useState(false);
   const [audioMessage, setAudioMessage] = useState("");
+  // Avisos para adultos que ya se han ido (solos o al tocarlos); uno nuevo, con otro texto, vuelve a salir.
+  const [avisosCerrados, setAvisosCerrados] = useState<ReadonlySet<string>>(() => new Set());
+  const cerrarAviso = useCallback((id: string) => setAvisosCerrados((cerrados) => new Set(cerrados).add(id)), []);
   const [collectionTab, setCollectionTab] = useState<CollectionTab>("stickers");
   const [albumHints, setAlbumHints] = useState<string[]>([]);
   const [musicVolume, setMusicVolume] = useState(() => readSavedPercentage(MUSIC_VOLUME_KEY, 100));
@@ -808,11 +812,13 @@ export default function App() {
 
   return (
     <main className={`app-shell ${reduceMotion ? "reduce-motion" : ""} ${touchControls === "always" ? "touch-controls-always" : ""}`}>
-      {saveError && <p className="save-warning" role="alert">{t("adultos.app.no-se-pudo-guardar")}</p>}
-      {enrollmentChecking && <p className="ranking-sync-warning" role="status">{t("adultos.app.conectando-el-tablon-en")}</p>}
-      {enrollmentMessage && <p className="ranking-sync-warning" role="status">{enrollmentMessage}</p>}
-      {rankingDevice && rankingSyncState === "pending" && <p className="ranking-sync-warning" role="status">{t("adultos.app.tus-logros-del-tablon")} {rankingSyncMessage} {saveError ? t("adultos.app.puedes-seguir-jugando-aunque") : t("adultos.app.tu-partida-sigue-guardada")} <button type="button" onClick={() => setRankingRetry((current) => current + 1)}>{t("adultos.app.reintentar-envio")}</button></p>}
-      {audioMessage && !muted && musicVolume > 0 && <p className="audio-warning" role="status">{audioMessage}</p>}
+      <Avisos esperar={(screen === "game" || screen === "boss") && !paused} cerrados={avisosCerrados} onCerrar={cerrarAviso} avisos={[
+        ...(saveError ? [{ id: "guardar", clase: "save-warning", rol: "alert" as const, contenido: t("adultos.app.no-se-pudo-guardar") }] : []),
+        ...(enrollmentChecking ? [{ id: "tablon-conectando", clase: "ranking-sync-warning", rol: "status" as const, contenido: t("adultos.app.conectando-el-tablon-en") }] : []),
+        ...(enrollmentMessage ? [{ id: `tablon:${enrollmentMessage}`, clase: "ranking-sync-warning", rol: "status" as const, contenido: enrollmentMessage }] : []),
+        ...(rankingDevice && rankingSyncState === "pending" ? [{ id: `tablon-pendiente:${rankingSyncMessage}:${rankingRetry}`, clase: "ranking-sync-warning", rol: "status" as const, contenido: <>{t("adultos.app.tus-logros-del-tablon")} {rankingSyncMessage} {saveError ? t("adultos.app.puedes-seguir-jugando-aunque") : t("adultos.app.tu-partida-sigue-guardada")} <button type="button" onClick={() => setRankingRetry((current) => current + 1)}>{t("adultos.app.reintentar-envio")}</button></> }] : []),
+        ...(audioMessage && !muted && musicVolume > 0 ? [{ id: `musica:${audioMessage}`, clase: "audio-warning", rol: "status" as const, contenido: audioMessage }] : []),
+      ]} />
       {screen === "home" && (
         <section className="home-screen" aria-labelledby="game-title">
           <div className="home-copy">

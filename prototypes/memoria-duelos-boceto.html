@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Boceto · duelos de memoria</title>
+<style>
+  /* Boceto barato de la issue 354: formas simples, sin arte final. Solo sirve para reaccionar al movimiento. */
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: "Trebuchet MS", system-ui, sans-serif; background: #1b1230; color: #fff; }
+  #barra { position: fixed; inset: 0 0 auto 0; z-index: 30; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 8px; background: rgba(0,0,0,.55); font-size: 12px; }
+  #barra button, #barra label { background: #fff2; color: #fff; border: 1px solid #fff5; border-radius: 6px; padding: 4px 8px; font: inherit; cursor: pointer; }
+  #barra button.activo { background: #ffd35a; color: #2a1a00; border-color: #ffd35a; font-weight: bold; }
+  #barra .nota { opacity: .75; margin-left: auto; }
+  #escena { position: fixed; inset: 0; overflow: hidden; touch-action: manipulation; }
+  .aurora #escena { background: radial-gradient(ellipse at 50% 20%, #2b3a7a 0%, #141a3f 55%, #0b0e24 100%); }
+  .tricera #escena { background: linear-gradient(#bfe8ff 0%, #d8f4c8 45%, #7cc46a 70%, #4f9a45 100%); }
+  .capa { position: absolute; pointer-events: none; }
+  /* Escena viva de Aurora */
+  .banda { position: absolute; left: -20%; width: 140%; height: 16%; border-radius: 50%; filter: blur(18px); opacity: .45; }
+  .estrella-fondo { position: absolute; width: 3px; height: 3px; background: #fff; border-radius: 50%; }
+  /* Escena viva de la Reina */
+  .volcan { position: absolute; width: 0; height: 0; border-left: 70px solid transparent; border-right: 70px solid transparent; border-bottom: 90px solid #8a6a5a; }
+  .humo { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: #fff9; }
+  .helecho { position: absolute; width: 16px; height: 70px; background: #2f7d35; border-radius: 50% 50% 0 0; transform-origin: 50% 100%; }
+  .mariposa, .tero { position: absolute; font-size: 22px; }
+  /* Sitios */
+  .sitio { position: absolute; transform: translate(-50%, -50%); cursor: pointer; display: grid; place-items: center; }
+  .nube { width: var(--t); height: calc(var(--t) * .62); background: #eef3ff; border-radius: 999px; box-shadow: 0 6px 0 #c3cdee inset, 0 8px 18px #0006; }
+  .nubecita { width: 46%; height: 62%; border-radius: 50%; background: var(--color); position: relative; transition: transform .15s; }
+  .nubecita::before, .nubecita::after { content: ""; position: absolute; top: 40%; width: 14%; height: 6%; background: #2a2340; border-radius: 4px; }
+  .nubecita::before { left: 26%; } .nubecita::after { right: 26%; }
+  .despierta .nubecita::before, .despierta .nubecita::after { height: 18%; border-radius: 50%; top: 32%; }
+  .guiña .nubecita::after { height: 18%; border-radius: 50%; top: 32%; }
+  .arbusto { width: var(--t); height: calc(var(--t) * .8); background: radial-gradient(circle at 30% 40%, var(--color) 0 9%, transparent 10%), radial-gradient(circle at 65% 30%, var(--color) 0 9%, transparent 10%), radial-gradient(circle at 50% 62%, var(--color) 0 9%, transparent 10%), radial-gradient(circle at 78% 60%, var(--color) 0 8%, transparent 9%), #2e8a3a; border-radius: 45% 45% 20% 20%; box-shadow: 0 -6px 0 #3aa84a inset, 0 10px 14px #0004; transform-origin: 50% 100%; }
+  .mece { animation: mece 2.4s ease-in-out infinite; } .mece-fuerte { animation: mece 0.5s ease-in-out infinite; }
+  @keyframes mece { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  .flota { animation: flota 3.2s ease-in-out infinite; }
+  @keyframes flota { 0%,100% { margin-top: -4px; } 50% { margin-top: 4px; } }
+  .brilla { filter: drop-shadow(0 0 14px #fff) drop-shadow(0 0 22px var(--color)); }
+  .golpe { animation: golpe .35s ease-out; }
+  @keyframes golpe { 0% { transform: scale(1); } 40% { transform: scale(1.12, .9); } 100% { transform: scale(1); } }
+  /* Guardianas */
+  .guardiana { position: absolute; transform: translate(-50%, -50%); pointer-events: none; z-index: 10; }
+  .lechuza { width: 84px; height: 96px; background: #b9a6e8; border-radius: 45% 45% 40% 40%; position: relative; box-shadow: 0 6px 0 #8f79c9 inset; }
+  .lechuza .ojo { position: absolute; top: 26%; width: 26px; height: 26px; background: #fff; border-radius: 50%; }
+  .lechuza .ojo::after { content: ""; position: absolute; top: 8px; left: var(--mira, 8px); width: 10px; height: 10px; background: #221; border-radius: 50%; transition: left .2s; }
+  .lechuza .ojo.i { left: 12%; } .lechuza .ojo.d { right: 12%; }
+  .lechuza .corona { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); width: 30px; height: 22px; background: #ffe07a; clip-path: polygon(0 100%, 0 30%, 25% 60%, 50% 0, 75% 60%, 100% 30%, 100% 100%); }
+  .lechuza .ala { position: absolute; top: 40%; width: 34px; height: 46px; background: #9d88d8; border-radius: 50%; transform-origin: 50% 10%; }
+  .lechuza .ala.i { left: -18px; } .lechuza .ala.d { right: -18px; }
+  .vuela .ala.i { animation: aleteo-i .25s linear infinite; } .vuela .ala.d { animation: aleteo-d .25s linear infinite; }
+  @keyframes aleteo-i { 50% { transform: rotate(35deg); } } @keyframes aleteo-d { 50% { transform: rotate(-35deg); } }
+  .luna { position: absolute; transform: translate(-50%, -50%); width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fffbe0, #f3dc86); box-shadow: 0 0 60px #f3dc8677; }
+  .reina { width: 140px; height: 86px; position: relative; }
+  .reina .cuerpo { position: absolute; inset: 18px 0 14px 18px; background: #6fb07a; border-radius: 50% 45% 40% 45%; box-shadow: 0 -6px 0 #5a9a66 inset; }
+  .reina .cabeza { position: absolute; left: 0; top: 6px; width: 62px; height: 52px; background: #7cc088; border-radius: 50% 40% 45% 50%; }
+  .reina .gola { position: absolute; left: 30px; top: -6px; width: 54px; height: 54px; background: #e9a24f; border-radius: 50%; z-index: -1; }
+  .reina .cuerno { position: absolute; left: 4px; top: -4px; width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-bottom: 24px solid #fff4d0; transform: rotate(-30deg); }
+  .reina .ojo { position: absolute; left: 18px; top: 20px; width: 9px; height: 9px; background: #221; border-radius: 50%; }
+  .reina .pata { position: absolute; bottom: 0; width: 16px; height: 22px; background: #5a9a66; border-radius: 6px; }
+  .reina .pata.a { left: 36px; } .reina .pata.b { left: 96px; }
+  .trota .pata.a { animation: pata .25s linear infinite; } .trota .pata.b { animation: pata .25s linear infinite reverse; }
+  @keyframes pata { 50% { transform: translateY(-6px); } }
+  .mira-izq { transform: translate(-50%, -50%) scaleX(1); } .mira-der { transform: translate(-50%, -50%) scaleX(-1); }
+  .cria { position: absolute; transform: translate(-50%, -50%) scale(.42); pointer-events: none; z-index: 9; }
+  .nido { position: absolute; transform: translate(-50%, -50%); width: 230px; height: 90px; background: radial-gradient(ellipse at 50% 30%, #c79a5a, #8a6236); border-radius: 50%; display: flex; justify-content: center; gap: 6px; align-items: flex-start; padding-top: 4px; }
+  .huevo { width: 30px; height: 40px; background: #fff7e3; border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%; box-shadow: 0 -4px 0 #ead9b0 inset; margin-top: -18px; }
+  .huevo.abierto { background: transparent; box-shadow: none; border: 3px dashed #fff7e3; }
+  /* Marcador de Aurora: constelación */
+  .constelacion { position: absolute; pointer-events: none; }
+  .astro { position: absolute; width: 26px; height: 26px; transform: translate(-50%, -50%); clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); background: #fff3; transition: background .4s, transform .4s; }
+  .astro.encendida { background: #ffe57a; transform: translate(-50%, -50%) scale(1.3); filter: drop-shadow(0 0 10px #ffe57a); }
+  .linea-astro { position: absolute; height: 2px; background: #ffe57a99; transform-origin: 0 50%; }
+  /* Partículas */
+  .chispa { position: absolute; width: 10px; height: 10px; border-radius: 50%; pointer-events: none; z-index: 12; transition: transform .9s ease-out, opacity .9s ease-out; }
+  .petalo { position: absolute; width: 12px; height: 8px; border-radius: 50% 50% 50% 0; pointer-events: none; z-index: 12; transition: transform 1s ease-out, opacity 1s ease-in; }
+  /* Interfaz */
+  #rotulo { position: absolute; z-index: 20; left: 50%; transform: translateX(-50%); padding: 8px 16px; border-radius: 12px; background: #fff8e6; color: #3a2400; font-weight: bold; letter-spacing: 1px; font-size: clamp(16px, 4vw, 26px); box-shadow: 0 4px 0 #c9a24f; white-space: nowrap; }
+  #rotulo:empty { display: none; }
+  #mira { position: absolute; z-index: 20; width: 64px; height: 64px; border-radius: 50%; border: 0; background: #fff8e6; box-shadow: 0 4px 0 #c9a24f; font-size: 30px; cursor: pointer; }
+  #final { position: absolute; inset: 0; z-index: 25; display: none; place-items: center; background: #0007; }
+  #final .ventana { background: #fff8e6; color: #3a2400; border-radius: 18px; padding: 22px 26px; text-align: center; box-shadow: 0 6px 0 #c9a24f; }
+  #final h2 { margin: 0 0 8px; } #final button { margin-top: 12px; font: inherit; font-weight: bold; padding: 10px 18px; border-radius: 10px; border: 0; background: #5aa84a; color: #fff; cursor: pointer; }
+  .quieto * { animation: none !important; }
+</style>
+</head>
+<body class="aurora">
+<div id="barra">
+  <button id="b-aurora" class="activo">EL VUELO DE AURORA</button>
+  <button id="b-reina">EL NIDO DE LA REINA</button>
+  <label><input type="checkbox" id="viva" checked> escena viva</label>
+  <button id="b-nueva">Otra partida</button>
+  <span class="nota">Boceto #354 · teclas ← ↑ → o 1 2 3</span>
+</div>
+<div id="escena">
+  <div id="fondo" class="capa" style="inset:0"></div>
+  <div id="marcador" class="capa" style="inset:0"></div>
+  <div id="sitios"></div>
+  <div id="guardiana" class="guardiana"></div>
+  <div id="crias"></div>
+  <div id="rotulo">MIRA</div>
+  <button id="mira" title="Enseñar otra vez">👀</button>
+  <div id="final"><div class="ventana"><h2 id="final-titulo">¡BRAVO, NOA!</h2><div id="final-corona" style="font-size:40px"></div><button id="final-otra">OTRA VEZ</button></div></div>
+</div>
+<script>
+// ----------------------------------------------------------------- reglas (issue 351)
+const PULSO = 60 / 90; // segundos: compás suave de ~90 pulsos
+const RONDAS = 5;
+function azar(semilla) { let s = semilla >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 2 ** 32); }
+function recorridoCon(semilla) {
+  const r = azar(semilla), sitios = [];
+  while (sitios.length < RONDAS) { const s = Math.floor(r() * 3); if (s !== sitios[sitios.length - 1]) sitios.push(s); }
+  return sitios;
+}
+
+// ----------------------------------------------------------------- juegos (issues 352 y 353)
+const JUEGOS = {
+  aurora: {
+    colores: ["#ff9ec7", "#ffe066", "#7cc8ff"], notas: [783.99, 1046.5, 1318.5], onda: "sine", // sol, do, mi de celesta
+    sitios: { v: [[24, 80], [50, 60], [76, 80]], h: [[38, 80], [60, 58], [82, 80]] },
+    casa: { v: [50, 36], h: [60, 24] },
+  },
+  reina: {
+    colores: ["#ff5a5a", "#ffd23a", "#b26bff"], notas: [440, 523.25, 659.25], onda: "triangle", // la, do, mi de marimba
+    sitios: { v: [[18, 84], [50, 84], [82, 84]], h: [[46, 74], [67, 74], [88, 74]] },
+    casa: { v: [30, 26], h: [26, 60] }, nido: { v: [55, 22], h: [14, 40] },
+  },
+};
+
+// ----------------------------------------------------------------- estado
+let juego = "aurora", orient = "v", recorrido = [], ronda = 1, fase = "enseña", paso = 0, fallosSeguidos = 0, fallos = 0, ayuda = false, turno = 0;
+let pos = { x: 50, y: 40 }, mirando = 0, rastro = [];
+const $ = (id) => document.getElementById(id);
+const escena = $("escena");
+const vivo = () => $("viva").checked;
+
+// ----------------------------------------------------------------- audio
+let ac = null;
+function audio() { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); if (ac.state !== "running") ac.resume(); return ac; }
+function nota(f, dur = 0.5, vol = 0.18, onda = JUEGOS[juego].onda) {
+  const c = audio(), t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+  o.type = onda; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + 0.05);
+}
+function golpecito() { nota(juego === "aurora" ? 220 : 110, 0.12, 0.05, "sine"); }
+function casi() { nota(330, 0.25, 0.12); setTimeout(() => nota(262, 0.4, 0.12), 180); }
+
+// ----------------------------------------------------------------- utilidades
+const dormir = (s, mio) => new Promise((ok, no) => setTimeout(() => (mio === turno ? ok() : no("cancelado")), s * 1000));
+const px = ([x, y]) => [x * escena.clientWidth / 100, y * escena.clientHeight / 100];
+function tamaño() { return Math.min(escena.clientWidth / (orient === "v" ? 3.4 : 5.2), escena.clientHeight / (orient === "v" ? 5.5 : 2.8)); }
+function rotulo(texto) { $("rotulo").textContent = texto; }
+function sitioEl(i) { return $("sitios").children[i]; }
+function ponerGuardiana(x, y) {
+  pos = { x, y }; const [a, b] = px([x, y]);
+  const g = $("guardiana"); g.style.left = a + "px"; g.style.top = b + "px";
+  rastro.unshift({ x, y, t: performance.now() }); if (rastro.length > 400) rastro.pop();
+}
+async function mover(destino, segundos, mio, arco = 0) {
+  const g = $("guardiana"), ini = { ...pos }, t0 = performance.now();
+  if (juego === "reina") g.className = "guardiana trota " + (destino[0] < ini.x ? "mira-izq" : "mira-der");
+  else g.classList.add("vuela");
+  await new Promise((ok, no) => {
+    const paso = (ahora) => {
+      if (mio !== turno) return no("cancelado");
+      const k = Math.min(1, (ahora - t0) / (segundos * 1000)), e = k < .5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2;
+      const brinco = juego === "reina" ? Math.abs(Math.sin(k * Math.PI * 4)) * 1.2 : 0;
+      ponerGuardiana(ini.x + (destino[0] - ini.x) * e, ini.y + (destino[1] - ini.y) * e - Math.sin(k * Math.PI) * arco - brinco);
+      k < 1 ? requestAnimationFrame(paso) : ok();
+    };
+    requestAnimationFrame(paso);
+  });
+  g.classList.remove("vuela", "trota");
+}
+function chispas(i, cuantas = 12) {
+  const [x, y] = px(JUEGOS[juego].sitios[orient][i]);
+  for (let n = 0; n < cuantas; n++) {
+    const p = document.createElement("div"); p.className = juego === "aurora" ? "chispa" : "petalo";
+    p.style.background = juego === "aurora" ? "#fff6b0" : JUEGOS[juego].colores[i];
+    p.style.left = x + "px"; p.style.top = y + "px"; escena.appendChild(p);
+    const ang = Math.random() * Math.PI * 2, d = 40 + Math.random() * 70;
+    requestAnimationFrame(() => { p.style.transform = `translate(${Math.cos(ang) * d}px, ${Math.sin(ang) * d + (juego === "reina" ? 60 : -20)}px) rotate(${ang * 90}deg)`; p.style.opacity = 0; });
+    setTimeout(() => p.remove(), 1100);
+  }
+}
+function cantar(i) {
+  const el = sitioEl(i); nota(JUEGOS[juego].notas[i]);
+  if (juego === "aurora") { el.classList.add("despierta", "brilla"); setTimeout(() => el.classList.remove("despierta", "brilla"), PULSO * 900); }
+  else { el.firstChild.classList.remove("golpe"); void el.offsetWidth; el.firstChild.classList.add("golpe"); el.classList.add("brilla"); setTimeout(() => el.classList.remove("brilla"), PULSO * 900); }
+  chispas(i);
+}
+function mirarHacia(i) {
+  if (juego === "aurora") { const dx = JUEGOS.aurora.sitios[orient][i][0] - pos.x; document.querySelectorAll(".lechuza .ojo").forEach((o) => o.style.setProperty("--mira", dx < -5 ? "2px" : dx > 5 ? "14px" : "8px")); }
+  else { const g = $("guardiana"); g.animate([{ marginTop: "0px" }, { marginTop: "-14px" }, { marginTop: "0px" }], { duration: 300 }); escena.animate([{ transform: "translateX(0)" }, { transform: "translateX(-3px)" }, { transform: "translateX(3px)" }, { transform: "translateX(0)" }], { duration: 200 }); }
+}
+
+// ----------------------------------------------------------------- dibujo de la escena
+function montar() {
+  document.body.className = juego === "aurora" ? "aurora" : "tricera";
+  orient = escena.clientWidth > escena.clientHeight * 1.1 ? "h" : "v";
+  const J = JUEGOS[juego], t = tamaño(), fondo = $("fondo"), sitios = $("sitios");
+  fondo.innerHTML = ""; sitios.innerHTML = ""; $("crias").innerHTML = "";
+  document.body.classList.toggle("quieto", !vivo());
+  if (juego === "aurora") {
+    ["#5cffb0", "#7a7cff", "#ff7ad9"].forEach((c, i) => { const b = document.createElement("div"); b.className = "banda"; b.style.top = 8 + i * 7 + "%"; b.style.background = c; fondo.appendChild(b); });
+    for (let n = 0; n < 50; n++) { const s = document.createElement("div"); s.className = "estrella-fondo"; s.style.left = Math.random() * 100 + "%"; s.style.top = Math.random() * 60 + "%"; s.dataset.f = Math.random() * 6; fondo.appendChild(s); }
+    const [lx, ly] = px(J.casa[orient]); const luna = document.createElement("div"); luna.className = "luna"; const d = Math.min(150, escena.clientHeight * .28); luna.style.width = luna.style.height = d + "px"; luna.style.left = lx + "px"; luna.style.top = ly + d * .27 + "px"; fondo.appendChild(luna);
+    $("guardiana").innerHTML = '<div class="lechuza"><div class="ala i"></div><div class="ala d"></div><div class="corona"></div><div class="ojo i"></div><div class="ojo d"></div></div>';
+  } else {
+    const v = document.createElement("div"); v.className = "volcan"; v.style.left = (orient === "v" ? 70 : 40) + "%"; v.style.top = (orient === "v" ? 34 : 18) + "%"; fondo.appendChild(v);
+    for (let n = 0; n < 3; n++) { const h = document.createElement("div"); h.className = "humo"; h.dataset.n = n; fondo.appendChild(h); }
+    for (let n = 0; n < 9; n++) { const h = document.createElement("div"); h.className = "helecho mece"; h.style.left = 4 + n * 11.5 + "%"; h.style.top = (orient === "v" ? 58 : 50) + (n % 3) * 3 + "%"; h.style.animationDelay = -n * .3 + "s"; fondo.appendChild(h); }
+    for (let n = 0; n < 2; n++) { const m = document.createElement("div"); m.className = "mariposa"; m.textContent = "🦋"; m.dataset.n = n; fondo.appendChild(m); }
+    const te = document.createElement("div"); te.className = "tero"; te.textContent = "🦅"; te.dataset.tero = 1; fondo.appendChild(te);
+    const [nx, ny] = px(J.nido[orient]); const nido = document.createElement("div"); nido.className = "nido"; nido.style.left = nx + "px"; nido.style.top = ny + "px";
+    for (let n = 0; n < 5; n++) { const h = document.createElement("div"); h.className = "huevo"; nido.appendChild(h); } fondo.appendChild(nido);
+    $("guardiana").innerHTML = '<div class="reina"><div class="gola"></div><div class="cuerpo"></div><div class="cabeza"><div class="ojo"></div></div><div class="cuerno"></div><div class="pata a"></div><div class="pata b"></div></div>';
+  }
+  J.sitios[orient].forEach((p, i) => {
+    const [x, y] = px(p); const s = document.createElement("div"); s.className = "sitio" + (juego === "aurora" ? " flota" : "");
+    s.style.left = x + "px"; s.style.top = y + "px"; s.style.setProperty("--t", t + "px"); s.style.setProperty("--color", J.colores[i]); s.style.animationDelay = -i * 1.1 + "s";
+    s.innerHTML = juego === "aurora" ? '<div class="nube"><div class="nubecita" style="margin:auto;margin-top:12%"></div></div>' : '<div class="arbusto mece"></div>';
+    s.addEventListener("pointerdown", (e) => { e.preventDefault(); tocar(i); });
+    sitios.appendChild(s);
+  });
+  // Rótulo, MIRA y marcador según la orientación.
+  const r = $("rotulo"), m = $("mira");
+  if (orient === "v") { r.style.top = "56px"; r.style.left = "50%"; m.style.right = "14px"; m.style.top = "50px"; m.style.left = ""; }
+  else { r.style.top = "46px"; r.style.left = "18%"; m.style.right = "14px"; m.style.top = "46px"; m.style.left = ""; }
+  pintarMarcador();
+  ponerGuardiana(...J.casa[orient]);
+  // Rastro inicial en fila detrás de la Reina, para que las crías esperen en fila y no debajo de ella.
+  const ahora = performance.now(); rastro = Array.from({ length: 60 }, (_, k) => ({ x: pos.x + k * 0.35, y: pos.y, t: ahora - k * 40 }));
+}
+function pintarMarcador() {
+  const marc = $("marcador"); marc.innerHTML = "";
+  if (juego === "aurora") {
+    // Constelación del gatito: cinco estrellas (cabeza, orejas, cola).
+    const forma = [[0, 1], [-1, 0], [1, 0], [0, -1.2], [2, 1.4]];
+    const [cx, cy] = orient === "v" ? [50, 14] : [14, 64], esc = orient === "v" ? 7 : 6;
+    const puntos = forma.map(([a, b]) => px([cx + a * esc * (orient === "v" ? 1 : escena.clientHeight / escena.clientWidth * 1.6), cy + b * esc * (orient === "v" ? escena.clientWidth / escena.clientHeight * 1.2 : 1)]));
+    puntos.forEach(([x, y], i) => { const a = document.createElement("div"); a.className = "astro" + (i < ronda - 1 || fase === "fin" ? " encendida" : ""); a.style.left = x + "px"; a.style.top = y + "px"; marc.appendChild(a); });
+    if (fase === "fin") for (let i = 0; i < puntos.length - 1; i++) { const [x1, y1] = puntos[i], [x2, y2] = puntos[i + 1]; const l = document.createElement("div"); l.className = "linea-astro"; l.style.left = x1 + "px"; l.style.top = y1 + "px"; l.style.width = Math.hypot(x2 - x1, y2 - y1) + "px"; l.style.transform = `rotate(${Math.atan2(y2 - y1, x2 - x1)}rad)`; marc.appendChild(l); }
+  } else {
+    document.querySelectorAll(".huevo").forEach((h, i) => h.classList.toggle("abierto", i < ronda - 1 || fase === "fin"));
+    const crias = $("crias"); crias.innerHTML = "";
+    const n = fase === "fin" ? 5 : ronda - 1;
+    for (let i = 0; i < n; i++) { const c = document.createElement("div"); c.className = "cria"; c.innerHTML = $("guardiana").innerHTML; crias.appendChild(c); }
+  }
+}
+
+// ----------------------------------------------------------------- bucle de la escena viva
+function vida(ahora) {
+  const s = ahora / 1000;
+  if (vivo()) {
+    document.querySelectorAll(".banda").forEach((b, i) => { b.style.transform = `translateX(${Math.sin(s * .3 + i) * 6}%) skewY(${Math.sin(s * .5 + i) * 4}deg)`; });
+    document.querySelectorAll(".estrella-fondo").forEach((e) => { e.style.opacity = .35 + .65 * Math.abs(Math.sin(s * 1.5 + +e.dataset.f)); });
+    document.querySelectorAll(".humo").forEach((h) => { const k = ((s * .25 + +h.dataset.n / 3) % 1); const v = document.querySelector(".volcan"); if (!v) return; h.style.left = v.offsetLeft + 60 + k * 30 + "px"; h.style.top = v.offsetTop - k * 70 + "px"; h.style.opacity = 1 - k; h.style.transform = `scale(${.6 + k})`; });
+    document.querySelectorAll(".mariposa").forEach((m) => { const n = +m.dataset.n; m.style.left = 20 + n * 45 + Math.sin(s * .6 + n) * 18 + "%"; m.style.top = 40 + n * 6 + Math.sin(s * 1.7 + n) * 5 + "%"; });
+    const t = document.querySelector("[data-tero]"); if (t) { const k = (s % 14) / 14; t.style.left = (k * 140 - 20) + "%"; t.style.top = "10%"; t.style.opacity = k < .7 ? 1 : 0; }
+  }
+  // Crías en fila detrás de la Reina (posiciones de su rastro con retraso).
+  document.querySelectorAll(".cria").forEach((c, i) => {
+    let p = rastro[0] || pos;
+    if (fase === "fin") { const [hx, hy] = JUEGOS.reina.casa[orient]; p = { x: hx + 6 + i * 5, y: hy + 8 + Math.abs(Math.sin(s * 6 + i)) * -2 }; }
+    else { const objetivo = performance.now() - (i + 1) * 260; p = rastro.find((r) => r.t <= objetivo) || rastro[rastro.length - 1] || pos; p = { x: p.x + (orient === "v" ? 0 : -2), y: p.y + 5 }; }
+    const [x, y] = px([p.x, p.y]); c.style.left = x + "px"; c.style.top = y + "px";
+  });
+  requestAnimationFrame(vida);
+}
+
+// ----------------------------------------------------------------- partida
+async function enseñar() {
+  const mio = ++turno, J = JUEGOS[juego];
+  fase = "enseña"; paso = 0; rotulo("MIRA");
+  try {
+    await dormir(PULSO, mio);
+    for (const i of recorrido.slice(0, ronda)) {
+      golpecito();
+      const [sx, sy] = J.sitios[orient][i];
+      await mover([sx, sy - (juego === "aurora" ? 9 : 8)], PULSO, mio, juego === "aurora" ? 12 : 0); // 1 pulso de viaje
+      cantar(i);                                                                                    // 1 pulso en el sitio
+      await dormir(PULSO, mio);
+    }
+    await mover(J.casa[orient], PULSO, mio, juego === "aurora" ? 10 : 0);
+    if (juego === "reina") $("guardiana").className = "guardiana mira-izq";
+    fase = "repite"; paso = 0; rotulo("AHORA TU"); marcarAyuda();
+  } catch { /* otra enseñanza o partida la sustituye */ }
+}
+function marcarAyuda() {
+  document.querySelectorAll(".sitio").forEach((s, i) => {
+    const toca = ayuda && fase === "repite" && i === recorrido[paso];
+    s.classList.toggle("guiña", toca && juego === "aurora");
+    if (juego === "reina") s.firstChild.className = "arbusto " + (toca ? "mece-fuerte" : "mece");
+  });
+}
+async function tocar(i) {
+  audio();
+  if (fase !== "repite") return; // lo que se toca mientras la guardiana enseña se ignora
+  mirarHacia(i);
+  if (i === recorrido[paso]) {
+    cantar(i); paso++; marcarAyuda();
+    if (paso < ronda) return;
+    // Ronda ganada
+    fase = "celebra"; fallosSeguidos = 0; ayuda = false; marcarAyuda(); rotulo("¡BIEN!");
+    const mio = ++turno;
+    try {
+      await dormir(PULSO, mio);
+      for (const s of recorrido.slice(0, ronda)) { cantar(s); await dormir(PULSO * .6, mio); }
+      if (juego === "reina") { nota(180, .2, .2, "square"); }
+      ronda++;
+      if (ronda > RONDAS) return terminar();
+      pintarMarcador(); await dormir(PULSO, mio); enseñar();
+    } catch { /* cancelado */ }
+  } else {
+    // CASI: sin perder; vuelve a enseñar la misma ronda.
+    fallos++; fallosSeguidos++; ayuda = fallosSeguidos >= 2;
+    fase = "casi"; rotulo("¡CASI!"); casi();
+    if (juego === "reina") { const g = $("guardiana"); g.animate([{ transform: g.style.transform + " rotate(0)" }, { transform: "translate(-50%,-50%) rotate(-8deg)" }, { transform: "translate(-50%,-50%) rotate(0)" }], { duration: 400 }); }
+    const mio = ++turno;
+    try { await dormir(PULSO * 2, mio); enseñar(); } catch { /* cancelado */ }
+  }
+}
+function terminar() {
+  fase = "fin"; rotulo(""); pintarMarcador();
+  if (juego === "aurora") { [0, 1, 2].forEach((s, k) => setTimeout(() => cantar(s), k * 250)); }
+  $("final-corona").textContent = fallos === 0 ? "👑" : "";
+  setTimeout(() => { $("final").style.display = "grid"; }, 900);
+}
+function nueva() {
+  turno++; recorrido = recorridoCon(Date.now()); ronda = 1; fallos = 0; fallosSeguidos = 0; ayuda = false; fase = "enseña";
+  $("final").style.display = "none"; montar(); enseñar();
+}
+
+// ----------------------------------------------------------------- controles
+$("b-aurora").onclick = () => { juego = "aurora"; $("b-aurora").classList.add("activo"); $("b-reina").classList.remove("activo"); nueva(); };
+$("b-reina").onclick = () => { juego = "reina"; $("b-reina").classList.add("activo"); $("b-aurora").classList.remove("activo"); nueva(); };
+$("b-nueva").onclick = nueva; $("final-otra").onclick = nueva;
+$("viva").onchange = () => document.body.classList.toggle("quieto", !vivo());
+$("mira").onclick = () => { audio(); if (fase === "repite" || fase === "casi") enseñar(); }; // «MIRA» no cuenta como fallo
+addEventListener("keydown", (e) => { const k = { ArrowLeft: 0, ArrowUp: 1, ArrowRight: 2, Digit1: 0, Digit2: 1, Digit3: 2 }[e.code]; if (k !== undefined) { e.preventDefault(); tocar(k); } });
+addEventListener("resize", () => { const antes = orient; montar(); if (antes !== orient && fase === "enseña") enseñar(); });
+nueva(); requestAnimationFrame(vida);
+</script>
+</body>
+</html>

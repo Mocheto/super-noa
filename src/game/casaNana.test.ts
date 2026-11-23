@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { hzDeMidi, NANA_BAJO, NANA_BPM, NANA_MELODIA, NANA_VOLUMEN, notasDelPulso, PULSOS_POR_COMPAS, pulsosNana, segundosPorPulso } from "./casaNana.ts";
+import { hzDeMidi, NANA_BAJO, NANA_BPM, NANA_MELODIA, NANA_VOLUMEN, notasDelPulso, PULSOS_POR_COMPAS, pulsosNana, segundosPorPulso, volumenLluvia } from "./casaNana.ts";
 
 test("la nana tiene ocho compases de tres pulsos con su bajo, y empieza cada compás con nota", () => {
   assert.equal(NANA_MELODIA.length, 8);
@@ -27,4 +27,9 @@ test("de noche va más lenta y más bajita", () => {
   assert.ok(segundosPorPulso(true) > segundosPorPulso(false));
   assert.ok(NANA_VOLUMEN.noche < NANA_VOLUMEN.dia && NANA_VOLUMEN.dia <= 0.3, "por debajo de los maullidos");
   assert.ok(Math.abs(hzDeMidi(69) - 440) < 1e-9);
+});
+
+test("la lluvia suena bajita, por debajo de la nana, y solo cuando llueve", () => {
+  assert.equal(volumenLluvia(false), 0);
+  assert.ok(volumenLluvia(true) > 0 && volumenLluvia(true) <= 0.5);
 });

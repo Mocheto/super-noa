@@ -274,14 +274,14 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // Música de fondo: la nana de la casa, que empieza con el primer toque, sigue la noche y para al salir.
   const nanaRef = useRef<Nana | null>(null);
   useEffect(() => {
-    const nana = crearNana({ silencio: muted, volumen: musicVolume / 100, noche: esDeNoche(new Date()) });
+    const nana = crearNana({ silencio: muted, volumen: musicVolume / 100, noche: esDeNoche(new Date()), lluvia: clima === "lluvia" });
     nanaRef.current = nana;
     return () => { nana.cerrar(); nanaRef.current = null; };
     // Solo al montar: los cambios van por `ajustar`.
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Durante el baño, la nana suena a la mitad para que se oigan el agua y el secador.
   // Tras «¡BUENAS NOCHES!», más bajita todavía.
-  useEffect(() => { nanaRef.current?.ajustar({ silencio: muted, volumen: (musicVolume / 100) * (bano !== null ? 0.5 : 1) * (buenasNoches !== "no" ? 0.4 : 1), noche }); }, [muted, musicVolume, noche, bano, buenasNoches]);
+  useEffect(() => { nanaRef.current?.ajustar({ silencio: muted, volumen: (musicVolume / 100) * (bano !== null ? 0.5 : 1) * (buenasNoches !== "no" ? 0.4 : 1), noche, lluvia: clima === "lluvia" }); }, [muted, musicVolume, noche, bano, buenasNoches, clima]);
 
   // Las mariposas revolotean por el jardín de día; de noche, las luciérnagas.
   const mariposasVisibles = enJardin && !noche && fase === "casa";

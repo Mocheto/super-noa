@@ -37,7 +37,14 @@ export function notasDelPulso(pulso: number): { nota: number; pulsos: number; ba
   return notas;
 }
 
-type Ajustes = { silencio: boolean; volumen: number; noche: boolean };
+/**
+ * La lluvia (issue 347): ruido suave filtrado, en bucle, por el mismo bus que la nana y a esta parte de su volumen
+ * (muy bajita). Solo con lluvia; la nieve y el arcoíris no suenan.
+ */
+export const LLUVIA_VOLUMEN = 0.5;
+export const volumenLluvia = (lluvia: boolean) => lluvia ? LLUVIA_VOLUMEN : 0;
+
+type Ajustes = { silencio: boolean; volumen: number; noche: boolean; /** Llueve en la casa. */ lluvia?: boolean };
 
 /** Reproductor de la nana: programa las notas con antelación sobre el reloj de audio. */
 export function crearNana(inicial: Ajustes) {
@@ -47,6 +54,7 @@ export function crearNana(inicial: Ajustes) {
   let temporizador = 0;
   let siguientePulso = 0;
   let siguienteTiempo = 0;
+  let lluvia: GainNode | null = null;
 
   const volumen = () => ajustes.silencio ? 0 : ajustes.volumen * (ajustes.noche ? NANA_VOLUMEN.noche : NANA_VOLUMEN.dia);
 
@@ -75,6 +83,29 @@ export function crearNana(inicial: Ajustes) {
     }
   };
 
+  /** El rumor de la lluvia: dos segundos de ruido en bucle, entre 400 y 2500 Hz. Se crea una vez y sube o baja. */
+  const ponerLluvia = () => {
+    if (!contexto || !salida) return;
+    if (!lluvia) {
+      const muestras = contexto.sampleRate * 2;
+      const buffer = contexto.createBuffer(1, muestras, contexto.sampleRate);
+      const datos = buffer.getChannelData(0);
+      for (let i = 0; i < muestras; i++) datos[i] = Math.random() * 2 - 1;
+      const fuente = contexto.createBufferSource();
+      fuente.buffer = buffer;
+      fuente.loop = true;
+      const graves = contexto.createBiquadFilter();
+      graves.type = "highpass"; graves.frequency.value = 400;
+      const agudos = contexto.createBiquadFilter();
+      agudos.type = "lowpass"; agudos.frequency.value = 2500;
+      lluvia = contexto.createGain();
+      lluvia.gain.value = 0;
+      fuente.connect(graves).connect(agudos).connect(lluvia).connect(salida);
+      fuente.start();
+    }
+    lluvia.gain.setTargetAtTime(volumenLluvia(ajustes.lluvia === true), contexto.currentTime, 0.8);
+  };
+
   return {
     /** Empieza (o retoma) la nana; llamar tras un gesto de la jugadora para que el navegador deje sonar. */
     empezar() {
@@ -84,18 +115,21 @@ export function crearNana(inicial: Ajustes) {
         salida = busDeZona(contexto, volumen());
         siguienteTiempo = contexto.currentTime + 0.1;
         temporizador = window.setInterval(programar, 100);
+        if (ajustes.lluvia) ponerLluvia();
       }
       if (contexto.state === "suspended") void contexto.resume();
     },
     ajustar(nuevos: Ajustes) {
       ajustes = nuevos;
       if (contexto && salida) salida.gain.setTargetAtTime(volumen(), contexto.currentTime, 0.3);
+      if (contexto && (ajustes.lluvia || lluvia)) ponerLluvia();
     },
     cerrar() {
       window.clearInterval(temporizador);
       soltarBus(salida);
       contexto = null;
       salida = null;
+      lluvia = null;
     },
   };
 }

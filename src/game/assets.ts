@@ -131,6 +131,17 @@ export function precargarPantalla(assets: RasterAssets, extra: string[] = []) {
 
 const when = (needed: boolean, src: string) => needed ? getImage(src) : (unloaded ??= new Image());
 
+/** Ilustración de fondo de la pantalla; también rellena, difuminada, lo que sobra en vertical (issue 323). */
+export function fondoDeNivel(level: Pick<Level, "world" | "theme">): string {
+  const world = level.world;
+  if (world === 8) return "./assets/worlds/world-8.webp";
+  if (world === 13) return `./assets/worlds/${level.theme === "winter-snow" ? "winter-village-background-v1" : level.theme === "toy-factory" ? "toy-factory-background-v2" : "gift-warehouse-background-v2"}.webp`;
+  if (world >= 14) return `./assets/worlds/${world === 14 ? "desert" : world === 15 ? "train" : world === 16 ? "music" : "sky-kingdom"}-background-v1.webp`;
+  if (level.theme === "crystal-cave") return "./assets/worlds/crystal-cave-background-v1.webp";
+  if (level.theme === "haunted-castle") return "./assets/worlds/castle-interior-background-v1.webp";
+  return `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.webp`;
+}
+
 export function getLevelAssets(level: Level): RasterAssets {
   const world = level.world;
   const tileImages = {
@@ -165,15 +176,8 @@ export function getLevelAssets(level: Level): RasterAssets {
     get flyingShip() { return when(level.platforms.some((platform) => platform.kind === "ship"), mechanicSpriteSheets.flyingShip.source); },
     get airPlank() { return when(level.platforms.some((platform) => platform.kind === "air-plank"), mechanicSpriteSheets.airPlank.source); },
     get mistPlatform() { return when(level.platforms.some((platform) => platform.kind === "mist"), mechanicSpriteSheets.mistPlatform.source); },
-    get worldBackground() {
-      const source = level.theme === "crystal-cave"
-        ? "./assets/worlds/crystal-cave-background-v1.webp"
-        : level.theme === "haunted-castle"
-          ? "./assets/worlds/castle-interior-background-v1.webp"
-          : `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.webp`;
-      return when(world <= 12 && world !== 8, source);
-    },
-    get waterBackground() { return when(world === 8, "./assets/worlds/world-8.webp"); },
+    get worldBackground() { return when(world <= 12 && world !== 8, fondoDeNivel(level)); },
+    get waterBackground() { return when(world === 8, fondoDeNivel(level)); },
     get waterTerrain() { return when(world === 8, "./assets/atlases/water-terrain-v1.webp"); },
     get seaWall() { return when(world === 8, "./assets/sprites/sea-reef-wall-v2.webp"); },
     get seaRock() { return when(world === 8 && level.platforms.some((platform) => platform.asoma), "./assets/sprites/roca-asoma-v1.webp"); },
@@ -184,8 +188,8 @@ export function getLevelAssets(level: Level): RasterAssets {
     get castleEnemies() { return when(world === 6, "./assets/atlases/castle-enemies-v1.webp"); },
     get dinosaurEnemies() { return when(world === 9, "./assets/atlases/dinosaur-enemies-v1.webp"); },
     get dinosaurTerrain() { return when(world === 9, "./assets/atlases/dinosaur-island-v1.webp"); },
-    get holidayBackground() { return when(world === 13, `./assets/worlds/${level.theme === "winter-snow" ? "winter-village-background-v1" : level.theme === "toy-factory" ? "toy-factory-background-v2" : "gift-warehouse-background-v2"}.webp`); },
-    get adventureBackground() { return when(world >= 14, `./assets/worlds/${world === 14 ? "desert" : world === 15 ? "train" : world === 16 ? "music" : "sky-kingdom"}-background-v1.webp`); },
+    get holidayBackground() { return when(world === 13, fondoDeNivel(level)); },
+    get adventureBackground() { return when(world >= 14, fondoDeNivel(level)); },
     get adventurePrecipices() { return when(world >= 14 && world <= 16, "./assets/atlases/adventure-precipices-v1.webp"); },
     get skyLift() { return when(Boolean(level.skyLifts?.length), "./assets/atlases/sky-lift-v1.webp"); },
     get worldCharacters() { return when(world >= 10, `./assets/atlases/${world === 14 ? "desert-enemies-v1" : world === 15 ? "train-enemies-v1" : world === 16 ? "music-characters-v1" : world === 17 ? "sky-kingdom-characters-v1" : level.theme === "winter-snow" ? "winter-village-enemies-v1" : level.theme === "toy-factory" ? "toy-factory-enemies-v1" : level.theme === "gift-warehouse" ? "gift-warehouse-enemies-v1" : world === 10 ? "volcano-characters-v1" : world === 11 ? "giant-valley-characters-v1" : "ice-mountain-characters-v1"}.webp`); },

@@ -22,12 +22,14 @@ type Props = {
 export const MEDIDAS_TACTILES = {
   grande: { flecha: 72, salta: 88, lana: 64, separacion: 12, areaExtra: 8, borde: 14 },
   apaisado: { flecha: 56, salta: 68, lana: 50, separacion: 10, areaExtra: 6, borde: 8 },
-  vertical: { flecha: 60, salta: 72, lana: 54, separacion: 10, areaExtra: 6, borde: 10 },
+  vertical: { flecha: 74, salta: 86, lana: 58, separacion: 10, areaExtra: 6, borde: 10 },
+  /** Tableta en vertical (issue 323): unos 2 cm, como pide la guía de estilo visual. */
+  tableta: { flecha: 105, salta: 116, lana: 84, separacion: 14, areaExtra: 8, borde: 18 },
   opacidad: 0.6,
 } as const;
 
 export const variablesTactiles = Object.fromEntries([
-  ...(["grande", "apaisado", "vertical"] as const).flatMap((tamano) => Object.entries(MEDIDAS_TACTILES[tamano])
+  ...(["grande", "apaisado", "vertical", "tableta"] as const).flatMap((tamano) => Object.entries(MEDIDAS_TACTILES[tamano])
     .map(([medida, valor]) => [`--tactil-${medida}-${tamano}`, `${valor}px`])),
   ["--tactil-opacidad", String(MEDIDAS_TACTILES.opacidad)],
 ]) as CSSProperties;

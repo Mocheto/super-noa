@@ -1,7 +1,7 @@
 import { getImage, type RasterAssets } from "./assets.ts";
 import { letraLienzo } from "./cartelLienzo";
 import { chaseTrail, runnerRect, type ChaseState } from "./chase.ts";
-import { VIEW_WIDTH } from "./constants.ts";
+import { vista } from "./vista.ts";
 import { drawEnemy } from "./rendering.ts";
 import type { Chase } from "./types";
 
@@ -22,9 +22,9 @@ export function speech(context: CanvasRenderingContext2D, text: string, centerX:
     const cut = spaces.sort((a, b) => Math.abs(a - middle) - Math.abs(b - middle))[0];
     if (cut) lines = [text.slice(0, cut), text.slice(cut + 1)];
   }
-  const width = Math.min(VIEW_WIDTH - 16, Math.max(...lines.map((line) => context.measureText(line).width)) + 24);
+  const width = Math.min(vista.derecha - vista.izquierda - 16, Math.max(...lines.map((line) => context.measureText(line).width)) + 24);
   const height = 12 + lines.length * 19;
-  const x = Math.round(Math.max(8, Math.min(VIEW_WIDTH - width - 8, centerX - width / 2)));
+  const x = Math.round(Math.max(vista.izquierda + 8, Math.min(vista.derecha - width - 8, centerX - width / 2)));
   const y = Math.round(bottomY - 8 - height);
   context.fillStyle = "#fff6e3"; context.strokeStyle = "#2f1d33"; context.lineWidth = 3;
   context.beginPath(); context.roundRect(x, y, width, height, 8); context.fill(); context.stroke();
@@ -72,11 +72,11 @@ export function drawChase(context: CanvasRenderingContext2D, chase: Chase, state
   if (say && say.life > 0) speech(context, say.text, Math.round(rect.x + rect.width / 2 - cameraX), rect.y - 6);
 
   const screenX = rect.x + rect.width / 2 - cameraX;
-  if (!state.caught && (screenX > VIEW_WIDTH - 10 || screenX < 10)) {
-    const right = screenX > VIEW_WIDTH - 10;
+  if (!state.caught && (screenX > vista.derecha - 10 || screenX < vista.izquierda + 10)) {
+    const right = screenX > vista.derecha - 10;
     context.save();
     context.fillStyle = "#ffd76a"; context.strokeStyle = "#2f1d33"; context.lineWidth = 3;
-    const x = right ? VIEW_WIDTH - 34 : 34;
+    const x = right ? vista.derecha - 34 : vista.izquierda + 34;
     const y = Math.max(60, Math.min(430, rect.y));
     context.beginPath();
     if (right) { context.moveTo(x + 18, y); context.lineTo(x - 8, y - 14); context.lineTo(x - 8, y + 14); }

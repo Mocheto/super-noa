@@ -44,7 +44,7 @@ test("los controles compartidos conservan la identidad del dedo al soltar o canc
 
 test("los botones táctiles caben en un móvil y siguen siendo fáciles de tocar", () => {
   const { MEDIDAS_TACTILES: m } = engineModules({ "react/jsx-runtime": { jsx, jsxs: jsx } })("./TouchControls") as typeof import("./TouchControls");
-  for (const tamano of [m.grande, m.apaisado, m.vertical]) {
+  for (const tamano of [m.grande, m.apaisado, m.vertical, m.tableta]) {
     // Un dedo de cinco años mide unos 40–45 px: cada área táctil le saca al menos 60.
     for (const lado of [tamano.flecha, tamano.salta, tamano.lana]) assert.ok(lado + 2 * tamano.areaExtra >= 60, `área táctil de ${lado} px demasiado pequeña`);
     assert.ok(tamano.salta > tamano.flecha && tamano.flecha > tamano.lana, "SALTA es el más grande y LANA el más pequeño");
@@ -53,6 +53,10 @@ test("los botones táctiles caben en un móvil y siguen siendo fáciles de tocar
   // En un móvil de 375 px de ancho en vertical caben las dos flechas, LANA y SALTA en una fila.
   const v = m.vertical;
   assert.ok(2 * v.flecha + v.separacion + v.lana + v.salta + v.separacion + 2 * v.borde + 40 <= 375);
+  // En la tableta de Noa en vertical (800 px de ancho, 1 px ≈ 0,19 mm) miden unos 2 cm y caben de sobra.
+  const tb = m.tableta;
+  assert.ok(tb.flecha * .19 >= 19 && tb.salta * .19 <= 24, "unos 2 cm en la tableta");
+  assert.ok(2 * tb.flecha + tb.separacion + tb.lana + tb.salta + tb.separacion + 2 * tb.borde + 40 <= 800);
   // En móvil apaisado (340 px de alto) SALTA y LANA no suben más de un tercio de la pantalla.
   const a = m.apaisado;
   assert.ok(a.borde + a.salta * 1.45 + a.lana <= 340 * 0.6);

@@ -6,7 +6,7 @@ import { Emblema } from "./Emblema";
 import { SecretShop } from "./SecretShop";
 import "./secretDoors.css";
 import { TouchControls } from "./TouchControls";
-import { dibujarConMapas, getImage, getLevelAssets, precargarPantalla } from "./assets";
+import { cssAssetUrl, dibujarConMapas, fondoDeNivel, getImage, getLevelAssets, precargarPantalla } from "./assets";
 import {
   drawAmbientForeground, drawApple, drawBackground, drawBloomBridge, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawChainGuardian, drawCheckpoint,
@@ -39,6 +39,7 @@ import { bossCatalog } from "./bosses";
 import { createExploreState, exploreCameraTarget, hintTarget, reachedGate, shortcutWalls, stepExplore } from "./explore";
 import { drawExploreOverlay, drawExploreWorld, prepararExploracion } from "./exploreRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
+import { ANCHO_VERTICAL, ponerVista, recorteObjetivo, vista } from "./vista";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
@@ -112,7 +113,7 @@ function drawPalabraRecogida(context: CanvasRenderingContext2D, capa: CapaPalabr
   const texto = textoLienzo(CLAVE_PALABRA[capa.objeto]);
   const ancho = medirTexto(context, texto, 24 * capa.escala) + 32;
   const alto = 48 * capa.escala;
-  const centro = Math.max(ancho / 2 + 8, Math.min(VIEW_WIDTH - ancho / 2 - 8, x));
+  const centro = Math.max(vista.izquierda + ancho / 2 + 8, Math.min(vista.derecha - ancho / 2 - 8, x));
   const y = Math.max(techo + alto / 2, cabeza - 64 - capa.subida) - alto / 2;
   context.fillStyle = "rgba(0, 0, 0, .3)";
   cajaRedondeada(context, centro - ancho / 2 + 4, y + 5, ancho, alto, 10); context.fill();
@@ -158,9 +159,9 @@ function drawTransitionLayer(context: CanvasRenderingContext2D, capa: CapaTransi
 }
 
 /** Colores del marco caramelo del mundo (decisión «El marco exterior de la partida»). */
-const marcoMundo = (world: Parameters<typeof acentoMundo>[0]) => {
-  const { base, oscuro, claro } = acentoMundo(world);
-  return { "--acento": base, "--acento-oscuro": oscuro, "--acento-claro": claro } as CSSProperties;
+const marcoMundo = (level: Level) => {
+  const { base, oscuro, claro } = acentoMundo(level.world);
+  return { "--acento": base, "--acento-oscuro": oscuro, "--acento-claro": claro, "--fondo-mundo": cssAssetUrl(fondoDeNivel(level)) } as CSSProperties;
 };
 
 export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourComplete, onDetourActiveChange, onFriendGreeted, onReturn, reduceMotion = false, playSound }: GameCanvasProps) {
@@ -1089,7 +1090,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
 
     // Techo de los carteles: bajo el HUD de esquinas, que no escala con el lienzo (en el móvil ocupa más del lienzo).
     const medirTechoCartel = () => {
-      const hud = canvas.parentElement?.querySelector?.(".hud-centro");
+      const hud = canvas.closest?.(".game-stage")?.querySelector(".hud-centro");
       const lienzo = canvas.getBoundingClientRect?.();
       if (!hud || !lienzo?.width) return CARTEL_ARRIBA;
       return techoCarteles(hud.getBoundingClientRect().bottom - lienzo.top, lienzo.width / VIEW_WIDTH);
@@ -1097,7 +1098,32 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     let techoCartel = CARTEL_ARRIBA;
     const cartelesDeCaja: { lineas: string[]; centroX: number; arriba: number; color?: string }[] = [];
 
+    // En vertical se ve una ventana 4:3 del lienzo que sigue a Noa (issue 323); el CSS la recorta.
+    const enVertical = typeof matchMedia === "function" ? matchMedia("(orientation: portrait)") : null;
+    let recorte = 0;
+    let recorteAplicado = -1;
+    const moverVista = () => {
+      if (!enVertical?.matches) {
+        if (recorteAplicado !== 0) {
+          if (canvas.style) canvas.style.transform = "";
+          ponerVista(0, VIEW_WIDTH);
+          recorte = 0;
+          recorteAplicado = 0;
+        }
+        return;
+      }
+      const objetivo = recorteObjetivo(player.x + player.width / 2 - cameraX);
+      recorte = recorteAplicado < 0 ? objetivo : recorte + (objetivo - recorte) * .15;
+      const redondo = Math.round(recorte);
+      if (redondo !== recorteAplicado) {
+        if (canvas.style) canvas.style.transform = `translateX(${(-redondo / VIEW_WIDTH * 100).toFixed(3)}%)`;
+        recorteAplicado = redondo;
+      }
+      ponerVista(redondo, ANCHO_VERTICAL);
+    };
+
     const render = () => {
+      moverVista();
       const desplazaY = level.orientation === "vertical" || explore ? cameraY : 0;
       drawBackground(context, level, cameraX, frame, raster, cameraY);
       drawDetourScenery(context, level, cameraX);
@@ -1299,7 +1325,12 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         ocupadas.push({ x: pista.centroX - ancho / 2, y: techoCartel, ancho, alto });
       }
       if (cartelesDeCaja.length) {
-        const medidas = cartelesDeCaja.map((cartel) => ({ ...cartel, ...medirCartel(context, cartel.lineas) }));
+        // Dentro de la parte visible del lienzo (en vertical, la ventana 4:3).
+        const medidas = cartelesDeCaja.map((cartel) => {
+          const medida = medirCartel(context, cartel.lineas);
+          const centroX = Math.max(vista.izquierda + medida.ancho / 2 + 8, Math.min(vista.derecha - medida.ancho / 2 - 8, cartel.centroX));
+          return { ...cartel, ...medida, centroX };
+        });
         const arribas = colocarCarteles(medidas, techoCartel, ocupadas);
         const alfa = palabras.capa(false) ? 0.35 : 1;
         medidas.forEach((cartel, indice) => drawCartel(context, cartel.lineas, cartel.centroX, arribas[indice], { alfa, color: cartel.color }));
@@ -1354,10 +1385,12 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
 
   return (
     <>
-    <div className="game-frame" hidden={Boolean(excursion)} style={marcoMundo(level.world)}>
+    <div className="game-frame" hidden={Boolean(excursion)} style={marcoMundo(level)}>
       <span className="marco-emblema" aria-hidden="true"><Emblema world={level.world} /></span>
       <div className="game-stage">
-        <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={t("partida.lienzo.pantalla.oculto", { id: level.id, titulo: level.title })} />
+        <div className="game-vista">
+          <canvas ref={canvasRef} tabIndex={0} width={VIEW_WIDTH} height={VIEW_HEIGHT} aria-label={t("partida.lienzo.pantalla.oculto", { id: level.id, titulo: level.title })} />
+        </div>
         <p className="sr-only" ref={statusRef} aria-live="polite" aria-atomic="true" />
         {hud}
         {doorAvailable && running && !shopOpen && <button className="secret-door-enter" type="button" aria-label={t(`partida.lienzo.interaccion.${interaction}.oculto`)} onClick={() => { inputRef.current.enterQueued = true; }}>↑ <Texto clave={`partida.lienzo.interaccion.${interaction}.rotulo`} /></button>}

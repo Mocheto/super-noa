@@ -306,7 +306,59 @@
   .touch-group { opacity: 1; align-items: center; }
   .touch-yarn { margin-bottom: 0; }
 }
+/* Tableta en vertical (issue 323): controles de unos 2 cm pegados al borde inferior. */
+@media (orientation: portrait) and (min-width: 600px) {
+  .touch-controls {
+    --tactil-flecha: var(--tactil-flecha-tableta); --tactil-salta: var(--tactil-salta-tableta); --tactil-lana: var(--tactil-lana-tableta);
+    --tactil-separacion: var(--tactil-separacion-tableta); --tactil-area: var(--tactil-areaExtra-tableta); --tactil-borde: var(--tactil-borde-tableta);
+    padding-block: 14px calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+}
 @media (prefers-reduced-motion: reduce) { .touch-button:active { transform: none; } }
+
+/* Composición vertical de la partida (issue 323; guía de estilo visual). El bloque va pegado abajo: HUD encima del
+   escenario y fuera de él, escenario 4:3 (una ventana de 720 × 540 del lienzo que sigue a Noa, que mueve GameCanvas) y
+   controles debajo. Lo que sobra arriba es el marco con el fondo del mundo difuminado: nada se toca ahí. */
+@media (orientation: portrait) {
+  .play-screen { display: block; height: 100dvh; min-height: 100dvh; overflow: hidden; padding: 0; }
+  .play-screen .game-frame {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .play-screen .game-frame::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: -24px;
+    background: var(--fondo-mundo) center / cover no-repeat, var(--acento, #68aa5c);
+    filter: blur(14px) brightness(.72) saturate(.85);
+    pointer-events: none;
+  }
+  .play-screen .game-stage { overflow: visible; margin-top: 64px; border: 0; }
+  .game-vista { position: relative; overflow: hidden; aspect-ratio: 4 / 3; }
+  .game-vista canvas { width: calc(100% * 960 / 720); max-width: none; will-change: transform; }
+  /* El HUD sale encima del escenario, en una franja propia. */
+  .play-screen .hud-esquinas { inset: auto 4px calc(100% + 8px) 4px; }
+  .play-screen .room-restart { top: auto; bottom: calc(100% + 8px); }
+}
+/* En la tableta en vertical, el HUD con las medidas de escritorio: hay sitio encima del escenario. */
+@media (orientation: portrait) and (min-width: 600px) {
+  .play-screen .game-stage { margin-top: 100px; }
+  .play-screen .hud-esquinas { gap: 8px; font-size: var(--rotulo-pequeno); }
+  .play-screen .hud-esquinas > * { gap: 6px; }
+  .play-screen .hud-chip { min-height: 32px; padding: 5px 8px; gap: 6px; border-width: 3px; }
+  .play-screen .hud-chip .game-asset-icon, .play-screen .hud-chip .pictograma { --icon-size: 20px; font-size: 20px; }
+  .play-screen .hud-vidas { gap: 4px; }
+  .play-screen .hud-vidas .game-asset-icon { --icon-size: 28px; }
+  .play-screen .hud-pausa { --control: 52px; border-width: 4px; border-radius: 16px; font-size: inherit; }
+  .play-screen .room-restart { right: calc(4px + var(--control) + 8px); }
+}
 
 /* Ventana común y pantalla de resultado (issue 143): papel crema, cinta dorada con el título, frase para leer juntos
    debajo de su rótulo y botones comunes. En móvil apaisado los botones van en columna a la derecha. */

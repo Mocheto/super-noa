@@ -26,6 +26,11 @@ export const santaTerrainSources = {
   ground: [80, 360, 1090, 231],
   ledge: [38, 874, 1180, 179],
 } as const;
+/**
+ * Cuánto sube el dibujo del suelo y de la repisa sobre la línea donde se pisa (px de la arena): la línea cae en mitad de
+ * su cara de arriba (nieve, arena o baldosas) y los pies se ven apoyados encima, no flotando sobre el borde.
+ */
+export const santaTerrainInset = { ground: 6, ledge: 3 } as const;
 
 // Terreno y proyectil propios de Siroco y Don Silbato (issue 355, docs/art/batalla-saltos-v1.md): un atlas por
 // guardián con el suelo, la repisa y el proyectil apilados, recortado con prototypes/tools/batalla-saltos-recorte.py.
@@ -36,6 +41,7 @@ export const bossTerrains = {
     ground: [80, 0, 992, 222],
     ledge: [0, 230, 768, 193],
     projectile: [4, 435, 120, 120],
+    inset: { ground: 12, ledge: 5 },
   },
   "don-silbato": {
     atlas: "./assets/atlases/don-silbato-boss-terrain-v1.webp",
@@ -43,6 +49,7 @@ export const bossTerrains = {
     ground: [70, 0, 1012, 189],
     ledge: [0, 197, 768, 157],
     projectile: [4, 377, 120, 97],
+    inset: { ground: 10, ledge: 2 },
   },
 } as const;
 

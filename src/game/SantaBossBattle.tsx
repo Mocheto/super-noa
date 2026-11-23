@@ -104,8 +104,9 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
   };
   const won = hud.status === "won", lost = hud.status === "lost";
   const boss = bossCatalog[bossId];
-  // Papá Noel: su hoja de una fila. Siroco y Don Silbato: la cuadrícula común de 5 × 2, con las poses abajo.
-  const retrato = <span className={`santa-retrato${bossId === "santa-claus" ? "" : " is-cuadricula"}`} style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />;
+  // Papá Noel: su hoja de 3 × 2 (quieto arriba a la izquierda). Siroco y Don Silbato: la cuadrícula común de 5 × 2, con
+  // las poses abajo.
+  const retrato = <span className={`santa-retrato ${bossId === "santa-claus" ? "is-santa" : "is-cuadricula"}`} style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />;
   return <section className="santa-boss-battle" role="dialog" aria-modal="true" aria-labelledby="santa-boss-title">
     <h2 id="santa-boss-title" className="sr-only"><Texto clave={clave("titulo.rotulo") as ClaveTexto} /></h2>
     <div className="santa-arena game-frame">

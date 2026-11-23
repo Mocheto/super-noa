@@ -1,5 +1,5 @@
 import { getImage } from "./assets";
-import { actionBossBackgrounds, BOSS_POSE_DRAWN, BOSS_POSE_FEET, bossPoseSheets, bossTerrains, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainSources } from "./santaBattleAssets";
+import { actionBossBackgrounds, BOSS_POSE_DRAWN, BOSS_POSE_FEET, bossPoseSheets, bossTerrains, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainInset, santaTerrainSources } from "./santaBattleAssets";
 import { SANTA_ARENA, SANTA_PLATFORMS, type SantaBattle } from "./santaBattle";
 import type { BossId } from "./types";
 import { textoLienzo, tClave } from "../textos/index.ts";
@@ -52,10 +52,13 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
     if (terrain.complete && terrain.naturalWidth) {
       const [sx, sy, sw, sh] = own ? own[ground ? "ground" : "ledge"] : santaTerrainSources[ground ? "ground" : "ledge"];
       // El suelo se repite en tramos con su proporción; el de Papá Noel, en tramos de 384 px.
-      const tileWidth = ground ? (own ? Math.round(support.height * sw / sh) : 384) : support.width;
+      // Sube un poco sobre la línea donde se pisa, para que los pies queden encima de su cara de arriba.
+      const inset = (own ? own.inset : santaTerrainInset)[ground ? "ground" : "ledge"];
+      const drawnHeight = ground ? support.height + inset : 40;
+      const tileWidth = ground ? (own ? Math.round(drawnHeight * sw / sh) : 384) : support.width;
       for (let offset = 0; offset < support.width; offset += tileWidth) {
         const drawnWidth = Math.min(tileWidth, support.width - offset);
-        ctx.drawImage(terrain, sx, sy, sw * drawnWidth / tileWidth, sh, support.x + offset, support.y, drawnWidth, ground ? support.height : 40);
+        ctx.drawImage(terrain, sx, sy, sw * drawnWidth / tileWidth, sh, support.x + offset, support.y - inset, drawnWidth, drawnHeight);
       }
     } else {
       ctx.fillStyle = "#876447"; ctx.fillRect(support.x, support.y, support.width, support.height);

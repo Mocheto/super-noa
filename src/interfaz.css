@@ -623,6 +623,7 @@
    resultado, y escenario que cabe en el alto del móvil. */
 .santa-retrato { display: block; width: 120px; height: 120px; background-size: 500% 100%; background-position: 0 0; background-repeat: no-repeat; image-rendering: pixelated; }
 .santa-retrato.is-cuadricula { background-size: 500% 200%; background-position: 0 100%; }
+.santa-retrato.is-santa { background-size: 300% 200%; background-position: 0 0; }
 .santa-boss-battle .hud-esquinas { pointer-events: none; }
 .santa-boss-battle .hud-derecha .boton { pointer-events: auto; }
 .santa-vidas { color: #ff6b81; letter-spacing: 2px; }

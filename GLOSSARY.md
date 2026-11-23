@@ -434,6 +434,24 @@ _Avoid_: Espera, retardo
 Jabato pequeño que, con un «¡gru-gru!», pide dos bellotas en pulsos seguidos; solo aparece en la última fase de la merienda.
 _Avoid_: Doble, jabato doble
 
+## Duelo de memoria
+
+**Sitio**:
+Cada uno de los tres lugares del escenario a los que va la guardiana para enseñar y que Noa toca para repetir.
+_Avoid_: Opción, botón, casilla
+
+**Recorrido**:
+Orden de sitios que la guardiana enseña; crece un sitio al final en cada ronda.
+_Avoid_: Secuencia, patrón (reservado al ritmo), camino
+
+**Enseña**:
+Fase en que la guardiana va de sitio en sitio mostrando el recorrido; lo que se toca entonces no cuenta.
+_Avoid_: Demostración, turno del guardián
+
+**Repite**:
+Fase en que Noa toca los sitios en el orden del recorrido, sin reloj.
+_Avoid_: Respuesta (reservado al tambor de Armonía), turno de Noa
+
 ## Piedra, papel o tijera
 
 **Bocadillo del guardián**:

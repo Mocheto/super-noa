@@ -175,6 +175,7 @@ export function getLevelAssets(level: Level): RasterAssets {
     get waterEntrance() { return when(Boolean(level.waterEntrance), mechanicSpriteSheets.waterEntrance.source); },
     get flyingShip() { return when(level.platforms.some((platform) => platform.kind === "ship"), mechanicSpriteSheets.flyingShip.source); },
     get airPlank() { return when(level.platforms.some((platform) => platform.kind === "air-plank"), mechanicSpriteSheets.airPlank.source); },
+    get giftSpring() { return when(level.platforms.some((platform) => platform.kind === "gift-spring"), mechanicSpriteSheets.giftSpring.source); },
     get mistPlatform() { return when(level.platforms.some((platform) => platform.kind === "mist"), mechanicSpriteSheets.mistPlatform.source); },
     get worldBackground() { return when(world <= 12 && world !== 8, fondoDeNivel(level)); },
     get waterBackground() { return when(world === 8, fondoDeNivel(level)); },

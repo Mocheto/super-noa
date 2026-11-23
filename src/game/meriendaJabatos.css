@@ -123,7 +123,6 @@
 .merienda-phase-jabato { display: inline-block; width: 56px; height: 56px; background-repeat: no-repeat; background-size: 400% 100%; background-position: 0 0; image-rendering: pixelated; }
 .merienda-caption { font: 32px "Press Start 2P", ui-monospace, monospace; }
 .merienda-feedback, .merienda-bubble { font-family: "Press Start 2P", ui-monospace, monospace; }
-.merienda-mute { position: absolute; z-index: 6; left: 50%; top: 200px; display: grid; place-items: center; width: 44px; height: 44px; border: 3px solid #3d1430; border-radius: 50%; background: #fff8e9; font-size: 22px; }
 .merienda-retrato { max-height: 120px; image-rendering: pixelated; }
 .merienda-rama-resultado { position: relative; width: min(340px, 72vw); height: 85px; }
 .merienda-rama-resultado .merienda-branch { position: absolute; inset: 0; width: 100%; }

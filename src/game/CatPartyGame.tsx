@@ -388,7 +388,6 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
         <div className="cat-party-stump" style={{ backgroundImage: `url("${ART.stump.src}")`, width: ART.stump.size[0] / 2, height: ART.stump.size[1] / 2, left: STUMP_BOX.centerX - ART.stump.size[0] / 4, top: STUMP_BOX.centerTop - 23 }} />
         {view.ring && <div className={`cat-party-ring${view.ring.ready ? " is-ready" : ""}`} style={{ width: view.ring.radius * 2, height: view.ring.radius * 2, left: STUMP_X - view.ring.radius, top: BELT_Y - 18 - view.ring.radius }} />}
         {view.ring?.ready && <div className="cat-party-now">{t("minijuegos.gatitos.compas.ahora.rotulo")}</div>}
-        {mode && clockKind === "frame" && <span className="cat-party-mute"><Pictograma nombre="sin-sonido" /></span>}
         <div className="cat-party-noa" style={{ ...cellStyle(ART.noa, celebrating ? NOA_POSES.celebrate : view.noaPose), ...noaSize, left: NOA_FEET.x - ART.noa.feetX! / 2, top: NOA_FEET.y - noaSize.height }} />
         <div className={`cat-party-kitten is-first${celebrating ? " is-party" : ""}`} style={{ ...cellStyle(ART.kittenGrey, celebrating ? KITTEN_POSES.meow : view.kittenA), ...greySize, left: KITTENS.grey.feetX - ART.kittenGrey.feetX! / 2, top: KITTENS.grey.floor - greySize.height }}>
           {view.bubbleA && !celebrating && <span className={`cat-party-bubble${view.bubbleA.pink ? " is-pink" : ""}`}>{view.bubbleA.text}</span>}
@@ -410,6 +409,7 @@ export function CatParty({ paused, muted, musicVolume, effectsVolume, reduceMoti
       </div>
     </div>
     {mode && <div className="cat-party-botones-control">
+      {mode && clockKind === "frame" && <span className="ritmo-mute"><Pictograma nombre="sin-sonido" /></span>}
       <BotonControl pictograma={soundOff ? "sin-sonido" : "sonido"} etiqueta="minijuegos.gatitos.sonido.oculto" aria-pressed={soundOff} disabled={muted} onClick={() => setSilent(!silent)} />
       <BotonControl pictograma="pausa" etiqueta="partida.hud.pausa.oculto" onClick={onPause} />
     </div>}

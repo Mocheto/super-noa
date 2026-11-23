@@ -62,7 +62,7 @@ test("cada pantalla carga sus propios atlas y reutiliza las imágenes", () => {
       castleHound: "6-1", castleChainLink: "6-1", castleChainPost: "6-1",
       flyingDragon: "10-1",
       sleepingWolf: "3-1", bloomFlower: "11-1", bloomBridge: "11-1", updraft: "S-1", windGust: "12-1",
-      lavaJet: "10-1", lavaSurface: "10-1", waterSurface: "11-1", waterEntrance: "3-3", flyingShip: "5-1", airPlank: "5-1", mistPlatform: "2-1",
+      lavaJet: "10-1", lavaSurface: "10-1", waterSurface: "11-1", waterEntrance: "3-3", flyingShip: "5-1", airPlank: "5-1", mistPlatform: "2-1", giftSpring: "13-1",
     };
     for (const name of Object.keys(mechanicLevels) as MechanicSprite[]) {
       const level = levels.find((entry) => entry.id === mechanicLevels[name])!;

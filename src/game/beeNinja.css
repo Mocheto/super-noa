@@ -97,7 +97,6 @@
 .bee-ninja-phase-piece.is-ladybug { width: 56px; background-image: var(--mariquita); background-size: 200% 100%; background-position: 0 0; }
 .bee-ninja-caption { font: 32px "Press Start 2P", ui-monospace, monospace; }
 .bee-ninja-feedback, .bee-ninja-now, .bee-ninja-bubble { font-family: "Press Start 2P", ui-monospace, monospace; }
-.bee-ninja-mute { position: absolute; z-index: 6; display: grid; place-items: center; width: 44px; height: 44px; border: 3px solid #3d1430; border-radius: 50%; background: #fff8e9; font-size: 22px; }
 .bee-ninja-retrato { width: 120px; height: 120px; background-size: 500% 200%; background-position: 0 100%; background-repeat: no-repeat; image-rendering: pixelated; }
 .bee-ninja-jar-resultado { width: 96px; height: 120px; background-size: 500% 100%; background-repeat: no-repeat; image-rendering: pixelated; }
 .bee-ninja-controls { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }

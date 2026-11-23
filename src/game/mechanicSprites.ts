@@ -16,6 +16,7 @@ export const mechanicSpriteSheets = {
   waterEntrance: { source: "./assets/sprites/water-entrance-v1.webp", columns: 2, frameWidth: 160, frameHeight: 128 },
   flyingShip: { source: "./assets/sprites/flying-ship-v1.webp", columns: 2, frameWidth: 320, frameHeight: 224 },
   airPlank: { source: "./assets/sprites/air-plank-v1.webp", columns: 1, frameWidth: 128, frameHeight: 48 },
+  giftSpring: { source: "./assets/sprites/gift-spring-v1.webp", columns: 4, frameWidth: 192, frameHeight: 144 },
   mistPlatform: { source: "./assets/sprites/mist-platform-v1.webp", columns: 1, frameWidth: 128, frameHeight: 48 },
 } as const;
 

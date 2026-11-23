@@ -666,3 +666,13 @@
   .boss-battle[class*=" battle-"] .boss-sprite-window { width: 100%; }
   .boss-battle[class*=" battle-"] .boss-sprite-window.is-atlas-sprite { width: 100%; height: auto; aspect-ratio: 1; }
 }
+
+/* Minijuegos rítmicos sin audio (issue 329): el aviso de «sin sonido» va en la fila de controles, nunca sobre la escena. */
+.ritmo-mute { display: inline-grid; flex: none; place-items: center; width: 44px; height: 44px; border: 3px solid var(--ciruela); border-radius: 50%; background: var(--crema); font-size: 22px; }
+/* El objeto que marca el ritmo destaca sobre el fondo (issue 329): la flor de la abeja, un 50 % más grande y con
+   contorno claro; las bellotas y castañas de la cuenta atrás de la merienda, con su color y contorno. El fondo de las dos
+   escenas baja un poco más (velo). Son filtros fijos: no cambian en cada cuadro. */
+.bee-ninja-target:not(.is-ladybug) { scale: 1.5; filter: drop-shadow(0 0 1.5px #fff8e9) drop-shadow(0 0 1.5px #fff8e9) drop-shadow(0 3px 0 rgba(61, 20, 48, .7)); }
+.bee-ninja-background { filter: saturate(.75) brightness(.78) blur(1px); }
+.merienda-background { filter: saturate(.8) brightness(.72) blur(1.5px); }
+.merienda-dot.is-bite:not(.is-on):not(.is-ok):not(.is-gone) { filter: drop-shadow(0 0 1.5px #fff8e9) drop-shadow(0 0 1.5px #fff8e9) drop-shadow(0 2px 0 #3d1430); }

@@ -228,7 +228,6 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
           {mode && view.gota && <i className="gota-cae" style={{ "--gota": "#ffd76a", left: `calc(${Math.min(got, total - 1) / total * 100}% + 8px)` } as CSSProperties} />}
         </div>
         {mode && view.counting > 0 && <div className="armonia-drum-caption">{view.counting}</div>}
-        {mode && clockKind === "frame" && <span className="armonia-drum-mute" style={{ left: noaPrints.x + 150, top: noaPrints.y - 90 }}><Pictograma nombre="sin-sonido" /></span>}
         {mode && view.phase && <span className="armonia-drum-phase">{view.phase}</span>}
       </div>
     </div>
@@ -236,6 +235,7 @@ export function ArmoniaDrumGame({ paused, muted, musicVolume, effectsVolume, red
     {mode && <progress className="armonia-drum-progress" max={scoreLength(drumScores[mode])} value={Math.max(0, view.pulse)} aria-label={t("minijuegos.tambor.avance.oculto")} />}
 
     {mode && <div className="armonia-drum-controls">
+      {mode && clockKind === "frame" && <span className="ritmo-mute"><Pictograma nombre="sin-sonido" /></span>}
       <div className={`armonia-drum-bigprints${prints ? ` is-${prints.drum}` : " is-off"}`} aria-hidden="true">
         {prints ? <Prints view={prints} className="armonia-drum-bigprints-row" /> : <span className="armonia-drum-bigprints-row" />}
       </div>

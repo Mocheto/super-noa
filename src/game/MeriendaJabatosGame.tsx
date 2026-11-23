@@ -247,7 +247,6 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
           {mode && view.gota && <i className="gota-cae" style={{ "--gota": "#a8693a", left: `${branchSlot(Math.min(got, total - 1), total)}%` } as CSSProperties} />}
         </div>
         {mode && view.counting > 0 && <div className="merienda-caption">{view.counting}</div>}
-        {mode && clockKind === "frame" && <span className="merienda-mute"><Pictograma nombre="sin-sonido" /></span>}
         {mode && view.phase && <span className="merienda-phase"><i className="merienda-phase-jabato" style={{ backgroundImage: `url("${JABATO_SPRITES[view.phase.kind]}")` }} />{view.phase.name}</span>}
       </div>
     </div>
@@ -255,6 +254,7 @@ export function MeriendaJabatosGame({ paused, muted, musicVolume, effectsVolume,
     {mode && <progress className="merienda-progress" max={scoreLength(meriendaScores[mode])} value={Math.max(0, view.pulse)} aria-label={t("minijuegos.merienda.avance.oculto")} />}
 
     {mode && <div className="merienda-controls">
+      {mode && clockKind === "frame" && <span className="ritmo-mute"><Pictograma nombre="sin-sonido" /></span>}
       {mode !== "demo" && <Boton tipo="seguir" className="merienda-feed" clave="minijuegos.merienda.boton.dale.rotulo" disabled={interactionPaused}
         onPointerDown={(event) => { event.stopPropagation(); if (event.button === 0) feed(); }} onClick={(event) => { if (event.detail === 0) feed(); }} />}
       {mode !== "song" && <Boton clave="minijuegos.merienda.practica.termina.rotulo" onClick={() => { const session = sessionRef.current; if (session) finish(session); }} />}

@@ -1021,6 +1021,10 @@ export function drawPlatform(context: CanvasRenderingContext2D, platform: Level[
     return;
   }
   if (platform.kind === "gift-spring") {
+    // Regalo con lazo (hoja de 4 fotogramas): reposo, lazo a un lado y a otro, y aplastado al pisarlo. La tapa de la caja
+    // queda a 30 px del borde superior del fotograma dibujado y coincide con la superficie de la plataforma.
+    const fotograma = springCompressed ? 3 : [0, 1, 0, 2][Math.floor(frame / 20) % 4];
+    if (drawMechanicSprite(context, raster.giftSpring, "giftSpring", fotograma, x - 6, platform.y - 30, platform.width + 12, 72)) return;
     const top = platform.y + (springCompressed ? 12 : 0);
     context.fillStyle = "#bc2447"; context.fillRect(x, top, platform.width, platform.height - (springCompressed ? 12 : 0));
     context.fillStyle = "#ffdf78"; context.fillRect(x + platform.width / 2 - 7, top, 14, platform.height - (springCompressed ? 12 : 0));

@@ -225,7 +225,6 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
           {mode && view.gota && <i className="gota-cae" style={{ "--gota": "#f2b632" } as CSSProperties} />}
         </div>
         {view.ring && mode && <div className={`bee-ninja-ring${view.ring.ready ? " is-ready" : ""}`} style={{ left: CUT_POINT.x - 50, top: CUT_POINT.y - 50, transform: `scale(${view.ring.scale})` }} />}
-        {mode && clockKind === "frame" && <span className="bee-ninja-mute" style={{ left: CUT_POINT.x + 40, top: CUT_POINT.y - 70 }}><Pictograma nombre="sin-sonido" /></span>}
         {view.ring?.ready && mode && <div className="bee-ninja-now" style={{ left: CUT_POINT.x - 26, top: CUT_POINT.y - 150 }}>{t("minijuegos.abeja.compas.ya.rotulo")}</div>}
         <div className="bee-ninja-hero" data-pose={heroPose} style={{ backgroundImage: 'url("./assets/sprites/noa-abeja-v1.webp")', left: HERO.left, top: HERO.top, width: HERO.width, height: HERO.height }} />
         {view.targets.map((target) => <div key={target.id} className={`bee-ninja-target is-${target.kind}${target.kind === "ladybug" && view.greet ? " is-greeting" : ""}`}
@@ -245,6 +244,7 @@ export function BeeNinjaGame({ paused, muted, musicVolume, effectsVolume, reduce
     {mode && <progress className="bee-ninja-progress" max={total} value={Math.max(0, view.pulse)} aria-label={t("minijuegos.abeja.avance.oculto")} />}
 
     {mode && <div className="bee-ninja-controls">
+      {mode && clockKind === "frame" && <span className="ritmo-mute"><Pictograma nombre="sin-sonido" /></span>}
       {mode !== "demo" && <Boton tipo="seguir" className="bee-ninja-cut" clave="minijuegos.abeja.boton.corta.rotulo" disabled={interactionPaused}
         onPointerDown={(event) => { event.stopPropagation(); if (event.button === 0) strike(); }} onClick={(event) => { if (event.detail === 0) strike(); }} />}
       {mode !== "song" && <Boton clave="minijuegos.abeja.practica.termina.rotulo" onClick={() => { const session = sessionRef.current; if (session) finish(session); }} />}

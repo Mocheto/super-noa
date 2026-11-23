@@ -22,7 +22,7 @@ export const duelos = {
     piedra: { juntos: "La piedra rompe las tijeras." },
     papel: { juntos: "El papel envuelve la piedra." },
     tijeras: { juntos: "Las tijeras cortan el papel." },
-    elige: { rotulo: "{pictograma:reto} ELIGE UN GESTO", juntos: "Elige un gesto. El primero que gane dos rondas vence." },
+    elige: { rotulo: "{pictograma:reto} ELIGE UN GESTO", juntos: "Gana dos rondas para vencer." },
     bocadillo: { juntos: "Mira lo que piensa el guardián y saca lo que le gana." },
     gana: { rotulo: "GANA A" },
     grupo: { oculto: "Elige piedra, papel o tijera" },

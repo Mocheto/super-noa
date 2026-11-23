@@ -22,7 +22,7 @@ export const minijuegos = {
   abeja: {
     previa: {
       nombre: { rotulo: "ABEJA NINJA" },
-      regla: { juntos: "La Reina Melisa te lanza flores. ¡Córtalas con tu varita cuando lleguen a la punta, al ritmo de la música! A la mariquita no se la corta. Si cortas sin flor, se cae una gota de miel." },
+      regla: { juntos: "Corta las flores de la Reina Melisa cuando lleguen a la punta, al ritmo de la música. ¡La mariquita no se corta!" },
     },
     /** La práctica se detiene en cada pieza nueva: su rótulo y la frase para leer juntos. */
     practica: {
@@ -74,7 +74,7 @@ export const minijuegos = {
   tambor: {
     previa: {
       nombre: { rotulo: "{pictograma:musica} TAMBOR" },
-      regla: { juntos: "La Maestra Armonía toca su tambor y Noa repite sus golpes. Escucha, espera tu turno y golpea en las huellas doradas. Si golpeas sin huella, se cae una nota." },
+      regla: { juntos: "Escucha el tambor de la Maestra Armonía y repite sus golpes en las huellas doradas." },
     },
     /** La práctica se detiene en cada pieza nueva: su rótulo y la frase para leer juntos. */
     practica: {
@@ -123,7 +123,7 @@ export const minijuegos = {
   merienda: {
     previa: {
       nombre: { rotulo: "{pictograma:amigos} MERIENDA" },
-      regla: { juntos: "Los jabatos tienen hambre. Cuando el Gran Jabalí gruña, un jabato asomará: ¡dale su bocado cuando abra la boca del todo, al compás! Si das sin boca abierta, se cae una bellota." },
+      regla: { juntos: "Cuando un jabato abra la boca del todo, ¡dale su bocado al compás!" },
     },
     /** La práctica se detiene en cada jabato nuevo: su rótulo y la frase para leer juntos. */
     practica: {
@@ -171,7 +171,7 @@ export const minijuegos = {
   gatitos: {
     previa: {
       nombre: { rotulo: "{pictograma:fiesta} FIESTA" },
-      regla: { juntos: "Bruma y sus amigos necesitan leña para la fiesta. Golpea los troncos cuando lleguen al tajo, al ritmo de la música. ¡El ovillo no se corta! Si golpeas sin tronco, se cae un leño del montón." },
+      regla: { juntos: "Golpea los troncos cuando lleguen al tajo, al ritmo de la música. ¡El ovillo no se corta!" },
     },
     /** La práctica se detiene en cada pieza nueva: su rótulo y la frase para leer juntos. */
     practica: {

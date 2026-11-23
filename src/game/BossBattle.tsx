@@ -296,7 +296,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
       </Dialog>
       {!empezado && !paused && <PantallaPrevia id="boss-previa" nombre={friendlyReplay ? "duelos.titulo.amistoso.rotulo" : "duelos.titulo.final.rotulo"} nombreVariables={{ nombre: boss.name }}
         guardian={<BossSprite assetPrefix={boss.assetPrefix} assetAtlas={boss.assetAtlas} frame={0} name={boss.name} />}
-        regla={`${boss.intro} ${t("duelos.regla.elige.juntos")} ${t("duelos.regla.bocadillo.juntos")} ${boss.challenge.label}`}
+        regla={`${t("duelos.regla.bocadillo.juntos")} ${t("duelos.regla.elige.juntos")} ${boss.challenge.label}`}
         ayudaAdultos={[t("duelos.regla.mando")]} practicaPrimero={false} onJugar={() => setEmpezado(true)} onSalir={onAbandon} />}
 
       {battle.status === "won" && !paused && <ResultadoMinijuego id="boss-resultado" titulo="duelos.mensaje.gana.rotulo" tituloVariables={{ nombre: boss.name }} gano onSalir={() => { playSound("goal"); onWin(wonChallenge); }}

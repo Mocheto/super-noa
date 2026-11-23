@@ -37,8 +37,8 @@
     --rotulo-titulo: 20px;
     --rotulo: 16px;
     --rotulo-pequeno: 12px;
-    --boton-alto: 44px;
-    --control: 40px;
+    --boton-alto: 48px;
+    --control: 48px;
   }
 }
 
@@ -788,3 +788,13 @@
   .boss-battle[class*=" battle-"] .boss-header h2, .boss-battle.guardian-game .boss-header h2 { font-size: 14px; white-space: nowrap; }
   .boss-battle[class*=" battle-"] .boss-header .eyebrow { display: none; }
 }
+
+/* Ventanas y pantallas previas (issue 335): el título de la cinta no se parte ni llega a la X de cerrar (deja su sitio y,
+   si hace falta, la letra baja hasta 14 px); los botones de control miden 48 px también en el móvil. */
+.pantalla-previa .ventana-cinta { padding-inline: 60px; text-wrap: balance; font-size: clamp(14px, 4.2vw, var(--rotulo-titulo)); }
+@media (orientation: landscape) and (max-height: 540px) {
+  /* En apaisado la regla no se corta: el dibujo del guardián cede su sitio. */
+  .pantalla-previa .previa-guardian > * { max-height: 64px; width: auto; }
+  .pantalla-previa .ventana-contenido { overflow-y: auto; }
+}
+.ventana-cerrar { --control: 48px; }

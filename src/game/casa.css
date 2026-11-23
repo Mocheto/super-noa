@@ -403,3 +403,7 @@
 @media (orientation: portrait) {
   .casa-gatitos.is-vertical { align-content: end; min-height: 100dvh; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
 }
+
+/* La caña de pluma (issue 342): icono de la bandeja y capa sobre la escena mientras se arrastra. */
+svg.casa-objeto.is-pluma { overflow: visible; }
+.casa-pluma-capa { position: absolute; left: 0; top: 0; z-index: 2000; overflow: visible; pointer-events: none; filter: drop-shadow(0 6px 4px #2f1d3366); }

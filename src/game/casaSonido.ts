@@ -134,6 +134,22 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
       tocarSample(maullido.sample, tonoDe(mundo) * maullido.tono, maullido.volumen);
     },
     bote() { tocarSample("plop-ovillo", 1, 0.5); },
+    /** «Fiu» de la pluma al moverla deprisa: un silbido corto que sube. */
+    fiu() {
+      const ctx = listo();
+      if (!ctx || !salida) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(900, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1600, ctx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.16);
+      osc.connect(gain).connect(salida);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.17);
+    },
     /** Canción corta del gatito que canta. */
     cantar(mundo: number) {
       const ctx = listo();

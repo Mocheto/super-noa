@@ -62,6 +62,7 @@ export const casa = {
     pelota: { oculto: "Pelota: suéltala en la habitación para que un gatito la atrape" },
     escoba: { oculto: "Escoba: pásala por las huellas de barro" },
     regadera: { oculto: "Regadera: llévala a un macetero para regarlo" },
+    pluma: { oculto: "Caña de pluma: muévela y los gatitos con ganas de jugar la persiguen; déjala quieta para que la atrapen" },
   },
   decorar: {
     boton: { oculto: "Decorar la casa" },

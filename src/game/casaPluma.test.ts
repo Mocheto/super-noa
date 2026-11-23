@@ -4,7 +4,7 @@ import { asegurarGatitos, casaVacia, type CasaProgress } from "./casa.ts";
 import { nuevoAndante } from "./casaDeambular.ts";
 import { HABITACION_CASA } from "./casaHabitacion.ts";
 import {
-  ALCANCE, ALTO_SALTO, atraparPluma, HILO, moverPluma, nuevaPluma, perseguir, plumaQuieta, plumaSoltada, PARA_A, QUIETA_MS,
+  bajoLaPluma, ALCANCE, ALTO_SALTO, atraparPluma, HILO, moverPluma, nuevaPluma, perseguir, plumaQuieta, plumaSoltada, PARA_A, QUIETA_MS,
   puntaDeCana, quienAtrapa, quiereLaPluma, TEMBLOR, VELOCIDAD_PERSIGUE,
 } from "./casaPluma.ts";
 
@@ -87,4 +87,10 @@ test("el dedo coge la caña por el mango y la pluma cuelga lejos del dedo", () =
   const dedo = { x: 600, y: 400 };
   const pluma = nuevaPluma(puntaDeCana(dedo), 0);
   assert.ok(Math.hypot(pluma.x - dedo.x, pluma.y - dedo.y) > 100, "el dedo no la tapa");
+});
+
+test("junto a una pared, los que la persiguen se reparten hacia dentro sin montarse", () => {
+  const puntos = [-60, 0, 60].map((hueco) => bajoLaPluma({ x: 0, y: 450 }, suelo, hueco).x);
+  assert.equal(new Set(puntos).size, 3);
+  assert.ok(puntos.every((x) => x >= suelo.izquierda));
 });

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, decoracionDe, dejarHuella, dePaseoDe, enCasaDe, esDeNoche, llegadasDePaseo, mandarDePaseo, MAX_EN_CASA, traerACasa, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
+import { avanzar, barrer, bocadilloDe, LANZAMIENTOS_PARA_JUGAR, casaLimpia, cuidar, decoracionDe, dejarHuella, dePaseoDe, enCasaDe, esDeNoche, llegadasDePaseo, mandarDePaseo, MAX_EN_CASA, traerACasa, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
 import {
   aEscena, ANCHO_VERTICAL_CASA, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
   MANTENER_PARA_COGER_MS, MOVER_PARA_FROTAR, relojCasa, SITIOS_CASA, type Frote, type Herramienta,
@@ -29,6 +29,8 @@ import { worldCatalog } from "./worldMapData";
 import { t, tClave } from "../textos/index.ts";
 import { Boton, BotonControl, Texto } from "../textos/Texto";
 import { COMIDAS, darDeComer, favoritaDescubierta, HOJA_COMIDAS, type Comida } from "./casaComida";
+import { DESCANSO_MS, HUECO_PERSEGUIR, moverPluma, nuevaPluma, perseguir, plumaSoltada, puntaDeCana, quienAtrapa, quiereLaPluma, type Pluma } from "./casaPluma";
+import { CapaPluma, IconoCanaPluma, pintarPluma } from "./casaPlumaArte";
 import "./casa.css";
 
 type Props = {
@@ -114,7 +116,7 @@ function conNecesidadesDePrueba(casa: CasaProgress): CasaProgress {
     [mundo, { ...gatito, necesidades: Object.fromEntries(NECESIDADES.map((id) => [id, valor])) as Record<NecesidadId, number> }])) };
 }
 
-type Arrastre = { herramienta: Herramienta | "mantita" | "regadera" | "plato"; /** Con el plato: la comida de los amigos elegida. */ comidaAmigo?: FriendFood; x: number; y: number; /** Con el cuenco: la comida elegida en el abanico. */ comida?: Comida };
+type Arrastre = { herramienta: Herramienta | "mantita" | "regadera" | "plato" | "pluma"; /** Con el plato: la comida de los amigos elegida. */ comidaAmigo?: FriendFood; x: number; y: number; /** Con el cuenco: la comida elegida en el abanico. */ comida?: Comida };
 /** Gatito cogido con el dedo: cuelga del dedo (`x`, `y` en la escena) hasta que se suelta. */
 type Cogido = { indice: number; x: number; y: number };
 /** Distancia del dedo a los pies del gatito que cuelga. */
@@ -209,6 +211,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   useEffect(() => { botandoRef.current = botando; }, [botando]);
   // Gatito en el vestidor (se le lleva al armario).
   const [vestidor, setVestidor] = useState<number | null>(null);
+  // La caña de pluma: la pluma vive en una referencia (la capa se mueve en cada cuadro sin volver a pintar la casa).
+  const plumaRef = useRef<Pluma | null>(null);
+  const capaPlumaRef = useRef<SVGSVGElement | null>(null);
+  /** Hasta cuándo descansa cada gatito (por mundo) tras atrapar la pluma. */
+  const descansoRef = useRef(new Map<number, number>());
   const frotandoRef = useRef<number | null>(null);
   useEffect(() => { frotandoRef.current = frotando; }, [frotando]);
   const [medidas, setMedidas] = useState<Medidas>({ escala: 0.75, anchoVisor: 600, vertical: false, medido: false });
@@ -763,6 +770,15 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               : nuevoAndante(noche ? sitioNoche(mundo) : sitioDia(mundo), momento, noche ? "dormir" : "sentarse");
           }
           if (cogidoRef.current?.indice === indice || bano === mundo || botandoRef.current.includes(mundo)) { siguientes[mundo] = andante; return; }
+          // Con la caña fuera, los que tienen ganas de jugar corren tras la pluma; los demás la miran.
+          const pluma = plumaRef.current;
+          if (pluma && fase === "casa" && !seVanRef.current.has(mundo) && !saliendoRef.current.includes(mundo) && frotandoRef.current !== indice) {
+            if (quiereLaPluma(actual.gatitos[mundo]) && (descansoRef.current.get(mundo) ?? 0) <= momento) {
+              siguientes[mundo] = perseguir(andante, pluma, (enJardin ? JARDIN : HABITACION).suelo, ms, momento, (indice - (gatitos.length - 1) / 2) * HUECO_PERSEGUIR);
+              return;
+            }
+            if (!andando(andante) && Math.abs(pluma.x - andante.x) > 4) andante = { ...andante, mira: pluma.x > andante.x ? 1 : -1 };
+          }
           andante = avanzarAndante(andante, rapidosRef.current.has(mundo) ? ms * RAPIDO_PUERTA : ms, momento);
           if (fase === "casa" && !andando(andante) && momento >= andante.hasta && frotandoRef.current !== indice && !saliendoRef.current.includes(mundo)) {
             const otros = gatitos.filter((otro) => otro !== mundo).map((otro) => siguientes[otro]).filter((otro): otro is Andante => Boolean(otro));
@@ -849,6 +865,63 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }, reduceMotion ? 0 : ATRAPAR_MS);
   };
 
+  /** Atrapar la pluma: salta (animación de la pelota), maúlla y cuenta como una pelota atrapada; luego descansa un poco. */
+  const atraparLaPluma = (indice: number, momento: number) => {
+    const mundo = gatitos[indice];
+    if (mundo === undefined) return;
+    descansoRef.current.set(mundo, momento + DESCANSO_MS);
+    // El maullido de «gracias» ya lo pone `atender` en la tercera; en las otras, uno aquí.
+    if ((casaRef.current.gatitos[mundo]?.lanzamientos ?? 0) + 1 < LANZAMIENTOS_PARA_JUGAR) sonidoRef.current?.maullar(mundo, "gracias");
+    atender(indice, "pelota");
+  };
+  /** Con el teclado, la caña juega con el primer gatito que tiene ganas (o el primero). */
+  const plumaConTeclado = () => {
+    if (fase !== "casa" || !gatitos.length) return;
+    const indice = Math.max(0, gatitos.findIndex((mundo) => quiereLaPluma(casaRef.current.gatitos[mundo])));
+    setVista(centrarEn(sitios[indice], anchoVisible));
+    atraparLaPluma(indice, performance.now());
+  };
+
+  // La caña de pluma, mientras se arrastra: la pluma sigue al dedo con su hilo (en cada cuadro, sin volver a pintar la
+  // casa), suena un «fiu» al moverla deprisa, y con la pluma quieta al alcance de un gatito que la persigue, la atrapa.
+  const conPluma = arrastre?.herramienta === "pluma";
+  const dedoPlumaRef = useRef<{ x: number; y: number } | null>(null);
+  useEffect(() => { dedoPlumaRef.current = conPluma && arrastre ? { x: arrastre.x, y: arrastre.y } : null; });
+  const atraparRef = useRef(atraparLaPluma);
+  useEffect(() => { atraparRef.current = atraparLaPluma; });
+  const listaRef = useRef(lista);
+  useEffect(() => { listaRef.current = lista; });
+  useEffect(() => {
+    if (!conPluma) { plumaRef.current = null; return; }
+    let anterior = performance.now();
+    let ultimoFiu = -Infinity;
+    let fotograma = 0;
+    const paso = () => {
+      const momento = performance.now();
+      const ms = momento - anterior;
+      anterior = momento;
+      const dedo = dedoPlumaRef.current;
+      if (dedo) {
+        const punta = puntaDeCana(dedo);
+        const antes = plumaRef.current;
+        const pluma = antes ? moverPluma(antes, punta, reduceMotion ? 10_000 : ms, momento) : nuevaPluma(punta, momento);
+        if (antes && ms > 0 && Math.hypot(pluma.x - antes.x, pluma.y - antes.y) / ms > 0.8 && momento - ultimoFiu > 350) {
+          ultimoFiu = momento;
+          sonidoRef.current?.fiu();
+        }
+        const candidatos = gatitos.flatMap((mundo, indice) => quiereLaPluma(casaRef.current.gatitos[mundo]) && (descansoRef.current.get(mundo) ?? 0) <= momento && listaRef.current[indice]
+          ? [{ clave: indice, pies: listaRef.current[indice] }] : []);
+        const atrapa = quienAtrapa(pluma, candidatos, momento);
+        plumaRef.current = atrapa === null ? pluma : plumaSoltada(pluma, momento);
+        if (atrapa !== null) atraparRef.current(atrapa, momento);
+        pintarPluma(capaPlumaRef.current, dedo, punta, plumaRef.current);
+      }
+      fotograma = requestAnimationFrame(paso);
+    };
+    fotograma = requestAnimationFrame(paso);
+    return () => { cancelAnimationFrame(fotograma); plumaRef.current = null; };
+  }, [conPluma, gatitos, reduceMotion]);
+
   // Con un objeto cerca del borde de la vista, la habitación se desliza sola hacia ese lado.
   const arrastrando = arrastre !== null;
   useEffect(() => {
@@ -922,7 +995,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     };
   });
 
-  const cogerObjeto = (herramienta: Herramienta | "mantita" | "regadera" | "plato", comida?: Comida, comidaAmigo?: FriendFood) => (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const cogerObjeto = (herramienta: Herramienta | "mantita" | "regadera" | "plato" | "pluma", comida?: Comida, comidaAmigo?: FriendFood) => (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (fase !== "casa" || event.button !== 0) return;
     event.preventDefault();
     const punto = enEscena(event) ?? { x: 0, y: 0 };
@@ -1259,7 +1332,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             aria-label={t("casa.dormir.lampara.oculto")} style={{ left: LAMPARA.x, top: LAMPARA.y, width: LAMPARA.ancho, height: LAMPARA.alto }}
             onClick={(event) => { if (event.detail === 0) cambiarLampara(); }} />}
           {pelota && <i key={pelota.id} className="casa-objeto is-pelota casa-pelota-lanzada" style={{ left: porcentajeX(pelota.x), top: porcentajeY(pelota.y), "--hasta": porcentajeX(lista[pelota.gatito]?.x ?? pelota.x), "--hasta-y": porcentajeY((lista[pelota.gatito]?.y ?? pelota.y) - 30) } as CSSProperties} />}
-          {arrastre && <i className={`${arrastre.comidaAmigo ? `casa-comida-amigo is-${arrastre.comidaAmigo}` : arrastre.comida ? `casa-comida is-${arrastre.comida}` : `casa-objeto is-${arrastre.herramienta}`} casa-arrastrado`} style={{ left: porcentajeX(arrastre.x), top: porcentajeY(arrastre.y) }} />}
+          {arrastre?.herramienta === "pluma" && <CapaPluma capaRef={capaPlumaRef} ancho={ESCENA_CASA.ancho} alto={ESCENA_CASA.alto} />}
+          {arrastre && arrastre.herramienta !== "pluma" && <i className={`${arrastre.comidaAmigo ? `casa-comida-amigo is-${arrastre.comidaAmigo}` : arrastre.comida ? `casa-comida is-${arrastre.comida}` : `casa-objeto is-${arrastre.herramienta}`} casa-arrastrado`} style={{ left: porcentajeX(arrastre.x), top: porcentajeY(arrastre.y) }} />}
         </div>
         {quedaIzquierda && <span className="casa-borde is-izquierda" aria-hidden="true" />}
         {quedaDerecha && <span className="casa-borde is-derecha" aria-hidden="true" />}
@@ -1323,6 +1397,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             aria-label={tClave(`casa.objeto.${herramienta}.oculto`)} onPointerDown={cogerObjeto(herramienta)} onClick={(event) => { if (event.detail === 0) usarConTeclado(herramienta); }}>
             <i className={`casa-objeto is-${herramienta}`} />
           </button>)}
+        {/* La caña de pluma: se arrastra y los gatitos con ganas de jugar la persiguen. */}
+        <button type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === "pluma" ? " is-cogido" : ""}`}
+          aria-label={tClave("casa.objeto.pluma.oculto")} onPointerDown={cogerObjeto("pluma")} onClick={(event) => { if (event.detail === 0) plumaConTeclado(); }}>
+          <IconoCanaPluma />
+        </button>
         {/* Con un visitante en el jardín, el plato (en lugar de la pelota, para que quepa): al tocarlo salen sus tres comidas para arrastrar una. */}
         {enJardin && visita?.fase === "dentro" && <span className="casa-cuenco-sitio">
           {abanicoAmigos && <span className="casa-abanico is-plato" role="group" aria-label={t("casa.visitante.plato.abanico.oculto")}>

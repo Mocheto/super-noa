@@ -12,7 +12,7 @@ import type { SueloDeEstancia } from "./casaHabitacion.ts";
  * La punta de la caña respecto al dedo: Noa la coge por el mango y la punta queda arriba a la izquierda, para que el
  * dedo no tape la pluma.
  */
-export const PUNTA_DESDE_DEDO: Punto = { x: -110, y: -90 };
+export const PUNTA_DESDE_DEDO: Punto = { x: -110, y: -150 };
 export const puntaDeCana = (dedo: Punto): Punto => ({ x: dedo.x + PUNTA_DESDE_DEDO.x, y: dedo.y + PUNTA_DESDE_DEDO.y });
 
 /** Largo del hilo: la pluma cuelga esto por debajo de la punta de la caña (px de escena). */
@@ -31,6 +31,8 @@ export const ALCANCE = 80;
 export const ALTO_SALTO = 200;
 /** Se para a esta distancia del punto bajo la pluma, para no pisarla. */
 export const PARA_A = 30;
+/** Separación entre los que la persiguen, para que no corran montados. */
+export const HUECO_PERSEGUIR = 60;
 /** Tras atraparla, ese gatito descansa un poco antes de volver a perseguirla. */
 export const DESCANSO_MS = 1500;
 
@@ -68,8 +70,10 @@ export const quiereLaPluma = (gatito: GatitoCasa | undefined) => Boolean(gatito)
 
 /** Punto del suelo bajo la pluma (con un pequeño hueco por gatito, para que no se monten), adonde corren. */
 export function bajoLaPluma(pluma: Punto, suelo: SueloDeEstancia["suelo"], hueco = 0): Punto {
+  // Junto a una pared, el centro se aparta un hueco hacia dentro para que los de los lados no se monten.
+  const base = Math.max(suelo.izquierda + HUECO_PERSEGUIR, Math.min(suelo.derecha - HUECO_PERSEGUIR, pluma.x));
   return {
-    x: Math.max(suelo.izquierda, Math.min(suelo.derecha, pluma.x + hueco)),
+    x: Math.max(suelo.izquierda, Math.min(suelo.derecha, base + hueco)),
     y: Math.max(suelo.fondo, Math.min(suelo.delante, pluma.y)),
   };
 }

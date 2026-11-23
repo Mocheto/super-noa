@@ -22,7 +22,7 @@ export function MuestraInterfaz() {
   if (ventana === "tienda") return <SecretShop world={1} paused={false} reduceMotion={false} onResult={nada} onLeave={nada} playSound={nada} />;
   if (ventana === "saltos") return <SantaBossBattle bossId="siroco" paused={false} apples={2} onSpendApple={nada} onRestartLevel={nada} onAbandon={nada} onWin={nada} playSound={nada} />;
   if (ventana === "duelo") return <BossBattle bossId="bramble-king" paused={false} apples={2} protectedByApple={false} onSpendApple={nada} onRestartLevel={nada} onAbandon={nada} onWin={nada} playSound={nada} />;
-  if (ventana === "guardian") return <GuardianMiniGame bossId="triceratops-queen" paused={false} apples={2} protectedByApple={false} onSpendApple={nada} onRestartLevel={nada} onAbandon={nada} onWin={nada} playSound={nada} />;
+  if (ventana === "guardian") return <GuardianMiniGame bossId="sky-captain" paused={false} apples={2} protectedByApple={false} onSpendApple={nada} onRestartLevel={nada} onAbandon={nada} onWin={nada} playSound={nada} />;
   if (ventana === "gatitos") return <CatParty paused={false} muted musicVolume={0} effectsVolume={0} reduceMotion={false} onPause={nada} onExit={nada} />;
   if (ventana === "merienda") return <MeriendaJabatosGame paused={false} muted musicVolume={0} effectsVolume={0} reduceMotion={false} levelCompleted={false} onAbandon={nada} onWin={nada} playSound={nada} />;
   if (ventana === "tambor") return <ArmoniaDrumGame paused={false} muted musicVolume={0} effectsVolume={0} reduceMotion={false} levelCompleted={false} onAbandon={nada} onWin={nada} playSound={nada} />;

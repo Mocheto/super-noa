@@ -15,7 +15,7 @@ import { testScreens } from "./game/testScreens";
  * pantalla de la campaña, para revisarlas sin recorrer el mapa. */
 const devTestName = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("prueba") ?? "" : "";
 /** En desarrollo, `?prueba=<pantalla>&duelo` abre directamente el duelo del guardián de esa pantalla, `?prueba=fiesta` la fiesta de los gatitos y `?prueba=casa` la casa de los gatitos (con `&paletas`, las paletas de sus gatitos, y con `&gatitos=6`, con los gatitos de los mundos 1 a 6). */
-/** En desarrollo, `?prueba=vuelo` y `?prueba=nido` abren los duelos de memoria nuevos (mapa «Mejorar los duelos de memoria») hasta que sustituyan a los de ahora. */
+/** En desarrollo, `?prueba=vuelo` y `?prueba=nido` abren directamente los duelos de memoria de Aurora Celeste y de la Reina Tricera. */
 const devMemoria = devTestName === "vuelo" ? "aurora-celeste" : devTestName === "nido" ? "triceratops-queen" : null;
 const devDuel = import.meta.env.DEV && (new URLSearchParams(window.location.search).has("duelo") || devMemoria !== null);
 const devTestLevel = devMemoria ? levels.find((level) => level.boss === devMemoria)
@@ -385,7 +385,9 @@ export default function App() {
     const beeNinjaDuel = screen === "boss" && activeLevel.boss === "queen-bee";
     const armoniaDrumDuel = screen === "boss" && activeLevel.boss === "maestra-armonia";
     const meriendaDuel = screen === "boss" && activeLevel.boss === "great-boar";
-    const playing = (screen === "game" || screen === "boss") && !beeNinjaDuel && !armoniaDrumDuel && !meriendaDuel && !shopActive && !paused && !muted && musicVolume > 0;
+    // Los duelos de memoria tienen su canción propia mientras la guardiana enseña.
+    const memoriaDuel = screen === "boss" && (activeLevel.boss === "aurora-celeste" || activeLevel.boss === "triceratops-queen");
+    const playing = (screen === "game" || screen === "boss") && !beeNinjaDuel && !armoniaDrumDuel && !meriendaDuel && !memoriaDuel && !shopActive && !paused && !muted && musicVolume > 0;
     musicRef.current.update({
       source: musicTracks[activeLevel.world],
       // En el paseo de los amigos la música del mundo suena más suave.
@@ -990,7 +992,7 @@ export default function App() {
               onWin={bossReplay ? finishBossReplay : handleComplete}
               playSound={playSound}
               friendlyReplay={bossReplay}
-            /> : activeLevel.boss === "aurora-celeste" && devMemoria === "aurora-celeste" ? <VueloAuroraGame
+            /> : activeLevel.boss === "aurora-celeste" ? <VueloAuroraGame
               key={`vuelo-aurora-${activeLevel.id}-${levelRun}`}
               paused={paused}
               muted={muted}
@@ -1002,7 +1004,7 @@ export default function App() {
               onWin={bossReplay ? finishBossReplay : handleComplete}
               playSound={playSound}
               friendlyReplay={bossReplay}
-            /> : activeLevel.boss === "triceratops-queen" && devMemoria === "triceratops-queen" ? <NidoReinaGame
+            /> : activeLevel.boss === "triceratops-queen" ? <NidoReinaGame
               key={`nido-reina-${activeLevel.id}-${levelRun}`}
               paused={paused}
               muted={muted}

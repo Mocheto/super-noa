@@ -1,10 +1,12 @@
 import type { BossId } from "./types";
 import { conTextos } from "../textos/index.ts";
 
-export type GuardianGameId = Extract<BossId,
-  "triceratops-queen" | "sky-captain" |
-  "aurora-celeste" | "rainbow-queen"
->;
+/**
+ * Duelos de elegir y de memoria con tablero fijo que siguen en `GuardianMiniGame`. Aurora Celeste y la Reina Tricera
+ * tienen sus duelos de memoria con movimiento propios («El vuelo de Aurora» y «El nido de la Reina»); la fila de iconos
+ * de las cestas de la Reina se queda en el atlas `guardian-game-icons-v1`.
+ */
+export type GuardianGameId = Extract<BossId, "sky-captain" | "rainbow-queen">;
 
 type OpcionDatos = { id: string; sprite: readonly [row: number, column: number]; color: string };
 export type GuardianOption = OpcionDatos & { label: string };
@@ -21,20 +23,10 @@ export type GuardianGame = {
 
 export const GUARDIAN_GAME_ROUNDS = 5;
 
-const laneOptions = [
-  { id: "left", sprite: [1, 0], color: "#76b98c" },
-  { id: "center", sprite: [1, 1], color: "#e0a452" },
-  { id: "right", sprite: [1, 2], color: "#8b79cf" },
-] as const;
 const cannonOptions = [
   { id: "red", sprite: [2, 0], color: "#df5c62" },
   { id: "yellow", sprite: [2, 1], color: "#efc94f" },
   { id: "blue", sprite: [2, 2], color: "#58a9df" },
-] as const;
-const starOptions = [
-  { id: "moon", sprite: [5, 0], color: "#8b78cf" },
-  { id: "star", sprite: [5, 1], color: "#efc84d" },
-  { id: "cloud", sprite: [5, 2], color: "#71b5de" },
 ] as const;
 const rainbowOptions = [
   { id: "red", sprite: [6, 0], color: "#e45e66" },
@@ -44,9 +36,7 @@ const rainbowOptions = [
 
 /** Juegos tal como se declaran: sin textos. Título, instrucción, pista, éxito y nombre de cada opción salen de `juegos.<guardián>.…`. */
 const datosJuegos: Record<GuardianGameId, JuegoDatos> = {
-  "triceratops-queen": { kind: "choice", options: laneOptions },
   "sky-captain": { kind: "choice", options: cannonOptions },
-  "aurora-celeste": { kind: "sequence", options: starOptions, sequenceLengths: [2, 3, 3, 4, 5] },
   "rainbow-queen": { kind: "sequence", options: rainbowOptions, sequenceLengths: [3, 3, 4, 4, 5] },
 };
 

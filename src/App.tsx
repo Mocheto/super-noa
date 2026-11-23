@@ -97,6 +97,8 @@ export default function App() {
   const [levelRun, setLevelRun] = useState(0);
   const [avionetaGift, setAvionetaGift] = useState(false);
   const [lives, setLives] = useState(MAX_LIVES);
+  // Menú para adultos del mapa (issue 333): ajustes, tablón, borrar progreso, lista, zoom y ayuda.
+  const [menuMapa, setMenuMapa] = useState(false);
   // Cada vida perdida hace latir una vez el chip de vidas (issue 327): la clave nueva reinicia la animación.
   const [latidoVidas, setLatidoVidas] = useState(0);
   const vidasAntes = useRef(lives);
@@ -863,22 +865,28 @@ export default function App() {
 
       {screen === "map" && (
         <section className="map-screen">
+          {/* Mapa a pantalla completa (issue 333): arriba flotan los contadores, el inicio y el menú para adultos. */}
           <header className="map-header">
-            <div><h2 className="rotulo"><Texto clave="mapa.cabecera.rotulo" /></h2><p className="eyebrow juntos">{t("mapa.cabecera.juntos")}</p></div>
+            <h2 className="sr-only"><Texto clave="mapa.cabecera.rotulo" /></h2>
             <div className="map-actions">
               <span className="apple-total"><GameAssetIcon kind="apple" /> {totalApples}</span>
               <button className="album-button" type="button" onClick={() => openCollection("stickers")} aria-label={t("mapa.abrirAlbum.oculto")}><PixelIcon kind="sparkle" /> {progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length}/{albumStickers.length}</button>
               <button className="album-button" type="button" onClick={() => openCollection("bosses")} aria-label={t("mapa.abrirJefes.oculto")}>★ {knownBosses}/{bossLevels.length}</button>
-              <button className="album-button" type="button" onClick={openRanking}>{t("adultos.app.tablon")}</button>
-              <button className="icon-button" type="button" onClick={() => setShowSettings(true)} aria-label={t("mapa.abrirAjustes.oculto")}>⚙</button>
+            </div>
+            <div className="map-actions">
+              <button className="icon-button" type="button" aria-expanded={menuMapa} onClick={() => setMenuMapa((abierto) => !abierto)} aria-label={t("mapa.menuAdultos.oculto")}>⚙</button>
               <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label={t("mapa.volverInicio.oculto")}>⌂</button>
             </div>
+            {menuMapa && <div className="map-menu-adultos">
+              <button className="album-button" type="button" onClick={() => setShowSettings(true)}>{t("mapa.ajustes")}</button>
+              <button className="album-button" type="button" onClick={openRanking}>{t("adultos.app.tablon")}</button>
+              <button className="text-button reset-button" type="button" onClick={resetProgress}>{t("mapa.borrarProgreso")}</button>
+            </div>}
           </header>
           <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
             <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} onOpenAvioneta={() => void requestAdventure(() => { setAvionetaGift(false); setPaused(false); setScreen("avioneta"); })} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal}
-              onOpenCasa={funciones.casa && casaAbierta(progress.levelStats) ? () => setScreen("casa") : undefined} />
+              onOpenCasa={funciones.casa && casaAbierta(progress.levelStats) ? () => setScreen("casa") : undefined} menuAdultos={menuMapa} />
           </Suspense>
-          <button className="text-button reset-button" type="button" onClick={resetProgress}>{t("mapa.borrarProgreso")}</button>
         </section>
       )}
 

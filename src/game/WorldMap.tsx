@@ -35,9 +35,11 @@ type WorldMapProps = {
   onOpenAvioneta?: () => void;
   /** Abre la casa de los gatitos; sin él, no hay botón CASA. */
   onOpenCasa?: () => void;
+  /** Menú para adultos abierto (issue 333): vista de lista, zoom, ver todo y la ayuda. Para Noa quedan NOA y CASA. */
+  menuAdultos?: boolean;
 };
 
-export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal, onOpenAvioneta, onOpenCasa }: WorldMapProps) {
+export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal, onOpenAvioneta, onOpenCasa, menuAdultos = false }: WorldMapProps) {
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedWorld, setSelectedWorld] = useState<WorldId | null>(null);
   const [openObjectives, setOpenObjectives] = useState<{ levelId: string; pinned: boolean } | null>(null);
@@ -183,21 +185,26 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
 
   return (
     <>
-      <p className="map-intro"><span className="rotulo"><Texto clave="mapa.intro.rotulo" /></span> <small className="juntos">{t("mapa.intro.juntos")}</small></p>
-      <div className="map-layout">
-      <div className="map-controls" inert={selectedWorld !== null} aria-label={t("mapa.controles.oculto")}>
+      <div className={`map-layout${view === "list" ? " is-lista" : ""}`}>
+      {/* Para adultos, en su menú (issue 333): la ayuda, la vista de lista, el zoom y ver todo. Con la lista abierta, el
+          cambio de vista se queda a la vista para poder volver al mapa. */}
+      {(menuAdultos || view === "list") && <div className="map-controls map-adultos" inert={selectedWorld !== null} aria-label={t("mapa.controles.oculto")}>
+        {menuAdultos && <p className="map-intro">{t("mapa.intro.juntos")}</p>}
         <div className="map-mode">
           <button type="button" aria-pressed={view === "map"} onClick={() => setView("map")}><Texto clave="mapa.vistaMapa.rotulo" /></button>
           <button type="button" aria-pressed={view === "list"} onClick={() => { followNoa.current = false; setView("list"); }}><Texto clave="mapa.vistaLista.rotulo" /></button>
         </div>
-        {view === "map" && <div className="map-zoom">
+        {menuAdultos && view === "map" && <div className="map-zoom">
           <button type="button" aria-label={t("mapa.alejar.oculto")} disabled={camera.atMin} onClick={() => camera.zoomBy(-1)}>−</button>
           <button type="button" aria-label={t("mapa.acercar.oculto")} disabled={camera.atMax} onClick={() => camera.zoomBy(1)}>+</button>
           <button type="button" aria-pressed={camera.atMin} onClick={camera.showAll}><Texto clave="mapa.verTodo.rotulo" /></button>
-          <button type="button" onClick={() => camera.showNear(noaPosition)}><Texto clave="mapa.volverANoa.rotulo" /></button>
         </div>}
+      </div>}
+      {/* Para Noa, grandes y flotando sobre el mapa: volver a Noa y la casa. */}
+      {view === "map" && <div className="map-noa-botones" inert={selectedWorld !== null}>
+        <Boton className="map-volver-noa" clave="mapa.volverANoa.rotulo" onClick={() => camera.showNear(noaPosition)} />
         {onOpenCasa && <Boton tipo="seguir" className="map-casa" clave="casa.boton.rotulo" onClick={onOpenCasa} />}
-      </div>
+      </div>}
       <div className="map-scroll" inert={selectedWorld !== null} hidden={view !== "map"} role="region" aria-label={t("mapa.mapaIlustrado.oculto")}
         ref={viewportRef} {...camera.viewportEvents}>
         <div className={`map-board${camera.overview ? " is-overview" : ""}`} style={{ width: camera.frame.width, height: camera.frame.height, left: camera.frame.x, top: camera.frame.y }}>
@@ -229,7 +236,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
             const summary = summaries[world.id];
             const shop = getWorldSecretShopBadge(world.id, progress);
             return <button
-              className={`map-node map-node-${world.id} ${available ? "is-open" : "is-locked"} ${summary.remembered ? "is-remembered" : ""}`}
+              className={`map-node map-node-${world.id} ${available ? "is-open" : "is-locked"} ${summary.remembered ? "is-remembered" : ""}${available && summary.complete < summary.total ? " is-next" : ""}`}
               style={{ left: `${world.x}%`, top: `${world.y}%` }}
               type="button"
               aria-label={`Ver ${world.name}: ${available ? `${summary.complete} de ${summary.total} pantallas completadas` : "todavía cerrado"}${shop ? `. ${shop.label}` : ""}`}

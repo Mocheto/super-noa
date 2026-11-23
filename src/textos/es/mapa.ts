@@ -4,13 +4,14 @@
  * Cualquier otra hoja es texto para adultos.
  */
 export const mapa = {
-  cabecera: { rotulo: "{pictograma:mapa} MAPA", juntos: "Elige una pantalla." },
+  cabecera: { rotulo: "{pictograma:mapa} MAPA" },
   abrirAlbum: { oculto: "Abrir álbum de pegatinas" },
   abrirJefes: { oculto: "Abrir jefes amigos" },
-  abrirAjustes: { oculto: "Abrir ajustes" },
+  menuAdultos: { oculto: "Menú para adultos: ajustes, tablón, lista y zoom" },
+  ajustes: "Ajustes",
   volverInicio: { oculto: "Volver al inicio" },
   borrarProgreso: "Borrar progreso",
-  intro: { rotulo: "{pictograma:mapa} MUEVE EL MAPA", juntos: "Arrastra el mapa con un dedo. Junta o separa dos dedos para alejar o acercar. Toca un mundo para ver sus pantallas." },
+  intro: { juntos: "Arrastra el mapa con un dedo. Junta o separa dos dedos para alejar o acercar. Toca un mundo para ver sus pantallas." },
   controles: { oculto: "Explorar el mapa" },
   vistaMapa: { rotulo: "{pictograma:mapa} MAPA" },
   vistaLista: { rotulo: "LISTA" },

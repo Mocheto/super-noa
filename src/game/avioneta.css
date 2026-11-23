@@ -32,3 +32,14 @@
   .avioneta-controls { --avioneta-flecha: var(--tactil-flecha-apaisado); --avioneta-pompa: var(--tactil-salta-apaisado); --avioneta-borde: var(--tactil-borde-apaisado); gap: var(--tactil-separacion-apaisado); }
   .avioneta-retrato { max-height: 72px; }
 }
+/* En vertical (issue 332): el cielo y los botones van pegados abajo, al alcance de las manos, con el salir arriba. El
+   cielo no se recorta a 4:3: el avión recorre todo su ancho y Noa tiene que ver los nubarrones que llegan por los lados.
+   En la tableta, botones de unos 2 cm. */
+@media (orientation: portrait) {
+  .avioneta { min-height: 100dvh; display: flex; flex-direction: column; justify-content: flex-end; box-sizing: border-box; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .avioneta .avioneta-leave { top: 12px; }
+  .avioneta-controls { margin-top: 14px; }
+}
+@media (orientation: portrait) and (min-width: 600px) {
+  .avioneta-controls { --avioneta-flecha: var(--tactil-flecha-tableta); --avioneta-pompa: var(--tactil-salta-tableta); --avioneta-borde: var(--tactil-borde-tableta); gap: var(--tactil-separacion-tableta); }
+}

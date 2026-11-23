@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { avanzar, barrer, bocadilloDe, casaLimpia, cuidar, decoracionDe, dejarHuella, dePaseoDe, enCasaDe, esDeNoche, llegadasDePaseo, mandarDePaseo, MAX_EN_CASA, traerACasa, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
 import {
-  aEscena, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
+  aEscena, ANCHO_VERTICAL_CASA, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
   MANTENER_PARA_COGER_MS, MOVER_PARA_FROTAR, relojCasa, SITIOS_CASA, type Frote, type Herramienta,
 } from "./casaInteraccion";
 import { crearSonidoCasa, sonidoDelBano, type SonidoCasa } from "./casaSonido";
@@ -304,7 +304,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       const ancho = seccion.clientWidth - MARGEN_LADOS - MARCO_MOVIL - (vertical ? 0 : ANCHO_BANDEJA_LADO);
       // La sección crece con su contenido: el alto disponible es el de la ventana desde donde empieza.
       const alto = window.innerHeight - Math.max(0, seccion.getBoundingClientRect().top) - MARGEN_ARRIBA - MARCO_MOVIL - (vertical ? ALTO_BANDEJA_VERTICAL : 0);
-      const escala = escalaCasa(ancho, alto);
+      const escala = escalaCasa(ancho, alto, window.matchMedia("(orientation: portrait)").matches);
       setMedidas({ escala, anchoVisor: Math.min(ancho, ESCENA_CASA.ancho * escala), vertical, medido: true });
     };
     medir();
@@ -1105,14 +1105,18 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   /** El marco de la bandeja: guarda como foto lo que se ve ahora (el trozo de habitación y sus gatitos). */
   const hacerFoto = () => {
     const margen = 80;
+    // La foto guarda al menos una ventana 4:3 de la habitación, centrada en lo que se ve: en una pantalla estrecha no sale
+    // solo un trozo de puerta (issue 332).
+    const anchoFoto = Math.min(ESCENA_CASA.ancho, Math.max(anchoVisible, ANCHO_VERTICAL_CASA));
+    const xFoto = limitarVista(vistaX + anchoVisible / 2 - anchoFoto / 2, anchoFoto);
     const foto: FotoCasa = {
       hecha: new Date().toISOString(),
-      vista: { x: Math.round(vistaX), ancho: Math.round(anchoVisible) },
+      vista: { x: Math.round(xFoto), ancho: Math.round(anchoFoto) },
       decoracion,
       noche,
       apagada: noche && lamparaApagada,
       gatitos: aspectos
-        .filter(({ andante }) => andante.x >= vistaX - margen && andante.x <= vistaX + anchoVisible + margen)
+        .filter(({ andante }) => andante.x >= xFoto - margen && andante.x <= xFoto + anchoFoto + margen)
         .map(({ mundo, andante, animacion, cuadro, mira, tapado }) => {
           const variante = variantes.find((v) => v.mundo === mundo);
           const ropa = ropaDe(casa, mundo);

@@ -398,3 +398,8 @@
 @media (orientation: landscape) and (max-height: 540px) {
   .casa-gatitos { padding: 8px 16px 8px 72px; }
 }
+/* En vertical la casa es una ventana 4:3 de la habitación y el bloque (habitación y bandeja) va pegado abajo, al alcance
+   de las manos (issue 332; guía de estilo visual). */
+@media (orientation: portrait) {
+  .casa-gatitos.is-vertical { align-content: end; min-height: 100dvh; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+}

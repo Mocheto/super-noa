@@ -18,6 +18,10 @@ test("un punto de la pantalla se pasa a la escena de 1280 × 540", () => {
 test("la habitación cabe a lo alto y en el móvil vertical no baja de 0,75: entonces se desliza", () => {
   assert.equal(escalaCasa(343, 600), ESCALA_MINIMA, "móvil vertical");
   assert.equal(escalaCasa(700, 268), 268 / 540, "móvil apaisado: cabe entera");
+  // En vertical se ve una ventana 4:3 de la habitación (issue 332): 720 px de escena de ancho, salvo que no quepa a lo alto.
+  assert.equal(escalaCasa(343, 600, true), 343 / 720, "móvil vertical, 4:3");
+  assert.equal(escalaCasa(768, 900, true), 768 / 720, "tableta vertical, 4:3");
+  assert.equal(escalaCasa(768, 400, true), 400 / 540, "si no cabe a lo alto, manda el alto");
   assert.equal(escalaCasa(1400, 900), 1400 / 1280, "escritorio ancho: cabe entera a lo ancho");
   assert.equal(limitarVista(-50, 457), 0);
   assert.equal(limitarVista(5000, 457), 1280 - 457);

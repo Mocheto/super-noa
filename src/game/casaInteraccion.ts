@@ -120,8 +120,11 @@ export function frotar(frote: Frote | null, gatito: number, ahora: number, objet
  * (140 px de escena) mida unos 105 px; entonces se desliza a los lados.
  */
 export const ESCALA_MINIMA = 0.75;
-export function escalaCasa(anchoDisponible: number, altoDisponible: number): number {
+/** En vertical se ve una ventana 4:3 de la habitación (issue 332; guía de estilo visual): 720 × 540 px de escena. */
+export const ANCHO_VERTICAL_CASA = 720;
+export function escalaCasa(anchoDisponible: number, altoDisponible: number, vertical = false): number {
   if (anchoDisponible <= 0 || altoDisponible <= 0) return ESCALA_MINIMA;
+  if (vertical) return Math.min(altoDisponible / ESCENA_CASA.alto, anchoDisponible / ANCHO_VERTICAL_CASA);
   return Math.min(altoDisponible / ESCENA_CASA.alto, Math.max(anchoDisponible / ESCENA_CASA.ancho, ESCALA_MINIMA));
 }
 

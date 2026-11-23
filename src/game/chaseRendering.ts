@@ -7,6 +7,8 @@ import type { Chase } from "./types";
 
 const YARN = "./assets/sprites/yarn-ball-v1.webp";
 const HEART = "./assets/sprites/ui-heart-v1.webp";
+/** Arte de la persecución que no va en `RasterAssets`, para precargarlo (issue 322). */
+export const ARTE_PERSECUCION = [YARN, HEART];
 
 /** Bocadillo de diálogo centrado en `centerX` con la punta en `bottomY` (coordenadas de pantalla). */
 export function speech(context: CanvasRenderingContext2D, text: string, centerX: number, bottomY: number) {

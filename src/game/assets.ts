@@ -36,6 +36,7 @@ export function cssAssetUrl(src: string): string {
   return `url("${resolved}")`;
 }
 
+/** Imagen compartida por ruta. */
 export function getImage(src: string): HTMLImageElement {
   let image = cache.get(src);
   if (!image) {
@@ -43,7 +44,89 @@ export function getImage(src: string): HTMLImageElement {
     image.src = src;
     cache.set(src, image);
   }
+  if (!mapas.has(image)) prepararMapa(image);
   return image;
+}
+
+/*
+ * Mapas de bits ya descodificados (issue 322). El lienzo 2D descodifica cada imagen en el hilo principal la primera
+ * vez que la dibuja: 20–180 ms de golpe en mitad de la partida. `createImageBitmap` sobre el archivo (un `Blob`, no la
+ * `<img>`, que Chromium descodifica en el hilo principal) la descodifica fuera de él, y el lienzo de la partida dibuja
+ * ese mapa en lugar de la imagen (`dibujarConMapas`). El archivo sale de la caché HTTP: no se descarga dos veces.
+ */
+const mapas = new Map<HTMLImageElement, ImageBitmap | "pendiente">();
+/** Lienzos de partida que usan los mapas: solo se preparan mientras hay alguno, y se liberan al salir de la partida. */
+let partidasConMapas = 0;
+
+function prepararMapa(image: HTMLImageElement) {
+  if (!partidasConMapas || typeof createImageBitmap !== "function" || typeof fetch !== "function" || !image.src) return;
+  mapas.set(image, "pendiente");
+  fetch(image.src)
+    .then((respuesta) => respuesta.ok ? respuesta.blob() : Promise.reject(new Error(String(respuesta.status))))
+    .then((archivo) => createImageBitmap(archivo))
+    .then((mapa) => { if (mapas.get(image) === "pendiente") mapas.set(image, mapa); else mapa.close(); })
+    .catch(() => mapas.delete(image));
+}
+
+/** El mapa de bits descodificado de una imagen, si ya está listo. */
+export function mapaDe(image: HTMLImageElement): ImageBitmap | undefined {
+  const mapa = mapas.get(image);
+  return mapa && mapa !== "pendiente" ? mapa : undefined;
+}
+
+/**
+ * Hace que `context.drawImage` use el mapa ya descodificado de cada imagen. Mientras su mapa se está descodificando
+ * (unas decenas de ms tras llegar), la imagen se trata como si aún no hubiera cargado y no se dibuja: dibujarla
+ * descodificaría en el hilo principal justo lo que se quiere evitar.
+ */
+export function dibujarConMapas(context: CanvasRenderingContext2D): () => void {
+  if (typeof HTMLImageElement === "undefined") return () => undefined;
+  partidasConMapas += 1;
+  const dibujar = context.drawImage.bind(context) as (...args: unknown[]) => void;
+  context.drawImage = ((image: CanvasImageSource, ...resto: number[]) => {
+    if (!(image instanceof HTMLImageElement)) return dibujar(image, ...resto);
+    const mapa = mapas.get(image);
+    if (mapa === "pendiente") return;
+    dibujar(mapa ?? image, ...resto);
+  }) as CanvasRenderingContext2D["drawImage"];
+  return () => {
+    partidasConMapas -= 1;
+    // Se liberan un poco después: al pasar de una pantalla a otra (o al reintentar) la partida vuelve enseguida.
+    const liberar = () => {
+      if (partidasConMapas) return;
+      for (const mapa of mapas.values()) if (mapa !== "pendiente") mapa.close();
+      mapas.clear();
+    };
+    if (typeof setTimeout === "function") setTimeout(liberar, 2000);
+    else liberar();
+  };
+}
+
+/** Poses de Noa que se usan nada más empezar a moverse. */
+const POSES_BASICAS = ["./assets/sprites/noa-sprite-sheet.webp", "./assets/sprites/noa-jump-v2.webp"];
+
+/**
+ * Pide ya todo el arte que usará la pantalla (issue 322), para que llegue descodificado antes de entrar en escena: la
+ * bandera, la puerta de la exploración, los atlas del mundo… Se llama justo después del primer cuadro, para no retrasar
+ * el arranque. `extra` son rutas que la pantalla dibuja fuera de `RasterAssets` (gatitos de la exploración, ovillo de la
+ * persecución…). Libera los mapas de bits de las imágenes que esta pantalla no pide: si luego se piden, se rehacen.
+ */
+export function precargarPantalla(assets: RasterAssets, extra: string[] = []) {
+  const usadas = new Set<HTMLImageElement>();
+  const tocar = (grupo: object) => {
+    for (const clave of Object.keys(grupo)) {
+      const valor = (grupo as Record<string, unknown>)[clave];
+      if (typeof HTMLImageElement !== "undefined" && valor instanceof HTMLImageElement) usadas.add(valor);
+      else if (valor instanceof Object && !("src" in valor)) tocar(valor);
+    }
+  };
+  tocar(assets);
+  [...POSES_BASICAS, ...extra].forEach((src) => usadas.add(getImage(src)));
+  for (const [image, mapa] of mapas) {
+    if (usadas.has(image) || mapa === "pendiente") continue;
+    mapa.close();
+    mapas.delete(image);
+  }
 }
 
 const when = (needed: boolean, src: string) => needed ? getImage(src) : (unloaded ??= new Image());

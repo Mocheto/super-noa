@@ -6,7 +6,7 @@ import { Emblema } from "./Emblema";
 import { SecretShop } from "./SecretShop";
 import "./secretDoors.css";
 import { TouchControls } from "./TouchControls";
-import { getImage, getLevelAssets } from "./assets";
+import { dibujarConMapas, getImage, getLevelAssets, precargarPantalla } from "./assets";
 import {
   drawAmbientForeground, drawApple, drawBackground, drawBloomBridge, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawChainGuardian, drawCheckpoint,
@@ -33,11 +33,11 @@ import "./puzzleRooms.css";
 import { advanceRoom, createPuzzleState, pushCrates, puzzlePlatforms, resetRoom, restartHintActive, slideCrates, stepTriggers } from "./puzzleRooms";
 import { drawPuzzleRooms, type SparkTrail } from "./puzzleRoomsRendering";
 import { createChaseState, stepChase } from "./chase";
-import { drawChase, speech } from "./chaseRendering";
+import { ARTE_PERSECUCION, drawChase, speech } from "./chaseRendering";
 import { GREET_DISTANCE, guardianOf, restStopFor } from "./restStops";
 import { bossCatalog } from "./bosses";
 import { createExploreState, exploreCameraTarget, hintTarget, reachedGate, shortcutWalls, stepExplore } from "./explore";
-import { drawExploreOverlay, drawExploreWorld } from "./exploreRendering";
+import { drawExploreOverlay, drawExploreWorld, prepararExploracion } from "./exploreRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import {
   enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
@@ -202,6 +202,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     const context = canvas.getContext("2d");
     if (!context) return;
     context.imageSmoothingEnabled = false;
+    const soltarMapas = dibujarConMapas(context);
 
     const raster = getLevelAssets(level);
     const player = createInitialPlayer(level);
@@ -1333,7 +1334,11 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     }, render, () => { frame += 1; });
     gameLoopRef.current = gameLoop;
     gameLoop.setRunning(runningRef.current);
+    // Tras el primer cuadro, el resto del arte de la pantalla se pide y se descodifica ya (issue 322).
+    const precarga = typeof setTimeout === "function" ? setTimeout(() => precargarPantalla(raster, [...(level.orientation === "explore" ? prepararExploracion(level) : []), ...(level.chase ? ARTE_PERSECUCION : [])]), 400) : undefined;
     return () => {
+      if (precarga !== undefined) clearTimeout(precarga);
+      soltarMapas();
       if (puzzle) window.removeEventListener("keydown", restartKey);
       gameLoop.stop();
       gameLoopRef.current = null;

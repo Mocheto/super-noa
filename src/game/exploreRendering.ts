@@ -1,4 +1,4 @@
-import { getImage } from "./assets.ts";
+import { getImage, mapaDe } from "./assets.ts";
 import { letraLienzo } from "./cartelLienzo";
 import { allFound, followerPositions, type ExploreState } from "./explore.ts";
 import type { Level, LostKitten } from "./types";
@@ -18,13 +18,19 @@ function smallCat(kitten: LostKitten): HTMLCanvasElement | HTMLImageElement | nu
   const image = catSprite(kitten);
   if (!image.complete || !image.naturalWidth) return null;
   if (typeof document === "undefined") return image;
+  // Se reduce desde el mapa ya descodificado, para no descodificar un dibujo de más de 1000 px en mitad de la partida.
+  const mapa = mapaDe(image);
+  if (!mapa && typeof createImageBitmap === "function") return null;
   const canvas = document.createElement("canvas");
   canvas.width = 128;
   canvas.height = Math.round(128 * image.naturalHeight / image.naturalWidth);
-  canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  canvas.getContext("2d")?.drawImage(mapa ?? image, 0, 0, canvas.width, canvas.height);
   smallCats.set(kitten.cat, canvas);
   return canvas;
 }
+
+/** Arte de la exploración que no va en `RasterAssets`, para precargarlo (issue 322). */
+export const prepararExploracion = (level: Level): string[] => [GATE, ...(level.lostKittens ?? []).map((kitten) => catSprite(kitten).src)];
 
 function drawCat(context: CanvasRenderingContext2D, kitten: LostKitten, x: number, bottom: number, size: number) {
   const image = smallCat(kitten);

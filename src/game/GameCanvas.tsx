@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { cajaRedondeada, drawCartel, medirCartel, medirTexto } from "./cartelLienzo";
+import { cajaRedondeada, drawCartel, medirCartel, medirTexto, ponerEscalaLienzo, tamanoLegible } from "./cartelLienzo";
 import { CARTEL_ARRIBA, colocarCarteles, pistaDeLaPartida, techoCarteles, type Caja } from "./carteles";
 import { acentoMundo } from "./worldMapData";
 import { Emblema } from "./Emblema";
@@ -109,10 +109,11 @@ const CLAVE_PALABRA = { apple: "partida.lienzo.recoger.manzana.rotulo", sticker:
 function drawPalabraRecogida(context: CanvasRenderingContext2D, capa: CapaPalabra, x: number, cabeza: number, techo = CARTEL_ARRIBA) {
   context.save();
   context.globalAlpha = capa.alfa;
-  context.font = `${Math.round(24 * capa.escala)}px "Press Start 2P", monospace`;
+  const letra = tamanoLegible(24) * capa.escala;
+  context.font = `${Math.round(letra)}px "Press Start 2P", monospace`;
   const texto = textoLienzo(CLAVE_PALABRA[capa.objeto]);
-  const ancho = medirTexto(context, texto, 24 * capa.escala) + 32;
-  const alto = 48 * capa.escala;
+  const ancho = medirTexto(context, texto, letra) + 32;
+  const alto = letra * 2;
   const centro = Math.max(vista.izquierda + ancho / 2 + 8, Math.min(vista.derecha - ancho / 2 - 8, x));
   const y = Math.max(techo + alto / 2, cabeza - 64 - capa.subida) - alto / 2;
   context.fillStyle = "rgba(0, 0, 0, .3)";
@@ -1092,6 +1093,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     const medirTechoCartel = () => {
       const hud = canvas.closest?.(".game-stage")?.querySelector(".hud-centro");
       const lienzo = canvas.getBoundingClientRect?.();
+      if (lienzo?.width) ponerEscalaLienzo(lienzo.width / VIEW_WIDTH);
       if (!hud || !lienzo?.width) return CARTEL_ARRIBA;
       return techoCarteles(hud.getBoundingClientRect().bottom - lienzo.top, lienzo.width / VIEW_WIDTH);
     };

@@ -1,5 +1,5 @@
 import { getImage, mapaDe } from "./assets.ts";
-import { letraLienzo } from "./cartelLienzo";
+import { letraLienzo, tamanoLegible } from "./cartelLienzo";
 import { allFound, followerPositions, type ExploreState } from "./explore.ts";
 import type { Level, LostKitten } from "./types";
 import { textoLienzo } from "../textos/index.ts";
@@ -41,11 +41,13 @@ function drawCat(context: CanvasRenderingContext2D, kitten: LostKitten, x: numbe
 
 function bubble(context: CanvasRenderingContext2D, text: string, x: number, y: number) {
   context.save();
-  context.font = letraLienzo(12);
-  const width = context.measureText(text).width + 18;
+  const letra = tamanoLegible(12);
+  const alto = Math.round(letra * 2);
+  context.font = letraLienzo(letra);
+  const width = context.measureText(text).width + letra * 1.5;
   context.fillStyle = "#fff6e3"; context.strokeStyle = "#2f1d33"; context.lineWidth = 3;
-  context.beginPath(); context.roundRect(Math.round(x - width / 2), Math.round(y - 26), width, 24, 7); context.fill(); context.stroke();
-  context.fillStyle = "#3d294a"; context.textAlign = "center"; context.fillText(text, Math.round(x), Math.round(y - 9));
+  context.beginPath(); context.roundRect(Math.round(x - width / 2), Math.round(y - alto - 2), width, alto, 7); context.fill(); context.stroke();
+  context.fillStyle = "#3d294a"; context.textAlign = "center"; context.textBaseline = "middle"; context.fillText(text, Math.round(x), Math.round(y - 2 - alto / 2));
   context.restore();
 }
 

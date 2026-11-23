@@ -48,3 +48,16 @@ test("el techo de los carteles baja con el HUD cuando el lienzo se ve pequeño",
   assert.equal(techoCarteles(42, 1.17), CARTEL_ARRIBA, "escritorio: el HUD cabe sobre la primera fila");
   assert.ok(techoCarteles(26, 343 / 960) > CARTEL_ARRIBA, "móvil vertical: el HUD ocupa más lienzo");
 });
+
+test("los textos del lienzo miden al menos 14 px reales en cualquier pantalla", async () => {
+  const { MINIMO_PX, ponerEscalaLienzo, tamanoLegible } = await import("./cartelLienzo.ts");
+  for (const escala of [1.17, 800 / 960, 478 / 960, 343 / 960]) {
+    ponerEscalaLienzo(escala);
+    for (const tamano of [12, 13, 16, 24]) {
+      assert.ok(tamanoLegible(tamano) * escala >= MINIMO_PX - .01, `${tamano} a escala ${escala.toFixed(2)}`);
+      assert.ok(tamanoLegible(tamano) >= tamano, "nunca encoge");
+    }
+  }
+  ponerEscalaLienzo(1);
+  assert.equal(tamanoLegible(16), 16, "en escritorio no cambia");
+});

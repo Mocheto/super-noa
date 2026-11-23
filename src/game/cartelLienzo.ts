@@ -1,3 +1,15 @@
+/** Ningún texto del lienzo para Noa mide menos de esto en pantalla, en px reales (guía de estilo visual, issue 324). */
+export const MINIMO_PX = 14;
+let escalaLienzo = 1;
+
+/** Px de pantalla por unidad del lienzo; la mide GameCanvas cuando cambia el tamaño del escenario. */
+export function ponerEscalaLienzo(escala: number) {
+  if (escala > 0 && Number.isFinite(escala)) escalaLienzo = escala;
+}
+
+/** Tamaño en unidades del lienzo para que un texto de `tamano` mida al menos `MINIMO_PX` en pantalla. */
+export const tamanoLegible = (tamano: number) => Math.max(tamano, Math.ceil(MINIMO_PX / escalaLienzo));
+
 /** Letra del texto para Noa en el lienzo: Press Start 2P, la misma de la interfaz. */
 export const letraLienzo = (tamano: number) => `${tamano}px "Press Start 2P", monospace`;
 
@@ -19,7 +31,8 @@ const medidaInterior = (context: CanvasRenderingContext2D, lineas: string[], tam
 });
 
 /** Medida de un cartel con su contorno, para colocarlo antes de dibujarlo; `arriba` sigue siendo el borde de la caja. */
-export function medirCartel(context: CanvasRenderingContext2D, lineas: string[], tamano = 16) {
+export function medirCartel(context: CanvasRenderingContext2D, lineas: string[], tamanoPedido = 16) {
+  const tamano = tamanoLegible(tamanoPedido);
   context.save();
   context.font = letraLienzo(tamano);
   const { ancho, alto } = medidaInterior(context, lineas, tamano);
@@ -31,7 +44,8 @@ export function medirCartel(context: CanvasRenderingContext2D, lineas: string[],
  * Cartel del lienzo con el estilo de la interfaz: Press Start 2P (16 px por defecto), caja crema con contorno ciruela a la
  * medida del texto. Cada línea es un rótulo de hasta dos palabras con su dibujo. `arriba` es el borde superior de la caja.
  */
-export function drawCartel(context: CanvasRenderingContext2D, lineas: string[], centroX: number, arriba: number, { alfa = 1, color = "#3d1430", fondo = "#fff8e9", tamano = 16 }: OpcionesCartel = {}) {
+export function drawCartel(context: CanvasRenderingContext2D, lineas: string[], centroX: number, arriba: number, { alfa = 1, color = "#3d1430", fondo = "#fff8e9", tamano: tamanoPedido = 16 }: OpcionesCartel = {}) {
+  const tamano = tamanoLegible(tamanoPedido);
   context.save();
   context.globalAlpha = alfa;
   context.font = letraLienzo(tamano);

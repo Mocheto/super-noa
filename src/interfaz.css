@@ -636,3 +636,33 @@
   .ventana-coleccion .collection-tabs { gap: 3px; }
   .ventana-coleccion .pestana { width: 70px; padding: 0 2px; }
 }
+
+/* Duelos de guardián (issue 328): salir va arriba a la derecha en todos los tamaños (nunca en las esquinas de abajo,
+   donde se apoya la mano) y ningún rótulo de Noa baja de 14 px. */
+.boss-battle[class*=" battle-"] .duel-abandon, .boss-battle.guardian-game .duel-abandon { position: absolute; z-index: 2; top: 10px; right: 12px; margin: 0; }
+.boss-battle[class*=" battle-"] .boss-header, .boss-battle.guardian-game .boss-header { padding-right: 120px; }
+.boss-battle .duel-fighter > strong, .boss-battle .gesture-card b, .boss-battle .duel-choices strong,
+.boss-battle .round-history li, .boss-battle .duel-rules, .boss-battle .round-message span,
+.boss-battle .guardian-game-board > p, .boss-battle .guardian-options strong, .boss-battle .guardian-target strong { font-size: max(14px, 1em); }
+.boss-battle .duel-score, .boss-battle .duel-attempts, .boss-battle .eyebrow { font-size: max(14px, 1em); }
+.boss-battle[class*=" battle-"] .duel-fighter > strong { font-size: 14px; }
+/* En pantallas de menos de 900 px de alto el duelo cabe sin desplazarse: título más bajo, menos relleno y sin el
+   historial de rondas, que ya cuenta el marcador. */
+@media (min-height: 541px) and (max-height: 900px) {
+  .boss-battle[class*=" battle-"] { padding: 16px 22px; }
+  .boss-battle[class*=" battle-"] .boss-header h2 { font-size: 2rem; }
+  .boss-battle[class*=" battle-"] .round-history { display: none; }
+  .boss-battle[class*=" battle-"] .duel-arena { min-height: 0; margin-top: 6px; }
+  .boss-battle[class*=" battle-"] .round-message { min-height: 0; margin: 6px 0; }
+  .boss-battle[class*=" battle-"] .duel-rules { margin-top: 8px; }
+  /* Los luchadores se escalan (no se recortan) con el alto de la pantalla. */
+  .boss-battle[class*=" battle-"] .boss-sprite-window { height: min(clamp(230px, 31vw, 340px), 30dvh); }
+  .boss-battle[class*=" battle-"] .boss-sprite-window.is-atlas-sprite { width: min(clamp(210px, 25vw, 300px), 30dvh); height: min(clamp(210px, 25vw, 300px), 30dvh); }
+  .boss-battle[class*=" battle-"] .boss-sprite-window.is-wide-sprite { height: min(clamp(165px, 25vw, 270px), 26dvh); }
+  .boss-battle[class*=" battle-"] .duel-noa-sprite { width: min(clamp(86px, 16vw, 175px), 21dvh); }
+}
+/* En el móvil la columna de cada luchador mide unos 125 px: el guardián se ajusta a ella en vez de salirse. */
+@media (max-width: 620px) {
+  .boss-battle[class*=" battle-"] .boss-sprite-window { width: 100%; }
+  .boss-battle[class*=" battle-"] .boss-sprite-window.is-atlas-sprite { width: 100%; height: auto; aspect-ratio: 1; }
+}

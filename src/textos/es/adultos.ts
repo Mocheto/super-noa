@@ -17,6 +17,10 @@ export const adultos = {
       controles: "Teclado: Espacio. Mando: botón A. También puedes tocar el botón de golpear.",
       sinSonido: "Sin sonido, sigue los farolillos y el aro dorado: el tronco está listo cuando el aro se ilumina.",
     },
+    /** Los duelos de memoria (el vuelo de Aurora y el nido de la Reina). */
+    memoria: {
+      controles: "Teclado: flechas izquierda, arriba y derecha (o 1, 2 y 3) para tocar los sitios en orden. Mando: cruceta. El botón del ojo vuelve a enseñar el camino sin contar como fallo.",
+    },
     merienda: {
       controles: "Teclado: Espacio. Mando: botón A. También puedes tocar la escena o el botón de dar de comer.",
       sinSonido: "Sin sonido, sigue los puntos y la boca del jabato: la bellota grande se enciende cuando hay que darle de comer.",

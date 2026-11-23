@@ -1,0 +1,83 @@
+/* «El vuelo de Aurora» (issue 360): escena de 960 × 540 en apaisado y de 720 × 1080 en vertical, escalada a lo que cabe.
+   Arte provisional: Aurora y las nubecitas del atlas del reino del cielo; nubes, luna, aurora y estrellas por CSS. */
+.vuelo-juego { display: flex; flex-direction: column; width: min(1100px, 100%); height: min(760px, calc(100dvh - 24px)); padding: 10px; background: #1b1840; }
+.vuelo-marco { position: relative; flex: 1; min-height: 0; overflow: hidden; border: 4px solid var(--ciruela, #2f1d33); border-radius: 14px; background: #1b1840; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.vuelo-escena { position: absolute; top: 50%; left: 50%; transform-origin: 50% 50%; }
+.vuelo-escena > * { position: absolute; }
+
+/* El cielo de noche: degradado, una aurora que ondula despacio y estrellas que titilan. */
+.vuelo-cielo { inset: 0; overflow: hidden; background: linear-gradient(180deg, #120f33 0%, #2a2160 55%, #4b3a86 100%); }
+.vuelo-aurora { position: absolute; inset: 8% -20% auto; height: 34%; opacity: .55; background: linear-gradient(100deg, transparent 10%, #4fe3b5 30%, #7cc4ff 48%, #c78bff 66%, transparent 85%); filter: blur(22px); border-radius: 50%; animation: vuelo-aurora 9s ease-in-out infinite alternate; }
+@keyframes vuelo-aurora { from { transform: translateX(-6%) skewY(-4deg); } to { transform: translateX(6%) skewY(4deg); } }
+.vuelo-estrella { position: absolute; width: 4px; height: 4px; background: #fff6d2; animation: vuelo-titila 2.4s ease-in-out infinite; }
+@keyframes vuelo-titila { 50% { opacity: .3; } }
+
+/* La constelación del gatito: estrellas que se encienden y se unen con una línea. */
+.vuelo-constelacion { overflow: visible; }
+.vuelo-constelacion-linea { fill: none; stroke: #ffe9a3; stroke-width: 2; stroke-dasharray: 4 4; opacity: .8; }
+.vuelo-constelacion-estrella { fill: #4b4380; stroke: #8c84c4; stroke-width: 1.5; transition: fill .4s; }
+.vuelo-constelacion-estrella.is-encendida { fill: #ffd45f; stroke: #fff6d2; }
+.vuelo-constelacion-estrella.is-final { animation: vuelo-brilla 1s ease-in-out infinite alternate; }
+@keyframes vuelo-brilla { to { fill: #fff6d2; } }
+
+/* La luna asiento de Aurora: un creciente dorado. */
+.vuelo-luna { width: 150px; height: 150px; border-radius: 50%; box-shadow: inset -26px 10px 0 0 #ffd45f, 0 0 40px #ffd45f33; }
+
+/* Las nubes: se tocan enteras; la nubecita duerme encima y despierta al cantar. */
+.vuelo-nube { width: 220px; height: 150px; padding: 0; border: 0; background: none; transform: translate(-50%, -50%); cursor: pointer; animation: vuelo-flota 4s ease-in-out infinite; }
+.vuelo-nube:nth-of-type(2) { animation-delay: -1.3s; }
+.vuelo-nube:nth-of-type(3) { animation-delay: -2.6s; }
+@keyframes vuelo-flota { 50% { transform: translate(-50%, calc(-50% - 8px)); } }
+.vuelo-nube:disabled { cursor: default; }
+.vuelo-nube:focus-visible { outline: 5px solid #ffd76a; outline-offset: 4px; border-radius: 40px; }
+.vuelo-nube-forma { position: absolute; left: 10px; right: 10px; bottom: 14px; height: 70px; border-radius: 40px; background: #fbf8ff; box-shadow: inset 0 -10px 0 #d9d1f2, 0 0 0 4px var(--ciruela, #2f1d33); }
+.vuelo-nube-forma::before, .vuelo-nube-forma::after { content: ""; position: absolute; bottom: 30px; border-radius: 50%; background: #fbf8ff; box-shadow: 0 -4px 0 0 var(--ciruela, #2f1d33); }
+.vuelo-nube-forma::before { left: 26px; width: 80px; height: 64px; }
+.vuelo-nube-forma::after { right: 30px; width: 64px; height: 52px; }
+.vuelo-nubecita { position: absolute; left: 50%; bottom: 52px; width: 96px; height: 96px; transform: translateX(-50%); background-repeat: no-repeat; background-size: 500% 200%; image-rendering: pixelated; filter: drop-shadow(0 0 0 transparent); transition: transform .2s; }
+.vuelo-nube::after { content: ""; position: absolute; left: 50%; bottom: 60px; width: 84px; height: 84px; border-radius: 50%; transform: translateX(-50%); opacity: .35; background: var(--color-nubecita); z-index: -1; transition: opacity .2s; }
+.vuelo-nube.is-rosa { --color-nubecita: #ff9ec4; }
+.vuelo-nube.is-amarilla { --color-nubecita: #ffd45f; }
+.vuelo-nube.is-azul { --color-nubecita: #7cc4ff; }
+.vuelo-nube.is-despierta::after { opacity: 1; box-shadow: 0 0 30px var(--color-nubecita); }
+.vuelo-nube.is-despierta .vuelo-nubecita { transform: translateX(-50%) translateY(-10px) scale(1.1); }
+.vuelo-nube.is-bosteza .vuelo-nubecita { transform: translateX(-50%) scale(1.1, .9); }
+.vuelo-nube.is-brilla::after { opacity: .8; animation: vuelo-ayuda .7s ease-in-out infinite alternate; }
+@keyframes vuelo-ayuda { to { opacity: .35; } }
+
+/* Aurora: del atlas (fila de abajo); vuela, canta en la nube o gira la cabeza hacia la nube tocada. */
+.vuelo-aurora-lechuza { z-index: 3; width: 130px; height: 130px; background-repeat: no-repeat; background-size: 500% 200%; image-rendering: pixelated; filter: drop-shadow(0 6px 4px #0007); }
+.vuelo-aurora-lechuza.is-ulula { animation: vuelo-ulula .35s ease-in-out 2; }
+@keyframes vuelo-ulula { 50% { margin-top: -6px; } }
+
+/* Rótulo al compás: una palabra (MIRA, ¡TU!, ¡CASI!, ¡BIEN!). */
+.vuelo-rotulo { left: 50%; bottom: 10px; z-index: 4; transform: translateX(-50%); padding: 6px 16px; border: 3px solid var(--ciruela, #2f1d33); border-radius: 14px; background: #fff6e3; color: var(--ciruela, #2f1d33); font-family: var(--letra-noa); font-size: 24px; white-space: nowrap; }
+.vuelo-rotulo.is-casi { background: #ffd6a0; }
+
+.vuelo-controles { display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding-top: 10px; }
+.vuelo-controles .vuelo-pausa { margin-right: auto; }
+.vuelo-retrato { display: block; width: 120px; height: 120px; background-repeat: no-repeat; background-size: 500% 200%; image-rendering: pixelated; }
+.vuelo-resultado-dibujo { position: relative; display: inline-block; }
+.vuelo-corona { position: absolute; left: 50%; top: -14px; width: 46px; height: 30px; transform: translateX(-50%); background: #ffd45f; clip-path: polygon(0 100%, 0 30%, 25% 60%, 50% 0, 75% 60%, 100% 30%, 100% 100%); }
+
+/* El atlas tiene casillas de ancho no entero: se recorta un poco el borde para que no asome la vecina. */
+.vuelo-retrato, .vuelo-nubecita, .vuelo-aurora-lechuza { clip-path: inset(1% 3%); }
+
+/* Con «movimiento tranquilo», nada se mueve solo. */
+.vuelo-marco.is-quieto .vuelo-aurora, .vuelo-marco.is-quieto .vuelo-estrella, .vuelo-marco.is-quieto .vuelo-nube, .vuelo-marco.is-quieto .vuelo-nube.is-brilla::after,
+.vuelo-marco.is-quieto .vuelo-constelacion-estrella.is-final, .vuelo-marco.is-quieto .vuelo-aurora-lechuza.is-ulula { animation: none; }
+
+/* En vertical, a toda la pantalla, con los controles grandes abajo. */
+@media (orientation: portrait) {
+  .boss-battle.vuelo-juego { position: fixed; inset: 0; width: auto; height: auto; max-width: none; max-height: none; border: 0; border-radius: 0; box-shadow: none; padding: 8px 8px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .vuelo-controles .boton-control { --control: 64px; }
+}
+/* En apaisado bajo (móvil), a toda la pantalla con los controles en una columna a la derecha, sin quitarle alto a la escena. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .boss-battle.vuelo-juego { position: fixed; inset: 0; width: auto; height: auto; max-height: none; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; border: 0; border-radius: 0; box-shadow: none; padding: 6px max(8px, env(safe-area-inset-right, 0px)) 6px max(8px, env(safe-area-inset-left, 0px)); }
+  .boss-battle.vuelo-juego { grid-template-rows: minmax(0, 1fr); }
+  .boss-battle.vuelo-juego > .sr-only { position: absolute; }
+  .boss-battle.vuelo-juego .vuelo-marco { grid-column: 1; grid-row: 1; align-self: stretch; height: auto; }
+  .vuelo-controles { grid-column: 2; grid-row: 1; flex-direction: column; justify-content: center; padding-top: 0; }
+  .vuelo-controles .vuelo-pausa { margin-right: 0; }
+}

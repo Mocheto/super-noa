@@ -15,8 +15,11 @@ import { testScreens } from "./game/testScreens";
  * pantalla de la campaña, para revisarlas sin recorrer el mapa. */
 const devTestName = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("prueba") ?? "" : "";
 /** En desarrollo, `?prueba=<pantalla>&duelo` abre directamente el duelo del guardián de esa pantalla, `?prueba=fiesta` la fiesta de los gatitos y `?prueba=casa` la casa de los gatitos (con `&paletas`, las paletas de sus gatitos, y con `&gatitos=6`, con los gatitos de los mundos 1 a 6). */
-const devDuel = import.meta.env.DEV && new URLSearchParams(window.location.search).has("duelo");
-const devTestLevel = devTestName ? testScreens[devTestName] ?? [...levels, ...detourLevels, ...restStopLevels].find((level) => level.id === devTestName) : undefined;
+/** En desarrollo, `?prueba=vuelo` y `?prueba=nido` abren los duelos de memoria nuevos (mapa «Mejorar los duelos de memoria») hasta que sustituyan a los de ahora. */
+const devMemoria = devTestName === "vuelo" ? "aurora-celeste" : devTestName === "nido" ? "triceratops-queen" : null;
+const devDuel = import.meta.env.DEV && (new URLSearchParams(window.location.search).has("duelo") || devMemoria !== null);
+const devTestLevel = devMemoria ? levels.find((level) => level.boss === devMemoria)
+  : devTestName ? testScreens[devTestName] ?? [...levels, ...detourLevels, ...restStopLevels].find((level) => level.id === devTestName) : undefined;
 import { getStickerSprite, stickerCatalog } from "./game/stickers";
 import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";
@@ -58,6 +61,7 @@ const GameCanvas = lazy(() => Promise.all([import("./game/GameCanvas"), import("
 })));
 const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
 const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((module) => ({ default: module.GuardianMiniGame })));
+const VueloAuroraGame = lazy(() => import("./game/VueloAuroraGame").then((module) => ({ default: module.VueloAuroraGame })));
 const ArmoniaDrumGame = lazy(() => import("./game/ArmoniaDrumGame").then((module) => ({ default: module.ArmoniaDrumGame })));
 const MeriendaJabatosGame = lazy(() => import("./game/MeriendaJabatosGame").then((module) => ({ default: module.MeriendaJabatosGame })));
 const BeeNinjaGame = lazy(() => import("./game/BeeNinjaGame").then((module) => ({ default: module.BeeNinjaGame })));
@@ -975,6 +979,18 @@ export default function App() {
               friendlyReplay={bossReplay}
             /> : activeLevel.boss === "great-boar" ? <MeriendaJabatosGame
               key={`merienda-jabatos-${activeLevel.id}-${levelRun}`}
+              paused={paused}
+              muted={muted}
+              musicVolume={musicVolume}
+              effectsVolume={effectsVolume}
+              reduceMotion={reduceMotion}
+              levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
+              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
+              onWin={bossReplay ? finishBossReplay : handleComplete}
+              playSound={playSound}
+              friendlyReplay={bossReplay}
+            /> : activeLevel.boss === "aurora-celeste" && devMemoria === "aurora-celeste" ? <VueloAuroraGame
+              key={`vuelo-aurora-${activeLevel.id}-${levelRun}`}
               paused={paused}
               muted={muted}
               musicVolume={musicVolume}

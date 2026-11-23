@@ -464,6 +464,18 @@ _Avoid_: Pufflito, puffling (nombre interno)
 Marcador del vuelo de Aurora: cada ronda ganada sube una estrella al cielo y las cinco dibujan un gatito.
 _Avoid_: Estrellas del marcador, raya
 
+**Nido de la Reina**:
+Duelo de memoria de la Reina Tricera en el que ella trota de arbusto en arbusto dándoles un topetazo y Noa repite el recorrido tocando los arbustos.
+_Avoid_: Salva el huevo (el duelo anterior), Simon
+
+**Topetazo**:
+Golpecito con el cuerno con que la Reina Tricera hace sonar un arbusto y soltar sus pétalos.
+_Avoid_: Golpe (reservado al ritmo), embestida
+
+**Crías del nido**:
+Marcador del nido de la Reina: cada ronda ganada abre un huevo y la cría sale a trotar en fila detrás de la Reina.
+_Avoid_: Huevos del marcador, estrellas
+
 ## Piedra, papel o tijera
 
 **Bocadillo del guardián**:

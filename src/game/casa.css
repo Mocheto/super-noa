@@ -405,5 +405,5 @@
 }
 
 /* La caña de pluma (issue 342): icono de la bandeja y capa sobre la escena mientras se arrastra. */
-svg.casa-objeto.is-pluma { overflow: visible; }
+.casa-objeto.is-pluma { background: var(--pluma) no-repeat 0 0 / 300% 100%; image-rendering: pixelated; }
 .casa-pluma-capa { position: absolute; left: 0; top: 0; z-index: 2000; overflow: visible; pointer-events: none; filter: drop-shadow(0 6px 4px #2f1d3366); }

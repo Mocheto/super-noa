@@ -9,10 +9,10 @@ import type { Andante, Punto } from "./casaDeambular.ts";
 import type { SueloDeEstancia } from "./casaHabitacion.ts";
 
 /**
- * La punta de la caña respecto al dedo: Noa la coge por el mango y la punta queda arriba a la izquierda, para que el
- * dedo no tape la pluma.
+ * La punta de la caña respecto al dedo: Noa la coge por el mango y la punta queda arriba a la derecha, como en su
+ * dibujo, para que la mano no tape la pluma.
  */
-export const PUNTA_DESDE_DEDO: Punto = { x: -110, y: -150 };
+export const PUNTA_DESDE_DEDO: Punto = { x: 114, y: -112 };
 export const puntaDeCana = (dedo: Punto): Punto => ({ x: dedo.x + PUNTA_DESDE_DEDO.x, y: dedo.y + PUNTA_DESDE_DEDO.y });
 
 /** Largo del hilo: la pluma cuelga esto por debajo de la punta de la caña (px de escena). */

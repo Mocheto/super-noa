@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import test from "node:test";
 import { asegurarGatitos, casaVacia, type CasaProgress } from "./casa.ts";
 import { nuevoAndante } from "./casaDeambular.ts";
@@ -93,4 +94,8 @@ test("junto a una pared, los que la persiguen se reparten hacia dentro sin monta
   const puntos = [-60, 0, 60].map((hueco) => bajoLaPluma({ x: 0, y: 450 }, suelo, hueco).x);
   assert.equal(new Set(puntos).size, 3);
   assert.ok(puntos.every((x) => x >= suelo.izquierda));
+});
+
+test("el arte de la caña está publicado como WebP", () => {
+  assert.ok(existsSync(new URL("../../public/assets/sprites/casa-pluma-v1.webp", import.meta.url)));
 });

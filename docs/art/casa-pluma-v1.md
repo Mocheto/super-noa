@@ -4,8 +4,9 @@ Dossier del arte del juego de la pluma. Ticket: [Prompt del arte de la caña de 
 
 ## Estado
 
-- **Pendiente de generar** en [Generar el arte de la caña de pluma](https://github.com/Mocheto/super-noa/issues/340). Mientras tanto la caña y la pluma se dibujan por código.
-- Se recortará con `prototypes/tools/casa-pluma-recorte.py` en `sprites/casa-pluma-v1.webp`: tres celdas de 128 × 128, en este orden: la caña entera (icono de la bandeja), el palo solo y la pluma sola. Las tres a la misma escala.
+- **Montada** en [Montar el arte de la caña de pluma](https://github.com/Mocheto/super-noa/issues/343). La original está en `../super-noa-arte-original/casa-pluma-v1/casa-pluma.png`.
+- `prototypes/tools/casa-pluma-recorte.py` la recorta en `sprites/casa-pluma-v1.webp`: tres celdas de 128 × 128 (la caña entera, el palo solo y la pluma sola), las tres a la misma escala. Cada pieza es todo lo que hay en su tercio de la lámina, y el hilo de la caña entera, que el recorte del verde se come, se vuelve a trazar. El script imprime las anclas que usa `src/game/casaPlumaArte.tsx`: mango (19, 106) y punta (107, 19) del palo, y bolita de la pluma.
+- En la escena, el palo va del dedo (mango) a la punta, arriba a la derecha como en el dibujo; la pluma, a 0,8, cuelga del hilo que traza el juego.
 
 ## Qué hace falta
 

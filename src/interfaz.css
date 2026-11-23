@@ -676,3 +676,43 @@
 .bee-ninja-background { filter: saturate(.75) brightness(.78) blur(1px); }
 .merienda-background { filter: saturate(.8) brightness(.72) blur(1.5px); }
 .merienda-dot.is-bite:not(.is-on):not(.is-ok):not(.is-gone) { filter: drop-shadow(0 0 1.5px #fff8e9) drop-shadow(0 0 1.5px #fff8e9) drop-shadow(0 2px 0 #3d1430); }
+
+/* Rítmicos y duelos con la maqueta vertical (issue 331; guía de estilo visual). En vertical ocupan toda la pantalla y el
+   bloque va pegado abajo: la escena justo encima de botones grandes (unos 2 cm en la tableta), al alcance de los pulgares.
+   En apaisado bajo, los controles van en una columna a la derecha de la escena, en vez de taparla. */
+@media (orientation: portrait) {
+  .boss-battle.bee-ninja-game, .boss-battle.armonia-drum-game, .boss-battle.merienda-game,
+  .boss-battle[class*=" battle-"], .boss-battle.guardian-game {
+    position: fixed; inset: 0; width: auto; max-height: none; display: flex; flex-direction: column; justify-content: flex-end;
+    border: 0; box-shadow: none; padding: 12px 12px calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  .bee-ninja-game .bee-ninja-cut, .armonia-drum-game .armonia-drum-hit, .merienda-game .merienda-feed, .cat-party-screen .cat-party-strike {
+    width: 100%; min-height: clamp(76px, 9dvh, 112px); font-size: clamp(1.4rem, 4.5vw, 2.1rem);
+  }
+  .bee-ninja-game .bee-ninja-controls, .armonia-drum-game .armonia-drum-controls, .merienda-game .merienda-controls { width: 100%; }
+  .cat-party-screen { min-height: 100dvh; display: flex; flex-direction: column; justify-content: flex-end; box-sizing: border-box; padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .cat-party-screen .cat-party-controls { width: 100%; }
+  /* Duelos: los luchadores ocupan el sitio que sobra y las elecciones quedan abajo, grandes. */
+  .boss-battle[class*=" battle-"] .duel-arena { flex: 1; align-content: center; }
+  .boss-battle[class*=" battle-"] .duel-choices button { min-height: clamp(76px, 9dvh, 120px); }
+  .boss-battle.guardian-game .guardian-game-stage { flex: 1; align-content: center; }
+  .boss-battle.guardian-game .guardian-options button { min-height: clamp(76px, 9dvh, 120px); }
+}
+@media (orientation: landscape) and (max-height: 540px) {
+  .boss-battle.bee-ninja-game, .boss-battle.armonia-drum-game, .boss-battle.merienda-game {
+    display: grid; grid-template-columns: minmax(0, 1fr) 150px; column-gap: 6px; align-items: center;
+    width: min(calc(100vw - 8px), calc((100dvh - 22px) * 16 / 9 + 170px));
+  }
+  .boss-battle.bee-ninja-game > :not(.bee-ninja-controls):not(.sr-only), .boss-battle.armonia-drum-game > :not(.armonia-drum-controls):not(.sr-only),
+  .boss-battle.merienda-game > :not(.merienda-controls):not(.sr-only) { grid-column: 1; }
+  .boss-battle.bee-ninja-game .bee-ninja-controls, .boss-battle.armonia-drum-game .armonia-drum-controls, .boss-battle.merienda-game .merienda-controls {
+    position: static; grid-column: 2; grid-row: 1 / span 9; translate: none; opacity: 1; display: flex; flex-direction: column; align-items: stretch; gap: 8px;
+  }
+  .bee-ninja-game .bee-ninja-cut, .armonia-drum-game .armonia-drum-hit, .merienda-game .merienda-feed { width: 100%; min-height: 120px; padding: 6px; font-size: .95rem; white-space: normal; }
+  /* La fiesta de los gatitos: el mismo reparto, con GOLPEA en su columna. */
+  .cat-party-screen { display: grid; grid-template-columns: minmax(0, 1fr) 150px; column-gap: 6px; align-items: center; width: min(calc(100vw - 8px), calc((100dvh - 12px) * 16 / 9 + 156px)); }
+  .cat-party-screen > :not(.cat-party-controls) { grid-column: 1; }
+  .cat-party-screen .cat-party-controls { position: static; grid-column: 2; grid-row: 1 / span 9; opacity: 1; display: flex; flex-direction: column; align-items: stretch; }
+  .cat-party-screen .cat-party-controls .boton { --boton-alto: 120px; min-height: 120px; width: 100%; padding: 6px; font-size: .95rem; white-space: normal; }
+  .bee-ninja-game .ritmo-mute, .armonia-drum-game .ritmo-mute, .merienda-game .ritmo-mute { align-self: center; }
+}

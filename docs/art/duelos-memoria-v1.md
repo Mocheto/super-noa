@@ -4,8 +4,13 @@ Dossier del arte de los dos duelos de memoria con movimiento. Ticket: [Prompts d
 
 ## Estado
 
-- **Pendiente de generar** en [Generar el arte de los duelos de memoria](https://github.com/Mocheto/super-noa/issues/359). Mientras tanto, los dos juegos se juegan con formas provisionales.
-- Se recortará con `prototypes/tools/duelos-memoria-recorte.py` en hojas de casillas cuadradas, todas las poses de un personaje a la misma escala y con los pies (o el apoyo) en la misma fila, como las hojas nuevas de Siroco y Don Silbato.
+- **Montadas seis de las ocho** en [Montar el arte de los duelos de memoria](https://github.com/Mocheto/super-noa/issues/362): `aurora-poses`, `nubecita-poses`, `aurora-piezas`, `reina-poses`, `cria-poses` y `selva-piezas`. Las originales están en `../super-noa-arte-original/duelos-memoria-v1/`.
+- **Faltan los dos fondos** (`aurora-fondo` y `selva-fondo`): mientras tanto, el cielo de noche y la selva se dibujan por código y funcionan bien, así que son opcionales.
+- `prototypes/tools/duelos-memoria-recorte.py` las deja en `public/assets/sprites/`:
+  - hojas de casillas de 256 px en una fila, a la misma escala y con el apoyo a 248 px: `vuelo-aurora-v1` (de las doce poses, vuela 1-3, posada, canta y mira a cada lado), `vuelo-nubecita-v1`, `nido-reina-v1` y `nido-cria-v1`;
+  - las máscaras para teñir por código: `vuelo-nubecita-cuerpo-v1` (el cuerpo blanco de la nubecita) y `nido-arbusto-flores-v1` (las flores del arbusto);
+  - las piezas sueltas `vuelo-nube-v1`, `vuelo-luna-v1`, `nido-arbusto-v1` y `nido-nido-v1`.
+- La Reina y la selva se recortan con una clave más fina (cercanía al verde del borde), porque las hojas y la piel turquesa de la Reina se parecen al fondo y el recorte común les abría agujeros.
 
 ## Qué hace falta
 

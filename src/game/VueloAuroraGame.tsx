@@ -22,14 +22,14 @@ type Props = {
 };
 
 type Punto = { x: number; y: number };
-type Disposicion = { ancho: number; alto: number; nubes: [Punto, Punto, Punto]; luna: Punto; lunaEscala: number; constelacion: Punto & { escala: number } };
+type Disposicion = { ancho: number; alto: number; nubes: [Punto, Punto, Punto]; luna: Punto; lunaEscala: number; escalaAurora: number; constelacion: Punto & { escala: number } };
 /**
  * Dónde va cada cosa. En la tableta vertical: la constelación arriba, Aurora en su luna en medio y las nubes grandes abajo.
  * En apaisado: el mismo triángulo, la luna arriba y más pequeña (unos 28 % del alto) y la constelación a un lado.
  */
 const DISPOSICION: Record<"vertical" | "apaisado", Disposicion> = {
-  vertical: { ancho: 720, alto: 1080, nubes: [{ x: 170, y: 860 }, { x: 360, y: 640 }, { x: 550, y: 860 }], luna: { x: 360, y: 400 }, lunaEscala: 1, constelacion: { x: 360, y: 150, escala: 1.25 } },
-  apaisado: { ancho: 960, alto: 540, nubes: [{ x: 250, y: 440 }, { x: 480, y: 300 }, { x: 710, y: 440 }], luna: { x: 480, y: 92 }, lunaEscala: 0.62, constelacion: { x: 830, y: 120, escala: 0.8 } },
+  vertical: { ancho: 720, alto: 1080, nubes: [{ x: 170, y: 860 }, { x: 360, y: 640 }, { x: 550, y: 860 }], luna: { x: 360, y: 400 }, lunaEscala: 1, escalaAurora: 1, constelacion: { x: 360, y: 150, escala: 1.25 } },
+  apaisado: { ancho: 960, alto: 540, nubes: [{ x: 250, y: 440 }, { x: 480, y: 300 }, { x: 710, y: 440 }], luna: { x: 480, y: 108 }, lunaEscala: 0.62, escalaAurora: 0.75, constelacion: { x: 830, y: 120, escala: 0.8 } },
 };
 /** Las tres nubecitas: rosa, amarilla y azul, con sus notas de celesta (sol, do y mi). */
 const NUBECITAS = ["rosa", "amarilla", "azul"] as const;
@@ -43,10 +43,23 @@ const CLAVES_NUBECITA = [
 /** La constelación del gatito: cinco estrellas (orejas, cabeza y barbilla) que se unen al encenderse. */
 const CONSTELACION: Punto[] = [{ x: -60, y: -40 }, { x: -30, y: -90 }, { x: 0, y: -45 }, { x: 30, y: -90 }, { x: 60, y: -40 }];
 const ESTRELLAS_FONDO = Array.from({ length: 34 }, (_, i) => ({ x: (i * 197 + 41) % 1000 / 10, y: (i * 89 + 13) % 600 / 10, retraso: (i % 7) * 0.4 }));
-const ATLAS = "./assets/atlases/sky-kingdom-characters-v1.webp";
+/**
+ * Arte de `prototypes/tools/duelos-memoria-recorte.py`: hojas de casillas de 256 px en una fila. Aurora: vuela 1-3 (de
+ * perfil, mirando a la derecha), posada, canta, mira a la izquierda y mira a la derecha. Nubecita: dormida, un ojo,
+ * canta y bosteza, con su cuerpo blanco aparte (máscara) para teñirlo de su color.
+ */
+const HOJA_AURORA = "./assets/sprites/vuelo-aurora-v1.webp";
+const HOJA_NUBECITA = "./assets/sprites/vuelo-nubecita-v1.webp";
+const CUERPO_NUBECITA = "./assets/sprites/vuelo-nubecita-cuerpo-v1.webp";
+const AURORA = { vuela: 0, posada: 3, canta: 4, izquierda: 5, derecha: 6 } as const;
+const NUBECITA = { dormida: 0, ojo: 1, canta: 2, bosteza: 3 } as const;
 
 /** Celda del atlas del reino del cielo (5 × 2): arriba las nubecitas, abajo Aurora. */
-const celda = (columna: number, fila: number): CSSProperties => ({ backgroundImage: `url("${ATLAS}")`, backgroundPosition: `${columna * 25}% ${fila * 100}%` });
+const celda = (hoja: string, casillas: number, casilla: number): CSSProperties =>
+  ({ backgroundImage: `url("${hoja}")`, backgroundSize: `${casillas * 100}% 100%`, backgroundPosition: `${casilla * 100 / (casillas - 1)}% 0` });
+const mascara = (hoja: string, casillas: number, casilla: number): CSSProperties =>
+  ({ maskImage: `url("${hoja}")`, WebkitMaskImage: `url("${hoja}")`, maskSize: `${casillas * 100}% 100%`, WebkitMaskSize: `${casillas * 100}% 100%`,
+    maskPosition: `${casilla * 100 / (casillas - 1)}% 0`, WebkitMaskPosition: `${casilla * 100 / (casillas - 1)}% 0` });
 
 /** Aurora vuela en arco de un punto a otro (`t` de 0 a 1). */
 function enArco(desde: Punto, hasta: Punto, t: number): Punto {
@@ -80,7 +93,8 @@ export function VueloAuroraGame({ paused, muted, musicVolume, effectsVolume, red
   }, []);
 
   // Dónde está Aurora y qué hace: en su luna, de camino a una nube o cantando en ella.
-  const luna = { x: disposicion.luna.x, y: disposicion.luna.y - 30 * disposicion.lunaEscala };
+  // Aurora se sienta dentro del creciente (su hueco queda arriba a la izquierda del centro del dibujo).
+  const luna = { x: disposicion.luna.x - 14 * disposicion.lunaEscala, y: disposicion.luna.y + 28 * disposicion.lunaEscala };
   const nubeDe = (sitio: Sitio) => ({ x: disposicion.nubes[sitio].x, y: disposicion.nubes[sitio].y - 70 });
   let aurora: Punto = luna;
   let volando = false;
@@ -109,7 +123,11 @@ export function VueloAuroraGame({ paused, muted, musicVolume, effectsVolume, red
 
   useEffect(() => { if (resultado) playSound("checkpoint"); }, [resultado, playSound]);
 
-  const retrato = <span className="vuelo-retrato" style={celda(0, 1)} />;
+  const retrato = <span className="vuelo-retrato" style={celda(HOJA_AURORA, 7, AURORA.posada)} />;
+  // Volando mira hacia donde va (el dibujo mira a la derecha); aletea con los tres cuadros.
+  const haciaIzquierda = camino ? nubeDe(camino.sitio).x < camino.desde.x : false;
+  const casillaAurora = volando ? (reduceMotion ? 1 : Math.floor(ahora / 110) % 3) : cantando !== null ? AURORA.canta
+    : mira === -1 ? AURORA.izquierda : mira === 1 ? AURORA.derecha : AURORA.posada;
   return <>
     <Dialog labelledBy="vuelo-titulo" backdropClassName="boss-backdrop" className="boss-battle vuelo-juego" gamepad={juego.detenido || !modo}>
       <h2 id="vuelo-titulo" className="sr-only"><Texto clave="minijuegos.vuelo.previa.nombre.rotulo" /></h2>
@@ -129,25 +147,25 @@ export function VueloAuroraGame({ paused, muted, musicVolume, effectsVolume, red
               d={`M${p.x} ${p.y - 9} L${p.x + 3} ${p.y - 3} L${p.x + 9} ${p.y - 2} L${p.x + 4} ${p.y + 3} L${p.x + 6} ${p.y + 9} L${p.x} ${p.y + 5} L${p.x - 6} ${p.y + 9} L${p.x - 4} ${p.y + 3} L${p.x - 9} ${p.y - 2} L${p.x - 3} ${p.y - 3} Z`} />)}
           </svg>
 
-          <div className="vuelo-luna" aria-hidden="true" style={{ left: disposicion.luna.x, top: disposicion.luna.y, transform: `translate(-50%, -50%) scale(${disposicion.lunaEscala})` }} />
+          <img className="vuelo-luna" src="./assets/sprites/vuelo-luna-v1.webp" alt="" style={{ left: disposicion.luna.x, top: disposicion.luna.y, transform: `translate(-50%, -50%) scale(${disposicion.lunaEscala})` }} draggable={false} />
 
           {disposicion.nubes.map((nube, i) => {
             const sitio = i as Sitio;
             const despierta = cantando === sitio || tocando?.sitio === sitio && tocando.acierto;
             const bosteza = casi && tocando?.sitio === sitio;
             const ojo = brilla === sitio;
-            const pose = bosteza ? 4 : despierta ? 1 : ojo ? 0 : 4;
+            const pose = bosteza ? NUBECITA.bosteza : despierta ? NUBECITA.canta : ojo ? NUBECITA.ojo : NUBECITA.dormida;
             return <button key={sitio} type="button" className={`vuelo-nube is-${NUBECITAS[sitio]}${despierta ? " is-despierta" : ""}${bosteza ? " is-bosteza" : ""}${ojo ? " is-brilla" : ""}`}
               style={{ left: nube.x, top: nube.y }} aria-label={t(CLAVES_NUBECITA[sitio].nube)}
               disabled={!modo || estado?.fase !== "repite" || juego.detenido || Boolean(respuesta) || Boolean(visita)}
               onPointerDown={(event) => { if (event.button === 0) juego.tocar(sitio); }} onClick={(event) => { if (event.detail === 0) juego.tocar(sitio); }}>
-              <span className="vuelo-nube-forma" />
-              <span className="vuelo-nubecita" style={celda(pose, 0)} />
+              <img className="vuelo-nube-forma" src="./assets/sprites/vuelo-nube-v1.webp" alt="" draggable={false} />
+              <span className="vuelo-nubecita" style={celda(HOJA_NUBECITA, 4, pose)}><i className="vuelo-nubecita-color" style={mascara(CUERPO_NUBECITA, 4, pose)} /></span>
             </button>;
           })}
 
           <span className={`vuelo-aurora-lechuza${volando ? " is-volando" : ""}${casi ? " is-ulula" : ""}`} aria-hidden="true"
-            style={{ left: aurora.x, top: aurora.y, transform: `translate(-50%, -78%) scaleX(${mira === -1 ? -1 : 1})`, ...celda(volando ? 4 : cantando !== null ? 1 : mira ? 3 : 0, 1) }} />
+            style={{ left: aurora.x, top: aurora.y, transform: `translate(-50%, -88%) scale(${disposicion.escalaAurora}) scaleX(${volando && haciaIzquierda ? -1 : 1})`, ...celda(HOJA_AURORA, 7, casillaAurora) }} />
 
           {rotulo && <span className={`vuelo-rotulo${casi ? " is-casi" : ""}`}><Texto clave={rotulo} /></span>}
         </div>

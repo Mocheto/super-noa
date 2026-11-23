@@ -20,8 +20,8 @@
 .vuelo-constelacion-estrella.is-final { animation: vuelo-brilla 1s ease-in-out infinite alternate; }
 @keyframes vuelo-brilla { to { fill: #fff6d2; } }
 
-/* La luna asiento de Aurora: un creciente dorado. */
-.vuelo-luna { width: 150px; height: 150px; border-radius: 50%; box-shadow: inset -26px 10px 0 0 #ffd45f, 0 0 40px #ffd45f33; }
+/* La luna asiento de Aurora: un creciente dorado que duerme. */
+.vuelo-luna { width: 190px; image-rendering: pixelated; filter: drop-shadow(0 0 18px #ffd45f55); pointer-events: none; }
 
 /* Las nubes: se tocan enteras; la nubecita duerme encima y despierta al cantar. */
 .vuelo-nube { width: 220px; height: 150px; padding: 0; border: 0; background: none; transform: translate(-50%, -50%); cursor: pointer; animation: vuelo-flota 4s ease-in-out infinite; }
@@ -30,12 +30,11 @@
 @keyframes vuelo-flota { 50% { transform: translate(-50%, calc(-50% - 8px)); } }
 .vuelo-nube:disabled { cursor: default; }
 .vuelo-nube:focus-visible { outline: 5px solid #ffd76a; outline-offset: 4px; border-radius: 40px; }
-.vuelo-nube-forma { position: absolute; left: 10px; right: 10px; bottom: 14px; height: 70px; border-radius: 40px; background: #fbf8ff; box-shadow: inset 0 -10px 0 #d9d1f2, 0 0 0 4px var(--ciruela, #2f1d33); }
-.vuelo-nube-forma::before, .vuelo-nube-forma::after { content: ""; position: absolute; bottom: 30px; border-radius: 50%; background: #fbf8ff; box-shadow: 0 -4px 0 0 var(--ciruela, #2f1d33); }
-.vuelo-nube-forma::before { left: 26px; width: 80px; height: 64px; }
-.vuelo-nube-forma::after { right: 30px; width: 64px; height: 52px; }
-.vuelo-nubecita { position: absolute; left: 50%; bottom: 52px; width: 96px; height: 96px; transform: translateX(-50%); background-repeat: no-repeat; background-size: 500% 200%; image-rendering: pixelated; filter: drop-shadow(0 0 0 transparent); transition: transform .2s; }
-.vuelo-nube::after { content: ""; position: absolute; left: 50%; bottom: 60px; width: 84px; height: 84px; border-radius: 50%; transform: translateX(-50%); opacity: .35; background: var(--color-nubecita); z-index: -1; transition: opacity .2s; }
+.vuelo-nube-forma { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; image-rendering: pixelated; pointer-events: none; }
+.vuelo-nubecita { position: absolute; left: 50%; bottom: 62px; z-index: 1; width: 104px; height: 104px; transform: translateX(-50%); background-repeat: no-repeat; image-rendering: pixelated; transition: transform .2s; }
+/* El cuerpo blanco de la nubecita, teñido de su color (la máscara es solo el cuerpo, sin alas, pico ni ojos). */
+.vuelo-nubecita-color { position: absolute; inset: 0; background: var(--color-nubecita); mix-blend-mode: multiply; mask-repeat: no-repeat; -webkit-mask-repeat: no-repeat; }
+.vuelo-nube::after { content: ""; position: absolute; left: 50%; bottom: 60px; width: 84px; height: 84px; border-radius: 50%; transform: translateX(-50%); opacity: 0; background: var(--color-nubecita); z-index: 0; filter: blur(10px); transition: opacity .2s; }
 .vuelo-nube.is-rosa { --color-nubecita: #ff9ec4; }
 .vuelo-nube.is-amarilla { --color-nubecita: #ffd45f; }
 .vuelo-nube.is-azul { --color-nubecita: #7cc4ff; }
@@ -46,7 +45,7 @@
 @keyframes vuelo-ayuda { to { opacity: .35; } }
 
 /* Aurora: del atlas (fila de abajo); vuela, canta en la nube o gira la cabeza hacia la nube tocada. */
-.vuelo-aurora-lechuza { z-index: 3; width: 130px; height: 130px; background-repeat: no-repeat; background-size: 500% 200%; image-rendering: pixelated; filter: drop-shadow(0 6px 4px #0007); }
+.vuelo-aurora-lechuza { z-index: 3; width: 150px; height: 150px; transform-origin: 50% 88%; background-repeat: no-repeat; image-rendering: pixelated; filter: drop-shadow(0 6px 4px #0007); }
 .vuelo-aurora-lechuza.is-ulula { animation: vuelo-ulula .35s ease-in-out 2; }
 @keyframes vuelo-ulula { 50% { margin-top: -6px; } }
 
@@ -56,12 +55,9 @@
 
 .vuelo-controles { display: flex; justify-content: flex-end; align-items: center; gap: 12px; padding-top: 10px; }
 .vuelo-controles .vuelo-pausa { margin-right: auto; }
-.vuelo-retrato { display: block; width: 120px; height: 120px; background-repeat: no-repeat; background-size: 500% 200%; image-rendering: pixelated; }
+.vuelo-retrato { display: block; width: 120px; height: 120px; background-repeat: no-repeat; image-rendering: pixelated; }
 .vuelo-resultado-dibujo { position: relative; display: inline-block; }
 .vuelo-corona { position: absolute; left: 50%; top: -14px; width: 46px; height: 30px; transform: translateX(-50%); background: #ffd45f; clip-path: polygon(0 100%, 0 30%, 25% 60%, 50% 0, 75% 60%, 100% 30%, 100% 100%); }
-
-/* El atlas tiene casillas de ancho no entero: se recorta un poco el borde para que no asome la vecina. */
-.vuelo-retrato, .vuelo-nubecita, .vuelo-aurora-lechuza { clip-path: inset(1% 3%); }
 
 /* Con «movimiento tranquilo», nada se mueve solo. */
 .vuelo-marco.is-quieto .vuelo-aurora, .vuelo-marco.is-quieto .vuelo-estrella, .vuelo-marco.is-quieto .vuelo-nube, .vuelo-marco.is-quieto .vuelo-nube.is-brilla::after,

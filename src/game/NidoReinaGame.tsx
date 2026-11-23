@@ -6,6 +6,7 @@
  * ella en pequeño); selva, volcán, nido, huevos, arbustos y pétalos con CSS.
  */
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { cssAssetUrl } from "./assets";
 import { bossCatalog } from "./bosses";
 import { Dialog } from "./Dialog";
 import type { SoundKind } from "./GameCanvas";
@@ -44,8 +45,18 @@ const PETALOS = Array.from({ length: 10 }, (_, i) => ({ angulo: -150 + i * 13, d
 /** Distancia entre las crías de la fila, en px de la escena. */
 const HUECO_CRIA = 54;
 
-/** Poses provisionales de la Reina (`boss-reina-tricera-<n>.webp`): quieta, trote, topetazo, estornudo y pisotón. */
-const POSE = { quieta: 0, trote: 2, topetazo: 1, estornudo: 3, pisoton: 4 } as const;
+/**
+ * Arte de `prototypes/tools/duelos-memoria-recorte.py`: hojas de casillas de 256 px en una fila, de perfil mirando a la
+ * derecha. La Reina: trota 1-4, topetazo, pisotón y estornudo. La cría: huevo, huevo que se abre, trota 1-2 y baila 1-2.
+ */
+const HOJA_REINA = "./assets/sprites/nido-reina-v1.webp";
+const HOJA_CRIA = "./assets/sprites/nido-cria-v1.webp";
+/** Arte que usa la hoja de estilos, con rutas relativas al sitio publicado. */
+const ARTE_CSS = { "--arbusto": cssAssetUrl("./assets/sprites/nido-arbusto-v1.webp"), "--flores": cssAssetUrl("./assets/sprites/nido-arbusto-flores-v1.webp") } as CSSProperties;
+const POSE = { quieta: 0, topetazo: 4, pisoton: 5, estornudo: 6 } as const;
+const CRIA = { huevo: 0, seAbre: 1, trota: 2, quieta: 3, baila: 4 } as const;
+const celda = (hoja: string, casillas: number, casilla: number): CSSProperties =>
+  ({ backgroundImage: `url("${hoja}")`, backgroundSize: `${casillas * 100}% 100%`, backgroundPosition: `${casilla * 100 / (casillas - 1)}% 0` });
 
 function trote(desde: Punto, hasta: Punto, t: number): Punto {
   const suave = Math.min(1, Math.max(0, t));
@@ -99,8 +110,11 @@ export function NidoReinaGame({ paused, muted, musicVolume, effectsVolume, reduc
   const casi = respuesta?.fase === "casi";
   const crias = Math.min(RONDAS, estado?.estrellas ?? 0);
   const final = respuesta?.fase === "final" || Boolean(resultado);
-  const pose = casi ? POSE.estornudo : golpeando !== null ? POSE.topetazo : trotando ? (Math.floor(ahora / 160) % 2 ? POSE.trote : POSE.quieta)
-    : tocando?.acierto || final ? POSE.pisoton : POSE.quieta;
+  const paso = reduceMotion ? 0 : Math.floor(ahora / 140);
+  const pose = casi ? POSE.estornudo : golpeando !== null ? POSE.topetazo : trotando ? paso % 4
+    : tocando?.acierto || (final && paso % 2) ? POSE.pisoton : POSE.quieta;
+  // La cría recién salida se ve asomando del huevo mientras dura el «¡CRAC!».
+  const saliendo = respuesta?.fase === "rondaGanada" || respuesta?.fase === "final" ? crias - 1 : -1;
   const enPrevia = !modo && !resultado;
   const leave = () => friendlyReplay && !modo ? onAbandon() : juego.setMostrarSalir(true);
 
@@ -110,14 +124,14 @@ export function NidoReinaGame({ paused, muted, musicVolume, effectsVolume, reduc
 
   useEffect(() => { if (resultado) playSound("checkpoint"); }, [resultado, playSound]);
 
-  const retrato = <img className="nido-retrato" src={`${boss.assetPrefix}-0.webp`} alt="" />;
+  const retrato = <span className="nido-retrato" style={celda(HOJA_REINA, 7, POSE.quieta)} />;
   // Las crías trotan en fila detrás de la Reina (y esperan detrás de ella cuando está quieta).
   const fila = Array.from({ length: crias }, (_, i) => ({ x: reina.x - mira * HUECO_CRIA * (i + 1.4), y: reina.y + (trotando && !reduceMotion ? (Math.floor(ahora / 160 + i) % 2) * -5 : 0) }));
   return <>
     <Dialog labelledBy="nido-titulo" backdropClassName="boss-backdrop" className="boss-battle nido-juego" gamepad={juego.detenido || !modo}>
       <h2 id="nido-titulo" className="sr-only"><Texto clave="minijuegos.nido.previa.nombre.rotulo" /></h2>
       <div className={`nido-marco${reduceMotion ? " is-quieto" : ""}${vertical ? " is-vertical" : ""}`} ref={marcoRef}>
-        <div className="nido-escena" style={{ width: disposicion.ancho, height: disposicion.alto, transform: `translate(-50%, -50%) scale(${escala})` }}>
+        <div className="nido-escena" style={{ width: disposicion.ancho, height: disposicion.alto, transform: `translate(-50%, -50%) scale(${escala})`, ...ARTE_CSS }}>
           <div className="nido-selva" aria-hidden="true">
             <div className="nido-volcan"><i className="nido-humo" /><i className="nido-humo" /><i className="nido-humo" /></div>
             <i className="nido-helecho is-izquierda" /><i className="nido-helecho is-derecha" />
@@ -129,7 +143,9 @@ export function NidoReinaGame({ paused, muted, musicVolume, effectsVolume, reduc
           {disposicion.loma && <div className="nido-loma" aria-hidden="true" style={{ left: disposicion.nido.x + 110, top: disposicion.nido.y }} />}
           {/* El nido con sus cinco huevos: uno se abre en cada ronda ganada. */}
           <div className="nido-nido" role="img" aria-label={t("minijuegos.nido.nido.oculto", { n: crias, total: RONDAS })} style={{ left: disposicion.nido.x, top: disposicion.nido.y }}>
-            {Array.from({ length: RONDAS }, (_, i) => <i key={i} className={`nido-huevo${i < crias ? " is-abierto" : ""}`} style={{ left: 18 + i * 26, top: i % 2 ? 2 : 10 }} />)}
+            {Array.from({ length: RONDAS }, (_, i) => (i >= crias || i === saliendo) && <i key={i} className="nido-huevo"
+              style={{ left: 22 + i * 34, top: i % 2 ? 4 : 16, ...celda(HOJA_CRIA, 6, i === saliendo ? CRIA.seAbre : CRIA.huevo) }} />)}
+            <img className="nido-nido-dibujo" src="./assets/sprites/nido-nido-v1.webp" alt="" draggable={false} />
           </div>
 
           {disposicion.arbustos.map((arbusto, i) => {
@@ -139,16 +155,16 @@ export function NidoReinaGame({ paused, muted, musicVolume, effectsVolume, reduc
               style={{ left: arbusto.x, top: arbusto.y, "--escala": disposicion.escalaArbusto } as CSSProperties} aria-label={t(CLAVES_ARBUSTO[sitio].arbusto)}
               disabled={!modo || estado?.fase !== "repite" || juego.detenido || Boolean(respuesta) || Boolean(visita)}
               onPointerDown={(event) => { if (event.button === 0) juego.tocar(sitio); }} onClick={(event) => { if (event.detail === 0) juego.tocar(sitio); }}>
-              <span className="nido-arbusto-hojas" />
-              {[0, 1, 2, 3, 4].map((flor) => <i key={flor} className="nido-flor" />)}
+              <span className="nido-arbusto-hojas"><i className="nido-flores" /></span>
               {golpe && PETALOS.map((petalo, p) => <i key={p} className="nido-petalo" style={{ "--angulo": `${petalo.angulo}deg`, "--distancia": `${petalo.distancia}px` } as CSSProperties} />)}
             </button>;
           })}
 
-          {fila.map((cria, i) => <img key={i} className={`nido-cria${final ? " is-baila" : ""}`} src={`${boss.assetPrefix}-${final ? 4 : 0}.webp`} alt=""
-            style={{ left: cria.x, top: cria.y, transform: `translate(-50%, -100%) scaleX(${mira})`, animationDelay: `${i * 0.12}s` }} />)}
-          <img className={`nido-reina${final ? " is-baila" : ""}`} src={`${boss.assetPrefix}-${pose}.webp`} alt=""
-            style={{ left: reina.x, top: reina.y, transform: `translate(-50%, -100%) scale(${disposicion.escalaReina}) scaleX(${mira})` }} />
+          {fila.map((cria, i) => <span key={i} className="nido-cria" aria-hidden="true"
+            style={{ left: cria.x, top: cria.y, transform: `translate(-50%, -97%) scaleX(${final ? 1 : mira})`,
+              ...celda(HOJA_CRIA, 6, final ? CRIA.baila + ((paso + i) % 2) : trotando ? CRIA.trota + ((paso + i) % 2) : CRIA.quieta) }} />)}
+          <span className="nido-reina" aria-hidden="true"
+            style={{ left: reina.x, top: reina.y, transform: `translate(-50%, -97%) scale(${disposicion.escalaReina}) scaleX(${mira})`, ...celda(HOJA_REINA, 7, pose) }} />
 
           {rotulo && <span className={`nido-rotulo${casi ? " is-casi" : ""}`}><Texto clave={rotulo} /></span>}
         </div>

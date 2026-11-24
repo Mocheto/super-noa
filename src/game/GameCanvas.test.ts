@@ -150,3 +150,29 @@ test("el primer frame difiere poses y gráficos no utilizados y reduce la descar
     engine.unmount();
   }
 });
+
+test("en vertical, caer antes del primer punto seguro cuesta una sola vida: la cámara baja a donde reaparece Noa", async () => {
+  const { levels } = await import("./levels.ts");
+  const engine = mountEngine(levels.find((candidate) => candidate.id === "13-2")!);
+  try {
+    let now = 1000;
+    engine.tick(now);
+    // El guion «avanza» de la huella: en 13-2 sube hasta y≈2040 y cae antes del punto seguro de y=1880.
+    for (let tic = 0; tic < 200 && !engine.events.includes("life"); tic++) {
+      engine.input.right = true;
+      const paso = tic % 14;
+      if (paso === 0 || paso === 4) engine.input.jumpQueued = true;
+      engine.input.jump = paso < 6;
+      engine.tick(now += 50);
+    }
+    assert.equal(engine.events.filter((event) => event === "life").length, 1);
+    engine.input.right = false;
+    engine.input.jump = false;
+    for (let tic = 0; tic < 40; tic++) engine.tick(now += 50);
+    assert.equal(engine.events.filter((event) => event === "life").length, 1, "reaparecer bajo la vista no debe volver a contar como caída");
+    // En vertical el lienzo ya está trasladado por la cámara: el rectángulo dibujado está en coordenadas del mundo.
+    assert.equal(engine.playerRect!.y, 2482, "Noa sigue de pie en el suelo de la salida");
+  } finally {
+    engine.unmount();
+  }
+});

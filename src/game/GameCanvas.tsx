@@ -338,6 +338,11 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         : mechanicRespawn(level, respawnX, player.width, player.height);
       player.x = spawn.x;
       player.y = spawn.y;
+      // En vertical la cámara solo sube: si Noa reaparece por debajo de la vista, la cámara baja a buscarla. Si no,
+      // seguiría «cayendo» en cada paso y perdería todas las vidas de golpe.
+      if (level.orientation === "vertical" && player.y + player.height > cameraY + VIEW_HEIGHT) {
+        cameraY = Math.max(0, Math.min((level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT, player.y - 250));
+      }
       player.vx = 0;
       player.vy = 0;
       if (hasWorldMechanics(level)) {

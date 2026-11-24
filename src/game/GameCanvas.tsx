@@ -39,6 +39,7 @@ import { bossCatalog } from "./bosses";
 import { createExploreState, hintTarget, reachedGate, shortcutWalls, stepExplore } from "./explore";
 import { drawExploreOverlay, drawExploreWorld, prepararExploracion } from "./exploreRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
+import { aterrizar, golpearCajas } from "./colisionPartida";
 import { camaraAlReaparecer, camaraInicial, metaAlcanzada, seguirCamara, superficieMeta } from "./camaraPartida";
 import { ANCHO_VERTICAL, ponerVista, recorteObjetivo, vista } from "./vista";
 import { drawContornos, drawHalo, drawVelo, opacidadInvencible } from "./halo";
@@ -49,7 +50,7 @@ import {
 } from "./gameState";
 import { t, textoLienzo } from "../textos";
 import { BotonControl, Texto } from "../textos/Texto";
-import { conveyorSpeed, boarChargeVelocity, empujeViento, GRAVITY, keepInsidePatrol, landsOnSpring, pisaHielo, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolverSalto, resolveHorizontalWallCollision, SKY_BOUNCE_SPEED, SPRING_SPEED, velocidadHorizontal, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
+import { conveyorSpeed, boarChargeVelocity, empujeViento, GRAVITY, keepInsidePatrol, pisaHielo, projectileHitsWaterWall, rectanglesOverlap, resolverSalto, resolveHorizontalWallCollision, velocidadHorizontal, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
 
 
 type SoundKind = "apple" | "block" | "cat" | "jump" | "hurt" | "stomp" | "yarn" | "checkpoint" | "goal" | "sticker" | "howl" | "snort" | "cannon" | "countdown";
@@ -504,53 +505,19 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         player.y = swimming.y + 1 - player.height * 0.6;
         player.vy = 0;
       }
-      player.grounded = false;
-      standingOnMechanism = null;
-      standingOnSkyLift = null;
-      for (const platform of platforms) {
-        const horizontal = player.x + player.width > platform.x && player.x < platform.x + platform.width;
-        const surfaceY = platformSurfaceY(platform);
-        const isSpring = platform.kind === "spring" || platform.kind === "dew" || platform.kind === "gift-spring" || platform.kind === "sky-bounce";
-        // El muelle solo responde al aterrizaje de un salto: al caminar se puede pasar de largo.
-        const landed = isSpring
-          ? landsOnSpring(wasGrounded, previousBottom, player.y + player.height, surfaceY, player.vy)
-          : player.vy >= 0 && previousBottom <= surfaceY + 10 && player.y + player.height >= surfaceY;
-        if (horizontal && landed) {
-          player.y = surfaceY - player.height;
-          if (isSpring) {
-            const skyBounce = platform.kind === "sky-bounce";
-            player.vy = -(skyBounce ? platform.bounceSpeed ?? SKY_BOUNCE_SPEED : SPRING_SPEED);
-            if (skyBounce) {
-              const direction = (skyBounceUses + Math.round(platform.x)) % 2 === 0 ? -1 : 1;
-              player.vx = direction * (platform.bounceDrift ?? 330);
-              player.facing = direction;
-              skyBounceSteerLock = .42;
-              skyBounceUses += 1;
-              if (statusRef.current) statusRef.current.textContent = t("partida.avisos.nubeEsponjosa.oculto");
-            }
-            player.grounded = false;
-            player.jumpsUsed = 2;
-            player.springLaunch = true;
-            player.doubleJumpFx = 0.32;
-            lastSpringX = platform.x;
-            lastSpringFrame = frame;
-            callbacksRef.current.playSound("jump");
-          } else {
-            player.vy = 0;
-            player.grounded = true;
-            player.jumpsUsed = 0;
-            player.springLaunch = false;
-            standingOnMechanism = supports.find((entry) => entry === platform)?.id ?? null;
-            const liftIndex = liftPlatforms.indexOf(platform);
-            standingOnSkyLift = liftIndex >= 0 ? level.skyLifts?.[liftIndex]?.id ?? null : null;
-          }
-        } else if ((platform.kind === "cave-wall" || platform.kind === "castle-wall" || platform.kind === "sea-wall" || platform.kind === "dino-wall" || platform.kind === "volcano-wall" || platform.kind === "ice-wall" || platform.kind === "puzzle-block") && horizontal && player.vy < 0) {
-          const platformBottom = platform.y + platform.height;
-          if (previousY >= platformBottom - 10 && player.y <= platformBottom) {
-            player.y = platformBottom;
-            player.vy = 0;
-          }
-        }
+      const aterrizaje = aterrizar(player, platforms, { y: previousY, bottom: previousBottom, grounded: wasGrounded }, {
+        rebotesNube: skyBounceUses, bloqueoGiro: skyBounceSteerLock, apoyos: supports, ascensores: liftPlatforms,
+        idsAscensor: (level.skyLifts ?? []).map((lift) => lift.id),
+      });
+      standingOnMechanism = aterrizaje.apoyo;
+      standingOnSkyLift = aterrizaje.ascensor;
+      skyBounceUses = aterrizaje.rebotesNube;
+      skyBounceSteerLock = aterrizaje.bloqueoGiro;
+      for (const muelle of aterrizaje.muelles) {
+        if (muelle.nube && statusRef.current) statusRef.current.textContent = t("partida.avisos.nubeEsponjosa.oculto");
+        lastSpringX = muelle.x;
+        lastSpringFrame = frame;
+        callbacksRef.current.playSound("jump");
       }
 
       // Polvo al aterrizar tras un salto o una caída de verdad (no al pisar un escalón).
@@ -578,27 +545,10 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         }
       }
 
-      for (const block of level.rewardBlocks) {
-        const horizontal = player.x + player.width > block.x && player.x < block.x + 48;
-        if (!horizontal) continue;
-        if (player.vy >= 0 && previousBottom <= block.y + 10 && player.y + player.height >= block.y) {
-          player.y = block.y - player.height;
-          player.vy = 0;
-          player.grounded = true;
-          player.jumpsUsed = 0;
-        } else if (player.vy < 0 && previousY >= block.y + 40 && player.y <= block.y + 48) {
-          player.y = block.y + 48;
-          player.vy = 95;
-          if (!hitBlocks.has(block.id)) {
-            hitBlocks.add(block.id);
-            callbacksRef.current.playSound("block");
-            if (block.reward === "secret-vine") {
-              vineStartedFrame = frame;
-            } else {
-              items.push({ id: `${block.id}-reward`, kind: block.reward, x: block.x + 4, y: block.y - 42, age: 0, rise: 0, fromBlock: true });
-            }
-          }
-        }
+      for (const block of golpearCajas(player, level.rewardBlocks, hitBlocks, { y: previousY, bottom: previousBottom })) {
+        callbacksRef.current.playSound("block");
+        if (block.reward === "secret-vine") vineStartedFrame = frame;
+        else items.push({ id: `${block.id}-reward`, kind: block.reward, x: block.x + 4, y: block.y - 42, age: 0, rise: 0, fromBlock: true });
       }
 
       if (level.spikePits?.some((pit) => intersects(player, { x: pit.x + 8, y: pit.y + 16, width: pit.width - 16, height: pit.height }))) {

@@ -1,3 +1,4 @@
+import "../textos/zonas/casa";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { aspectoDelGatito, banoNuevo, frotarBano, terminado, UTENSILIOS, utensilioQueToca, type Bano, type RespuestaBano, type Utensilio } from "./casaBano";
 import { ANIMACIONES_GATO, cuadroDe, type AnimacionGato } from "./casaGatoArte";

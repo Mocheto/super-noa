@@ -7,7 +7,7 @@ const importaciones = (archivo: string) =>
   [...readFileSync(new URL(archivo, import.meta.url), "utf8").matchAll(/^import (?!type )[^;]*? from "([^"]+)";/gms)].map((m) => m[1].replace(/\.tsx?$/, ""));
 
 test("el progreso de la casa solo depende de datos, para no arrastrar la casa al bloque principal", () => {
-  assert.deepEqual(importaciones("./casaProgreso.ts"), ["./friends"]);
+  assert.deepEqual(importaciones("./casaProgreso.ts"), ["./friendData"]);
 });
 
 test("lo que entra en el bloque principal lee la casa desde casaProgreso, no desde su motor", () => {

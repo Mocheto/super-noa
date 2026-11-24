@@ -1,3 +1,9 @@
+import "../textos/zonas/minijuegos.comun";
+import "../textos/zonas/minijuegos.abeja";
+import "../textos/zonas/minijuegos.tambor";
+import "../textos/zonas/minijuegos.merienda";
+import "../textos/zonas/minijuegos.gatitos";
+import "../textos/zonas/minijuegos.avioneta";
 import { t } from "../textos";
 import { Boton, BotonControl, Texto } from "../textos/Texto";
 import { Medalla, Ventana } from "./Ventana";

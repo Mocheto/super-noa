@@ -6,13 +6,36 @@ Todo texto visible de Super Noa vive en `src/textos/es/` y se pide por **clave**
 
 | Pieza | Para qué sirve |
 |---|---|
-| `src/textos/es/<zona>.ts` | Los textos en español, una zona por archivo. `es/index.ts` las une. |
+| `src/textos/es/<zona>.ts` | Los textos en español, una zona por archivo (los minijuegos, uno por juego en `es/minijuegos/`). `es/index.ts` las une para los tipos; `es/base.ts` reúne las que van en el bloque principal. |
+| `src/textos/zonas/<ruta>.ts` | Una zona diferida: registra sus textos con `registrarZona(ruta, textos)` al importarse. |
+| `src/textos/todo.ts` | Registra el catálogo entero; lo importan `textos:json` y `completitud.test.ts`. |
 | `src/textos/index.ts` | `t()`, `tClave()`, `partes()`, `textoLienzo()`, `sinPictogramas()`, `puntos()`, `conTextos()`, `existeClave()` y `hojas()`. |
 | `src/textos/Texto.tsx` | `<Texto clave="…" />` y `<Pictogramas texto="…" />` para pintar un texto con sus pictogramas en React; `<Pictograma nombre="…" />` suelto, `<Boton clave="…" tipo="seguir" />` y `<BotonControl pictograma="…" etiqueta="….oculto" />`. Sus estilos están en `src/interfaz.css`. |
 | `src/textos/pictogramas.ts` | Los 51 nombres de pictograma y su emoji provisional. |
 | `src/textos/exportar.ts` | Exportación a JSON con plurales ICU; la usa `npm run textos:json`. |
 
-Zonas actuales: `partida`, `ventanas`, `inicio`, `mapa`, `coleccion`, `duelos`, `minijuegos`, `adultos` (textos de la interfaz) y `pantallas`, `temas`, `mundos`, `caminos`, `paseos`, `pegatinas`, `amigos`, `guardianes`, `juegos` (textos de los datos).
+Zonas actuales: `partida`, `ventanas`, `inicio`, `mapa`, `coleccion`, `duelos`, `minijuegos`, `adultos` (textos de la interfaz) y `pantallas`, `temas`, `mundos`, `caminos`, `paseos`, `pegatinas`, `amigos`, `guardianes`, `juegos` (textos de los datos), además de `casa`.
+
+## Zonas base y diferidas
+
+Para que el bloque principal no cargue los textos de pantallas que aún no se han abierto (issue [Cargar los textos por zona sin que Noa vea nunca una clave](https://github.com/Mocheto/super-noa/issues/301)), las zonas se reparten así:
+
+- **Base** (`es/base.ts`, siempre cargadas): `partida`, `ventanas`, `inicio`, `mapa`, `coleccion`, `adultos`, `pantallas`, `temas`, `mundos`, `caminos`, `pegatinas`, `guardianes` (los leen el álbum y el mapa) y `minijuegos.tienda`.
+- **Diferidas** (`src/textos/zonas/`): `duelos`, `juegos`, `amigos`, `paseos`, `casa` y cada minijuego: `minijuegos.comun`, `.abeja`, `.tambor`, `.merienda`, `.vuelo`, `.nido`, `.gatitos` y `.avioneta`.
+
+Una zona diferida se registra cuando se evalúa el módulo que la usa, porque ese módulo la importa con un `import` estático de efecto, por ejemplo `import "../textos/zonas/duelos";`. En ESM las dependencias se evalúan antes, así que la zona está registrada antes de cualquier `t()` y viaja en el mismo bloque que su pantalla, y `t()` sigue siendo síncrono. Si aun así se pide una clave de una zona sin cargar, en desarrollo y en las pruebas `t()` falla en el acto; en producción devuelve una cadena vacía y lo avisa en la consola. Noa ve un hueco, nunca la clave.
+
+Los datos que usa la navegación sin abrir la pantalla van aparte de sus textos: `friendData.ts` (amigos sin textos) frente a `friends.ts`, `guardianGameIds.ts` frente a `guardianGames.ts` y `restStops.ts` frente a `restStopNiveles.ts`.
+
+### Añadir textos a una zona diferida o crear una
+
+- **Textos nuevos en una zona que ya existe:** basta con escribirlos en su archivo de `es/`. Si un módulo nuevo usa sus claves, añádele `import "../textos/zonas/<ruta>";` (la prueba `zonas.test.ts` dice cuál falta).
+- **Una zona diferida nueva** (por ejemplo, un minijuego nuevo):
+  1. sus textos, en `es/<zona>.ts` (o `es/minijuegos/<juego>.ts`, sumado en `es/minijuegos.ts`);
+  2. `src/textos/zonas/<ruta>.ts`, que llama a `registrarZona("<ruta>", textos)`;
+  3. el `import` de efecto en cada módulo que use sus claves, y que esos módulos lleguen al resto solo con `import()` (en `App.tsx`, `lazy()`);
+  4. `npm run test:logic`: `zonas.test.ts` comprueba los cuatro puntos de su tabla de pruebas.
+- **Una zona que debe ir siempre:** se suma en `es/base.ts`. Úsalo solo si la necesitan el inicio, el mapa, el álbum o la partida.
 
 ## Claves
 
@@ -59,7 +82,7 @@ Los datos declarativos **no llevan texto**: tienen un identificador y leen su te
 | Decorado (`themeNames`) | `orchard-day` | `temas.<tema>.rotulo` / `.juntos` |
 | Mundo (`worldMapData.ts`) | `1`…`17` | `mundos.<n>.nombre`, `.gato.rotulo` |
 | Camino secreto (`detours.ts`) | `fireflies` | `caminos.<id>.titulo`, `.pista.juntos` |
-| Paseo (`restStops.ts`) | número de mundo | `paseos.<mundo>.amigos.<tipo>`, `.despedida`; `paseos.titulo` y `.pista` son comunes |
+| Paseo (`restStops.ts`) | número de mundo | `paseos.<mundo>.amigos.<tipo>`, `.despedida`; el título y la pista comunes, en `mapa.pantallaPaseo` (la base, porque el mapa los muestra) |
 | Pegatina (`stickers.ts`) | `sticker-1-1` | `pegatinas.<id>.nombre`, `.pista.juntos` |
 | Amigo (`friends.ts`) | `slime` | `amigos.<tipo>.nombre`, `.muerde.juntos`, `.consejo.juntos`; `amigos.comida.*` |
 | Guardián (`bosses.ts`) | `shark-captain` | `guardianes.<id>.nombre`, `.presentacion.juntos`, `.reto.juntos` |
@@ -81,6 +104,7 @@ El `rotulo` de un nombre es la palabra corta («ERIZOS»); su `juntos` conserva 
 | `completitud.test.ts` | a una pantalla, mundo, camino, paseo, pegatina, amigo, guardián o juego le falta un texto, sobra uno sin dato, o una clave de `minijuegos` no la usa ningún archivo. |
 | `textoSuelto.test.ts` | aparece texto visible escrito en el código fuera del catálogo. Detecta textos en JSX, atributos, cadenas y plantillas, con sus excepciones fijas en `extraerTextos.ts`. |
 | `exportar.test.ts` | la exportación a JSON no incluye todas las hojas. |
+| `zonas.test.ts` | un módulo usa una clave de una zona diferida sin importarla, una zona diferida se alcanza desde `main.tsx` sin `import()`, una zona no la registra su archivo o está también en la base, o la base y las zonas no forman el catálogo entero. |
 
 Si `textoSuelto.test.ts` marca un texto que no es visible (una clave interna, un selector), arréglalo con el detector (`src/textos/extraerTextos.ts`) y no con una excepción por archivo.
 

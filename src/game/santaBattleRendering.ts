@@ -1,3 +1,4 @@
+import "../textos/zonas/duelos.ts";
 import { getImage } from "./assets";
 import { actionBossBackgrounds, BOSS_POSE_DRAWN, BOSS_POSE_FEET, bossPoseSheets, bossTerrains, santaBattleAssets, santaGiftSource, santaSpriteFrames, santaTerrainInset, santaTerrainSources } from "./santaBattleAssets";
 import { SANTA_ARENA, SANTA_PLATFORMS, type SantaBattle } from "./santaBattle";

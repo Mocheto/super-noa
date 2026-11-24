@@ -4,6 +4,7 @@
  * nubes. Sobre el motor común (`memoriaDuelo.ts`) y la base `useMemoriaDuelo`. Arte provisional: Aurora y las nubecitas
  * salen del atlas del reino del cielo; nubes, luna, aurora, estrellas y constelación se dibujan con CSS y SVG.
  */
+import "../textos/zonas/minijuegos.vuelo";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { bossCatalog } from "./bosses";
 import { Dialog } from "./Dialog";

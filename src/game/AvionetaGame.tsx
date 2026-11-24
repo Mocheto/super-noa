@@ -1,3 +1,4 @@
+import "../textos/zonas/minijuegos.avioneta";
 import { useEffect, useRef, useState } from "react";
 import { getImage } from "./assets";
 import { busDeZona, contextoAudio, soltarBus } from "./audio";

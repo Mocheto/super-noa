@@ -1,3 +1,4 @@
+import "../textos/zonas/paseos.ts";
 import { conTextos } from "../textos/index.ts";
 import { levels } from "./levels.ts";
 import { REST_STOP_WIDTH, restStopCatalog, type RestStop } from "./restStops.ts";
@@ -30,7 +31,17 @@ export function restStopLevel(stop: RestStop): Level {
     theme: first.theme, width: REST_STOP_WIDTH, start: { x: 80, y: 398 }, goalX: REST_STOP_WIDTH - 200,
     platforms: [floor], enemies, items: [], rewardBlocks: [], checkpoints: [],
     restStop: stop.world,
-  } as unknown as Level, { title: "paseos.titulo.rotulo", subtitle: "paseos.pista.rotulo" });
+  } as unknown as Level, { title: "mapa.pantallaPaseo.titulo.rotulo", subtitle: "mapa.pantallaPaseo.pista.rotulo" });
 }
 
 export const restStopLevels: Level[] = restStopCatalog.map(restStopLevel);
+
+export type RestStopFriendConTexto = RestStop["friends"][number] & { line: string };
+export type RestStopConTextos = { world: number; friends: RestStopFriendConTexto[]; farewell: string };
+
+/** Paseos con lo que dicen los amigos y el guardián (`paseos.<mundo>.amigos.<tipo>.rotulo`, `paseos.<mundo>.despedida.rotulo`). */
+export const restStopTextos: RestStopConTextos[] = restStopCatalog.map((paseo) => conTextos({
+  world: paseo.world,
+  friends: paseo.friends.map((amigo) => conTextos({ ...amigo }, { line: `paseos.${paseo.world}.amigos.${amigo.kind}.rotulo` }) as RestStopFriendConTexto),
+} as RestStopConTextos, { farewell: `paseos.${paseo.world}.despedida.rotulo` }));
+export const restStopConTextos = (world: number) => restStopTextos.find((stop) => stop.world === world);

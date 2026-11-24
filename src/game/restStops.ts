@@ -6,16 +6,16 @@ import { conTextos } from "../textos/index.ts";
 /** Paseo de los amigos: pantalla de descanso corta y opcional tras el guardián de un mundo. Sin peligros ni
  * contador: los animales y enemigos del mundo aparecen como amigos que se dejan saludar. */
 type RestStopFriendDatos = { kind: Enemy["kind"] };
-type RestStopDatos = { world: number; friends: RestStopFriendDatos[] };
-export type RestStopFriend = RestStopFriendDatos & { line: string };
-export type RestStop = { world: number; friends: RestStopFriend[]; farewell: string };
+/** Paseo sin textos. Lo que dicen los amigos y el guardián lo añade `restStopNiveles.ts`, que se carga con la partida
+ * y registra la zona diferida `paseos`. */
+export type RestStop = { world: number; friends: RestStopFriendDatos[] };
 
 export const REST_STOP_WIDTH = 2400;
 export const GREET_DISTANCE = 140;
 
 /** Catálogo declarativo: un paseo por cada mundo de campaña (1–6 y 9–16), con un amigo de cada tipo de enemigo
  * (como mucho cinco). */
-const datosPaseos: RestStopDatos[] = [
+const datosPaseos: RestStop[] = [
   {
     world: 1,
     friends: [
@@ -129,11 +129,8 @@ const datosPaseos: RestStopDatos[] = [
   },
 ];
 
-/** Paseos de los amigos. Lo que dicen los amigos y el guardián sale del catálogo (`paseos.<mundo>.amigos.<tipo>.rotulo`, `paseos.<mundo>.despedida.rotulo`). */
-export const restStopCatalog: RestStop[] = datosPaseos.map((paseo) => {
-  const amigos = paseo.friends.map((amigo) => conTextos(amigo, { line: `paseos.${paseo.world}.amigos.${amigo.kind}.rotulo` }) as RestStopFriend);
-  return conTextos({ world: paseo.world, friends: amigos } as RestStop, { farewell: `paseos.${paseo.world}.despedida.rotulo` });
-});
+/** Paseos de los amigos, sin textos. */
+export const restStopCatalog: RestStop[] = datosPaseos;
 
 /** Resumen de cada paseo para la interfaz (mapa, progreso, índices de pantalla); la pantalla jugable con su
  * geometría la construye `restStopNiveles.ts`, que se carga con la partida. */
@@ -143,7 +140,7 @@ export function restStopResumen(stop: RestStop): NivelResumen {
     id: `P-${stop.world}`, world: first.world, screen: 1, theme: first.theme,
     items: [], enemies: [...new Set(stop.friends.map((friend) => friend.kind))].map((kind) => ({ kind })),
     restStop: stop.world,
-  } as unknown as NivelResumen, { title: "paseos.titulo.rotulo", subtitle: "paseos.pista.rotulo" });
+  } as unknown as NivelResumen, { title: "mapa.pantallaPaseo.titulo.rotulo", subtitle: "mapa.pantallaPaseo.pista.rotulo" });
 }
 
 export const restStopResumenes: NivelResumen[] = restStopCatalog.map(restStopResumen);

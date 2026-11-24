@@ -1,3 +1,4 @@
+import "../textos/zonas/casa";
 import { useEffect, useState, type CSSProperties } from "react";
 import { ACCESORIOS, alternar, TIPOS_ACCESORIO, type Accesorio, type Ropa, type TipoAccesorio } from "./casaRopa";
 import { hojaPintada, type VarianteGatito } from "./casaGatoArte";

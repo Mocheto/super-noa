@@ -34,7 +34,8 @@ import { advanceRoom, createPuzzleState, pushCrates, puzzlePlatforms, resetRoom,
 import { drawPuzzleRooms, type SparkTrail } from "./puzzleRoomsRendering";
 import { createChaseState, stepChase } from "./chase";
 import { ARTE_PERSECUCION, drawChase, speech } from "./chaseRendering";
-import { GREET_DISTANCE, guardianOf, restStopFor } from "./restStops";
+import { GREET_DISTANCE, guardianOf } from "./restStops";
+import { restStopConTextos } from "./restStopNiveles";
 import { bossCatalog } from "./bosses";
 import { createExploreState, hintTarget, reachedGate, shortcutWalls, stepExplore } from "./explore";
 import { drawExploreOverlay, drawExploreWorld, prepararExploracion } from "./exploreRendering";
@@ -212,7 +213,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     let chaseSay: { text: string; life: number } | null = level.chase ? { text: level.chase.stops[0].talk, life: 2.6 } : null;
     let chaseCaughtAge = 0;
     const explore = level.orientation === "explore" ? createExploreState() : null;
-    const restStop = level.restStop ? restStopFor(level.restStop) : undefined;
+    const restStop = level.restStop ? restStopConTextos(level.restStop) : undefined;
     const greetedFriends = new Set<string>();
     const friendHops = new Map<string, number>();
     let friendSay: { text: string; life: number; id: string } | null = null;

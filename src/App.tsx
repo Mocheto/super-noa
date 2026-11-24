@@ -3,7 +3,7 @@ import { CAT_PARTY_LEVEL_ID } from "./game/catPartyNivel";
 import { busDeZona, contextoAudio, pistaDeMusica, vigilarAudio } from "./game/audio";
 import { Dialog } from "./game/Dialog";
 import { bossCatalog } from "./game/bosses";
-import { isGuardianGameId } from "./game/guardianGames";
+import { isGuardianGameId } from "./game/guardianGameIds";
 import { GameAssetIcon } from "./game/GameAssetIcon";
 import { PixelIcon } from "./game/PixelIcon";
 import type { SoundKind } from "./game/GameCanvas";

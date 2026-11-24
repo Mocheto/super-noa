@@ -5,7 +5,7 @@
  * cuidados, jardín, fotos, dibujo…) va con `CasaGatitos`, en su propio bloque. Los módulos de la casa reexportan de
  * aquí lo que era suyo, así que se sigue importando desde ellos.
  */
-import { friendCatalog } from "./friends.ts";
+import { friendData as friendCatalog } from "./friendData.ts";
 
 // --- Gatitos y necesidades -------------------------------------------------------------------------------------------
 

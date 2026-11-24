@@ -1,3 +1,4 @@
+import "../textos/zonas/minijuegos.gatitos";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { crearEquipo, despertar, liberarEquipo, ponerVolumenes, tocarNota, type EquipoAudio } from "./ritmoAudio";
 import { firstConnectedGamepad } from "./gamepad";

@@ -7,10 +7,10 @@ import { friendCatalog, foodNames } from "../game/friends.ts";
 import { guardianGames } from "../game/guardianGames.ts";
 import { levels, themeNames } from "../game/levels.ts";
 import { restStopCatalog } from "../game/restStops.ts";
-import { restStopLevels } from "../game/restStopNiveles.ts";
+import { restStopLevels, restStopTextos } from "../game/restStopNiveles.ts";
 import { stickerCatalog } from "../game/stickers.ts";
 import { worldCatalog } from "../game/worldMapData.ts";
-import { es } from "./es/index.ts";
+import { es } from "./todo.ts";
 import { existeClave, hojas } from "./index.ts";
 
 /** Claves de una zona, agrupadas por su primer nivel: `{ "1-1": ["titulo.rotulo", "titulo.juntos", …] }`. */
@@ -58,7 +58,7 @@ test("cada decorado, mundo, camino y paseo tiene sus textos y no sobra ninguno",
     const sobran = Object.keys((es.paseos as unknown as Record<string, { amigos: Record<string, unknown> }>)[String(paseo.world)].amigos).filter((tipo) => !esperados.has(tipo as never));
     assert.deepEqual(sobran, [], `Amigos del paseo ${paseo.world} sin dato: quítalos de paseos.ts`);
   }
-  sinSobrantes("paseos", restStopCatalog.map((paseo) => String(paseo.world)), ["titulo", "pista"]);
+  sinSobrantes("paseos", restStopCatalog.map((paseo) => String(paseo.world)));
 });
 
 test("los datos leen sus textos del catálogo y no llevan texto propio", () => {
@@ -67,7 +67,7 @@ test("los datos leen sus textos del catálogo y no llevan texto propio", () => {
     assert.ok(nivel.subtitle.length > 0, `${nivel.id} sin pista`);
   }
   for (const mundo of worldCatalog) assert.ok(mundo.name && mundo.shortName && mundo.description && mundo.cat, `Mundo ${mundo.id} sin textos`);
-  for (const paseo of restStopCatalog) assert.ok(paseo.farewell && paseo.friends.every((amigo) => amigo.line), `Paseo ${paseo.world} sin textos`);
+  for (const paseo of restStopTextos) assert.ok(paseo.farewell && paseo.friends.every((amigo) => amigo.line), `Paseo ${paseo.world} sin textos`);
 });
 
 test("cada pegatina y cada amigo tiene sus textos y no sobra ninguno", () => {

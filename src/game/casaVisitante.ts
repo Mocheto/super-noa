@@ -4,7 +4,7 @@
  * el campo opcional `casa.visitante`; los corazones van al progreso de amigos de siempre. Solo lógica.
  */
 import { fechaLocal, normalizeVisitante, type CasaProgress, type VisitanteProgress } from "./casaProgreso.ts";
-import { friendCatalog, type FriendFood } from "./friends.ts";
+import { friendData as friendCatalog, type FriendFood } from "./friendData.ts";
 import { nivelesCampana as levels, nivelesAgua as waterLevels } from "./nivelesIndice.ts";
 
 /** Las tres comidas de los amigos, en el orden de su lámina (docs/art/casa-visitante-v1.md). */

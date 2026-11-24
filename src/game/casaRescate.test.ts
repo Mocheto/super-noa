@@ -4,6 +4,7 @@ import { enCasaDe, llegadasDePaseo, llegadasPendientes, prepararCasa, presentar 
 import { casaAbierta, gatitosRescatados, llegadasPorVer, MUNDOS_CASA, mundoCompleto } from "./casaRescate.ts";
 import { levels } from "./levels.ts";
 import { worldCatalog } from "./worldMapData.ts";
+import "../textos/zonas/casa.ts";
 import { t } from "../textos/index.ts";
 
 const completo = (...mundos: number[]) => Object.fromEntries(levels.filter((level) => mundos.includes(level.world)).map((level) => [level.id, { completed: true }]));

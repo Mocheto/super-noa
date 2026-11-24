@@ -1,3 +1,4 @@
+import "../textos/zonas/duelos";
 import { useState, type CSSProperties } from "react";
 import type { SoundKind } from "./GameCanvas";
 import { Dialog } from "./Dialog";

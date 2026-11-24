@@ -5,6 +5,7 @@
  * común (`memoriaDuelo.ts`) y la base `useMemoriaDuelo`. Arte provisional: las poses de la Reina que ya hay (las crías,
  * ella en pequeño); selva, volcán, nido, huevos, arbustos y pétalos con CSS.
  */
+import "../textos/zonas/minijuegos.nido";
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { cssAssetUrl } from "./assets";
 import { bossCatalog } from "./bosses";

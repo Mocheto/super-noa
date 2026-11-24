@@ -1,3 +1,4 @@
+import "../textos/zonas/duelos";
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import type { SoundKind } from "./GameCanvas";
 import { createGameLoop } from "./gameLoop";

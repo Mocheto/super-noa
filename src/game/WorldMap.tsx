@@ -203,7 +203,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
       {/* Para Noa, grandes y flotando sobre el mapa: volver a Noa y la casa. */}
       {view === "map" && <div className="map-noa-botones" inert={selectedWorld !== null}>
         <Boton className="map-volver-noa" clave="mapa.volverANoa.rotulo" onClick={() => camera.showNear(noaPosition)} />
-        {onOpenCasa && <Boton tipo="seguir" className="map-casa" clave="casa.boton.rotulo" onClick={onOpenCasa} />}
+        {onOpenCasa && <Boton tipo="seguir" className="map-casa" clave="mapa.casa.rotulo" onClick={onOpenCasa} />}
       </div>}
       <div className="map-scroll" inert={selectedWorld !== null} hidden={view !== "map"} role="region" aria-label={t("mapa.mapaIlustrado.oculto")}
         ref={viewportRef} {...camera.viewportEvents}>

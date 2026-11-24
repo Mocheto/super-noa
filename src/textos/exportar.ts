@@ -1,3 +1,4 @@
+import "./todo.ts";
 import { hojas, type Plural } from "./index.ts";
 
 const categorias = ["zero", "one", "two", "few", "many", "other"] as const;

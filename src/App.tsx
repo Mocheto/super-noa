@@ -19,8 +19,7 @@ const devDuel = import.meta.env.DEV && (new URLSearchParams(window.location.sear
 const devTestLevel = devMemoria ? levels.find((level) => level.boss === devMemoria)
   : devTestName ? testScreens[devTestName] ?? [...levels, ...detourLevels, ...restStopLevels].find((level) => level.id === devTestName) : undefined;
 import { stickerCatalog } from "./game/stickers";
-import { firstConnectedGamepad } from "./game/gamepad";
-import { menuDirection, readMenuPad } from "./game/menuGamepad";
+import { useMandoEnMenus, usePausaAutomatica } from "./game/usePausaAutomatica";
 import { musicaDePantalla } from "./game/musicaDePantalla";
 import { useEfectos, useMusicaDeFondo } from "./game/useSonidoJuego";
 import { adoptarProgreso, collectLifetimeApples, completeSecretShop, lifetimeApples, parseProgress, progressMilestone, readProgress, resetCampaignProgress, serializeProgress, STORAGE_KEY, textoNormalizado, visitSecretShop, type Progress } from "./game/progress";
@@ -368,92 +367,8 @@ export default function App() {
     };
   }, [rankingClave, rankingDevice, rankingRetry]);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (!event.defaultPrevented && event.code === "Escape" && !event.repeat && isTimedScreen(screen)) setPaused((value) => !value);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [screen]);
-
-  useEffect(() => {
-    if (!isTimedScreen(screen)) return;
-    const pauseWhenHidden = () => {
-      if (document.visibilityState === "hidden") setPaused(true);
-    };
-    const pauseWhenBlurred = () => setPaused(true);
-    document.addEventListener("visibilitychange", pauseWhenHidden);
-    window.addEventListener("blur", pauseWhenBlurred);
-    const timeout = window.setTimeout(pauseWhenHidden, 0);
-    return () => {
-      window.clearTimeout(timeout);
-      document.removeEventListener("visibilitychange", pauseWhenHidden);
-      window.removeEventListener("blur", pauseWhenBlurred);
-    };
-  }, [screen]);
-
-  useEffect(() => {
-    if (!isTimedScreen(screen)) return;
-    let animationId = 0;
-    let previous = readMenuPad(firstConnectedGamepad())[6];
-    const poll = () => {
-      const start = readMenuPad(firstConnectedGamepad())[6];
-      if (start && !previous) setPaused((value) => !value);
-      previous = start;
-      animationId = requestAnimationFrame(poll);
-    };
-    animationId = requestAnimationFrame(poll);
-    return () => cancelAnimationFrame(animationId);
-  }, [screen]);
-
-  useEffect(() => {
-    if ((screen === "game" || screen === "boss") && !paused && !showSettings && !showHelp && !showCredits && !showAlbum) return;
-    let animationId = 0;
-    let previous = readMenuPad(firstConnectedGamepad());
-    let previousPadIndex = firstConnectedGamepad()?.index ?? -1;
-    const poll = () => {
-      const pad = firstConnectedGamepad();
-      const current = readMenuPad(pad);
-      if (pad?.index !== previousPadIndex) {
-        previous = current;
-        previousPadIndex = pad?.index ?? -1;
-      } else if (pad) {
-        const overlays = document.querySelectorAll<HTMLElement>(".modal-backdrop");
-        const container = overlays.item(overlays.length - 1) ?? document.querySelector<HTMLElement>(screen === "home" ? ".home-screen" : screen === "cat-party" ? ".cat-party-screen" : ".map-screen");
-        if (container && container.dataset.gamepadManaged !== "true") {
-          const focusables = Array.from(container.querySelectorAll<HTMLElement>("button:not(:disabled), input:not(:disabled), a[href]"))
-            .filter((element) => element.getClientRects().length > 0);
-          const focused = document.activeElement instanceof HTMLElement && container.contains(document.activeElement) ? document.activeElement : null;
-          const selected = focused && focusables.includes(focused) ? focused : focusables.find((element) => element.hasAttribute("data-gamepad-default")) ?? focusables[0];
-          const focusFromPad = (element: HTMLElement) => {
-            container.querySelectorAll(".gamepad-focus").forEach((item) => item.classList.remove("gamepad-focus"));
-            element.classList.add("gamepad-focus");
-            element.focus();
-          };
-          const direction = menuDirection(current, previous);
-          const horizontal = (current[3] && !previous[3]) || (current[4] && !previous[4]);
-          if (direction && selected instanceof HTMLInputElement && selected.type === "range" && horizontal) {
-            const value = Math.max(0, Math.min(100, Number(selected.value) + direction * 5));
-            if (selected.id === "music-volume") ajustarVolumen("musica", value);
-            else if (selected.id === "effects-volume") ajustarVolumen("efectos", value);
-          } else if (direction && selected) {
-            const index = focusables.indexOf(selected);
-            const next = focusables[(index + direction + focusables.length) % focusables.length];
-            if (next) focusFromPad(next);
-          }
-          if (current[0] && !previous[0] && selected && !(selected instanceof HTMLInputElement && selected.type === "range")) {
-            focusFromPad(selected);
-            selected.click();
-          }
-          if (current[5] && !previous[5]) container.querySelector<HTMLElement>("[data-gamepad-back]")?.click();
-        }
-      }
-      previous = current;
-      animationId = requestAnimationFrame(poll);
-    };
-    animationId = requestAnimationFrame(poll);
-    return () => cancelAnimationFrame(animationId);
-  }, [ajustarVolumen, screen, paused, showSettings, showHelp, showCredits, showAlbum]);
+  usePausaAutomatica(screen, isTimedScreen(screen), setPaused);
+  useMandoEnMenus(!((screen === "game" || screen === "boss") && !paused && !showSettings && !showHelp && !showCredits && !showAlbum), screen, ajustarVolumen);
 
   useEffect(() => {
     if (screen !== "secret-transition" || paused) return;

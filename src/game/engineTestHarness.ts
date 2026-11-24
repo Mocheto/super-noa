@@ -7,6 +7,9 @@ import type { LiveEnemy } from "./gameState";
 import type { WolfSleepPhase } from "./worldMechanics";
 import type { LiveChainGuardian } from "./chainGuardians";
 
+/** El código ya transpilado de cada archivo: cada montaje sigue teniendo sus propios módulos, pero no se transpila otra vez. */
+const transpilados = new Map<string, string>();
+
 export function engineModules(overrides: Record<string, unknown> = {}, globals: Record<string, unknown> = {}) {
   const context = vm.createContext({ console, ...globals });
   const cache = new Map<string, { exports: unknown }>();
@@ -23,10 +26,13 @@ export function engineModules(overrides: Record<string, unknown> = {}, globals: 
     if (cache.has(url.href)) return cache.get(url.href)!.exports;
     const module = { exports: {} };
     cache.set(url.href, module);
-    const source = readFileSync(url, "utf8");
-    const code = ts.transpileModule(source, {
-      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
-    }).outputText;
+    let code = transpilados.get(url.href);
+    if (code === undefined) {
+      code = ts.transpileModule(readFileSync(url, "utf8"), {
+        compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+      }).outputText;
+      transpilados.set(url.href, code);
+    }
     vm.runInContext(`(function(require, module, exports) { ${code}\n})`, context)(loadFrom(url), module, module.exports);
     return module.exports;
   };
@@ -64,6 +70,8 @@ export function mountEngine(level: Level) {
   const context = new Proxy<Record<string, unknown>>({}, {
     get: (target, key: string) => {
       if (key === "fillText") return (text: string) => drawnText.push(text);
+      // Medida fija y determinista: 8 px por carácter, como una letra pequeña.
+      if (key === "measureText") return (text: string) => ({ width: text.length * 8 });
       if (key === "fillRect") return (x: number, y: number, width: number, height: number) => {
         if (target.fillStyle === "#aa6bd5") playerRect = { x, y, width, height };
       };
@@ -118,6 +126,8 @@ export function mountEngine(level: Level) {
   }, {
     Image: PendingImage,
     navigator: { getGamepads: () => padConnected ? [pad] : [] },
+    // Las salas-rompecabezas escuchan la tecla R en la ventana.
+    window: { addEventListener() {}, removeEventListener() {} },
     requestAnimationFrame: (callback: (time: number) => void) => { pending.set(++nextId, callback); return nextId; },
     cancelAnimationFrame: (id: number) => pending.delete(id),
   });

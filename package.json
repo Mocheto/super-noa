@@ -16,6 +16,7 @@
     "textos:json": "node --experimental-strip-types scripts/textos-json.ts",
     "recursos:webp": "node scripts/webp.mjs",
     "niveles:indice": "node --experimental-strip-types scripts/niveles-indice.ts",
+    "huella:partida": "ACTUALIZAR_HUELLA=1 node --experimental-strip-types --test src/game/partidaHuella.test.ts",
     "lint": "eslint ."
   },
   "dependencies": {

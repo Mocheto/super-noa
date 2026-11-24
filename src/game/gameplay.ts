@@ -98,3 +98,86 @@ export function conveyorSpeed(player: Rect & { grounded: boolean }, platforms: r
     && player.x + player.width > platform.x && player.x < platform.x + platform.width
     && Math.abs(player.y + player.height - platformSurfaceY(platform)) < 6)?.beltSpeed ?? 0;
 }
+
+// --- Movimiento horizontal y salto (corte 2 de «Mapear el bucle de GameCanvas para sacar la física a un módulo puro») ---
+
+export const MOVE_SPEED = 250;
+/** Velocidad nadando: más lenta que andando. */
+export const SWIM_SPEED = 175;
+/** Tiempo de coyote (saltar justo después de dejar el suelo) y búfer de salto (pulsar justo antes de aterrizar). */
+export const COYOTE_SECONDS = 0.12;
+export const JUMP_BUFFER_SECONDS = 0.13;
+
+type Movil = Rect & { vx: number; vy: number; grounded: boolean; facing: 1 | -1 };
+
+/** Si Noa está de pie sobre hielo (suelo, repisa o pared de hielo, a menos de 6 px de su superficie). */
+export const pisaHielo = (player: Movil, platforms: readonly Platform[]) => player.grounded && platforms.some((platform) =>
+  (platform.kind === "ice-ground" || platform.kind === "ice-ledge" || platform.kind === "ice-wall") &&
+  player.x + player.width > platform.x && player.x < platform.x + platform.width &&
+  Math.abs(player.y + player.height - platformSurfaceY(platform)) < 6);
+
+/**
+ * Velocidad horizontal y hacia dónde mira tras un paso. Mientras la nube que rebota bloquea el giro, nada cambia. Sin
+ * dirección (o con las dos) frena: casi en seco, o poco a poco en el hielo. Con dirección, va a su velocidad (nadando,
+ * más despacio); en el hielo acelera como mucho 520 px/s².
+ */
+export function velocidadHorizontal(
+  player: Movil,
+  mando: { left: boolean; right: boolean; swimming: boolean; ice: boolean; steerLock: number },
+  delta: number,
+): { vx: number; facing: 1 | -1 } {
+  const { left, right, swimming, ice, steerLock } = mando;
+  if (steerLock > 0) return { vx: player.vx, facing: player.facing };
+  if (left === right) return { vx: player.vx * Math.pow(ice ? 0.32 : 0.0008, delta), facing: player.facing };
+  const targetVelocity = (left ? -1 : 1) * (swimming ? SWIM_SPEED : MOVE_SPEED);
+  return {
+    vx: ice ? player.vx + Math.max(-520 * delta, Math.min(520 * delta, targetVelocity - player.vx)) : targetVelocity,
+    facing: left ? -1 : 1,
+  };
+}
+
+/** El viento empuja a Noa fuera del agua, sin pasar de 360 px/s. */
+export function empujeViento(vx: number, viento: { direction: number; strength: number } | undefined, swimming: boolean, delta: number): number {
+  return viento && !swimming ? Math.max(-360, Math.min(360, vx + viento.direction * viento.strength * delta)) : vx;
+}
+
+export type Saltador = Movil & { coyote: number; jumpBuffer: number; jumpsUsed: number; springLaunch: boolean; doubleJumpFx: number };
+
+/**
+ * El salto de un paso, sobre los campos de salto de Noa: búfer, coyote, brazada en el agua, salto (desde el suelo o
+ * en una corriente), doble salto al 94 % y salto corto al soltar. `pulsado` es una pulsación nueva en este paso.
+ * Devuelve el salto que ha dado, para que suene.
+ */
+export function resolverSalto(
+  player: Saltador,
+  mando: { jump: boolean; pulsado: boolean; swimming: boolean; inUpdraft: boolean },
+  delta: number,
+): "salto" | "doble" | null {
+  const { jump, pulsado, swimming, inUpdraft } = mando;
+  if (pulsado) player.jumpBuffer = JUMP_BUFFER_SECONDS;
+  player.jumpBuffer = Math.max(0, player.jumpBuffer - delta);
+  player.coyote = player.grounded ? COYOTE_SECONDS : Math.max(0, player.coyote - delta);
+  let salto: "salto" | "doble" | null = null;
+  if (swimming) {
+    player.vy = swimmingVelocity(player.vy, jump || pulsado, delta);
+    if (pulsado) player.vy = -190;
+    player.jumpsUsed = 0;
+    player.springLaunch = false;
+    player.jumpBuffer = 0;
+  } else if (player.jumpBuffer > 0 && (player.coyote > 0 || inUpdraft) && player.jumpsUsed === 0) {
+    player.vy = -JUMP_SPEED;
+    player.grounded = false;
+    player.coyote = 0;
+    player.jumpBuffer = 0;
+    player.jumpsUsed = 1;
+    salto = "salto";
+  } else if (player.jumpBuffer > 0 && !player.grounded && player.jumpsUsed === 1) {
+    player.vy = -JUMP_SPEED * 0.94;
+    player.jumpBuffer = 0;
+    player.jumpsUsed = 2;
+    player.doubleJumpFx = 0.38;
+    salto = "doble";
+  }
+  if (!swimming && !jump && player.vy < -220 && !player.springLaunch) player.vy += GRAVITY * 1.4 * delta;
+  return salto;
+}

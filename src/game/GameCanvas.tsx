@@ -49,9 +49,8 @@ import {
 } from "./gameState";
 import { t, textoLienzo } from "../textos";
 import { BotonControl, Texto } from "../textos/Texto";
-import { conveyorSpeed, boarChargeVelocity, GRAVITY, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SKY_BOUNCE_SPEED, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
+import { conveyorSpeed, boarChargeVelocity, empujeViento, GRAVITY, keepInsidePatrol, landsOnSpring, pisaHielo, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolverSalto, resolveHorizontalWallCollision, SKY_BOUNCE_SPEED, SPRING_SPEED, velocidadHorizontal, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
 
-const MOVE_SPEED = 250;
 
 type SoundKind = "apple" | "block" | "cat" | "jump" | "hurt" | "stomp" | "yarn" | "checkpoint" | "goal" | "sticker" | "howl" | "snort" | "cannon" | "countdown";
 
@@ -451,47 +450,16 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       const newStroke = input.jumpQueued || (jump && !previousJump);
       skyBounceSteerLock = Math.max(0, skyBounceSteerLock - delta);
 
-      const standingOnIce = player.grounded && level.platforms.some((platform) =>
-        (platform.kind === "ice-ground" || platform.kind === "ice-ledge" || platform.kind === "ice-wall") &&
-        player.x + player.width > platform.x && player.x < platform.x + platform.width &&
-        Math.abs(player.y + player.height - platformSurfaceY(platform)) < 6);
-      if (skyBounceSteerLock > 0) {
-        // La nube elige el primer tramo; enseguida se recupera el control para buscar dónde aterrizar.
-      } else if (left === right) player.vx *= Math.pow(standingOnIce ? 0.32 : 0.0008, delta);
-      else {
-        const targetVelocity = (left ? -1 : 1) * (swimming ? 175 : MOVE_SPEED);
-        player.vx = standingOnIce ? player.vx + Math.max(-520 * delta, Math.min(520 * delta, targetVelocity - player.vx)) : targetVelocity;
-        player.facing = left ? -1 : 1;
-      }
-      const activeWind = level.windZones?.find((zone) => intersects(player, zone));
-      if (activeWind && !swimming) player.vx = Math.max(-360, Math.min(360, player.vx + activeWind.direction * activeWind.strength * delta));
+      // La nube que rebota elige el primer tramo (`skyBounceSteerLock`); enseguida se recupera el control.
+      ({ vx: player.vx, facing: player.facing } = velocidadHorizontal(player, {
+        left, right, swimming: Boolean(swimming), ice: pisaHielo(player, level.platforms), steerLock: skyBounceSteerLock,
+      }, delta));
+      player.vx = empujeViento(player.vx, level.windZones?.find((zone) => intersects(player, zone)), Boolean(swimming), delta);
 
-      if (input.jumpQueued || (jump && !previousJump)) player.jumpBuffer = 0.13;
+      // La entrada consume la pulsación: el paso pone `jumpQueued` a cero.
       input.jumpQueued = false;
       previousJump = jump;
-      player.jumpBuffer = Math.max(0, player.jumpBuffer - delta);
-      player.coyote = player.grounded ? 0.12 : Math.max(0, player.coyote - delta);
-      if (swimming) {
-        player.vy = swimmingVelocity(player.vy, jump || newStroke, delta);
-        if (newStroke) player.vy = -190;
-        player.jumpsUsed = 0;
-        player.springLaunch = false;
-        player.jumpBuffer = 0;
-      } else if (player.jumpBuffer > 0 && (player.coyote > 0 || inUpdraft) && player.jumpsUsed === 0) {
-        player.vy = -JUMP_SPEED;
-        player.grounded = false;
-        player.coyote = 0;
-        player.jumpBuffer = 0;
-        player.jumpsUsed = 1;
-        callbacksRef.current.playSound("jump");
-      } else if (player.jumpBuffer > 0 && !player.grounded && player.jumpsUsed === 1) {
-        player.vy = -JUMP_SPEED * 0.94;
-        player.jumpBuffer = 0;
-        player.jumpsUsed = 2;
-        player.doubleJumpFx = 0.38;
-        callbacksRef.current.playSound("jump");
-      }
-      if (!swimming && !jump && player.vy < -220 && !player.springLaunch) player.vy += GRAVITY * 1.4 * delta;
+      if (resolverSalto(player, { jump, pulsado: newStroke, swimming: Boolean(swimming), inUpdraft: Boolean(inUpdraft) }, delta)) callbacksRef.current.playSound("jump");
 
       shootCooldown = Math.max(0, shootCooldown - delta);
       if ((input.shootQueued || (shoot && !previousShoot)) && player.power === "cat" && shootCooldown === 0) {

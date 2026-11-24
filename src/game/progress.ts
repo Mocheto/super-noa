@@ -128,3 +128,53 @@ export function readProgress(): Progress {
 export function saveProgress(progress: Progress): boolean {
   return writeStorage(STORAGE_KEY, serializeProgress(progress));
 }
+
+// --- Dos pestañas (mapa de mejoras de código, issue «Que dos pestañas no se pisen el progreso») ---------------------
+
+/** Fusión que nunca retrocede: «o» en los sí/no, máximo en los números, unión en las listas y lo mismo dentro de los registros. */
+function fusionMonotona(local: unknown, remoto: unknown): unknown {
+  if (local === undefined || local === null) return remoto;
+  if (remoto === undefined || remoto === null) return local;
+  if (typeof local === "boolean" && typeof remoto === "boolean") return local || remoto;
+  if (typeof local === "number" && typeof remoto === "number") return Math.max(local, remoto);
+  if (Array.isArray(local) && Array.isArray(remoto)) return [...local, ...remoto.filter((valor) => !local.includes(valor))];
+  if (typeof local === "object" && typeof remoto === "object" && !Array.isArray(local) && !Array.isArray(remoto)) {
+    const a = local as Record<string, unknown>;
+    const b = remoto as Record<string, unknown>;
+    return Object.fromEntries([...new Set([...Object.keys(a), ...Object.keys(b)])].map((clave) => [clave, fusionMonotona(a[clave], b[clave])]));
+  }
+  return remoto;
+}
+
+const instante = (fecha: string | null | undefined) => {
+  const valor = Date.parse(normalizeProgressDate(fecha) ?? "");
+  return Number.isFinite(valor) ? valor : -Infinity;
+};
+
+/**
+ * Junta lo de esta pestaña con lo que acaba de guardar otra, sin perder nada de ninguna: la campaña nunca retrocede
+ * (pantallas, manzanas, pegatinas, duelos, tiendas, desvíos, paseos, amigos y avioneta) y la casa es la de
+ * `calculadoEn` más reciente. Solo para cuando esta pestaña tiene cambios sin guardar; si no, se adopta lo de la otra
+ * tal cual (así «Borrar progreso» en una pestaña también borra en la otra).
+ */
+export function fusionarProgreso(local: Progress, remoto: Progress): Progress {
+  const { casa: casaLocal, achievedAt: logroLocal, ...campanaLocal } = local;
+  const { casa: casaRemota, achievedAt: logroRemoto, ...campanaRemota } = remoto;
+  const casa = !casaLocal ? casaRemota : !casaRemota ? casaLocal
+    : Date.parse(casaRemota.calculadoEn) > Date.parse(casaLocal.calculadoEn) ? casaRemota : casaLocal;
+  const achievedAt = instante(logroRemoto) > instante(logroLocal) ? logroRemoto : logroLocal;
+  const fusion = { ...(fusionMonotona(campanaLocal, campanaRemota) as Omit<Progress, "casa" | "achievedAt">), achievedAt, ...(casa ? { casa } : {}) };
+  return parseProgress(serializeProgress(fusion));
+}
+
+/**
+ * Lo que una pestaña hace al saber que otra ha guardado `remoto`: si lo suyo es lo último que guardó o leyó
+ * (`ultimaConocida`), lo adopta tal cual; si tiene cambios aún sin guardar, los fusiona con lo remoto.
+ */
+/** Lo guardado tal como lo volvería a escribir esta pestaña (la primera lectura completa campos como `flawless`). */
+export const textoNormalizado = (texto: string | null) => texto === null ? null : serializeProgress(parseProgress(texto));
+
+export function adoptarProgreso(actual: Progress, remoto: string | null, ultimaConocida: string | null): Progress {
+  const nuevo = remoto === null ? emptyProgress : parseProgress(remoto);
+  return serializeProgress(actual) === ultimaConocida ? nuevo : fusionarProgreso(actual, nuevo);
+}

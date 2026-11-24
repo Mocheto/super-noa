@@ -25,10 +25,10 @@ import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";
 import { createMusicPlayer, musicTracks } from "./game/music";
 import { getLevelObjectives } from "./game/levelObjectives";
-import { collectLifetimeApples, completeSecretShop, lifetimeApples, progressMilestone, readProgress, resetCampaignProgress, saveProgress, visitSecretShop, type Progress } from "./game/progress";
+import { adoptarProgreso, collectLifetimeApples, completeSecretShop, lifetimeApples, parseProgress, progressMilestone, readProgress, resetCampaignProgress, serializeProgress, STORAGE_KEY, textoNormalizado, visitSecretShop, type Progress } from "./game/progress";
 import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
 import { worldArtwork, worldCatalog, type WorldId } from "./game/worldMapData";
-import { checkRankingAvailability, loadRanking, rankingConnectionMessage, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
+import { checkRankingAvailability, loadRanking, rankingConnectionMessage, rankingProgress, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
 import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnrolled, safeEnrollmentMoment } from "./game/rankingOnboarding";
 import type { GameSnapshot, Level } from "./game/types";
 import type { DetourId } from "./game/types";
@@ -318,11 +318,50 @@ export default function App() {
     return () => { cancelled = true; window.clearInterval(interval); };
   }, [deferEnrollment, enrollmentRequired]);
 
+  // Lo último que se sabe que hay guardado: lo que escribió esta pestaña o lo que leyó de otra.
+  const guardadoRef = useRef<string | null | undefined>(undefined);
+  const progressRef = useRef(progress);
+  /** Cambia al adoptar una casa de otra pestaña con la casa abierta: vuelve a montarla con los datos nuevos. */
+  const [casaVersion, setCasaVersion] = useState(0);
+
   useEffect(() => {
-    const saved = saveProgress(progress);
+    progressRef.current = progress;
+    const texto = serializeProgress(progress);
+    // Una cadena idéntica a la guardada no se vuelve a escribir (tampoco la que se acaba de leer de otra pestaña).
+    if (texto === guardadoRef.current) return;
+    const saved = writeStorage(STORAGE_KEY, texto);
+    if (saved) guardadoRef.current = texto;
     const timeout = window.setTimeout(() => setSaveError(!saved), 0);
     return () => window.clearTimeout(timeout);
   }, [progress]);
+
+  // Otra pestaña ha guardado (o se vuelve a esta pestaña): se adopta su progreso en lugar de pisarlo en la siguiente escritura.
+  useEffect(() => {
+    const adoptar = (remoto: string | null) => {
+      const normal = textoNormalizado(remoto);
+      if (normal === guardadoRef.current) return;
+      const conocida = guardadoRef.current ?? null;
+      // Adoptado tal cual, se serializa igual que `normal` y no se vuelve a escribir; fusionado, sí.
+      guardadoRef.current = normal;
+      const casaRemota = parseProgress(remoto).casa;
+      if (screenRef.current === "casa" && JSON.stringify(casaRemota) !== JSON.stringify(progressRef.current.casa)) setCasaVersion((version) => version + 1);
+      setProgress((actual) => adoptarProgreso(actual, remoto, conocida));
+    };
+    const alGuardarOtra = (event: StorageEvent) => { if (event.key === STORAGE_KEY) adoptar(event.newValue); };
+    const releer = () => { if (document.visibilityState === "visible") adoptar(readStorage(STORAGE_KEY)); };
+    const alVolver = (event: PageTransitionEvent) => { if (event.persisted) adoptar(readStorage(STORAGE_KEY)); };
+    window.addEventListener("storage", alGuardarOtra);
+    document.addEventListener("visibilitychange", releer);
+    window.addEventListener("pageshow", alVolver);
+    return () => {
+      window.removeEventListener("storage", alGuardarOtra);
+      document.removeEventListener("visibilitychange", releer);
+      window.removeEventListener("pageshow", alVolver);
+    };
+  }, []);
+
+  // El tablón solo recibe lo que le importa: cuidar la casa o mirar fotos no lo vuelve a enviar.
+  const rankingClave = useMemo(() => JSON.stringify(rankingProgress(progress)), [progress]);
 
   useEffect(() => {
     if (!rankingDevice || rankingDevice.registrationPending) return;
@@ -332,7 +371,7 @@ export default function App() {
       const currentAttempt = ++attempt;
       setRankingSyncState("syncing");
       try {
-        await syncRanking(rankingDevice, progress);
+        await syncRanking(rankingDevice, progressRef.current);
         if (!cancelled && currentAttempt === attempt) {
           const confirmedDevice = readRankingDevice();
           if (confirmedDevice?.id === rankingDevice.id && confirmedDevice.token === rankingDevice.token
@@ -357,7 +396,7 @@ export default function App() {
       window.clearTimeout(timeout);
       window.removeEventListener("online", retryOnline);
     };
-  }, [progress, rankingDevice, rankingRetry]);
+  }, [rankingClave, rankingDevice, rankingRetry]);
 
   useEffect(() => {
     writeStorage("super-noa-muted", String(muted));
@@ -925,7 +964,7 @@ export default function App() {
           }} />
       </Suspense>}
       {screen === "casa" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
-        {devPaletas ? <PruebaPaletas /> : <CasaGatitos casa={progress.casa} levelStats={devGatitos ? conMundosCompletos(progress.levelStats, devGatitos) : progress.levelStats}reduceMotion={reduceMotion} muted={muted} effectsVolume={effectsVolume} musicVolume={musicVolume}
+        {devPaletas ? <PruebaPaletas /> : <CasaGatitos key={`casa-${casaVersion}`} casa={progress.casa} levelStats={devGatitos ? conMundosCompletos(progress.levelStats, devGatitos) : progress.levelStats}reduceMotion={reduceMotion} muted={muted} effectsVolume={effectsVolume} musicVolume={musicVolume}
           onGuardar={(casa) => setProgress((current) => ({ ...current, casa }))} onAmistad={(kind) => setProgress((current) => addHeart(current, kind))} onSalir={() => setScreen("map")} />}
       </Suspense>}
       {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>

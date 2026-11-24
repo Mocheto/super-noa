@@ -833,23 +833,38 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   }, [fase, reduceMotion]);
 
   // El tiempo sigue pasando con la casa abierta, un gatito sucio va dejando huellas y se nota si se hace de noche.
+  // Con la pestaña oculta el reloj y las huellas se paran, para que una casa olvidada no guarde sola cada minuto encima
+  // de lo jugado en otra pestaña; al volver, `avanzar` pone las necesidades al día desde `calculadoEn`.
+  const [pestanaVisible, setPestanaVisible] = useState(() => typeof document === "undefined" || document.visibilityState !== "hidden");
   useEffect(() => {
-    if (fase !== "casa") return;
-    const huellas = window.setInterval(() => {
-      let siguiente = casaRef.current;
-      gatitos.forEach((mundo, indice) => { siguiente = dejarHuella(siguiente, mundo, sitios[indice] + (Math.random() - 0.5) * 240); });
-      if (siguiente !== casaRef.current) guardar(siguiente);
-    }, HUELLA_CADA_MS);
-    const reloj = window.setInterval(() => {
+    const cambiar = () => setPestanaVisible(document.visibilityState !== "hidden");
+    document.addEventListener("visibilitychange", cambiar);
+    return () => document.removeEventListener("visibilitychange", cambiar);
+  }, []);
+  const estuvoOcultaRef = useRef(false);
+  useEffect(() => {
+    if (!pestanaVisible) estuvoOcultaRef.current = true;
+    if (fase !== "casa" || !pestanaVisible) return;
+    const pasarElTiempo = () => {
       guardar(avanzar(casaRef.current, new Date()));
       setNocheReloj(esDeNoche(relojCasa(ajustes)));
       setHoraDeDormir(puedeDormir(relojCasa(ajustes)));
       // Por la mañana la lámpara vuelve a estar encendida para la noche siguiente.
       if (!puedeDormir(relojCasa(ajustes))) setLamparaApagada(false);
       setFechaCasa(relojCasa(ajustes));
-    }, TIEMPO_CADA_MS);
+    };
+    if (estuvoOcultaRef.current) {
+      estuvoOcultaRef.current = false;
+      pasarElTiempo();
+    }
+    const huellas = window.setInterval(() => {
+      let siguiente = casaRef.current;
+      gatitos.forEach((mundo, indice) => { siguiente = dejarHuella(siguiente, mundo, sitios[indice] + (Math.random() - 0.5) * 240); });
+      if (siguiente !== casaRef.current) guardar(siguiente);
+    }, HUELLA_CADA_MS);
+    const reloj = window.setInterval(pasarElTiempo, TIEMPO_CADA_MS);
     return () => { window.clearInterval(huellas); window.clearInterval(reloj); };
-  }, [fase, gatitos, sitios, guardar]);
+  }, [fase, gatitos, sitios, guardar, pestanaVisible]);
 
   useEffect(() => {
     // El «atrás» (Escape en el teclado) vuelve al mapa guardando la casa, salvo con la ventana de llegada abierta.

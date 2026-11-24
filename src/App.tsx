@@ -3,7 +3,6 @@ import { CAT_PARTY_LEVEL_ID } from "./game/catPartyNivel";
 import { busDeZona, contextoAudio, pistaDeMusica, vigilarAudio } from "./game/audio";
 import { Dialog } from "./game/Dialog";
 import { bossCatalog } from "./game/bosses";
-import { isGuardianGameId } from "./game/guardianGameIds";
 import { GameAssetIcon } from "./game/GameAssetIcon";
 import { PixelIcon } from "./game/PixelIcon";
 import type { SoundKind } from "./game/GameCanvas";
@@ -20,14 +19,13 @@ const devMemoria = devTestName === "vuelo" ? "aurora-celeste" : devTestName === 
 const devDuel = import.meta.env.DEV && (new URLSearchParams(window.location.search).has("duelo") || devMemoria !== null);
 const devTestLevel = devMemoria ? levels.find((level) => level.boss === devMemoria)
   : devTestName ? testScreens[devTestName] ?? [...levels, ...detourLevels, ...restStopLevels].find((level) => level.id === devTestName) : undefined;
-import { getStickerSprite, stickerCatalog } from "./game/stickers";
+import { stickerCatalog } from "./game/stickers";
 import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";
 import { createMusicPlayer, musicTracks } from "./game/music";
-import { getLevelObjectives } from "./game/levelObjectives";
 import { adoptarProgreso, collectLifetimeApples, completeSecretShop, lifetimeApples, parseProgress, progressMilestone, readProgress, resetCampaignProgress, serializeProgress, STORAGE_KEY, textoNormalizado, visitSecretShop, type Progress } from "./game/progress";
 import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
-import { worldArtwork, worldCatalog, type WorldId } from "./game/worldMapData";
+import { worldCatalog, type WorldId } from "./game/worldMapData";
 import { checkRankingAvailability, loadRanking, rankingConnectionMessage, rankingProgress, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
 import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnrolled, safeEnrollmentMoment } from "./game/rankingOnboarding";
 import type { GameSnapshot, Level } from "./game/types";
@@ -39,19 +37,19 @@ import { addHeart } from "./game/friendProgress";
 import { funciones } from "./game/funciones";
 import { casaAbierta, conMundosCompletos, llegadasPorVer } from "./game/casaRescate";
 import { recordFlight } from "./game/avioneta";
-import { puntos, sinPictogramas, t } from "./textos";
-import { Boton, BotonControl, PalabraConDibujo, Pictograma, Texto } from "./textos/Texto";
+import { t } from "./textos";
+import { Boton, BotonControl, Pictograma, Texto } from "./textos/Texto";
 import { Medalla, Ventana } from "./game/Ventana";
 import { Avisos } from "./game/Avisos";
+import { HudEsquinas } from "./game/HudEsquinas";
+import { PantallaInicio } from "./game/PantallaInicio";
+import { DueloDelGuardian } from "./game/DueloDelGuardian";
+import { VentanaAjustes, type TouchControlsMode } from "./game/VentanaAjustes";
+import { precargarAlbum, VentanaAlbum, type CollectionTab } from "./game/VentanaAlbum";
+import { VentanaTablon } from "./game/VentanaTablon";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
 import { visitDetour } from "./game/detourProgress";
 
-// La pestaña Amigos (que arrastra rendering.ts) y las fotos de la casa van en su propio bloque; se precargan en reposo
-// desde el mapa para que el álbum las abra sin espera.
-const cargarFriendsTab = () => import("./game/FriendsTab");
-const cargarFotosCasa = () => import("./game/FotosCasa");
-const FriendsTab = lazy(() => cargarFriendsTab().then((module) => ({ default: module.FriendsTab })));
-const FotosCasa = lazy(() => cargarFotosCasa().then((module) => ({ default: module.FotosCasa })));
 const WorldMap = lazy(() => import("./game/WorldMap").then((module) => ({ default: module.WorldMap })));
 // La partida recibe el resumen de la pantalla y busca su geometría completa en un bloque que se carga con ella.
 const GameCanvas = lazy(() => Promise.all([import("./game/GameCanvas"), import("./game/nivelCompleto")]).then(([juego, niveles]) => ({
@@ -59,13 +57,6 @@ const GameCanvas = lazy(() => Promise.all([import("./game/GameCanvas"), import("
     return <juego.GameCanvas {...props} level={niveles.nivelCompleto(level)} />;
   },
 })));
-const BossBattle = lazy(() => import("./game/BossBattle").then((module) => ({ default: module.BossBattle })));
-const GuardianMiniGame = lazy(() => import("./game/GuardianMiniGame").then((module) => ({ default: module.GuardianMiniGame })));
-const NidoReinaGame = lazy(() => import("./game/NidoReinaGame").then((module) => ({ default: module.NidoReinaGame })));
-const VueloAuroraGame = lazy(() => import("./game/VueloAuroraGame").then((module) => ({ default: module.VueloAuroraGame })));
-const ArmoniaDrumGame = lazy(() => import("./game/ArmoniaDrumGame").then((module) => ({ default: module.ArmoniaDrumGame })));
-const MeriendaJabatosGame = lazy(() => import("./game/MeriendaJabatosGame").then((module) => ({ default: module.MeriendaJabatosGame })));
-const BeeNinjaGame = lazy(() => import("./game/BeeNinjaGame").then((module) => ({ default: module.BeeNinjaGame })));
 const CasaGatitos = lazy(() => import("./game/CasaGatitos").then((module) => ({ default: module.CasaGatitos })));
 const PruebaPaletas = lazy(() => import("./game/PruebaPaletas").then((module) => ({ default: module.PruebaPaletas })));
 /** En desarrollo, `?prueba=casa&paletas` enseña los gatitos de la casa con su paleta, en vez de la casa. */
@@ -73,7 +64,6 @@ const devPaletas = import.meta.env.DEV && new URLSearchParams(window.location.se
 /** En desarrollo, `?prueba=casa&gatitos=6` abre la casa como si los mundos 1 a 6 estuvieran completos (y la casa lo guarda). */
 const devGatitos = import.meta.env.DEV ? Number(new URLSearchParams(window.location.search).get("gatitos")) || 0 : 0;
 const CatParty = lazy(() => import("./game/CatPartyGame").then((module) => ({ default: module.CatParty })));
-const SantaBossBattle = lazy(() => import("./game/SantaBossBattle").then((module) => ({ default: module.SantaBossBattle })));
 
 const MUSIC_VOLUME_KEY = "super-noa-music-volume";
 const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
@@ -81,8 +71,6 @@ const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
 type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition" | "cat-party" | "avioneta" | "casa";
 const isTimedScreen = (screen: Screen) => screen === "game" || screen === "boss" || screen === "secret-transition" || screen === "cat-party" || screen === "avioneta";
 
-type CollectionTab = "stickers" | "bosses" | "memories" | "friends" | "photos";
-type TouchControlsMode = "auto" | "always";
 
 const emptySnapshot: GameSnapshot = { apples: 0, stickers: [], power: "normal", checkpoint: 0, paused: false };
 const MAX_LIVES = 3;
@@ -188,7 +176,7 @@ export default function App() {
   // En el mapa, cuando el navegador está libre, se descargan la pestaña Amigos y las fotos para que el álbum no espere.
   useEffect(() => {
     if (screen !== "map") return;
-    const precargar = () => { void cargarFriendsTab().catch(() => {}); void cargarFotosCasa().catch(() => {}); };
+    const precargar = precargarAlbum;
     if (typeof window.requestIdleCallback === "function") {
       const id = window.requestIdleCallback(precargar, { timeout: 4000 });
       return () => window.cancelIdleCallback(id);
@@ -854,36 +842,8 @@ export default function App() {
   };
 
   const albumFound = progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length;
-  /** HUD de esquinas sobre el escenario (decisión «El HUD de la partida»): vidas y contadores a la izquierda, pantalla y banderas en el centro y la pausa a la derecha. */
-  const hudEsquinas = !bossReplay && <div className="hud-esquinas">
-    <div className="hud-izquierda">
-      <span key={latidoVidas} className={`hud-chip hud-vidas${latidoVidas ? " late" : ""}`} role="img" aria-label={t("partida.hud.vidas.oculto", { n: lives })}>{Array.from({ length: MAX_LIVES }, (_, vida) => <span key={vida} className="hud-vida">
-        <GameAssetIcon kind="heart" className={vida < lives ? "" : "vida-perdida"} />
-        {latidoVidas > 0 && vida === lives && <GameAssetIcon kind="heart" className="vida-cae" />}
-      </span>)}</span>
-      <span className="hud-contadores">
-        <span className="hud-chip" role="img" aria-label={t("partida.hud.manzanas.oculto", { n: snapshot.apples })}><GameAssetIcon kind="apple" /> {snapshot.apples}</span>
-        <span className="hud-chip" role="img" aria-label={t("partida.hud.pegatinas.oculto", { n: snapshot.stickers.length })}><Pictograma nombre="pegatina" />{snapshot.stickers.length}</span>
-        {(starActive || snapshot.power === "cat" || snapshot.power === "apple") && <span className={`hud-chip power-chip power-${snapshot.power} ${starActive ? "star-power-chip" : ""}`} role="img" aria-label={t(starActive ? "partida.hud.poder.estrella.oculto" : snapshot.power === "cat" ? "partida.hud.poder.gata.oculto" : "partida.hud.poder.manzana.oculto")}><Texto clave={starActive ? "partida.hud.poder.estrella.rotulo" : snapshot.power === "cat" ? "partida.hud.poder.gata.rotulo" : "partida.hud.poder.manzana.rotulo"} /></span>}
-      </span>
-    </div>
-    <div className="hud-centro">
-      {displayedLevel.detour ? <span className="hud-chip hud-pantalla"><Texto clave="partida.hud.secreto.rotulo" /></span>
-        : displayedLevel.restStop ? <span className="hud-chip hud-pantalla"><Texto clave="partida.hud.paseo.rotulo" /></span>
-          : <span className="hud-chip hud-pantalla">{displayedLevel.id}</span>}
-      {!displayedLevel.detour && !displayedLevel.restStop && <span className="hud-chip hud-banderas" role="img" aria-label={displayedLevel.puzzleRooms
-        ? t("partida.hud.salas.oculto", { n: snapshot.checkpoint + 1, total: displayedLevel.puzzleRooms.length })
-        : t("partida.hud.banderas.oculto", { n: snapshot.checkpoint, total: displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length })}>
-        {displayedLevel.puzzleRooms ? <Texto clave="partida.hud.sala.rotulo" variables={{ puntos: puntos(snapshot.checkpoint + 1, displayedLevel.puzzleRooms.length) }} /> : <Texto clave="partida.hud.bandera.rotulo" variables={{ puntos: puntos(snapshot.checkpoint, displayedLevel.verticalCheckpoints?.length ?? displayedLevel.checkpoints.length) }} />}
-      </span>}
-      {snapshot.kittens && snapshot.kittens.total > 0 && <span className="hud-chip hud-banderas" role="img" aria-label={t("partida.hud.gatitos.oculto", { n: snapshot.kittens.found, total: snapshot.kittens.total })}>
-        <Texto clave="partida.hud.gatitos.rotulo" variables={{ puntos: puntos(snapshot.kittens.found, snapshot.kittens.total) }} />
-      </span>}
-    </div>
-    <div className="hud-derecha">
-      {(screen === "game" || screen === "boss") && <BotonControl className="hud-pausa" pictograma="pausa" etiqueta="partida.hud.pausa.oculto" onClick={() => setPaused((value) => !value)} />}
-    </div>
-  </div>;
+  const hudEsquinas = !bossReplay && <HudEsquinas lives={lives} maxLives={MAX_LIVES} latidoVidas={latidoVidas} snapshot={snapshot} starActive={starActive}
+    displayedLevel={displayedLevel} mostrarPausa={screen === "game" || screen === "boss"} onPausa={() => setPaused((value) => !value)} />;
 
   return (
     <main className={`app-shell ${reduceMotion ? "reduce-motion" : ""} ${touchControls === "always" ? "touch-controls-always" : ""}`}>
@@ -894,35 +854,10 @@ export default function App() {
         ...(rankingDevice && rankingSyncState === "pending" ? [{ id: `tablon-pendiente:${rankingSyncMessage}:${rankingRetry}`, clase: "ranking-sync-warning", rol: "status" as const, contenido: <>{t("adultos.app.tus-logros-del-tablon")} {rankingSyncMessage} {saveError ? t("adultos.app.puedes-seguir-jugando-aunque") : t("adultos.app.tu-partida-sigue-guardada")} <button type="button" onClick={() => setRankingRetry((current) => current + 1)}>{t("adultos.app.reintentar-envio")}</button></> }] : []),
         ...(audioMessage && !muted && musicVolume > 0 ? [{ id: `musica:${audioMessage}`, clase: "audio-warning", rol: "status" as const, contenido: audioMessage }] : []),
       ]} />
-      {screen === "home" && (
-        <section className="home-screen" aria-labelledby="game-title">
-          <div className="home-copy">
-            <h1 id="game-title" className="inicio-titulo"><span><Texto clave="inicio.titulo.super.rotulo" /></span> <Texto clave="inicio.titulo.noa.rotulo" /></h1>
-            <div className="rotulo-con-frase inicio-lema"><p className="texto-noa"><Texto clave="inicio.corre.rotulo" /></p><p className="juntos">{t("inicio.corre.juntos")}</p></div>
-            <div className="rotulo-con-frase inicio-novedades"><p className="texto-noa pequeno"><Texto clave="inicio.mundosNuevos.rotulo" /></p><p className="juntos">{t("inicio.mundosNuevos.juntos")}</p></div>
-            <div className="home-actions">
-              <Boton tipo="jugar" className="home-play" clave="inicio.jugar.rotulo" data-gamepad-default onClick={() => void requestAdventure(() => setScreen("map"))} />
-              <Boton clave="inicio.comoSeJuega.rotulo" onClick={() => setShowHelp(true)} />
-            </div>
-          </div>
-          <div className="inicio-arte">
-            <div className="hero-scene" aria-hidden="true">
-              <img className="hero-backdrop" src={"./assets/home-adventure-v3.webp"} alt="" />
-            </div>
-            <div className="inicio-baldosas">
-              <button type="button" className="baldosa" aria-label={t("inicio.album.oculto", { n: albumFound, total: albumStickers.length })} onClick={() => openCollection("stickers")}><span className="texto-noa pictograma-doble"><Texto clave="inicio.album.rotulo" /></span><span className="baldosa-cuenta">{albumFound}/{albumStickers.length}</span></button>
-              <button type="button" className="baldosa" aria-label={t("inicio.jefes.oculto", { n: knownBosses, total: bossLevels.length })} onClick={() => openCollection("bosses")}><span className="texto-noa pictograma-doble"><Texto clave="inicio.jefes.rotulo" /></span><span className="baldosa-cuenta">{knownBosses}/{bossLevels.length}</span></button>
-            </div>
-          </div>
-          <BotonControl className="inicio-sonido" pictograma={muted ? "sin-sonido" : "sonido"} etiqueta={muted ? "partida.hud.sonido.oculto" : "partida.hud.silencio.oculto"} aria-pressed={!muted} onClick={() => setMuted((value) => !value)} />
-          <nav className="inicio-adultos" aria-label={t("inicio.opciones.oculto")}>
-            {progress.unlocked > 0 && !saveError && <span>{t(progress.secretUnlocked ? "inicio.partidaGuardadaConSecreto" : "inicio.partidaGuardada", { hechas: completedLevels, total: campaignLevelCount })}</span>}
-            <button type="button" onClick={() => setShowSettings(true)}>{t("adultos.app.ajustes")}</button>
-            <button type="button" onClick={openRanking}>{t("adultos.app.tablon-mundial")}</button>
-            <button type="button" onClick={() => setShowCredits(true)}>{t("adultos.app.creditos")}</button>
-          </nav>
-        </section>
-      )}
+      {screen === "home" && <PantallaInicio albumFound={albumFound} albumTotal={albumStickers.length} knownBosses={knownBosses} jefesTotal={bossLevels.length} muted={muted}
+        partidaEmpezada={progress.unlocked > 0} secretUnlocked={progress.secretUnlocked} saveError={saveError} completedLevels={completedLevels} campaignLevelCount={campaignLevelCount}
+        onJugar={() => void requestAdventure(() => setScreen("map"))} onAyuda={() => setShowHelp(true)} onColeccion={openCollection} onSonido={() => setMuted((value) => !value)}
+        onAjustes={() => setShowSettings(true)} onTablon={openRanking} onCreditos={() => setShowCredits(true)} />}
 
       {screen === "map" && (
         <section className="map-screen">
@@ -988,99 +923,10 @@ export default function App() {
             <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} hud={hudEsquinas} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onFriendGreeted={handleFriendGreeted} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
           </Suspense>}
 
-          {screen === "boss" && activeLevel.boss && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
-            {
-            (activeLevel.boss === "santa-claus" || activeLevel.boss === "siroco" || activeLevel.boss === "don-silbato") ? <SantaBossBattle
-              key={`santa-boss-${activeLevel.id}-${levelRun}`}
-              bossId={activeLevel.boss}
-              paused={paused} apples={snapshot.apples} onSpendApple={spendBossApple} onRestartLevel={restartBossLevel}
-              onAbandon={abandonBossBattle} onWin={handleComplete} playSound={playSound}
-            /> : activeLevel.boss === "queen-bee" ? <BeeNinjaGame
-              key={`bee-ninja-${activeLevel.id}-${levelRun}`}
-              paused={paused}
-              muted={muted}
-              musicVolume={musicVolume}
-              effectsVolume={effectsVolume}
-              reduceMotion={reduceMotion}
-              levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
-              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
-              onWin={bossReplay ? finishBossReplay : handleComplete}
-              playSound={playSound}
-              friendlyReplay={bossReplay}
-            /> : activeLevel.boss === "maestra-armonia" ? <ArmoniaDrumGame
-              key={`armonia-drum-${activeLevel.id}-${levelRun}`}
-              paused={paused}
-              muted={muted}
-              musicVolume={musicVolume}
-              effectsVolume={effectsVolume}
-              reduceMotion={reduceMotion}
-              levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
-              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
-              onWin={bossReplay ? finishBossReplay : handleComplete}
-              playSound={playSound}
-              friendlyReplay={bossReplay}
-            /> : activeLevel.boss === "great-boar" ? <MeriendaJabatosGame
-              key={`merienda-jabatos-${activeLevel.id}-${levelRun}`}
-              paused={paused}
-              muted={muted}
-              musicVolume={musicVolume}
-              effectsVolume={effectsVolume}
-              reduceMotion={reduceMotion}
-              levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
-              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
-              onWin={bossReplay ? finishBossReplay : handleComplete}
-              playSound={playSound}
-              friendlyReplay={bossReplay}
-            /> : activeLevel.boss === "aurora-celeste" ? <VueloAuroraGame
-              key={`vuelo-aurora-${activeLevel.id}-${levelRun}`}
-              paused={paused}
-              muted={muted}
-              musicVolume={musicVolume}
-              effectsVolume={effectsVolume}
-              reduceMotion={reduceMotion}
-              levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
-              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
-              onWin={bossReplay ? finishBossReplay : handleComplete}
-              playSound={playSound}
-              friendlyReplay={bossReplay}
-            /> : activeLevel.boss === "triceratops-queen" ? <NidoReinaGame
-              key={`nido-reina-${activeLevel.id}-${levelRun}`}
-              paused={paused}
-              muted={muted}
-              musicVolume={musicVolume}
-              effectsVolume={effectsVolume}
-              reduceMotion={reduceMotion}
-              levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
-              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
-              onWin={bossReplay ? finishBossReplay : handleComplete}
-              playSound={playSound}
-              friendlyReplay={bossReplay}
-            /> : isGuardianGameId(activeLevel.boss) ? <GuardianMiniGame
-              key={`guardian-game-${activeLevel.id}-${levelRun}`}
-              bossId={activeLevel.boss}
-              paused={paused}
-              apples={bossReplay ? 0 : snapshot.apples}
-              protectedByApple={!bossReplay && snapshot.power === "apple"}
-              onSpendApple={spendBossApple}
-              onRestartLevel={restartBossLevel}
-              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
-              onWin={bossReplay ? finishBossReplay : handleComplete}
-              playSound={playSound}
-              friendlyReplay={bossReplay}
-            /> : <BossBattle
-              key={`boss-${activeLevel.id}-${levelRun}`}
-              bossId={activeLevel.boss}
-              paused={paused}
-              apples={bossReplay ? 0 : snapshot.apples}
-              protectedByApple={!bossReplay && snapshot.power === "apple"}
-              onSpendApple={spendBossApple}
-              onRestartLevel={restartBossLevel}
-              onAbandon={bossReplay ? finishBossReplay : abandonBossBattle}
-              onWin={bossReplay ? finishBossReplay : handleComplete}
-              playSound={playSound}
-              friendlyReplay={bossReplay}
-            />}
-          </Suspense>}
+          {screen === "boss" && activeLevel.boss && <DueloDelGuardian level={{ id: activeLevel.id, boss: activeLevel.boss }} levelRun={levelRun} paused={paused} muted={muted}
+            musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotion} levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
+            apples={snapshot.apples} power={snapshot.power} bossReplay={bossReplay} onSpendApple={spendBossApple} onRestartLevel={restartBossLevel}
+            onAbandon={abandonBossBattle} onFinishReplay={finishBossReplay} onWin={handleComplete} playSound={playSound} />}
 
           {screen === "complete" && (
             <Ventana id="complete-title" titulo="ventanas.completada.titulo.rotulo" celebracion esperaMs={500} onClose={() => setScreen("map")}
@@ -1147,26 +993,10 @@ export default function App() {
           </>} />
       )}
 
-      {showSettings && (
-        <Dialog labelledBy="settings-title" className="game-modal settings-modal" onClose={() => setShowSettings(false)}>
-          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowSettings(false)} aria-label={t("adultos.app.cerrar.oculto")}>×</button>
-          <p className="eyebrow">{t("adultos.app.a-tu-manera")}</p><h2 id="settings-title">{t("adultos.app.ajustes-de-juego")}</h2>
-          <p>{t("adultos.app.estos-ajustes-se-guardan")}</p>
-          <div className="settings-group">
-            <label htmlFor="music-volume">{t("adultos.app.musica")} <output>{Math.round(musicVolume)}%</output></label>
-            <input id="music-volume" type="range" min="0" max="100" value={musicVolume} onChange={(event) => { writeStorage(`${MUSIC_VOLUME_KEY}-configured`, "true"); setMusicVolume(Number(event.target.value)); }} />
-            <label htmlFor="effects-volume">{t("adultos.app.efectos")} <output>{Math.round(effectsVolume)}%</output></label>
-            <input id="effects-volume" type="range" min="0" max="100" value={effectsVolume} onChange={(event) => { writeStorage(`${EFFECTS_VOLUME_KEY}-configured`, "true"); setEffectsVolume(Number(event.target.value)); }} />
-          </div>
-          <div className="settings-toggle"><input id="reduce-motion" type="checkbox" checked={reduceMotionAjuste} onChange={(event) => setReduceMotion(event.target.checked)} /><label htmlFor="reduce-motion"><strong>{t("adultos.app.movimiento-tranquilo")}</strong><small>{t("adultos.app.reduce-destellos-y-animaciones")}</small></label></div>
-          <fieldset className="settings-controls"><legend>{t("adultos.app.controles-tactiles")}</legend>
-            <label><input type="radio" name="touch-controls" checked={touchControls === "auto"} onChange={() => setTouchControls("auto")} /> {t("adultos.app.automaticos-en-movil")}</label>
-            <label><input type="radio" name="touch-controls" checked={touchControls === "always"} onChange={() => setTouchControls("always")} /> {t("adultos.app.siempre-visibles")}</label>
-          </fieldset>
-          <p className="settings-help"><strong>{t("adultos.app.teclado")}</strong> {t("adultos.app.flechas-o-a-d")} <strong>{t("adultos.app.mando")}</strong> {t("adultos.app.cruceta-o-palanca-para")}</p>
-          <button className="pixel-button primary" type="button" onClick={() => setShowSettings(false)}>{t("adultos.app.listo")}</button>
-        </Dialog>
-      )}
+      {showSettings && <VentanaAjustes musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotionAjuste} touchControls={touchControls}
+        onMusicVolume={(volumen) => { writeStorage(`${MUSIC_VOLUME_KEY}-configured`, "true"); setMusicVolume(volumen); }}
+        onEffectsVolume={(volumen) => { writeStorage(`${EFFECTS_VOLUME_KEY}-configured`, "true"); setEffectsVolume(volumen); }}
+        onReduceMotion={setReduceMotion} onTouchControls={setTouchControls} onClose={() => setShowSettings(false)} />}
 
       {showHelp && (
         <Ventana id="help-title" titulo="inicio.ayuda.titulo.rotulo" className="ventana-ayuda" onClose={() => setShowHelp(false)}
@@ -1198,107 +1028,13 @@ export default function App() {
         </Dialog>
       )}
 
-      {showAlbum && (
-        <Dialog labelledBy="album-title" className="game-modal album-modal ventana-coleccion" onClose={() => setShowAlbum(false)}>
-          <BotonControl className="ventana-cerrar" pictograma="cerrar" etiqueta="coleccion.cerrar.oculto" data-gamepad-back onClick={() => setShowAlbum(false)} />
-          <h2 id="album-title" className="ventana-cinta texto-noa titulo pictograma-doble"><Texto clave={collectionTab === "stickers" ? "coleccion.titulo.pegatinas.rotulo" : collectionTab === "bosses" ? "coleccion.titulo.jefes.rotulo" : collectionTab === "friends" ? "coleccion.titulo.amigos.rotulo" : collectionTab === "photos" ? "coleccion.titulo.fotos.rotulo" : "coleccion.titulo.postales.rotulo"} /></h2>
-          <div className="collection-tabs" aria-label={t("coleccion.grupo.oculto")}>
-            <button className={`pestana texto-noa ${collectionTab === "stickers" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "stickers"} aria-label={sinPictogramas(t("coleccion.pestana.pegatinas.rotulo"))} onClick={() => setCollectionTab("stickers")}><PalabraConDibujo clave="coleccion.pestana.pegatinas.rotulo" /></button>
-            <button className={`pestana texto-noa ${collectionTab === "bosses" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "bosses"} aria-label={sinPictogramas(t("coleccion.pestana.jefes.rotulo"))} onClick={() => setCollectionTab("bosses")}><PalabraConDibujo clave="coleccion.pestana.jefes.rotulo" /></button>
-            {funciones.amigos && <button className={`pestana texto-noa ${collectionTab === "friends" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "friends"} aria-label={sinPictogramas(t("coleccion.pestana.amigos.rotulo"))} onClick={() => setCollectionTab("friends")}><PalabraConDibujo clave="coleccion.pestana.amigos.rotulo" /></button>}
-            <button className={`pestana texto-noa ${collectionTab === "memories" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "memories"} aria-label={sinPictogramas(t("coleccion.pestana.postales.rotulo"))} onClick={() => setCollectionTab("memories")}><PalabraConDibujo clave="coleccion.pestana.postales.rotulo" /></button>
-            {funciones.casa && progress.casa && <button className={`pestana texto-noa ${collectionTab === "photos" ? "is-active" : ""}`} type="button" aria-pressed={collectionTab === "photos"} aria-label={sinPictogramas(t("coleccion.pestana.fotos.rotulo"))} onClick={() => setCollectionTab("photos")}><PalabraConDibujo clave="coleccion.pestana.fotos.rotulo" /></button>}
-          </div>
-          {collectionTab === "photos" ? <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}><FotosCasa fotos={progress.casa?.fotos ?? []} /></Suspense> : funciones.amigos && collectionTab === "friends" ? <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}><FriendsTab progress={progress} onHeart={(kind) => setProgress((current) => addHeart(current, kind))} /></Suspense> : collectionTab === "stickers" ? <>
-            <p className="juntos">{t(progress.secretUnlocked ? "coleccion.pegatinas.introConSecreto.juntos" : "coleccion.pegatinas.introSinSecreto.juntos")}</p>
-            <div className="sticker-grid">
-              {albumStickers.map((sticker) => {
-                const found = progress.stickers.includes(sticker.id);
-                const sprite = getStickerSprite(sticker.id);
-                const stickerLevel = levels.find((level) => level.items.some((item) => item.id === sticker.id));
-                const available = stickerLevel && getLevelObjectives(stickerLevel, progress).available;
-                const hintVisible = albumHints.includes(sticker.id);
-                return (
-                  <article className={`sticker-card ${found ? "is-found" : "is-locked"}`} key={sticker.id}>
-                    <span className="sticker-frame" aria-hidden="true">{found && sprite ? <span className="sticker-sprite" style={{ backgroundImage: `url(${sprite.src})`, backgroundPosition: `${sprite.column * 50}% center` }} /> : "?"}</span>
-                    <strong className="texto-noa pequeno">{found ? sticker.name : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: sticker.world }} />}</strong>
-                    <small>{stickerLevel ? stickerLevel.id : ""} · <Texto clave={found ? "coleccion.pegatinas.encontrada.rotulo" : "coleccion.pegatinas.pendiente.rotulo"} /></small>
-                    {!found && available && <><button className="level-hint-toggle" type="button" aria-expanded={hintVisible} aria-controls={`album-hint-${sticker.id}`} onClick={() => setAlbumHints((current) => hintVisible ? current.filter((id) => id !== sticker.id) : [...current, sticker.id])}><Texto clave="coleccion.pegatinas.pista.rotulo" /></button><p className="album-sticker-hint" id={`album-hint-${sticker.id}`} hidden={!hintVisible}>{sticker.hint}</p></>}
-                    {!found && !available && <small><Texto clave="coleccion.pegatinas.abrirPantalla.rotulo" /> <span className="juntos">{t("coleccion.pegatinas.abrirPantalla.juntos")}</span></small>}
-                  </article>
-                );
-              })}
-            </div>
-            <p className="album-progress texto-noa pequeno" aria-label={t("coleccion.pegatinas.progreso.oculto", { n: progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length, total: albumStickers.length })}><Texto clave="coleccion.pegatinas.progreso.rotulo" variables={{ n: progress.stickers.filter((id) => albumStickers.some((sticker) => sticker.id === id)).length, total: albumStickers.length }} /></p>
-          </> : collectionTab === "bosses" ? <>
-            <p className="juntos">{t("coleccion.jefes.intro.juntos")}</p>
-            <div className="boss-friends-grid">
-              {bossLevels.map(({ level, index, boss }) => {
-                const known = Boolean(progress.levelStats[level.id]?.completed);
-                const challengeDone = Boolean(progress.bossChallenges[level.boss ?? ""]);
-                return (
-                  <article className={`boss-friend-card ${known ? "is-friend" : "is-mystery"} ${challengeDone ? "has-challenge-frame" : ""}`} key={level.id}>
-                    <span className="boss-friend-world">{level.world === 7 ? (progress.secretUnlocked ? <Texto clave="mapa.mundo.secreto.rotulo" /> : <Texto clave="coleccion.jefes.misterioso.rotulo" />) : level.world === 8 ? <Texto clave="mapa.mundo.agua.rotulo" /> : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: level.world }} />}</span>
-                    <div className="boss-friend-portrait" aria-hidden="true">
-                      {known ? boss.assetAtlas
-                        ? <span className={`boss-friend-atlas ${level.boss === "santa-claus" ? "boss-friend-atlas-santa" : ""}`} style={{ backgroundImage: `url("${boss.assetAtlas}")` }} />
-                        : <img src={`${boss.assetPrefix}-0.webp`} alt="" />
-                        : <span className="boss-mystery-shape">?</span>}
-                    </div>
-                    <strong className="texto-noa pequeno" aria-label={known ? undefined : t("coleccion.jefes.porDescubrir.oculto")}>{known ? boss.name : <Texto clave="coleccion.jefes.porDescubrir.rotulo" />}</strong>
-                    {known ? <>{challengeDone ? <small className="challenge-frame-label"><Texto clave="coleccion.jefes.marco.rotulo" /></small> : <small><Texto clave="coleccion.jefes.retoPendiente.rotulo" /> {boss.challenge.label}</small>}<Boton tipo="seguir" className="boton-pequeno" clave="coleccion.jefes.jugarOtraVez.rotulo" onClick={() => replayBoss(index)} /></> : <small className="juntos">{t("coleccion.jefes.conocer.juntos")}</small>}
-                  </article>
-                );
-              })}
-            </div>
-            <p className="album-progress texto-noa pequeno" aria-label={t("coleccion.jefes.progreso.oculto", { n: knownBosses, total: bossLevels.length })}><Texto clave="coleccion.jefes.progreso.rotulo" variables={{ n: knownBosses, total: bossLevels.length }} /></p>
-          </> : <>
-            <p className="juntos">{t("coleccion.postales.intro.juntos")}</p>
-            <div className="memory-grid">
-              {worldCatalog.map((world) => {
-                const memory = worldProgress[world.id];
-                return (
-                  <article className={`memory-card world-${world.id} ${memory.remembered ? "is-remembered" : "is-locked"}`} key={world.id}>
-                    <img className="memory-world-art" src={worldArtwork(world.id)} alt="" aria-hidden="true" />
-                    <div className="memory-content">
-                      <span>{world.id === 7 ? <Texto clave="mapa.mundo.secreto.rotulo" /> : world.id === 8 ? <Texto clave="mapa.mundo.agua.rotulo" /> : <Texto clave="mapa.mundo.numero.rotulo" variables={{ n: world.id }} />}</span>
-                      {memory.remembered ? <><img className="memory-cat" src={world.catAsset} alt={t("coleccion.postales.gatito.oculto", { gato: world.cat, mundo: world.name })} /><strong>{world.cat}</strong><small>{world.name}</small><em aria-label={t("coleccion.postales.medallas.oculto", { n: memory.complete + memory.stickers + memory.flawless })}><Texto clave="coleccion.postales.medallas.rotulo" variables={{ n: memory.complete + memory.stickers + memory.flawless }} /></em></> : <><b className="memory-lock">?</b><strong aria-label={t("coleccion.postales.porDescubrir.oculto")}><Texto clave="coleccion.postales.porDescubrir.rotulo" /></strong><small aria-label={t("mapa.mundo.progreso.oculto", { n: memory.complete, total: memory.total })}><Texto clave="mapa.mundo.progreso.rotulo" variables={{ puntos: puntos(memory.complete, memory.total) }} /></small></>}
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-            <p className="album-progress texto-noa pequeno" aria-label={t("coleccion.postales.progreso.oculto", { n: Object.values(worldProgress).filter((world) => world.remembered).length, total: worldCatalog.length })}><Texto clave="coleccion.postales.progreso.rotulo" variables={{ n: Object.values(worldProgress).filter((world) => world.remembered).length, total: worldCatalog.length }} /></p>
-          </>}
-          <Boton tipo="seguir" className="coleccion-seguir" clave="coleccion.seguir.rotulo" onClick={() => setShowAlbum(false)} />
-        </Dialog>
-      )}
-      {showRanking && (
-        <Dialog labelledBy="ranking-title" className="game-modal ranking-modal" onClose={enrollmentRequired ? undefined : () => setShowRanking(false)}>
-          {!enrollmentRequired && <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowRanking(false)} aria-label={t("adultos.app.cerrar.oculto")}>×</button>}
-          <div className="ranking-heading">
-            <span className="ranking-trophy" aria-hidden="true">★</span>
-            <div><p className="eyebrow">{t("adultos.app.aventureras-y-aventureros")}</p><h2 id="ranking-title">{enrollmentRequired ? t("adultos.app.tu-alias-para-la") : t("adultos.app.tablon-mundial-2")}</h2></div>
-          </div>
-          {enrollmentRequired && <p>{t("adultos.app.antes-de-jugar-elige")}</p>}
-          {!isEnrolled(rankingDevice) ? <form className="ranking-join" onSubmit={(event) => { event.preventDefault(); void joinRanking(); }}><label htmlFor="ranking-alias">{t("adultos.app.tu-alias-de-aventura")}</label><input ref={rankingAliasRef} data-gamepad-default id="ranking-alias" value={rankingDevice?.registrationPending ? rankingDevice.alias : rankingAlias} onChange={(event) => setRankingAlias(event.target.value)} readOnly={Boolean(rankingDevice?.registrationPending)} maxLength={16} disabled={rankingJoining} placeholder={t("adultos.app.por-ejemplo-moche")} autoComplete="off" aria-describedby="ranking-alias-help" /><button className="pixel-button primary" type="submit" disabled={rankingJoining}>{rankingJoining ? t("adultos.app.preparando-tu-tarjeta") : rankingDevice?.registrationPending ? t("adultos.app.reintentar-mi-tarjeta") : enrollmentRequired ? t("adultos.app.guardar-alias-y-jugar") : t("adultos.app.salir-al-tablon")}</button><small id="ranking-alias-help">{t("adultos.app.solo-compartimos-tu-alias")}{rankingDevice?.registrationPending ? t("adultos.app.recuperaremos-tu-tarjeta-pendiente") : ""}</small></form> : <><p className="ranking-welcome">{t("adultos.app.hola")} {rankingDevice!.alias}!</p><p className="ranking-sync-status" role="status">{rankingSyncState === "saved" ? t("adultos.app.tus-logros-ya-estan") : rankingSyncState === "pending" ? t("adultos.app.envio-pendiente-rankingsyncmessage", { rankingSyncMessage }) : t("adultos.app.enviando-tus-logros")}</p></>}
-          {rankingMessage && <p className="ranking-message" role="status">{rankingMessage}</p>}
-          {enrollmentRequired && enrollmentStorageBlocked && <><p>{t("adultos.app.no-podemos-guardar-tu")}</p><button className="pixel-button" type="button" disabled={rankingJoining} onClick={() => deferEnrollment(t("adultos.app.el-navegador-no-permite"))}>{t("adultos.app.jugar-sin-guardar-tarjeta")}</button></>}
-          {!enrollmentRequired && <><ol className="ranking-list">{rankingPlayers.map((player, index) => {
-            const position = index + 1;
-            const isCurrentPlayer = rankingDevice?.alias.toLocaleLowerCase("es") === player.alias.toLocaleLowerCase("es");
-            return <li className={`${position <= 3 ? `ranking-podium ranking-place-${position}` : ""} ${isCurrentPlayer ? "is-current-player" : ""}`} key={`${player.alias}-${index}`}>
-              <span className="ranking-position" aria-label={t("adultos.app.puesto-position.oculto", { position })}>{position}</span>
-              <div className="ranking-player">
-                <div className="ranking-player-name"><strong>{player.alias}</strong>{isCurrentPlayer && <em>{t("adultos.app.tu")}</em>}</div>
-                <div className="ranking-stats">{player.campaignWorld != null && player.campaignWorld > 0 && <span>{t("adultos.app.etapa")} {player.campaignWorld}/15</span>}<span>🚩 {player.completedLevels}/{campaignLevelCount} {t("adultos.app.pantallas")}</span><span>★ {player.stickers}{t("adultos.app.51-pegatinas")}</span><span>🤝 {player.bossChallenges}{t("adultos.app.17-retos-de-amistad")}</span><span>🍎 {player.totalApples === null ? t("adultos.app.total-sin-datos") : t("adultos.app.v-en-toda-la", { v: player.totalApples.toLocaleString("es-ES") })}</span><span>{player.achievedAt === null ? t("adultos.app.fecha-del-progreso-sin") : t("adultos.app.progreso-logrado-el-v", { v: new Date(player.achievedAt).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" }) })}</span></div>
-              </div>
-            </li>;
-          })}</ol>
-          {rankingPlayers.length === 0 && !rankingMessage && <p className="ranking-empty">{t("adultos.app.aun-no-hay-nadie")}</p>}
-          <div className="ranking-footer"><button className="pixel-button ranking-refresh" type="button" disabled={rankingLoading} onClick={() => void refreshRanking()}><span aria-hidden="true">↻</span> {rankingLoading ? t("adultos.app.actualizando") : t("adultos.app.actualizar-tablon")}</button></div></>}
-        </Dialog>
-      )}
+      {showAlbum && <VentanaAlbum progress={progress} collectionTab={collectionTab} albumStickers={albumStickers} albumHints={albumHints} setAlbumHints={setAlbumHints}
+        bossLevels={bossLevels} knownBosses={knownBosses} worldProgress={worldProgress} onTab={setCollectionTab} onReplayBoss={replayBoss}
+        onHeart={(kind) => setProgress((current) => addHeart(current, kind))} onClose={() => setShowAlbum(false)} />}
+      {showRanking && <VentanaTablon enrollmentRequired={enrollmentRequired} enrollmentStorageBlocked={enrollmentStorageBlocked} rankingDevice={rankingDevice}
+        rankingAlias={rankingAlias} rankingAliasRef={rankingAliasRef} rankingJoining={rankingJoining} rankingSyncState={rankingSyncState} rankingSyncMessage={rankingSyncMessage}
+        rankingMessage={rankingMessage} rankingPlayers={rankingPlayers} rankingLoading={rankingLoading} campaignLevelCount={campaignLevelCount}
+        onAliasChange={setRankingAlias} onJoin={() => void joinRanking()} onDefer={deferEnrollment} onRefresh={() => void refreshRanking()} onClose={() => setShowRanking(false)} />}
     </main>
   );
 }

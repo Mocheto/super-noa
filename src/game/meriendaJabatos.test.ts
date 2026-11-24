@@ -35,7 +35,7 @@ test("la merienda de los jabatos es el duelo del Gran Jabalí en la 4-3 y sus re
   for (const match of component.matchAll(/\.\/assets\/([\w/.-]+\.(?:webp|png))/g)) assert.ok(asset(match[1]), match[1]);
   assert.doesNotMatch(component, /public\/assets/, "las rutas del arte son relativas al sitio publicado");
   const app = read("../App.tsx");
-  assert.match(app, /activeLevel\.boss === "great-boar" \? <MeriendaJabatosGame/);
+  assert.match(read("./DueloDelGuardian.tsx"), /level\.boss === "great-boar" \? <MeriendaJabatosGame/);
   assert.match(app, /meriendaDuel = screen === "boss" && activeLevel\.boss === "great-boar"/, "la música del mundo se silencia durante el duelo");
   assert.match(app, /!meriendaDuel/);
 });

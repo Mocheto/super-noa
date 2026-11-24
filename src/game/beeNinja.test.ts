@@ -83,7 +83,7 @@ test("Flores para la colmena se retira y el reto pide no dejar caer ninguna flor
   assert.equal(melisa.challenge.id, "perfect-game");
   assert.match(melisa.challenge.label, /sin dejar caer ninguna/);
   const app = readFileSync(new URL("../App.tsx", import.meta.url), "utf8");
-  assert.match(app, /activeLevel\.boss === "queen-bee" \? <BeeNinjaGame/);
+  assert.match(readFileSync(new URL("./DueloDelGuardian.tsx", import.meta.url), "utf8"), /level\.boss === "queen-bee" \? <BeeNinjaGame/);
   assert.match(app, /beeNinjaDuel/, "la música del mundo se silencia durante el duelo");
 });
 

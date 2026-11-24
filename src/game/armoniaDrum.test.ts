@@ -26,7 +26,7 @@ test("el tambor de Armonía es el duelo de la Maestra Armonía y sus recursos ex
   assert.equal(final?.boss, "maestra-armonia");
   for (const path of ["sprites/noa-tambor-v0.webp", "sprites/tambor-armonia-v0.webp", "sprites/tambor-noa-v0.webp", "sprites/atril-armonia-v0.webp", "worlds/teatro-armonia-v0.webp", "atlases/music-characters-v1.webp"]) assert.ok(asset(path), path);
   const app = readFileSync(new URL("../App.tsx", import.meta.url), "utf8");
-  assert.match(app, /activeLevel\.boss === "maestra-armonia" \? <ArmoniaDrumGame/);
+  assert.match(readFileSync(new URL("./DueloDelGuardian.tsx", import.meta.url), "utf8"), /level\.boss === "maestra-armonia" \? <ArmoniaDrumGame/);
   assert.match(app, /armoniaDrumDuel/, "la música del mundo se silencia durante el duelo");
 });
 

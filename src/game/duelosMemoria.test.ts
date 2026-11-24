@@ -8,8 +8,9 @@ const read = (ruta: string) => readFileSync(new URL(ruta, import.meta.url), "utf
 
 test("el duelo de Aurora Celeste es «El vuelo de Aurora» y el de la Reina Tricera, «El nido de la Reina»", () => {
   const app = read("../App.tsx");
-  assert.match(app, /activeLevel\.boss === "aurora-celeste" \? <VueloAuroraGame/);
-  assert.match(app, /activeLevel\.boss === "triceratops-queen" \? <NidoReinaGame/);
+  const duelo = read("./DueloDelGuardian.tsx");
+  assert.match(duelo, /level\.boss === "aurora-celeste" \? <VueloAuroraGame/);
+  assert.match(duelo, /level\.boss === "triceratops-queen" \? <NidoReinaGame/);
   assert.match(app, /memoriaDuel = screen === "boss" && \(activeLevel\.boss === "aurora-celeste" \|\| activeLevel\.boss === "triceratops-queen"\)/, "la música del mundo se calla: cada uno tiene su canción");
   assert.match(app, /!memoriaDuel/);
   for (const id of ["aurora-celeste", "triceratops-queen"] as const) {

@@ -144,3 +144,69 @@ export function adminTokenMatches(expected, supplied) {
   const b = createHash("sha256").update(supplied).digest();
   return timingSafeEqual(a, b);
 }
+
+// ── Límite de peticiones (issue 311) ──────────────────────────────────────────────────────────────────────────────
+// Vive aquí por lo mismo: el supervisor solo descarga `ranking-server.mjs` y este archivo.
+
+/**
+ * Cuánto se deja hacer a cada IP y a cada dispositivo, por tipo de petición. Es una cubeta de fichas: `max` es lo que se puede
+ * gastar de golpe y se recupera una ficha cada `windowMs / max`. Una IP puede ser una casa o un cole con varias tarjetas,
+ * así que su tope es bastante más holgado que el del dispositivo.
+ *  - registro: crear la tarjeta (`POST /v1/devices`) o cambiar el alias (`POST /v1/alias`).
+ *  - progreso: enviar el avance (`POST /v1/progress`); el cliente lo manda con cada cambio, pero no más de unas pocas veces por minuto.
+ *  - consulta: todo lo demás (tablón, tarjeta, salud, revisión de alias).
+ */
+export const rateLimits = {
+  registro: { ip: { max: 10, windowMs: 3_600_000 }, device: { max: 5, windowMs: 3_600_000 } },
+  progreso: { ip: { max: 120, windowMs: 60_000 }, device: { max: 12, windowMs: 60_000 } },
+  consulta: { ip: { max: 120, windowMs: 60_000 }, device: { max: 60, windowMs: 60_000 } },
+};
+
+/** A qué tipo de petición pertenece una ruta (`null` para el preflight de CORS, que no cuenta). */
+export function rateLimitGroup(method, pathname) {
+  if (method === "OPTIONS") return null;
+  if (method === "POST" && (pathname === "/v1/devices" || pathname === "/v1/alias")) return "registro";
+  if (method === "POST" && pathname === "/v1/progress") return "progreso";
+  return "consulta";
+}
+
+/** Cubetas de fichas en memoria, una por clave. Se reinician con el proceso, que es aceptable: es una defensa contra abuso, no una cuota. */
+export function createRateLimiter({ now = Date.now, maxKeys = 50_000 } = {}) {
+  const buckets = new Map();
+  function prune(at) {
+    for (const [key, bucket] of buckets) if (at - bucket.updated >= bucket.windowMs) buckets.delete(key);
+    // Si aun así hay demasiadas claves (un ataque con claves nuevas sin parar), se olvidan las más antiguas.
+    for (const key of buckets.keys()) {
+      if (buckets.size <= maxKeys / 2) break;
+      buckets.delete(key);
+    }
+  }
+  return {
+    /** Gasta una ficha de `key`. Devuelve `{ ok: true }` o `{ ok: false, retryAfter }` con los segundos (enteros, mínimo 1) hasta la próxima. */
+    take(key, { max, windowMs }) {
+      const at = now();
+      const bucket = buckets.get(key);
+      const tokens = bucket ? Math.min(max, bucket.tokens + (at - bucket.updated) * max / windowMs) : max;
+      if (tokens >= 1) {
+        if (!bucket && buckets.size >= maxKeys) prune(at);
+        buckets.set(key, { tokens: tokens - 1, updated: at, windowMs });
+        return { ok: true };
+      }
+      buckets.set(key, { tokens, updated: at, windowMs });
+      return { ok: false, retryAfter: Math.max(1, Math.ceil((1 - tokens) * windowMs / max / 1000)) };
+    },
+    get size() { return buckets.size; },
+  };
+}
+
+/**
+ * La IP del cliente. Detrás de un proxy inverso, el socket es el del proxy, así que se lee `X-Forwarded-For` contando desde la
+ * derecha tantos saltos de confianza como `trustedProxies` (lo que añadió nuestro proxy; lo que escribió el cliente va más a la
+ * izquierda y no cuenta). Con 0 se ignora la cabecera.
+ */
+export function clientIp(request, trustedProxies = 1) {
+  const socket = request.socket?.remoteAddress ?? "desconocida";
+  if (!(trustedProxies > 0)) return socket;
+  const hops = String(request.headers["x-forwarded-for"] ?? "").split(",").map((hop) => hop.trim()).filter(Boolean);
+  return hops[Math.max(0, hops.length - trustedProxies)] ?? socket;
+}

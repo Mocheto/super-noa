@@ -3,6 +3,7 @@ import { once } from "node:events";
 import test from "node:test";
 import { randomUUID } from "node:crypto";
 import { createRankingServer, leaderboardQuery, rankingSchema } from "./ranking-server.mjs";
+import { createRateLimiter, rateLimits } from "./ranking-domain.mjs";
 
 function profilePool() {
   const profiles = new Map();
@@ -33,8 +34,8 @@ function profilePool() {
   };
 }
 
-async function apiFixture(t, pool = profilePool()) {
-  const server = createRankingServer({ pool, tokenPepper: "test-pepper", logger: { error() {} } });
+async function apiFixture(t, pool = profilePool(), options = {}) {
+  const server = createRankingServer({ pool, tokenPepper: "test-pepper", logger: { error() {} }, ...options });
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   t.after(async () => {
@@ -236,4 +237,88 @@ test("revisión de alias sin base: clave mala, sin clave configurada y alias que
   });
   const missing = await fetch(`http://127.0.0.1:${sinClave.address().port}/v1/admin/aliases`, { headers: { Authorization: `Bearer ${adminToken}` } });
   assert.equal(missing.status, 404);
+});
+
+test("límite de peticiones: 200 registros seguidos desde una IP ya no entran, con 429 y Retry-After", async (t) => {
+  const api = await apiFixture(t);
+  const origin = "https://mocheto.github.io";
+  const statuses = [];
+  let rejected;
+  for (let i = 0; i < 200; i += 1) {
+    const response = await fetch(`${api.url}/v1/devices`, {
+      method: "POST", headers: { "Content-Type": "application/json", Origin: origin, "X-Forwarded-For": "203.0.113.7" },
+      body: JSON.stringify({ alias: `Noa${String(i).padStart(3, "0")}`, deviceId: randomUUID(), deviceToken: "a".repeat(43) }),
+    });
+    statuses.push(response.status);
+    if (response.status === 429 && !rejected) rejected = response;
+    else await response.body.cancel();
+  }
+  assert.equal(statuses.filter((status) => status === 201).length, rateLimits.registro.ip.max);
+  assert.equal(statuses.filter((status) => status === 429).length, 200 - rateLimits.registro.ip.max);
+  assert.equal(api.pool.profiles.size, rateLimits.registro.ip.max, "lo rechazado no llega a la base de datos");
+  assert.equal(rejected.headers.get("Retry-After"), String(Math.ceil(3_600 / rateLimits.registro.ip.max)));
+  assert.equal(rejected.headers.get("Access-Control-Expose-Headers"), "Retry-After", "el navegador puede leer Retry-After desde otro origen");
+  assert.equal(rejected.headers.get("Access-Control-Allow-Origin"), origin);
+  assert.deepEqual(await rejected.json(), {
+    error: "Hay muchas peticiones seguidas. Espera un poquito y vuelve a intentarlo.", code: "rate_limited", retryable: true, retryAfter: 360,
+  });
+  const other = await fetch(`${api.url}/v1/devices`, {
+    method: "POST", headers: { "Content-Type": "application/json", "X-Forwarded-For": "203.0.113.8" },
+    body: JSON.stringify({ alias: "OtraCasa", deviceId: randomUUID(), deviceToken: "b".repeat(43) }),
+  });
+  assert.equal(other.status, 201, "otra IP no se ve afectada");
+});
+
+test("límite de peticiones: por dispositivo, aunque cambie la IP, y cada tipo tiene su cubeta", async (t) => {
+  let now = 0;
+  const api = await apiFixture(t, undefined, { rateLimiter: createRateLimiter({ now: () => now }) });
+  const card = { deviceId: randomUUID(), deviceToken: "c".repeat(43) };
+  const headers = (ip) => ({ "Content-Type": "application/json", "X-Forwarded-For": ip, "X-Super-Noa-Device": card.deviceId, "X-Super-Noa-Token": card.deviceToken });
+  const progress = { world: 1, completedLevels: 1, stickers: 0, bossChallenges: 0 };
+  const statuses = [];
+  for (let i = 0; i < rateLimits.progreso.device.max + 3; i += 1) {
+    const response = await fetch(`${api.url}/v1/progress`, { method: "POST", headers: headers(`198.51.100.${i}`), body: JSON.stringify(progress) });
+    statuses.push(response.status);
+    await response.body.cancel();
+  }
+  assert.equal(statuses.filter((status) => status === 429).length, 3, "con 12 envíos por minuto, el resto espera, venga de la IP que venga");
+  assert.ok(!statuses.slice(0, rateLimits.progreso.device.max).includes(429));
+  const read = await fetch(`${api.url}/health`, { headers: { "X-Forwarded-For": "198.51.100.200" } });
+  assert.equal(read.status, 200, "consultar el tablón no gasta fichas de envío");
+  await read.body.cancel();
+  now = 5_000;
+  const later = await fetch(`${api.url}/v1/progress`, { method: "POST", headers: headers("198.51.100.99"), body: JSON.stringify(progress) });
+  assert.notEqual(later.status, 429, "pasado el Retry-After, vuelve a entrar");
+  await later.body.cancel();
+});
+
+test("límite de peticiones: el registro cuenta por tarjeta aunque se repita el cuerpo, y la consulta tiene su tope por IP", async (t) => {
+  const api = await apiFixture(t);
+  const card = { alias: "NoaLuna", deviceId: randomUUID(), deviceToken: "d".repeat(43) };
+  const codes = [];
+  for (let i = 0; i < rateLimits.registro.device.max + 2; i += 1) {
+    const response = await api.post("/v1/devices", card, { "X-Forwarded-For": `192.0.2.${i}` });
+    codes.push(response.status);
+    await response.body.cancel();
+  }
+  assert.deepEqual(codes, [201, 200, 200, 200, 200, 429, 429]);
+  const reads = [];
+  for (let i = 0; i < rateLimits.consulta.ip.max + 1; i += 1) {
+    const response = await fetch(`${api.url}/health`, { headers: { "X-Forwarded-For": "192.0.2.250" } });
+    reads.push(response.status);
+    await response.body.cancel();
+  }
+  assert.equal(reads.at(-1), 429);
+  assert.equal(reads.filter((status) => status === 200).length, rateLimits.consulta.ip.max);
+});
+
+test("límite de peticiones: sin proxy de confianza la IP es la del socket y X-Forwarded-For no sirve para esquivarlo", async (t) => {
+  const api = await apiFixture(t, undefined, { trustedProxies: 0 });
+  const statuses = [];
+  for (let i = 0; i < rateLimits.registro.ip.max + 1; i += 1) {
+    const response = await api.post("/v1/devices", { alias: `Falso${i}`, deviceId: randomUUID(), deviceToken: "e".repeat(43) }, { "X-Forwarded-For": `192.0.2.${i}` });
+    statuses.push(response.status);
+    await response.body.cancel();
+  }
+  assert.equal(statuses.at(-1), 429);
 });

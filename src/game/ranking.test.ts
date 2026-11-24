@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import { emptyProgress } from "./progress.ts";
-import { checkRankingAvailability, loadRanking, RankingError, rankingProgress, readRankingDevice, registerRankingDevice, syncRanking } from "./ranking.ts";
+import { checkRankingAvailability, loadRanking, parseRetryAfter, RankingError, rankingProgress, readRankingDevice, registerRankingDevice, resetRankingCooldowns, syncRanking } from "./ranking.ts";
 
 test("el tablón reconoce el mundo 12 y sus pantallas de campaña", () => {
   const levelStats = Object.fromEntries(["1-1", "9-1", "12-1"].map((id) => [id, {
@@ -280,4 +280,60 @@ test("la sincronización descarta fechas locales dañadas y normaliza zonas hora
     { alias: "Luna", world: 0, completedLevels: 0, stickers: 0, bossChallenges: 0, achievedAt: "2024-02-29T12:30:00+02:00" },
   ] }));
   assert.equal((await loadRanking())[0].achievedAt, normalized);
+});
+
+test("Retry-After: segundos, fecha HTTP, cuerpo o un minuto, siempre entre 1 s y 1 h", () => {
+  assert.equal(parseRetryAfter("120", null), 120_000);
+  assert.equal(parseRetryAfter("0", null), 1_000);
+  assert.equal(parseRetryAfter("999999", null), 3_600_000);
+  assert.equal(parseRetryAfter("Wed, 21 Oct 2015 07:28:30 GMT", null, Date.parse("2015-10-21T07:28:00Z")), 30_000);
+  assert.equal(parseRetryAfter(null, { retryAfter: 45 }), 45_000);
+  assert.equal(parseRetryAfter("basura", null), 60_000);
+  assert.equal(parseRetryAfter(null, null), 60_000);
+});
+
+test("un 429 con Retry-After frena esa ruta sin llamar al servidor hasta que pase, y no frena las demás", async (t) => {
+  resetRankingCooldowns();
+  t.after(resetRankingCooldowns);
+  const now = t.mock.method(Date, "now", () => 1_000_000);
+  const calls: string[] = [];
+  let limited = true;
+  t.mock.method(globalThis, "fetch", async (url: string) => {
+    calls.push(url);
+    if (url.includes("/v1/leaderboard") && limited) return new Response(JSON.stringify({ code: "rate_limited", retryable: true }), { status: 429, headers: { "Content-Type": "application/json", "Retry-After": "30" } });
+    if (url.endsWith("/health")) return jsonResponse({ registrationVersion: 2, progressVersion: 2 });
+    return jsonResponse({ players: [] });
+  });
+  await assert.rejects(loadRanking(), (error: unknown) => error instanceof RankingError && error.code === "rate_limited" && error.retryable && error.status === 429 && error.retryAfterMs === 30_000);
+  assert.equal(calls.length, 1);
+  for (let i = 0; i < 10; i += 1) {
+    await assert.rejects(loadRanking(), (error: unknown) => error instanceof RankingError && error.code === "rate_limited" && error.status === null && error.retryAfterMs === 30_000);
+  }
+  assert.equal(calls.length, 1, "durante la espera no hay ni una petición más, ni en bucle");
+  now.mock.mockImplementation(() => 1_000_000 + 12_000);
+  await assert.rejects(loadRanking(), (error: unknown) => error instanceof RankingError && error.retryAfterMs === 18_000);
+  assert.equal(calls.length, 1);
+  assert.deepEqual(await (async () => { await fetch("https://rankings.moche-home.es/health"); return calls.length; })(), 2, "otras rutas no tienen veda");
+  limited = false;
+  now.mock.mockImplementation(() => 1_000_000 + 30_000);
+  assert.deepEqual(await loadRanking(), []);
+  assert.equal(calls.length, 3, "pasado el Retry-After vuelve a llamar");
+});
+
+test("el registro respeta la veda sin borrar la tarjeta guardada: se reintenta con la misma", async (t) => {
+  resetRankingCooldowns();
+  storageFixture(t);
+  t.after(resetRankingCooldowns);
+  let registrations = 0;
+  t.mock.method(globalThis, "fetch", async (url: string) => {
+    if (url.endsWith("/health")) return jsonResponse({ registrationVersion: 2 });
+    registrations += 1;
+    return new Response("{}", { status: 429, headers: { "Content-Type": "application/json", "Retry-After": "3600" } });
+  });
+  await assert.rejects(registerRankingDevice("NoaLuna"), (error: unknown) => error instanceof RankingError && error.code === "rate_limited" && error.retryAfterMs === 3_600_000);
+  const pending = readRankingDevice();
+  assert.ok(pending?.registrationPending, "la tarjeta sigue pendiente");
+  await assert.rejects(registerRankingDevice("NoaLuna"), (error: unknown) => error instanceof RankingError && error.code === "rate_limited");
+  assert.equal(registrations, 1);
+  assert.equal(readRankingDevice()?.id, pending.id);
 });

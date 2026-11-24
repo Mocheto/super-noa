@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
-import { adminTokenMatches, aliasAllowed, aliasStatuses, createDeviceCredentials, hashDeviceToken, normalizeAlias, publicAlias, validateDeviceCredentials, validateProgress } from "./ranking-domain.mjs";
+import { adminTokenMatches, aliasAllowed, aliasStatuses, clientIp, createDeviceCredentials, createRateLimiter, hashDeviceToken, normalizeAlias, publicAlias, rateLimitGroup, rateLimits, validateDeviceCredentials, validateProgress } from "./ranking-domain.mjs";
 
 export const rankingSchema = `
   CREATE TABLE IF NOT EXISTS super_noa_ranking_profiles (
@@ -82,10 +82,11 @@ export const progressUpdateQuery = `UPDATE super_noa_ranking_profiles SET
   WHERE id = $1 AND token_hash = $2 RETURNING ${playerColumns}`;
 
 class RequestError extends Error {
-  constructor(status, code, message) {
+  constructor(status, code, message, retryAfter = null) {
     super(message);
     this.status = status;
     this.code = code;
+    this.retryAfter = retryAfter;
   }
 }
 
@@ -182,11 +183,13 @@ export const adminListQuery = `SELECT id, alias, approved_alias AS "approvedAlia
   alias_submitted_at AS "submittedAt" FROM super_noa_ranking_profiles
   WHERE ($1::TEXT IS NULL OR alias_status = $1) ORDER BY alias_submitted_at ASC NULLS FIRST, id ASC LIMIT 500`;
 
-export function createRankingServer({ pool, tokenPepper, adminToken = null, allowedOrigins = new Set(["https://mocheto.github.io"]), release = "manual", logger = console }) {
-  function sendJson(response, status, payload, origin) {
-    const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" };
+export function createRankingServer({ pool, tokenPepper, adminToken = null, allowedOrigins = new Set(["https://mocheto.github.io"]), release = "manual", logger = console, rateLimiter = createRateLimiter(), trustedProxies = 1 }) {
+  function sendJson(response, status, payload, origin, extraHeaders = {}) {
+    const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", ...extraHeaders };
     if (origin && allowedOrigins.has(origin)) {
       headers["Access-Control-Allow-Origin"] = origin;
+      // Sin esto, el navegador no deja leer `Retry-After` desde otro origen.
+      headers["Access-Control-Expose-Headers"] = "Retry-After";
       headers.Vary = "Origin";
     }
     response.writeHead(status, headers);
@@ -208,6 +211,20 @@ export function createRankingServer({ pool, tokenPepper, adminToken = null, allo
     if (origin && !allowedOrigins.has(origin)) return sendJson(response, 403, { error: "Origen no permitido.", code: "request_failed", retryable: false });
     try {
       const url = new URL(request.url ?? "/", "http://localhost");
+      // Primero la IP, antes de leer el cuerpo o tocar la base de datos; el dispositivo se mira en cuanto se conoce.
+      const group = rateLimitGroup(request.method, url.pathname);
+      const limit = (key, rule) => {
+        const verdict = rateLimiter.take(`${group}:${key}`, rule);
+        if (!verdict.ok) {
+          throw new RequestError(429, "rate_limited", "Hay muchas peticiones seguidas. Espera un poquito y vuelve a intentarlo.", verdict.retryAfter);
+        }
+      };
+      const limitDevice = (deviceId) => {
+        if (typeof deviceId === "string" && uuidPattern.test(deviceId)) limit(`device:${deviceId.toLowerCase()}`, rateLimits[group].device);
+      };
+      limit(`ip:${clientIp(request, trustedProxies)}`, rateLimits[group].ip);
+      // Las rutas con la tarjeta en las cabeceras se limitan por dispositivo antes de leer nada más.
+      limitDevice(request.headers["x-super-noa-device"]);
       if (request.method === "GET" && url.pathname === "/health") {
         await pool.query("SELECT total_apples, achieved_at, alias_status, approved_alias FROM super_noa_ranking_profiles LIMIT 0");
         return sendJson(response, 200, { status: "bien", release, registrationVersion: 2, progressVersion: 2, aliasReviewVersion: 1 }, origin);
@@ -220,6 +237,7 @@ export function createRankingServer({ pool, tokenPepper, adminToken = null, allo
       }
       if (request.method === "POST" && url.pathname === "/v1/devices") {
         const body = await readJson(request);
+        limitDevice(body?.deviceId);
         const alias = normalizeAlias(body?.alias);
         if (!alias) throw new RequestError(400, "invalid_alias", "El alias debe tener entre 3 y 16 letras o números.");
         if (!aliasAllowed(alias)) throw aliasNotAllowed();
@@ -285,6 +303,9 @@ export function createRankingServer({ pool, tokenPepper, adminToken = null, allo
       }
       throw new RequestError(404, "request_failed", "No encuentro ese camino.");
     } catch (error) {
+      if (error instanceof RequestError && error.status === 429) {
+        return sendJson(response, 429, { error: error.message, code: error.code, retryable: true, retryAfter: error.retryAfter }, origin, { "Retry-After": String(error.retryAfter) });
+      }
       if (error instanceof RequestError) return sendJson(response, error.status, { error: error.message, code: error.code, retryable: false }, origin);
       logger.error("El ranking no pudo completar la petición.", error);
       return sendJson(response, 503, { error: "El ranking está descansando un momento. Tu aventura sigue guardada aquí; vuelve a intentarlo.", code: "server_unavailable", retryable: true }, origin);
@@ -309,6 +330,8 @@ async function main() {
     // Clave de la revisión de alias: solo en el entorno del servidor; sin ella, la revisión no existe.
     adminToken: process.env.RANKING_ADMIN_TOKEN || null,
     allowedOrigins: new Set((process.env.RANKING_ALLOWED_ORIGINS ?? "https://mocheto.github.io").split(",").map((origin) => origin.trim()).filter(Boolean)),
+    // Saltos de proxy inverso de confianza para leer la IP de `X-Forwarded-For` (0 la ignora; sin proxy delante, ponlo a 0).
+    trustedProxies: process.env.RANKING_TRUSTED_PROXIES === undefined ? 1 : Math.max(0, Number.parseInt(process.env.RANKING_TRUSTED_PROXIES, 10) || 0),
     release: /^[a-f\d]{40}$/.test(process.env.RANKING_RELEASE_SHA ?? "") ? process.env.RANKING_RELEASE_SHA.slice(0, 12) : "manual",
   });
   server.listen(port, "0.0.0.0", () => console.info(`Ranking de Super Noa listo en el puerto ${port}.`));

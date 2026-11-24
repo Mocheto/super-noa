@@ -40,12 +40,13 @@ import { createExploreState, hintTarget, reachedGate, shortcutWalls, stepExplore
 import { drawExploreOverlay, drawExploreWorld, prepararExploracion } from "./exploreRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
 import { aterrizar, golpearCajas } from "./colisionPartida";
+import { peligroMortal, puntosSegurosAlcanzados, seCayo, tocaLava } from "./peligrosPartida";
 import { camaraAlReaparecer, camaraInicial, metaAlcanzada, seguirCamara, superficieMeta } from "./camaraPartida";
 import { ANCHO_VERTICAL, ponerVista, recorteObjetivo, vista } from "./vista";
 import { drawContornos, drawHalo, drawVelo, opacidadInvencible } from "./halo";
 import { crearEfectos, drawEfectos } from "./efectos";
 import {
-  createInitialPlayer, enemyY, lavaJetState, positiveModulo, waterJumperState, type LiveEnemy, type LiveItem, type LiveWaterJumper,
+  createInitialPlayer, enemyY, positiveModulo, waterJumperState, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
 import { t, textoLienzo } from "../textos";
@@ -551,23 +552,14 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         else items.push({ id: `${block.id}-reward`, kind: block.reward, x: block.x + 4, y: block.y - 42, age: 0, rise: 0, fromBlock: true });
       }
 
-      if (level.spikePits?.some((pit) => intersects(player, { x: pit.x + 8, y: pit.y + 16, width: pit.width - 16, height: pit.height }))) {
+      // Pinchos y agua mortal terminan el paso; la lava hace daño y caerse reaparece sin terminarlo.
+      if (peligroMortal(level, player)) {
         callbacksRef.current.playSound("hurt");
         respawn();
         return;
       }
-      if (level.deadlyWater?.some((zone) => intersects(player, { x: zone.x + 5, y: zone.y + 8, width: zone.width - 10, height: zone.height }))) {
-        callbacksRef.current.playSound("hurt");
-        respawn();
-        return;
-      }
-      if (level.lavaJets?.some((jet) => {
-        const state = lavaJetState(jet, levelAge);
-        return state.extension > .12 && intersects(player, state.rect);
-      })) {
-        hurt();
-      }
-      if (player.y > (level.orientation === "vertical" ? cameraY + VIEW_HEIGHT + 100 : explore ? (level.height ?? VIEW_HEIGHT) + 80 : VIEW_HEIGHT + 120)) {
+      if (tocaLava(level, player, levelAge)) hurt();
+      if (seCayo(level, player, cameraY, Boolean(explore))) {
         callbacksRef.current.playSound("hurt");
         respawn();
       }
@@ -764,29 +756,14 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         if (bursts[index].life <= 0) bursts.splice(index, 1);
       }
 
-      level.checkpoints.forEach((checkpoint, index) => {
-        if (index > checkpointIndex && player.x >= checkpoint) {
-          checkpointIndex = index;
-          respawnX = checkpoint + 22;
-          callbacksRef.current.playSound("checkpoint");
-          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.bandera.oculto", { n: index + 1 });
-          palabras.recoger("flag");
-        }
-      });
-      level.verticalCheckpoints?.forEach((checkpoint, index) => {
-        // En la exploración el punto seguro se toma al pasar por él; en las subidas, al llegar a su altura.
-        const reached = explore
-          ? player.grounded && Math.abs(player.x + player.width / 2 - checkpoint.x - 21) < 70 && Math.abs(player.y + player.height - checkpoint.y) < 8
-          : player.y <= checkpoint.y;
-        if (index > checkpointIndex && reached) {
-          checkpointIndex = index;
-          respawnX = checkpoint.x;
-          respawnY = checkpoint.y - player.height;
-          callbacksRef.current.playSound("checkpoint");
-          if (statusRef.current) statusRef.current.textContent = t("partida.avisos.nubeSegura.oculto", { n: index + 1 });
-          palabras.recoger("flag");
-        }
-      });
+      for (const punto of puntosSegurosAlcanzados(level, player, checkpointIndex, Boolean(explore))) {
+        checkpointIndex = punto.indice;
+        respawnX = punto.x;
+        if (punto.tipo === "vertical") respawnY = punto.y;
+        callbacksRef.current.playSound("checkpoint");
+        if (statusRef.current) statusRef.current.textContent = t(punto.tipo === "bandera" ? "partida.avisos.bandera.oculto" : "partida.avisos.nubeSegura.oculto", { n: punto.indice + 1 });
+        palabras.recoger("flag");
+      }
 
       const secretVine = level.rewardBlocks.find((block) => block.reward === "secret-vine");
       if (level.waterEntrance && intersects(player, level.waterEntrance)) {

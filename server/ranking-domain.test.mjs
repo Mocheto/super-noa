@@ -111,3 +111,44 @@ test("la clave de administración: corta, ausente o distinta no vale", () => {
   assert.equal(adminTokenMatches("corta", "corta"), false, "una clave de menos de 16 caracteres no se acepta");
   assert.equal(adminTokenMatches(undefined, "algo"), false);
 });
+
+test("la cubeta de fichas deja pasar el tope, dice cuánto esperar y se recupera con el tiempo", async () => {
+  const { createRateLimiter } = await import("./ranking-domain.mjs");
+  let now = 0;
+  const limiter = createRateLimiter({ now: () => now });
+  const rule = { max: 5, windowMs: 3_600_000 };
+  for (let i = 0; i < 5; i += 1) assert.deepEqual(limiter.take("a", rule), { ok: true });
+  assert.deepEqual(limiter.take("a", rule), { ok: false, retryAfter: 720 }, "una ficha tarda 3600 s / 5");
+  assert.deepEqual(limiter.take("b", rule), { ok: true }, "cada clave tiene su cubeta");
+  now = 719_000;
+  assert.equal(limiter.take("a", rule).ok, false, "esperar menos de lo dicho no basta");
+  assert.equal(limiter.take("a", rule).retryAfter, 1, "y la espera nunca baja de un segundo");
+  now = 720_000;
+  assert.deepEqual(limiter.take("a", rule), { ok: true });
+  assert.equal(limiter.take("a", rule).ok, false);
+});
+
+test("el limitador olvida las cubetas llenas y no crece sin tope con claves nuevas", async () => {
+  const { createRateLimiter } = await import("./ranking-domain.mjs");
+  let now = 0;
+  const limiter = createRateLimiter({ now: () => now, maxKeys: 100 });
+  const rule = { max: 2, windowMs: 1_000 };
+  for (let i = 0; i < 100; i += 1) limiter.take(`k${i}`, rule);
+  now = 10_000;
+  limiter.take("nueva", rule);
+  assert.equal(limiter.size, 1, "las cubetas ya recuperadas se olvidan");
+  for (let i = 0; i < 1_000; i += 1) limiter.take(`x${i}`, rule);
+  assert.ok(limiter.size <= 100);
+});
+
+test("la IP sale de X-Forwarded-For contando desde el proxy de confianza", async () => {
+  const { clientIp, rateLimitGroup } = await import("./ranking-domain.mjs");
+  const request = (forwarded) => ({ socket: { remoteAddress: "10.0.0.2" }, headers: forwarded === undefined ? {} : { "x-forwarded-for": forwarded } });
+  assert.equal(clientIp(request("1.2.3.4")), "1.2.3.4");
+  assert.equal(clientIp(request("6.6.6.6, 1.2.3.4")), "1.2.3.4", "lo que escribió el cliente va a la izquierda y no cuenta");
+  assert.equal(clientIp(request("6.6.6.6, 1.2.3.4, 10.0.0.9"), 2), "1.2.3.4");
+  assert.equal(clientIp(request("1.2.3.4"), 0), "10.0.0.2", "sin proxy de confianza se ignora la cabecera");
+  assert.equal(clientIp(request()), "10.0.0.2");
+  assert.deepEqual(["OPTIONS /v1/devices", "POST /v1/devices", "POST /v1/alias", "POST /v1/progress", "GET /health", "GET /v1/leaderboard", "GET /v1/admin/aliases"]
+    .map((route) => rateLimitGroup(...route.split(" "))), [null, "registro", "registro", "progreso", "consulta", "consulta", "consulta"]);
+});

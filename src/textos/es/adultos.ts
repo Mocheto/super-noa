@@ -113,5 +113,6 @@ export const adultos = {
   },
   ranking: {
     "sin-conexion": "No puedo conectar con el ranking. Tu aventura sigue guardada aquí. Puedes volver a intentarlo.",
+    "demasiadas-peticiones": "El ranking pide un respiro por haber hecho muchas peticiones seguidas. Tu aventura sigue guardada aquí; se enviará más tarde.",
   },
 } as const;

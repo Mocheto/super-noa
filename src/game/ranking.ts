@@ -10,16 +10,19 @@ export const rankingConnectionMessage = t("adultos.ranking.sin-conexion");
 
 export type RankingDevice = { id: string; token: string; alias: string; registrationPending?: boolean };
 export type RankingPlayer = { alias: string; world: number; campaignWorld: number | null; completedLevels: number; stickers: number; bossChallenges: number; totalApples: number | null; achievedAt: string | null };
-export type RankingErrorCode = "network" | "timeout" | "storage_unavailable" | "invalid_alias" | "alias_not_allowed" | "alias_taken" | "device_invalid" | "device_exists" | "backend_outdated" | "invalid_response" | "server_unavailable" | "request_failed";
-const rankingErrorCodes: readonly RankingErrorCode[] = ["network", "timeout", "storage_unavailable", "invalid_alias", "alias_not_allowed", "alias_taken", "device_invalid", "device_exists", "backend_outdated", "invalid_response", "server_unavailable", "request_failed"];
+export type RankingErrorCode = "network" | "timeout" | "storage_unavailable" | "invalid_alias" | "alias_not_allowed" | "alias_taken" | "device_invalid" | "device_exists" | "backend_outdated" | "invalid_response" | "server_unavailable" | "rate_limited" | "request_failed";
+const rankingErrorCodes: readonly RankingErrorCode[] = ["network", "timeout", "storage_unavailable", "invalid_alias", "alias_not_allowed", "alias_taken", "device_invalid", "device_exists", "backend_outdated", "invalid_response", "server_unavailable", "rate_limited", "request_failed"];
 
 export class RankingError extends Error {
   readonly code: RankingErrorCode;
   readonly retryable: boolean;
   readonly status: number | null;
+  /** Milisegundos que pidió esperar el servidor (`Retry-After`); solo en `rate_limited`. */
+  readonly retryAfterMs: number | null;
 
-  constructor(code: RankingErrorCode, message: string, retryable: boolean, status: number | null = null) {
+  constructor(code: RankingErrorCode, message: string, retryable: boolean, status: number | null = null, retryAfterMs: number | null = null) {
     super(message);
+    this.retryAfterMs = retryAfterMs;
     this.name = "RankingError";
     this.code = code;
     this.retryable = retryable;
@@ -64,10 +67,47 @@ export function rankingProgress(progress: Progress) {
   };
 }
 
+// Si el servidor dice «espera» (429 con Retry-After), no se le vuelve a llamar a esa ruta hasta pasado ese tiempo, venga el reintento
+// de donde venga (conexión recuperada, botón de actualizar, cambio de progreso). Es una veda por tipo de petición, igual que el servidor.
+const MIN_RETRY_AFTER_MS = 1_000;
+const MAX_RETRY_AFTER_MS = 3_600_000;
+const DEFAULT_RETRY_AFTER_MS = 60_000;
+const cooldowns = new Map<string, number>();
+
+function cooldownGroup(path: string, post: boolean) {
+  const route = path.split("?")[0];
+  return post && (route === "/v1/devices" || route === "/v1/alias") ? "registro" : post && route === "/v1/progress" ? "progreso" : "consulta";
+}
+
+/** `Retry-After` son segundos enteros o una fecha HTTP; sin cabecera legible se usa el campo `retryAfter` del cuerpo o un minuto. */
+export function parseRetryAfter(header: string | null, body: unknown, now = Date.now()): number {
+  const fromBody = isRecord(body) && typeof body.retryAfter === "number" ? body.retryAfter : null;
+  const seconds = header !== null && /^\s*\d+\s*$/.test(header) ? Number(header)
+    : header !== null && !Number.isNaN(Date.parse(header)) ? (Date.parse(header) - now) / 1_000
+    : fromBody;
+  const ms = seconds !== null && Number.isFinite(seconds) ? seconds * 1_000 : DEFAULT_RETRY_AFTER_MS;
+  return Math.min(MAX_RETRY_AFTER_MS, Math.max(MIN_RETRY_AFTER_MS, Math.ceil(ms)));
+}
+
+/** Solo para las pruebas: olvida las vedas. */
+export function resetRankingCooldowns() { cooldowns.clear(); }
+
+function rateLimitedError(waitMs: number, status: number | null) {
+  return new RankingError("rate_limited", t("adultos.ranking.demasiadas-peticiones"), true, status, waitMs);
+}
+
 async function request(path: string, init?: RequestInit) {
+  const group = cooldownGroup(path, init?.method === "POST");
+  const waiting = (cooldowns.get(group) ?? 0) - Date.now();
+  if (waiting > 0) throw rateLimitedError(waiting, null);
   try {
     const response = await fetch(`${RANKING_URL}${path}`, { ...init, signal: AbortSignal.timeout(7_000) });
     const body: unknown = await response.json().catch(() => null);
+    if (response.status === 429) {
+      const waitMs = parseRetryAfter(response.headers.get("Retry-After"), body);
+      cooldowns.set(group, Date.now() + waitMs);
+      throw rateLimitedError(waitMs, 429);
+    }
     if (!response.ok) {
       const fallbackCode = response.status === 401 ? "device_invalid" : response.status === 409
         ? isRecord(body) && body.code === "device_exists" ? "device_exists" : "alias_taken"

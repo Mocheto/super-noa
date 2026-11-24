@@ -5,13 +5,13 @@
  * Solo lógica: sin dibujo.
  */
 
-export type MuebleId = "cama" | "alfombra" | "cuadro" | "planta" | "pared";
-export type Version = 0 | 1 | 2 | 3 | 4;
-export type Decoracion = Record<MuebleId, Version>;
-export type Caja = { x: number; y: number; ancho: number; alto: number };
+import { DECORACION_DE_SIEMPRE, esDeSiempre, MUEBLES, normalizeDecoracion, VERSIONES, type Decoracion, type MuebleId, type Version } from "./casaProgreso.ts";
 
-export const MUEBLES: readonly MuebleId[] = ["cama", "alfombra", "cuadro", "planta", "pared"];
-export const VERSIONES: readonly Version[] = [0, 1, 2, 3, 4];
+// Los identificadores que se guardan y su lectura viven en `casaProgreso.ts`, fuera del bloque de la casa.
+export { DECORACION_DE_SIEMPRE, esDeSiempre, MUEBLES, normalizeDecoracion, VERSIONES };
+export type { Decoracion, MuebleId, Version };
+
+export type Caja = { x: number; y: number; ancho: number; alto: number };
 
 export type Mueble = {
   /** Dónde está el de siempre en la escena de 1280 × 540, para tocarlo (la pared es toda la habitación y no tiene caja). */
@@ -54,18 +54,6 @@ export const TONOS_PARED: readonly (readonly [string, string])[] = [
   ["#e2effa", "#c9e0f4"],
   ["#fff4c9", "#fbe6a2"],
 ];
-
-export const DECORACION_DE_SIEMPRE: Decoracion = { cama: 0, alfombra: 0, cuadro: 0, planta: 0, pared: 0 };
-
-const esVersion = (valor: unknown): valor is Version => VERSIONES.includes(valor as Version);
-
-/** Lectura tolerante: lo que falte o no valga sale como la decoración de siempre. */
-export function normalizeDecoracion(raw: unknown): Decoracion {
-  const datos = typeof raw === "object" && raw !== null && !Array.isArray(raw) ? raw as Record<string, unknown> : {};
-  return Object.fromEntries(MUEBLES.map((id) => [id, esVersion(datos[id]) ? datos[id] : 0])) as Decoracion;
-}
-
-export const esDeSiempre = (decoracion: Decoracion) => MUEBLES.every((id) => decoracion[id] === 0);
 
 export const cambiarMueble = (decoracion: Decoracion, mueble: MuebleId, version: Version): Decoracion =>
   ({ ...decoracion, [mueble]: version });

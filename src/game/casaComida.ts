@@ -4,6 +4,9 @@
  * descubre. Sin hambre, «ahora no» igual. Las descubiertas se guardan en el campo opcional `casa.favoritas`. Solo lógica.
  */
 import { cuidar, type CasaProgress, type ResultadoCuidado } from "./casa.ts";
+import { normalizeFavoritas } from "./casaProgreso.ts";
+
+export { normalizeFavoritas };
 
 export const COMIDAS = ["pescado", "leche", "galletas", "pollo"] as const;
 /** Lámina de las cuatro comidas en su cuenco, en el orden de `COMIDAS` (docs/art/casa-comida-v1.md). */
@@ -37,11 +40,4 @@ export function darDeComer(casa: CasaProgress, mundo: number, comida: Comida, ah
   const ya = resultado.casa.favoritas ?? [];
   if (ya.includes(mundo)) return { ...resultado, favorita: true, descubierta: false };
   return { ...resultado, casa: { ...resultado.casa, favoritas: [...ya, mundo].sort((a, b) => a - b) }, favorita: true, descubierta: true };
-}
-
-/** Lectura tolerante de las favoritas descubiertas: solo gatitos de la casa, sin repetir. */
-export function normalizeFavoritas(raw: unknown, esGatito: (mundo: number) => boolean): number[] | undefined {
-  if (!Array.isArray(raw)) return undefined;
-  const mundos = [...new Set(raw.map(Number).filter((mundo) => Number.isInteger(mundo) && esGatito(mundo)))].sort((a, b) => a - b);
-  return mundos.length ? mundos : undefined;
 }

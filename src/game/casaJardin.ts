@@ -4,7 +4,15 @@
  * `casa.jardin`). Solo lógica.
  */
 import { cuidar, enCasaDe, fechaLocal, LANZAMIENTOS_PARA_JUGAR, type CasaProgress, type ResultadoCuidado } from "./casa.ts";
+import {
+  CELDAS_MACETEROS, COLORES_FLOR, ETAPAS, JARDIN_DE_SIEMPRE, normalizeEnJardin, normalizeJardin,
+  type ColorFlor, type Etapa, type JardinProgress, type Macetero,
+} from "./casaProgreso.ts";
 import type { SitioInteres, SueloDeEstancia } from "./casaHabitacion.ts";
+
+// Lo que se guarda del jardín y su lectura viven en `casaProgreso.ts`, fuera del bloque de la casa.
+export { CELDAS_MACETEROS, COLORES_FLOR, ETAPAS, JARDIN_DE_SIEMPRE, normalizeEnJardin, normalizeJardin };
+export type { ColorFlor, Etapa, JardinProgress, Macetero };
 
 export const ESTANCIAS = ["habitacion", "jardin"] as const;
 export type Estancia = (typeof ESTANCIAS)[number];
@@ -114,13 +122,6 @@ export const CAMBIAR_SOLO = 0.03;
 /** ¿Se va solo a la otra estancia esta vez? (de noche, nunca). */
 export const cambiaSolo = (azar: () => number, noche: boolean) => !noche && azar() < CAMBIAR_SOLO;
 
-/** Lectura tolerante de los gatitos en el jardín: solo gatitos de la casa, sin repetir. */
-export function normalizeEnJardin(raw: unknown, esGatito: (mundo: number) => boolean): number[] | undefined {
-  if (!Array.isArray(raw)) return undefined;
-  const mundos = [...new Set(raw.map(Number).filter((mundo) => Number.isInteger(mundo) && esGatito(mundo)))].sort((a, b) => a - b);
-  return mundos.length ? mundos : undefined;
-}
-
 // --- Colchoneta ------------------------------------------------------------------------------------------------------
 
 /** Cuánto bota un gatito en la colchoneta antes de bajar de un salto, y cuántos botes da. */
@@ -225,23 +226,10 @@ export function luciernagaEn(indice: number, ms: number): { x: number; y: number
 
 // --- Maceteros -------------------------------------------------------------------------------------------------------
 
-export const ETAPAS = ["semilla", "brote", "capullo", "flor"] as const;
-export type Etapa = (typeof ETAPAS)[number];
-export const COLORES_FLOR = ["roja", "amarilla", "azul", "rosa"] as const;
-export type ColorFlor = (typeof COLORES_FLOR)[number];
-
-/** Un macetero: su etapa y, desde que brota, el color de su flor (al azar, distinto de los otros si se puede). */
 /** Lámina de los maceteros: diez celdas de 100 × 128 en fila (semilla, brote y, por color, capullo y flor). */
 export const HOJA_MACETEROS = "./assets/sprites/casa-maceteros-v1.webp";
-export const CELDAS_MACETEROS = 10;
 /** La regadera de la bandeja, en una celda de 128 × 128. */
 export const REGADERA = "./assets/sprites/casa-regadera-v1.webp";
-
-export type Macetero = { color?: ColorFlor; etapa: Etapa; /** Día local del último riego (AAAA-MM-DD). */ regado?: string };
-export type JardinProgress = { maceteros: Macetero[] };
-
-/** Si nunca se ha regado: los tres maceteros con su semilla. */
-export const JARDIN_DE_SIEMPRE: JardinProgress = { maceteros: [{ etapa: "semilla" }, { etapa: "semilla" }, { etapa: "semilla" }] };
 
 export const jardinDe = (casa: CasaProgress | undefined): JardinProgress => casa?.jardin ?? JARDIN_DE_SIEMPRE;
 
@@ -284,21 +272,4 @@ export function maceteroPorRegar(casa: CasaProgress, ahora: Date): number {
   const hoy = fechaLocal(ahora);
   const indice = jardinDe(casa).maceteros.findIndex((m) => m.etapa !== "flor" && m.regado !== hoy);
   return Math.max(0, indice);
-}
-
-/** Lectura tolerante del jardín: tres maceteros con color y etapa conocidos; lo que no se entiende, como de siempre. */
-export function normalizeJardin(raw: unknown): JardinProgress | undefined {
-  if (typeof raw !== "object" || raw === null || !Array.isArray((raw as { maceteros?: unknown }).maceteros)) return undefined;
-  const leidos = (raw as { maceteros: unknown[] }).maceteros;
-  const maceteros = JARDIN_DE_SIEMPRE.maceteros.map((deSiempre, i): Macetero => {
-    const m = leidos[i] as Partial<Record<keyof Macetero, unknown>> | undefined;
-    if (!m || typeof m !== "object") return deSiempre;
-    const color = (COLORES_FLOR as readonly unknown[]).includes(m.color) ? (m.color as ColorFlor) : undefined;
-    const leida = (ETAPAS as readonly unknown[]).includes(m.etapa) ? (m.etapa as Etapa) : "semilla";
-    // Sin color no puede haber brotado.
-    const etapa = color ? leida : "semilla";
-    const regado = typeof m.regado === "string" && /^\d{4}-\d{2}-\d{2}$/.test(m.regado) ? m.regado : undefined;
-    return { ...(etapa !== "semilla" ? { color } : {}), etapa, ...(regado ? { regado } : {}) };
-  });
-  return maceteros.every((m) => m.etapa === "semilla" && !m.regado) ? undefined : { maceteros };
 }

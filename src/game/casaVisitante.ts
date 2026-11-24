@@ -3,7 +3,7 @@
  * pasa un rato en el jardín. Quién puede venir, cuándo toca, y qué pasa al darle de comer. La última visita se guarda en
  * el campo opcional `casa.visitante`; los corazones van al progreso de amigos de siempre. Solo lógica.
  */
-import { fechaLocal, type CasaProgress } from "./casa.ts";
+import { fechaLocal, normalizeVisitante, type CasaProgress, type VisitanteProgress } from "./casaProgreso.ts";
 import { friendCatalog, type FriendFood } from "./friends.ts";
 import { nivelesCampana as levels, nivelesAgua as waterLevels } from "./nivelesIndice.ts";
 
@@ -43,7 +43,9 @@ export const SITIOS_PARA_OLER: readonly { x: number; y: number }[] = [
 /** Los gatitos van a olerlo cuando ha terminado de entrar. */
 export const OLER_TRAS_ENTRAR_MS = 2600;
 
-export type VisitanteProgress = { /** Día local de la última visita (AAAA-MM-DD). */ dia: string; /** Animal (tipo del catálogo de amigos). */ animal: string };
+// Lo que se guarda de la visita y su lectura viven en `casaProgreso.ts`, fuera del bloque de la casa.
+export { normalizeVisitante };
+export type { VisitanteProgress };
 
 type Estadisticas = Record<string, { completed?: boolean } | undefined>;
 
@@ -86,12 +88,4 @@ export const comidaFavoritaDe = (animal: string): FriendFood | null => friendCat
 export function darDeComerAlVisitante(animal: string, comida: FriendFood, yaGanoCorazon: boolean): { favorita: boolean; corazon: boolean } {
   const favorita = comidaFavoritaDe(animal) === comida;
   return { favorita, corazon: favorita && !yaGanoCorazon };
-}
-
-/** Lectura tolerante de la última visita: día válido y animal del catálogo. */
-export function normalizeVisitante(raw: unknown): VisitanteProgress | undefined {
-  if (typeof raw !== "object" || raw === null) return undefined;
-  const { dia, animal } = raw as Record<string, unknown>;
-  if (typeof dia !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(dia) || typeof animal !== "string") return undefined;
-  return friendCatalog.some((amigo) => amigo.kind === animal) ? { dia, animal } : undefined;
 }

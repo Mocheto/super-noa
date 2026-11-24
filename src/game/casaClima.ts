@@ -3,10 +3,10 @@
  * internet. Sale de la fecha local, así que es el mismo todo el día; del 1 de diciembre al 6 de enero la nieve sustituye
  * a la lluvia. Solo lógica: el dibujo está en `casaClimaArte.ts`.
  */
-import { fechaLocal } from "./casa.ts";
+import { CLIMAS, esClima, fechaLocal, type Clima } from "./casaProgreso.ts";
 
-export type Clima = "sol" | "lluvia" | "nieve" | "arcoiris";
-export const CLIMAS: readonly Clima[] = ["sol", "lluvia", "nieve", "arcoiris"];
+export { CLIMAS, esClima };
+export type { Clima };
 
 /** Reparto de los días: sol 6 de cada 10, lluvia (o nieve) 1 de cada 4 y arcoíris el resto. */
 export const PARTE_SOL = 0.6;
@@ -43,8 +43,6 @@ export const climaQueSeVe = (clima: Clima, noche: boolean): Clima => noche && cl
 
 /** Con lluvia o nieve los gatitos van más a mirar por la ventana. */
 export const miranPorLaVentana = (clima: Clima) => clima === "lluvia" || clima === "nieve";
-
-export const esClima = (valor: unknown): valor is Clima => typeof valor === "string" && (CLIMAS as readonly string[]).includes(valor);
 
 /** `?casaClima=lluvia` fuerza el clima para probarlo; si no, `null`. */
 export function climaDePrueba(busqueda: string | null): Clima | null {

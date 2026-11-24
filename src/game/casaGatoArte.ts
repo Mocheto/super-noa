@@ -8,23 +8,11 @@ export const HOJA_GATO = "./assets/sprites/gato-casa-v1.webp";
 export const CUADRO_GATO = 160;
 export const COLUMNAS_GATO = 4;
 
-/** Filas de la hoja, en orden, con sus cuadros y su velocidad en cuadros por segundo. */
-export const ANIMACIONES_GATO = {
-  andar: { fila: 0, cuadros: 4, fps: 8 },
-  sentado: { fila: 1, cuadros: 2, fps: 1.5 },
-  cola: { fila: 2, cuadros: 1, fps: 1 },
-  dormir: { fila: 3, cuadros: 2, fps: 1 },
-  jugarSolo: { fila: 4, cuadros: 3, fps: 5 },
-  cantar: { fila: 5, cuadros: 2, fps: 3 },
-  pedir: { fila: 6, cuadros: 2, fps: 3 },
-  comer: { fila: 7, cuadros: 3, fps: 4 },
-  ronronear: { fila: 8, cuadros: 2, fps: 3 },
-  bano: { fila: 9, cuadros: 2, fps: 3 },
-  sacudirse: { fila: 10, cuadros: 3, fps: 6 },
-  pelota: { fila: 11, cuadros: 4, fps: 8 },
-  ahoraNo: { fila: 12, cuadros: 2, fps: 3 },
-} as const;
-export type AnimacionGato = keyof typeof ANIMACIONES_GATO;
+// Las poses viven en `casaProgreso.ts` porque las fotos las guardan.
+import { ANIMACIONES_GATO, type AnimacionGato } from "./casaProgreso.ts";
+
+export { ANIMACIONES_GATO };
+export type { AnimacionGato };
 export const FILAS_GATO = Object.keys(ANIMACIONES_GATO).length;
 
 /** Cuadro que toca a los `segundos` de empezar la animación (en bucle). */

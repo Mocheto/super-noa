@@ -6,7 +6,7 @@ import { normalizeDetours, type DetourProgress } from "./detourProgress.ts";
 import { normalizeRestStops, type RestStopProgress } from "./restStopProgress.ts";
 import { normalizeFriends, type FriendProgress } from "./friendProgress.ts";
 import { normalizeAvioneta, type AvionetaProgress } from "./avioneta.ts";
-import { normalizeCasa, type CasaProgress } from "./casa.ts";
+import { normalizeCasa, type CasaProgress } from "./casaProgreso.ts";
 
 export { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
 

@@ -3,7 +3,7 @@
  * mundo está completo, el mismo criterio que la postal del álbum. Se mudan los diecisiete gatitos (mapa «Más gatitos en
  * la casa»), cinco como mucho en casa a la vez; el botón CASA aparece al rescatar al del mundo 1.
  */
-import { asegurarGatitos, avanzar, casaVacia, llegadasPendientes, type CasaProgress } from "./casa.ts";
+import { asegurarGatitos, llegadasPendientes, type CasaProgress } from "./casaProgreso.ts";
 import { nivelesCampana as levels } from "./nivelesIndice.ts";
 import type { LevelStats } from "./progress.ts";
 
@@ -27,10 +27,6 @@ export function conMundosCompletos(levelStats: LevelStats, hasta: number): Level
 
 /** El botón CASA aparece al rescatar al gatito del mundo 1. */
 export const casaAbierta = (levelStats: Estadisticas) => mundoCompleto(levelStats, MUNDOS_CASA[0]);
-
-/** Pone la casa al día: hace pasar el tiempo y mete a los gatitos rescatados que aún no estaban. */
-export const prepararCasa = (casa: CasaProgress | undefined, levelStats: Estadisticas, ahora: Date): CasaProgress =>
-  asegurarGatitos(avanzar(casa ?? casaVacia(ahora), ahora), gatitosRescatados(levelStats), ahora);
 
 /** Gatitos rescatados cuya llegada aún no se ha visto (aunque la casa todavía no los haya metido). */
 export const llegadasPorVer = (casa: CasaProgress | undefined, levelStats: Estadisticas): number[] =>

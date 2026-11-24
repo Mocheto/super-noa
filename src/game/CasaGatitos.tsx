@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
-import { avanzar, barrer, bocadilloDe, LANZAMIENTOS_PARA_JUGAR, casaLimpia, cuidar, decoracionDe, dejarHuella, dePaseoDe, enCasaDe, esDeNoche, llegadasDePaseo, mandarDePaseo, MAX_EN_CASA, traerACasa, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
+import { avanzar, barrer, bocadilloDe, LANZAMIENTOS_PARA_JUGAR, casaLimpia, cuidar, decoracionDe, dejarHuella, dePaseoDe, enCasaDe, esDeNoche, llegadasDePaseo, mandarDePaseo, MAX_EN_CASA, traerACasa, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, prepararCasa, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
 import {
   aEscena, ANCHO_VERTICAL_CASA, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, frotar, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
   MANTENER_PARA_COGER_MS, MOVER_PARA_FROTAR, relojCasa, SITIOS_CASA, type Frote, type Herramienta,
@@ -7,7 +7,6 @@ import {
 import { crearSonidoCasa, sonidoDelBano, type SonidoCasa } from "./casaSonido";
 import { crearNana, type Nana } from "./casaNana";
 import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, type AnimacionGato } from "./casaGatoArte";
-import { prepararCasa } from "./casaRescate";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
 import { apuntarVisita, comidaFavoritaDe, OLER_TRAS_ENTRAR_MS, SITIOS_PARA_OLER, COMIDAS_AMIGOS, cuerpoDelVisitante, darDeComerAlVisitante, DESPEDIDA_MS, elegirVisitante, HOJA_COMIDAS_AMIGOS, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, SE_VA_TRAS_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";

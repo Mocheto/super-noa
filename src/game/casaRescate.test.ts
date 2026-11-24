@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { enCasaDe, llegadasDePaseo, llegadasPendientes, presentar } from "./casa.ts";
-import { casaAbierta, gatitosRescatados, llegadasPorVer, MUNDOS_CASA, mundoCompleto, prepararCasa } from "./casaRescate.ts";
+import { enCasaDe, llegadasDePaseo, llegadasPendientes, prepararCasa, presentar } from "./casa.ts";
+import { casaAbierta, gatitosRescatados, llegadasPorVer, MUNDOS_CASA, mundoCompleto } from "./casaRescate.ts";
 import { levels } from "./levels.ts";
 import { worldCatalog } from "./worldMapData.ts";
 import { t } from "../textos/index.ts";

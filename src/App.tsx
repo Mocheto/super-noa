@@ -1,11 +1,10 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from "react";
 import { CAT_PARTY_LEVEL_ID } from "./game/catPartyNivel";
-import { busDeZona, contextoAudio, pistaDeMusica, vigilarAudio } from "./game/audio";
+import { vigilarAudio } from "./game/audio";
 import { Dialog } from "./game/Dialog";
 import { bossCatalog } from "./game/bosses";
 import { GameAssetIcon } from "./game/GameAssetIcon";
 import { PixelIcon } from "./game/PixelIcon";
-import type { SoundKind } from "./game/GameCanvas";
 import { nivelesCampana as levels, type NivelResumen } from "./game/nivelesIndice";
 import { campaignLevels, campaignUnlockIndex, levelIndex, nextLevelIndex } from "./game/routes";
 import { testScreens } from "./game/testScreens";
@@ -22,7 +21,8 @@ const devTestLevel = devMemoria ? levels.find((level) => level.boss === devMemor
 import { stickerCatalog } from "./game/stickers";
 import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";
-import { createMusicPlayer, musicTracks } from "./game/music";
+import { musicaDePantalla } from "./game/musicaDePantalla";
+import { useEfectos, useMusicaDeFondo } from "./game/useSonidoJuego";
 import { adoptarProgreso, collectLifetimeApples, completeSecretShop, lifetimeApples, parseProgress, progressMilestone, readProgress, resetCampaignProgress, serializeProgress, STORAGE_KEY, textoNormalizado, visitSecretShop, type Progress } from "./game/progress";
 import { readStorage, writeStorage } from "./game/storage";
 import { worldCatalog, type WorldId } from "./game/worldMapData";
@@ -125,7 +125,6 @@ export default function App() {
   const [enrollmentDeferred, setEnrollmentDeferred] = useState(() => Boolean(readRankingDevice()?.registrationPending));
   const [enrollmentMessage, setEnrollmentMessage] = useState("");
   const [enrollmentStorageBlocked, setEnrollmentStorageBlocked] = useState(false);
-  const [audioMessage, setAudioMessage] = useState("");
   // Avisos para adultos que ya se han ido (solos o al tocarlos); uno nuevo, con otro texto, vuelve a salir.
   const [avisosCerrados, setAvisosCerrados] = useState<ReadonlySet<string>>(() => new Set());
   const cerrarAviso = useCallback((id: string) => setAvisosCerrados((cerrados) => new Set(cerrados).add(id)), []);
@@ -140,8 +139,6 @@ export default function App() {
   const [shopActive, setShopActive] = useState(false);
   const [activeDetour, setActiveDetour] = useState<DetourId | null>(null);
   const starActive = screen === "game" && (snapshot.starSeconds ?? 0) > 0;
-  const musicRef = useRef<ReturnType<typeof createMusicPlayer> | null>(null);
-  const starMusicRef = useRef<ReturnType<typeof createMusicPlayer> | null>(null);
   const rankingJoiningRef = useRef(false);
   const rankingAliasRef = useRef<HTMLInputElement | null>(null);
   const enrollmentBusyRef = useRef(false);
@@ -149,12 +146,13 @@ export default function App() {
   const enrollmentRetryAtRef = useRef(0);
   const adventureActionRef = useRef<(() => void) | null>(null);
   const secretTransitionRef = useRef({ target: -1, remaining: 1800 });
-  const effectsBusRef = useRef<GainNode | null>(null);
   const playScreenRef = useRef<HTMLElement | null>(null);
   const screenRef = useRef(screen);
   const activeLevel = devTestLevel ?? levels[activeIndex] ?? detourLevels[activeIndex - levels.length] ?? restStopLevels[activeIndex - levels.length - detourLevels.length];
   const forestComplete = Boolean(progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed);
   const displayedLevel = activeDetour ? detourLevel(activeDetour) : activeLevel;
+  const playSound = useEfectos({ muted, effectsVolume });
+  const audioMessage = useMusicaDeFondo(musicaDePantalla(screen, activeLevel, { shopActive, paused, muted, musicVolume, starActive }));
 
   useEffect(() => { screenRef.current = screen; }, [screen]);
   // En el mapa, cuando el navegador está libre, se descargan la pestaña Amigos y las fotos para que el álbum no espere.
@@ -371,35 +369,6 @@ export default function App() {
   }, [rankingClave, rankingDevice, rankingRetry]);
 
   useEffect(() => {
-    const createPlayer = () => createMusicPlayer(
-      pistaDeMusica,
-      (error) => {
-        console.warn("No se pudo reproducir la música.", error);
-        setAudioMessage(t("adultos.app.la-musica-no-ha"));
-      },
-      () => setAudioMessage(""),
-    );
-    musicRef.current ??= createPlayer();
-    starMusicRef.current ??= createPlayer();
-    // La abeja ninja, el tambor de Armonía y la merienda de los jabatos traen su propia canción: la música del mundo calla mientras duran.
-    const beeNinjaDuel = screen === "boss" && activeLevel.boss === "queen-bee";
-    const armoniaDrumDuel = screen === "boss" && activeLevel.boss === "maestra-armonia";
-    const meriendaDuel = screen === "boss" && activeLevel.boss === "great-boar";
-    // Los duelos de memoria tienen su canción propia mientras la guardiana enseña.
-    const memoriaDuel = screen === "boss" && (activeLevel.boss === "aurora-celeste" || activeLevel.boss === "triceratops-queen");
-    const playing = (screen === "game" || screen === "boss") && !beeNinjaDuel && !armoniaDrumDuel && !meriendaDuel && !memoriaDuel && !shopActive && !paused && !muted && musicVolume > 0;
-    musicRef.current.update({
-      source: musicTracks[activeLevel.world],
-      // En el paseo de los amigos la música del mundo suena más suave.
-      volume: activeLevel.restStop ? musicVolume * .6 : musicVolume,
-      playing: playing && !starActive,
-    });
-    starMusicRef.current.update({ source: "./assets/music/noa-estelar.mp3", volume: musicVolume, playing: playing && starActive });
-  }, [activeLevel.boss, activeLevel.restStop, activeLevel.world, musicVolume, muted, paused, screen, shopActive, starActive]);
-
-  useEffect(() => () => { musicRef.current?.pause(); starMusicRef.current?.pause(); }, []);
-
-  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (!event.defaultPrevented && event.code === "Escape" && !event.repeat && isTimedScreen(screen)) setPaused((value) => !value);
     };
@@ -502,33 +471,6 @@ export default function App() {
       transition.remaining = Math.max(0, transition.remaining - (performance.now() - started));
     };
   }, [paused, screen]);
-
-  const playSound = useCallback((kind: SoundKind) => {
-    if (muted || effectsVolume === 0) return;
-    const audioContext = contextoAudio();
-    if (!audioContext) return;
-    effectsBusRef.current ??= busDeZona(audioContext);
-    if (audioContext.state === "suspended") void audioContext.resume();
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    const now = audioContext.currentTime;
-    const notes: Record<SoundKind, [number, number, OscillatorType]> = {
-      apple: [660, 0.11, "square"], block: [410, 0.12, "square"], cat: [523, 0.28, "triangle"], jump: [360, 0.12, "square"],
-      hurt: [145, 0.22, "sawtooth"], stomp: [210, 0.09, "square"], yarn: [760, 0.08, "triangle"],
-      checkpoint: [880, 0.18, "triangle"], goal: [1046, 0.42, "square"], sticker: [1174, 0.32, "triangle"],
-      howl: [196, 0.48, "sawtooth"], snort: [110, 0.22, "square"], countdown: [330, 0.08, "square"],
-      cannon: [92, 0.3, "sawtooth"],
-    };
-    const [frequency, duration, type] = notes[kind];
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency, now);
-    oscillator.frequency.exponentialRampToValueAtTime(kind === "hurt" || kind === "howl" || kind === "snort" ? 70 : frequency * 1.35, now + duration);
-    gain.gain.setValueAtTime(0.075 * Math.min(1, Math.max(0, effectsVolume / 100)), now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-    oscillator.connect(gain).connect(effectsBusRef.current);
-    oscillator.start(now);
-    oscillator.stop(now + duration);
-  }, [effectsVolume, muted]);
 
   const totalApples = lifetimeApples(progress);
   const albumStickers = stickerCatalog.filter((sticker) => (sticker.world !== 7 || progress.secretUnlocked) && (sticker.world !== 8 || progress.waterUnlocked));

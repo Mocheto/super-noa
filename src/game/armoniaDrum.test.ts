@@ -10,6 +10,7 @@ import { bossCatalog } from "./bosses.ts";
 import { guardianGames, isGuardianGameId } from "./guardianGames.ts";
 import { levels } from "./levels.ts";
 import { parseProgress, serializeProgress } from "./progress.ts";
+import { musicaDePantalla } from "./musicaDePantalla.ts";
 
 const asset = (path: string) => existsSync(new URL(`../../public/assets/${path}`, import.meta.url));
 const source = (path: string) => existsSync(new URL(path, import.meta.url));
@@ -25,9 +26,8 @@ test("el tambor de Armonía es el duelo de la Maestra Armonía y sus recursos ex
   assert.equal(final?.world, 16);
   assert.equal(final?.boss, "maestra-armonia");
   for (const path of ["sprites/noa-tambor-v0.webp", "sprites/tambor-armonia-v0.webp", "sprites/tambor-noa-v0.webp", "sprites/atril-armonia-v0.webp", "worlds/teatro-armonia-v0.webp", "atlases/music-characters-v1.webp"]) assert.ok(asset(path), path);
-  const app = readFileSync(new URL("../App.tsx", import.meta.url), "utf8");
   assert.match(readFileSync(new URL("./DueloDelGuardian.tsx", import.meta.url), "utf8"), /level\.boss === "maestra-armonia" \? <ArmoniaDrumGame/);
-  assert.match(app, /armoniaDrumDuel/, "la música del mundo se silencia durante el duelo");
+  assert.equal(musicaDePantalla("boss", { world: 1, boss: "maestra-armonia" }, { shopActive: false, paused: false, muted: false, musicVolume: 100, starActive: false }).mundo.playing, false, "la música del mundo se silencia durante el duelo");
 });
 
 test("el duelo de polillas y El eco musical se retiran y el reto pide no dejar escapar ningún golpe", () => {

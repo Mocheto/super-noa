@@ -11,6 +11,7 @@ import { bossCatalog } from "./bosses.ts";
 import { guardianGames, isGuardianGameId } from "./guardianGames.ts";
 import { levels } from "./levels.ts";
 import { parseProgress, serializeProgress } from "./progress.ts";
+import { musicaDePantalla } from "./musicaDePantalla.ts";
 
 const asset = (path: string) => existsSync(new URL(`../../public/assets/${path}`, import.meta.url));
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8");
@@ -34,10 +35,8 @@ test("la merienda de los jabatos es el duelo del Gran Jabalí en la 4-3 y sus re
   const component = read("./MeriendaJabatosGame.tsx") + read("./meriendaJabatos.css");
   for (const match of component.matchAll(/\.\/assets\/([\w/.-]+\.(?:webp|png))/g)) assert.ok(asset(match[1]), match[1]);
   assert.doesNotMatch(component, /public\/assets/, "las rutas del arte son relativas al sitio publicado");
-  const app = read("../App.tsx");
   assert.match(read("./DueloDelGuardian.tsx"), /level\.boss === "great-boar" \? <MeriendaJabatosGame/);
-  assert.match(app, /meriendaDuel = screen === "boss" && activeLevel\.boss === "great-boar"/, "la música del mundo se silencia durante el duelo");
-  assert.match(app, /!meriendaDuel/);
+  assert.equal(musicaDePantalla("boss", { world: 1, boss: "great-boar" }, { shopActive: false, paused: false, muted: false, musicVolume: 100, starActive: false }).mundo.playing, false, "la música del mundo se silencia durante el duelo");
 });
 
 test("«Esquiva la carrera» se retira y el reto pide que ningún jabato se quede con hambre", () => {

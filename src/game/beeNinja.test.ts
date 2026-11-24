@@ -12,6 +12,7 @@ import { bossCatalog } from "./bosses.ts";
 import { guardianGames, isGuardianGameId } from "./guardianGames.ts";
 import { levels } from "./levels.ts";
 import { parseProgress, serializeProgress } from "./progress.ts";
+import { musicaDePantalla } from "./musicaDePantalla.ts";
 
 const asset = (path: string) => existsSync(new URL(`../../public/assets/${path}`, import.meta.url));
 const cutAll = (mode: "song" | "practice", except = 0) => {
@@ -82,9 +83,8 @@ test("Flores para la colmena se retira y el reto pide no dejar caer ninguna flor
   const melisa = bossCatalog["queen-bee"];
   assert.equal(melisa.challenge.id, "perfect-game");
   assert.match(melisa.challenge.label, /sin dejar caer ninguna/);
-  const app = readFileSync(new URL("../App.tsx", import.meta.url), "utf8");
   assert.match(readFileSync(new URL("./DueloDelGuardian.tsx", import.meta.url), "utf8"), /level\.boss === "queen-bee" \? <BeeNinjaGame/);
-  assert.match(app, /beeNinjaDuel/, "la música del mundo se silencia durante el duelo");
+  assert.equal(musicaDePantalla("boss", { world: 1, boss: "queen-bee" }, { shopActive: false, paused: false, muted: false, musicVolume: 100, starActive: false }).mundo.playing, false, "la música del mundo se silencia durante el duelo");
 });
 
 test("un guardado con el marco de flores lo conserva sin migración", () => {

@@ -3,16 +3,16 @@ import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import { bossCatalog } from "./bosses.ts";
 import { guardianGames, isGuardianGameId } from "./guardianGames.ts";
+import { musicaDePantalla } from "./musicaDePantalla.ts";
 
 const read = (ruta: string) => readFileSync(new URL(ruta, import.meta.url), "utf8");
 
 test("el duelo de Aurora Celeste es «El vuelo de Aurora» y el de la Reina Tricera, «El nido de la Reina»", () => {
-  const app = read("../App.tsx");
   const duelo = read("./DueloDelGuardian.tsx");
   assert.match(duelo, /level\.boss === "aurora-celeste" \? <VueloAuroraGame/);
   assert.match(duelo, /level\.boss === "triceratops-queen" \? <NidoReinaGame/);
-  assert.match(app, /memoriaDuel = screen === "boss" && \(activeLevel\.boss === "aurora-celeste" \|\| activeLevel\.boss === "triceratops-queen"\)/, "la música del mundo se calla: cada uno tiene su canción");
-  assert.match(app, /!memoriaDuel/);
+  assert.equal(musicaDePantalla("boss", { world: 1, boss: "aurora-celeste" }, { shopActive: false, paused: false, muted: false, musicVolume: 100, starActive: false }).mundo.playing, false, "la música del mundo se silencia durante el duelo");
+  assert.equal(musicaDePantalla("boss", { world: 1, boss: "triceratops-queen" }, { shopActive: false, paused: false, muted: false, musicVolume: 100, starActive: false }).mundo.playing, false, "la música del mundo se silencia durante el duelo");
   for (const id of ["aurora-celeste", "triceratops-queen"] as const) {
     assert.equal(isGuardianGameId(id), false, id);
     assert.equal(id in guardianGames, false, id);

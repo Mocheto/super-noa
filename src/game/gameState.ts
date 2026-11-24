@@ -40,3 +40,25 @@ export const lavaJetState = (jet: LavaJet, elapsed: number) => {
     rect: { x: jet.x, y: jet.baseY - jet.height * extension, width: jet.width, height: jet.height * extension },
   };
 };
+
+/** Noa al empezar la pantalla, en su salida. */
+export function createInitialPlayer(level: Level): Player {
+  return {
+    x: level.start.x,
+    y: level.start.y,
+    width: 42,
+    height: 58,
+    vx: 0,
+    vy: 0,
+    grounded: false,
+    facing: 1,
+    power: "normal",
+    invincible: 0,
+    coyote: 0,
+    jumpBuffer: 0,
+    jumpsUsed: 0,
+    springLaunch: false,
+    doubleJumpFx: 0,
+    shootFx: 0,
+  };
+}

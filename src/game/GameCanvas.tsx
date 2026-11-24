@@ -36,19 +36,20 @@ import { createChaseState, stepChase } from "./chase";
 import { ARTE_PERSECUCION, drawChase, speech } from "./chaseRendering";
 import { GREET_DISTANCE, guardianOf, restStopFor } from "./restStops";
 import { bossCatalog } from "./bosses";
-import { createExploreState, exploreCameraTarget, hintTarget, reachedGate, shortcutWalls, stepExplore } from "./explore";
+import { createExploreState, hintTarget, reachedGate, shortcutWalls, stepExplore } from "./explore";
 import { drawExploreOverlay, drawExploreWorld, prepararExploracion } from "./exploreRendering";
 import { VIEW_WIDTH, VIEW_HEIGHT } from "./constants";
+import { camaraAlReaparecer, camaraInicial, metaAlcanzada, seguirCamara, superficieMeta } from "./camaraPartida";
 import { ANCHO_VERTICAL, ponerVista, recorteObjetivo, vista } from "./vista";
 import { drawContornos, drawHalo, drawVelo, opacidadInvencible } from "./halo";
 import { crearEfectos, drawEfectos } from "./efectos";
 import {
-  enemyY, lavaJetState, positiveModulo, waterJumperState, type Player, type LiveEnemy, type LiveItem, type LiveWaterJumper,
+  createInitialPlayer, enemyY, lavaJetState, positiveModulo, waterJumperState, type LiveEnemy, type LiveItem, type LiveWaterJumper,
   type Projectile, type LiveCannon, type Cannonball, type PixelBurst,
 } from "./gameState";
 import { t, textoLienzo } from "../textos";
 import { BotonControl, Texto } from "../textos/Texto";
-import { conveyorSpeed, boarChargeVelocity, GRAVITY, hasReachedGoalFlag, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SKY_BOUNCE_SPEED, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
+import { conveyorSpeed, boarChargeVelocity, GRAVITY, JUMP_SPEED, keepInsidePatrol, landsOnSpring, platformSurfaceY, projectileHitsWaterWall, rectanglesOverlap, resolveHorizontalWallCollision, SKY_BOUNCE_SPEED, SPRING_SPEED, swimmingVelocity, walkAnimationFrame, waterAt, wrapHorizontalPosition } from "./gameplay";
 
 const MOVE_SPEED = 250;
 
@@ -80,26 +81,6 @@ type GameCanvasProps = {
 
 const intersects = rectanglesOverlap;
 
-function createInitialPlayer(level: Level): Player {
-  return {
-    x: level.start.x,
-    y: level.start.y,
-    width: 42,
-    height: 58,
-    vx: 0,
-    vy: 0,
-    grounded: false,
-    facing: 1,
-    power: "normal",
-    invincible: 0,
-    coyote: 0,
-    jumpBuffer: 0,
-    jumpsUsed: 0,
-    springLaunch: false,
-    doubleJumpFx: 0,
-    shootFx: 0,
-  };
-}
 
 
 type Interaccion = "entrar" | "explorar" | "subir" | "activar";
@@ -235,17 +216,12 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     const friendHops = new Map<string, number>();
     let friendSay: { text: string; life: number; id: string } | null = null;
     let roomHintShown = false;
-    const goalPlatforms = level.platforms.filter((platform) => level.goalX >= platform.x && level.goalX <= platform.x + platform.width);
-    const goalSurfaceY = level.world === 8 || level.orientation === "vertical"
-      ? Math.min(...goalPlatforms.map((platform) => platform.y))
-      : goalPlatforms[0]?.y ?? 456;
-    let cameraX = 0;
+    const goalSurfaceY = superficieMeta(level);
+    let { x: cameraX, y: cameraY } = camaraInicial(level, player);
     /** Segundos de simulación desde que empezó la pantalla, para el círculo de entrada. */
     let entradaSegundos = 0;
     /** Palabra con dibujo al recoger: la primera vez de cada objeto en esta pantalla. */
     const palabras = createPalabrasRecoger();
-    let cameraY = level.orientation === "vertical" ? Math.max(0, (level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT)
-      : level.orientation === "explore" ? exploreCameraTarget(level, player, { width: VIEW_WIDTH, height: VIEW_HEIGHT }).y : 0;
     let apples = 0;
     let checkpointIndex = -1;
     let respawnX = level.start.x;
@@ -338,11 +314,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         : mechanicRespawn(level, respawnX, player.width, player.height);
       player.x = spawn.x;
       player.y = spawn.y;
-      // En vertical la cámara solo sube: si Noa reaparece por debajo de la vista, la cámara baja a buscarla. Si no,
-      // seguiría «cayendo» en cada paso y perdería todas las vidas de golpe.
-      if (level.orientation === "vertical" && player.y + player.height > cameraY + VIEW_HEIGHT) {
-        cameraY = Math.max(0, Math.min((level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT, player.y - 250));
-      }
+      cameraY = camaraAlReaparecer(level, player, cameraY);
       player.vx = 0;
       player.vy = 0;
       if (hasWorldMechanics(level)) {
@@ -950,9 +922,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         }
       }
 
-      const reachedGoal = !level.chase && !explore && (level.orientation === "vertical"
-        ? player.y <= (level.goalY ?? goalSurfaceY) && Math.abs(player.x + player.width / 2 - level.goalX) < 130
-        : hasReachedGoalFlag(player, level.goalX, goalSurfaceY));
+      const reachedGoal = !level.chase && !explore && metaAlcanzada(level, player, goalSurfaceY);
       if (!completed && reachedGoal) {
         goalCelebrationFrame = frame;
         player.x = level.goalX - 48;
@@ -974,18 +944,9 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       player.doubleJumpFx = Math.max(0, player.doubleJumpFx - delta);
       player.shootFx = Math.max(0, player.shootFx - delta);
       walkCycleTime = player.grounded && Math.abs(player.vx) > 25 ? walkCycleTime + delta : 0;
-      // En las salas la cámara queda fija en la sala y se desliza (~0,4 s) al pasar a la siguiente.
-      const cameraTarget = puzzle && level.puzzleRooms ? level.puzzleRooms[puzzle.room].x : player.x - 330;
-      if (explore) {
-        // Exploración: la cámara sigue a Noa en los dos ejes, con adelanto hacia donde mira.
-        const target = exploreCameraTarget(level, player, { width: VIEW_WIDTH, height: VIEW_HEIGHT });
-        cameraX += (target.x - cameraX) * Math.min(1, delta * 9);
-        cameraY += (target.y - cameraY) * Math.min(1, delta * 7);
-      } else cameraX += (Math.max(0, Math.min(level.width - VIEW_WIDTH, cameraTarget)) - cameraX) * Math.min(1, delta * (puzzle ? 9 : 5));
-      if (level.orientation === "vertical") {
-        const targetY = Math.max(0, Math.min((level.height ?? VIEW_HEIGHT) - VIEW_HEIGHT, player.y - 250));
-        cameraY = Math.min(cameraY, cameraY + (targetY - cameraY) * Math.min(1, delta * 5));
-      }
+      ({ x: cameraX, y: cameraY } = seguirCamara(level, player, { x: cameraX, y: cameraY }, delta, {
+        salaX: puzzle && level.puzzleRooms ? level.puzzleRooms[puzzle.room].x : null, exploracion: Boolean(explore),
+      }));
 
       if (!completed && now - lastSnapshot > 130) {
         callbacksRef.current.onSnapshot(currentSnapshot());

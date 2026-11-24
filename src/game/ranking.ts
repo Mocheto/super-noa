@@ -10,8 +10,8 @@ export const rankingConnectionMessage = t("adultos.ranking.sin-conexion");
 
 export type RankingDevice = { id: string; token: string; alias: string; registrationPending?: boolean };
 export type RankingPlayer = { alias: string; world: number; campaignWorld: number | null; completedLevels: number; stickers: number; bossChallenges: number; totalApples: number | null; achievedAt: string | null };
-export type RankingErrorCode = "network" | "timeout" | "storage_unavailable" | "invalid_alias" | "alias_taken" | "device_invalid" | "device_exists" | "backend_outdated" | "invalid_response" | "server_unavailable" | "request_failed";
-const rankingErrorCodes: readonly RankingErrorCode[] = ["network", "timeout", "storage_unavailable", "invalid_alias", "alias_taken", "device_invalid", "device_exists", "backend_outdated", "invalid_response", "server_unavailable", "request_failed"];
+export type RankingErrorCode = "network" | "timeout" | "storage_unavailable" | "invalid_alias" | "alias_not_allowed" | "alias_taken" | "device_invalid" | "device_exists" | "backend_outdated" | "invalid_response" | "server_unavailable" | "request_failed";
+const rankingErrorCodes: readonly RankingErrorCode[] = ["network", "timeout", "storage_unavailable", "invalid_alias", "alias_not_allowed", "alias_taken", "device_invalid", "device_exists", "backend_outdated", "invalid_response", "server_unavailable", "request_failed"];
 
 export class RankingError extends Error {
   readonly code: RankingErrorCode;
@@ -123,7 +123,7 @@ async function registerDevice(alias: string): Promise<RankingDevice> {
       body: JSON.stringify({ alias: device.alias, deviceId: device.id, deviceToken: device.token }),
     });
   } catch (error) {
-    if (error instanceof RankingError && (error.code === "alias_taken" || error.code === "invalid_alias")) {
+    if (error instanceof RankingError && (error.code === "alias_taken" || error.code === "invalid_alias" || error.code === "alias_not_allowed")) {
       if (!writeStorage(DEVICE_KEY, "null") || readStorage(DEVICE_KEY) !== "null") {
         throw new RankingError("storage_unavailable", "No pude guardar el cambio de tarjeta. Permite el almacenamiento y vuelve a intentarlo.", false);
       }

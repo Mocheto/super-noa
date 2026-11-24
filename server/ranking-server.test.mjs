@@ -56,7 +56,7 @@ test("registro idempotente: perder la respuesta y repetir no cambia la tarjeta n
   await first.body.cancel();
   const retry = await api.post("/v1/devices", { ...card, alias: "noaluna" });
   assert.equal(retry.status, 200);
-  assert.deepEqual(await retry.json(), card);
+  assert.deepEqual(await retry.json(), { ...card, aliasStatus: "pending" });
   assert.equal(api.pool.profiles.size, 1);
   assert.notEqual(api.pool.profiles.get(card.deviceId).token_hash, card.deviceToken);
 });
@@ -101,7 +101,7 @@ test("salud comprueba PostgreSQL y anuncia capacidades solo cuando está disponi
   const server = createRankingServer({
     pool: { query: async (sql) => {
       queries += 1;
-      assert.match(sql, /SELECT total_apples, achieved_at FROM super_noa_ranking_profiles/);
+      assert.match(sql, /SELECT total_apples, achieved_at, alias_status, approved_alias FROM super_noa_ranking_profiles/);
       if (unavailable) throw new Error("base desconectada");
       return { rows: [] };
     } },
@@ -116,7 +116,7 @@ test("salud comprueba PostgreSQL y anuncia capacidades solo cuando está disponi
   const url = `http://127.0.0.1:${server.address().port}/health`;
   const ready = await fetch(url);
   assert.equal(ready.status, 200);
-  assert.deepEqual(await ready.json(), { status: "bien", release: "abc123", registrationVersion: 2, progressVersion: 2 });
+  assert.deepEqual(await ready.json(), { status: "bien", release: "abc123", registrationVersion: 2, progressVersion: 2, aliasReviewVersion: 1 });
   unavailable = true;
   const failed = await fetch(url);
   assert.equal(failed.status, 503);
@@ -195,4 +195,45 @@ test("cliente y API reales recuperan un registro confirmado cuya respuesta se pe
   assert.equal(confirmed.token, pending.token);
   assert.equal(api.pool.profiles.size, 1);
   assert.equal(readRankingDevice().registrationPending, undefined);
+});
+
+test("revisión de alias sin base: clave mala, sin clave configurada y alias que no vale", async (t) => {
+  const adminToken = "clave-de-prueba-larga-0123456789";
+  const queries = [];
+  const pool = { query: async (sql) => { queries.push(sql); return { rowCount: 0, rows: [] }; } };
+  const server = createRankingServer({ pool, tokenPepper: "test-pepper", adminToken, logger: { error() {} } });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+  });
+  const url = `http://127.0.0.1:${server.address().port}`;
+  for (const authorization of [undefined, "Bearer mala-mala-mala-mala", `Bearer ${adminToken}x`, adminToken]) {
+    const response = await fetch(`${url}/v1/admin/aliases`, { headers: authorization ? { Authorization: authorization } : {} });
+    assert.equal(response.status, 401);
+    const body = await response.text();
+    assert.match(body, /admin_invalid/);
+    assert.ok(!body.includes(adminToken));
+  }
+  const approve = await fetch(`${url}/v1/admin/aliases/approve-all`, { method: "POST", headers: { Authorization: "Bearer mala-mala-mala-mala" } });
+  assert.equal(approve.status, 401);
+  assert.deepEqual(queries, [], "con una clave mala no se toca la base");
+  const ok = await fetch(`${url}/v1/admin/aliases`, { headers: { Authorization: `Bearer ${adminToken}` } });
+  assert.equal(ok.status, 200);
+  assert.match(queries.at(-1), /alias_status = \$1/);
+
+  const blocked = await fetch(`${url}/v1/devices`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ alias: "M1erda" }) });
+  assert.equal(blocked.status, 400);
+  assert.deepEqual(await blocked.json(), { error: "Ese nombre no vale. Prueba otro.", code: "alias_not_allowed", retryable: false });
+
+  const sinClave = createRankingServer({ pool, tokenPepper: "test-pepper", logger: { error() {} } });
+  sinClave.listen(0, "127.0.0.1");
+  await once(sinClave, "listening");
+  t.after(async () => {
+    sinClave.closeAllConnections();
+    await new Promise((resolve) => sinClave.close(resolve));
+  });
+  const missing = await fetch(`http://127.0.0.1:${sinClave.address().port}/v1/admin/aliases`, { headers: { Authorization: `Bearer ${adminToken}` } });
+  assert.equal(missing.status, 404);
 });

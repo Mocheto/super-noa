@@ -9,7 +9,7 @@ export function isEnrolled(device: RankingDevice | null): boolean {
 export function enrollmentFailure(error: unknown): "validate" | "storage" | "defer" {
   if (error instanceof RankingError) {
     if (error.code === "storage_unavailable") return "storage";
-    if (["invalid_alias", "alias_taken", "device_exists"].includes(error.code)) return "validate";
+    if (["invalid_alias", "alias_not_allowed", "alias_taken", "device_exists"].includes(error.code)) return "validate";
   }
   return "defer";
 }

@@ -3,7 +3,8 @@ import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import test from "node:test";
 import { Pool } from "pg";
-import { createRankingServer, leaderboardQuery, rankingSchema } from "./ranking-server.mjs";
+import { approveAllQuery, createRankingServer, leaderboardQuery, rankingSchema } from "./ranking-server.mjs";
+import { provisionalName } from "./ranking-domain.mjs";
 
 test("PostgreSQL real: migración histórica, acumulación, fechas y desempates", {
   skip: !process.env.TEST_RANKING_DATABASE_URL,
@@ -107,6 +108,8 @@ test("PostgreSQL real: migración histórica, acumulación, fechas y desempates"
 
   const second = await register("NoaSol");
   const third = await register("NoaMar");
+  // El orden se comprueba con los alias ya aprobados (sin aprobar, los demás ven el nombre provisional).
+  await pool.query(approveAllQuery);
   const tied = { ...base, completedLevels: 11, stickers: 5, bossChallenges: 2, totalApples: 58 };
   await sync({ ...tied, achievedAt: early }, second);
   await sync({ ...tied, achievedAt: null }, third);
@@ -156,4 +159,135 @@ test("PostgreSQL real: migración histórica, acumulación, fechas y desempates"
   assert.equal(unavailable.status, 503, "una base conectada sin el esquema necesario no está lista");
   assert.equal((await unavailable.json()).retryable, true);
   assert.equal(errors.length, 1);
+});
+
+async function databaseFixture(t) {
+  const schema = `ranking_test_${randomUUID().replaceAll("-", "")}`;
+  const admin = new Pool({ connectionString: process.env.TEST_RANKING_DATABASE_URL });
+  await admin.query(`CREATE SCHEMA ${schema}`);
+  const pool = new Pool({ connectionString: process.env.TEST_RANKING_DATABASE_URL, options: `-c search_path=${schema}` });
+  t.after(async () => {
+    await pool.end();
+    await admin.query(`DROP SCHEMA ${schema} CASCADE`);
+    await admin.end();
+  });
+  return pool;
+}
+
+async function serverFixture(t, pool, options = {}) {
+  const errors = [];
+  const server = createRankingServer({ pool, tokenPepper: "test", logger: { error: (...args) => errors.push(args) }, ...options });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+  });
+  const url = `http://127.0.0.1:${server.address().port}`;
+  return { url, errors };
+}
+
+test("PostgreSQL real: los alias que ya había pasan a pendientes con su progreso y su puesto", {
+  skip: !process.env.TEST_RANKING_DATABASE_URL,
+}, async (t) => {
+  const pool = await databaseFixture(t);
+  // El esquema anterior a la revisión, con dos jugadoras y su progreso.
+  await pool.query(rankingSchema.split("-- Revisión de alias")[0]);
+  const viejas = [randomUUID(), randomUUID()];
+  await pool.query(`INSERT INTO super_noa_ranking_profiles (id, alias, alias_key, token_hash, completed_levels, created_at)
+    VALUES ($1, 'Primera', 'primera', $3, 20, '2025-05-01T00:00:00Z'), ($2, 'Segunda', 'segunda', $3, 10, '2025-06-01T00:00:00Z')`, [...viejas, "a".repeat(64)]);
+  await pool.query(rankingSchema);
+  await pool.query(rankingSchema);
+  const filas = (await pool.query(`SELECT id, alias, alias_status, approved_alias, alias_submitted_at, completed_levels FROM super_noa_ranking_profiles ORDER BY completed_levels DESC`)).rows;
+  assert.deepEqual(filas.map((fila) => [fila.alias, fila.alias_status, fila.approved_alias, fila.completed_levels]), [["Primera", "pending", null, 20], ["Segunda", "pending", null, 10]]);
+  assert.equal(filas[0].alias_submitted_at.toISOString(), "2025-05-01T00:00:00.000Z", "la fecha de envío es la de la tarjeta");
+  await assert.rejects(pool.query("UPDATE super_noa_ranking_profiles SET alias_status = 'raro'"), /alias_status_check/);
+  const { url } = await serverFixture(t, pool);
+  const players = (await (await fetch(`${url}/v1/leaderboard`)).json()).players;
+  assert.deepEqual(players.map((player) => player.alias), viejas.map(provisionalName), "mismo puesto, con el nombre provisional");
+  assert.deepEqual(Object.keys(players[0]).sort(), ["achievedAt", "alias", "bossChallenges", "campaignWorld", "completedLevels", "stickers", "totalApples", "updatedAt", "world"]);
+});
+
+test("PostgreSQL real: filtro, estados, tablón y revisión de alias", {
+  skip: !process.env.TEST_RANKING_DATABASE_URL,
+}, async (t) => {
+  const pool = await databaseFixture(t);
+  await pool.query(rankingSchema);
+  const adminToken = "clave-de-prueba-larga-0123456789";
+  const { url, errors } = await serverFixture(t, pool, { adminToken });
+  const post = (path, body, headers = {}) => fetch(`${url}${path}`, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) });
+  const asDevice = (card) => ({ "X-Super-Noa-Device": card.deviceId, "X-Super-Noa-Token": card.deviceToken });
+  const asAdmin = (token = adminToken) => ({ Authorization: `Bearer ${token}` });
+  const board = async () => (await (await fetch(`${url}/v1/leaderboard`)).json()).players.map((player) => player.alias);
+  const own = async (card) => (await fetch(`${url}/v1/device`, { headers: asDevice(card) })).json();
+
+  // Filtro: ni al apuntarse ni al cambiar de alias.
+  for (const alias of ["Pu7a", "M1erda", "p u t a"]) {
+    const blocked = await post("/v1/devices", { alias });
+    assert.equal(blocked.status, 400, alias);
+    assert.equal((await blocked.json()).code, "alias_not_allowed", alias);
+  }
+  assert.equal((await pool.query("SELECT 1 FROM super_noa_ranking_profiles")).rowCount, 0);
+
+  const luna = await (await post("/v1/devices", { alias: "NoaLuna" })).json();
+  assert.equal(luna.aliasStatus, "pending");
+  const sol = await (await post("/v1/devices", { alias: "NoaSol" })).json();
+  await post("/v1/progress", { world: 2, completedLevels: 5, stickers: 0, bossChallenges: 0 }, asDevice(luna));
+  assert.deepEqual(await board(), [provisionalName(luna.deviceId), provisionalName(sol.deviceId)], "pendientes: los demás ven el nombre provisional");
+  assert.deepEqual(await own(luna), { alias: "NoaLuna", aliasStatus: "pending", publicAlias: provisionalName(luna.deviceId) }, "el dispositivo ve su alias y su estado");
+  const progreso = await (await post("/v1/progress", { world: 2, completedLevels: 5, stickers: 0, bossChallenges: 0 }, asDevice(luna))).json();
+  assert.equal(progreso.alias, "NoaLuna");
+  assert.equal(progreso.aliasStatus, "pending");
+
+  // Clave mala, ausente o sin configurar.
+  for (const headers of [{}, asAdmin("otra-clave-que-no-es-la-buena"), asAdmin(adminToken.slice(0, -1)), { Authorization: adminToken }]) {
+    const denied = await fetch(`${url}/v1/admin/aliases`, { headers });
+    assert.equal(denied.status, 401);
+    const body = await denied.text();
+    assert.match(body, /admin_invalid/);
+    assert.doesNotMatch(body, new RegExp(adminToken));
+  }
+  assert.equal((await post("/v1/admin/aliases/approve-all", {}, asAdmin("mala-mala-mala-mala"))).status, 401);
+  assert.equal((await pool.query("SELECT 1 FROM super_noa_ranking_profiles WHERE alias_status = 'approved'")).rowCount, 0, "una clave mala no aprueba nada");
+
+  const pendientes = (await (await fetch(`${url}/v1/admin/aliases`, { headers: asAdmin() })).json()).aliases;
+  assert.deepEqual(pendientes.map((fila) => [fila.alias, fila.aliasStatus]), [["NoaLuna", "pending"], ["NoaSol", "pending"]]);
+  assert.ok(pendientes.every((fila) => fila.submittedAt));
+
+  // Aprobar uno y rechazar otro.
+  assert.deepEqual(await (await post("/v1/admin/aliases/approve", { ids: [luna.deviceId] }, asAdmin())).json(), { updated: 1 });
+  assert.deepEqual(await (await post("/v1/admin/aliases/reject", { ids: [sol.deviceId] }, asAdmin())).json(), { updated: 1 });
+  assert.deepEqual(await board(), ["NoaLuna", provisionalName(sol.deviceId)]);
+  assert.equal((await own(sol)).aliasStatus, "rejected");
+
+  // Un rechazado elige otro: vuelve a pendiente, con el nombre provisional mientras tanto.
+  const nuevo = await (await post("/v1/alias", { alias: "NoaEstrella" }, asDevice(sol))).json();
+  assert.deepEqual(nuevo, { alias: "NoaEstrella", aliasStatus: "pending" });
+  assert.equal((await board())[1], provisionalName(sol.deviceId));
+  assert.equal((await post("/v1/alias", { alias: "Sh1t" }, asDevice(sol))).status, 400);
+  assert.equal((await post("/v1/alias", { alias: "noaluna" }, asDevice(sol))).status, 409, "un alias ocupado no se puede tomar");
+  assert.equal((await post("/v1/alias", { alias: "OtraCosa" }, { "X-Super-Noa-Device": sol.deviceId, "X-Super-Noa-Token": "b".repeat(43) })).status, 401);
+
+  // Cambiar un alias aprobado: los demás ven el aprobado anterior hasta que se revise.
+  assert.deepEqual(await (await post("/v1/alias", { alias: "LunaNueva" }, asDevice(luna))).json(), { alias: "LunaNueva", aliasStatus: "pending" });
+  assert.equal((await board())[0], "NoaLuna");
+  assert.deepEqual(await (await post("/v1/alias", { alias: "lunanueva" }, asDevice(luna))).json(), { alias: "LunaNueva", aliasStatus: "pending" }, "el mismo alias no cambia nada");
+  await post("/v1/admin/aliases/reject", { ids: [luna.deviceId] }, asAdmin());
+  assert.equal((await board())[0], "NoaLuna", "si se rechaza el cambio, sigue el aprobado anterior");
+
+  // Aprobar todos y ocultar uno aprobado.
+  assert.deepEqual(await (await post("/v1/admin/aliases/approve-all", {}, asAdmin())).json(), { updated: 1 });
+  assert.deepEqual(await board(), ["NoaLuna", "NoaEstrella"]);
+  await post("/v1/admin/aliases/hide", { ids: [sol.deviceId] }, asAdmin());
+  assert.deepEqual(await board(), ["NoaLuna", provisionalName(sol.deviceId)]);
+  assert.equal((await own(sol)).aliasStatus, "hidden");
+  const ocultos = (await (await fetch(`${url}/v1/admin/aliases?status=hidden`, { headers: asAdmin() })).json()).aliases;
+  assert.deepEqual(ocultos.map((fila) => fila.alias), ["NoaEstrella"]);
+  assert.equal((await fetch(`${url}/v1/admin/aliases?status=raro`, { headers: asAdmin() })).status, 400);
+  assert.equal((await post("/v1/admin/aliases/approve", { ids: ["no-es-una-tarjeta"] }, asAdmin())).status, 400);
+  assert.deepEqual(errors, []);
+
+  // Sin clave en el entorno, la revisión no existe.
+  const sinClave = await serverFixture(t, pool);
+  assert.equal((await fetch(`${sinClave.url}/v1/admin/aliases`, { headers: asAdmin() })).status, 404);
 });

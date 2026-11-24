@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 
 export const maxAliasLength = 16;
 export const maxTotalApples = Number.MAX_SAFE_INTEGER;
@@ -74,4 +74,73 @@ export function createDeviceCredentials(pepper) {
 
 export function hashDeviceToken(pepper, token) {
   return createHmac("sha256", pepper).update(token).digest("hex");
+}
+
+// ── Revisión de alias (issue 314) ─────────────────────────────────────────────────────────────────────────────────
+// Vive aquí porque el supervisor solo descarga `ranking-server.mjs` y este archivo.
+
+export const aliasStatuses = ["pending", "approved", "rejected", "hidden"];
+
+/** Letras de otros alfabetos que se parecen a las latinas y números o signos que las imitan. */
+const lookalikes = new Map(Object.entries({
+  0: "o", 1: "i", 2: "z", 3: "e", 4: "a", 5: "s", 6: "g", 7: "t", 8: "b", 9: "g", "@": "a", $: "s", "!": "i", "|": "i", "€": "e",
+  // Cirílico
+  а: "a", в: "b", е: "e", ё: "e", з: "3", и: "u", к: "k", м: "m", н: "h", о: "o", п: "n", р: "p", с: "c", т: "t", у: "y", х: "x",
+  ш: "w", ь: "b", ї: "i", і: "i", ј: "j", ѕ: "s", ԁ: "d", ԛ: "q", ԝ: "w",
+  // Griego
+  α: "a", β: "b", γ: "y", δ: "d", ε: "e", ζ: "z", η: "n", ι: "i", κ: "k", μ: "u", ν: "v", ο: "o", π: "n", ρ: "p", σ: "o", ς: "c",
+  τ: "t", υ: "u", φ: "o", χ: "x", ω: "w",
+}));
+
+/** Forma para comparar: minúsculas, sin tildes, con las letras que imitan otras ya cambiadas y sin letras repetidas. */
+export function aliasForFilter(value) {
+  const plain = value.normalize("NFKC").toLocaleLowerCase("es").normalize("NFD").replace(/\p{M}/gu, "");
+  return [...plain].map((char) => lookalikes.get(char) ?? char).join("").replace(/3/g, "e").replace(/(.)\1+/g, "$1");
+}
+
+// Palabras que no pueden aparecer en ninguna parte del alias (raíces largas, sin falsos positivos habituales).
+const blockedRoots = [
+  "mierd", "cabron", "gilipol", "hijoputa", "hdp", "folar", "folad", "chingad", "pendej", "maricon", "zora", "putita", "puton",
+  "polla", "verga", "carajo", "joder", "jodid", "mamon", "pezon", "porno", "porn", "sexo", "violad", "nazi", "hitler", "subnormal",
+  "retrasad", "negrat", "sudaca", "puñet", "capul", "imbecil", "idiot", "estupid", "muerte", "droga", "cocain",
+  "fuck", "fuk", "shit", "bitch", "cunt", "pusy", "whore", "slut", "niga", "rapist", "penis", "vagin", "asshole", "wank", "bastard",
+].map((word) => aliasForFilter(word));
+
+// Palabras cortas o que aparecen dentro de otras («computadora», «Cumbre», «Conocer»): solo cuentan como palabra entera
+// o como el alias entero.
+const blockedWords = ["puta", "puto", "culo", "caca", "pis", "pedo", "tonto", "tonta", "sex", "ass", "tit", "tits", "teta", "tetas", "gay",
+  "pene", "nalga", "mear", "orto", "coño", "cono", "marica", "maricas", "cum", "arse", "fag", "dick", "cock", "kill", "matar", "niger",
+  "rape", "kk", "jiz", "mongol", "facha"]
+  .map((word) => aliasForFilter(word));
+
+/** ¿Pasa el filtro automático? (Lo que pasa, aún queda pendiente de revisión.) */
+export function aliasAllowed(alias) {
+  const words = alias.split(/[\s_-]+/).filter(Boolean).map(aliasForFilter);
+  const joined = aliasForFilter(alias.replace(/[\s_-]+/g, ""));
+  if (blockedRoots.some((root) => joined.includes(root))) return false;
+  return !blockedWords.some((word) => joined === word || words.includes(word));
+}
+
+const provisionalAnimals = ["Zorro", "Lobo", "Jabalí", "Erizo", "Búho", "Ardilla", "Pingüino", "Loro", "Abeja", "Unicornio", "Tortuga", "Delfín",
+  "Panda", "Oso", "Conejo", "Ciervo", "Mariquita", "Pato", "Koala", "Foca"];
+
+/** El nombre que ven los demás mientras el alias no está aprobado: animal del juego y número, fijo para cada tarjeta. */
+export function provisionalName(deviceId) {
+  const digest = createHash("sha256").update(String(deviceId).toLowerCase()).digest();
+  return `${provisionalAnimals[digest.readUInt16BE(0) % provisionalAnimals.length]} ${1 + digest.readUInt16BE(2) % 99}`;
+}
+
+/** Lo que ven los demás: el alias aprobado, el aprobado anterior mientras se revisa un cambio, o el nombre provisional. */
+export function publicAlias({ id, alias, aliasStatus, approvedAlias }) {
+  if (aliasStatus === "approved") return alias;
+  if (aliasStatus !== "hidden" && approvedAlias) return approvedAlias;
+  return provisionalName(id);
+}
+
+/** Compara la clave de administración en tiempo constante (también si las longitudes no coinciden). */
+export function adminTokenMatches(expected, supplied) {
+  if (typeof expected !== "string" || expected.length < 16 || typeof supplied !== "string") return false;
+  const a = createHash("sha256").update(expected).digest();
+  const b = createHash("sha256").update(supplied).digest();
+  return timingSafeEqual(a, b);
 }

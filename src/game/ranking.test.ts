@@ -168,6 +168,7 @@ test("distingue timeout, credenciales inválidas, infraestructura y respuestas m
     { response: () => { throw new DOMException("Tarda", "TimeoutError"); }, code: "timeout", retryable: true },
     { response: () => jsonResponse({ error: "Tarjeta inválida" }, 401), code: "device_invalid", retryable: false },
     { response: () => jsonResponse({ code: "invalid_alias", error: "Alias inválido" }, 400), code: "invalid_alias", retryable: false },
+    { response: () => jsonResponse({ code: "alias_not_allowed", error: "Ese nombre no vale. Prueba otro." }, 400), code: "alias_not_allowed", retryable: false },
     { response: () => jsonResponse({ error: "Descansando" }, 503), code: "server_unavailable", retryable: true },
     { response: () => jsonResponse({ players: null }), code: "invalid_response", retryable: true },
     { response: () => jsonResponse({ players: [null] }), code: "invalid_response", retryable: true },

@@ -23,7 +23,7 @@ test("las recuperaciones esperan un menú seguro sin otro diálogo", () => {
 });
 
 test("validación mantiene el diálogo, fallos de servicio aplazan y almacenamiento ofrece salida explícita", () => {
-  for (const code of ["invalid_alias", "alias_taken", "device_exists"] as const) {
+  for (const code of ["invalid_alias", "alias_not_allowed", "alias_taken", "device_exists"] as const) {
     assert.equal(enrollmentFailure(new RankingError(code, "Elige otro alias", false)), "validate");
   }
   assert.equal(enrollmentFailure(new RankingError("storage_unavailable", "No se puede guardar", false)), "storage");

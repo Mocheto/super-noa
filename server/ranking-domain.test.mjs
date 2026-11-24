@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { campaignWorldFromLegacyWorld, hashDeviceToken, normalizeAlias, validateDeviceCredentials, validateProgress } from "./ranking-domain.mjs";
+import { adminTokenMatches, aliasAllowed, campaignWorldFromLegacyWorld, hashDeviceToken, normalizeAlias, provisionalName, publicAlias, validateDeviceCredentials, validateProgress } from "./ranking-domain.mjs";
 
 test("normaliza alias infantiles sin permitir texto arbitrario", () => {
   assert.equal(normalizeAlias("  Moche   Luna "), "Moche Luna");
@@ -75,4 +75,39 @@ test("valida tarjetas generadas por el cliente sin aceptar tarjetas parciales", 
 test("la tarjeta de un dispositivo nunca se almacena sin cifrar", () => {
   assert.notEqual(hashDeviceToken("sal", "tarjeta"), "tarjeta");
   assert.equal(hashDeviceToken("sal", "tarjeta"), hashDeviceToken("sal", "tarjeta"));
+});
+
+test("el filtro rechaza lo obvio tras normalizar tildes, números, otros alfabetos y espacios", () => {
+  for (const alias of ["puta", "Pu7a", "PUTA", "p u t a", "p_u-t_a", "M1erda", "mierdecilla", "Ρuta", "рuta", "FUUUCK", "Sh1t", "H1J0PUT4", "Hitler2", "Cono", "Teta Loca", "C4br0n"]) {
+    assert.equal(aliasAllowed(alias), false, alias);
+  }
+  for (const alias of ["NoaLuna", "Computadora", "Pasado", "Cassandra", "Tontería", "Mariposa", "Pedro", "Cumbre", "Escultura", "Conocer", "Maricarmen",
+    "Bob", "Marsella", "Dickens", "Zorro 12", "Nigeria", "Skill", "Anaconda", "Sexto", "Tetera", "Kiko", "Gatito_99", "Pingüino", "Ñandú"]) {
+    assert.equal(aliasAllowed(alias), true, alias);
+  }
+});
+
+test("el nombre provisional es un animal y un número, fijo para cada tarjeta", () => {
+  const id = "0f8fad5b-d9cb-469f-a165-70867728950e";
+  assert.match(provisionalName(id), /^\p{Lu}[\p{L}]+ (?:[1-9]|[1-9]\d)$/u);
+  assert.equal(provisionalName(id), provisionalName(id.toUpperCase()));
+  const nombres = new Set(Array.from({ length: 50 }, (_, index) => provisionalName(`0f8fad5b-d9cb-469f-a165-${String(index).padStart(12, "0")}`)));
+  assert.ok(nombres.size > 40, "cambia de una tarjeta a otra");
+});
+
+test("lo que ven los demás según el estado del alias", () => {
+  const id = "0f8fad5b-d9cb-469f-a165-70867728950e";
+  assert.equal(publicAlias({ id, alias: "Nueva", aliasStatus: "approved", approvedAlias: "Nueva" }), "Nueva");
+  assert.equal(publicAlias({ id, alias: "Nueva", aliasStatus: "pending", approvedAlias: "Vieja" }), "Vieja");
+  assert.equal(publicAlias({ id, alias: "Nueva", aliasStatus: "rejected", approvedAlias: "Vieja" }), "Vieja");
+  assert.equal(publicAlias({ id, alias: "Nueva", aliasStatus: "pending", approvedAlias: null }), provisionalName(id));
+  assert.equal(publicAlias({ id, alias: "Nueva", aliasStatus: "hidden", approvedAlias: "Vieja" }), provisionalName(id));
+});
+
+test("la clave de administración: corta, ausente o distinta no vale", () => {
+  const clave = "clave-de-prueba-larga-0123456789";
+  assert.equal(adminTokenMatches(clave, clave), true);
+  for (const supplied of [undefined, null, "", clave.slice(0, -1), `${clave}x`, clave.toUpperCase()]) assert.equal(adminTokenMatches(clave, supplied), false, String(supplied));
+  assert.equal(adminTokenMatches("corta", "corta"), false, "una clave de menos de 16 caracteres no se acepta");
+  assert.equal(adminTokenMatches(undefined, "algo"), false);
 });

@@ -33,6 +33,7 @@ import { DESCANSO_MS, HUECO_PERSEGUIR, moverPluma, nuevaPluma, perseguir, plumaS
 import { CapaPluma, HOJA_PLUMA, IconoCanaPluma, pintarPluma } from "./casaPlumaArte";
 import { climaDelDia, climaDePrueba, climaQueSeVe, miranPorLaVentana } from "./casaClima";
 import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte";
+import { useEfimero, useRespuestas, useTemporizadores } from "./useTemporizadores";
 import "./casa.css";
 
 type Props = {
@@ -153,7 +154,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [llegan] = useState(() => llegadasPendientes(inicial));
   // La primera llegada a la casa (nadie presentado aún): al cerrarla, la bandeja brilla una vez.
   const [estreno] = useState(() => inicial.presentados.length === 0 && llegadasPendientes(inicial).length > 0);
-  const [brilla, setBrilla] = useState(false);
+  // Todo lo que se programa para luego se cancela al cerrar la casa (issue 309).
+  const temporizadores = useTemporizadores();
+  const [brilla, ponerBrillo] = useEfimero<{ bandeja: true }>(temporizadores);
   const [fase, setFase] = useState<"entrando" | "hola" | "casa">(llegan.length ? "entrando" : "casa");
   const [nocheReloj, setNocheReloj] = useState(() => esDeNoche(relojCasa(ajustes)));
   // Hora de dormir: desde las 19 h la bandeja enseña la estrella; al pulsarla, la habitación se pone de noche, los
@@ -172,8 +175,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // Pose «arropado» de cada gatito, con su paleta y la mantita del color de su collar.
   const [poseArropado, setPoseArropado] = useState<Record<string, string>>({});
   const [arrastre, setArrastre] = useState<Arrastre | null>(null);
-  const [respuestas, setRespuestas] = useState<Respuesta[]>([]);
-  const [pelota, setPelota] = useState<Pelota | null>(null);
+  const { respuestas, responder } = useRespuestas<Respuesta>(temporizadores);
+  const [pelota, ponerPelota] = useEfimero<Omit<Pelota, "id">>(temporizadores);
   const [frotando, setFrotando] = useState<number | null>(null);
   const [cogido, setCogido] = useState<Cogido | null>(null);
   const cogidoRef = useRef<Cogido | null>(null);
@@ -193,11 +196,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const botandoRef = useRef<number[]>([]);
   /** Mariposas del jardín que Noa ha hecho posarse junto a un gatito. */
   /** El último riego: a qué macetero y qué ha pasado (crece, brillitos en flor, o ya regado hoy). */
-  const [riego, setRiego] = useState<{ indice: number; id: number; efecto: "crece" | "brilla" | "espera" } | null>(null);
+  const [riego, ponerRiego] = useEfimero<{ indice: number; efecto: "crece" | "brilla" | "espera" }>(temporizadores);
   /** El visitante de hoy (mapa «Visitas de los amigos a la casa»): llamando a la puerta o ya en el jardín. */
   const [visita, setVisita] = useState<{ animal: string; fase: "llama" | "dentro" | "seva"; llamadas: number; comio?: boolean; corazon?: boolean } | null>(null);
   /** Reacción del visitante: saludo (bocadillo con su comida favorita) o comida (con su favorita, «¡ÑAM!» y corazón). */
-  const [reaccion, setReaccion] = useState<{ id: number; tipo: "saluda" | "come" | "favorita"; corazon: boolean } | null>(null);
+  const [reaccion, ponerReaccion] = useEfimero<{ tipo: "saluda" | "come" | "favorita"; corazon: boolean }>(temporizadores);
   const [abanicoAmigos, setAbanicoAmigos] = useState(false);
   // El abanico abierto se cierra al tocar fuera de él o de su cuenco, por ejemplo otro botón de la bandeja (issue 330).
   useEffect(() => {
@@ -235,7 +238,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // Decorar: la bandeja cambia a los muebles; `elegido` es el mueble tocado, cuyas versiones salen en la bandeja.
   const [decorando, setDecorando] = useState(false);
   const [elegido, setElegido] = useState<MuebleId | null>(null);
-  const [destello, setDestello] = useState<{ mueble: MuebleId; id: number } | null>(null);
+  const [destello, ponerDestello] = useEfimero<{ mueble: MuebleId }>(temporizadores);
   const [fondo, setFondo] = useState(HABITACION.fondo);
   // Ventana de quién está en casa, y el parpadeo de las huellas cuando ya no cabe nadie más.
   // Orden de las fichas, fijado al abrir (en casa primero, luego de paseo) para que no salten al tocarlas.
@@ -256,7 +259,6 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const dedoRef = useRef(false);
   const deslizRef = useRef<Desliz | null>(null);
   const autoRef = useRef<-1 | 0 | 1>(0);
-  const idRef = useRef(0);
   const sonidoRef = useRef<SonidoCasa | null>(null);
   const estadosRef = useRef<Record<number, EstadoVida>>({});
   useEffect(() => { casaRef.current = casa; }, [casa]);
@@ -381,8 +383,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setBotando((antes) => [...antes, mundo]);
     setAndantes((actuales) => ({ ...actuales, [mundo]: { ...(actuales[mundo] ?? nuevoAndante(BOTA_EN, momento)), ...BOTA_EN, destino: null, pose: "sentarse", desde: momento, hasta: momento + BOTAR_MS } }));
     const duracion = reduceMotion ? 400 : BOTAR_MS;
-    Array.from({ length: BOTES }, (_, bote) => window.setTimeout(() => sonidoRef.current?.bote(), (duracion / BOTES) * (bote + 0.5)));
-    window.setTimeout(() => {
+    Array.from({ length: BOTES }, (_, bote) => temporizadores.despues((duracion / BOTES) * (bote + 0.5), () => sonidoRef.current?.bote()));
+    temporizadores.despues(duracion, () => {
       setBotando((antes) => antes.filter((otro) => otro !== mundo));
       const resultado = botar(casaRef.current, mundo, new Date());
       guardar(resultado.casa);
@@ -391,10 +393,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       setAndantes((actuales) => actuales[mundo] ? { ...actuales, [mundo]: ir({ ...actuales[mundo], ...BOTA_EN, destino: null }, BAJA_EN, "sentarse", 2, ya) } : actuales);
       const indice = gatitos.indexOf(mundo);
       if (indice < 0) return;
-      const id = ++idRef.current;
-      setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice), { gatito: indice, tipo: resultado.respuesta, cuidado: "pelota", corazon: resultado.corazon, id, desde: ya }]);
-      window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
-    }, duracion);
+      responder({ gatito: indice, tipo: resultado.respuesta, cuidado: "pelota", corazon: resultado.corazon, desde: ya }, RESPUESTA_MS);
+    });
   };
   /** Tocar la puerta del corazón: pasa a la otra estancia, con la vista junto a la puerta. */
   const cruzarPuerta = () => {
@@ -429,16 +429,14 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const mundo = gatitos[cercano];
     pararGatito(cercano);
     setPosadas((antes) => antes.map((p, i) => i === indice ? { desde: ms, de: ahoraMismo[indice], a: dondeSePosa(lista[cercano]) } : p));
-    window.setTimeout(() => {
+    temporizadores.despues(reduceMotion ? 0 : POSARSE_MS, () => {
       const gatito = casaRef.current.gatitos[mundo];
       if (!gatito || estadoDe(gatito.necesidades.jugar) === "bien") return;
       const resultado = jugarDeUnaVez(casaRef.current, mundo, new Date());
       guardar(resultado.casa);
       sonidoRef.current?.maullar(mundo, "gracias");
-      const id = ++idRef.current;
-      setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== cercano), { gatito: cercano, tipo: resultado.respuesta, cuidado: "pelota", corazon: resultado.corazon, id, desde: performance.now() }]);
-      window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
-    }, reduceMotion ? 0 : POSARSE_MS);
+      responder({ gatito: cercano, tipo: resultado.respuesta, cuidado: "pelota", corazon: resultado.corazon, desde: performance.now() }, RESPUESTA_MS);
+    });
     return true;
   };
 
@@ -520,9 +518,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const resultado = regar(casaRef.current, indice, new Date());
     if (resultado.casa !== casaRef.current) guardar(resultado.casa);
     if (resultado.crecio || resultado.brillitos) sonidoRef.current?.golpeBano("campanita");
-    const id = ++idRef.current;
-    setRiego({ indice, id, efecto: resultado.crecio ? "crece" : resultado.brillitos ? "brilla" : "espera" });
-    window.setTimeout(() => setRiego((actual) => actual?.id === id ? null : actual), 1400);
+    ponerRiego({ indice, efecto: resultado.crecio ? "crece" : resultado.brillitos ? "brilla" : "espera" }, 1400);
   };
   /** Con el teclado, la regadera riega el primer macetero que aún se puede regar hoy. */
   const regarConTeclado = (event: ReactMouseEvent<HTMLButtonElement>) => {
@@ -542,9 +538,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (visita?.fase === "llama") { setVisita({ ...visita, fase: "dentro" }); return; }
     if (visita?.fase !== "dentro") return;
     // Saludo: da un saltito y enseña su comida favorita.
-    const id = ++idRef.current;
-    setReaccion({ id, tipo: "saluda", corazon: false });
-    window.setTimeout(() => setReaccion((actual) => actual?.id === id ? null : actual), 2200);
+    ponerReaccion({ tipo: "saluda", corazon: false }, 2200);
   };
   /** Darle una comida del plato: siempre se la come; con su favorita, «¡ÑAM!» y su corazón (uno por visita). */
   const darleDeComer = (comida: FriendFood) => {
@@ -555,9 +549,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (resultado.favorita) sonidoRef.current?.golpeBano("campanita");
     else sonidoRef.current?.bote();
     setVisita({ ...visita, comio: true, corazon: visita.corazon || resultado.corazon });
-    const id = ++idRef.current;
-    setReaccion({ id, tipo: resultado.favorita ? "favorita" : "come", corazon: resultado.corazon });
-    window.setTimeout(() => setReaccion((actual) => actual?.id === id ? null : actual), 2200);
+    ponerReaccion({ tipo: resultado.favorita ? "favorita" : "come", corazon: resultado.corazon }, 2200);
   };
   const platoConTeclado = (event: ReactMouseEvent<HTMLButtonElement>) => {
     if (event.detail !== 0) return;
@@ -608,9 +600,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const momento = performance.now();
     setAndantes((actuales) => actuales[mundo] ? { ...actuales, [mundo]: { ...actuales[mundo], destino: null, pose: "dormir", desde: momento, hasta: momento + 60_000 } } : actuales);
     if (resultado.corazon) {
-      const id = ++idRef.current;
-      setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice), { gatito: indice, tipo: "gracias", cuidado: "frotar", corazon: true, id, desde: momento, dormido: true }]);
-      window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
+      responder({ gatito: indice, tipo: "gracias", cuidado: "frotar", corazon: true, desde: momento, dormido: true }, RESPUESTA_MS);
     }
   };
 
@@ -631,34 +621,32 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       reduceMotion ? 0 : (Math.hypot(hasta.x - desde.x, hasta.y - desde.y) / (VELOCIDAD_GATITO * RAPIDO_PUERTA)) * 1000 + 300;
     setSaliendo((actuales) => [...actuales, ...salen]);
     setEsperando((actuales) => [...actuales, ...entran]);
-    salen.forEach((mundo, orden) => window.setTimeout(() => {
+    salen.forEach((mundo, orden) => temporizadores.despues(orden * paso, () => {
       const desde = andantes[mundo] ?? puerta;
       rapidosRef.current.add(mundo);
       setAndantes((actuales) => actuales[mundo] ? { ...actuales, [mundo]: ir({ ...actuales[mundo], destino: null }, puerta, "sentarse", 0, performance.now()) } : actuales);
-      window.setTimeout(() => {
+      temporizadores.despues(recorrido(desde, puerta), () => {
         rapidosRef.current.delete(mundo);
         setSaliendo((actuales) => actuales.filter((otro) => otro !== mundo));
         setAndantes((actuales) => { const { [mundo]: _fuera, ...resto } = actuales; return resto; }); // eslint-disable-line @typescript-eslint/no-unused-vars
-      }, recorrido(desde, puerta));
-    }, orden * paso));
+      });
+    }));
     const empieza = salen.length ? salen.length * paso + (reduceMotion ? 0 : 1200) : 0;
-    entran.forEach((mundo, orden) => window.setTimeout(() => {
+    entran.forEach((mundo, orden) => temporizadores.despues(empieza + orden * paso, () => {
       const destino = noche ? sitioNoche(mundo) : sitioDia(mundo);
       rapidosRef.current.add(mundo);
       setAndantes((actuales) => ({ ...actuales, [mundo]: ir(nuevoAndante(puerta, performance.now()), destino, noche ? "dormir" : "sentarse", 2, performance.now()) }));
       setEsperando((actuales) => actuales.filter((otro) => otro !== mundo));
       setLuzPuerta((veces) => veces + 1);
-      window.setTimeout(() => rapidosRef.current.delete(mundo), recorrido(puerta, destino));
-    }, empieza + orden * paso));
+      temporizadores.despues(recorrido(puerta, destino), () => rapidosRef.current.delete(mundo));
+    }));
   };
 
   /** Cambia el mueble elegido a `version` en el momento `momento` (el del toque): destello, campanita y, de día, el gatito más cercano va a olerlo. */
   const ponerVersion = (mueble: MuebleId, version: Version, momento: number) => {
     if (decoracionDe(casaRef.current)[mueble] === version) return;
     guardar({ ...casaRef.current, decoracion: cambiarMueble(decoracionDe(casaRef.current), mueble, version) });
-    const id = ++idRef.current;
-    setDestello({ mueble, id });
-    window.setTimeout(() => setDestello((actual) => actual?.id === id ? null : actual), DESTELLO_MS);
+    ponerDestello({ mueble }, DESTELLO_MS);
     sonidoRef.current?.golpeBano("campanita");
     // De noche duermen (y los arropados llevan su mantita): nadie se levanta a olerlo.
     if (noche) return;
@@ -679,10 +667,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const sonido = sonidoRef.current;
     if (resultado.respuesta === "gracias") sonido?.maullar(mundo, "gracias");
     else if (resultado.respuesta === "ahoraNo") sonido?.maullar(mundo, "ahoraNo");
-    const id = ++idRef.current;
-    setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice), { gatito: indice, tipo: resultado.respuesta, cuidado, corazon: resultado.corazon, id, desde: performance.now() }]);
-    window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
-  }, [gatitos, guardar, pararGatito]);
+    responder({ gatito: indice, tipo: resultado.respuesta, cuidado, corazon: resultado.corazon, desde: performance.now() }, RESPUESTA_MS);
+  }, [gatitos, guardar, pararGatito, responder]);
 
   /** Darle una comida del abanico: como el cuenco de siempre y, si es su favorita con hambre, «¡ÑAM!» (y queda descubierta). */
   const atenderComida = (indice: number, comida: Comida) => {
@@ -695,10 +681,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (resultado.respuesta === "gracias") sonido?.maullar(mundo, "gracias");
     else if (resultado.respuesta === "ahoraNo") sonido?.maullar(mundo, "ahoraNo");
     if (resultado.favorita) sonido?.golpeBano("campanita");
-    const id = ++idRef.current;
-    setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice),
-      { gatito: indice, tipo: resultado.respuesta, cuidado: "comer", corazon: resultado.corazon, id, desde: performance.now(), favorita: resultado.favorita }]);
-    window.setTimeout(() => setRespuestas((actuales) => actuales.filter((r) => r.id !== id)), RESPUESTA_MS);
+    responder({ gatito: indice, tipo: resultado.respuesta, cuidado: "comer", corazon: resultado.corazon, desde: performance.now(), favorita: resultado.favorita }, RESPUESTA_MS);
   };
 
   // Ronroneo mientras se frota con el dedo (con la esponja no ronronea).
@@ -888,13 +871,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   /** La pelota cae donde se suelta y corre a por ella el gatito más cercano. */
   const lanzar = (x: number, y: number) => {
     const indice = lista.reduce((mejor, andante, i) => Math.hypot(andante.x - x, andante.y - y) < Math.hypot(lista[mejor].x - x, lista[mejor].y - y) ? i : mejor, 0);
-    const id = ++idRef.current;
-    setPelota({ x, y, gatito: indice, id });
-    window.setTimeout(() => {
-      setPelota((actual) => actual?.id === id ? null : actual);
+    const espera = reduceMotion ? 0 : ATRAPAR_MS;
+    ponerPelota({ x, y, gatito: indice }, espera);
+    temporizadores.despues(espera, () => {
       sonidoRef.current?.bote();
       atender(indice, "pelota");
-    }, reduceMotion ? 0 : ATRAPAR_MS);
+    });
   };
 
   /** Atrapar la pluma: salta (animación de la pelota), maúlla y cuenta como una pelota atrapada; luego descansa un poco. */
@@ -1163,8 +1145,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       setEligiendo({ orden: [...dentro, ...fuera, ...dePaseoDe(casaRef.current).filter((mundo) => !fuera.includes(mundo))], antes: dentro });
     }
     if (estreno) {
-      setBrilla(true);
-      window.setTimeout(() => setBrilla(false), BRILLO_BANDEJA_MS);
+      ponerBrillo({ bandeja: true }, BRILLO_BANDEJA_MS);
     }
   };
   const salir = () => {
@@ -1264,8 +1245,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     guardar(vestir(casaRef.current, mundo, ropa));
     const indice = gatitos.indexOf(mundo);
     if (indice < 0) return;
-    const id = ++idRef.current;
-    setRespuestas((actuales) => [...actuales.filter((r) => r.gatito !== indice), { gatito: indice, tipo: "gracias", cuidado: "frotar", corazon: false, id, desde: performance.now() }]);
+    responder({ gatito: indice, tipo: "gracias", cuidado: "frotar", corazon: false, desde: performance.now() }, RESPUESTA_MS);
   };
   const terminarBano = () => {
     const indice = bano === null ? -1 : gatitos.indexOf(bano);

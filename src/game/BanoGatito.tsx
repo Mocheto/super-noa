@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type PointerEvent as R
 import { aspectoDelGatito, banoNuevo, frotarBano, terminado, UTENSILIOS, utensilioQueToca, type Bano, type RespuestaBano, type Utensilio } from "./casaBano";
 import { ANIMACIONES_GATO, cuadroDe, type AnimacionGato } from "./casaGatoArte";
 import { Ventana } from "./Ventana";
+import { useTemporizadores } from "./useTemporizadores";
 import { cssAssetUrl } from "./assets";
 import { t, tClave } from "../textos/index.ts";
 import { Boton, BotonControl } from "../textos/Texto";
@@ -41,6 +42,8 @@ export function BanoGatito({ nombre, hoja, reduceMotion, onSalir, onTerminar, on
   const [arrastre, setArrastre] = useState<{ utensilio: Utensilio; x: number; y: number } | null>(null);
   const [cara, setCara] = useState<{ animacion: AnimacionGato; desde: number; hasta: number } | null>(null);
   const [fin, setFin] = useState(false);
+  // El final del canto se cancela si se cierra el baño antes (issue 309).
+  const temporizadores = useTemporizadores();
   const [ahora, setAhora] = useState(() => performance.now());
   const gatitoRef = useRef<HTMLSpanElement>(null);
   const escenaRef = useRef<HTMLDivElement>(null);
@@ -80,7 +83,7 @@ export function BanoGatito({ nombre, hoja, reduceMotion, onSalir, onTerminar, on
         setArrastre(null);
         setCara({ animacion: "cantar", desde: momento, hasta: momento + CANTA_MS });
         onSonido?.("terminado", null);
-        window.setTimeout(() => setFin(true), reduceMotion ? 0 : CANTA_MS);
+        temporizadores.despues(reduceMotion ? 0 : CANTA_MS, () => setFin(true));
       }
     };
     const soltar = () => { setArrastre(null); anteriorRef.current = null; onSonido?.("nada", null); };

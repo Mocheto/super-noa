@@ -1,7 +1,9 @@
 import { Dialog } from "./Dialog";
 import { t } from "../textos";
 
-export type TouchControlsMode = "auto" | "always";
+import type { TouchControlsMode } from "./ajustes";
+
+export type { TouchControlsMode };
 
 type Props = {
   musicVolume: number;

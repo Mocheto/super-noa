@@ -24,7 +24,7 @@ import { firstConnectedGamepad } from "./game/gamepad";
 import { menuDirection, readMenuPad } from "./game/menuGamepad";
 import { createMusicPlayer, musicTracks } from "./game/music";
 import { adoptarProgreso, collectLifetimeApples, completeSecretShop, lifetimeApples, parseProgress, progressMilestone, readProgress, resetCampaignProgress, serializeProgress, STORAGE_KEY, textoNormalizado, visitSecretShop, type Progress } from "./game/progress";
-import { readSavedPercentage, readStorage, writeStorage } from "./game/storage";
+import { readStorage, writeStorage } from "./game/storage";
 import { worldCatalog, type WorldId } from "./game/worldMapData";
 import { checkRankingAvailability, loadRanking, rankingConnectionMessage, rankingProgress, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
 import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnrolled, safeEnrollmentMoment } from "./game/rankingOnboarding";
@@ -44,7 +44,8 @@ import { Avisos } from "./game/Avisos";
 import { HudEsquinas } from "./game/HudEsquinas";
 import { PantallaInicio } from "./game/PantallaInicio";
 import { DueloDelGuardian } from "./game/DueloDelGuardian";
-import { VentanaAjustes, type TouchControlsMode } from "./game/VentanaAjustes";
+import { VentanaAjustes } from "./game/VentanaAjustes";
+import { useAjustes } from "./game/useAjustes";
 import { precargarAlbum, VentanaAlbum, type CollectionTab } from "./game/VentanaAlbum";
 import { VentanaTablon } from "./game/VentanaTablon";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
@@ -64,9 +65,6 @@ const devPaletas = import.meta.env.DEV && new URLSearchParams(window.location.se
 /** En desarrollo, `?prueba=casa&gatitos=6` abre la casa como si los mundos 1 a 6 estuvieran completos (y la casa lo guarda). */
 const devGatitos = import.meta.env.DEV ? Number(new URLSearchParams(window.location.search).get("gatitos")) || 0 : 0;
 const CatParty = lazy(() => import("./game/CatPartyGame").then((module) => ({ default: module.CatParty })));
-
-const MUSIC_VOLUME_KEY = "super-noa-music-volume";
-const EFFECTS_VOLUME_KEY = "super-noa-effects-volume";
 
 type Screen = "home" | "map" | "game" | "boss" | "complete" | "gameover" | "finished" | "secret-transition" | "cat-party" | "avioneta" | "casa";
 const isTimedScreen = (screen: Screen) => screen === "game" || screen === "boss" || screen === "secret-transition" || screen === "cat-party" || screen === "avioneta";
@@ -107,7 +105,6 @@ export default function App() {
     return () => window.clearTimeout(fin);
   }, [lives]);
   const [paused, setPaused] = useState(false);
-  const [muted, setMuted] = useState(() => readStorage("super-noa-muted") === "true");
   const [saveError, setSaveError] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
@@ -134,20 +131,7 @@ export default function App() {
   const cerrarAviso = useCallback((id: string) => setAvisosCerrados((cerrados) => new Set(cerrados).add(id)), []);
   const [collectionTab, setCollectionTab] = useState<CollectionTab>("stickers");
   const [albumHints, setAlbumHints] = useState<string[]>([]);
-  const [musicVolume, setMusicVolume] = useState(() => readSavedPercentage(MUSIC_VOLUME_KEY, 100));
-  const [effectsVolume, setEffectsVolume] = useState(() => readSavedPercentage(EFFECTS_VOLUME_KEY, 100));
-  const [reduceMotionAjuste, setReduceMotion] = useState(() => readStorage("super-noa-reduce-motion") === "true");
-  // «Reducir movimiento» vale tanto el ajuste del juego como el del sistema (issue 336).
-  const [movimientoSistema, setMovimientoSistema] = useState(() => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
-  useEffect(() => {
-    if (typeof matchMedia !== "function") return;
-    const consulta = matchMedia("(prefers-reduced-motion: reduce)");
-    const cambiar = () => setMovimientoSistema(consulta.matches);
-    consulta.addEventListener?.("change", cambiar);
-    return () => consulta.removeEventListener?.("change", cambiar);
-  }, []);
-  const reduceMotion = reduceMotionAjuste || movimientoSistema;
-  const [touchControls, setTouchControls] = useState<TouchControlsMode>(() => readStorage("super-noa-touch-controls") === "always" ? "always" : "auto");
+  const { muted, musicVolume, effectsVolume, reduceMotion, reduceMotionAjuste, touchControls, alternarSonido, ajustarVolumen, setReduceMotion, setTouchControls } = useAjustes();
   const [mapReturnWorld, setMapReturnWorld] = useState<WorldId>();
   const [showCatPartyInvite, setShowCatPartyInvite] = useState(false);
   const [bossReplay, setBossReplay] = useState(false);
@@ -387,17 +371,6 @@ export default function App() {
   }, [rankingClave, rankingDevice, rankingRetry]);
 
   useEffect(() => {
-    writeStorage("super-noa-muted", String(muted));
-  }, [muted]);
-
-  useEffect(() => {
-    writeStorage(MUSIC_VOLUME_KEY, String(musicVolume));
-    writeStorage(EFFECTS_VOLUME_KEY, String(effectsVolume));
-    writeStorage("super-noa-reduce-motion", String(reduceMotionAjuste));
-    writeStorage("super-noa-touch-controls", touchControls);
-  }, [effectsVolume, musicVolume, reduceMotionAjuste, touchControls]);
-
-  useEffect(() => {
     const createPlayer = () => createMusicPlayer(
       pistaDeMusica,
       (error) => {
@@ -492,13 +465,8 @@ export default function App() {
           const horizontal = (current[3] && !previous[3]) || (current[4] && !previous[4]);
           if (direction && selected instanceof HTMLInputElement && selected.type === "range" && horizontal) {
             const value = Math.max(0, Math.min(100, Number(selected.value) + direction * 5));
-            if (selected.id === "music-volume") {
-              writeStorage(`${MUSIC_VOLUME_KEY}-configured`, "true");
-              setMusicVolume(value);
-            } else if (selected.id === "effects-volume") {
-              writeStorage(`${EFFECTS_VOLUME_KEY}-configured`, "true");
-              setEffectsVolume(value);
-            }
+            if (selected.id === "music-volume") ajustarVolumen("musica", value);
+            else if (selected.id === "effects-volume") ajustarVolumen("efectos", value);
           } else if (direction && selected) {
             const index = focusables.indexOf(selected);
             const next = focusables[(index + direction + focusables.length) % focusables.length];
@@ -516,7 +484,7 @@ export default function App() {
     };
     animationId = requestAnimationFrame(poll);
     return () => cancelAnimationFrame(animationId);
-  }, [screen, paused, showSettings, showHelp, showCredits, showAlbum]);
+  }, [ajustarVolumen, screen, paused, showSettings, showHelp, showCredits, showAlbum]);
 
   useEffect(() => {
     if (screen !== "secret-transition" || paused) return;
@@ -856,7 +824,7 @@ export default function App() {
       ]} />
       {screen === "home" && <PantallaInicio albumFound={albumFound} albumTotal={albumStickers.length} knownBosses={knownBosses} jefesTotal={bossLevels.length} muted={muted}
         partidaEmpezada={progress.unlocked > 0} secretUnlocked={progress.secretUnlocked} saveError={saveError} completedLevels={completedLevels} campaignLevelCount={campaignLevelCount}
-        onJugar={() => void requestAdventure(() => setScreen("map"))} onAyuda={() => setShowHelp(true)} onColeccion={openCollection} onSonido={() => setMuted((value) => !value)}
+        onJugar={() => void requestAdventure(() => setScreen("map"))} onAyuda={() => setShowHelp(true)} onColeccion={openCollection} onSonido={alternarSonido}
         onAjustes={() => setShowSettings(true)} onTablon={openRanking} onCreditos={() => setShowCredits(true)} />}
 
       {screen === "map" && (
@@ -987,15 +955,14 @@ export default function App() {
             {screen !== "cat-party" && <Boton clave="partida.pausa.otraVez.rotulo" onClick={restartCurrentLevel} />}
             <Boton clave="partida.pausa.mapa.rotulo" data-gamepad-back onClick={screen === "cat-party" ? leaveCatParty : () => { setPaused(false); setScreen("map"); }} />
             <div className="pausa-controles">
-              <BotonControl pictograma={muted ? "sin-sonido" : "sonido"} etiqueta={muted ? "partida.hud.sonido.oculto" : "partida.hud.silencio.oculto"} aria-pressed={!muted} onClick={() => setMuted((value) => !value)} />
+              <BotonControl pictograma={muted ? "sin-sonido" : "sonido"} etiqueta={muted ? "partida.hud.sonido.oculto" : "partida.hud.silencio.oculto"} aria-pressed={!muted} onClick={alternarSonido} />
               <BotonControl pictograma="pantalla-grande" etiqueta="partida.hud.pantallaGrande.oculto" onClick={toggleFullscreen} />
             </div>
           </>} />
       )}
 
       {showSettings && <VentanaAjustes musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotionAjuste} touchControls={touchControls}
-        onMusicVolume={(volumen) => { writeStorage(`${MUSIC_VOLUME_KEY}-configured`, "true"); setMusicVolume(volumen); }}
-        onEffectsVolume={(volumen) => { writeStorage(`${EFFECTS_VOLUME_KEY}-configured`, "true"); setEffectsVolume(volumen); }}
+        onMusicVolume={(volumen) => ajustarVolumen("musica", volumen)} onEffectsVolume={(volumen) => ajustarVolumen("efectos", volumen)}
         onReduceMotion={setReduceMotion} onTouchControls={setTouchControls} onClose={() => setShowSettings(false)} />}
 
       {showHelp && (

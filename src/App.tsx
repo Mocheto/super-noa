@@ -6,7 +6,7 @@ import { bossCatalog } from "./game/bosses";
 import { GameAssetIcon } from "./game/GameAssetIcon";
 import { PixelIcon } from "./game/PixelIcon";
 import { nivelesCampana as levels, type NivelResumen } from "./game/nivelesIndice";
-import { campaignLevels, campaignUnlockIndex, levelIndex, nextLevelIndex } from "./game/routes";
+import { campaignLevels, levelIndex, nextLevelIndex } from "./game/routes";
 import { testScreens } from "./game/testScreens";
 
 /** Solo en desarrollo: `?prueba=salas` abre una pantalla de prueba de los motores de formato y `?prueba=12-2`, una
@@ -22,8 +22,7 @@ import { stickerCatalog } from "./game/stickers";
 import { useMandoEnMenus, usePausaAutomatica } from "./game/usePausaAutomatica";
 import { musicaDePantalla } from "./game/musicaDePantalla";
 import { useEfectos, useMusicaDeFondo } from "./game/useSonidoJuego";
-import { adoptarProgreso, collectLifetimeApples, completeSecretShop, lifetimeApples, parseProgress, progressMilestone, readProgress, resetCampaignProgress, serializeProgress, STORAGE_KEY, textoNormalizado, visitSecretShop, type Progress } from "./game/progress";
-import { readStorage, writeStorage } from "./game/storage";
+import { lifetimeApples } from "./game/progress";
 import { worldCatalog, type WorldId } from "./game/worldMapData";
 import { checkRankingAvailability, loadRanking, rankingConnectionMessage, rankingProgress, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
 import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnrolled, safeEnrollmentMoment } from "./game/rankingOnboarding";
@@ -31,11 +30,8 @@ import type { GameSnapshot, Level } from "./game/types";
 import type { DetourId } from "./game/types";
 import { detourLevel, detourLevels } from "./game/detours";
 import { restStopFor, restStopIndex, restStopResumenes as restStopLevels, restStopUnlocked } from "./game/restStops";
-import { greetFriend, visitRestStop } from "./game/restStopProgress";
-import { addHeart } from "./game/friendProgress";
 import { funciones } from "./game/funciones";
 import { casaAbierta, conMundosCompletos, llegadasPorVer } from "./game/casaRescate";
-import { recordFlight } from "./game/avioneta";
 import { t } from "./textos";
 import { Boton, BotonControl, Pictograma, Texto } from "./textos/Texto";
 import { Medalla, Ventana } from "./game/Ventana";
@@ -45,10 +41,10 @@ import { PantallaInicio } from "./game/PantallaInicio";
 import { DueloDelGuardian } from "./game/DueloDelGuardian";
 import { VentanaAjustes } from "./game/VentanaAjustes";
 import { useAjustes } from "./game/useAjustes";
+import { useProgreso } from "./game/useProgreso";
 import { precargarAlbum, VentanaAlbum, type CollectionTab } from "./game/VentanaAlbum";
 import { VentanaTablon } from "./game/VentanaTablon";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
-import { visitDetour } from "./game/detourProgress";
 
 const WorldMap = lazy(() => import("./game/WorldMap").then((module) => ({ default: module.WorldMap })));
 // La partida recibe el resumen de la pantalla y busca su geometría completa en un bloque que se carga con ella.
@@ -83,8 +79,9 @@ function rankingErrorMessage(error: unknown, fallback: string) {
 }
 
 export default function App() {
-  const [progress, setProgress] = useState<Progress>(readProgress);
   const [screen, setScreen] = useState<Screen>(devTestLevel ? (devDuel && devTestLevel.boss ? "boss" : "game") : devTestName === "fiesta" ? "cat-party" : devTestName === "casa" ? "casa" : "home");
+  const screenRef = useRef(screen);
+  const { progress, progressRef, saveError, casaVersion, acciones } = useProgreso(screenRef);
   const [activeIndex, setActiveIndex] = useState(0);
   const [levelRun, setLevelRun] = useState(0);
   const [avionetaGift, setAvionetaGift] = useState(false);
@@ -104,7 +101,6 @@ export default function App() {
     return () => window.clearTimeout(fin);
   }, [lives]);
   const [paused, setPaused] = useState(false);
-  const [saveError, setSaveError] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [showCredits, setShowCredits] = useState(false);
   const [showAlbum, setShowAlbum] = useState(false);
@@ -146,7 +142,6 @@ export default function App() {
   const adventureActionRef = useRef<(() => void) | null>(null);
   const secretTransitionRef = useRef({ target: -1, remaining: 1800 });
   const playScreenRef = useRef<HTMLElement | null>(null);
-  const screenRef = useRef(screen);
   const activeLevel = devTestLevel ?? levels[activeIndex] ?? detourLevels[activeIndex - levels.length] ?? restStopLevels[activeIndex - levels.length - detourLevels.length];
   const forestComplete = Boolean(progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed);
   const displayedLevel = activeDetour ? detourLevel(activeDetour) : activeLevel;
@@ -287,48 +282,6 @@ export default function App() {
     return () => { cancelled = true; window.clearInterval(interval); };
   }, [deferEnrollment, enrollmentRequired]);
 
-  // Lo último que se sabe que hay guardado: lo que escribió esta pestaña o lo que leyó de otra.
-  const guardadoRef = useRef<string | null | undefined>(undefined);
-  const progressRef = useRef(progress);
-  /** Cambia al adoptar una casa de otra pestaña con la casa abierta: vuelve a montarla con los datos nuevos. */
-  const [casaVersion, setCasaVersion] = useState(0);
-
-  useEffect(() => {
-    progressRef.current = progress;
-    const texto = serializeProgress(progress);
-    // Una cadena idéntica a la guardada no se vuelve a escribir (tampoco la que se acaba de leer de otra pestaña).
-    if (texto === guardadoRef.current) return;
-    const saved = writeStorage(STORAGE_KEY, texto);
-    if (saved) guardadoRef.current = texto;
-    const timeout = window.setTimeout(() => setSaveError(!saved), 0);
-    return () => window.clearTimeout(timeout);
-  }, [progress]);
-
-  // Otra pestaña ha guardado (o se vuelve a esta pestaña): se adopta su progreso en lugar de pisarlo en la siguiente escritura.
-  useEffect(() => {
-    const adoptar = (remoto: string | null) => {
-      const normal = textoNormalizado(remoto);
-      if (normal === guardadoRef.current) return;
-      const conocida = guardadoRef.current ?? null;
-      // Adoptado tal cual, se serializa igual que `normal` y no se vuelve a escribir; fusionado, sí.
-      guardadoRef.current = normal;
-      const casaRemota = parseProgress(remoto).casa;
-      if (screenRef.current === "casa" && JSON.stringify(casaRemota) !== JSON.stringify(progressRef.current.casa)) setCasaVersion((version) => version + 1);
-      setProgress((actual) => adoptarProgreso(actual, remoto, conocida));
-    };
-    const alGuardarOtra = (event: StorageEvent) => { if (event.key === STORAGE_KEY) adoptar(event.newValue); };
-    const releer = () => { if (document.visibilityState === "visible") adoptar(readStorage(STORAGE_KEY)); };
-    const alVolver = (event: PageTransitionEvent) => { if (event.persisted) adoptar(readStorage(STORAGE_KEY)); };
-    window.addEventListener("storage", alGuardarOtra);
-    document.addEventListener("visibilitychange", releer);
-    window.addEventListener("pageshow", alVolver);
-    return () => {
-      window.removeEventListener("storage", alGuardarOtra);
-      document.removeEventListener("visibilitychange", releer);
-      window.removeEventListener("pageshow", alVolver);
-    };
-  }, []);
-
   // El tablón solo recibe lo que le importa: cuidar la casa o mirar fotos no lo vuelve a enviar.
   const rankingClave = useMemo(() => JSON.stringify(rankingProgress(progress)), [progress]);
 
@@ -365,7 +318,7 @@ export default function App() {
       window.clearTimeout(timeout);
       window.removeEventListener("online", retryOnline);
     };
-  }, [rankingClave, rankingDevice, rankingRetry]);
+  }, [progressRef, rankingClave, rankingDevice, rankingRetry]);
 
   usePausaAutomatica(screen, isTimedScreen(screen), setPaused);
   useMandoEnMenus(!((screen === "game" || screen === "boss") && !paused && !showSettings && !showHelp && !showCredits && !showAlbum), screen, ajustarVolumen);
@@ -481,7 +434,7 @@ export default function App() {
   };
 
   const finishBossReplay = (challengeCompleted = false) => {
-    if (challengeCompleted && activeLevel.boss) setProgress((current) => progressMilestone(current, { ...current, bossChallenges: { ...current.bossChallenges, [activeLevel.boss!]: true } }));
+    if (challengeCompleted && activeLevel.boss) acciones.retoDeJefe(activeLevel.boss);
     setBossReplay(false);
     openCollection("bosses");
     setScreen(bossReplayReturn);
@@ -514,58 +467,31 @@ export default function App() {
   const handleSnapshot = useCallback((next: GameSnapshot) => {
     setSnapshot(next);
     if (next.stickers.length === 0) return;
-    setProgress((current) => {
-      const newStickers = next.stickers.filter((id) => !current.stickers.includes(id));
-      return newStickers.length > 0 ? progressMilestone(current, { ...current, stickers: [...current.stickers, ...newStickers] }) : current;
-    });
-  }, []);
+    acciones.pegatinas(next.stickers);
+  }, [acciones]);
 
-  const handleAppleCollected = useCallback((count: number) => {
-    setProgress((current) => collectLifetimeApples(current, count));
-  }, []);
-  const handleShopVisit = useCallback((id: string) => setProgress((current) => visitSecretShop(current, id)), []);
-  const handleShopWin = useCallback((id: string) => setProgress((current) => completeSecretShop(current, id)), []);
-  const handleDetourVisit = useCallback((id: DetourId) => setProgress((current) => visitDetour(current, id)), []);
-  const handleFriendGreeted = useCallback((world: number, kind: string) => setProgress((current) => greetFriend(current, world, kind)), []);
-  const handleDetourComplete = useCallback((id: DetourId) => setProgress((current) => visitDetour(current, id, true)), []);
-  const handleDetourReveal = useCallback((ids: DetourId[]) => setProgress((current) => {
-    const detours = { ...current.detours };
-    let changed = false;
-    for (const id of ids) {
-      const previous = detours[id];
-      if (!previous || previous.revealed) continue;
-      detours[id] = { ...previous, revealed: true };
-      changed = true;
-    }
-    return changed ? { ...current, detours } : current;
-  }), []);
+  const handleAppleCollected = acciones.manzanas;
+  const handleShopVisit = acciones.visitarTienda;
+  const handleShopWin = acciones.ganarTienda;
+  const handleDetourVisit = acciones.visitarDesvio;
+  const handleFriendGreeted = acciones.saludar;
+  const handleDetourComplete = acciones.completarDesvio;
+  const handleDetourReveal = acciones.revelarDesvios;
 
   const handleComplete = useCallback((challengeCompleted = false, finalSnapshot = snapshot) => {
     setSnapshot(finalSnapshot);
     if (activeLevel.detour) {
-      setProgress((current) => visitDetour(current, activeLevel.detour!, true));
+      acciones.completarDesvio(activeLevel.detour);
       setScreen("map");
       return;
     }
     if (activeLevel.restStop) {
-      setProgress((current) => visitRestStop(current, activeLevel.restStop!));
+      acciones.visitarPaseo(activeLevel.restStop);
       setScreen("map");
       return;
     }
     setShowCatPartyInvite(activeLevel.id === CAT_PARTY_LEVEL_ID && !forestComplete);
-    setProgress((current) => {
-      const previous = current.levelStats[activeLevel.id];
-      return progressMilestone(current, {
-        ...current,
-        stickers: [...new Set([...current.stickers, ...finalSnapshot.stickers])],
-        unlocked: Math.max(current.unlocked, campaignUnlockIndex(activeLevel)),
-        levelStats: {
-          ...current.levelStats,
-          [activeLevel.id]: { completed: true, bestApples: Math.max(previous?.bestApples ?? 0, finalSnapshot.apples), flawless: previous?.flawless || lives === MAX_LIVES },
-        },
-        bossChallenges: activeLevel.boss && challengeCompleted ? { ...current.bossChallenges, [activeLevel.boss]: true } : current.bossChallenges,
-      });
-    });
+    acciones.completarPantalla(activeLevel, finalSnapshot, { sinCaer: lives === MAX_LIVES, reto: challengeCompleted });
     // La primera vez que se vence a la Reina Arcoíris, ella regala la avioneta y el vuelo empieza solo.
     if (activeLevel.world === 7 && activeLevel.boss && !progress.avioneta?.flown) {
       setAvionetaGift(true);
@@ -573,21 +499,21 @@ export default function App() {
       return;
     }
     setScreen(activeLevel.route?.finale ? "finished" : "complete");
-  }, [activeLevel, forestComplete, lives, snapshot, progress.avioneta?.flown]);
+  }, [acciones, activeLevel, forestComplete, lives, snapshot, progress.avioneta?.flown]);
 
   const handleCanvasComplete = useCallback((finalSnapshot: GameSnapshot) => handleComplete(false, finalSnapshot), [handleComplete]);
 
   const handleWaterExit = useCallback(() => {
     const target = levelIndex(activeLevel.route?.waterExit ?? "");
     if (target < 0) return;
-    setProgress((current) => progressMilestone(current, { ...current, waterUnlocked: true }));
+    acciones.desbloquearAgua();
     setActiveIndex(target);
     setLevelRun((current) => current + 1);
     setLives(MAX_LIVES);
     setSnapshot(emptySnapshot);
     setPaused(false);
     setScreen("game");
-  }, [activeLevel]);
+  }, [acciones, activeLevel]);
 
   const handleBossEncounter = useCallback((finalSnapshot: GameSnapshot) => {
     handleSnapshot(finalSnapshot);
@@ -599,11 +525,11 @@ export default function App() {
   const handleSecretExit = useCallback(() => {
     const target = levelIndex(activeLevel.route?.secretExit ?? "");
     if (target < 0) return;
-    setProgress((current) => progressMilestone(current, { ...current, secretUnlocked: true }));
+    acciones.desbloquearSecreto();
     secretTransitionRef.current = { target, remaining: 1800 };
     setPaused(false);
     setScreen("secret-transition");
-  }, [activeLevel]);
+  }, [acciones, activeLevel]);
 
   const spendBossApple = useCallback(() => {
     setSnapshot((current) => {
@@ -656,7 +582,7 @@ export default function App() {
     if (!window.confirm(t("adultos.app.empezar-de-nuevo-se"))) return;
     setMapReturnWorld(undefined);
     setLevelRun(0);
-    setProgress(resetCampaignProgress);
+    acciones.borrar();
     setActiveIndex(0);
     setLives(MAX_LIVES);
   };
@@ -717,7 +643,7 @@ export default function App() {
           onExit={(stars) => {
             // Rendirse no pierde nada; al cruzar el arcoíris se guarda la mejor marca. El marcador queda abierto en
             // cuanto se vence a la Reina Arcoíris, aunque no se complete el vuelo.
-            setProgress((current) => stars === null ? { ...current, avioneta: { bestStars: current.avioneta?.bestStars ?? 0, flown: true } } : recordFlight(current, stars));
+            acciones.terminarVuelo(stars);
             setAvionetaGift(false);
             setPaused(false);
             setScreen("map");
@@ -725,7 +651,7 @@ export default function App() {
       </Suspense>}
       {screen === "casa" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
         {devPaletas ? <PruebaPaletas /> : <CasaGatitos key={`casa-${casaVersion}`} casa={progress.casa} levelStats={devGatitos ? conMundosCompletos(progress.levelStats, devGatitos) : progress.levelStats}reduceMotion={reduceMotion} muted={muted} effectsVolume={effectsVolume} musicVolume={musicVolume}
-          onGuardar={(casa) => setProgress((current) => ({ ...current, casa }))} onAmistad={(kind) => setProgress((current) => addHeart(current, kind))} onSalir={() => setScreen("map")} />}
+          onGuardar={acciones.guardarCasa} onAmistad={acciones.amistad} onSalir={() => setScreen("map")} />}
       </Suspense>}
       {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
         <CatParty paused={paused} muted={muted} musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotion}
@@ -854,7 +780,7 @@ export default function App() {
 
       {showAlbum && <VentanaAlbum progress={progress} collectionTab={collectionTab} albumStickers={albumStickers} albumHints={albumHints} setAlbumHints={setAlbumHints}
         bossLevels={bossLevels} knownBosses={knownBosses} worldProgress={worldProgress} onTab={setCollectionTab} onReplayBoss={replayBoss}
-        onHeart={(kind) => setProgress((current) => addHeart(current, kind))} onClose={() => setShowAlbum(false)} />}
+        onHeart={acciones.amistad} onClose={() => setShowAlbum(false)} />}
       {showRanking && <VentanaTablon enrollmentRequired={enrollmentRequired} enrollmentStorageBlocked={enrollmentStorageBlocked} rankingDevice={rankingDevice}
         rankingAlias={rankingAlias} rankingAliasRef={rankingAliasRef} rankingJoining={rankingJoining} rankingSyncState={rankingSyncState} rankingSyncMessage={rankingSyncMessage}
         rankingMessage={rankingMessage} rankingPlayers={rankingPlayers} rankingLoading={rankingLoading} campaignLevelCount={campaignLevelCount}

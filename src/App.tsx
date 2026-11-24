@@ -42,7 +42,8 @@ import { DueloDelGuardian } from "./game/DueloDelGuardian";
 import { VentanaAjustes } from "./game/VentanaAjustes";
 import { useAjustes } from "./game/useAjustes";
 import { useProgreso } from "./game/useProgreso";
-import { precargarAlbum, VentanaAlbum, type CollectionTab } from "./game/VentanaAlbum";
+import { useVentanas } from "./game/useVentanas";
+import { precargarAlbum, VentanaAlbum } from "./game/VentanaAlbum";
 import { VentanaTablon } from "./game/VentanaTablon";
 const AvionetaGame = lazy(() => import("./game/AvionetaGame").then((module) => ({ default: module.AvionetaGame })));
 
@@ -101,11 +102,8 @@ export default function App() {
     return () => window.clearTimeout(fin);
   }, [lives]);
   const [paused, setPaused] = useState(false);
-  const [showHelp, setShowHelp] = useState(false);
-  const [showCredits, setShowCredits] = useState(false);
-  const [showAlbum, setShowAlbum] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showRanking, setShowRanking] = useState(false);
+  const ventanas = useVentanas();
+  const { abrir, cerrar, cerrarMenus, abrirColeccion: openCollection } = ventanas;
   const [rankingDevice, setRankingDevice] = useState<RankingDevice | null>(readRankingDevice);
   const [rankingAlias, setRankingAlias] = useState("");
   const [rankingPlayers, setRankingPlayers] = useState<RankingPlayer[]>([]);
@@ -123,8 +121,6 @@ export default function App() {
   // Avisos para adultos que ya se han ido (solos o al tocarlos); uno nuevo, con otro texto, vuelve a salir.
   const [avisosCerrados, setAvisosCerrados] = useState<ReadonlySet<string>>(() => new Set());
   const cerrarAviso = useCallback((id: string) => setAvisosCerrados((cerrados) => new Set(cerrados).add(id)), []);
-  const [collectionTab, setCollectionTab] = useState<CollectionTab>("stickers");
-  const [albumHints, setAlbumHints] = useState<string[]>([]);
   const { muted, musicVolume, effectsVolume, reduceMotion, reduceMotionAjuste, touchControls, alternarSonido, ajustarVolumen, setReduceMotion, setTouchControls } = useAjustes();
   const [mapReturnWorld, setMapReturnWorld] = useState<WorldId>();
   const [showCatPartyInvite, setShowCatPartyInvite] = useState(false);
@@ -164,11 +160,11 @@ export default function App() {
   const finishEnrollment = useCallback(() => {
     enrollmentRequiredRef.current = false;
     setEnrollmentRequired(false);
-    setShowRanking(false);
+    cerrar("tablon");
     const action = adventureActionRef.current;
     adventureActionRef.current = null;
     action?.();
-  }, []);
+  }, [cerrar]);
 
   const deferEnrollment = useCallback((message: string) => {
     enrollmentRetryAtRef.current = Date.now() + ENROLLMENT_RETRY_MS;
@@ -201,10 +197,7 @@ export default function App() {
           finishEnrollment();
           return;
         }
-        setShowHelp(false);
-        setShowAlbum(false);
-        setShowSettings(false);
-        setShowCredits(false);
+        cerrarMenus();
         setPaused(false);
         setRankingDevice(pending);
         setRankingAlias(pending?.alias ?? "");
@@ -212,7 +205,7 @@ export default function App() {
         setEnrollmentStorageBlocked(false);
         enrollmentRequiredRef.current = true;
         setEnrollmentRequired(true);
-        setShowRanking(true);
+        abrir("tablon");
         window.requestAnimationFrame(() => rankingAliasRef.current?.focus());
       }
     } catch (error) {
@@ -228,14 +221,11 @@ export default function App() {
           finishEnrollment();
           return;
         }
-        setShowHelp(false);
-        setShowAlbum(false);
-        setShowSettings(false);
-        setShowCredits(false);
+        cerrarMenus();
         setScreen((current) => safeEnrollmentMoment(current, false) ? current : "map");
         enrollmentRequiredRef.current = true;
         setEnrollmentRequired(true);
-        setShowRanking(true);
+        abrir("tablon");
         window.requestAnimationFrame(() => rankingAliasRef.current?.focus());
       } else if (!safeEnrollmentMoment(screenRef.current, false)) {
         enrollmentRetryAtRef.current = Date.now() + ENROLLMENT_RETRY_MS;
@@ -246,14 +236,14 @@ export default function App() {
       enrollmentBusyRef.current = false;
       setEnrollmentChecking(false);
     }
-  }, [deferEnrollment, enrollmentDeferred, finishEnrollment, rankingDevice]);
+  }, [abrir, cerrarMenus, deferEnrollment, enrollmentDeferred, finishEnrollment, rankingDevice]);
 
   useEffect(() => {
     if (!enrollmentDeferred || isEnrolled(rankingDevice)) return;
     const { retry, online } = createEnrollmentRecovery(
       enrollmentRetryAtRef,
       () => document.visibilityState !== "hidden"
-        && safeEnrollmentMoment(screen, showRanking || showHelp || showAlbum || showCredits || showSettings),
+        && safeEnrollmentMoment(screen, ventanas.algunaAbierta),
       () => { void requestAdventure(); },
     );
     const timeout = window.setTimeout(retry, Math.max(0, enrollmentRetryAtRef.current - Date.now()));
@@ -264,7 +254,7 @@ export default function App() {
       window.clearInterval(interval);
       window.removeEventListener("online", online);
     };
-  }, [enrollmentDeferred, rankingDevice, requestAdventure, screen, showRanking, showHelp, showAlbum, showCredits, showSettings]);
+  }, [enrollmentDeferred, rankingDevice, requestAdventure, screen, ventanas.algunaAbierta]);
 
   useEffect(() => {
     if (!enrollmentRequired) return;
@@ -321,7 +311,7 @@ export default function App() {
   }, [progressRef, rankingClave, rankingDevice, rankingRetry]);
 
   usePausaAutomatica(screen, isTimedScreen(screen), setPaused);
-  useMandoEnMenus(!((screen === "game" || screen === "boss") && !paused && !showSettings && !showHelp && !showCredits && !showAlbum), screen, ajustarVolumen);
+  useMandoEnMenus(!((screen === "game" || screen === "boss") && !paused && !ventanas.ajustes && !ventanas.ayuda && !ventanas.creditos && !ventanas.album), screen, ajustarVolumen);
 
   useEffect(() => {
     if (screen !== "secret-transition" || paused) return;
@@ -355,11 +345,6 @@ export default function App() {
     return [world.id, { complete, total: worldLevels.length, stickers, stickerTotal: stickerCatalog.filter((sticker) => sticker.world === world.id).length, flawless, bossFriend, remembered }];
   })), [progress.levelStats, progress.stickers]);
 
-  const openCollection = (tab: CollectionTab) => {
-    setCollectionTab(tab);
-    setShowAlbum(true);
-  };
-
   const refreshRanking = async () => {
     setRankingMessage("");
     setRankingLoading(true);
@@ -374,7 +359,7 @@ export default function App() {
   };
 
   const openRanking = () => {
-    setShowRanking(true);
+    abrir("tablon");
     void refreshRanking();
   };
 
@@ -419,7 +404,7 @@ export default function App() {
   const replayBoss = (index: number) => {
     const level = levels[index];
     if (!level.boss || !progress.levelStats[level.id]?.completed) return;
-    setShowAlbum(false);
+    cerrar("album");
     void requestAdventure(() => {
       setBossReplayReturn(screen === "home" ? "home" : "map");
       setActiveIndex(index);
@@ -607,8 +592,8 @@ export default function App() {
       ]} />
       {screen === "home" && <PantallaInicio albumFound={albumFound} albumTotal={albumStickers.length} knownBosses={knownBosses} jefesTotal={bossLevels.length} muted={muted}
         partidaEmpezada={progress.unlocked > 0} secretUnlocked={progress.secretUnlocked} saveError={saveError} completedLevels={completedLevels} campaignLevelCount={campaignLevelCount}
-        onJugar={() => void requestAdventure(() => setScreen("map"))} onAyuda={() => setShowHelp(true)} onColeccion={openCollection} onSonido={alternarSonido}
-        onAjustes={() => setShowSettings(true)} onTablon={openRanking} onCreditos={() => setShowCredits(true)} />}
+        onJugar={() => void requestAdventure(() => setScreen("map"))} onAyuda={() => abrir("ayuda")} onColeccion={openCollection} onSonido={alternarSonido}
+        onAjustes={() => abrir("ajustes")} onTablon={openRanking} onCreditos={() => abrir("creditos")} />}
 
       {screen === "map" && (
         <section className="map-screen">
@@ -625,7 +610,7 @@ export default function App() {
               <button className="icon-button" type="button" data-gamepad-back onClick={() => setScreen("home")} aria-label={t("mapa.volverInicio.oculto")}>⌂</button>
             </div>
             {menuMapa && <div className="map-menu-adultos">
-              <button className="album-button" type="button" onClick={() => setShowSettings(true)}>{t("mapa.ajustes")}</button>
+              <button className="album-button" type="button" onClick={() => abrir("ajustes")}>{t("mapa.ajustes")}</button>
               <button className="album-button" type="button" onClick={openRanking}>{t("adultos.app.tablon")}</button>
               <button className="text-button reset-button" type="button" onClick={resetProgress}>{t("mapa.borrarProgreso")}</button>
             </div>}
@@ -744,14 +729,14 @@ export default function App() {
           </>} />
       )}
 
-      {showSettings && <VentanaAjustes musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotionAjuste} touchControls={touchControls}
+      {ventanas.ajustes && <VentanaAjustes musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotionAjuste} touchControls={touchControls}
         onMusicVolume={(volumen) => ajustarVolumen("musica", volumen)} onEffectsVolume={(volumen) => ajustarVolumen("efectos", volumen)}
-        onReduceMotion={setReduceMotion} onTouchControls={setTouchControls} onClose={() => setShowSettings(false)} />}
+        onReduceMotion={setReduceMotion} onTouchControls={setTouchControls} onClose={() => cerrar("ajustes")} />}
 
-      {showHelp && (
-        <Ventana id="help-title" titulo="inicio.ayuda.titulo.rotulo" className="ventana-ayuda" onClose={() => setShowHelp(false)}
-          botones={<Boton tipo="seguir" clave="inicio.ayuda.lista.rotulo" data-gamepad-default disabled={enrollmentChecking} onClick={() => { setShowHelp(false); void requestAdventure(() => setScreen("map")); }} />}>
-          <BotonControl className="ventana-cerrar" pictograma="cerrar" etiqueta="inicio.ayuda.cerrar.oculto" data-gamepad-back onClick={() => setShowHelp(false)} />
+      {ventanas.ayuda && (
+        <Ventana id="help-title" titulo="inicio.ayuda.titulo.rotulo" className="ventana-ayuda" onClose={() => cerrar("ayuda")}
+          botones={<Boton tipo="seguir" clave="inicio.ayuda.lista.rotulo" data-gamepad-default disabled={enrollmentChecking} onClick={() => { cerrar("ayuda"); void requestAdventure(() => setScreen("map")); }} />}>
+          <BotonControl className="ventana-cerrar" pictograma="cerrar" etiqueta="inicio.ayuda.cerrar.oculto" data-gamepad-back onClick={() => cerrar("ayuda")} />
           <div className="ayuda-tarjetas">
               <div className="ayuda-tarjeta"><Pictograma nombre="camina" doble /><div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="inicio.ayuda.camina.rotulo" /></p><p className="juntos">{t("inicio.ayuda.camina.juntos")}</p></div></div>
               <div className="ayuda-tarjeta"><Pictograma nombre="salta" doble /><div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="inicio.ayuda.dobleSalto.rotulo" /></p><p className="juntos">{t("inicio.ayuda.dobleSalto.juntos")}</p></div></div>
@@ -766,25 +751,25 @@ export default function App() {
         </Ventana>
       )}
 
-      {showCredits && (
-        <Dialog labelledBy="credits-title" className="game-modal credits-modal" onClose={() => setShowCredits(false)}>
-          <button className="modal-close" type="button" data-gamepad-back onClick={() => setShowCredits(false)} aria-label={t("adultos.app.cerrar.oculto")}>×</button>
+      {ventanas.creditos && (
+        <Dialog labelledBy="credits-title" className="game-modal credits-modal" onClose={() => cerrar("creditos")}>
+          <button className="modal-close" type="button" data-gamepad-back onClick={() => cerrar("creditos")} aria-label={t("adultos.app.cerrar.oculto")}>×</button>
           <p className="eyebrow">{t("adultos.app.hecho-con-carino")}</p><h2 id="credits-title">{t("adultos.app.creditos")}</h2>
           <p><strong>{t("adultos.app.super-noa")}</strong> {t("adultos.app.es-un-juego-original")}</p>
           <p>{t("adultos.app.personaje-creado-para-este")}</p>
           <p>{t("adultos.app.todas-las-aventuras-tienen")} <a href="https://opengameart.org/content/platformer-chiptunes" target="_blank" rel="noreferrer">{t("adultos.app.platformer-chiptunes")}</a>{t("adultos.app.de-guy-g-gamerson")}</p>
           <p>{t("adultos.app.los-guardianes-finales-y")}</p>
-          <button className="pixel-button primary" type="button" onClick={() => setShowCredits(false)}>{t("adultos.app.cerrar-2")}</button>
+          <button className="pixel-button primary" type="button" onClick={() => cerrar("creditos")}>{t("adultos.app.cerrar-2")}</button>
         </Dialog>
       )}
 
-      {showAlbum && <VentanaAlbum progress={progress} collectionTab={collectionTab} albumStickers={albumStickers} albumHints={albumHints} setAlbumHints={setAlbumHints}
-        bossLevels={bossLevels} knownBosses={knownBosses} worldProgress={worldProgress} onTab={setCollectionTab} onReplayBoss={replayBoss}
-        onHeart={acciones.amistad} onClose={() => setShowAlbum(false)} />}
-      {showRanking && <VentanaTablon enrollmentRequired={enrollmentRequired} enrollmentStorageBlocked={enrollmentStorageBlocked} rankingDevice={rankingDevice}
+      {ventanas.album && <VentanaAlbum progress={progress} collectionTab={ventanas.pestana} albumStickers={albumStickers} albumHints={ventanas.pistas} setAlbumHints={ventanas.setPistas}
+        bossLevels={bossLevels} knownBosses={knownBosses} worldProgress={worldProgress} onTab={ventanas.setPestana} onReplayBoss={replayBoss}
+        onHeart={acciones.amistad} onClose={() => cerrar("album")} />}
+      {ventanas.tablon && <VentanaTablon enrollmentRequired={enrollmentRequired} enrollmentStorageBlocked={enrollmentStorageBlocked} rankingDevice={rankingDevice}
         rankingAlias={rankingAlias} rankingAliasRef={rankingAliasRef} rankingJoining={rankingJoining} rankingSyncState={rankingSyncState} rankingSyncMessage={rankingSyncMessage}
         rankingMessage={rankingMessage} rankingPlayers={rankingPlayers} rankingLoading={rankingLoading} campaignLevelCount={campaignLevelCount}
-        onAliasChange={setRankingAlias} onJoin={() => void joinRanking()} onDefer={deferEnrollment} onRefresh={() => void refreshRanking()} onClose={() => setShowRanking(false)} />}
+        onAliasChange={setRankingAlias} onJoin={() => void joinRanking()} onDefer={deferEnrollment} onRefresh={() => void refreshRanking()} onClose={() => cerrar("tablon")} />}
     </main>
   );
 }

@@ -3,7 +3,7 @@ import test from "node:test";
 import { EventEmitter, once } from "node:events";
 import { spawn } from "node:child_process";
 import { createServer } from "node:net";
-import { createRankingSupervisor, isCommitSha, parseUpdateInterval } from "./ranking-supervisor.mjs";
+import { createRankingSupervisor, isCommitSha, parseUpdateInterval, recoveryDelay, retryDelay } from "./ranking-supervisor.mjs";
 
 test("acepta únicamente SHA completos de Git", () => {
   assert.equal(isCommitSha("a".repeat(40)), true);
@@ -21,6 +21,11 @@ test("usa cinco minutos por defecto y rechaza intervalos demasiado cortos", () =
 
 const first = { sha: "a".repeat(40), directory: "/app/releases/" + "a".repeat(40) };
 const next = { sha: "b".repeat(40), directory: "/app/releases/" + "b".repeat(40) };
+/** Commits que aún no están en la caché: uno roto, uno que solo toca otras carpetas (mismo servidor que `first`) y una corrección. */
+const broken = "c".repeat(40);
+const sameAsFirst = "d".repeat(40);
+const fixed = "e".repeat(40);
+const raw = (sha, filename) => `https://raw.githubusercontent.com/Mocheto/super-noa/${sha}/server/${filename}`;
 
 function fixture(t, initial = null) {
   const files = new Map();
@@ -33,11 +38,18 @@ function fixture(t, initial = null) {
   let liveProcess = null;
   let clock = 0;
   let onWait = async () => {};
+  const downloads = [];
+  const commitChecks = [];
   if (initial) files.set("/app/ranking-release.json", JSON.stringify({ sha: initial.sha }));
   for (const release of [first, next]) {
-    files.set(`${release.directory}/ranking-server.mjs`, "server");
+    files.set(`${release.directory}/ranking-server.mjs`, `server ${release.sha}`);
     files.set(`${release.directory}/ranking-domain.mjs`, "domain");
   }
+  const remote = new Map([
+    [raw(broken, "ranking-server.mjs"), `server ${broken}`], [raw(broken, "ranking-domain.mjs"), "domain"],
+    [raw(sameAsFirst, "ranking-server.mjs"), `server ${first.sha}`], [raw(sameAsFirst, "ranking-domain.mjs"), "domain"],
+    [raw(fixed, "ranking-server.mjs"), `server ${fixed}`], [raw(fixed, "ranking-domain.mjs"), "domain"],
+  ]);
   const fs = {
     mkdir: async () => {},
     readFile: async (path) => {
@@ -82,6 +94,11 @@ function fixture(t, initial = null) {
         json: async () => ({ release: liveProcess?.sha.slice(0, 12) }),
       };
       if (offline) throw new Error("Sin conexión");
+      if (remote.has(url)) {
+        downloads.push(url);
+        return { ok: true, text: async () => remote.get(url) };
+      }
+      commitChecks.push(clock);
       return { ok: true, json: async () => ({ sha: latest }) };
     },
     waitForNextCheck: async (milliseconds) => onWait(milliseconds),
@@ -89,7 +106,9 @@ function fixture(t, initial = null) {
   const supervisor = createRankingSupervisor(options);
   t.after(() => supervisor.shutdown());
   return {
-    supervisor, options, files, launches, healthFailures,
+    supervisor, options, files, launches, healthFailures, downloads, commitChecks,
+    get clock() { return clock; },
+    set clock(value) { clock = value; },
     set failWrites(value) { failWrites = value; },
     set failRenames(value) { failRenames = value; },
     set latest(value) { latest = value; },
@@ -265,4 +284,93 @@ test("la activación y parada funcionan también con proceso Node y HTTP reales"
   assert.equal((await fetch(`http://127.0.0.1:${port}/health`).then((response) => response.json())).release, next.sha.slice(0, 12));
   await supervisor.shutdown();
   assert.ok(children[0].exitCode !== null || children[0].signalCode !== null);
+});
+
+test("las esperas crecen: reintento de una versión rota hasta seis horas y bucle sin backend hasta el intervalo", () => {
+  assert.deepEqual([1, 2, 3, 6, 10].map((attempts) => retryDelay(attempts, 300_000)), [600_000, 1_200_000, 2_400_000, 19_200_000, 21_600_000]);
+  assert.deepEqual([0, 1, 2, 5, 6, 9].map((loops) => recoveryDelay(loops, 300_000)), [5_000, 10_000, 20_000, 160_000, 300_000, 300_000]);
+});
+
+test("un main que no arranca no corta el backend sano en cada comprobación, se recuerda tras reiniciar y se reintenta con espera creciente", async (t) => {
+  const f = fixture(t);
+  await f.supervisor.activateRelease(first);
+  f.latest = broken;
+  f.healthFailures.add(broken);
+  await assert.rejects(f.supervisor.checkForUpdates(), /versión esperada/);
+  assert.deepEqual(f.launches.map((child) => child.sha), [first.sha, broken, first.sha]);
+  assert.equal(f.supervisor.getState().running, true);
+  const saved = JSON.parse(f.files.get("/app/ranking-release.json"));
+  assert.equal(saved.sha, first.sha);
+  assert.equal(saved.failed.sha, broken);
+  assert.equal(saved.failed.attempts, 1);
+  assert.equal(saved.failed.retryAt, f.clock + 600_000);
+
+  // Las comprobaciones siguientes no la vuelven a arrancar ni a descargar.
+  const downloaded = f.downloads.length;
+  await f.supervisor.checkForUpdates();
+  await f.supervisor.checkForUpdates();
+  assert.equal(f.launches.length, 3);
+  assert.equal(f.downloads.length, downloaded);
+
+  // Tras reiniciar el contenedor tampoco: el fallo está guardado.
+  const restarted = createRankingSupervisor(f.options);
+  t.after(() => restarted.shutdown());
+  await f.supervisor.shutdown();
+  f.onWait = async () => { await restarted.shutdown(); };
+  await restarted.run();
+  assert.deepEqual(f.launches.slice(3).map((child) => child.sha), [first.sha]);
+  assert.equal(restarted.getState().failedRelease.sha, broken);
+
+  // Pasado su plazo se reintenta una vez, y el siguiente plazo es el doble.
+  const third = createRankingSupervisor(f.options);
+  t.after(() => third.shutdown());
+  f.onWait = async () => { await third.shutdown(); };
+  f.clock += 600_000;
+  await third.run();
+  assert.deepEqual(f.launches.slice(-3).map((child) => child.sha), [first.sha, broken, first.sha]);
+  assert.equal(third.getState().failedRelease.attempts, 2);
+  assert.equal(third.getState().failedRelease.retryAt, f.clock + 1_200_000);
+});
+
+test("una corrección en server/ se prueba enseguida aunque la versión rota esté esperando su plazo", async (t) => {
+  const f = fixture(t);
+  await f.supervisor.activateRelease(first);
+  f.latest = broken;
+  f.healthFailures.add(broken);
+  await assert.rejects(f.supervisor.checkForUpdates());
+  f.latest = fixed;
+  await f.supervisor.checkForUpdates();
+  assert.equal(f.supervisor.getState().currentRelease.sha, fixed);
+  assert.equal(f.supervisor.getState().running, true);
+  // El fallo se recuerda por su contenido: si main vuelve a ese servidor, tampoco corta el backend.
+  assert.equal(f.supervisor.getState().failedRelease.sha, broken);
+});
+
+test("un commit que no cambia server/ no reinicia el backend ni se vuelve a descargar", async (t) => {
+  const f = fixture(t);
+  await f.supervisor.activateRelease(first);
+  f.latest = sameAsFirst;
+  await f.supervisor.checkForUpdates();
+  await f.supervisor.checkForUpdates();
+  assert.deepEqual(f.launches.map((child) => child.sha), [first.sha]);
+  assert.equal(f.supervisor.getState().currentRelease.sha, first.sha);
+  assert.equal(f.supervisor.getState().running, true);
+  assert.equal(f.downloads.length, 2);
+  assert.equal(f.files.has(`/app/releases/${sameAsFirst}/ranking-server.mjs`), false);
+});
+
+test("sin backend que arranque el bucle espera cada vez más y consulta GitHub como mucho una vez por intervalo", async (t) => {
+  const f = fixture(t, first);
+  f.healthFailures.add(first.sha);
+  f.healthFailures.add(next.sha);
+  const waits = [];
+  f.onWait = async (milliseconds) => {
+    waits.push(milliseconds);
+    f.clock += milliseconds;
+    if (waits.length === 9) await f.supervisor.shutdown();
+  };
+  await f.supervisor.run();
+  assert.deepEqual(waits, [5_000, 10_000, 20_000, 40_000, 80_000, 160_000, 300_000, 300_000, 300_000]);
+  assert.ok(f.commitChecks.length >= 3);
+  for (let i = 1; i < f.commitChecks.length; i++) assert.ok(f.commitChecks[i] - f.commitChecks[i - 1] >= 300_000, `consultas a GitHub ${f.commitChecks}`);
 });

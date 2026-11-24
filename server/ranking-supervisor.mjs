@@ -1,4 +1,5 @@
 import { spawn, spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +11,23 @@ export function isCommitSha(value) {
 export function parseUpdateInterval(value) {
   const parsed = Number.parseInt(value ?? "", 10);
   return Number.isInteger(parsed) && parsed >= 60_000 ? parsed : 300_000;
+}
+
+/** Huella del contenido que ejecuta el backend: dos commits con la misma huella son el mismo servidor. */
+export function releaseHash(files) {
+  const hash = createHash("sha256");
+  for (const [filename, text] of files) hash.update(`${filename}\0${text}\0`);
+  return hash.digest("hex");
+}
+
+/** Una versión que no arrancó se vuelve a probar tras el doble del intervalo, y luego el doble cada vez, hasta seis horas. */
+export function retryDelay(attempts, updateInterval) {
+  return Math.min(6 * 60 * 60_000, updateInterval * 2 ** Math.max(1, attempts));
+}
+
+/** Mientras no haya un backend sano, el bucle espera 5 s, 10, 20… hasta el intervalo de comprobación. */
+export function recoveryDelay(failedLoops, updateInterval) {
+  return Math.min(updateInterval, 5_000 * 2 ** Math.max(0, failedLoops));
 }
 
 export function createRankingSupervisor(options = {}) {
@@ -34,6 +52,11 @@ export function createRankingSupervisor(options = {}) {
   let shuttingDown = false;
   let wake = null;
   let transition = Promise.resolve();
+  /** Versión candidata que no arrancó: su huella, cuántas veces y cuándo se puede volver a probar. */
+  let failedRelease = null;
+  /** Último commit consultado y la huella de su servidor, para no descargarlo en cada comprobación. */
+  let knownCommit = null;
+  let lastCheckAt = null;
 
   async function fetchChecked(url) {
     const response = await fetchUrl(url, {
@@ -56,54 +79,82 @@ export function createRankingSupervisor(options = {}) {
     if (result.status !== 0) throw new Error(result.stderr?.trim() || `No se pudo validar ${path}.`);
   }
 
-  async function downloadRelease(sha) {
+  async function readReleaseFiles(directory) {
+    const files = [];
+    for (const filename of serverFiles) files.push([filename, String(await fs.readFile(join(directory, filename), "utf8"))]);
+    return files;
+  }
+
+  /** Los archivos del servidor en ese commit: los de la caché si están completos y son válidos; si no, de GitHub. */
+  async function loadRelease(sha) {
     if (!isCommitSha(sha)) throw new Error("No se puede descargar un commit no válido.");
     const directory = join(releasesDirectory, sha);
     try {
-      for (const filename of serverFiles) {
-        await fs.readFile(join(directory, filename));
-        validateServerFile(join(directory, filename));
-      }
-      return directory;
+      const files = await readReleaseFiles(directory);
+      for (const filename of serverFiles) validateServerFile(join(directory, filename));
+      return { sha, directory, files, hash: releaseHash(files), stored: true };
     } catch {
       // Una caché incompleta no debe impedir volver a descargar la versión.
     }
-    const staging = join(releasesDirectory, `.download-${sha}-${process.pid}`);
+    const files = [];
+    for (const filename of serverFiles) {
+      const response = await fetchChecked(`https://raw.githubusercontent.com/${repository}/${sha}/server/${filename}`);
+      files.push([filename, await response.text()]);
+    }
+    return { sha, directory, files, hash: releaseHash(files), stored: false };
+  }
+
+  async function storeRelease(release) {
+    if (release.stored) return release.directory;
+    const staging = join(releasesDirectory, `.download-${release.sha}-${process.pid}`);
     await fs.rm(staging, { recursive: true, force: true });
     await fs.mkdir(staging, { recursive: true });
     try {
-      for (const filename of serverFiles) {
-        const response = await fetchChecked(`https://raw.githubusercontent.com/${repository}/${sha}/server/${filename}`);
+      for (const [filename, text] of release.files) {
         const destination = join(staging, filename);
-        await fs.writeFile(destination, await response.text(), "utf8");
+        await fs.writeFile(destination, text, "utf8");
         validateServerFile(destination);
       }
-      await fs.mkdir(dirname(directory), { recursive: true });
-      await fs.rm(directory, { recursive: true, force: true });
-      await fs.rename(staging, directory);
-      return directory;
+      await fs.mkdir(dirname(release.directory), { recursive: true });
+      await fs.rm(release.directory, { recursive: true, force: true });
+      await fs.rename(staging, release.directory);
+      return release.directory;
     } catch (error) {
       await fs.rm(staging, { recursive: true, force: true });
       throw error;
     }
   }
 
-  async function readSavedRelease() {
+  async function readState() {
     try {
-      const saved = JSON.parse(await fs.readFile(stateFile, "utf8"));
+      return JSON.parse(await fs.readFile(stateFile, "utf8")) ?? {};
+    } catch {
+      return {};
+    }
+  }
+
+  async function readSavedRelease(saved) {
+    try {
       if (!isCommitSha(saved?.sha)) return null;
       const directory = join(releasesDirectory, saved.sha);
-      for (const filename of serverFiles) await fs.readFile(join(directory, filename));
-      return { sha: saved.sha, directory };
+      return { sha: saved.sha, directory, hash: releaseHash(await readReleaseFiles(directory)) };
     } catch {
       return null;
     }
   }
 
-  async function saveRelease(sha) {
+  function readFailedRelease(saved) {
+    const failed = saved?.failed;
+    if (!isCommitSha(failed?.sha) || !/^[a-f\d]{64}$/.test(failed?.hash ?? "")) return null;
+    const attempts = Number.isInteger(failed.attempts) && failed.attempts > 0 ? failed.attempts : 1;
+    const retryAt = Number.isFinite(failed.retryAt) ? failed.retryAt : now();
+    return { sha: failed.sha, hash: failed.hash, attempts, retryAt };
+  }
+
+  async function saveState(sha) {
     const staging = `${stateFile}.tmp`;
     try {
-      await fs.writeFile(staging, `${JSON.stringify({ sha })}\n`, "utf8");
+      await fs.writeFile(staging, `${JSON.stringify({ ...(sha ? { sha } : {}), ...(failedRelease ? { failed: failedRelease } : {}) })}\n`, "utf8");
       await fs.rename(staging, stateFile);
     } catch (error) {
       await fs.rm(staging, { force: true }).catch(() => {});
@@ -177,9 +228,10 @@ export function createRankingSupervisor(options = {}) {
       const launched = startServer(nextRelease);
       await waitForHealth(launched, nextRelease);
       if (shuttingDown) throw new Error("El supervisor se está deteniendo.");
-      if (persist) await saveRelease(nextRelease.sha);
-      currentRelease = nextRelease;
-      savedRelease = nextRelease;
+      if (persist) await saveState(nextRelease.sha);
+      const confirmed = { sha: nextRelease.sha, directory: nextRelease.directory, hash: nextRelease.hash ?? releaseHash(await readReleaseFiles(nextRelease.directory)) };
+      currentRelease = confirmed;
+      savedRelease = confirmed;
       logger.info(`Backend ${nextRelease.sha.slice(0, 12)} preparado y confirmado.`);
     } catch (error) {
       logger.error("No se pudo confirmar la versión nueva; se intentará recuperar la anterior.", error);
@@ -205,11 +257,53 @@ export function createRankingSupervisor(options = {}) {
     return result;
   }
 
+  const isHealthy = () => Boolean(child && !child.error && currentRelease);
+
+  async function rememberFailure(release) {
+    const attempts = failedRelease?.hash === release.hash ? failedRelease.attempts + 1 : 1;
+    failedRelease = { sha: release.sha, hash: release.hash, attempts, retryAt: now() + retryDelay(attempts, updateInterval) };
+    logger.error(`El backend ${release.sha.slice(0, 12)} no arrancó (${attempts}.ª vez); no se volverá a probar hasta ${new Date(failedRelease.retryAt).toISOString()} salvo que cambie server/.`);
+    try {
+      await saveState(savedRelease?.sha);
+    } catch (error) {
+      logger.error("No se pudo guardar la versión que falló; solo se recordará hasta reiniciar.", error);
+    }
+  }
+
+  async function forgetFailure() {
+    if (!failedRelease) return;
+    failedRelease = null;
+    try {
+      await saveState(savedRelease?.sha);
+    } catch (error) {
+      logger.error("No se pudo borrar del estado la versión que falló.", error);
+    }
+  }
+
   async function checkForUpdates() {
     const sha = await findLatestCommit();
-    if (currentRelease?.sha === sha && child && !child.error) return;
-    const directory = await downloadRelease(sha);
-    await activateRelease({ sha, directory });
+    lastCheckAt = now();
+    const healthy = isHealthy();
+    if (healthy && currentRelease.sha === sha) return;
+    // Con un backend sano, una versión que ya falló no lo corta otra vez hasta su próximo intento.
+    const waitingRetry = (hash) => healthy && failedRelease !== null && (failedRelease.sha === sha || failedRelease.hash === hash) && now() < failedRelease.retryAt;
+    const knownHash = knownCommit?.sha === sha ? knownCommit.hash : null;
+    if ((healthy && knownHash === currentRelease.hash) || waitingRetry(knownHash)) return;
+    const release = await loadRelease(sha);
+    knownCommit = { sha, hash: release.hash };
+    if (healthy && release.hash === currentRelease.hash) {
+      logger.info(`El commit ${sha.slice(0, 12)} no cambia server/; el backend ${currentRelease.sha.slice(0, 12)} sigue sin reiniciarse.`);
+      return;
+    }
+    if (waitingRetry(release.hash)) return;
+    const directory = await storeRelease(release);
+    try {
+      await activateRelease({ sha, directory, hash: release.hash });
+    } catch (error) {
+      if (!shuttingDown) await rememberFailure(release);
+      throw error;
+    }
+    if (failedRelease?.hash === release.hash) await forgetFailure();
   }
 
   function waitForNextCheck(milliseconds) {
@@ -245,14 +339,20 @@ export function createRankingSupervisor(options = {}) {
 
   async function run() {
     await fs.mkdir(releasesDirectory, { recursive: true });
-    savedRelease = await readSavedRelease();
+    const state = await readState();
+    savedRelease = await readSavedRelease(state);
+    failedRelease = readFailedRelease(state);
     await recoverSavedRelease();
     if (!shuttingDown) await updateSafely();
+    let failedLoops = 0;
     while (!shuttingDown) {
-      await waitForNextCheck(child ? updateInterval : 5_000);
+      failedLoops = isHealthy() ? 0 : failedLoops;
+      await waitForNextCheck(isHealthy() ? updateInterval : recoveryDelay(failedLoops, updateInterval));
       if (shuttingDown) break;
+      if (!isHealthy()) failedLoops += 1;
       await recoverSavedRelease();
-      if (!shuttingDown) await updateSafely();
+      // Sin backend sano el bucle va más deprisa, pero GitHub se consulta como mucho una vez por intervalo.
+      if (!shuttingDown && (lastCheckAt === null || now() - lastCheckAt >= updateInterval || isHealthy())) await updateSafely();
     }
   }
 
@@ -265,7 +365,7 @@ export function createRankingSupervisor(options = {}) {
 
   return {
     run, shutdown, activateRelease, checkForUpdates,
-    getState: () => ({ currentRelease, savedRelease, running: !!child && !child.error, shuttingDown }),
+    getState: () => ({ currentRelease, savedRelease, failedRelease, running: !!child && !child.error, shuttingDown }),
   };
 }
 

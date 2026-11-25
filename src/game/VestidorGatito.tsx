@@ -1,8 +1,8 @@
 import "../textos/zonas/casa";
 import { useEffect, useState, type CSSProperties } from "react";
 import { ACCESORIOS, alternar, TIPOS_ACCESORIO, type Accesorio, type Ropa, type TipoAccesorio } from "./casaRopa";
-import { hojaPintada, type VarianteGatito } from "./casaGatoArte";
-import { ARMARIO_ABIERTO, cajaSobreElGatito, DETRAS, FILA_DE_PIEZAS, FILAS_ARMARIO, FONDO_VESTIDOR, HOJA_VESTIDOR, LAMINAS, ORDEN_DE_DIBUJO, PIEZAS_POR_FILA } from "./casaVestidorArte";
+import { hojaPintada, modeloDibujado, type VarianteGatito } from "./casaGatoArte";
+import { anclasVestidorDe, ARMARIO_ABIERTO, cajaSobreElGatito, DETRAS, FILA_DE_PIEZAS, FILAS_ARMARIO, FONDO_VESTIDOR, HOJA_VESTIDOR, HOJAS_VESTIDOR, LAMINAS, ORDEN_DE_DIBUJO, PIEZAS_POR_FILA } from "./casaVestidorArte";
 import { cssAssetUrl } from "./assets";
 import { PiezaAccesorio } from "./PiezaAccesorio";
 import { t, tClave } from "../textos/index.ts";
@@ -51,7 +51,7 @@ export function VestidorGatito({ nombre, mundo, variante, ropa: inicial, reduceM
 
   useEffect(() => {
     let vivo = true;
-    void hojaPintada(HOJA_VESTIDOR, mundo, variante).then((url) => { if (vivo) setHoja(url); });
+    void hojaPintada(HOJAS_VESTIDOR[modeloDibujado(mundo)] ?? HOJA_VESTIDOR, mundo, variante).then((url) => { if (vivo) setHoja(url); });
     return () => { vivo = false; };
   }, [mundo, variante]);
 
@@ -73,7 +73,7 @@ export function VestidorGatito({ nombre, mundo, variante, ropa: inicial, reduceM
     return pieza ? [{ tipo, pieza }] : [];
   });
   const pintarPuesta = ({ tipo, pieza }: { tipo: TipoAccesorio; pieza: string }) =>
-    <PiezaAccesorio key={tipo} tipo={tipo} pieza={pieza} caja={cajaSobreElGatito(tipo)} className="casa-vestidor-puesta" />;
+    <PiezaAccesorio key={tipo} tipo={tipo} pieza={pieza} caja={cajaSobreElGatito(tipo, anclasVestidorDe(modeloDibujado(mundo)))} className="casa-vestidor-puesta" />;
   const piezas = ACCESORIOS[tipoElegido] as readonly string[];
   const movimiento = reaccion && !reduceMotion ? ` is-${reaccion.como}` : "";
 

@@ -3,13 +3,18 @@
  * el gatito grande con sus anclas, la lámina de las piezas y las baldas del armario abierto. Las cuentas de dónde va
  * cada pieza son puras; se dan en % de la caja que las contiene, así escalan con la pantalla.
  */
-import { ANCLAS_GATO } from "./casaGatoAnclas.ts";
-import { CUADRO_GATO, type AnimacionGato } from "./casaGatoArte.ts";
+import { ANCLAS_POR_MODELO } from "./casaGatoAnclas.ts";
+import { CUADRO_GATO, type AnimacionGato, type ModeloGatito } from "./casaGatoArte.ts";
 import { ACCESORIOS, type Accesorio, type Ropa, type TipoAccesorio } from "./casaRopa.ts";
 
 export const FONDO_VESTIDOR = "./assets/worlds/casa-vestidor-v1.webp";
 export const ARMARIO_ABIERTO = "./assets/sprites/casa-armario-abierto-v1.webp";
 export const HOJA_VESTIDOR = "./assets/sprites/gato-casa-vestidor-v1.webp";
+/** El gatito grande de cada modelo con hoja en la casa (los mismos que `HOJAS_MODELO`). */
+export const HOJAS_VESTIDOR: Readonly<{ atigrado: string } & Partial<Record<ModeloGatito, string>>> = {
+  atigrado: HOJA_VESTIDOR,
+  melena: "./assets/sprites/gato-casa-vestidor-melena-v1.webp",
+};
 export const HOJA_ACCESORIOS = "./assets/sprites/casa-accesorios-v2.webp";
 export const HOJA_CAPAS = "./assets/sprites/casa-capas-v1.webp";
 export const HOJA_ALAS = "./assets/sprites/casa-alas-v1.webp";
@@ -55,6 +60,12 @@ export const ANCLAS_VESTIDOR: Record<"cabeza" | "ojos" | "cuello", Punto> = {
   ojos: { x: 137, y: 107 },
   cuello: { x: 134, y: 181 },
 };
+/** Anclas del gatito grande de cada modelo (de `prototypes/tools/casa-modelo-recorte.py`, las del cuadro quieto). */
+export const ANCLAS_VESTIDOR_POR_MODELO: Readonly<{ atigrado: typeof ANCLAS_VESTIDOR } & Partial<Record<ModeloGatito, typeof ANCLAS_VESTIDOR>>> = {
+  atigrado: ANCLAS_VESTIDOR,
+  melena: { cabeza: { x: 160, y: 68 }, ojos: { x: 171, y: 139 }, cuello: { x: 171, y: 188 } },
+};
+export const anclasVestidorDe = (modelo: ModeloGatito) => ANCLAS_VESTIDOR_POR_MODELO[modelo] ?? ANCLAS_VESTIDOR;
 
 /**
  * Cómo encaja cada tipo en su ancla, en px de la lámina a la escala del gatito grande: la celda de la pieza se escala
@@ -122,6 +133,15 @@ export const MEDIDAS_ARMARIO = { ancho: 615, alto: 488 };
  */
 export const ESCALA_EN_CASA = 64 / 146;
 
+const distancia = (a: Punto, b: Punto) => Math.hypot(a.x - b.x, a.y - b.y);
+/** Lo mismo para cada modelo, con sus anclas: del lazo al collar sentado, en la casa y en el vestidor. */
+export function escalaEnCasa(modelo: ModeloGatito): number {
+  const sentado = ANCLAS_POR_MODELO[modelo]?.sentado[0];
+  if (!sentado?.cabeza || !sentado.cuello) return ESCALA_EN_CASA;
+  const grande = anclasVestidorDe(modelo);
+  return distancia(sentado.cabeza, sentado.cuello) / distancia(grande.cabeza, grande.cuello);
+}
+
 export type PiezaEnCuadro = { tipo: TipoAccesorio; pieza: string; caja: CajaPorcentaje; detras: boolean };
 
 /**
@@ -129,13 +149,15 @@ export type PiezaEnCuadro = { tipo: TipoAccesorio; pieza: string; caja: CajaPorc
  * de dibujo (alas y capa, detrás del gatito; luego bufanda, gafas y sombrero). Las que no tienen sitio en ese cuadro
  * (gafas de espaldas, bufanda o capa dormido) no salen.
  */
-export function piezasEnCuadro(ropa: Ropa, animacion: AnimacionGato, cuadro: number): PiezaEnCuadro[] {
-  const anclas = ANCLAS_GATO[animacion][cuadro] ?? ANCLAS_GATO[animacion][0];
+export function piezasEnCuadro(ropa: Ropa, animacion: AnimacionGato, cuadro: number, modelo: ModeloGatito = "atigrado"): PiezaEnCuadro[] {
+  const tabla = ANCLAS_POR_MODELO[modelo] ?? ANCLAS_POR_MODELO.atigrado;
+  const anclas = tabla[animacion][cuadro] ?? tabla[animacion][0];
+  const factor = escalaEnCasa(modelo);
   return ORDEN_DE_DIBUJO.flatMap((tipo): PiezaEnCuadro[] => {
     const pieza = ropa[tipo];
     const punto = anclas?.[ENCAJE[tipo].ancla];
     if (!pieza || !punto) return [];
-    const caja = cajaSobreElGatito(tipo, { cabeza: punto, ojos: punto, cuello: punto }, { ancho: CUADRO_GATO, alto: CUADRO_GATO }, ESCALA_EN_CASA);
+    const caja = cajaSobreElGatito(tipo, { cabeza: punto, ojos: punto, cuello: punto }, { ancho: CUADRO_GATO, alto: CUADRO_GATO }, factor);
     return [{ tipo, pieza, caja, detras: DETRAS.includes(tipo) }];
   });
 }

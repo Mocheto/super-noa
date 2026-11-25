@@ -7,7 +7,7 @@ import type { FotoCasa, GatitoEnFoto } from "./casaFoto.ts";
 import { DELANTE_DE_LA_VENTANA, MUEBLES, MUEBLES_CASA, VERSIONES, type MuebleId } from "./casaDecoracion.ts";
 import { fondoConPared } from "./casaDecoracionArte.ts";
 import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte.ts";
-import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito } from "./casaGatoArte.ts";
+import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito, modeloDibujado } from "./casaGatoArte.ts";
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
 import { CAPA_VISIBLE, columnaDe, LAMINAS, piezasEnCuadro, type PiezaEnCuadro } from "./casaVestidorArte.ts";
@@ -134,7 +134,7 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     const hoja = await cargar(await hojaDeGatito(gatito.mundo, variante));
     const { fila } = ANIMACIONES_GATO[gatito.animacion];
     // Sus accesorios, en su sitio de ese cuadro (como en la casa): alas y capa detrás del gatito, lo demás delante.
-    const piezas = gatito.ropa ? piezasEnCuadro(gatito.ropa, gatito.animacion, gatito.cuadro) : [];
+    const piezas = gatito.ropa ? piezasEnCuadro(gatito.ropa, gatito.animacion, gatito.cuadro, modeloDibujado(gatito.mundo)) : [];
     const pintarPieza = async ({ tipo, pieza, caja: enCuadro }: PiezaEnCuadro) => {
       const lamina = LAMINAS[tipo];
       const imagen = await cargar(lamina.imagen);

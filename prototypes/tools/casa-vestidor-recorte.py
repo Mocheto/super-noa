@@ -137,19 +137,23 @@ def anclas_grande(a, dx, dy):
     return {"cabeza": lazo, "ojos": ojos, "cuello": cuello}
 
 
-def gatito(folder):
+def gatito(folder, destino="gato-casa-vestidor-v1.webp", alto=None):
+    """El gatito grande en dos cuadros. Con `alto`, se escala a ese alto visible en lugar de a ESCALA_VESTIDOR."""
     rgba = key_out(load(folder, "gato-vestidor"))
     piezas = sorted(poses(rgba, 2, min_area=40000), key=lambda p: p["box"][0])
     hoja = Image.new("RGBA", (CELDA_GATO[0] * 2, CELDA_GATO[1]), (0, 0, 0, 0))
     anclas = []
     for i, pieza in enumerate(piezas):
-        img = a_claves(escalar(visible(recorte(rgba, pieza)), ESCALA_VESTIDOR))
+        pieza_visible = visible(recorte(rgba, pieza))
+        # Con `alto`, también cabe de ancho en su celda (el pelo largo abulta más que el atigrado).
+        escala = min(alto / pieza_visible.height, (CELDA_GATO[0] - 4) / pieza_visible.width) if alto else ESCALA_VESTIDOR
+        img = a_claves(escalar(pieza_visible, escala))
         x = i * CELDA_GATO[0] + (CELDA_GATO[0] - img.width) // 2
         y = CELDA_GATO[1] - 6 - img.height
         hoja.alpha_composite(img, (x, y))
         a = np.array(img).astype(int)
         anclas.append(anclas_grande(a, x - i * CELDA_GATO[0], y))
-    guardar(hoja, SPRITES / "gato-casa-vestidor-v1.webp", sin_perdida=True)
+    guardar(hoja, SPRITES / destino, sin_perdida=True)
     return {"celda": CELDA_GATO, "anclas": anclas}
 
 

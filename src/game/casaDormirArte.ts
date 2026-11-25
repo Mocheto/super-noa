@@ -3,7 +3,7 @@
  * va en la bandeja. El gatito arropado tiene su pose propia con la mantita en violeta clave, que se tiñe del color de su
  * collar conservando el ribete claro, los pliegues oscuros y el contorno.
  */
-import { CLAVES_GATO, MARCAS_GATITOS, PALETAS_GATITOS, recolorear, tablaDeColores, type Rgb, type VarianteGatito } from "./casaGatoArte.ts";
+import { CLAVES_GATO, MARCAS_GATITOS, modeloDibujado, PALETAS_GATITOS, recolorear, tablaDeColores, type ModeloGatito, type Rgb, type VarianteGatito } from "./casaGatoArte.ts";
 
 export const HOJA_MANTITA = "./assets/sprites/casa-mantita-v1.webp";
 /**
@@ -13,6 +13,11 @@ export const HOJA_MANTITA = "./assets/sprites/casa-mantita-v1.webp";
  */
 export const HOJA_ARROPADO = "./assets/sprites/gato-casa-arropado-v1.webp";
 export const CUADROS_ARROPADO = 2;
+/** La pose arropado de cada modelo con hoja en la casa (los mismos que `HOJAS_MODELO`). */
+export const HOJAS_ARROPADO: Readonly<{ atigrado: string } & Partial<Record<ModeloGatito, string>>> = {
+  atigrado: HOJA_ARROPADO,
+  melena: "./assets/sprites/gato-casa-arropado-melena-v1.webp",
+};
 
 function hsv([r, g, b]: Rgb): [number, number, number] {
   const max = Math.max(r, g, b) / 255;
@@ -57,19 +62,24 @@ export function teñirMantita(pixeles: Uint8ClampedArray, collar: Rgb): void {
 }
 
 const arropados = new Map<string, Promise<string>>();
-let hojaArropado: Promise<HTMLImageElement> | null = null;
+const hojasArropado = new Map<string, Promise<HTMLImageElement>>();
 
 /** La pose «arropado» pintada para el gatito del mundo dado (paleta, barro y lazo) con la mantita del color de su collar. */
 export function arropadoDe(mundo: number, variante: VarianteGatito): Promise<string> {
   const clave = `${mundo}-${variante.sucio}-${variante.mejorAmigo}`;
   const guardada = arropados.get(clave);
   if (guardada) return guardada;
-  hojaArropado ??= new Promise((resolver, fallar) => {
-    const imagen = new Image();
-    imagen.onload = () => resolver(imagen);
-    imagen.onerror = fallar;
-    imagen.src = HOJA_ARROPADO;
-  });
+  const src = HOJAS_ARROPADO[modeloDibujado(mundo)] ?? HOJA_ARROPADO;
+  let hojaArropado = hojasArropado.get(src);
+  if (!hojaArropado) {
+    hojaArropado = new Promise((resolver, fallar) => {
+      const imagen = new Image();
+      imagen.onload = () => resolver(imagen);
+      imagen.onerror = fallar;
+      imagen.src = src;
+    });
+    hojasArropado.set(src, hojaArropado);
+  }
   const promesa = hojaArropado.then((imagen) => {
     const lienzo = document.createElement("canvas");
     lienzo.width = imagen.naturalWidth;

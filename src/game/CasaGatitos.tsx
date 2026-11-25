@@ -7,7 +7,7 @@ import {
 } from "./casaInteraccion";
 import { crearSonidoCasa, sonidoDelBano, type SonidoCasa } from "./casaSonido";
 import { crearNana, type Nana } from "./casaNana";
-import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, type AnimacionGato } from "./casaGatoArte";
+import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, modeloDibujado, type AnimacionGato } from "./casaGatoArte";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
 import { apuntarVisita, comidaFavoritaDe, OLER_TRAS_ENTRAR_MS, SITIOS_PARA_OLER, COMIDAS_AMIGOS, cuerpoDelVisitante, darDeComerAlVisitante, DESPEDIDA_MS, elegirVisitante, HOJA_COMIDAS_AMIGOS, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, SE_VA_TRAS_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";
@@ -1353,7 +1353,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               <span className="casa-gatito-dibujo" style={{ transform: mira < 0 ? "scaleX(-1)" : undefined }}>
                 {/* Sus accesorios, en su sitio en este cuadro (alas y capa detrás de él); arropado, no se ven. */}
                 {(() => {
-                  const piezas = tapado ? [] : piezasEnCuadro(ropaDe(casa, mundo), animacion, cuadro);
+                  const piezas = tapado ? [] : piezasEnCuadro(ropaDe(casa, mundo), animacion, cuadro, modeloDibujado(mundo));
                   const pintar = ({ tipo, pieza, caja }: (typeof piezas)[number]) => <PiezaAccesorio key={tipo} tipo={tipo} pieza={pieza} caja={caja} />;
                   return <>{piezas.filter((pieza) => pieza.detras).map(pintar)}<b className="casa-gatito-cuerpo" style={dibujo} />{piezas.filter((pieza) => !pieza.detras).map(pintar)}</>;
                 })()}

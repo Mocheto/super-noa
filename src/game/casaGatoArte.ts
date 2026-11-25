@@ -155,8 +155,24 @@ export function hojaPintada(src: string, mundo: number, variante: VarianteGatito
   return promesa;
 }
 
-/** URL de la hoja del gato de la casa pintada para un gatito y una variante. */
 /** Lámina de la prueba de parecido: el atigrado sentado y las referencias de esmoquin, melena y nube, en fila. */
 export const HOJA_REFERENCIAS = "./assets/sprites/gato-casa-referencias-v1.webp";
 
-export const hojaDeGatito = (mundo: number, variante: VarianteGatito): Promise<string> => hojaPintada(HOJA_GATO, mundo, variante);
+/**
+ * Hoja de la casa de cada modelo que ya tiene arte (docs/art/casa-modelos-v1.md, de
+ * `prototypes/tools/casa-modelo-recorte.py`). Un modelo sin hoja se dibuja con la del atigrado mientras llega la suya.
+ */
+export const HOJAS_MODELO: Readonly<{ atigrado: string } & Partial<Record<ModeloGatito, string>>> = {
+  atigrado: HOJA_GATO,
+  melena: "./assets/sprites/gato-casa-melena-v1.webp",
+};
+
+/** Modelo con que se dibuja el gatito del mundo dado: el suyo si ya tiene hoja; si no, el atigrado. */
+export function modeloDibujado(mundo: number): ModeloGatito {
+  const modelo = MODELO_DE_GATITO[mundo] ?? "atigrado";
+  return HOJAS_MODELO[modelo] ? modelo : "atigrado";
+}
+
+/** URL de la hoja del gato de la casa, la de su modelo, pintada para un gatito y una variante. */
+export const hojaDeGatito = (mundo: number, variante: VarianteGatito): Promise<string> =>
+  hojaPintada(HOJAS_MODELO[modeloDibujado(mundo)] ?? HOJA_GATO, mundo, variante);

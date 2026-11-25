@@ -79,3 +79,30 @@ test("las fotos guardan los accesorios de cada gatito y quitan los que no entien
   assert.deepEqual(foto.gatitos[0].ropa, { gafas: "buceo" });
   assert.equal("ropa" in foto.gatitos[1], false);
 });
+
+test("cada modelo con hoja en la casa tiene arropado, gatito grande y anclas, y sus archivos existen", async () => {
+  const { HOJAS_MODELO, modeloDibujado, MODELO_DE_GATITO } = await import("./casaGatoArte.ts");
+  const { HOJAS_ARROPADO } = await import("./casaDormirArte.ts");
+  const { HOJAS_VESTIDOR, ANCLAS_VESTIDOR_POR_MODELO, escalaEnCasa } = await import("./casaVestidorArte.ts");
+  const { ANCLAS_POR_MODELO } = await import("./casaGatoAnclas.ts");
+  const modelos = Object.keys(HOJAS_MODELO).sort();
+  for (const tabla of [HOJAS_ARROPADO, HOJAS_VESTIDOR, ANCLAS_VESTIDOR_POR_MODELO, ANCLAS_POR_MODELO]) assert.deepEqual(Object.keys(tabla).sort(), modelos);
+  for (const hoja of [...Object.values(HOJAS_MODELO), ...Object.values(HOJAS_ARROPADO), ...Object.values(HOJAS_VESTIDOR)]) {
+    assert.ok(existsSync(`public/${hoja!.slice(2)}`), `falta ${hoja}`);
+  }
+  for (const modelo of modelos) {
+    const escala = escalaEnCasa(modelo as keyof typeof HOJAS_MODELO);
+    assert.ok(escala > 0.3 && escala < 0.6, `escala de ${modelo}: ${escala}`);
+  }
+  // Un gatito cuyo modelo aún no tiene hoja se dibuja como el atigrado.
+  for (const [mundo, modelo] of Object.entries(MODELO_DE_GATITO)) {
+    assert.equal(modeloDibujado(Number(mundo)), modelo in HOJAS_MODELO ? modelo : "atigrado");
+  }
+});
+
+test("con el modelo melena, las piezas van sobre sus anclas", () => {
+  const [sombrero] = piezasEnCuadro({ sombrero: "paja" }, "sentado", 0, "melena");
+  const [atigrado] = piezasEnCuadro({ sombrero: "paja" }, "sentado", 0);
+  assert.ok(sombrero && atigrado);
+  assert.notDeepEqual(sombrero.caja, atigrado.caja);
+});

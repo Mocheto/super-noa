@@ -34,7 +34,7 @@ def es_violeta(rgb):
     return 255 <= h * 360 <= 315 and s >= 0.25 and v >= 0.4
 
 
-def arropado(folder):
+def arropado(folder, destino="gato-casa-arropado-v1.webp"):
     """La pose «arropado»: dos cuadros alineados por abajo, el gatito ajustado a sus colores clave y la mantita sin tocar."""
     rgba = casa.key_out(casa.load(folder, "gato-arropado"))
     cuadros = sorted(casa.poses(rgba, 2, min_area=20000), key=lambda p: p["cuerpo"][0])
@@ -59,7 +59,7 @@ def arropado(folder):
         claves[violeta] = np.dstack([a[..., :3], np.full(a.shape[:2], 255, np.uint8)])[violeta]
         pieza = Image.fromarray(claves, "RGBA")
         hoja.alpha_composite(pieza, (i * casa.CELDA + (casa.CELDA - pieza.width) // 2, casa.PIES - pieza.height))
-    hoja.save(casa.SPRITES / "gato-casa-arropado-v1.webp", "WEBP", lossless=True)
+    hoja.save(casa.SPRITES / destino, "WEBP", lossless=True)
     return {"factor": factor, "cuadros": [p.size for p in piezas]}
 
 

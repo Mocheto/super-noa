@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
-import { ANIMACIONES_GATO, CLAVES_GATO, COLUMNAS_GATO, cuadroDe, FILAS_GATO, LAZO_DORADO, PALETAS_GATITOS, recolorear, tablaDeColores } from "./casaGatoArte.ts";
+import { ANIMACIONES_GATO, CLAVES_GATO, COLUMNAS_GATO, cuadroDe, FILAS_GATO, LAZO_DORADO, MODELO_DE_GATITO, MODELOS_GATITO, PALETAS_GATITOS, recolorear, tablaDeColores } from "./casaGatoArte.ts";
 import { MUNDOS_CASA } from "./casaRescate.ts";
 
 const asset = (path: string) => existsSync(new URL(`../../public/assets/${path}`, import.meta.url));
@@ -47,4 +47,9 @@ test("los diecisiete gatitos tienen paleta y no hay dos iguales", () => {
     assert.ok(!firmas.has(firma), `mundo ${mundo} repetido`);
     firmas.add(firma);
   }
+});
+
+test("cada gatito de la casa tiene modelo y cada modelo tiene gatitos", () => {
+  for (const mundo of MUNDOS_CASA) assert.ok(MODELO_DE_GATITO[mundo], `al gatito del mundo ${mundo} le falta modelo`);
+  for (const modelo of MODELOS_GATITO) assert.ok(Object.values(MODELO_DE_GATITO).includes(modelo), `nadie usa el modelo ${modelo}`);
 });

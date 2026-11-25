@@ -253,7 +253,10 @@
 }
 
 /* Solo en desarrollo: la prueba de las paletas de los gatitos. */
-.casa-prueba-paletas { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 16px; background: #fbead2; }
+.casa-prueba-paletas { display: grid; gap: 12px; padding: 16px; background: #fbead2; }
+.casa-prueba-modelo { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding-bottom: 12px; border-bottom: 3px dashed #c9a27a; }
+.casa-prueba-pareja { display: flex; align-items: flex-end; gap: 4px; }
+.casa-prueba-pareja img { width: 120px; height: 120px; object-fit: contain; }
 .casa-prueba-paletas figure { margin: 0; text-align: center; color: #2f1d33; }
 .casa-prueba-paletas span { display: block; width: 160px; height: 160px; background-repeat: no-repeat; image-rendering: pixelated; }
 

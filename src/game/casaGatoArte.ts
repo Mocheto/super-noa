@@ -59,6 +59,20 @@ export const PALETAS_GATITOS: Readonly<Record<number, PaletaGatito>> = {
   17: paleta({ pelo: "#D4C6F2", peloClaro: "#ECE4FF", peloOscuro: "#A898D6", rayas: "#BFAEE8", barriga: "#F8F4FF", orejas: "#F7A9D4", ojos: "#8B5CF6", collar: "#F2C14E", collarSombra: "#C99A2E" }),
 };
 
+/**
+ * Modelo de cada gatito por número de mundo (decisión «Cuántos modelos de gatito y quién va con cada uno»): la forma
+ * de su cuerpo y su cabeza. Hoy todos se dibujan con la hoja del atigrado; los otros tres llegan con sus láminas
+ * (docs/art/casa-modelos-v1.md).
+ */
+export const MODELOS_GATITO = ["atigrado", "esmoquin", "melena", "nube"] as const;
+export type ModeloGatito = (typeof MODELOS_GATITO)[number];
+export const MODELO_DE_GATITO: Readonly<Record<number, ModeloGatito>> = {
+  1: "atigrado", 3: "atigrado", 4: "atigrado", 10: "atigrado", 14: "atigrado",
+  5: "esmoquin", 11: "esmoquin", 13: "esmoquin", 15: "esmoquin",
+  2: "melena", 6: "melena", 8: "melena", 9: "melena", 12: "melena",
+  7: "nube", 16: "nube", 17: "nube",
+};
+
 export const LAZO_DORADO: Rgb = hex("#F5C542");
 export type VarianteGatito = { sucio: boolean; mejorAmigo: boolean };
 

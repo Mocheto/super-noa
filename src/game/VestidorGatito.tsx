@@ -2,7 +2,7 @@ import "../textos/zonas/casa";
 import { useEffect, useState, type CSSProperties } from "react";
 import { ACCESORIOS, alternar, TIPOS_ACCESORIO, type Accesorio, type Ropa, type TipoAccesorio } from "./casaRopa";
 import { hojaPintada, modeloDibujado, type VarianteGatito } from "./casaGatoArte";
-import { anclasVestidorDe, ARMARIO_ABIERTO, cajaSobreElGatito, DETRAS, FILA_DE_PIEZAS, FILAS_ARMARIO, FONDO_VESTIDOR, HOJA_VESTIDOR, HOJAS_VESTIDOR, LAMINAS, ORDEN_DE_DIBUJO, PIEZAS_POR_FILA } from "./casaVestidorArte";
+import { anclasVestidorDe, ARMARIO_ABIERTO, cajaSobreElGatito, DETRAS, FILA_DE_PIEZAS, FILAS_ARMARIO, FONDO_VESTIDOR, HOJA_VESTIDOR, HOJAS_VESTIDOR, LAMINAS, ORDEN_DE_DIBUJO, PIEZAS_POR_FILA, tamanoVestidor } from "./casaVestidorArte";
 import { cssAssetUrl } from "./assets";
 import { PiezaAccesorio } from "./PiezaAccesorio";
 import { conComplemento } from "./casaComplementos";
@@ -50,11 +50,14 @@ export function VestidorGatito({ nombre, mundo, variante, ropa: inicial, reduceM
   const [tipoElegido, setTipoElegido] = useState<TipoAccesorio>("sombrero");
   const [reaccion, setReaccion] = useState<{ veces: number; como: (typeof REACCION)[TipoAccesorio] } | null>(null);
 
+  // Con algo en la cabeza, el lazo de mejor amigo queda debajo.
+  const conSuComplemento = conComplemento(ropa, mundo);
+  const lazo = variante.mejorAmigo && !conSuComplemento.sombrero;
   useEffect(() => {
     let vivo = true;
-    void hojaPintada(HOJAS_VESTIDOR[modeloDibujado(mundo)] ?? HOJA_VESTIDOR, mundo, variante).then((url) => { if (vivo) setHoja(url); });
+    void hojaPintada(HOJAS_VESTIDOR[modeloDibujado(mundo)] ?? HOJA_VESTIDOR, mundo, { sucio: variante.sucio, mejorAmigo: lazo }).then((url) => { if (vivo) setHoja(url); });
     return () => { vivo = false; };
-  }, [mundo, variante]);
+  }, [mundo, variante.sucio, lazo]);
 
   useEffect(() => {
     if (!reaccion) return;
@@ -70,13 +73,12 @@ export function VestidorGatito({ nombre, mundo, variante, ropa: inicial, reduceM
   };
 
   // Lo que lleva, con su complemento donde no hay accesorio (lo tapa el que se ponga en su sitio).
-  const conSuComplemento = conComplemento(ropa, mundo);
   const puestas = ORDEN_DE_DIBUJO.flatMap((tipo) => {
     const pieza = conSuComplemento[tipo];
     return pieza ? [{ tipo, pieza }] : [];
   });
   const pintarPuesta = ({ tipo, pieza }: { tipo: TipoAccesorio; pieza: string }) =>
-    <PiezaAccesorio key={tipo} tipo={tipo} pieza={pieza} caja={cajaSobreElGatito(tipo, anclasVestidorDe(modeloDibujado(mundo)))} className="casa-vestidor-puesta" />;
+    <PiezaAccesorio key={tipo} tipo={tipo} pieza={pieza} caja={cajaSobreElGatito(tipo, anclasVestidorDe(modeloDibujado(mundo)), undefined, tamanoVestidor(modeloDibujado(mundo)), pieza)} className="casa-vestidor-puesta" />;
   const piezas = ACCESORIOS[tipoElegido] as readonly string[];
   const movimiento = reaccion && !reduceMotion ? ` is-${reaccion.como}` : "";
 

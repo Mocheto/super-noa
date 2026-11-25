@@ -101,8 +101,8 @@ export const ANCLAS_POR_MODELO: Readonly<{ atigrado: TablaAnclas } & Partial<Rec
       {cabeza: {x: 108, y: 25}, ojos: {x: 104, y: 61}, cuello: {x: 97, y: 87}},
     ],
     pedir: [
-      {cabeza: {x: 104, y: 4}, ojos: {x: 103, y: 40}, cuello: {x: 99, y: 65}},
-      {cabeza: {x: 103, y: 5}, ojos: {x: 102, y: 41}, cuello: {x: 98, y: 66}},
+      {cabeza: {x: 117, y: 46}, ojos: {x: 117, y: 66}, cuello: {x: 112, y: 96}},
+      {cabeza: {x: 116, y: 46}, ojos: {x: 116, y: 66}, cuello: {x: 111, y: 96}},
     ],
     comer: [
       {cabeza: {x: 128, y: 82}, ojos: null, cuello: null},
@@ -111,7 +111,7 @@ export const ANCLAS_POR_MODELO: Readonly<{ atigrado: TablaAnclas } & Partial<Rec
     ],
     ronronear: [
       {cabeza: {x: 118, y: 25}, ojos: {x: 110, y: 62}, cuello: {x: 100, y: 88}},
-      {cabeza: {x: 135, y: 28}, ojos: null, cuello: null},
+      {cabeza: {x: 135, y: 28}, ojos: {x: 127, y: 65}, cuello: {x: 117, y: 91}},
     ],
     bano: [
       {cabeza: {x: 125, y: 30}, ojos: {x: 124, y: 66}, cuello: {x: 120, y: 91}},
@@ -124,7 +124,7 @@ export const ANCLAS_POR_MODELO: Readonly<{ atigrado: TablaAnclas } & Partial<Rec
     ],
     pelota: [
       {cabeza: {x: 138, y: 61}, ojos: {x: 134, y: 93}, cuello: {x: 126, y: 116}},
-      {cabeza: {x: 108, y: 85}, ojos: null, cuello: null},
+      {cabeza: {x: 108, y: 85}, ojos: {x: 104, y: 117}, cuello: {x: 96, y: 140}},
       {cabeza: {x: 133, y: 29}, ojos: {x: 133, y: 64}, cuello: {x: 128, y: 89}},
       {cabeza: {x: 125, y: 26}, ojos: {x: 125, y: 63}, cuello: {x: 121, y: 89}},
     ],
@@ -165,8 +165,8 @@ export const ANCLAS_POR_MODELO: Readonly<{ atigrado: TablaAnclas } & Partial<Rec
       {cabeza: {x: 122, y: 30}, ojos: {x: 122, y: 63}, cuello: {x: 119, y: 88}},
     ],
     comer: [
-      {cabeza: {x: 124, y: 85}, ojos: null, cuello: null},
-      {cabeza: {x: 125, y: 83}, ojos: null, cuello: null},
+      {cabeza: {x: 124, y: 85}, ojos: {x: 127, y: 121}, cuello: {x: 122, y: 147}},
+      {cabeza: {x: 125, y: 83}, ojos: {x: 128, y: 119}, cuello: {x: 123, y: 145}},
       {cabeza: {x: 126, y: 59}, ojos: {x: 129, y: 95}, cuello: {x: 124, y: 121}},
     ],
     ronronear: [
@@ -183,7 +183,7 @@ export const ANCLAS_POR_MODELO: Readonly<{ atigrado: TablaAnclas } & Partial<Rec
       {cabeza: {x: 113, y: 35}, ojos: {x: 114, y: 68}, cuello: {x: 107, y: 91}},
     ],
     pelota: [
-      {cabeza: {x: 138, y: 76}, ojos: null, cuello: null},
+      {cabeza: {x: 138, y: 76}, ojos: {x: 132, y: 105}, cuello: {x: 119, y: 125}},
       {cabeza: {x: 112, y: 89}, ojos: {x: 109, y: 118}, cuello: {x: 93, y: 138}},
       {cabeza: {x: 132, y: 55}, ojos: {x: 132, y: 85}, cuello: {x: 122, y: 105}},
       {cabeza: {x: 124, y: 31}, ojos: {x: 123, y: 64}, cuello: {x: 118, y: 85}},
@@ -213,8 +213,8 @@ export const ANCLAS_POR_MODELO: Readonly<{ atigrado: TablaAnclas } & Partial<Rec
     ],
     jugarSolo: [
       {cabeza: {x: 126, y: 6}, ojos: {x: 127, y: 38}, cuello: {x: 123, y: 56}},
-      {cabeza: {x: 122, y: 16}, ojos: null, cuello: null},
-      {cabeza: {x: 96, y: 30}, ojos: null, cuello: null},
+      {cabeza: {x: 122, y: 16}, ojos: {x: 123, y: 48}, cuello: {x: 119, y: 66}},
+      {cabeza: {x: 96, y: 30}, ojos: {x: 97, y: 62}, cuello: {x: 93, y: 80}},
     ],
     cantar: [
       {cabeza: {x: 126, y: 19}, ojos: {x: 127, y: 61}, cuello: {x: 123, y: 87}},
@@ -226,7 +226,7 @@ export const ANCLAS_POR_MODELO: Readonly<{ atigrado: TablaAnclas } & Partial<Rec
     ],
     comer: [
       {cabeza: {x: 138, y: 81}, ojos: {x: 133, y: 110}, cuello: {x: 123, y: 124}},
-      {cabeza: null, ojos: null, cuello: null},
+      {cabeza: {x: 118, y: 84}, ojos: {x: 120, y: 104}, cuello: {x: 112, y: 128}},
       {cabeza: {x: 122, y: 37}, ojos: {x: 96, y: 82}, cuello: {x: 125, y: 101}},
     ],
     ronronear: [
@@ -238,14 +238,14 @@ export const ANCLAS_POR_MODELO: Readonly<{ atigrado: TablaAnclas } & Partial<Rec
       {cabeza: {x: 128, y: 26}, ojos: {x: 129, y: 63}, cuello: {x: 124, y: 85}},
     ],
     sacudirse: [
-      {cabeza: {x: 116, y: 41}, ojos: null, cuello: null},
+      {cabeza: {x: 116, y: 41}, ojos: {x: 117, y: 78}, cuello: {x: 113, y: 100}},
       {cabeza: {x: 130, y: 29}, ojos: {x: 131, y: 66}, cuello: {x: 127, y: 88}},
       {cabeza: {x: 124, y: 10}, ojos: {x: 120, y: 53}, cuello: {x: 112, y: 80}},
     ],
     pelota: [
       {cabeza: {x: 124, y: 71}, ojos: {x: 125, y: 108}, cuello: {x: 121, y: 130}},
       {cabeza: {x: 112, y: 86}, ojos: {x: 110, y: 116}, cuello: {x: 102, y: 133}},
-      {cabeza: null, ojos: null, cuello: null},
+      {cabeza: {x: 126, y: 56}, ojos: {x: 128, y: 74}, cuello: {x: 124, y: 92}},
       {cabeza: {x: 120, y: 48}, ojos: {x: 118, y: 81}, cuello: {x: 118, y: 100}},
     ],
     ahoraNo: [

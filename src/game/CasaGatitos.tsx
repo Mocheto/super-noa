@@ -712,11 +712,15 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
 
   // Hoja pintada de cada gatito, con su barro y su lazo de mejor amigo.
   // Hojas de todos los gatitos de la casa (también los de paseo, para la ventana de quién está en casa).
+  // Con algo en la cabeza (accesorio o complemento), el lazo queda debajo: la hoja se pinta sin él (`lazo`); arropado,
+  // sin sombrero, sí se ve.
   const variantes = Object.keys(casa.gatitos).map(Number).sort((a, b) => a - b).map((mundo) => {
     const gatito = casa.gatitos[mundo];
-    return { mundo, sucio: estadoDe(gatito.necesidades.bano) !== "bien", mejorAmigo: esMejorAmigo(gatito) };
+    const mejorAmigo = esMejorAmigo(gatito);
+    return { mundo, sucio: estadoDe(gatito.necesidades.bano) !== "bien", mejorAmigo, lazo: mejorAmigo && !conComplemento(ropaDe(casa, mundo), mundo).sombrero };
   });
   const claveVariantes = variantes.map((v) => `${v.mundo}-${v.sucio}-${v.mejorAmigo}`).join(",");
+  const claveHojas = variantes.map((v) => `${v.mundo}-${v.sucio}-${v.lazo}`).join(",");
   useEffect(() => {
     let vivo = true;
     for (const clave of claveVariantes.split(",").filter(Boolean)) {
@@ -732,17 +736,17 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   };
   const hojaDe = (mundo: number) => {
     const variante = variantes.find((v) => v.mundo === mundo);
-    return variante && hojas[`${variante.mundo}-${variante.sucio}-${variante.mejorAmigo}`];
+    return variante && hojas[`${variante.mundo}-${variante.sucio}-${variante.lazo}`];
   };
   useEffect(() => {
     let vivo = true;
-    for (const clave of claveVariantes.split(",").filter(Boolean)) {
-      const [mundo, sucio, mejorAmigo] = clave.split("-");
-      void hojaDeGatito(Number(mundo), { sucio: sucio === "true", mejorAmigo: mejorAmigo === "true" })
+    for (const clave of claveHojas.split(",").filter(Boolean)) {
+      const [mundo, sucio, lazo] = clave.split("-");
+      void hojaDeGatito(Number(mundo), { sucio: sucio === "true", mejorAmigo: lazo === "true" })
         .then((url) => { if (vivo) setHojas((actuales) => actuales[clave] === url ? actuales : { ...actuales, [clave]: url }); });
     }
     return () => { vivo = false; };
-  }, [claveVariantes]);
+  }, [claveHojas]);
 
   // El clima: en la ventana de la habitación o sobre el jardín, pintado en su lienzo. Lluvia y nieve se mueven en cada
   // cuadro (salvo con «movimiento tranquilo»); el arcoíris se pinta una vez.

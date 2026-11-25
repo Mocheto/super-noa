@@ -10,6 +10,11 @@ Dossier de los diecisiete complementos: cada gatito de la casa lleva una prenda 
   - Encima de las capas quedaron dos manchas borrosas: se toman solo las dos piezas más grandes.
 - **Chispa:** su complemento salió como gorro de aviador con las gafas en la frente, así que va en la cabeza, en el sitio del sombrero, y no en los ojos. Quedan 5 en la cabeza, 10 al cuello y 2 a la espalda.
 - **En el juego:** `src/game/casaComplementos.ts`. El pañuelo del atigrado se borra al pintar su hoja y toma el color de la barriga.
+- **Repaso del encaje (25-11-2026):**
+  - **Prendas del cuello:** pañuelos y bufandas salieron con el interior del aro o del tubo pintado, no hueco, así que `abrir_aro` no lo veía. Ahora el recorte corta la parte de atrás (`CORTE`) y encoge pañuelos, collares y lazos (`ANCHO`).
+  - **Gorros:** los cinco de cabeza bajan más que un sombrero del armario (`hundir`), y con algo en la cabeza no se pinta el lazo de mejor amigo.
+  - **Tamaño por modelo:** las piezas encogen con la cabeza del modelo (`TAMANO_VESTIDOR`: la melena, al 80 %).
+  - **Anclas:** los cuadros sueltos sin cuello toman el de su animación, y el esmoquin al pedir y la nube en el salto y al comer tienen anclas puestas a mano.
 
 ## Cómo funciona
 

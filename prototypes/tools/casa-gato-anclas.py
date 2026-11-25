@@ -41,6 +41,20 @@ PARTE_OJOS = 0.55
 # Cuadros de espaldas, por modelo: sin gafas.
 ESPALDA = {"atigrado": {("jugarSolo", 0)}}
 OJOS = (0x1D, 0x4E, 0xD8)
+# Cuadros que la detección no ve bien, con sus anclas puestas a mano (mirando la hoja). El esmoquin, al pedir, no
+# enseña ni lazo ni collar y sus lágrimas tienen el azul del collar: el sombrero salía flotando encima de la cabeza.
+A_MANO = {
+    "esmoquin": {
+        ("pedir", 0): {"cabeza": {"x": 117, "y": 46}, "ojos": {"x": 117, "y": 66}, "cuello": {"x": 112, "y": 96}},
+        ("pedir", 1): {"cabeza": {"x": 116, "y": 46}, "ojos": {"x": 116, "y": 66}, "cuello": {"x": 111, "y": 96}},
+    },
+    # La nube, en el salto de la pelota y con la cabeza en el cuenco, casi no enseña lazo ni collar: sin anclas, lo que
+    # lleva desaparecía en ese cuadro y parpadeaba al jugar y al comer.
+    "nube": {
+        ("pelota", 2): {"cabeza": {"x": 126, "y": 56}, "ojos": {"x": 128, "y": 74}, "cuello": {"x": 124, "y": 92}},
+        ("comer", 1): {"cabeza": {"x": 118, "y": 84}, "ojos": {"x": 120, "y": 104}, "cuello": {"x": 112, "y": 128}},
+    },
+}
 AZULES = [(0x1D, 0x4E, 0xD8), (0x25, 0x63, 0xEB), (0x1E, 0x3A, 0x8A)]
 COLLAR = [(0x25, 0x63, 0xEB), (0x1E, 0x3A, 0x8A)]
 
@@ -118,6 +132,21 @@ def cabezas_tapadas(tabla):
                 a["cabeza"] = {"x": int(round(a["cuello"]["x"] + dx)), "y": int(round(a["cuello"]["y"] + dy))}
 
 
+def huecos_de_la_animacion(tabla, modelo):
+    """En los modelos nuevos el collar se esconde en algún cuadro suelto de una animación (con la cabeza a la vista):
+    sin cuello, la bufanda desaparecía en ese cuadro y parpadeaba. Se pone donde va respecto a la cabeza en el cuadro
+    más cercano de la misma animación que sí lo enseña."""
+    for nombre, cuadros in tabla.items():
+        for c, a in enumerate(cuadros):
+            if a["cuello"] or not a["cabeza"] or (nombre, c) in ESPALDA.get(modelo, set()):
+                continue
+            otros = sorted((abs(o - c), o) for o, b in enumerate(cuadros) if b["cuello"] and b["cabeza"])
+            if not otros:
+                continue
+            b = cuadros[otros[0][1]]
+            a["cuello"] = {k: a["cabeza"][k] + b["cuello"][k] - b["cabeza"][k] for k in ("x", "y")}
+
+
 def completar(tabla, modelo):
     """Los ojos cerrados van donde irían abiertos: en el camino del lazo al cuello, corrido lo que se corren los vistos."""
     vistos = [a for cuadros in tabla.values() for a in cuadros if a["ojos"]]
@@ -139,7 +168,10 @@ def tabla_de(modelo):
     if modelo != "atigrado":
         cabeza_centrada(tabla)
         cabezas_tapadas(tabla)
+        huecos_de_la_animacion(tabla, modelo)
     completar(tabla, modelo)
+    for (nombre, c), a in A_MANO.get(modelo, {}).items():
+        tabla[nombre][c] = a
     return tabla
 
 

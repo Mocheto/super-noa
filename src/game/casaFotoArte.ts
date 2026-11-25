@@ -132,10 +132,12 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
       pintar(hoja, { x: (gatito.cuadro % CUADROS_ARROPADO) * CUADRO_GATO, y: 0, ancho: CUADRO_GATO, alto: CUADRO_GATO }, caja, gatito.mira < 0);
       continue;
     }
-    const hoja = await cargar(await hojaDeGatito(gatito.mundo, variante));
+    const puestas = conComplemento(gatito.ropa ?? {}, gatito.mundo);
+    // Con algo en la cabeza, el lazo de mejor amigo queda debajo (como en la casa).
+    const hoja = await cargar(await hojaDeGatito(gatito.mundo, { ...variante, mejorAmigo: variante.mejorAmigo && !puestas.sombrero }));
     const { fila } = ANIMACIONES_GATO[gatito.animacion];
     // Sus accesorios, en su sitio de ese cuadro (como en la casa): alas y capa detrás del gatito, lo demás delante.
-    const piezas = piezasEnCuadro(conComplemento(gatito.ropa ?? {}, gatito.mundo), gatito.animacion, gatito.cuadro, modeloDibujado(gatito.mundo));
+    const piezas = piezasEnCuadro(puestas, gatito.animacion, gatito.cuadro, modeloDibujado(gatito.mundo));
     const pintarPieza = async ({ tipo, pieza, caja: enCuadro }: PiezaEnCuadro) => {
       const lamina = laminaDePieza(tipo, pieza);
       const imagen = await cargar(lamina.imagen);

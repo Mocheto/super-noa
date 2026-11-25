@@ -90,6 +90,13 @@ export const ANCLAS_VESTIDOR_POR_MODELO: Readonly<{ atigrado: typeof ANCLAS_VEST
 export const anclasVestidorDe = (modelo: ModeloGatito) => ANCLAS_VESTIDOR_POR_MODELO[modelo] ?? ANCLAS_VESTIDOR;
 
 /**
+ * Tamaño de la cabeza del gatito grande de cada modelo frente al del atigrado (por la distancia entre los ojos y del
+ * lazo al collar): las piezas se dibujaron para el atigrado y en la melena, más pequeña, quedaban enormes.
+ */
+export const TAMANO_VESTIDOR: Readonly<Record<ModeloGatito, number>> = { atigrado: 1, esmoquin: 1, melena: 0.8, nube: 0.92 };
+export const tamanoVestidor = (modelo: ModeloGatito) => TAMANO_VESTIDOR[modelo] ?? 1;
+
+/**
  * Cómo encaja cada tipo en su ancla, en px de la lámina a la escala del gatito grande: la celda de la pieza se escala
  * por `escala` y su punto `(x, y)` de la celda (en fracción) se pone en el ancla más `bajar`. El sombrero se apoya por
  * el ala (abajo de la celda), las gafas por su centro y la bufanda por arriba.
@@ -110,8 +117,9 @@ export type CajaPorcentaje = { left: number; top: number; width: number; height:
  * con sus anclas: en % de esa caja (puede salirse, como el sombrero por arriba).
  */
 export function cajaSobreElGatito(tipo: TipoAccesorio, anclas: Record<"cabeza" | "ojos" | "cuello", Punto> = ANCLAS_VESTIDOR,
-  cuadro: { ancho: number; alto: number } = CUADRO_VESTIDOR, factor = 1): CajaPorcentaje {
-  const { ancla, escala, punto, bajar } = ENCAJE[tipo];
+  cuadro: { ancho: number; alto: number } = CUADRO_VESTIDOR, factor = 1, pieza?: string): CajaPorcentaje {
+  const { ancla, escala, punto } = ENCAJE[tipo];
+  const bajar = ENCAJE[tipo].bajar + ((pieza && esComplemento(pieza) && complementoDe(pieza)?.hundir) || 0);
   const ancho = LAMINAS[tipo].celda.ancho * escala * factor;
   const alto = LAMINAS[tipo].celda.alto * escala * factor;
   const x = anclas[ancla].x - ancho * punto.x;
@@ -155,12 +163,12 @@ export const MEDIDAS_ARMARIO = { ancho: 615, alto: 488 };
 export const ESCALA_EN_CASA = 64 / 146;
 
 const distancia = (a: Punto, b: Punto) => Math.hypot(a.x - b.x, a.y - b.y);
-/** Lo mismo para cada modelo, con sus anclas: del lazo al collar sentado, en la casa y en el vestidor. */
+/** Lo mismo para cada modelo, con sus anclas (del lazo al collar sentado, en la casa y en el vestidor) y su tamaño en el vestidor. */
 export function escalaEnCasa(modelo: ModeloGatito): number {
   const sentado = ANCLAS_POR_MODELO[modelo]?.sentado[0];
-  if (!sentado?.cabeza || !sentado.cuello) return ESCALA_EN_CASA;
+  if (!sentado?.cabeza || !sentado.cuello) return ESCALA_EN_CASA * tamanoVestidor(modelo);
   const grande = anclasVestidorDe(modelo);
-  return distancia(sentado.cabeza, sentado.cuello) / distancia(grande.cabeza, grande.cuello);
+  return (distancia(sentado.cabeza, sentado.cuello) / distancia(grande.cabeza, grande.cuello)) * tamanoVestidor(modelo);
 }
 
 export type PiezaEnCuadro = { tipo: TipoAccesorio; pieza: string; caja: CajaPorcentaje; detras: boolean };
@@ -178,7 +186,7 @@ export function piezasEnCuadro(ropa: Puestas, animacion: AnimacionGato, cuadro: 
     const pieza = ropa[tipo];
     const punto = anclas?.[ENCAJE[tipo].ancla];
     if (!pieza || !punto) return [];
-    const caja = cajaSobreElGatito(tipo, { cabeza: punto, ojos: punto, cuello: punto }, { ancho: CUADRO_GATO, alto: CUADRO_GATO }, factor);
+    const caja = cajaSobreElGatito(tipo, { cabeza: punto, ojos: punto, cuello: punto }, { ancho: CUADRO_GATO, alto: CUADRO_GATO }, factor, pieza);
     return [{ tipo, pieza, caja, detras: DETRAS.includes(tipo) }];
   });
 }

@@ -34,6 +34,27 @@ casa = v2.casa
 CABEZA = ["sombrero"] * 5
 CUELLO = ["bufanda"] * 10
 
+# Lo de cuello, en el orden de la lámina (Miel, Bruma, Pino, Iris, Perla, Ámbar, Copito, Estrella, Duna y Tempo):
+# - CORTE: qué parte de arriba es la de atrás del aro o del tubo (en fracción del alto de la pieza). El generador pintó
+#   el interior en lugar de dejarlo hueco, así que `abrir_aro` no lo ve; se corta en recto y se cierra con contorno,
+#   como las bufandas del armario, y queda solo la banda de delante.
+# - ANCHO: ancho final frente al de las bufandas del armario. Pañuelos, collares y lazos son más pequeños que una
+#   bufanda gorda: a su ancho entero tapaban medio gatito.
+CORTE = [0, 0, 0.12, 0, 0.30, 0, 0.23, 0.22, 0.29, 0]
+ANCHO = [0.8, 0.75, 1, 0.7, 0.8, 0.85, 1, 1, 0.8, 0.65]
+
+
+def cortar_arriba(img, fraccion):
+    if not fraccion:
+        return img
+    a = np.array(img)
+    a[: round(a.shape[0] * fraccion), :, 3] = 0
+    for x in range(a.shape[1]):
+        filas = np.nonzero(a[:, x, 3] > 0)[0]
+        if len(filas):
+            a[filas[0]:filas[0] + 2, x] = v2.CONTORNO
+    return v2.visible(Image.fromarray(a, "RGBA"))
+
 
 def colocar(hoja, img, tipo, columna):
     ancho, alto = v2.CELDA
@@ -46,11 +67,13 @@ def piezas(folder, nombre, filas, tipos, anchos):
     rgba = v2.sin_fondo(casa.load(folder, nombre))
     encontradas = [p for fila in casa.por_filas(casa.poses(rgba, sum(filas), min_area=4000), filas) for p in fila]
     resultado = []
-    for pieza, tipo in zip(encontradas, tipos):
+    for i, (pieza, tipo) in enumerate(zip(encontradas, tipos)):
         img = v2.visible(casa.recorte(rgba, pieza))
+        ancho = anchos[tipo]
         if tipo == "bufanda":
-            img = v2.abrir_aro(img)
-        resultado.append(casa.escalar(img, min(anchos[tipo] / img.width, v2.CELDA[1] / img.height)))
+            img = cortar_arriba(v2.abrir_aro(img), CORTE[i])
+            ancho *= ANCHO[i]
+        resultado.append(casa.escalar(img, min(ancho / img.width, v2.CELDA[1] / img.height)))
     return resultado
 
 

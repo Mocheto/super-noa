@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Prototipo · más decoraciones y armario</title>
+<!-- Prototipo del ticket «Disposición del vestidor con cinco tipos y de la bandeja con ocho muebles» (issue 372).
+     Cajas de color sobre el arte real; nada de esto va al juego. ?vista=habitacion|vestidor-a|vestidor-b -->
+<style>
+  :root { font-family: system-ui, sans-serif; background: #2c1d3a; color: #2f1d33; }
+  body { margin: 0; height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+  nav { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; background: #f6ead3; font-size: 13px; align-items: center; }
+  nav a { padding: 6px 10px; border-radius: 8px; background: #fff; color: inherit; text-decoration: none; border: 2px solid #78508d; }
+  nav a.is-activa { background: #78508d; color: #fff; }
+  nav label { display: flex; gap: 4px; align-items: center; }
+  main { min-height: 0; }
+
+  /* --- Habitación: 1280 × 540, como en el juego, con las cajas de los muebles nuevos encima. --- */
+  .habitacion-marco { height: 100%; display: grid; place-items: center; padding: 8px; box-sizing: border-box; container-type: size; }
+  .habitacion { position: relative; width: min(100cqw, 100cqh * 1280 / 540); aspect-ratio: 1280 / 540; background: url(../public/assets/worlds/casa-habitacion-v1.webp) 0 0 / 100% 100%; image-rendering: pixelated; border: 4px solid #2f1d33; border-radius: 12px; box-sizing: border-box; }
+  .caja { position: absolute; box-sizing: border-box; border: 3px dashed; border-radius: 6px; display: grid; place-items: center; font-weight: 700; font-size: clamp(8px, 1.3cqw, 14px); text-align: center; line-height: 1.1; }
+  .caja.cortina { background: #e8577a88; border-color: #9b1f45; color: #fff; }
+  .caja.estanteria { background: #3f8bd088; border-color: #1d4f80; color: #fff; }
+  .caja.cojin { background: #f2b33688; border-color: #8a5a00; }
+  .caja.armario { background: #8e6a4a66; border-color: #4a3220; color: #fff; }
+  .caja.cristal { background: transparent; border: 2px solid #2bb3ff; color: #0a6aa0; align-items: end; }
+  .caja.sitio { border-radius: 50%; background: #ffffffaa; border: 2px solid #2f1d33; font-size: clamp(7px, 1cqw, 11px); }
+
+  /* --- Vestidor: la escena cuadrada con el gatito grande y, al lado o debajo, el armario. --- */
+  .vestidor { height: 100%; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; padding: 12px; box-sizing: border-box; background: #d9c7dc; }
+  @media (orientation: landscape) { .vestidor { grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr) auto; } }
+  .escena { container-type: size; display: grid; place-items: center; min-height: 0; }
+  .cuadro { position: relative; width: min(100cqw, 100cqh); aspect-ratio: 1; border: 4px solid #2f1d33; border-radius: 14px; box-sizing: border-box; background: url(../public/assets/worlds/casa-vestidor-v1.webp) 50% 100% / cover; image-rendering: pixelated; overflow: hidden; }
+  .gatito { position: absolute; left: 50%; bottom: 7%; height: 68%; aspect-ratio: 240 / 340; transform: translateX(-50%); background: url(../public/assets/sprites/gato-casa-vestidor-v1.webp) 0 0 / 200% 100% no-repeat; image-rendering: pixelated; }
+  .gatito .capa { position: absolute; left: 14%; top: 42%; width: 72%; height: 50%; background: #e8577a99; border: 2px dashed #9b1f45; border-radius: 0 0 40% 40%; z-index: -1; }
+  .gatito .alas { position: absolute; left: -22%; top: 30%; width: 144%; height: 34%; background: radial-gradient(ellipse at 20% 50%, #9fe3ff 0 30%, transparent 31%), radial-gradient(ellipse at 80% 50%, #9fe3ff 0 30%, transparent 31%); z-index: -2; }
+  .lado { display: grid; justify-items: center; align-content: center; gap: 8px; min-height: 0; }
+  .boton-listo { min-height: 44px; padding: 0 22px; border: 3px solid #2f1d33; border-radius: 10px; background: #e8577a; color: #fff; font: 700 16px system-ui; }
+
+  /* A: pestañas por tipo y seis piezas grandes del tipo elegido. */
+  .pestanas { display: flex; gap: 6px; }
+  .pestana { width: 52px; height: 52px; border: 3px solid #2f1d33; border-radius: 12px; background: #fff8e9; font-size: 24px; display: grid; place-items: center; }
+  .pestana.is-elegida { background: #ffd76a; transform: translateY(-3px); }
+  .armario-a { width: min(92vw, 420px); aspect-ratio: 3 / 2.1; background: #b5835a; border: 4px solid #4a3220; border-radius: 10px; padding: 10px; box-sizing: border-box; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 8px; }
+  @media (orientation: landscape) { .armario-a { width: auto; height: min(calc(100dvh - 190px), 300px); } }
+
+  /* B: todo a la vista: tres baldas (cabeza) y dos barras con perchas (capas y alas), seis por fila. */
+  .armario-b { width: min(94vw, 560px); aspect-ratio: 6 / 5.4; background: #b5835a; border: 4px solid #4a3220; border-radius: 10px; padding: 8px; box-sizing: border-box; display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(5, 1fr); gap: 4px; }
+  @media (orientation: landscape) { .armario-b { width: auto; height: min(calc(100dvh - 100px), 560px); } }
+  .armario-b .fila-barra { border-top: 4px solid #6b6b6b; }
+
+  .pieza { border: 2px dashed #2f1d33; border-radius: 10px; background: #fff8e9cc; display: grid; place-items: center; font-size: clamp(14px, 4vmin, 34px); position: relative; }
+  .pieza.is-puesta { background: #ffd76a; box-shadow: inset 0 0 0 3px #e0a800; }
+  .pieza small { position: absolute; bottom: 2px; right: 4px; font-size: 10px; opacity: .7; }
+  .medida { position: fixed; right: 6px; bottom: 6px; background: #000c; color: #fff; font: 12px ui-monospace, monospace; padding: 4px 6px; border-radius: 6px; z-index: 9; }
+</style>
+</head>
+<body>
+<nav id="nav"></nav>
+<main id="main"></main>
+<div class="medida" id="medida"></div>
+<script>
+const params = new URLSearchParams(location.search);
+const vista = params.get("vista") ?? "habitacion";
+const opc = (k, def) => params.get(k) ?? def;
+const enlace = (cambios) => { const p = new URLSearchParams(params); for (const [k, v] of Object.entries(cambios)) p.set(k, v); return `?${p}`; };
+
+const nav = document.getElementById("nav");
+nav.innerHTML = [
+  ["habitacion", "Habitación"], ["vestidor-a", "Vestidor A · pestañas"], ["vestidor-b", "Vestidor B · todo a la vista"],
+].map(([id, t]) => `<a href="${enlace({ vista: id })}" class="${id === vista ? "is-activa" : ""}">${t}</a>`).join("");
+if (vista === "habitacion") {
+  nav.innerHTML += ["cortina", "estanteria", "cojin"].map((k) => `<span>${k}: ${["a", "b"].map((o) =>
+    `<a href="${enlace({ [k]: o })}" class="${opc(k, "a") === o ? "is-activa" : ""}">${o.toUpperCase()}</a>`).join(" ")}</span>`).join("");
+}
+
+const main = document.getElementById("main");
+// Cajas en coordenadas de la habitación (1280 × 540), pasadas a %.
+const caja = (clase, x, y, w, h, texto) =>
+  `<div class="caja ${clase}" style="left:${x / 12.8}%;top:${y / 5.4}%;width:${w / 12.8}%;height:${h / 5.4}%">${texto}</div>`;
+
+if (vista === "habitacion") {
+  const cortina = {
+    a: caja("cortina", 596, 22, 46, 262, "cortina") + caja("cortina", 846, 22, 36, 262, "cortina") + caja("cortina", 596, 22, 286, 26, "barra"),
+    b: caja("cortina", 612, 26, 256, 44, "cenefa (solo arriba)"),
+  }[opc("cortina", "a")];
+  const estanteria = {
+    a: caja("estanteria", 282, 150, 160, 82, "balda con juguetes, sobre la cama"),
+    b: caja("estanteria", 462, 150, 132, 238, "estantería de pie entre rascador y ventana"),
+  }[opc("estanteria", "a")];
+  const cojin = {
+    a: caja("cojin", 120, 452, 150, 72, "cojín delante, a la izquierda") + caja("sitio", 170, 470, 50, 30, "sitio"),
+    b: caja("cojin", 1010, 455, 160, 68, "cojín delante, a la derecha") + caja("sitio", 1065, 472, 50, 30, "sitio"),
+  }[opc("cojin", "a")];
+  main.innerHTML = `<div class="habitacion-marco"><div class="habitacion">
+    ${caja("cristal", 637, 55, 206, 198, "cristales: se ve el clima")}
+    ${caja("armario", 878, 250, 95, 150, "armario")}
+    ${cortina}${estanteria}${cojin}
+  </div></div>`;
+} else {
+  const tipos = [["🎩", "sombrero"], ["👓", "gafas"], ["🧣", "bufanda"], ["🦸", "capa"], ["🪽", "alas"]];
+  const muestra = { sombrero: ["🎩", "👒", "🧢", "👑", "🎀", "🎂"], gafas: ["👓", "🕶️", "🥽", "💖", "⭐", "🤿"], bufanda: ["🧣", "🌈", "❄️", "🌸", "🐝", "🦖"],
+    capa: ["🦸", "🏴‍☠️", "🌋", "🦄", "❄️", "☁️"], alas: ["🪽", "🦋", "🐝", "🦇", "🧚", "🐉"] };
+  const cat = `<div class="escena"><div class="cuadro"><div class="gatito"><div class="alas"></div><div class="capa"></div></div></div></div>`;
+  if (vista === "vestidor-a") {
+    const elegido = opc("tipo", "capa");
+    main.innerHTML = `<div class="vestidor">${cat}<div class="lado">
+      <div class="pestanas">${tipos.map(([icono, t]) => `<a href="${enlace({ tipo: t })}" class="pestana ${t === elegido ? "is-elegida" : ""}" aria-label="${t}">${icono}</a>`).join("")}</div>
+      <div class="armario-a">${muestra[elegido].map((p, i) => `<div class="pieza ${i === 1 ? "is-puesta" : ""}">${p}<small>${i + 1}</small></div>`).join("")}</div>
+      <button class="boton-listo">¡LISTO!</button></div></div>`;
+  } else {
+    main.innerHTML = `<div class="vestidor">${cat}<div class="lado">
+      <div class="armario-b">${tipos.map(([, t], fila) => muestra[t].map((p, i) =>
+        `<div class="pieza ${fila >= 3 ? "fila-barra" : ""} ${i === 1 && fila === 3 ? "is-puesta" : ""}">${p}</div>`).join("")).join("")}</div>
+      <button class="boton-listo">¡LISTO!</button></div></div>`;
+  }
+}
+
+// Medida real de una pieza (para comprobar los 44 px mínimos del dedo).
+const medir = () => {
+  const pieza = document.querySelector(".pieza");
+  document.getElementById("medida").textContent = `${innerWidth}×${innerHeight}` + (pieza ? ` · pieza ${Math.round(pieza.getBoundingClientRect().width)}×${Math.round(pieza.getBoundingClientRect().height)}` : "");
+};
+addEventListener("resize", medir); medir();
+</script>
+</body>
+</html>

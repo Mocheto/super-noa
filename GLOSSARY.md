@@ -155,6 +155,10 @@ _Avoid_: Ropa (a secas), disfraz, objeto (son los de la bandeja)
 Forma de un gatito de la casa (cuerpo, cabeza, orejas, cola y largo del pelo) con todos sus movimientos. Hay cuatro (atigrado, esmoquin, melena y nube) y varios gatitos comparten cada uno; lo demás lo ponen sus colores.
 _Avoid_: Gato base (era el único modelo), raza, cuerpo
 
+**Marcas**:
+Dibujo del pelo de un gatito de la casa, aparte de sus colores: rayas, esmoquin, puntas o manchas de nube. Son fijas: cada gatito tiene las de su dibujo del mundo.
+_Avoid_: Manchas (a secas), patrón, estampado
+
 **Estancia**:
 Cada sitio de la casa por el que andan los gatitos: la habitación y el jardín. Cada gatito en casa está en una de las dos.
 _Avoid_: Sala, cuarto, nivel

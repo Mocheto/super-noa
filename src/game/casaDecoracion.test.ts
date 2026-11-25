@@ -6,8 +6,8 @@ import { cambiarMueble, cambiarTonoPared, DECORACION_DE_SIEMPRE, muebleEn, MUEBL
 import { dentroDelSuelo, HABITACION_CASA as H } from "./casaHabitacion.ts";
 import { parseProgress, serializeProgress, emptyProgress } from "./progress.ts";
 
-test("cinco muebles con cinco versiones cada uno; la pared, con cinco tonos", () => {
-  assert.deepEqual([...MUEBLES], ["cama", "alfombra", "cuadro", "planta", "pared"]);
+test("ocho muebles con cinco versiones cada uno; la pared, con cinco tonos", () => {
+  assert.deepEqual([...MUEBLES], ["cama", "alfombra", "cuadro", "planta", "pared", "cortinas", "estanteria", "cojin"]);
   assert.equal(VERSIONES.length, 5);
   assert.equal(TONOS_PARED.length, 5);
   for (const tono of TONOS_PARED) for (const color of tono) assert.match(color, /^#[0-9a-f]{6}$/);
@@ -35,14 +35,14 @@ test("cada mueble está dentro de la habitación y su gatito va a olerlo por el 
 test("los sitios de interés de los gatitos no se mueven al decorar", () => {
   assert.deepEqual(
     Object.fromEntries(Object.entries(H.sitios).map(([id, s]) => [id, [s.x, s.y]])),
-    { puerta: [140, 420], cama: [360, 425], rascador: [545, 412], ventana: [740, 408], alfombra: [650, 505], banera: [1085, 440] },
+    { puerta: [140, 420], cama: [360, 425], rascador: [545, 412], ventana: [740, 408], alfombra: [650, 505], banera: [1085, 440], cojin: [240, 500] },
   );
 });
 
 test("la decoración se lee con tolerancia: lo que falta o no vale es la de siempre", () => {
   assert.deepEqual(normalizeDecoracion(undefined), DECORACION_DE_SIEMPRE);
   assert.deepEqual(normalizeDecoracion([1, 2]), DECORACION_DE_SIEMPRE);
-  assert.deepEqual(normalizeDecoracion({ cama: 4, alfombra: 7, cuadro: "1", planta: 1, pared: 5, sofa: 2 }), { cama: 4, alfombra: 0, cuadro: 0, planta: 1, pared: 0 });
+  assert.deepEqual(normalizeDecoracion({ cama: 4, alfombra: 7, cuadro: "1", planta: 1, pared: 5, sofa: 2 }), { cama: 4, alfombra: 0, cuadro: 0, planta: 1, pared: 0, cortinas: 0, estanteria: 0, cojin: 0 });
   assert.deepEqual(cambiarMueble(DECORACION_DE_SIEMPRE, "pared", 2), { ...DECORACION_DE_SIEMPRE, pared: 2 });
 });
 
@@ -68,7 +68,12 @@ test("tocar la escena elige el mueble de esa caja, la pared por encima del zóca
   assert.equal(muebleEn(1000, 120), "cuadro");
   assert.equal(muebleEn(920, 180), "planta");
   assert.equal(muebleEn(400, 100), "pared");
-  assert.equal(muebleEn(200, 480), null);
+  assert.equal(muebleEn(620, 150), "cortinas");
+  assert.equal(muebleEn(360, 190), "estanteria");
+  assert.equal(muebleEn(240, 490), "cojin");
+  // Las cortinas enmarcan la ventana: tocar el cristal también las elige. El suelo libre, nada.
+  assert.equal(muebleEn(740, 150), "cortinas");
+  assert.equal(muebleEn(60, 500), null);
 });
 
 test("la pared cambia el tono de sus rayas y deja igual lo demás", () => {

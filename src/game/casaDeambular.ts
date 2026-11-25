@@ -116,7 +116,9 @@ export function decidir(andante: Andante, gatito: GatitoCasa, otros: readonly An
   if (eleccion.estado === "andar") {
     return ir(andante, puntoLibre(habitacion, andante, otros, azar), "sentarse", eleccion.segundos, ahora);
   }
-  const sitio = Object.values(habitacion.sitios).find((s) => s?.para === eleccion.estado);
+  // Si hay varios sitios para lo mismo (la cama y el cojín para dormir), uno al azar.
+  const sitios = Object.values(habitacion.sitios).filter((s) => s?.para === eleccion.estado);
+  const sitio = sitios.length > 1 ? sitios[Math.floor(azar() * sitios.length)] : sitios[0];
   if (sitio && azar() < IR_AL_SITIO && libre(sitio, otros)) return ir(andante, { x: sitio.x, y: sitio.y }, eleccion.estado, eleccion.segundos, ahora);
   return quedarse(andante, eleccion.estado, eleccion.segundos, ahora);
 }

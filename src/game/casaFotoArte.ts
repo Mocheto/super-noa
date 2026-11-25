@@ -4,7 +4,7 @@
  * arropado, sus accesorios, y noche). Las cuentas de dónde va cada cosa son puras; el dibujo usa el lienzo del navegador.
  */
 import type { FotoCasa, GatitoEnFoto } from "./casaFoto.ts";
-import { MUEBLES, MUEBLES_CASA, VERSIONES } from "./casaDecoracion.ts";
+import { DELANTE_DE_LA_VENTANA, MUEBLES, MUEBLES_CASA, VERSIONES, type MuebleId } from "./casaDecoracion.ts";
 import { fondoConPared } from "./casaDecoracionArte.ts";
 import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte.ts";
 import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito } from "./casaGatoArte.ts";
@@ -96,14 +96,15 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
   const fondo = enJardin ? null : await cargar(await fondoConPared(HABITACION.fondo, foto.decoracion.pared));
   if (fondo) contexto.drawImage(fondo, foto.vista.x, 0, foto.vista.ancho, ALTO, 0, 0, ancho, ALTO * escala);
 
-  // Muebles en su versión.
-  for (const mueble of enJardin ? [] : MUEBLES) {
+  // Muebles en su versión (las cortinas, más abajo: delante de la ventana de noche y del clima).
+  const pintarMueble = async (mueble: MuebleId) => {
     const dibujo = MUEBLES_CASA[mueble].dibujo;
-    if (!dibujo) continue;
+    if (!dibujo) return;
     const hoja = await cargar(dibujo.imagen);
     const celda = hoja.naturalWidth / VERSIONES.length;
     pintar(hoja, { x: celda * foto.decoracion[mueble], y: 0, ancho: celda, alto: hoja.naturalHeight }, dibujo);
-  }
+  };
+  for (const mueble of enJardin ? [] : MUEBLES) if (!DELANTE_DE_LA_VENTANA.includes(mueble)) await pintarMueble(mueble);
 
   // De noche, la ventana de noche encima de la de día.
   if (foto.noche && !enJardin) {
@@ -120,6 +121,7 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     pintarClima(contexto, foto.clima, enJardin ? ZONA_JARDIN : ZONA_HABITACION, 0, true);
     contexto.restore();
   }
+  for (const mueble of enJardin ? [] : DELANTE_DE_LA_VENTANA) await pintarMueble(mueble);
 
   // Gatitos, de atrás adelante; los arropados, con su pose propia (cabeza fuera y mantita de su color).
   for (const gatito of [...foto.gatitos].sort((a, b) => a.y - b.y)) {

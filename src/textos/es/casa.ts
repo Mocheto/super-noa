@@ -74,6 +74,9 @@ export const casa = {
       cuadro: { oculto: "El cuadro" },
       planta: { oculto: "La planta" },
       pared: { oculto: "La pared" },
+      cortinas: { oculto: "Las cortinas" },
+      estanteria: { oculto: "La estantería" },
+      cojin: { oculto: "El cojín" },
     },
   },
   foto: {

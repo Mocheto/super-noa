@@ -132,7 +132,7 @@ La comida que más le gusta a un gatito de la casa: pescado, leche, galletas o p
 _Avoid_: Comida preferida, plato
 
 **Mueble**:
-Pieza de la casa que se puede cambiar por otra versión al decorar (cama, alfombra, cuadro, planta y pared).
+Pieza de la casa que se puede cambiar por otra versión al decorar (cama, alfombra, cuadro, planta, pared, cortinas, estantería y cojín).
 _Avoid_: Objeto (son los de la bandeja), adorno
 
 **Habitación con tema**:

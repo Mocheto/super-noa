@@ -43,7 +43,23 @@ export const MUEBLES_CASA: Readonly<Record<MuebleId, Mueble>> = {
     dibujo: { imagen: "./assets/sprites/casa-mueble-planta-v1.webp", x: 885, y: 125, ancho: 79, alto: 92 },
   },
   pared: { caja: null, oler: { x: 640, y: 430 }, dibujo: null },
+  // Mapa «Más decoraciones y accesorios para la casa»: láminas de `prototypes/tools/casa-decorar-v2-recorte.py`.
+  cortinas: {
+    caja: { x: 586, y: 22, ancho: 298, alto: 262 }, oler: { x: 740, y: 420 },
+    dibujo: { imagen: "./assets/sprites/casa-mueble-cortinas-v1.webp", x: 586, y: 22, ancho: 298, alto: 262 },
+  },
+  estanteria: {
+    caja: { x: 282, y: 150, ancho: 160, alto: 82 }, oler: { x: 300, y: 440 },
+    dibujo: { imagen: "./assets/sprites/casa-mueble-estanteria-v1.webp", x: 282, y: 150, ancho: 160, alto: 82 },
+  },
+  cojin: {
+    caja: { x: 150, y: 445, ancho: 180, alto: 86 }, oler: { x: 350, y: 500 },
+    dibujo: { imagen: "./assets/sprites/casa-mueble-cojin-v1.webp", x: 150, y: 445, ancho: 180, alto: 86 },
+  },
 };
+
+/** Muebles que cuelgan delante del cristal: en las fotos se pintan después de la ventana de noche y del clima (en la escena ya van encima). */
+export const DELANTE_DE_LA_VENTANA: readonly MuebleId[] = ["cortinas"];
 
 /** Los dos tonos de las rayas de la pared en el fondo (claro y oscuro) y sus cinco versiones: crema, menta, lila, azul cielo y amarillo. */
 export const RAYAS_DEL_FONDO = ["#fbead2", "#f8dabb"] as const;

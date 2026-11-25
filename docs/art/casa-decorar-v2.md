@@ -4,7 +4,10 @@ Dossier del arte de los tres muebles nuevos de la habitación. Ticket: [Arte y c
 
 ## Estado
 
-- **Por generar.** Las originales van a `../super-noa-arte-original/casa-decorar-v2/` y se recortan con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-decorar-v2-recorte.py ../super-noa-arte-original/casa-decorar-v2`.
+- **Montado.** Las originales están en `../super-noa-arte-original/casa-decorar-v2/` y se recortan con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-decorar-v2-recorte.py ../super-noa-arte-original/casa-decorar-v2`.
+- **Las cortinas salieron más anchas que la ventana:** el recorte parte cada juego por el hueco de en medio, pone cada cortina en un borde de la caja (como mucho 100 px de ancho) y alarga la barra, para que se vea el cristal. Las de CELESTE no iban recogidas y quedan más cortas.
+- **El verde de fondo se quita solo si es chillón:** las hojas de palmera y el dinosaurio de cuello largo son verdes.
+- **El cojín creció a 180 × 86** para no quedarse pequeño junto a la cama.
 
 ## Qué hace falta
 
@@ -22,9 +25,9 @@ Cada mueble tiene **cinco versiones**. La 0 es la de siempre, lisa, porque estos
 
 | Mueble | Caja (x, y, ancho, alto) | Apoyo |
 |---|---|---|
-| Cortinas | 596, 22, 286, 262 | alrededor de la ventana: una a cada lado y la barra arriba; **el centro queda vacío** para que se vea el cristal |
+| Cortinas | 586, 22, 298, 262 | alrededor de la ventana: una a cada lado y la barra arriba; **el centro queda vacío** para que se vea el cristal |
 | Estantería | 282, 150, 160, 82 | colgada en la pared, sobre la cama |
-| Cojín | 165, 455, 150, 72 | en el suelo, delante a la izquierda |
+| Cojín | 150, 445, 180, 86 | en el suelo, delante a la izquierda |
 
 | # | Lámina | Adjuntar | Archivo final |
 |---|---|---|---|

@@ -65,6 +65,18 @@ test("de noche va a la cama a dormir, y a veces va a propósito a su sitio de in
   assert.ok(sitios.some((s) => destinos.has(s)), "va a algún sitio de interés");
 });
 
+test("de día, para echarse a dormir, va a la cama o al cojín", () => {
+  const gatito = gatitoNuevo(ahora);
+  const destinos = new Set<string>();
+  const azar = azarDe(9);
+  for (let i = 0; i < 600; i++) {
+    const a = decidir(nuevoAndante({ x: 1000, y: 500 }, 0), gatito, [], contexto({ azar }));
+    if (a.destino && a.pose === "dormir") destinos.add(`${a.destino.x},${a.destino.y}`);
+  }
+  assert.ok(destinos.has(`${H.sitios.cama.x},${H.sitios.cama.y}`), "a la cama");
+  assert.ok(destinos.has(`${H.sitios.cojin.x},${H.sitios.cojin.y}`), "y al cojín");
+});
+
 test("tocarlo lo para en el acto y el toque cuenta en vertical con la profundidad", () => {
   const anda = ir(nuevoAndante({ x: 500, y: 420 }, 0), { x: 900, y: 500 }, "sentarse", 3, 0);
   const parado = parar(anda, 1000);

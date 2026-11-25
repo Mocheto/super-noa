@@ -5,7 +5,7 @@
  */
 import type { EstadoVida } from "./casa.ts";
 
-export type SitioId = "puerta" | "cama" | "rascador" | "ventana" | "alfombra" | "banera";
+export type SitioId = "puerta" | "cama" | "rascador" | "ventana" | "alfombra" | "banera" | "cojin";
 export type SitioInteres = { x: number; y: number; /** Lo que va a hacer allí un gatito que va a propósito. */ para: EstadoVida | null };
 
 export type Habitacion = {
@@ -52,6 +52,8 @@ export const HABITACION_CASA: Habitacion = {
     ventana: { x: 740, y: 408, para: "sentarse" },
     alfombra: { x: 650, y: 505, para: "cantar" },
     banera: { x: 1085, y: 440, para: null },
+    // El cojín (mapa «Más decoraciones y accesorios para la casa»): de día, otro sitio para echarse a dormir.
+    cojin: { x: 240, y: 500, para: "dormir" },
   },
   sitiosDia: [{ x: 570, y: 465 }, { x: 680, y: 495 }, { x: 790, y: 465 }, { x: 900, y: 495 }, { x: 1010, y: 465 }],
   // De noche, tres en la cama y dos en la alfombra.

@@ -124,14 +124,14 @@ function mundosDeGatitos(raw: unknown, esGatito: (mundo: number) => boolean): nu
 
 // --- Decoración (`casaDecoracion.ts`) --------------------------------------------------------------------------------
 
-export type MuebleId = "cama" | "alfombra" | "cuadro" | "planta" | "pared";
+export type MuebleId = "cama" | "alfombra" | "cuadro" | "planta" | "pared" | "cortinas" | "estanteria" | "cojin";
 export type Version = 0 | 1 | 2 | 3 | 4;
 export type Decoracion = Record<MuebleId, Version>;
 
-export const MUEBLES: readonly MuebleId[] = ["cama", "alfombra", "cuadro", "planta", "pared"];
+export const MUEBLES: readonly MuebleId[] = ["cama", "alfombra", "cuadro", "planta", "pared", "cortinas", "estanteria", "cojin"];
 export const VERSIONES: readonly Version[] = [0, 1, 2, 3, 4];
 
-export const DECORACION_DE_SIEMPRE: Decoracion = { cama: 0, alfombra: 0, cuadro: 0, planta: 0, pared: 0 };
+export const DECORACION_DE_SIEMPRE: Decoracion = { cama: 0, alfombra: 0, cuadro: 0, planta: 0, pared: 0, cortinas: 0, estanteria: 0, cojin: 0 };
 
 const esVersion = (valor: unknown): valor is Version => VERSIONES.includes(valor as Version);
 

@@ -2,12 +2,23 @@ import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from
 
 export const maxAliasLength = 16;
 export const maxTotalApples = Number.MAX_SAFE_INTEGER;
-const aliasPattern = /^[\p{L}\p{N} _-]{3,16}$/u;
+/**
+ * Letras latinas (con tildes, ñ y ç), cifras, espacio, guion y guion bajo. Otras escrituras se rechazan porque tienen
+ * letras que se ven igual que las latinas («Noа» con «а» cirílica) y permitirían aparecer con el nombre de otra persona.
+ */
+const aliasPattern = /^(?:(?=\p{L})\p{Script=Latin}|[0-9 _-]){3,16}$/u;
+
+/** Clave única del alias: en minúsculas. Algunas letras crecen al pasar a minúsculas («İ» da dos caracteres). */
+export function aliasKey(alias) {
+  return alias.toLocaleLowerCase("es");
+}
 
 export function normalizeAlias(value) {
   if (typeof value !== "string") return null;
-  const alias = value.trim().replace(/\s+/g, " ");
-  return aliasPattern.test(alias) ? alias : null;
+  // NFC junta las tildes escritas aparte («a» + «´») con su letra, como las escriben la mayoría de teclados.
+  const alias = value.normalize("NFC").trim().replace(/\s+/g, " ");
+  // Una clave que no cabe en la columna sería un 503 eterno; es un alias no válido.
+  return aliasPattern.test(alias) && aliasKey(alias).length <= maxAliasLength ? alias : null;
 }
 
 function boundedInteger(value, maximum) {

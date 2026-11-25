@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { adminTokenMatches, aliasAllowed, campaignWorldFromLegacyWorld, hashDeviceToken, normalizeAlias, provisionalName, publicAlias, validateDeviceCredentials, validateProgress } from "./ranking-domain.mjs";
+import { adminTokenMatches, aliasAllowed, campaignWorldFromLegacyWorld, hashDeviceToken, normalizeAlias, provisionalName, publicAlias, validateDeviceCredentials, validateProgress, aliasKey } from "./ranking-domain.mjs";
 
 test("normaliza alias infantiles sin permitir texto arbitrario", () => {
   assert.equal(normalizeAlias("  Moche   Luna "), "Moche Luna");
@@ -151,4 +151,12 @@ test("la IP sale de X-Forwarded-For contando desde el proxy de confianza", async
   assert.equal(clientIp(request()), "10.0.0.2");
   assert.deepEqual(["OPTIONS /v1/devices", "POST /v1/devices", "POST /v1/alias", "POST /v1/progress", "GET /health", "GET /v1/leaderboard", "GET /v1/admin/aliases"]
     .map((route) => rateLimitGroup(...route.split(" "))), [null, "registro", "registro", "progreso", "consulta", "consulta", "consulta"]);
+});
+
+test("alias: solo letras latinas, tildes juntas con su letra y una clave que cabe en minúsculas", () => {
+  for (const alias of ["Noa", "Ñoño", "Çelia", "Àlex 2", "Luna_7", "Mar-ia", "İsabel"]) assert.equal(normalizeAlias(alias), alias);
+  // «a» + tilde aparte se junta en «á».
+  assert.equal(normalizeAlias("Noá"), "Noá");
+  for (const alias of ["Noа", "Ноа", "Νοα", "ノア", "İ".repeat(16), "No", "x".repeat(17), "Noa!", "Noa٣"]) assert.equal(normalizeAlias(alias), null, alias);
+  assert.equal(aliasKey("İsabel").length, 7);
 });

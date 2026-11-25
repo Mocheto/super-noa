@@ -1,6 +1,6 @@
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -38,7 +38,7 @@ export function createRankingSupervisor(options = {}) {
   const releasesDirectory = join(appDirectory, "releases");
   const stateFile = join(appDirectory, "ranking-release.json");
   const serverFiles = ["ranking-server.mjs", "ranking-domain.mjs"];
-  const fs = options.fs ?? { mkdir, readFile, rename, rm, writeFile };
+  const fs = options.fs ?? { mkdir, readdir, readFile, rename, rm, writeFile };
   const launch = options.spawn ?? spawn;
   const checkSyntax = options.spawnSync ?? spawnSync;
   const fetchUrl = options.fetch ?? fetch;
@@ -122,6 +122,17 @@ export function createRankingSupervisor(options = {}) {
     } catch (error) {
       await fs.rm(staging, { recursive: true, force: true });
       throw error;
+    }
+  }
+
+  /** Tras confirmar una versión, se borran las descargadas que no sean la activa ni la anterior: `releases/` no crece sin límite. */
+  async function pruneReleases(keep) {
+    try {
+      for (const name of await fs.readdir(releasesDirectory)) {
+        if (isCommitSha(name) && !keep.includes(name)) await fs.rm(join(releasesDirectory, name), { recursive: true, force: true });
+      }
+    } catch (error) {
+      logger.error("No se pudieron borrar versiones antiguas; se intentará en la próxima.", error);
     }
   }
 
@@ -233,6 +244,8 @@ export function createRankingSupervisor(options = {}) {
       currentRelease = confirmed;
       savedRelease = confirmed;
       logger.info(`Backend ${nextRelease.sha.slice(0, 12)} preparado y confirmado.`);
+      // Solo al pasar de una versión confirmada a otra: al arrancar no se toca nada.
+      if (previousRelease && previousRelease.sha !== confirmed.sha) await pruneReleases([confirmed.sha, previousRelease.sha]);
     } catch (error) {
       logger.error("No se pudo confirmar la versión nueva; se intentará recuperar la anterior.", error);
       await stopServer();

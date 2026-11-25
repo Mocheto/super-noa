@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
-import { adminTokenMatches, aliasAllowed, aliasStatuses, clientIp, createDeviceCredentials, createRateLimiter, hashDeviceToken, normalizeAlias, publicAlias, rateLimitGroup, rateLimits, validateDeviceCredentials, validateProgress } from "./ranking-domain.mjs";
+import { adminTokenMatches, aliasAllowed, aliasKey, aliasStatuses, clientIp, createDeviceCredentials, createRateLimiter, hashDeviceToken, normalizeAlias, publicAlias, rateLimitGroup, rateLimits, validateDeviceCredentials, validateProgress } from "./ranking-domain.mjs";
 
 export const rankingSchema = `
   CREATE TABLE IF NOT EXISTS super_noa_ranking_profiles (
@@ -22,20 +22,25 @@ export const rankingSchema = `
   UPDATE super_noa_ranking_profiles
     SET campaign_world = CASE WHEN world BETWEEN 0 AND 6 THEN world WHEN world BETWEEN 9 AND 13 THEN world - 2 ELSE NULL END
     WHERE campaign_world IS NULL;
-  ALTER TABLE super_noa_ranking_profiles
-    DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_world_check,
-    DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_completed_levels_check,
-    DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_stickers_check,
-    DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_boss_challenges_check,
-    DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_campaign_world_check,
-    DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_total_apples_check;
-  ALTER TABLE super_noa_ranking_profiles
-    ADD CONSTRAINT super_noa_ranking_profiles_world_check CHECK (world BETWEEN 0 AND 17),
-    ADD CONSTRAINT super_noa_ranking_profiles_completed_levels_check CHECK (completed_levels BETWEEN 0 AND 45),
-    ADD CONSTRAINT super_noa_ranking_profiles_stickers_check CHECK (stickers BETWEEN 0 AND 51),
-    ADD CONSTRAINT super_noa_ranking_profiles_boss_challenges_check CHECK (boss_challenges BETWEEN 0 AND 17),
-    ADD CONSTRAINT super_noa_ranking_profiles_campaign_world_check CHECK (campaign_world BETWEEN 0 AND 15),
-    ADD CONSTRAINT super_noa_ranking_profiles_total_apples_check CHECK (total_apples BETWEEN 0 AND 9007199254740991);
+  -- Los máximos solo se amplían, nunca se estrechan: volver a una versión anterior no debe impedir arrancar con
+  -- datos que la nueva ya admitía. Una restricción que falta o es más estrecha se rehace; las demás no se tocan.
+  DO $$
+  DECLARE
+    limite RECORD;
+    actual NUMERIC;
+  BEGIN
+    FOR limite IN SELECT * FROM (VALUES
+      ('world', 17::NUMERIC), ('completed_levels', 45), ('stickers', 51), ('boss_challenges', 17),
+      ('campaign_world', 15), ('total_apples', 9007199254740991)
+    ) AS maximos(columna, maximo) LOOP
+      SELECT (regexp_match(pg_get_constraintdef(oid), '<= [^0-9]*([0-9]+)'))[1]::NUMERIC INTO actual FROM pg_constraint
+        WHERE conrelid = 'super_noa_ranking_profiles'::REGCLASS AND conname = 'super_noa_ranking_profiles_' || limite.columna || '_check';
+      IF actual IS NULL OR actual < limite.maximo THEN
+        EXECUTE format('ALTER TABLE super_noa_ranking_profiles DROP CONSTRAINT IF EXISTS %I, ADD CONSTRAINT %I CHECK (%I BETWEEN 0 AND %s)',
+          'super_noa_ranking_profiles_' || limite.columna || '_check', 'super_noa_ranking_profiles_' || limite.columna || '_check', limite.columna, limite.maximo);
+      END IF;
+    END LOOP;
+  END $$;
   -- Revisión de alias (issue 314): los alias que ya había pasan a pendientes, con su progreso y su puesto.
   ALTER TABLE super_noa_ranking_profiles ADD COLUMN IF NOT EXISTS alias_status VARCHAR(10);
   ALTER TABLE super_noa_ranking_profiles ADD COLUMN IF NOT EXISTS approved_alias VARCHAR(16);
@@ -44,10 +49,15 @@ export const rankingSchema = `
     WHERE alias_status IS NULL;
   ALTER TABLE super_noa_ranking_profiles
     ALTER COLUMN alias_status SET DEFAULT 'pending', ALTER COLUMN alias_status SET NOT NULL,
-    ALTER COLUMN alias_submitted_at SET DEFAULT NOW(),
-    DROP CONSTRAINT IF EXISTS super_noa_ranking_profiles_alias_status_check;
-  ALTER TABLE super_noa_ranking_profiles
-    ADD CONSTRAINT super_noa_ranking_profiles_alias_status_check CHECK (alias_status IN ('pending', 'approved', 'rejected', 'hidden'));
+    ALTER COLUMN alias_submitted_at SET DEFAULT NOW();
+  DO $$
+  BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'super_noa_ranking_profiles'::REGCLASS
+      AND conname = 'super_noa_ranking_profiles_alias_status_check') THEN
+      ALTER TABLE super_noa_ranking_profiles
+        ADD CONSTRAINT super_noa_ranking_profiles_alias_status_check CHECK (alias_status IN ('pending', 'approved', 'rejected', 'hidden'));
+    END IF;
+  END $$;
 `;
 
 const playerColumns = `alias, world, campaign_world AS "campaignWorld", completed_levels AS "completedLevels",
@@ -97,14 +107,23 @@ export function leaderboardRow({ id, approvedAlias, aliasStatus, alias, ...playe
 
 const aliasNotAllowed = () => new RequestError(400, "alias_not_allowed", "Ese nombre no vale. Prueba otro.");
 
+const maxBodyBytes = 10_000;
+
 async function readJson(request) {
-  let body = "";
+  const tooLarge = () => new RequestError(413, "request_failed", "La petición es demasiado grande.");
+  const declared = Number(request.headers["content-length"]);
+  if (Number.isFinite(declared) && declared > maxBodyBytes) throw tooLarge();
+  // Se juntan los bytes y se decodifica al final: una «ñ» partida entre dos trozos no se estropea.
+  const chunks = [];
+  let size = 0;
   for await (const chunk of request) {
-    body += chunk;
-    if (body.length > 10_000) throw new RequestError(413, "request_failed", "La petición es demasiado grande.");
+    const bytes = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
+    size += bytes.length;
+    if (size > maxBodyBytes) throw tooLarge();
+    chunks.push(bytes);
   }
   try {
-    return JSON.parse(body);
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
   } catch {
     throw new RequestError(400, "request_failed", "El cuerpo debe ser JSON válido.");
   }
@@ -112,11 +131,11 @@ async function readJson(request) {
 
 export async function registerProfile(pool, alias, credentials, pepper) {
   const tokenHash = hashDeviceToken(pepper, credentials.token);
-  const aliasKey = alias.toLocaleLowerCase("es");
+  const key = aliasKey(alias);
   const inserted = await pool.query(
     `INSERT INTO super_noa_ranking_profiles (id, alias, alias_key, token_hash)
      VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING RETURNING alias, alias_status AS "aliasStatus"`,
-    [credentials.id, alias, aliasKey, tokenHash],
+    [credentials.id, alias, key, tokenHash],
   );
   if (inserted.rowCount === 1) return { alias: inserted.rows[0].alias, aliasStatus: inserted.rows[0].aliasStatus ?? "pending", created: true };
   const existing = await pool.query(
@@ -125,7 +144,7 @@ export async function registerProfile(pool, alias, credentials, pepper) {
   const profile = existing.rows[0];
   if (!profile) throw new RequestError(409, "alias_taken", "Ese alias ya está jugando. Prueba otro.");
   if (profile.token_hash !== tokenHash) throw new RequestError(401, "device_invalid", "La tarjeta de este dispositivo no es válida.");
-  if (profile.alias_key !== aliasKey) throw new RequestError(409, "device_exists", "Esta tarjeta ya tiene otro nombre. Conserva tu tarjeta para seguir jugando.");
+  if (profile.alias_key !== key) throw new RequestError(409, "device_exists", "Esta tarjeta ya tiene otro nombre. Conserva tu tarjeta para seguir jugando.");
   return { alias: profile.alias, aliasStatus: profile.aliasStatus ?? "pending", created: false };
 }
 
@@ -135,14 +154,14 @@ export async function registerProfile(pool, alias, credentials, pepper) {
  */
 export async function changeAlias(pool, alias, credentials, pepper) {
   const tokenHash = hashDeviceToken(pepper, credentials.token);
-  const aliasKey = alias.toLocaleLowerCase("es");
+  const key = aliasKey(alias);
   let changed;
   try {
     changed = await pool.query(
       `UPDATE super_noa_ranking_profiles SET alias = $3, alias_key = $4, alias_status = 'pending', alias_submitted_at = NOW(),
          approved_alias = CASE WHEN alias_status = 'approved' THEN alias ELSE approved_alias END, updated_at = NOW()
        WHERE id = $1 AND token_hash = $2 AND alias_key <> $4 RETURNING alias, alias_status AS "aliasStatus"`,
-      [credentials.id, tokenHash, alias, aliasKey],
+      [credentials.id, tokenHash, alias, key],
     );
   } catch (error) {
     if (error?.code === "23505") throw new RequestError(409, "alias_taken", "Ese alias ya está jugando. Prueba otro.");
@@ -183,9 +202,12 @@ export const adminListQuery = `SELECT id, alias, approved_alias AS "approvedAlia
   alias_submitted_at AS "submittedAt" FROM super_noa_ranking_profiles
   WHERE ($1::TEXT IS NULL OR alias_status = $1) ORDER BY alias_submitted_at ASC NULLS FIRST, id ASC LIMIT 500`;
 
+/** Todo es JSON, pero estas cabeceras no cuestan nada: que el navegador no adivine el tipo y que nada se pinte ni se enmarque. */
+export const defensiveHeaders = { "X-Content-Type-Options": "nosniff", "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'" };
+
 export function createRankingServer({ pool, tokenPepper, adminToken = null, allowedOrigins = new Set(["https://mocheto.github.io"]), release = "manual", logger = console, rateLimiter = createRateLimiter(), trustedProxies = 1 }) {
   function sendJson(response, status, payload, origin, extraHeaders = {}) {
-    const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", ...extraHeaders };
+    const headers = { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store", ...defensiveHeaders, ...extraHeaders };
     if (origin && allowedOrigins.has(origin)) {
       headers["Access-Control-Allow-Origin"] = origin;
       // Sin esto, el navegador no deja leer `Retry-After` desde otro origen.
@@ -204,7 +226,7 @@ export function createRankingServer({ pool, tokenPepper, adminToken = null, allo
         "Access-Control-Allow-Origin": origin,
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Super-Noa-Device, X-Super-Noa-Token",
-        "Access-Control-Max-Age": "600", Vary: "Origin",
+        "Access-Control-Max-Age": "600", Vary: "Origin", ...defensiveHeaders,
       });
       return response.end();
     }
@@ -317,7 +339,8 @@ async function main() {
   const port = Number.parseInt(process.env.PORT ?? "8088", 10);
   if (!process.env.DATABASE_URL || !process.env.RANKING_TOKEN_PEPPER) throw new Error("DATABASE_URL y RANKING_TOKEN_PEPPER son obligatorios.");
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error("PORT debe ser un puerto válido.");
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  // Con la base de datos colgada, cada petición falla a los pocos segundos en vez de quedarse esperando para siempre.
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 10, connectionTimeoutMillis: 3_000, statement_timeout: 5_000, query_timeout: 6_000 });
   pool.on("error", (error) => console.error("Se perdió una conexión inactiva del ranking; se abrirá otra cuando haga falta.", error));
   try {
     await pool.query(rankingSchema);

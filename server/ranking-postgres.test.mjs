@@ -6,6 +6,9 @@ import { Pool } from "pg";
 import { approveAllQuery, createRankingServer, leaderboardQuery, rankingSchema } from "./ranking-server.mjs";
 import { provisionalName } from "./ranking-domain.mjs";
 
+/** Estas pruebas hacen muchas peticiones seguidas desde la misma IP: el límite de peticiones tiene sus propias pruebas. */
+const sinLimite = { take: () => ({ ok: true }) };
+
 test("PostgreSQL real: migración histórica, acumulación, fechas y desempates", {
   skip: !process.env.TEST_RANKING_DATABASE_URL,
 }, async (t) => {
@@ -42,7 +45,7 @@ test("PostgreSQL real: migración histórica, acumulación, fechas y desempates"
   }
 
   const errors = [];
-  const server = createRankingServer({ pool, tokenPepper: "test", logger: { error: (...args) => errors.push(args) } });
+  const server = createRankingServer({ pool, tokenPepper: "test", rateLimiter: sinLimite, logger: { error: (...args) => errors.push(args) } });
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   t.after(async () => {
@@ -176,7 +179,7 @@ async function databaseFixture(t) {
 
 async function serverFixture(t, pool, options = {}) {
   const errors = [];
-  const server = createRankingServer({ pool, tokenPepper: "test", logger: { error: (...args) => errors.push(args) }, ...options });
+  const server = createRankingServer({ pool, tokenPepper: "test", rateLimiter: sinLimite, logger: { error: (...args) => errors.push(args) }, ...options });
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   t.after(async () => {
@@ -290,4 +293,35 @@ test("PostgreSQL real: filtro, estados, tablón y revisión de alias", {
   // Sin clave en el entorno, la revisión no existe.
   const sinClave = await serverFixture(t, pool);
   assert.equal((await fetch(`${sinClave.url}/v1/admin/aliases`, { headers: asAdmin() })).status, 404);
+});
+
+test("PostgreSQL real: la migración amplía los máximos que se quedan cortos y nunca estrecha los más amplios", {
+  skip: !process.env.TEST_RANKING_DATABASE_URL,
+}, async (t) => {
+  const schema = `ranking_test_${randomUUID().replaceAll("-", "")}`;
+  const admin = new Pool({ connectionString: process.env.TEST_RANKING_DATABASE_URL });
+  await admin.query(`CREATE SCHEMA ${schema}`);
+  const pool = new Pool({ connectionString: process.env.TEST_RANKING_DATABASE_URL, options: `-c search_path=${schema}` });
+  t.after(async () => {
+    await pool.end();
+    await admin.query(`DROP SCHEMA ${schema} CASCADE`);
+    await admin.end();
+  });
+  const maximo = async (columna) => (await pool.query(`SELECT pg_get_constraintdef(oid) AS def FROM pg_constraint
+    WHERE conrelid = 'super_noa_ranking_profiles'::REGCLASS AND conname = $1`, [`super_noa_ranking_profiles_${columna}_check`])).rows[0]?.def;
+  await pool.query(rankingSchema);
+  assert.match(await maximo("world"), /<= 17/);
+  assert.match(await maximo("total_apples"), /9007199254740991/);
+  // Una versión posterior ya admitía el mundo 20 y hay datos con él: volver a esta no debe estrecharlo ni impedir arrancar.
+  await pool.query(`ALTER TABLE super_noa_ranking_profiles DROP CONSTRAINT super_noa_ranking_profiles_world_check,
+    ADD CONSTRAINT super_noa_ranking_profiles_world_check CHECK (world BETWEEN 0 AND 20)`);
+  await pool.query(`INSERT INTO super_noa_ranking_profiles (id, alias, alias_key, token_hash, world) VALUES ($1, 'Futuro', 'futuro', $2, 20)`, [randomUUID(), "a".repeat(64)]);
+  // Una más antigua dejó los pegatinas cortas: se amplían.
+  await pool.query(`ALTER TABLE super_noa_ranking_profiles DROP CONSTRAINT super_noa_ranking_profiles_stickers_check,
+    ADD CONSTRAINT super_noa_ranking_profiles_stickers_check CHECK (stickers BETWEEN 0 AND 36)`);
+  await pool.query(rankingSchema);
+  await pool.query(rankingSchema);
+  assert.match(await maximo("world"), /<= 20/);
+  assert.match(await maximo("stickers"), /<= 51/);
+  assert.match(await maximo("alias_status"), /pending/);
 });

@@ -1,3 +1,4 @@
+import { request as httpRequest } from "node:http";
 import assert from "node:assert/strict";
 import { once } from "node:events";
 import test from "node:test";
@@ -158,7 +159,9 @@ test("la migración es aditiva y el orden no depende de IDs históricos ni del c
   assert.match(rankingSchema, /WHEN world BETWEEN 0 AND 6 THEN world WHEN world BETWEEN 9 AND 13 THEN world - 2 ELSE NULL/);
   assert.match(rankingSchema, /WHERE campaign_world IS NULL/);
   assert.doesNotMatch(rankingSchema, /DROP TABLE|DELETE FROM|SET world =/);
-  assert.match(rankingSchema, /campaign_world BETWEEN 0 AND 15/);
+  assert.match(rankingSchema, /\('campaign_world', 15\)/);
+  // Los máximos solo se amplían: la restricción se rehace solo si falta o si la que hay es más estrecha.
+  assert.match(rankingSchema, /IF actual IS NULL OR actual < limite\.maximo THEN/);
   const ordering = leaderboardQuery.split("ORDER BY")[1];
   assert.match(ordering, /^\s*completed_levels DESC/);
   assert.doesNotMatch(ordering, /\bworld\b|\bcampaign_world\b/);
@@ -321,4 +324,54 @@ test("límite de peticiones: sin proxy de confianza la IP es la del socket y X-F
     await response.body.cancel();
   }
   assert.equal(statuses.at(-1), 429);
+});
+
+test("una «ñ» partida entre dos trozos del cuerpo no estropea el alias", async (t) => {
+  const api = await apiFixture(t);
+  const body = Buffer.from(JSON.stringify({ alias: "Ñoñoñoñoñoñoñoño" }));
+  // Se parte justo en medio de los dos bytes de una «ñ».
+  const corte = body.indexOf(Buffer.from("ñ")) + 1;
+  const response = await new Promise((resolve, reject) => {
+    const request = httpRequest(`${api.url}/v1/devices`, { method: "POST", headers: { "Content-Type": "application/json", "Content-Length": body.length } }, (res) => {
+      let text = "";
+      res.setEncoding("utf8");
+      res.on("data", (chunk) => { text += chunk; });
+      res.on("end", () => resolve({ status: res.statusCode, body: JSON.parse(text) }));
+    });
+    request.on("error", reject);
+    request.write(body.subarray(0, corte));
+    setTimeout(() => request.end(body.subarray(corte)), 20);
+  });
+  assert.equal(response.status, 201);
+  assert.equal(response.body.alias, "Ñoñoñoñoñoñoñoño");
+});
+
+test("alias que crecen al pasar a minúsculas u otras escrituras: 400 al momento, nunca 503 reintentable", async (t) => {
+  const api = await apiFixture(t);
+  for (const alias of ["İ".repeat(16), "Noа", "Ноа", "Νοα"]) {
+    const response = await api.post("/v1/devices", { alias });
+    assert.equal(response.status, 400, alias);
+    const body = await response.json();
+    assert.equal(body.code, "invalid_alias");
+    assert.equal(body.retryable, false);
+  }
+  assert.equal((await api.post("/v1/devices", { alias: "İsabel" })).status, 201);
+  assert.equal(api.pool.profiles.size, 1);
+});
+
+test("cuerpo demasiado grande se rechaza por su Content-Length antes de leerlo", async (t) => {
+  const api = await apiFixture(t);
+  const response = await api.post("/v1/devices", { alias: "Luna", relleno: "x".repeat(20_000) });
+  assert.equal(response.status, 413);
+});
+
+test("cabeceras defensivas en las respuestas y en el preflight", async (t) => {
+  const api = await apiFixture(t);
+  for (const response of [
+    await fetch(`${api.url}/health`),
+    await fetch(`${api.url}/v1/leaderboard`, { method: "OPTIONS", headers: { Origin: "https://mocheto.github.io" } }),
+  ]) {
+    assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+    assert.equal(response.headers.get("content-security-policy"), "default-src 'none'; frame-ancestors 'none'");
+  }
 });

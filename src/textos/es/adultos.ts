@@ -103,6 +103,23 @@ export const adultos = {
   ranking: {
     "sin-conexion": "No puedo conectar con el ranking. Tu aventura sigue guardada aquí. Puedes volver a intentarlo.",
     "demasiadas-peticiones": "El ranking pide un respiro por haber hecho muchas peticiones seguidas. Tu aventura sigue guardada aquí; se enviará más tarde.",
+    "sin-almacenamiento": "El navegador no deja guardar tu tarjeta del ranking. Permite el almacenamiento antes de apuntarte para no perderla.",
+    "respuesta-rara": "El ranking ha respondido de una forma que no entiendo. Puedes volver a intentarlo.",
+    "tardando": "El ranking está tardando. Tu tarjeta está guardada; vuelve a intentarlo.",
+    "preparando-tarjeta": "Estamos preparando tu tarjeta. Espera un momento antes de cambiar de alias.",
+    "alias-no-valido": "Elige un nombre de entre 3 y 16 letras o números.",
+    "otra-tarjeta": "Ya tienes una tarjeta guardada con otro nombre. Conserva esa tarjeta para seguir jugando.",
+    "servidor-antiguo-alta": "El ranking se está preparando para guardar tu tarjeta. Vuelve a intentarlo dentro de un ratito.",
+    "sin-almacenamiento-cambio": "No pude guardar el cambio de tarjeta. Permite el almacenamiento y vuelve a intentarlo.",
+    "sin-confirmar-tarjeta": "No pude confirmar tu tarjeta. Está guardada aquí para volver a intentarlo.",
+    "servidor-antiguo-progreso": "El tablón aún no guarda las manzanas totales ni la fecha. Las conservamos aquí para enviarlas cuando esté listo.",
+    "lista-ilegible": "No pude leer la lista del ranking. Puedes volver a intentarlo.",
+    "tarjeta-ilegible": "No pude leer tu tarjeta del tablón. Puedes volver a intentarlo.",
+    "sin-confirmar-alias": "No pude confirmar el alias nuevo. Puedes volver a intentarlo.",
+    "alias-ocupado": "Ese alias ya está jugando. Prueba otro.",
+    "tarjeta-no-valida": "La tarjeta de este dispositivo no es válida.",
+    "no-disponible": "El tablón no está disponible ahora. Tu aventura sigue guardada aquí.",
+    "fallo": "No pude hablar con el ranking.",
   },
   /** El tablón opcional: el interruptor de Ajustes, la puerta para adultos, el alias y su revisión. */
   tablon: {

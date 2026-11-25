@@ -52,6 +52,7 @@ function fixture(t, initial = null) {
   ]);
   const fs = {
     mkdir: async () => {},
+    readdir: async (directory) => [...new Set([...files.keys()].filter((path) => path.startsWith(`${directory}/`)).map((path) => path.slice(directory.length + 1).split("/")[0]))],
     readFile: async (path) => {
       if (!files.has(path)) throw new Error("ENOENT");
       return files.get(path);
@@ -62,10 +63,14 @@ function fixture(t, initial = null) {
     },
     rename: async (source, target) => {
       if (failRenames) throw new Error("EACCES");
-      files.set(target, files.get(source));
-      files.delete(source);
+      // Como el real: un archivo o una carpeta entera.
+      for (const file of [...files.keys()]) {
+        if (file !== source && !file.startsWith(`${source}/`)) continue;
+        files.set(target + file.slice(source.length), files.get(file));
+        files.delete(file);
+      }
     },
-    rm: async (path) => { files.delete(path); },
+    rm: async (path) => { for (const file of [...files.keys()]) if (file === path || file.startsWith(`${path}/`)) files.delete(file); },
   };
   const options = {
     env: { RANKING_APP_DIRECTORY: "/app" }, fs, logger: { info() {}, error() {} },
@@ -373,4 +378,22 @@ test("sin backend que arranque el bucle espera cada vez más y consulta GitHub c
   assert.deepEqual(waits, [5_000, 10_000, 20_000, 40_000, 80_000, 160_000, 300_000, 300_000, 300_000]);
   assert.ok(f.commitChecks.length >= 3);
   for (let i = 1; i < f.commitChecks.length; i++) assert.ok(f.commitChecks[i] - f.commitChecks[i - 1] >= 300_000, `consultas a GitHub ${f.commitChecks}`);
+});
+
+test("al confirmar una versión se borran las descargadas que no son la activa ni la anterior", async (t) => {
+  const f = fixture(t);
+  const old = "f".repeat(40);
+  f.files.set(`/app/releases/${old}/ranking-server.mjs`, "viejo");
+  f.files.set(`/app/releases/${old}/ranking-domain.mjs`, "viejo");
+  // Al arrancar con una versión no se borra nada.
+  await f.supervisor.activateRelease(first);
+  assert.equal(f.files.has(`/app/releases/${old}/ranking-server.mjs`), true);
+  f.latest = fixed;
+  await f.supervisor.checkForUpdates();
+  assert.equal(f.supervisor.getState().currentRelease.sha, fixed);
+  // Al cambiar, se quedan la activa y la anterior (para poder volver a ella) y se van las demás.
+  assert.equal(f.files.has(`/app/releases/${fixed}/ranking-server.mjs`), true);
+  assert.equal(f.files.has(`${first.directory}/ranking-server.mjs`), true);
+  assert.equal(f.files.has(`/app/releases/${old}/ranking-server.mjs`), false);
+  assert.equal(f.files.has(`${next.directory}/ranking-server.mjs`), false);
 });

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import { emptyProgress } from "./progress.ts";
-import { changeRankingAlias, loadRanking, parseRetryAfter, RankingError, rankingProgress, readOwnRanking, readRankingDevice, registerRankingDevice, resetRankingCooldowns, syncRanking } from "./ranking.ts";
+import { aliasValido, changeRankingAlias, loadRanking, parseRetryAfter, RankingError, rankingProgress, readOwnRanking, readRankingDevice, registerRankingDevice, resetRankingCooldowns, syncRanking } from "./ranking.ts";
 
 test("el tablón reconoce el mundo 12 y sus pantallas de campaña", () => {
   const levelStats = Object.fromEntries(["1-1", "9-1", "12-1"].map((id) => [id, {
@@ -348,4 +348,9 @@ test("el registro respeta la veda sin borrar la tarjeta guardada: se reintenta c
   await assert.rejects(registerRankingDevice("NoaLuna"), (error: unknown) => error instanceof RankingError && error.code === "rate_limited");
   assert.equal(registrations, 1);
   assert.equal(readRankingDevice()?.id, pending.id);
+});
+
+test("el cliente aplica la misma regla de alias que el servidor", () => {
+  for (const alias of ["Noa", "Ñoño", "Àlex 2", "Luna_7", "İsabel"]) assert.equal(aliasValido(alias), true, alias);
+  for (const alias of ["Noа", "Ноа", "İ".repeat(16), "No", "Noa!"]) assert.equal(aliasValido(alias), false, alias);
 });

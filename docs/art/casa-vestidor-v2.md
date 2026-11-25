@@ -7,7 +7,7 @@ Dossier del arte nuevo del armario. Ticket: [Arte y código de la capa, las alas
 - **Montado.** Las originales están en `../super-noa-arte-original/casa-vestidor-v2/` con los nombres `casa-capas`, `casa-alas` y `casa-piezas-nuevas` (cualquier extensión), y se recortan con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-vestidor-v2-recorte.py ../super-noa-arte-original/casa-vestidor-v2`.
 - **Alas:** la fila de abajo no salió como segundo cuadro (mezcla piezas y falta la mariposa), así que solo se usan los seis pares de arriba y **el aleteo va por código**: cada par se dibuja en dos mitades que giran desde el hombro.
 - **Capas:** salieron largas, hasta el suelo de pie, y con la silueta de unas patas dentro. Puestas, se cortan a la altura de las patas del gatito (`CAPA_VISIBLE`, el 68 % de arriba).
-- **Bufandas nuevas:** salieron como un aro grueso, no como una banda con las puntas; se ven más grandes que las de antes.
+- **Bufandas nuevas:** salieron como un aro grueso, también al repetirlas con el prompt de la sección 4. El recorte **abre el aro** por código (`abrir_aro`): quita la parte de atrás, por encima de la mitad del agujero, y cierra la parte de arriba con el contorno ciruela; queda la banda de delante con su punta, como las de antes.
 
 ## Qué hace falta
 

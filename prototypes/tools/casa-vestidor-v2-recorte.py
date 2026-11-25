@@ -77,6 +77,32 @@ def anchos_de_antes(antes):
     return anchos
 
 
+CONTORNO = (0x2F, 0x1D, 0x33, 255)
+
+
+def abrir_aro(img):
+    """Las bufandas nuevas salieron como un aro grueso (con agujero y borde de atrás), no como la banda curva de las de
+    antes. Se quita la parte de atrás: todo lo que queda por encima de la mitad del agujero, y la parte de arriba nueva
+    se cierra con el contorno ciruela de dos píxeles. Queda la banda de delante con su punta colgando."""
+    a = np.array(img)
+    opaco = a[..., 3] > 0
+    huecos, cuantos = ndimage.label(~opaco)
+    borde = set(np.unique(np.concatenate([huecos[0], huecos[-1], huecos[:, 0], huecos[:, -1]]))) - {0}
+    dentro = [i for i in range(1, cuantos + 1) if i not in borde]
+    if not dentro:
+        return img
+    agujero = max(dentro, key=lambda i: (huecos == i).sum())
+    ys = np.nonzero((huecos == agujero).any(axis=1))[0]
+    corte = (ys.min() + ys.max()) // 2
+    a[:corte, :, 3] = 0
+    # Contorno arriba: los dos primeros píxeles opacos de cada columna.
+    for x in range(a.shape[1]):
+        filas = np.nonzero(a[:, x, 3] > 0)[0]
+        if len(filas):
+            a[filas[0]:filas[0] + 2, x] = CONTORNO
+    return visible(Image.fromarray(a, "RGBA"))
+
+
 def piezas_nuevas(folder):
     antes = Image.open(casa.SPRITES / "casa-accesorios-v1.webp").convert("RGBA")
     anchos = anchos_de_antes(antes)
@@ -90,6 +116,8 @@ def piezas_nuevas(folder):
     for f, tipo in enumerate(TIPOS):
         for c, pieza in enumerate(filas[f]):
             img = visible(casa.recorte(rgba, pieza))
+            if tipo == "bufanda":
+                img = abrir_aro(img)
             img = casa.escalar(img, min(anchos[tipo] / img.width, alto / img.height))
             x = (4 + c) * ancho + (ancho - img.width) // 2
             y = f * alto + {"sombrero": alto - img.height, "gafas": (alto - img.height) // 2, "bufanda": 0}[tipo]

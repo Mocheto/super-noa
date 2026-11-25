@@ -11,7 +11,7 @@ export const HOJA_COMPLEMENTOS = "./assets/sprites/casa-complementos-v1.webp";
 export const HOJA_COMPLEMENTOS_CAPAS = "./assets/sprites/casa-complementos-capas-v1.webp";
 
 /**
- * `hundir`: cuánto más baja que un sombrero del armario (en px del gatito grande del vestidor). Los de cabeza son
+ * `hundir`: cuánto baja un gorro de cabeza más allá del ancla, como `HUNDIR_SOMBRERO` en el armario (en px del gatito grande del vestidor). Los de cabeza son
  * gorros sin ala que abrazan la cabeza: puestos a la altura de un sombrero se quedaban encima, con el lazo asomando.
  */
 type Complemento = { tipo: Extract<TipoAccesorio, "sombrero" | "bufanda" | "capa">; columna: number; hundir?: number };
@@ -27,7 +27,7 @@ export const COMPLEMENTOS: Readonly<Record<number, Complemento>> = {
   5: { tipo: "sombrero", columna: 1, hundir: 22 }, // pañuelo pirata
   11: { tipo: "sombrero", columna: 2, hundir: 14 }, // tulipán
   15: { tipo: "sombrero", columna: 3, hundir: 14 }, // gorra de revisor
-  10: { tipo: "sombrero", columna: 4, hundir: 14 }, // gorro de aviador
+  10: { tipo: "sombrero", columna: 4, hundir: 28 }, // gorro de aviador
   1: { tipo: "bufanda", columna: 5 }, // pañuelo con margarita
   2: { tipo: "bufanda", columna: 6 }, // collar con amatista
   3: { tipo: "bufanda", columna: 7 }, // bufanda de estrellas

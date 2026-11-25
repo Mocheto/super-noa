@@ -110,6 +110,25 @@ export const ENCAJE: Record<TipoAccesorio, { ancla: keyof typeof ANCLAS_VESTIDOR
   alas: { ancla: "cuello", escala: 1, punto: { x: 0.5, y: 0.5 }, bajar: -10 },
 };
 
+/**
+ * Cuánto más baja cada sombrero del armario que el ancla de la cabeza más `bajar` (en px del gatito grande): con el
+ * ala justo en el lazo quedaban posados encima de la cabeza; así se encajan, cada uno según su forma (el gorro de lana,
+ * que abriga, el que más). Los complementos llevan el suyo en `COMPLEMENTOS`.
+ */
+export const HUNDIR_SOMBRERO: Readonly<Record<string, number>> = { paja: 12, gorro: 20, fiesta: 10, chistera: 10, maquinista: 14, pirata: 12 };
+/**
+ * Y lo que baja cualquier sombrero en cada modelo: en la melena y la nube el lazo va sobre el pelo de encima de la
+ * cabeza (melena y tupé), más alto que en el atigrado.
+ */
+export const HUNDIR_MODELO: Readonly<Record<ModeloGatito, number>> = { atigrado: 0, esmoquin: 0, melena: 6, nube: 16 };
+
+/** Lo que baja una pieza puesta más allá del `bajar` de su tipo (solo los sombreros). */
+export function hundirDe(tipo: TipoAccesorio, pieza: string | undefined, modelo: ModeloGatito): number {
+  if (tipo !== "sombrero" || !pieza) return 0;
+  const propio = esComplemento(pieza) ? complementoDe(pieza)?.hundir ?? 0 : HUNDIR_SOMBRERO[pieza] ?? 0;
+  return propio + (HUNDIR_MODELO[modelo] ?? 0);
+}
+
 export type CajaPorcentaje = { left: number; top: number; width: number; height: number };
 
 /**
@@ -117,9 +136,9 @@ export type CajaPorcentaje = { left: number; top: number; width: number; height:
  * con sus anclas: en % de esa caja (puede salirse, como el sombrero por arriba).
  */
 export function cajaSobreElGatito(tipo: TipoAccesorio, anclas: Record<"cabeza" | "ojos" | "cuello", Punto> = ANCLAS_VESTIDOR,
-  cuadro: { ancho: number; alto: number } = CUADRO_VESTIDOR, factor = 1, pieza?: string): CajaPorcentaje {
+  cuadro: { ancho: number; alto: number } = CUADRO_VESTIDOR, factor = 1, pieza?: string, modelo: ModeloGatito = "atigrado"): CajaPorcentaje {
   const { ancla, escala, punto } = ENCAJE[tipo];
-  const bajar = ENCAJE[tipo].bajar + ((pieza && esComplemento(pieza) && complementoDe(pieza)?.hundir) || 0);
+  const bajar = ENCAJE[tipo].bajar + hundirDe(tipo, pieza, modelo);
   const ancho = LAMINAS[tipo].celda.ancho * escala * factor;
   const alto = LAMINAS[tipo].celda.alto * escala * factor;
   const x = anclas[ancla].x - ancho * punto.x;
@@ -171,6 +190,18 @@ export function escalaEnCasa(modelo: ModeloGatito): number {
   return (distancia(sentado.cabeza, sentado.cuello) / distancia(grande.cabeza, grande.cuello)) * tamanoVestidor(modelo);
 }
 
+/**
+ * Tamaño de la cabeza en un cuadro frente al gatito sentado (por la distancia del lazo al collar): algunas animaciones
+ * lo dibujan más pequeño (el esmoquin al andar) y las piezas quedaban grandes. Se acota para que una cabeza girada, que
+ * acorta esa distancia, no las encoja de más.
+ */
+function tamanoDelCuadro(tabla: (typeof ANCLAS_POR_MODELO)["atigrado"], anclas: { cabeza: Punto | null; cuello: Punto | null } | undefined): number {
+  const sentado = tabla.sentado[0];
+  if (!anclas?.cabeza || !anclas.cuello || !sentado?.cabeza || !sentado.cuello) return 1;
+  const proporcion = distancia(anclas.cabeza, anclas.cuello) / distancia(sentado.cabeza, sentado.cuello);
+  return Math.min(1, Math.max(0.75, proporcion));
+}
+
 export type PiezaEnCuadro = { tipo: TipoAccesorio; pieza: string; caja: CajaPorcentaje; detras: boolean };
 
 /**
@@ -181,12 +212,12 @@ export type PiezaEnCuadro = { tipo: TipoAccesorio; pieza: string; caja: CajaPorc
 export function piezasEnCuadro(ropa: Puestas, animacion: AnimacionGato, cuadro: number, modelo: ModeloGatito = "atigrado"): PiezaEnCuadro[] {
   const tabla = ANCLAS_POR_MODELO[modelo] ?? ANCLAS_POR_MODELO.atigrado;
   const anclas = tabla[animacion][cuadro] ?? tabla[animacion][0];
-  const factor = escalaEnCasa(modelo);
+  const factor = escalaEnCasa(modelo) * tamanoDelCuadro(tabla, anclas);
   return ORDEN_DE_DIBUJO.flatMap((tipo): PiezaEnCuadro[] => {
     const pieza = ropa[tipo];
     const punto = anclas?.[ENCAJE[tipo].ancla];
     if (!pieza || !punto) return [];
-    const caja = cajaSobreElGatito(tipo, { cabeza: punto, ojos: punto, cuello: punto }, { ancho: CUADRO_GATO, alto: CUADRO_GATO }, factor, pieza);
+    const caja = cajaSobreElGatito(tipo, { cabeza: punto, ojos: punto, cuello: punto }, { ancho: CUADRO_GATO, alto: CUADRO_GATO }, factor, pieza, modelo);
     return [{ tipo, pieza, caja, detras: DETRAS.includes(tipo) }];
   });
 }

@@ -78,7 +78,7 @@ export function VestidorGatito({ nombre, mundo, variante, ropa: inicial, reduceM
     return pieza ? [{ tipo, pieza }] : [];
   });
   const pintarPuesta = ({ tipo, pieza }: { tipo: TipoAccesorio; pieza: string }) =>
-    <PiezaAccesorio key={tipo} tipo={tipo} pieza={pieza} caja={cajaSobreElGatito(tipo, anclasVestidorDe(modeloDibujado(mundo)), undefined, tamanoVestidor(modeloDibujado(mundo)), pieza)} className="casa-vestidor-puesta" />;
+    <PiezaAccesorio key={tipo} tipo={tipo} pieza={pieza} caja={cajaSobreElGatito(tipo, anclasVestidorDe(modeloDibujado(mundo)), undefined, tamanoVestidor(modeloDibujado(mundo)), pieza, modeloDibujado(mundo))} className="casa-vestidor-puesta" />;
   const piezas = ACCESORIOS[tipoElegido] as readonly string[];
   const movimiento = reaccion && !reduceMotion ? ` is-${reaccion.como}` : "";
 

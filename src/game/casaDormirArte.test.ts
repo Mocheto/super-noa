@@ -19,3 +19,9 @@ test("la mantita toma el color del collar y conserva ribete, pliegues y contorno
   assert.deepEqual(contorno, [0x2f, 0x1d, 0x33]);
   assert.deepEqual(blanco, [255, 255, 255]);
 });
+
+test("las puntas violetas de los modelos nuevos no se tiñen como la mantita", () => {
+  const pixeles = new Uint8ClampedArray([0xa2, 0x1c, 0xaf, 255]);
+  teñirMantita(pixeles, [0x3d, 0x8b, 0xe0]);
+  assert.deepEqual([...pixeles], [0xa2, 0x1c, 0xaf, 255]);
+});

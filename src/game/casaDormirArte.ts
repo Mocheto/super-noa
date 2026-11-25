@@ -3,7 +3,7 @@
  * va en la bandeja. El gatito arropado tiene su pose propia con la mantita en violeta clave, que se tiñe del color de su
  * collar conservando el ribete claro, los pliegues oscuros y el contorno.
  */
-import { PALETAS_GATITOS, recolorear, tablaDeColores, type Rgb, type VarianteGatito } from "./casaGatoArte.ts";
+import { CLAVES_GATO, MARCAS_GATITOS, PALETAS_GATITOS, recolorear, tablaDeColores, type Rgb, type VarianteGatito } from "./casaGatoArte.ts";
 
 export const HOJA_MANTITA = "./assets/sprites/casa-mantita-v1.webp";
 /**
@@ -44,8 +44,11 @@ const esVioleta = ([h, s, v]: [number, number, number]) => h >= 255 && h <= 315 
  */
 export function teñirMantita(pixeles: Uint8ClampedArray, collar: Rgb): void {
   const [tono, saturacion, brillo] = hsv(collar);
+  const [pr, pg, pb] = CLAVES_GATO.puntas;
   for (let i = 0; i < pixeles.length; i += 4) {
     if (pixeles[i + 3] === 0) continue;
+    // Las puntas de los modelos melena y nube también son violetas, pero son del gatito, no de la mantita.
+    if (pixeles[i] === pr && pixeles[i + 1] === pg && pixeles[i + 2] === pb) continue;
     const color = hsv([pixeles[i], pixeles[i + 1], pixeles[i + 2]]);
     if (!esVioleta(color)) continue;
     const [r, g, b] = rgb(tono, Math.min(1, color[1] * saturacion), Math.min(1, color[2] * Math.max(brillo, 0.55)));
@@ -79,7 +82,7 @@ export function arropadoDe(mundo: number, variante: VarianteGatito): Promise<str
     // Primero la mantita (con el gatito aún en colores clave, que no son violetas) y luego la paleta del gatito, que
     // puede tener tonos lilas que la mantita no debe tocar.
     teñirMantita(datos.data, paleta.collar);
-    recolorear(datos.data, tablaDeColores(paleta, variante));
+    recolorear(datos.data, tablaDeColores(paleta, variante, MARCAS_GATITOS[mundo]));
     contexto.putImageData(datos, 0, 0);
     return new Promise<string>((resolver) => lienzo.toBlob((blob) => resolver(blob ? URL.createObjectURL(blob) : lienzo.toDataURL())));
   }).catch(() => HOJA_ARROPADO);

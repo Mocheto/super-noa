@@ -10,7 +10,8 @@ Decisiones de las que sale:
 
 ## Estado
 
-- **Pendiente:** generar las tres láminas de referencia. Con ellas se monta la prueba de parecido, en la que cada gatito sale junto a su dibujo del mundo, y se ajustan modelos y marcas antes de pedir las trece animaciones de cada uno.
+- **Hecho (25-11-2026):** las tres referencias están generadas (originales en `../super-noa-arte-original/casa-modelos-v1/`) y recortadas con `prototypes/tools/casa-modelos-recorte.py` en `sprites/gato-casa-referencias-v1.webp`: una fila de cuatro cuadros de 160 × 160 con el atigrado, el esmoquin, la melena y la nube. La prueba de parecido (`?prueba=casa&paletas`, en desarrollo) las pinta con la paleta y las marcas de cada gatito, junto a su dibujo del mundo.
+- **Pendiente:** darlas por buenas con la persona usuaria y, después, las trece animaciones, el arropado y el gatito grande del vestidor de cada modelo.
 
 ## Cómo funciona
 

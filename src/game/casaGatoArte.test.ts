@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
-import { ANIMACIONES_GATO, CLAVES_GATO, COLUMNAS_GATO, cuadroDe, FILAS_GATO, LAZO_DORADO, MODELO_DE_GATITO, MODELOS_GATITO, PALETAS_GATITOS, recolorear, tablaDeColores } from "./casaGatoArte.ts";
+import { ANIMACIONES_GATO, CLAVES_GATO, COLUMNAS_GATO, cuadroDe, FILAS_GATO, HOJA_REFERENCIAS, LAZO_DORADO, MARCAS_GATITOS, MODELO_DE_GATITO, MODELOS_GATITO, PALETAS_GATITOS, recolorear, tablaDeColores } from "./casaGatoArte.ts";
 import { MUNDOS_CASA } from "./casaRescate.ts";
 
 const asset = (path: string) => existsSync(new URL(`../../public/assets/${path}`, import.meta.url));
@@ -52,4 +52,12 @@ test("los diecisiete gatitos tienen paleta y no hay dos iguales", () => {
 test("cada gatito de la casa tiene modelo y cada modelo tiene gatitos", () => {
   for (const mundo of MUNDOS_CASA) assert.ok(MODELO_DE_GATITO[mundo], `al gatito del mundo ${mundo} le falta modelo`);
   for (const modelo of MODELOS_GATITO) assert.ok(Object.values(MODELO_DE_GATITO).includes(modelo), `nadie usa el modelo ${modelo}`);
+});
+
+test("las marcas de puntas y manchas se pintan con su color o, si el gatito no las tiene, del color del pelo", () => {
+  const pixel = (rgb: readonly number[]) => new Uint8ClampedArray([...rgb, 255]);
+  const perla = tablaDeColores(PALETAS_GATITOS[8], { sucio: false, mejorAmigo: false }, MARCAS_GATITOS[8]);
+  assert.deepEqual([...recolorear(pixel(CLAVES_GATO.puntas), perla)], [...MARCAS_GATITOS[8].puntas!, 255]);
+  assert.deepEqual([...recolorear(pixel(CLAVES_GATO.manchas), perla)], [...PALETAS_GATITOS[8].pelo, 255]);
+  assert.ok(existsSync(`public/${HOJA_REFERENCIAS.slice(2)}`), "falta la lámina de referencias");
 });

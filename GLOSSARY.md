@@ -159,6 +159,10 @@ _Avoid_: Gato base (era el único modelo), raza, cuerpo
 Dibujo del pelo de un gatito de la casa, aparte de sus colores: rayas, esmoquin, puntas o manchas de nube. Son fijas: cada gatito tiene las de su dibujo del mundo.
 _Avoid_: Manchas (a secas), patrón, estampado
 
+**Complemento**:
+Prenda fija que trae un gatito de la casa de su mundo, como la gorra de revisor de Vía o las gafas de Chispa; cada gatito tiene uno. No es un accesorio: no sale del armario ni se quita, y solo se esconde mientras lleva un accesorio en su mismo sitio.
+_Avoid_: Accesorio (son los del armario), pañuelo (a secas)
+
 **Estancia**:
 Cada sitio de la casa por el que andan los gatitos: la habitación y el jardín. Cada gatito en casa está en una de las dos.
 _Avoid_: Sala, cuarto, nivel

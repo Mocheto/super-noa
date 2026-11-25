@@ -9,7 +9,8 @@ export default defineConfig({
     outDir: "dist-pages",
     emptyOutDir: true,
     rollupOptions: {
-      input: resolve(process.cwd(), "index.html"),
+      // `revision.html`: revisión de alias del tablón para la persona adulta; no se enlaza desde el juego.
+      input: { main: resolve(process.cwd(), "index.html"), revision: resolve(process.cwd(), "revision.html") },
     },
   },
 });

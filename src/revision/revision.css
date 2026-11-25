@@ -1,0 +1,81 @@
+/* Página de revisión de alias: para la persona adulta, letra del sistema y botones de 44 px para el móvil. */
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.45;
+  background: #f7f1e6;
+  color: #2c1d3a;
+}
+
+body { margin: 0; }
+
+.revision {
+  box-sizing: border-box;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) 2rem max(1rem, env(safe-area-inset-left));
+}
+
+.revision h1 { font-size: 1.4rem; margin: 0.5rem 0; }
+.revision-explicacion, .revision-ayuda { opacity: 0.8; }
+.revision-ayuda { font-size: 0.9rem; }
+
+.revision-clave { display: grid; gap: 0.5rem; }
+.revision-clave label { font-weight: 600; }
+.revision-clave input {
+  min-height: 44px;
+  font: inherit;
+  padding: 0 0.75rem;
+  border: 1px solid #c9b79c;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+}
+
+.revision-boton, .revision-pestana {
+  min-height: 44px;
+  padding: 0 1rem;
+  font: inherit;
+  border: 1px solid #c9b79c;
+  border-radius: 8px;
+  background: #fff;
+  color: #2c1d3a;
+  cursor: pointer;
+}
+.revision-boton:disabled { opacity: 0.5; cursor: default; }
+.revision-boton-principal, .revision-boton-approve { background: #3f7d3a; border-color: #3f7d3a; color: #fff; }
+.revision-boton-reject, .revision-boton-hide { background: #a2392f; border-color: #a2392f; color: #fff; }
+
+.revision-pestanas { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0 0.5rem; }
+.revision-pestana[aria-pressed="true"] { background: #4b2864; border-color: #4b2864; color: #fff; }
+
+.revision-barra { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+
+.revision-aviso { padding: 0.75rem 1rem; border-radius: 8px; font-weight: 600; }
+.revision-aviso-error { background: #f8d7d3; color: #6d1a12; }
+.revision-aviso-hecho { background: #d9efd5; color: #1f4a1b; }
+
+.revision-lista { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.75rem; }
+.revision-ficha {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e0d2bb;
+  border-radius: 10px;
+  background: #fffdf8;
+}
+.revision-alias { font-size: 1.15rem; overflow-wrap: anywhere; }
+.revision-acciones { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.revision-acciones .revision-boton { flex: 1 1 8rem; }
+
+.revision-olvidar { margin-top: 2rem; }
+
+/* Al final, para ganar a los colores claros de arriba; los botones de color se quedan como están. */
+@media (prefers-color-scheme: dark) {
+  :root { background: #1d1428; color: #f3eadb; }
+  .revision-ficha, .revision-clave input { background: #2c2040; border-color: #4f3d68; }
+  .revision-boton, .revision-pestana { background: #3a2b52; color: #f3eadb; border-color: #5b4878; }
+  .revision-boton-principal, .revision-boton-approve { background: #3f7d3a; border-color: #3f7d3a; color: #fff; }
+  .revision-boton-reject, .revision-boton-hide { background: #a2392f; border-color: #a2392f; color: #fff; }
+  .revision-pestana[aria-pressed="true"] { background: #7a4aa0; border-color: #7a4aa0; color: #fff; }
+}

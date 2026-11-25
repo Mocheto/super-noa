@@ -3,8 +3,8 @@ import { readStorage, writeStorage } from "./storage.ts";
 import { campaignLevels } from "./routes.ts";
 import { lifetimeApples, normalizeProgressDate, validProgressDate } from "./progress.ts";
 import { t } from "../textos/index.ts";
+import { RANKING_URL } from "./rankingServidor.ts";
 
-const RANKING_URL = "https://rankings.moche-home.es";
 const DEVICE_KEY = "super-noa-ranking-device-v1";
 export const rankingConnectionMessage = t("adultos.ranking.sin-conexion");
 

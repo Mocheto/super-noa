@@ -11,13 +11,13 @@ Decisiones de las que sale:
 ## Estado
 
 - **Hecho (25-11-2026):** las tres referencias están generadas (originales en `../super-noa-arte-original/casa-modelos-v1/`) y recortadas con `prototypes/tools/casa-modelos-recorte.py` en `sprites/gato-casa-referencias-v1.webp`: una fila de cuatro cuadros de 160 × 160 con el atigrado, el esmoquin, la melena y la nube. La prueba de parecido (`?prueba=casa&paletas`, en desarrollo) las pinta con la paleta y las marcas de cada gatito, junto a su dibujo del mundo.
-- **Pendiente:** darlas por buenas con la persona usuaria y, después, las trece animaciones, el arropado y el gatito grande del vestidor de cada modelo.
+- **Dadas por buenas** con la persona usuaria (25-11-2026), con un collar fino que se queda y la cola de nube blanca con la punta de color. **Pendiente:** las trece animaciones, el arropado y el gatito grande del vestidor de cada modelo.
 
 ## Cómo funciona
 
 - **Cada referencia** es una sola pose grande: el gatito sentado, de lado en tres cuartos y mirando a la derecha, con las mismas proporciones y el mismo tamaño que el atigrado. Así las trece animaciones de cada modelo encajan después en la misma rejilla de 4 × 13 cuadros de 160 px, con los pies en la misma línea.
 - **Colores clave:** los mismos del gato base, con dos cambios:
-  - en vez del pañuelo, una **franja de collar** fina y lisa en las claves del collar (sirve para que las anclas encuentren el cuello; el juego la borra);
+  - en vez del pañuelo, una **franja de collar** fina y lisa en las claves del collar (sirve para que las anclas encuentren el cuello y se queda como collar fino del color del collar de cada gatito, con el complemento encima);
   - dos claves nuevas: **puntas** `#A21CAF` y **manchas** `#00E5FF`.
 - **El lazo y el barro** van como en el gato base: el lazo entre las orejas y dos manchitas de barro.
 - **Ningún complemento:** los complementos son piezas aparte, en otra lámina.

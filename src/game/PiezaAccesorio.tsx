@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { cssAssetUrl } from "./assets";
-import { fondoDePieza, LAMINAS, PIEZAS_MAGICAS, type CajaPorcentaje } from "./casaVestidorArte";
+import { fondoDePieza, laminaDePieza, PIEZAS_MAGICAS, type CajaPorcentaje } from "./casaVestidorArte";
 import type { TipoAccesorio } from "./casaRopa";
 
 type Props = {
@@ -12,12 +12,12 @@ type Props = {
 };
 
 /**
- * Una pieza del armario dibujada de su lámina. Las alas son dos mitades, una por ala, para que cada una aletee desde su
+ * Una pieza del armario (o el complemento de un gatito) dibujada de su lámina. Las alas son dos mitades, una por ala, para que cada una aletee desde su
  * hombro; las piezas mágicas (capa de Navidad, alas de unicornio) destellan. Las animaciones van en `casa.css` y se
  * paran con «movimiento tranquilo».
  */
 export function PiezaAccesorio({ tipo, pieza, caja, className = "" }: Props) {
-  const imagen = cssAssetUrl(LAMINAS[tipo].imagen);
+  const imagen = cssAssetUrl(laminaDePieza(tipo, pieza).imagen);
   const sitio: CSSProperties = caja ? { left: `${caja.left}%`, top: `${caja.top}%`, width: `${caja.width}%`, height: `${caja.height}%` } : {};
   const clase = `casa-pieza is-${tipo}${PIEZAS_MAGICAS.includes(pieza) ? " is-magica" : ""} ${className}`.trim();
   if (tipo === "alas") {

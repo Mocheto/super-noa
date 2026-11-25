@@ -4,7 +4,12 @@ Dossier de los diecisiete complementos: cada gatito de la casa lleva una prenda 
 
 ## Estado
 
-- **Pendiente:** generar las tres láminas.
+- **Hecho (25-11-2026):** las tres láminas están en `../super-noa-arte-original/casa-complementos-v1/` y se recortan con `uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-complementos-recorte.py ../super-noa-arte-original/casa-complementos-v1`, que deja `sprites/casa-complementos-v1.webp` (quince celdas de 200 × 170 en fila) y `sprites/casa-complementos-capas-v1.webp` (dos celdas de 260 × 240).
+- **Cambios al recortar:**
+  - Collares y bufandas salieron como aros vistos desde arriba: el recorte los abre por código (`abrir_aro`).
+  - Encima de las capas quedaron dos manchas borrosas: se toman solo las dos piezas más grandes.
+- **Chispa:** su complemento salió como gorro de aviador con las gafas en la frente, así que va en la cabeza, en el sitio del sombrero, y no en los ojos. Quedan 5 en la cabeza, 10 al cuello y 2 a la espalda.
+- **En el juego:** `src/game/casaComplementos.ts`. El pañuelo del atigrado se borra al pintar su hoja y toma el color de la barriga.
 
 ## Cómo funciona
 

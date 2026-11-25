@@ -17,6 +17,7 @@ import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, 
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
 import { piezasEnCuadro } from "./casaVestidorArte";
+import { conComplemento } from "./casaComplementos";
 import { PiezaAccesorio } from "./PiezaAccesorio";
 import { arropadosDe, arropar, puedeDormir, todosArropados } from "./casaDormir";
 import { arropadoDe, CUADROS_ARROPADO, HOJA_MANTITA } from "./casaDormirArte";
@@ -1353,7 +1354,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               <span className="casa-gatito-dibujo" style={{ transform: mira < 0 ? "scaleX(-1)" : undefined }}>
                 {/* Sus accesorios, en su sitio en este cuadro (alas y capa detrás de él); arropado, no se ven. */}
                 {(() => {
-                  const piezas = tapado ? [] : piezasEnCuadro(ropaDe(casa, mundo), animacion, cuadro, modeloDibujado(mundo));
+                  const piezas = tapado ? [] : piezasEnCuadro(conComplemento(ropaDe(casa, mundo), mundo), animacion, cuadro, modeloDibujado(mundo));
                   const pintar = ({ tipo, pieza, caja }: (typeof piezas)[number]) => <PiezaAccesorio key={tipo} tipo={tipo} pieza={pieza} caja={caja} />;
                   return <>{piezas.filter((pieza) => pieza.detras).map(pintar)}<b className="casa-gatito-cuerpo" style={dibujo} />{piezas.filter((pieza) => !pieza.detras).map(pintar)}</>;
                 })()}

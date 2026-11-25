@@ -147,7 +147,12 @@ export function hojaPintada(src: string, mundo: number, variante: VarianteGatito
     if (!contexto) return src;
     contexto.drawImage(imagen, 0, 0);
     const datos = contexto.getImageData(0, 0, lienzo.width, lienzo.height);
-    recolorear(datos.data, tablaDeColores(PALETAS_GATITOS[mundo] ?? PALETAS_GATITOS[1], variante, MARCAS_GATITOS[mundo]));
+    const paleta = PALETAS_GATITOS[mundo] ?? PALETAS_GATITOS[1];
+    const tabla = tablaDeColores(paleta, variante, MARCAS_GATITOS[mundo]);
+    // El pañuelo del atigrado se borra: en su sitio va el complemento de cada gatito (los modelos nuevos llevan solo
+    // un collar fino, que se queda). Debajo del pañuelo está el pecho, así que toma el color de la barriga.
+    if (src === HOJA_GATO) for (const clave of [CLAVES_GATO.collar, CLAVES_GATO.collarSombra]) tabla.set(claveRgb(clave), paleta.barriga);
+    recolorear(datos.data, tabla);
     contexto.putImageData(datos, 0, 0);
     return new Promise<string>((resolver) => lienzo.toBlob((blob) => resolver(blob ? URL.createObjectURL(blob) : lienzo.toDataURL())));
   }).catch(() => src);

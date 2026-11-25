@@ -5,6 +5,7 @@ import { hojaPintada, modeloDibujado, type VarianteGatito } from "./casaGatoArte
 import { anclasVestidorDe, ARMARIO_ABIERTO, cajaSobreElGatito, DETRAS, FILA_DE_PIEZAS, FILAS_ARMARIO, FONDO_VESTIDOR, HOJA_VESTIDOR, HOJAS_VESTIDOR, LAMINAS, ORDEN_DE_DIBUJO, PIEZAS_POR_FILA } from "./casaVestidorArte";
 import { cssAssetUrl } from "./assets";
 import { PiezaAccesorio } from "./PiezaAccesorio";
+import { conComplemento } from "./casaComplementos";
 import { t, tClave } from "../textos/index.ts";
 import { Boton } from "../textos/Texto";
 
@@ -68,8 +69,10 @@ export function VestidorGatito({ nombre, mundo, variante, ropa: inicial, reduceM
     onToque?.(puesta);
   };
 
+  // Lo que lleva, con su complemento donde no hay accesorio (lo tapa el que se ponga en su sitio).
+  const conSuComplemento = conComplemento(ropa, mundo);
   const puestas = ORDEN_DE_DIBUJO.flatMap((tipo) => {
-    const pieza = ropa[tipo];
+    const pieza = conSuComplemento[tipo];
     return pieza ? [{ tipo, pieza }] : [];
   });
   const pintarPuesta = ({ tipo, pieza }: { tipo: TipoAccesorio; pieza: string }) =>

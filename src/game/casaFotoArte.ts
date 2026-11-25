@@ -10,7 +10,8 @@ import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte.ts";
 import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito, modeloDibujado } from "./casaGatoArte.ts";
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
-import { CAPA_VISIBLE, columnaDe, LAMINAS, piezasEnCuadro, type PiezaEnCuadro } from "./casaVestidorArte.ts";
+import { CAPA_VISIBLE, laminaDePieza, piezasEnCuadro, type PiezaEnCuadro } from "./casaVestidorArte.ts";
+import { conComplemento } from "./casaComplementos.ts";
 import { CELDAS_MACETEROS, HOJA_MACETEROS, JARDIN, LUCIERNAGAS, luciernagaEn } from "./casaJardin.ts";
 
 /** Fila de los pies dentro del cuadro del gato (la misma que en la casa). */
@@ -134,15 +135,15 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     const hoja = await cargar(await hojaDeGatito(gatito.mundo, variante));
     const { fila } = ANIMACIONES_GATO[gatito.animacion];
     // Sus accesorios, en su sitio de ese cuadro (como en la casa): alas y capa detrás del gatito, lo demás delante.
-    const piezas = gatito.ropa ? piezasEnCuadro(gatito.ropa, gatito.animacion, gatito.cuadro, modeloDibujado(gatito.mundo)) : [];
+    const piezas = piezasEnCuadro(conComplemento(gatito.ropa ?? {}, gatito.mundo), gatito.animacion, gatito.cuadro, modeloDibujado(gatito.mundo));
     const pintarPieza = async ({ tipo, pieza, caja: enCuadro }: PiezaEnCuadro) => {
-      const lamina = LAMINAS[tipo];
+      const lamina = laminaDePieza(tipo, pieza);
       const imagen = await cargar(lamina.imagen);
       const ancho = caja.ancho * enCuadro.width / 100;
       const izquierda = gatito.mira < 0 ? caja.x + caja.ancho * (1 - (enCuadro.left + enCuadro.width) / 100) : caja.x + caja.ancho * enCuadro.left / 100;
       // La capa, cortada a la altura de las patas como en la escena.
       const parte = tipo === "capa" ? CAPA_VISIBLE : 1;
-      pintar(imagen, { x: columnaDe(tipo, pieza) * lamina.celda.ancho, y: lamina.fila * lamina.celda.alto, ancho: lamina.celda.ancho, alto: lamina.celda.alto * parte },
+      pintar(imagen, { x: lamina.columna * lamina.celda.ancho, y: lamina.fila * lamina.celda.alto, ancho: lamina.celda.ancho, alto: lamina.celda.alto * parte },
         { x: izquierda, y: caja.y + caja.alto * enCuadro.top / 100, ancho, alto: caja.alto * enCuadro.height / 100 * parte }, gatito.mira < 0);
     };
     for (const pieza of piezas) if (pieza.detras) await pintarPieza(pieza);

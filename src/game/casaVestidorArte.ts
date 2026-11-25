@@ -5,7 +5,8 @@
  */
 import { ANCLAS_POR_MODELO } from "./casaGatoAnclas.ts";
 import { CUADRO_GATO, type AnimacionGato, type ModeloGatito } from "./casaGatoArte.ts";
-import { ACCESORIOS, type Accesorio, type Ropa, type TipoAccesorio } from "./casaRopa.ts";
+import { ACCESORIOS, type TipoAccesorio } from "./casaRopa.ts";
+import { complementoDe, COMPLEMENTOS, esComplemento, HOJA_COMPLEMENTOS, HOJA_COMPLEMENTOS_CAPAS, type Puestas } from "./casaComplementos.ts";
 
 export const FONDO_VESTIDOR = "./assets/worlds/casa-vestidor-v1.webp";
 export const ARMARIO_ABIERTO = "./assets/sprites/casa-armario-abierto-v1.webp";
@@ -54,6 +55,20 @@ export const PIEZAS_MAGICAS: readonly string[] = ["navidad", "unicornio"];
 
 /** Columna de una pieza en la lámina de su tipo. */
 export const columnaDe = (tipo: TipoAccesorio, pieza: string) => (ACCESORIOS[tipo] as readonly string[]).indexOf(pieza);
+
+const columnasComplementos = (capas: boolean) =>
+  1 + Math.max(...Object.values(COMPLEMENTOS).filter((c) => (c.tipo === "capa") === capas).map((c) => c.columna));
+
+/**
+ * La lámina de una pieza puesta y su columna: la del armario para los accesorios y la de los complementos para el
+ * complemento de cada gatito (con celdas del mismo tamaño que las de su tipo, así encaja igual sobre las anclas).
+ */
+export function laminaDePieza(tipo: TipoAccesorio, pieza: string): (typeof LAMINAS)[TipoAccesorio] & { columna: number } {
+  const complemento = esComplemento(pieza) ? complementoDe(pieza) : undefined;
+  if (!complemento) return { ...LAMINAS[tipo], columna: columnaDe(tipo, pieza) };
+  const capa = complemento.tipo === "capa";
+  return { imagen: capa ? HOJA_COMPLEMENTOS_CAPAS : HOJA_COMPLEMENTOS, celda: LAMINAS[complemento.tipo].celda, columnas: columnasComplementos(capa), filas: 1, fila: 0, columna: complemento.columna };
+}
 
 type Punto = { x: number; y: number };
 /** Anclas del gatito grande en su cuadro (iguales en los dos: la misma postura). */
@@ -109,8 +124,7 @@ export function cajaSobreElGatito(tipo: TipoAccesorio, anclas: Record<"cabeza" |
  * elemento de media celda que enseña solo esa mitad (cada ala del par, que aletea por su lado).
  */
 export function fondoDePieza(tipo: TipoAccesorio, pieza: string, mitad?: "izquierda" | "derecha"): { backgroundSize: string; backgroundPosition: string } {
-  const { columnas, filas, fila } = LAMINAS[tipo];
-  const columna = columnaDe(tipo, pieza as Accesorio);
+  const { columnas, filas, fila, columna } = laminaDePieza(tipo, pieza);
   const y = filas > 1 ? `${(fila / (filas - 1)) * 100}%` : "0%";
   if (!mitad) return { backgroundSize: `${columnas * 100}% ${filas * 100}%`, backgroundPosition: `${columnas > 1 ? (columna / (columnas - 1)) * 100 : 0}% ${y}` };
   const medias = columnas * 2;
@@ -156,7 +170,7 @@ export type PiezaEnCuadro = { tipo: TipoAccesorio; pieza: string; caja: CajaPorc
  * de dibujo (alas y capa, detrás del gatito; luego bufanda, gafas y sombrero). Las que no tienen sitio en ese cuadro
  * (gafas de espaldas, bufanda o capa dormido) no salen.
  */
-export function piezasEnCuadro(ropa: Ropa, animacion: AnimacionGato, cuadro: number, modelo: ModeloGatito = "atigrado"): PiezaEnCuadro[] {
+export function piezasEnCuadro(ropa: Puestas, animacion: AnimacionGato, cuadro: number, modelo: ModeloGatito = "atigrado"): PiezaEnCuadro[] {
   const tabla = ANCLAS_POR_MODELO[modelo] ?? ANCLAS_POR_MODELO.atigrado;
   const anclas = tabla[animacion][cuadro] ?? tabla[animacion][0];
   const factor = escalaEnCasa(modelo);

@@ -292,7 +292,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
       </div>
       </div>
       <p className="map-location" aria-live="polite">{moving ? <Texto clave="mapa.ubicacion.enCamino.rotulo" /> : <><Texto clave="mapa.ubicacion.aqui.rotulo" /> <strong>{noaLocation.name}</strong> <span aria-label={t("mapa.mundo.progreso.oculto", { n: summaries[noaWorld].complete, total: summaries[noaWorld].total })}>{puntos(summaries[noaWorld].complete, summaries[noaWorld].total)}</span></>}</p>
-      {newDetours.length > 0 && <p role="status"><Texto clave="mapa.caminoNuevo.rotulo" /> {discoveredDetours.filter((entry) => newDetours.includes(entry.id)).map((entry) => entry.title).join(", ")}</p>}
+      {newDetours.length > 0 && <p className="map-camino-nuevo" role="status"><Texto clave="mapa.caminoNuevo.rotulo" /> {discoveredDetours.filter((entry) => newDetours.includes(entry.id)).map((entry) => entry.title).join(", ")}</p>}
 
       {selected && (
         <div className="modal-backdrop map-detail-backdrop">

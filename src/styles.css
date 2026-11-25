@@ -243,7 +243,6 @@ h1 span {
 .text-button { border: 0; color: #fff4da; background: none; text-decoration: underline; text-underline-offset: 5px; cursor: pointer; }
 .home-footer .pixel-icon { --icon-size: .95em; margin-right: 4px; }
 
-.map-screen { min-height: 100vh; padding: clamp(18px, 3vw, 42px); }
 .lazy-loading { max-width: 1500px; margin: 28px auto; border: 4px solid #ead4f4; padding: 24px; color: #fff8e9; background: #39234d; text-align: center; }
 .lazy-loading-game { width: min(960px, 100%); min-height: 240px; display: grid; place-items: center; margin: 0 auto; }
 
@@ -803,7 +802,6 @@ dialog.modal-backdrop::backdrop { background: transparent; }
   .map-header .eyebrow { display: none; }
   .map-actions { justify-content: space-between; gap: 5px; width: 100%; }
   .apple-total, .album-button { padding: 8px; font-size: .68rem; }
-  .map-screen { padding: 16px; }
   .map-intro { font-size: .8rem; }
   .map-world-hero, .map-world-heading { min-height: 180px; }
   .map-world-heading { padding: 16px 55px 16px 16px; }

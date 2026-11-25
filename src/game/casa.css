@@ -182,9 +182,12 @@
 
 /* Decorar: el botón de la bandeja, los muebles (cada uno en su versión, de su lámina), las zonas que brillan al
    decorar y el destello al cambiar uno. */
-.casa-bandeja-modo { width: 44px; height: 44px; }
+/* Tamaño de los botones de modo (issue «Botones de la bandeja de la casa más grandes»): a 44 px se le quedaban pequeños
+   a Noa; en la tableta vertical, más grandes aún, y en el móvil apaisado, que no tiene alto, los 44 de siempre. */
+.casa-gatitos { --modo: 56px; }
+.casa-bandeja-modo { --control: var(--modo); width: var(--modo); height: var(--modo); font-size: calc(var(--modo) * .55); }
 /* Botones de modo (estrella, flor, marco, gato): de dos en dos. */
-.casa-bandeja-modos { display: grid; grid-template-columns: repeat(2, 44px); gap: 4px; justify-content: center; }
+.casa-bandeja-modos { display: grid; grid-template-columns: repeat(2, var(--modo)); gap: 6px; justify-content: center; }
 /* Decorando caben el botón y cinco versiones: en columna, de dos en dos; en el móvil vertical, en fila. */
 .casa-bandeja.is-decorar { display: grid; grid-template-columns: repeat(2, auto); place-items: center; }
 .casa-bandeja.is-decorar .casa-bandeja-modo { grid-column: 1 / -1; }
@@ -373,8 +376,10 @@
    botones de modo en una sola fila. */
 .casa-gatitos.is-vertical .casa-bandeja { align-items: center; }
 @media (min-width: 600px) {
-  .casa-gatitos.is-vertical .casa-bandeja-modos { grid-template-columns: repeat(4, 44px); }
+  .casa-gatitos.is-vertical { --modo: 72px; }
+  .casa-gatitos.is-vertical .casa-bandeja-modos { grid-template-columns: repeat(4, var(--modo)); gap: 10px; }
 }
+@media (max-height: 460px) { .casa-gatitos.is-lado { --modo: 44px; } }
 /* Bandeja al lado de la habitación (móvil apaisado): fuera de la vista, así no tapa la bañera ni nada. */
 .casa-gatitos.is-lado .casa-marco { display: flex; align-items: center; gap: 8px; }
 .casa-gatitos.is-lado .casa-bandeja { position: static; flex-shrink: 0; transform: none; }

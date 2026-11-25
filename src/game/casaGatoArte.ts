@@ -41,7 +41,11 @@ export type MarcasGatito = Partial<Record<ClaveMarca, Rgb>>;
 const paleta = (colores: Record<keyof PaletaGatito, string>): PaletaGatito =>
   Object.fromEntries(Object.entries(colores).map(([clave, valor]) => [clave, hex(valor)])) as PaletaGatito;
 
-/** Paleta de cada gatito de la v1, por número de mundo. */
+/**
+ * Paleta de cada gatito de la v1, por número de mundo. En el repaso con los modelos (decisión «Repaso de las diecisiete
+ * paletas con los modelos») Luna pasó a lila y lisa, Ámbar a melocotón, Chispa a naranja vivo, Estrella a rojo coral y
+ * Celeste a sombras lila, como sus dibujos.
+ */
 export const PALETAS_GATITOS: Readonly<Record<number, PaletaGatito>> = {
   1: paleta({ pelo: "#F2973A", peloClaro: "#FFC27A", peloOscuro: "#C76A1E", rayas: "#B4561A", barriga: "#FFE6C2", orejas: "#F7A1B5", ojos: "#3B82F6", collar: "#3D8BE0", collarSombra: "#2563A8" }),
   2: paleta({ pelo: "#4A4A5C", peloClaro: "#6B6B80", peloOscuro: "#2E2E3D", rayas: "#4A4A5C", barriga: "#8A8AA0", orejas: "#D99AC8", ojos: "#22C5C5", collar: "#8B5CF6", collarSombra: "#5B3BA8" }),
@@ -50,18 +54,18 @@ export const PALETAS_GATITOS: Readonly<Record<number, PaletaGatito>> = {
   // entre sí (los naranjas van de dorado a óxido, y cada uno lleva otro collar y otros ojos).
   4: paleta({ pelo: "#F2B544", peloClaro: "#FFD58A", peloOscuro: "#CC8A22", rayas: "#A8661A", barriga: "#FFF1D6", orejas: "#F7A1B5", ojos: "#7A4E2A", collar: "#8B5A2B", collarSombra: "#5E3C1C" }),
   5: paleta({ pelo: "#2B2B33", peloClaro: "#4A4A55", peloOscuro: "#17171C", rayas: "#2B2B33", barriga: "#FFFFFF", orejas: "#F7A1B5", ojos: "#3B82F6", collar: "#E2463F", collarSombra: "#A82A25" }),
-  6: paleta({ pelo: "#A8A4B8", peloClaro: "#C8C4D6", peloOscuro: "#7E7A92", rayas: "#94909F", barriga: "#EDEBF3", orejas: "#F2A9C4", ojos: "#7C5CC4", collar: "#8B3A62", collarSombra: "#5E2442" }),
+  6: paleta({ pelo: "#B4AAD4", peloClaro: "#D2CAEC", peloOscuro: "#8C82B0", rayas: "#B4AAD4", barriga: "#F0ECFA", orejas: "#F2A9C4", ojos: "#7C5CC4", collar: "#8B3A62", collarSombra: "#5E2442" }),
   7: paleta({ pelo: "#8EC8F0", peloClaro: "#C2E3FA", peloOscuro: "#5C9ED0", rayas: "#7AB6E6", barriga: "#EAF6FF", orejas: "#F7B6CC", ojos: "#2563EB", collar: "#F2C14E", collarSombra: "#C99A2E" }),
   8: paleta({ pelo: "#F3E6D2", peloClaro: "#FFF6E8", peloOscuro: "#D9C6AA", rayas: "#7FCFC2", barriga: "#FFFFFF", orejas: "#F7A9C0", ojos: "#2BB3A6", collar: "#F28CA0", collarSombra: "#C25E74" }),
-  9: paleta({ pelo: "#EE7A30", peloClaro: "#FFAD6E", peloOscuro: "#BF5418", rayas: "#9E4012", barriga: "#FFE2C0", orejas: "#F7A1B5", ojos: "#2FA38A", collar: "#4CA64C", collarSombra: "#2F7A2F" }),
-  10: paleta({ pelo: "#C9622A", peloClaro: "#E48A50", peloOscuro: "#94431A", rayas: "#6E2E10", barriga: "#FFD9B0", orejas: "#F2A0A8", ojos: "#22C5C5", collar: "#B07A3A", collarSombra: "#7A5226" }),
+  9: paleta({ pelo: "#F2944A", peloClaro: "#FFBE84", peloOscuro: "#C86A26", rayas: "#B05A1E", barriga: "#FFE2C0", orejas: "#F7A1B5", ojos: "#2FA38A", collar: "#4CA64C", collarSombra: "#2F7A2F" }),
+  10: paleta({ pelo: "#EC7A26", peloClaro: "#FFA65C", peloOscuro: "#B85618", rayas: "#9A4012", barriga: "#FFD9B0", orejas: "#F2A0A8", ojos: "#22C5C5", collar: "#B07A3A", collarSombra: "#7A5226" }),
   11: paleta({ pelo: "#A0673A", peloClaro: "#C98E5C", peloOscuro: "#6E4224", rayas: "#5A3418", barriga: "#FFFFFF", orejas: "#F7A1B5", ojos: "#7A4A22", collar: "#F28CB8", collarSombra: "#C25E8A" }),
   12: paleta({ pelo: "#FBF9FF", peloClaro: "#FFFFFF", peloOscuro: "#D6D2E4", rayas: "#E4E0EE", barriga: "#FFFFFF", orejas: "#F7A9C8", ojos: "#3B82F6", collar: "#A88BE0", collarSombra: "#7A5CB8" }),
-  13: paleta({ pelo: "#D9453A", peloClaro: "#F07A6E", peloOscuro: "#A82A22", rayas: "#D9453A", barriga: "#FFFFFF", orejas: "#F7A1B5", ojos: "#2FA34A", collar: "#3F8F4A", collarSombra: "#2A6634" }),
+  13: paleta({ pelo: "#E25A4C", peloClaro: "#F28A7E", peloOscuro: "#B0382C", rayas: "#D9453A", barriga: "#FFFFFF", orejas: "#F7A1B5", ojos: "#2FA34A", collar: "#3F8F4A", collarSombra: "#2A6634" }),
   14: paleta({ pelo: "#E9A85A", peloClaro: "#F7CC8C", peloOscuro: "#C2803A", rayas: "#A8692A", barriga: "#FFEFD6", orejas: "#F2A6A6", ojos: "#1E8078", collar: "#2BB3A6", collarSombra: "#1E8078" }),
   15: paleta({ pelo: "#262630", peloClaro: "#44444F", peloOscuro: "#121218", rayas: "#262630", barriga: "#F2F2F2", orejas: "#E89AB0", ojos: "#E0A030", collar: "#E8B93C", collarSombra: "#B5891E" }),
   16: paleta({ pelo: "#F6E6CC", peloClaro: "#FFF4E2", peloOscuro: "#DCC4A2", rayas: "#B9A0E0", barriga: "#FFFFFF", orejas: "#F7A1B5", ojos: "#5B5BD6", collar: "#4AA8E0", collarSombra: "#2C7AB0" }),
-  17: paleta({ pelo: "#FAF7FF", peloClaro: "#FFFFFF", peloOscuro: "#D8D2EC", rayas: "#FAF7FF", barriga: "#FFFFFF", orejas: "#F7A9D4", ojos: "#2A3F9E", collar: "#F2C14E", collarSombra: "#C99A2E" }),
+  17: paleta({ pelo: "#F1ECFF", peloClaro: "#FFFFFF", peloOscuro: "#C9BCEE", rayas: "#E2D8FA", barriga: "#FFFFFF", orejas: "#F7A9D4", ojos: "#2A3F9E", collar: "#F2C14E", collarSombra: "#C99A2E" }),
 };
 
 /**

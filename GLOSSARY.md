@@ -135,6 +135,10 @@ _Avoid_: Comida preferida, plato
 Pieza de la casa que se puede cambiar por otra versión al decorar (cama, alfombra, cuadro, planta y pared).
 _Avoid_: Objeto (son los de la bandeja), adorno
 
+**Habitación con tema**:
+La que sale al elegir la misma versión de cortinas, estantería y cojín: las tres son del mismo mundo del juego (dinosaurios, hielo, barcos o celeste).
+_Avoid_: Conjunto, pack
+
 **Armario**:
 Sitio de la casa adonde se lleva a un gatito, cogiéndolo con el dedo, para vestirlo. No es un mueble: no se decora.
 _Avoid_: Ropero, cómoda
@@ -144,7 +148,7 @@ Pantalla en la que Noa viste a un gatito: el gatito grande en el centro y el arm
 _Avoid_: Probador, tienda
 
 **Accesorio**:
-Prenda que lleva un gatito de la casa: un sombrero, unas gafas o una bufanda, como mucho uno de cada a la vez. Cada gatito conserva los suyos.
+Prenda que lleva un gatito de la casa: un sombrero, unas gafas, una bufanda, una capa o unas alas, como mucho una de cada tipo a la vez. Cada gatito conserva los suyos.
 _Avoid_: Ropa (a secas), disfraz, objeto (son los de la bandeja)
 
 **Estancia**:

@@ -2,5 +2,5 @@
 
 Todos los prompts que faltan por generar, **completos**: cada bloque se copia y se pega tal cual, sin juntar trozos. Se generan a mano, sin servicios de pago. Los ya generados siguen en sus dossiers.
 
-- [Modelos nuevos de los gatitos de la casa](casa-modelos-v1.md#animaciones-arropado-y-vestidor): siete láminas por modelo (animaciones, arropado y gatito grande del vestidor) para [esmoquin](casa-modelos-v1.md#esmoquin-1), [melena](casa-modelos-v1.md#melena-1) y [nube](casa-modelos-v1.md#nube-1).
+- [Complementos de los gatitos de la casa](casa-complementos-v1.md): tres láminas, [cabeza y ojos](casa-complementos-v1.md#1-cabeza-y-ojos), [cuello](casa-complementos-v1.md#2-cuello) y [espalda](casa-complementos-v1.md#3-espalda).
 - [Duelos de memoria](duelos-memoria-v1.md), opcionales: los dos fondos, [aurora-fondo](duelos-memoria-v1.md#fondo-aurora-fondo) y [selva-fondo](duelos-memoria-v1.md#fondo-selva-fondo). Hoy se dibujan por código.

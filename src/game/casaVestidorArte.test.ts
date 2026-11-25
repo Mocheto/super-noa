@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ANCLAS_VESTIDOR, BALDAS, cajaSobreElGatito, CUADRO_VESTIDOR, ESCALA_EN_CASA, fondoDePieza, piezasEnCuadro } from "./casaVestidorArte.ts";
+import { existsSync } from "node:fs";
+import { ANCLAS_VESTIDOR, cajaSobreElGatito, CUADRO_VESTIDOR, ESCALA_EN_CASA, FILAS_ARMARIO, fondoDePieza, LAMINAS, piezasEnCuadro, PIEZAS_POR_FILA } from "./casaVestidorArte.ts";
+import { ACCESORIOS, TIPOS_ACCESORIO } from "./casaRopa.ts";
 import { normalizeFotos } from "./casaFoto.ts";
 import { HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion.ts";
 
@@ -16,18 +18,38 @@ test("en el gatito grande, el sombrero va encima de la cabeza, las gafas en los 
   assert.ok(Math.abs(bufanda.top / 100 * CUADRO_VESTIDOR.alto - (ANCLAS_VESTIDOR.cuello.y - 14)) < 1);
 });
 
-test("cada pieza sale de su celda de la lámina de 4 × 3", () => {
-  assert.equal(fondoDePieza("sombrero", "paja"), "0% 0%");
-  assert.equal(fondoDePieza("gafas", "estrella"), `${(1 / 3) * 100}% 50%`);
-  assert.equal(fondoDePieza("bufanda", "flecos"), "100% 100%");
+test("cada pieza sale de su celda: sombreros, gafas y bufandas en la lámina de 6 × 3; capas y alas, en la suya", () => {
+  assert.deepEqual(fondoDePieza("sombrero", "paja"), { backgroundSize: "600% 300%", backgroundPosition: "0% 0%" });
+  assert.deepEqual(fondoDePieza("gafas", "estrella"), { backgroundSize: "600% 300%", backgroundPosition: "20% 50%" });
+  assert.deepEqual(fondoDePieza("bufanda", "manzanas"), { backgroundSize: "600% 300%", backgroundPosition: "100% 100%" });
+  assert.deepEqual(fondoDePieza("capa", "navidad"), { backgroundSize: "600% 100%", backgroundPosition: "40% 0%" });
+  // Cada ala, la mitad de su celda: la izquierda y la derecha del par.
+  assert.deepEqual(fondoDePieza("alas", "mariposa", "izquierda"), { backgroundSize: "1200% 100%", backgroundPosition: "0% 0%" });
+  assert.deepEqual(fondoDePieza("alas", "unicornio", "derecha"), { backgroundSize: "1200% 100%", backgroundPosition: "100% 0%" });
 });
 
-test("las baldas van de arriba abajo sin pisarse, con el apoyo dentro de cada una", () => {
-  const baldas = [BALDAS.sombrero, BALDAS.gafas, BALDAS.bufanda];
-  baldas.forEach((balda, i) => {
-    assert.ok(balda.arriba < balda.apoyo && balda.apoyo <= balda.abajo);
-    if (i) assert.ok(baldas[i - 1].abajo <= balda.arriba);
+test("seis piezas de cada tipo, cada lámina existe y caben en las tres filas del armario, dos por fila", () => {
+  for (const tipo of TIPOS_ACCESORIO) {
+    assert.equal(ACCESORIOS[tipo].length, 6, tipo);
+    assert.ok(existsSync(new URL(`../../public/${LAMINAS[tipo].imagen.replace("./", "")}`, import.meta.url)), tipo);
+  }
+  assert.equal(FILAS_ARMARIO.length * PIEZAS_POR_FILA, 6);
+  const todas = TIPOS_ACCESORIO.flatMap((tipo) => [...ACCESORIOS[tipo]]);
+  assert.equal(new Set(todas).size, todas.length, "los identificadores no se repiten entre tipos");
+  FILAS_ARMARIO.forEach((fila, i) => {
+    assert.ok(fila.arriba < fila.apoyo && fila.apoyo <= fila.abajo);
+    if (i) assert.ok(FILAS_ARMARIO[i - 1].abajo <= fila.arriba);
   });
+});
+
+test("la capa y las alas van detrás del gatito, colgando del cuello; se dibujan antes que él", () => {
+  const capa = cajaSobreElGatito("capa");
+  assert.ok(capa.top / 100 * CUADRO_VESTIDOR.alto < ANCLAS_VESTIDOR.cuello.y, "la capa empieza por encima del cuello");
+  assert.ok(capa.width > 70, "y es más ancha que el gatito");
+  const alas = centro(cajaSobreElGatito("alas"));
+  assert.ok(Math.abs(alas.x - ANCLAS_VESTIDOR.cuello.x) < 1 && alas.y < ANCLAS_VESTIDOR.cuello.y, "las alas, a la altura de los hombros");
+  const piezas = piezasEnCuadro({ sombrero: "paja", capa: "dragon", alas: "buho", bufanda: "rayas" }, "sentado", 0);
+  assert.deepEqual(piezas.map((pieza) => [pieza.tipo, pieza.detras]), [["alas", true], ["capa", true], ["bufanda", false], ["sombrero", false]]);
 });
 
 test("el armario de la habitación no pisa la bañera y tiene los pies en el suelo", () => {

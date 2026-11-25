@@ -10,8 +10,7 @@ import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte.ts";
 import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito } from "./casaGatoArte.ts";
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
-import { CELDA_ACCESORIO, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte.ts";
-import { celdaDe, type Accesorio } from "./casaRopa.ts";
+import { CAPA_VISIBLE, columnaDe, LAMINAS, piezasEnCuadro, type PiezaEnCuadro } from "./casaVestidorArte.ts";
 import { CELDAS_MACETEROS, HOJA_MACETEROS, JARDIN, LUCIERNAGAS, luciernagaEn } from "./casaJardin.ts";
 
 /** Fila de los pies dentro del cuadro del gato (la misma que en la casa). */
@@ -134,19 +133,21 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     }
     const hoja = await cargar(await hojaDeGatito(gatito.mundo, variante));
     const { fila } = ANIMACIONES_GATO[gatito.animacion];
-    pintar(hoja, { x: gatito.cuadro * CUADRO_GATO, y: fila * CUADRO_GATO, ancho: CUADRO_GATO, alto: CUADRO_GATO }, caja, gatito.mira < 0);
-    // Sus accesorios, en su sitio de ese cuadro (como en la casa).
+    // Sus accesorios, en su sitio de ese cuadro (como en la casa): alas y capa detrás del gatito, lo demás delante.
     const piezas = gatito.ropa ? piezasEnCuadro(gatito.ropa, gatito.animacion, gatito.cuadro) : [];
-    if (piezas.length) {
-      const lamina = await cargar(HOJA_ACCESORIOS);
-      for (const { tipo, pieza, caja: enCuadro } of piezas) {
-        const { fila: f, columna } = celdaDe(tipo, pieza as Accesorio);
-        const ancho = caja.ancho * enCuadro.width / 100;
-        const izquierda = gatito.mira < 0 ? caja.x + caja.ancho * (1 - (enCuadro.left + enCuadro.width) / 100) : caja.x + caja.ancho * enCuadro.left / 100;
-        pintar(lamina, { x: columna * CELDA_ACCESORIO.ancho, y: f * CELDA_ACCESORIO.alto, ancho: CELDA_ACCESORIO.ancho, alto: CELDA_ACCESORIO.alto },
-          { x: izquierda, y: caja.y + caja.alto * enCuadro.top / 100, ancho, alto: caja.alto * enCuadro.height / 100 }, gatito.mira < 0);
-      }
-    }
+    const pintarPieza = async ({ tipo, pieza, caja: enCuadro }: PiezaEnCuadro) => {
+      const lamina = LAMINAS[tipo];
+      const imagen = await cargar(lamina.imagen);
+      const ancho = caja.ancho * enCuadro.width / 100;
+      const izquierda = gatito.mira < 0 ? caja.x + caja.ancho * (1 - (enCuadro.left + enCuadro.width) / 100) : caja.x + caja.ancho * enCuadro.left / 100;
+      // La capa, cortada a la altura de las patas como en la escena.
+      const parte = tipo === "capa" ? CAPA_VISIBLE : 1;
+      pintar(imagen, { x: columnaDe(tipo, pieza) * lamina.celda.ancho, y: lamina.fila * lamina.celda.alto, ancho: lamina.celda.ancho, alto: lamina.celda.alto * parte },
+        { x: izquierda, y: caja.y + caja.alto * enCuadro.top / 100, ancho, alto: caja.alto * enCuadro.height / 100 * parte }, gatito.mira < 0);
+    };
+    for (const pieza of piezas) if (pieza.detras) await pintarPieza(pieza);
+    pintar(hoja, { x: gatito.cuadro * CUADRO_GATO, y: fila * CUADRO_GATO, ancho: CUADRO_GATO, alto: CUADRO_GATO }, caja, gatito.mira < 0);
+    for (const pieza of piezas) if (!pieza.detras) await pintarPieza(pieza);
   }
 
   // El visitante del jardín, delante de los gatitos (que se le acercan a olerlo), con su dibujo de amigo (como en la escena: 200 px de ancho, los pies abajo en el centro).

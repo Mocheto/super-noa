@@ -145,17 +145,20 @@ export const esDeSiempre = (decoracion: Decoracion) => MUEBLES.every((id) => dec
 
 // --- Ropa (`casaRopa.ts`) --------------------------------------------------------------------------------------------
 
-export const TIPOS_ACCESORIO = ["sombrero", "gafas", "bufanda"] as const;
+export const TIPOS_ACCESORIO = ["sombrero", "gafas", "bufanda", "capa", "alas"] as const;
 export type TipoAccesorio = (typeof TIPOS_ACCESORIO)[number];
 
 /**
- * Las piezas de cada tipo, en el orden de su lámina (`casa-accesorios-v1.webp`: una fila por tipo y una columna por
- * pieza). Los identificadores son estables: se guardan en el progreso.
+ * Las piezas de cada tipo, en el orden de su lámina (`casa-accesorios-v2.webp` para sombreros, gafas y bufandas, una
+ * fila por tipo; `casa-capas-v1.webp` y `casa-alas-v1.webp`). Los identificadores son estables: se guardan en el
+ * progreso, y no se repiten entre tipos (son también la clave de su texto).
  */
 export const ACCESORIOS = {
-  sombrero: ["paja", "gorro", "fiesta", "chistera"],
-  gafas: ["redondas", "estrella", "corazon", "buceo"],
-  bufanda: ["rayas", "copos", "lunares", "flecos"],
+  sombrero: ["paja", "gorro", "fiesta", "chistera", "maquinista", "pirata"],
+  gafas: ["redondas", "estrella", "corazon", "buceo", "esqui", "aviador"],
+  bufanda: ["rayas", "copos", "lunares", "flecos", "dinosaurio", "manzanas"],
+  capa: ["caballero", "dragon", "navidad", "desierto", "musica", "bosque"],
+  alas: ["mariposa", "murcielago", "buho", "pez", "mariquita", "unicornio"],
 } as const satisfies Record<TipoAccesorio, readonly string[]>;
 export type Accesorio<T extends TipoAccesorio = TipoAccesorio> = (typeof ACCESORIOS)[T][number];
 

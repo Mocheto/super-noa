@@ -16,11 +16,12 @@ import { friendCatalog, type FriendFood } from "./friends";
 import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, CELDAS_MACETEROS, HOJA_MACETEROS, jardinDe, LUCIERNAGAS, luciernagaEn, maceteroBajo, maceteroPorRegar, regar, REGADERA, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
-import { fondoDePieza, HOJA_ACCESORIOS, piezasEnCuadro } from "./casaVestidorArte";
+import { piezasEnCuadro } from "./casaVestidorArte";
+import { PiezaAccesorio } from "./PiezaAccesorio";
 import { arropadosDe, arropar, puedeDormir, todosArropados } from "./casaDormir";
 import { arropadoDe, CUADROS_ARROPADO, HOJA_MANTITA } from "./casaDormirArte";
 import { guardarFoto, type FotoCasa } from "./casaFoto";
-import { cambiarMueble, muebleEn, MUEBLES_CASA, PARED_HASTA, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
+import { cambiarMueble, esMuebleMagico, muebleEn, MUEBLES_CASA, PARED_HASTA, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
 import { fondoConPared } from "./casaDecoracionArte";
 import { cssAssetUrl } from "./assets";
 import { Ventana } from "./Ventana";
@@ -219,7 +220,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [posadas, setPosadas] = useState<(Posada | null)[]>(() => Array.from({ length: MARIPOSAS }, () => null));
   useEffect(() => { botandoRef.current = botando; }, [botando]);
   // Gatito en el vestidor (se le lleva al armario).
-  const [vestidor, setVestidor] = useState<number | null>(null);
+  // En desarrollo, `?prueba=casa&vestidor=1` lo abre directamente con el gatito de ese mundo.
+  const [vestidor, setVestidor] = useState<number | null>(() => import.meta.env.DEV ? Number(new URLSearchParams(window.location.search).get("vestidor")) || null : null);
   // La caña de pluma: la pluma vive en una referencia (la capa se mueve en cada cuadro sin volver a pintar la casa).
   const plumaRef = useRef<Pluma | null>(null);
   const capaPlumaRef = useRef<SVGSVGElement | null>(null);
@@ -1238,7 +1240,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   };
 
   const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.webp"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--regadera": cssAssetUrl(REGADERA), "--pluma": cssAssetUrl(HOJA_PLUMA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
-  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--maceteros": cssAssetUrl(HOJA_MACETEROS), "--regadera": cssAssetUrl(REGADERA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--accesorios": cssAssetUrl(HOJA_ACCESORIOS), "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
+  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--maceteros": cssAssetUrl(HOJA_MACETEROS), "--regadera": cssAssetUrl(REGADERA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
   const hojaBano = bano !== null ? hojaDe(bano) : undefined;
@@ -1278,7 +1280,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           {/* Muebles, cada uno en la versión elegida, sobre la habitación vacía. */}
           {!enJardin && MUEBLES_DECORABLES.map((mueble) => {
             const dibujo = MUEBLES_CASA[mueble].dibujo!;
-            return <i key={mueble} className="casa-mueble" aria-hidden="true"
+            return <i key={mueble} className={`casa-mueble${esMuebleMagico(mueble, decoracion[mueble]) ? " is-magica" : ""}`} aria-hidden="true"
               style={{ left: dibujo.x, top: dibujo.y, width: dibujo.ancho, height: dibujo.alto, ...celdaDeMueble(mueble, decoracion[mueble]) }} />;
           })}
           {decorando && <>
@@ -1346,13 +1348,15 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               ? { backgroundImage: `url("${arropado}")`, backgroundSize: `${CUADROS_ARROPADO * CUADRO_GATO}px ${CUADRO_GATO}px`, backgroundPosition: `${-(cuadro % CUADROS_ARROPADO) * CUADRO_GATO}px 0` }
               : { backgroundImage: hoja ? `url("${hoja}")` : undefined, backgroundSize: `${COLUMNAS_GATO * CUADRO_GATO}px ${FILAS_GATO * CUADRO_GATO}px`, backgroundPosition: `${-cuadro * CUADRO_GATO}px ${-fila * CUADRO_GATO}px` };
             return <div key={mundo} role="img" aria-label={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })}
-              className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${respuesta?.favorita ? " is-favorita" : ""}${dormido ? " is-dormido" : ""}${botando.includes(mundo) ? " is-botando" : ""}`}
+              className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${respuesta?.favorita ? " is-favorita" : ""}${dormido ? " is-dormido" : ""}${botando.includes(mundo) ? " is-botando" : ""}${animacion === "andar" ? " is-andando" : ""}${ropaDe(casa, mundo).alas ? " con-alas" : ""}`}
               style={{ left: andante.x, top: andante.y - PIES_GATITO, zIndex: enBrazos ? 1500 : Math.round(andante.y), "--escala": escala, "--bote": `${BOTAR_MS / BOTES}ms` } as CSSProperties}>
-              <span className="casa-gatito-dibujo" style={{ ...dibujo, transform: mira < 0 ? "scaleX(-1)" : undefined }}>
-                {/* Sus accesorios, en su sitio en este cuadro; arropado, no se ven. */}
-                {!tapado && piezasEnCuadro(ropaDe(casa, mundo), animacion, cuadro).map(({ tipo, pieza, caja }) =>
-                  <i key={tipo} className="casa-gatito-pieza" style={{ left: `${caja.left}%`, top: `${caja.top}%`, width: `${caja.width}%`, height: `${caja.height}%`,
-                    backgroundPosition: fondoDePieza(tipo, pieza) }} />)}
+              <span className="casa-gatito-dibujo" style={{ transform: mira < 0 ? "scaleX(-1)" : undefined }}>
+                {/* Sus accesorios, en su sitio en este cuadro (alas y capa detrás de él); arropado, no se ven. */}
+                {(() => {
+                  const piezas = tapado ? [] : piezasEnCuadro(ropaDe(casa, mundo), animacion, cuadro);
+                  const pintar = ({ tipo, pieza, caja }: (typeof piezas)[number]) => <PiezaAccesorio key={tipo} tipo={tipo} pieza={pieza} caja={caja} />;
+                  return <>{piezas.filter((pieza) => pieza.detras).map(pintar)}<b className="casa-gatito-cuerpo" style={dibujo} />{piezas.filter((pieza) => !pieza.detras).map(pintar)}</>;
+                })()}
               </span>
               {pide && !respuesta && !dormido && <span className="casa-bocadillo" aria-hidden="true">{pide === "comer" && favoritaDescubierta(casa, mundo)
                 ? <i className={`casa-comida is-${favoritaDescubierta(casa, mundo)}`} /> : <i className={`casa-objeto is-${OBJETO_DE[pide]}`} />}</span>}

@@ -9,10 +9,6 @@ import { ACCESORIOS, esAccesorio, normalizeRopa, normalizeRopaCasa, ropaVacia, T
 export { ACCESORIOS, esAccesorio, normalizeRopa, normalizeRopaCasa, TIPOS_ACCESORIO };
 export type { Accesorio, Ropa, TipoAccesorio };
 
-/** Celda de la pieza en su lámina: fila del tipo y columna de la pieza. */
-export const celdaDe = <T extends TipoAccesorio>(tipo: T, pieza: Accesorio<T>) =>
-  ({ fila: TIPOS_ACCESORIO.indexOf(tipo), columna: (ACCESORIOS[tipo] as readonly string[]).indexOf(pieza) });
-
 /** Lo que lleva el gatito del mundo dado (nada si no lleva). */
 export const ropaDe = (casa: CasaProgress | undefined, mundo: number): Ropa => casa?.ropa?.[mundo] ?? {};
 

@@ -52,7 +52,32 @@
 .casa-gatito { width: 160px; height: 160px; transform: translateX(-50%) scale(var(--escala, 1)); transform-origin: 50% 95%; }
 .casa-gatito-dibujo { position: absolute; inset: 0; background-repeat: no-repeat; image-rendering: pixelated; filter: drop-shadow(0 4px 2px #2f1d3355); pointer-events: none; }
 /* Accesorios que lleva (sombrero, gafas, bufanda), colocados por casaVestidorArte en cada cuadro; giran con el gatito. */
-.casa-gatito-pieza { position: absolute; background: var(--accesorios) 0 0 / 400% 300% no-repeat; image-rendering: pixelated; }
+.casa-gatito-cuerpo { position: absolute; inset: 0; background-repeat: no-repeat; image-rendering: pixelated; }
+
+/* Piezas del armario (PiezaAccesorio): de su lámina; las alas, dos mitades que aletean desde los hombros (despacio
+   paradas, deprisa al andar, botar o volar); la capa ondea al andar; las mágicas destellan. Mapa «Más decoraciones y
+   accesorios para la casa». */
+.casa-pieza { position: absolute; display: block; background-repeat: no-repeat; image-rendering: pixelated; pointer-events: none; }
+.casa-pieza.is-icono, .casa-pieza.is-en-balda { inset: 0; }
+/* La capa puesta se corta a la altura de las patas (CAPA_VISIBLE de casaVestidorArte). */
+.casa-gatito .casa-pieza.is-capa, .casa-vestidor-puesta.is-capa { clip-path: inset(0 0 32% 0); }
+.casa-ala { position: absolute; top: 0; bottom: 0; width: 50%; background-repeat: no-repeat; image-rendering: pixelated; animation: var(--aleteo, 1.1s) ease-in-out infinite alternate; }
+.casa-ala.is-izquierda { left: 0; transform-origin: 100% 60%; animation-name: casa-ala-izquierda; }
+.casa-ala.is-derecha { right: 0; transform-origin: 0% 60%; animation-name: casa-ala-derecha; }
+@keyframes casa-ala-izquierda { from { transform: rotate(6deg); } to { transform: rotate(-16deg); } }
+@keyframes casa-ala-derecha { from { transform: rotate(-6deg); } to { transform: rotate(16deg); } }
+.casa-gatito.is-andando, .casa-gatito.is-botando { --aleteo: .3s; }
+.casa-gatito.is-andando .casa-pieza.is-capa { transform-origin: 50% 0; animation: casa-capa-ondea .45s ease-in-out infinite alternate; }
+@keyframes casa-capa-ondea { from { transform: skewX(-5deg); } to { transform: skewX(5deg); } }
+.casa-mueble.is-magica::after, .casa-pieza.is-magica::after { content: ""; position: absolute; inset: 0; pointer-events: none; animation: casa-destella 1.6s ease-in-out infinite;
+  background: radial-gradient(circle at 22% 30%, #fff 0 2.5%, transparent 3.5%), radial-gradient(circle at 78% 22%, #fff6b0 0 3%, transparent 4%), radial-gradient(circle at 62% 74%, #fff 0 2.5%, transparent 3.5%), radial-gradient(circle at 35% 82%, #fff6b0 0 2%, transparent 3%); }
+@keyframes casa-destella { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+/* De noche las estrellas de la habitación CELESTE destellan más deprisa. */
+.casa-escena.is-noche .casa-mueble.is-magica::after { animation-duration: .9s; }
+.casa-gatitos.is-quieta .casa-mueble.is-magica::after { animation: none; }
+.casa-gatitos.is-quieta .casa-ala, .casa-gatitos.is-quieta .casa-pieza, .casa-gatitos.is-quieta .casa-pieza::after,
+.casa-vestidor.is-quieta .casa-ala, .casa-vestidor.is-quieta .casa-pieza::after { animation: none; }
+@media (prefers-reduced-motion: reduce) { .casa-ala, .casa-pieza, .casa-pieza::after { animation: none; } }
 
 /* Bocadillo de «pide»: solo el dibujo de lo que quiere. */
 .casa-bocadillo { position: absolute; left: 62%; top: -34%; display: grid; place-items: center; width: 72px; height: 64px; border: 4px solid #2f1d33; border-radius: 50%; background: #fff8e9; animation: casa-bocadillo 1s ease-in-out infinite alternate; }
@@ -262,6 +287,9 @@
 @keyframes casa-colchoneta-bota { 0%, 100% { transform: scaleY(0.82); } 45%, 55% { transform: scaleY(1.04); } }
 .casa-gatito.is-botando .casa-gatito-dibujo { animation: casa-gatito-bota var(--bote, 750ms) ease-in-out infinite; }
 @keyframes casa-gatito-bota { 0%, 100% { translate: 0 10px; } 50% { translate: 0 -70px; } }
+/* Con alas, la colchoneta lo lanza más alto. */
+.casa-gatito.is-botando.con-alas .casa-gatito-dibujo { animation-name: casa-gatito-bota-alto; }
+@keyframes casa-gatito-bota-alto { 0%, 100% { translate: 0 10px; } 50% { translate: 0 -120px; } }
 @media (prefers-reduced-motion: reduce) { .casa-colchoneta.is-bota, .casa-gatito.is-botando .casa-gatito-dibujo { animation: none; } }
 .casa-mariposa { position: absolute; z-index: 1200; width: 64px; height: 64px; margin: -32px 0 0 -32px; padding: 0; border: 0; background: var(--mariposa) 0 0 / 400% 100% no-repeat; image-rendering: pixelated; pointer-events: none; transition: left 100ms linear, top 100ms linear; animation: casa-mariposa-aletea 360ms steps(4) infinite; }
 .casa-mariposa.is-otra { filter: hue-rotate(150deg) saturate(1.3); }
@@ -357,28 +385,38 @@
 .casa-vestidor-gatito { position: absolute; left: 50%; bottom: 7%; height: 68%; aspect-ratio: 240 / 340; transform: translateX(-50%); transform-origin: 50% 100%; }
 .casa-vestidor-gatito.is-contento { animation: casa-vestidor-salto .45s ease-out; }
 @keyframes casa-vestidor-salto { 40% { transform: translateX(-50%) translateY(-4%) scale(1.03, .98); } }
+/* Con capa da una vuelta para lucirla; con alas salta alto aleteando y baja despacio. */
+.casa-vestidor-gatito.is-vuelta { animation: casa-vestidor-vuelta .8s ease-in-out; }
+@keyframes casa-vestidor-vuelta { from { transform: translateX(-50%) rotateY(0); } to { transform: translateX(-50%) rotateY(360deg); } }
+.casa-vestidor-gatito.is-vuelo { --aleteo: .18s; animation: casa-vestidor-vuelo .9s ease-out; }
+@keyframes casa-vestidor-vuelo { 35% { transform: translateX(-50%) translateY(-16%); } 70% { transform: translateX(-50%) translateY(-10%); } }
 .casa-vestidor-cuerpo { position: absolute; inset: 0; background: 0 0 / 200% 100% no-repeat; }
-.casa-vestidor-puesta, .casa-vestidor-dibujo { background: var(--accesorios) 0 0 / 400% 300% no-repeat; image-rendering: pixelated; pointer-events: none; }
-.casa-vestidor-puesta { position: absolute; }
-.casa-vestidor-puesta.is-sombrero { z-index: 3; } .casa-vestidor-puesta.is-gafas { z-index: 2; } .casa-vestidor-puesta.is-bufanda { z-index: 1; }
+.casa-vestidor-pestanas { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.casa-vestidor-pestana { width: clamp(48px, 9vmin, 76px); aspect-ratio: 1; display: grid; place-items: center; padding: 5px; border: 3px solid #2f1d33; border-radius: 12px; background: #fff8e9; cursor: pointer; touch-action: manipulation; box-sizing: border-box; }
+.casa-vestidor-pestana[aria-pressed="true"] { background: #ffd76a; transform: translateY(-3px); box-shadow: 0 3px 0 #2f1d33; }
+.casa-vestidor-pestana:focus-visible { outline: 3px solid #2f1d33; outline-offset: 2px; }
+.casa-vestidor-icono { position: relative; width: 100%; max-height: 100%; }
 
 .casa-vestidor-lado { display: grid; justify-items: center; gap: 10px; }
 .casa-vestidor-armario { position: relative; width: min(100%, 560px); aspect-ratio: 615 / 488; background: var(--armario-abierto) center / 100% 100% no-repeat; image-rendering: pixelated; }
-.casa-vestidor-balda { position: absolute; display: grid; grid-template-columns: repeat(4, 1fr); }
-.casa-vestidor-pieza { position: relative; padding: 0; border: 0; border-radius: 12px; background: transparent; cursor: pointer; touch-action: manipulation; }
+.casa-vestidor-balda { position: absolute; display: grid; grid-template-columns: repeat(2, 1fr); gap: 4%; }
+.casa-vestidor-pieza { position: relative; container-type: size; padding: 0; border: 0; border-radius: 12px; background: transparent; cursor: pointer; touch-action: manipulation; }
 .casa-vestidor-pieza:focus-visible { outline: 3px solid #2f1d33; outline-offset: -3px; }
 .casa-vestidor-pieza.is-puesta { background: #ffd76a66; box-shadow: inset 0 0 0 3px #ffd76a; }
-.casa-vestidor-dibujo { position: absolute; left: 4%; bottom: var(--apoyo); width: 92%; aspect-ratio: 200 / 170; }
-.casa-vestidor-dibujo.is-gafas { transform: translateY(29%); }
-.casa-vestidor-dibujo.is-bufanda { transform: translateY(8%); }
+/* Cada pieza, tan grande como quepa en su hueco (algo más alta, para que se vea bien), apoyada en la tabla. */
+.casa-vestidor-dibujo { position: absolute; left: 50%; bottom: var(--apoyo); width: min(100cqw, calc(140cqh * var(--aspecto))); aspect-ratio: var(--aspecto); translate: -50% 0; pointer-events: none; }
+.casa-vestidor-dibujo.is-capa { width: min(100cqw, calc(75cqh * var(--aspecto))); }
+.casa-vestidor-dibujo.is-alas { width: min(100cqw, calc(100cqh * var(--aspecto))); }
+.casa-vestidor-dibujo.is-gafas { translate: -50% 29%; }
+.casa-vestidor-dibujo.is-bufanda { translate: -50% 8%; }
 .casa-vestidor-pieza:active .casa-vestidor-dibujo { scale: .92; }
 
 @media (orientation: landscape) {
   .casa-vestidor { grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr) auto; }
-  .casa-vestidor-lado { grid-template-rows: minmax(0, 1fr) auto; align-items: center; height: 100%; min-height: 0; }
+  .casa-vestidor-lado { grid-template-rows: auto minmax(0, 1fr) auto; align-items: center; height: 100%; min-height: 0; }
   .casa-vestidor-armario { width: auto; height: min(100%, 560px * 488 / 615); max-width: 56vw; }
 }
-@media (prefers-reduced-motion: reduce) { .casa-vestidor-gatito.is-contento { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .casa-vestidor-gatito.is-contento, .casa-vestidor-gatito.is-vuelta, .casa-vestidor-gatito.is-vuelo { animation: none; } }
 
 /* Fallos de la casa (issue 330). */
 /* «¡HOLA!»: los dibujos de los que llegan saltan de fila y, en pantallas estrechas, son más pequeños. */

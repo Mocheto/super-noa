@@ -1,19 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { asegurarGatitos, casaVacia, mandarDePaseo, normalizeCasa } from "./casa.ts";
-import { ACCESORIOS, alternar, celdaDe, normalizeRopa, ropaDe, TIPOS_ACCESORIO, vestir } from "./casaRopa.ts";
+import { ACCESORIOS, alternar, normalizeRopa, ropaDe, TIPOS_ACCESORIO, vestir } from "./casaRopa.ts";
 import { emptyProgress, parseProgress, serializeProgress } from "./progress.ts";
 
 const ahora = new Date(2026, 10, 20, 10);
 const casaCon = (...mundos: number[]) => asegurarGatitos(casaVacia(ahora), mundos, ahora);
 
-test("tres tipos de accesorio con cuatro piezas distintas cada uno, en su celda de la lámina", () => {
-  assert.deepEqual([...TIPOS_ACCESORIO], ["sombrero", "gafas", "bufanda"]);
-  for (const tipo of TIPOS_ACCESORIO) {
-    assert.equal(new Set(ACCESORIOS[tipo]).size, 4, tipo);
-  }
-  assert.deepEqual(celdaDe("sombrero", "paja"), { fila: 0, columna: 0 });
-  assert.deepEqual(celdaDe("bufanda", "flecos"), { fila: 2, columna: 3 });
+test("cinco tipos de accesorio con seis piezas distintas cada uno; las cuatro primeras de antes, en su sitio", () => {
+  assert.deepEqual([...TIPOS_ACCESORIO], ["sombrero", "gafas", "bufanda", "capa", "alas"]);
+  for (const tipo of TIPOS_ACCESORIO) assert.equal(new Set(ACCESORIOS[tipo]).size, 6, tipo);
+  // Los guardados de antes siguen valiendo: las piezas de antes conservan su identificador.
+  assert.deepEqual(ACCESORIOS.sombrero.slice(0, 4), ["paja", "gorro", "fiesta", "chistera"]);
+  assert.deepEqual(ACCESORIOS.bufanda.slice(0, 4), ["rayas", "copos", "lunares", "flecos"]);
 });
 
 test("tocar una pieza la pone en lugar de la de su tipo, y tocarla otra vez la quita", () => {

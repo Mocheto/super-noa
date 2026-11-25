@@ -58,6 +58,9 @@ export const MUEBLES_CASA: Readonly<Record<MuebleId, Mueble>> = {
   },
 };
 
+/** Las estrellas de la habitación CELESTE (versión 4 de cortinas, estantería y cojín) destellan, más de noche. */
+export const esMuebleMagico = (mueble: MuebleId, version: Version) => version === 4 && ["cortinas", "estanteria", "cojin"].includes(mueble);
+
 /** Muebles que cuelgan delante del cristal: en las fotos se pintan después de la ventana de noche y del clima (en la escena ya van encima). */
 export const DELANTE_DE_LA_VENTANA: readonly MuebleId[] = ["cortinas"];
 

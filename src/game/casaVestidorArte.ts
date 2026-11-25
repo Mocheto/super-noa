@@ -13,7 +13,9 @@ export const HOJA_VESTIDOR = "./assets/sprites/gato-casa-vestidor-v1.webp";
 /** El gatito grande de cada modelo con hoja en la casa (los mismos que `HOJAS_MODELO`). */
 export const HOJAS_VESTIDOR: Readonly<{ atigrado: string } & Partial<Record<ModeloGatito, string>>> = {
   atigrado: HOJA_VESTIDOR,
+  esmoquin: "./assets/sprites/gato-casa-vestidor-esmoquin-v1.webp",
   melena: "./assets/sprites/gato-casa-vestidor-melena-v1.webp",
+  nube: "./assets/sprites/gato-casa-vestidor-nube-v1.webp",
 };
 export const HOJA_ACCESORIOS = "./assets/sprites/casa-accesorios-v2.webp";
 export const HOJA_CAPAS = "./assets/sprites/casa-capas-v1.webp";
@@ -60,10 +62,15 @@ export const ANCLAS_VESTIDOR: Record<"cabeza" | "ojos" | "cuello", Punto> = {
   ojos: { x: 137, y: 107 },
   cuello: { x: 134, y: 181 },
 };
-/** Anclas del gatito grande de cada modelo (de `prototypes/tools/casa-modelo-recorte.py`, las del cuadro quieto). */
+/**
+ * Anclas del gatito grande de cada modelo (de `prototypes/tools/casa-modelo-recorte.py`, las del cuadro quieto; la
+ * cabeza, sobre los ojos, porque el lazo de los modelos nuevos no siempre va en medio).
+ */
 export const ANCLAS_VESTIDOR_POR_MODELO: Readonly<{ atigrado: typeof ANCLAS_VESTIDOR } & Partial<Record<ModeloGatito, typeof ANCLAS_VESTIDOR>>> = {
   atigrado: ANCLAS_VESTIDOR,
-  melena: { cabeza: { x: 160, y: 68 }, ojos: { x: 171, y: 139 }, cuello: { x: 171, y: 188 } },
+  esmoquin: { cabeza: { x: 108, y: 40 }, ojos: { x: 108, y: 116 }, cuello: { x: 107, y: 176 } },
+  melena: { cabeza: { x: 171, y: 68 }, ojos: { x: 171, y: 139 }, cuello: { x: 171, y: 188 } },
+  nube: { cabeza: { x: 155, y: 36 }, ojos: { x: 155, y: 129 }, cuello: { x: 154, y: 184 } },
 };
 export const anclasVestidorDe = (modelo: ModeloGatito) => ANCLAS_VESTIDOR_POR_MODELO[modelo] ?? ANCLAS_VESTIDOR;
 

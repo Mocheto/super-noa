@@ -11,8 +11,11 @@ Decisiones de las que sale:
 ## Estado
 
 - **Hecho (25-11-2026):** las tres referencias están generadas (originales en `../super-noa-arte-original/casa-modelos-v1/`) y recortadas con `prototypes/tools/casa-modelos-recorte.py` en `sprites/gato-casa-referencias-v1.webp`: una fila de cuatro cuadros de 160 × 160 con el atigrado, el esmoquin, la melena y la nube. La prueba de parecido (`?prueba=casa&paletas`, en desarrollo) las pinta con la paleta y las marcas de cada gatito, junto a su dibujo del mundo.
-- **Dadas por buenas** con la persona usuaria (25-11-2026), con un collar fino que se queda y la cola de nube blanca con la punta de color. **Melena, hecha (25-11-2026):** sus siete láminas, recortadas con `prototypes/tools/casa-modelo-recorte.py melena …` en `sprites/gato-casa-melena-v1.webp`, `gato-casa-arropado-melena-v1.webp` y `gato-casa-vestidor-melena-v1.webp`. El script elige qué cuadros se quedan cuando el generador da de más, pasa el pelo claro a pelo (el cuerpo salió claro) y lleva a su clave los ojos, que salieron del azul marino del collar. Las anclas salen de `casa-gato-anclas.py`.
-- **Pendiente:** esmoquin (falta `gato-arropado`) y nube (falta `gato-dormir-jugar`). Hasta tener su hoja, sus gatitos se dibujan como el atigrado (`modeloDibujado`).
+- **Dadas por buenas** con la persona usuaria (25-11-2026), con un collar fino que se queda y la cola de nube blanca con la punta de color.
+- **Los tres modelos, hechos (25-11-2026):** sus siete láminas, recortadas con `prototypes/tools/casa-modelo-recorte.py <modelo> <carpeta>` en `sprites/gato-casa-<modelo>-v1.webp`, `gato-casa-arropado-<modelo>-v1.webp` y `gato-casa-vestidor-<modelo>-v1.webp`. El script elige qué cuadros salen cuando el generador da de más o los reparte en otras filas, pasa el pelo claro a pelo en la melena (el cuerpo salió claro) y lleva a su clave los ojos, que salieron del azul marino del collar. Las anclas salen de `casa-gato-anclas.py`; en los modelos nuevos la cabeza se centra sobre los ojos, porque el lazo no siempre va en medio, y donde el pelo tapa el lazo se pone respecto al collar.
+- **Detalles que quedan:**
+  - En «comer» de la nube se ve el cuenco que dibujó el generador.
+  - En algunos cuadros pequeños del esmoquin (jugar solo, pedir) el sombrero queda un poco alto.
 
 ## Cómo funciona
 

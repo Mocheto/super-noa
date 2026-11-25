@@ -11,7 +11,7 @@ Imprime las anclas del gatito grande para copiarlas a `casaVestidorArte.ts`.
 
 Hace lo mismo que `casa-recorte.py`, `casa-dormir-recorte.py` y `casa-vestidor-recorte.py` con el atigrado, con las
 claves nuevas de puntas y manchas. Como el generador no siempre da los cuadros pedidos, `MODELOS` dice, por lámina,
-cuántas piezas trae cada fila y cuáles se quedan.
+cuántas piezas trae cada fila y qué cuadros salen.
 
 Uso: uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-modelo-recorte.py MODELO CARPETA
 """
@@ -40,20 +40,53 @@ vestidor = cargar("casa_vestidor_recorte", "casa-vestidor-recorte.py")
 CELDA, PIES = casa.CELDA, casa.PIES
 MARCAS = {"puntas": (0xA2, 0x1C, 0xAF), "manchas": (0x00, 0xE5, 0xFF)}
 
-# Por modelo: el alto del gato sentado (el de su referencia, a la escala del atigrado) y, por lámina, las piezas que
-# trae cada fila, cuáles se quedan (por índice dentro de la fila) y qué pieza (contando todas en orden) es la sentada
-# con que se calibra la escala; sin ella, la última pieza que se queda mide como el andar de la primera lámina.
+# Por modelo: el alto del gato sentado (el de su referencia, a la escala del atigrado), cambios de clave tras el recorte
+# y, por lámina, cuántas piezas trae cada fila del generador, qué cuadros salen en cada fila de la hoja (como pares
+# fila e índice dentro de la fila: así una animación puede tomar cuadros de dos filas) y qué pieza (contando todas en
+# orden) es la sentada con que se calibra la escala; sin ella, el último cuadro que sale mide como el andar de la primera
+# lámina.
+def fila(f, *indices):
+    return [(f, i) for i in indices]
+
+
 MODELOS = {
+    "esmoquin": {
+        "sentado": 140,
+        "laminas": [
+            ("gato-andar-sentado", [4, 2, 1], [fila(0, 0, 1, 2, 3), fila(1, 0, 1), fila(2, 0)], 4),
+            # Jugar solo: sin el tercero, que anda de lado sin mirar la cola.
+            ("gato-dormir-jugar", [2, 4], [fila(0, 0, 1), fila(1, 0, 1, 3)], None),
+            ("gato-cantar-pedir-comer", [2, 2, 3], [fila(0, 0, 1), fila(1, 0, 1), fila(2, 0, 1, 2)], 0),
+            # Cinco filas de dos: la sacudida tiene dos cuadros y el tercero es el sentado orgulloso de la última fila.
+            ("gato-mimos-bano-sacudirse", [2, 2, 2, 2, 2], [fila(0, 0, 1), fila(1, 0, 1), fila(3, 0, 1) + fila(4, 0)], 0),
+            # Tres filas de cuatro: la pelota en la primera y el «ahora no» en los dos primeros de la segunda.
+            ("gato-pelota-ahora-no", [4, 4, 4], [fila(0, 0, 1, 2, 3), fila(1, 0, 1)], 4),
+        ],
+    },
     "melena": {
         "sentado": 138,
         # El generador pintó el cuerpo con el pelo claro: pasa a ser el pelo, para que la paleta le dé su color.
         "cambios": {"pelo-claro": "pelo"},
         "laminas": [
-            ("gato-andar-sentado", [4, 3, 1], [[0, 1, 2, 3], [0, 1], [0]], 4),
-            ("gato-dormir-jugar", [3, 4], [[0, 2], [1, 2, 3]], None),
-            ("gato-cantar-pedir-comer", [2, 2, 3], [[0, 1], [0, 1], [0, 1, 2]], 0),
-            ("gato-mimos-bano-sacudirse", [2, 3, 3], [[0, 1], [0, 1], [0, 1, 2]], 0),
-            ("gato-pelota-ahora-no", [4, 2], [[0, 1, 2, 3], [0, 1]], 4),
+            ("gato-andar-sentado", [4, 3, 1], [fila(0, 0, 1, 2, 3), fila(1, 0, 1), fila(2, 0)], 4),
+            # Jugar solo: sin el primero, de espaldas.
+            ("gato-dormir-jugar", [3, 4], [fila(0, 0, 2), fila(1, 1, 2, 3)], None),
+            ("gato-cantar-pedir-comer", [2, 2, 3], [fila(0, 0, 1), fila(1, 0, 1), fila(2, 0, 1, 2)], 0),
+            ("gato-mimos-bano-sacudirse", [2, 3, 3], [fila(0, 0, 1), fila(1, 0, 1), fila(2, 0, 1, 2)], 0),
+            ("gato-pelota-ahora-no", [4, 2], [fila(0, 0, 1, 2, 3), fila(1, 0, 1)], 4),
+        ],
+    },
+    "nube": {
+        "sentado": 142,
+        "laminas": [
+            ("gato-andar-sentado", [4, 3, 1], [fila(0, 0, 1, 2, 3), fila(1, 0, 1), fila(2, 0)], 4),
+            # Jugar solo: sin el primero, de espaldas.
+            ("gato-dormir-jugar", [2, 4], [fila(0, 0, 1), fila(1, 1, 2, 3)], None),
+            # Cantar y pedir comparten la primera fila.
+            ("gato-cantar-pedir-comer", [4, 3], [fila(0, 0, 1), fila(0, 2, 3), fila(1, 0, 1, 2)], 0),
+            # Mimos: el primero y el de los corazones (el del medio ya lleva espuma).
+            ("gato-mimos-bano-sacudirse", [3, 2, 3], [fila(0, 0, 2), fila(1, 0, 1), fila(2, 0, 1, 2)], 0),
+            ("gato-pelota-ahora-no", [4, 2], [fila(0, 0, 1, 2, 3), fila(1, 0, 1)], 4),
         ],
     },
 }
@@ -74,19 +107,19 @@ def celda(rgba, pieza, factor):
 def hoja(modelo, folder, datos):
     filas_finales = []
     calibre_andar = None
-    for nombre, trae, quedan, calibre in datos["laminas"]:
+    for nombre, trae, salen, calibre in datos["laminas"]:
         rgba = casa.sin_rayas_de_suelo(casa.key_out(casa.load(folder, nombre)))
         ordenadas = casa.por_filas(casa.poses(rgba, sum(trae)), trae)
         planas = [p for fila in ordenadas for p in fila]
         if calibre is not None:
             factor = datos["sentado"] / (planas[calibre]["cuerpo"][3] - planas[calibre]["cuerpo"][1])
         else:
-            ultima = ordenadas[-1][quedan[-1][-1]]
-            factor = calibre_andar / (ultima["cuerpo"][3] - ultima["cuerpo"][1])
+            f, i = salen[-1][-1]
+            factor = calibre_andar / (ordenadas[f][i]["cuerpo"][3] - ordenadas[f][i]["cuerpo"][1])
         if nombre == "gato-andar-sentado":
             calibre_andar = (planas[0]["cuerpo"][3] - planas[0]["cuerpo"][1]) * factor
-        for fila, indices in zip(ordenadas, quedan):
-            filas_finales.append([celda(rgba, fila[i], factor) for i in indices])
+        for cuadros in salen:
+            filas_finales.append([celda(rgba, ordenadas[f][i], factor) for f, i in cuadros])
     if len(filas_finales) != 13:
         raise SystemExit(f"Salen {len(filas_finales)} filas y la hoja tiene 13")
     out = Image.new("RGBA", (CELDA * 4, CELDA * 13))
@@ -127,6 +160,10 @@ def anclas_vestidor(destino):
         if len(manchas) == 2 and min(m[0] for m in manchas) >= 20:
             ojos = {"x": int(round((manchas[0][2] + manchas[1][2]) / 2)), "y": int(round((manchas[0][1] + manchas[1][1]) / 2))}
         resultado.append({"cabeza": cabeza, "ojos": ojos, "cuello": cuello})
+    # El lazo no siempre va en medio de la cabeza: la cabeza se pone sobre los ojos abiertos del cuadro quieto.
+    if resultado[0]["ojos"]:
+        for r in resultado:
+            r["cabeza"]["x"] = resultado[0]["ojos"]["x"]
     return resultado
 
 

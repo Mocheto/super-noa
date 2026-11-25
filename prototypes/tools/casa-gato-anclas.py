@@ -73,7 +73,8 @@ def ojos_vistos(celda, cabeza, cuello):
 
 def anclas(celda, modelo):
     ys, xs = np.nonzero(mascara(celda, [LAZO]))
-    cabeza = {"x": int(round(xs.mean())), "y": int(round(ys.mean()))} if len(xs) >= 20 else None
+    # El lazo de la nube es muy pequeño: en los modelos nuevos basta con unos pocos píxeles.
+    cabeza = {"x": int(round(xs.mean())), "y": int(round(ys.mean()))} if len(xs) >= (20 if modelo == "atigrado" else 6) else None
     azul, n = ndimage.label(mascara(celda, AZULES if modelo == "atigrado" else COLLAR))
     cuello = None
     if n:
@@ -90,6 +91,19 @@ def en_el_camino(a):
     """Punto de los ojos estimado en el camino del lazo al cuello (para ojos cerrados)."""
     c, k = a["cabeza"], a["cuello"]
     return (c["x"] + PARTE_OJOS * (k["x"] - c["x"]), c["y"] + PARTE_OJOS * (k["y"] - c["y"]))
+
+
+def cabeza_centrada(tabla):
+    """En los modelos nuevos el lazo no siempre va en medio de la cabeza (al esmoquin le cae sobre una oreja): la cabeza
+    se corre de lado lo que suele separarse el lazo de los ojos abiertos, para que el sombrero quede centrado."""
+    pares = [a for cuadros in tabla.values() for a in cuadros if a["cabeza"] and a["ojos"]]
+    if not pares:
+        return
+    dx = float(np.median([a["ojos"]["x"] - a["cabeza"]["x"] for a in pares]))
+    for cuadros in tabla.values():
+        for a in cuadros:
+            if a["cabeza"]:
+                a["cabeza"]["x"] = int(round(a["cabeza"]["x"] + dx))
 
 
 def cabezas_tapadas(tabla):
@@ -123,6 +137,7 @@ def tabla_de(modelo):
     for fila, (nombre, cuadros) in enumerate(FILAS):
         tabla[nombre] = [anclas(hoja[fila * CELDA:(fila + 1) * CELDA, c * CELDA:(c + 1) * CELDA], modelo) for c in range(cuadros)]
     if modelo != "atigrado":
+        cabeza_centrada(tabla)
         cabezas_tapadas(tabla)
     completar(tabla, modelo)
     return tabla

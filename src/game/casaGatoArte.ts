@@ -164,7 +164,9 @@ export const HOJA_REFERENCIAS = "./assets/sprites/gato-casa-referencias-v1.webp"
  */
 export const HOJAS_MODELO: Readonly<{ atigrado: string } & Partial<Record<ModeloGatito, string>>> = {
   atigrado: HOJA_GATO,
+  esmoquin: "./assets/sprites/gato-casa-esmoquin-v1.webp",
   melena: "./assets/sprites/gato-casa-melena-v1.webp",
+  nube: "./assets/sprites/gato-casa-nube-v1.webp",
 };
 
 /** Modelo con que se dibuja el gatito del mundo dado: el suyo si ya tiene hoja; si no, el atigrado. */

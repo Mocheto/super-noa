@@ -16,7 +16,9 @@ export const CUADROS_ARROPADO = 2;
 /** La pose arropado de cada modelo con hoja en la casa (los mismos que `HOJAS_MODELO`). */
 export const HOJAS_ARROPADO: Readonly<{ atigrado: string } & Partial<Record<ModeloGatito, string>>> = {
   atigrado: HOJA_ARROPADO,
+  esmoquin: "./assets/sprites/gato-casa-arropado-esmoquin-v1.webp",
   melena: "./assets/sprites/gato-casa-arropado-melena-v1.webp",
+  nube: "./assets/sprites/gato-casa-arropado-nube-v1.webp",
 };
 
 function hsv([r, g, b]: Rgb): [number, number, number] {

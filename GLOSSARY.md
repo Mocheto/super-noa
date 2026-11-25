@@ -151,6 +151,10 @@ _Avoid_: Probador, tienda
 Prenda que lleva un gatito de la casa: un sombrero, unas gafas, una bufanda, una capa o unas alas, como mucho una de cada tipo a la vez. Cada gatito conserva los suyos.
 _Avoid_: Ropa (a secas), disfraz, objeto (son los de la bandeja)
 
+**Modelo**:
+Forma de un gatito de la casa (cuerpo, cabeza, orejas, cola y largo del pelo) con todos sus movimientos. Hay cuatro (atigrado, esmoquin, melena y nube) y varios gatitos comparten cada uno; lo demás lo ponen sus colores.
+_Avoid_: Gato base (era el único modelo), raza, cuerpo
+
 **Estancia**:
 Cada sitio de la casa por el que andan los gatitos: la habitación y el jardín. Cada gatito en casa está en una de las dos.
 _Avoid_: Sala, cuarto, nivel

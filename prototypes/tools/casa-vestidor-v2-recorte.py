@@ -3,7 +3,8 @@
 Entrada: una carpeta con las láminas tal como salen del generador (cualquier extensión):
   casa-piezas-nuevas  seis piezas en tres filas de dos: dos sombreros, dos gafas y dos bufandas;
   casa-capas          seis capas en dos filas de tres;
-  casa-alas           arriba, seis pares de alas en dos filas de tres (lo de abajo no se usa: el aleteo va por código).
+  casa-alas           arriba, seis pares de alas en dos filas de tres (lo de abajo no se usa: el aleteo va por código);
+  casa-bufandas-nuevas  (opcional) dos bufandas en fila que sustituyen a las de casa-piezas-nuevas.
 Además usa la lámina de piezas de ahora, public/assets/sprites/casa-accesorios-v1.webp.
 
 Salida (WebP sin pérdida, a la escala del gatito grande del vestidor):
@@ -96,6 +97,27 @@ def piezas_nuevas(folder):
     guardar(hoja, "casa-accesorios-v2.webp")
 
 
+def bufandas_otra_vez(folder):
+    """Si existe la lámina casa-bufandas-nuevas (dos bufandas en fila), sustituye las dos bufandas nuevas de la lámina de
+    piezas: las primeras salieron como un aro grueso."""
+    if not any(p.stem == "casa-bufandas-nuevas" for p in folder.iterdir()):
+        return
+    antes = Image.open(casa.SPRITES / "casa-accesorios-v1.webp").convert("RGBA")
+    ancho_bufanda = anchos_de_antes(antes)["bufanda"]
+    rgba = sin_fondo(casa.load(folder, "casa-bufandas-nuevas"))
+    encontradas = sorted(casa.poses(rgba, 2, min_area=4000), key=lambda p: p["box"][0])
+    ruta = casa.SPRITES / "casa-accesorios-v2.webp"
+    hoja = Image.open(ruta).convert("RGBA")
+    ancho, alto = CELDA
+    for c, pieza in enumerate(encontradas):
+        x0, y0 = (4 + c) * ancho, 2 * alto
+        hoja.paste((0, 0, 0, 0), (x0, y0, x0 + ancho, y0 + alto))
+        img = visible(casa.recorte(rgba, pieza))
+        img = casa.escalar(img, min(ancho_bufanda / img.width, alto / img.height))
+        hoja.alpha_composite(img, (x0 + (ancho - img.width) // 2, y0))
+    guardar(hoja, "casa-accesorios-v2.webp")
+
+
 def capas(folder):
     rgba = sin_fondo(casa.load(folder, "casa-capas"))
     encontradas = casa.poses(rgba, 6, min_area=8000)
@@ -136,6 +158,7 @@ def main():
         raise SystemExit(__doc__)
     folder = Path(sys.argv[1])
     piezas_nuevas(folder)
+    bufandas_otra_vez(folder)
     capas(folder)
     alas(folder)
 

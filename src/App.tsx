@@ -24,8 +24,7 @@ import { musicaDePantalla } from "./game/musicaDePantalla";
 import { useEfectos, useMusicaDeFondo } from "./game/useSonidoJuego";
 import { lifetimeApples } from "./game/progress";
 import { worldCatalog, type WorldId } from "./game/worldMapData";
-import { checkRankingAvailability, loadRanking, rankingConnectionMessage, rankingProgress, readRankingDevice, registerRankingDevice, syncRanking, type RankingDevice, type RankingPlayer } from "./game/ranking";
-import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnrolled, safeEnrollmentMoment } from "./game/rankingOnboarding";
+import { useTablon } from "./game/useTablon";
 import type { GameSnapshot, Level } from "./game/types";
 import type { DetourId } from "./game/types";
 import { detourLevel, detourLevels } from "./game/detours";
@@ -73,12 +72,6 @@ const campaignLevelCount = campaignLevels.length;
 const bossLevels = levels.flatMap((level, index) => level.boss ? [{ level, index, boss: bossCatalog[level.boss] }] : []);
 vigilarAudio();
 
-function rankingErrorMessage(error: unknown, fallback: string) {
-  return error instanceof TypeError || (error instanceof DOMException && error.name === "TimeoutError")
-    ? rankingConnectionMessage
-    : error instanceof Error ? error.message : fallback;
-}
-
 export default function App() {
   const [screen, setScreen] = useState<Screen>(devTestLevel ? (devDuel && devTestLevel.boss ? "boss" : "game") : devTestName === "fiesta" ? "cat-party" : devTestName === "casa" ? "casa" : "home");
   const screenRef = useRef(screen);
@@ -103,21 +96,8 @@ export default function App() {
   }, [lives]);
   const [paused, setPaused] = useState(false);
   const ventanas = useVentanas();
-  const { abrir, cerrar, cerrarMenus, abrirColeccion: openCollection } = ventanas;
-  const [rankingDevice, setRankingDevice] = useState<RankingDevice | null>(readRankingDevice);
-  const [rankingAlias, setRankingAlias] = useState("");
-  const [rankingPlayers, setRankingPlayers] = useState<RankingPlayer[]>([]);
-  const [rankingMessage, setRankingMessage] = useState("");
-  const [rankingLoading, setRankingLoading] = useState(false);
-  const [rankingJoining, setRankingJoining] = useState(false);
-  const [rankingSyncState, setRankingSyncState] = useState<"idle" | "syncing" | "saved" | "pending">("idle");
-  const [rankingSyncMessage, setRankingSyncMessage] = useState("");
-  const [rankingRetry, setRankingRetry] = useState(0);
-  const [enrollmentRequired, setEnrollmentRequired] = useState(false);
-  const [enrollmentChecking, setEnrollmentChecking] = useState(false);
-  const [enrollmentDeferred, setEnrollmentDeferred] = useState(() => Boolean(readRankingDevice()?.registrationPending));
-  const [enrollmentMessage, setEnrollmentMessage] = useState("");
-  const [enrollmentStorageBlocked, setEnrollmentStorageBlocked] = useState(false);
+  const { abrir, cerrar, abrirColeccion: openCollection } = ventanas;
+  const tablon = useTablon({ progress, progressRef, pantalla: screen, algunaVentana: ventanas.algunaAbierta, abrir, cerrar });
   // Avisos para adultos que ya se han ido (solos o al tocarlos); uno nuevo, con otro texto, vuelve a salir.
   const [avisosCerrados, setAvisosCerrados] = useState<ReadonlySet<string>>(() => new Set());
   const cerrarAviso = useCallback((id: string) => setAvisosCerrados((cerrados) => new Set(cerrados).add(id)), []);
@@ -130,12 +110,6 @@ export default function App() {
   const [shopActive, setShopActive] = useState(false);
   const [activeDetour, setActiveDetour] = useState<DetourId | null>(null);
   const starActive = screen === "game" && (snapshot.starSeconds ?? 0) > 0;
-  const rankingJoiningRef = useRef(false);
-  const rankingAliasRef = useRef<HTMLInputElement | null>(null);
-  const enrollmentBusyRef = useRef(false);
-  const enrollmentRequiredRef = useRef(false);
-  const enrollmentRetryAtRef = useRef(0);
-  const adventureActionRef = useRef<(() => void) | null>(null);
   const secretTransitionRef = useRef({ target: -1, remaining: 1800 });
   const playScreenRef = useRef<HTMLElement | null>(null);
   const activeLevel = devTestLevel ?? levels[activeIndex] ?? detourLevels[activeIndex - levels.length] ?? restStopLevels[activeIndex - levels.length - detourLevels.length];
@@ -156,159 +130,6 @@ export default function App() {
     const id = window.setTimeout(precargar, 1500);
     return () => window.clearTimeout(id);
   }, [screen]);
-
-  const finishEnrollment = useCallback(() => {
-    enrollmentRequiredRef.current = false;
-    setEnrollmentRequired(false);
-    cerrar("tablon");
-    const action = adventureActionRef.current;
-    adventureActionRef.current = null;
-    action?.();
-  }, [cerrar]);
-
-  const deferEnrollment = useCallback((message: string) => {
-    enrollmentRetryAtRef.current = Date.now() + ENROLLMENT_RETRY_MS;
-    setEnrollmentDeferred(true);
-    setEnrollmentMessage(t("adultos.app.message-puedes-seguir-jugando", { message }));
-    finishEnrollment();
-  }, [finishEnrollment]);
-
-  const requestAdventure = useCallback(async (action?: () => void) => {
-    action?.();
-    if (enrollmentBusyRef.current || enrollmentRequiredRef.current || rankingJoiningRef.current) return;
-    if (isEnrolled(readRankingDevice() ?? rankingDevice)) return;
-    if (enrollmentDeferred && Date.now() < enrollmentRetryAtRef.current) return;
-    enrollmentBusyRef.current = true;
-    adventureActionRef.current = null;
-    setEnrollmentChecking(true);
-    try {
-      await checkRankingAvailability();
-      const pending = readRankingDevice();
-      if (pending?.registrationPending) {
-        const device = await registerRankingDevice(pending.alias);
-        setRankingDevice(device);
-        setEnrollmentDeferred(false);
-        setEnrollmentMessage("");
-        finishEnrollment();
-      } else {
-        if (!safeEnrollmentMoment(screenRef.current, false)) {
-          enrollmentRetryAtRef.current = 0;
-          setEnrollmentDeferred(true);
-          finishEnrollment();
-          return;
-        }
-        cerrarMenus();
-        setPaused(false);
-        setRankingDevice(pending);
-        setRankingAlias(pending?.alias ?? "");
-        setRankingMessage("");
-        setEnrollmentStorageBlocked(false);
-        enrollmentRequiredRef.current = true;
-        setEnrollmentRequired(true);
-        abrir("tablon");
-        window.requestAnimationFrame(() => rankingAliasRef.current?.focus());
-      }
-    } catch (error) {
-      const message = rankingErrorMessage(error, t("adultos.app.el-tablon-no-esta"));
-      if (enrollmentFailure(error) === "validate" || enrollmentFailure(error) === "storage") {
-        setRankingDevice(readRankingDevice());
-        setRankingAlias(readRankingDevice()?.alias ?? "");
-        setRankingMessage(message);
-        setEnrollmentStorageBlocked(enrollmentFailure(error) === "storage");
-        if (!safeEnrollmentMoment(screenRef.current, false)) {
-          enrollmentRetryAtRef.current = 0;
-          setEnrollmentDeferred(true);
-          finishEnrollment();
-          return;
-        }
-        cerrarMenus();
-        setScreen((current) => safeEnrollmentMoment(current, false) ? current : "map");
-        enrollmentRequiredRef.current = true;
-        setEnrollmentRequired(true);
-        abrir("tablon");
-        window.requestAnimationFrame(() => rankingAliasRef.current?.focus());
-      } else if (!safeEnrollmentMoment(screenRef.current, false)) {
-        enrollmentRetryAtRef.current = Date.now() + ENROLLMENT_RETRY_MS;
-        setEnrollmentDeferred(true);
-        finishEnrollment();
-      } else deferEnrollment(message);
-    } finally {
-      enrollmentBusyRef.current = false;
-      setEnrollmentChecking(false);
-    }
-  }, [abrir, cerrarMenus, deferEnrollment, enrollmentDeferred, finishEnrollment, rankingDevice]);
-
-  useEffect(() => {
-    if (!enrollmentDeferred || isEnrolled(rankingDevice)) return;
-    const { retry, online } = createEnrollmentRecovery(
-      enrollmentRetryAtRef,
-      () => document.visibilityState !== "hidden"
-        && safeEnrollmentMoment(screen, ventanas.algunaAbierta),
-      () => { void requestAdventure(); },
-    );
-    const timeout = window.setTimeout(retry, Math.max(0, enrollmentRetryAtRef.current - Date.now()));
-    const interval = window.setInterval(retry, ENROLLMENT_RETRY_MS);
-    window.addEventListener("online", online);
-    return () => {
-      window.clearTimeout(timeout);
-      window.clearInterval(interval);
-      window.removeEventListener("online", online);
-    };
-  }, [enrollmentDeferred, rankingDevice, requestAdventure, screen, ventanas.algunaAbierta]);
-
-  useEffect(() => {
-    if (!enrollmentRequired) return;
-    let cancelled = false;
-    let checking = false;
-    const check = async () => {
-      if (checking || rankingJoiningRef.current || document.visibilityState === "hidden") return;
-      checking = true;
-      try { await checkRankingAvailability(); }
-      catch (error) {
-        if (!cancelled && !rankingJoiningRef.current) deferEnrollment(rankingErrorMessage(error, t("adultos.app.el-tablon-no-esta")));
-      } finally { checking = false; }
-    };
-    const interval = window.setInterval(() => void check(), ENROLLMENT_RETRY_MS);
-    return () => { cancelled = true; window.clearInterval(interval); };
-  }, [deferEnrollment, enrollmentRequired]);
-
-  // El tablón solo recibe lo que le importa: cuidar la casa o mirar fotos no lo vuelve a enviar.
-  const rankingClave = useMemo(() => JSON.stringify(rankingProgress(progress)), [progress]);
-
-  useEffect(() => {
-    if (!rankingDevice || rankingDevice.registrationPending) return;
-    let cancelled = false;
-    let attempt = 0;
-    const publish = async () => {
-      const currentAttempt = ++attempt;
-      setRankingSyncState("syncing");
-      try {
-        await syncRanking(rankingDevice, progressRef.current);
-        if (!cancelled && currentAttempt === attempt) {
-          const confirmedDevice = readRankingDevice();
-          if (confirmedDevice?.id === rankingDevice.id && confirmedDevice.token === rankingDevice.token
-            && (confirmedDevice.alias !== rankingDevice.alias || Boolean(confirmedDevice.registrationPending) !== Boolean(rankingDevice.registrationPending))) {
-            setRankingDevice(confirmedDevice);
-          }
-          setRankingSyncState("saved");
-          setRankingSyncMessage("");
-        }
-      } catch (error) {
-        if (!cancelled && currentAttempt === attempt) {
-          setRankingSyncState("pending");
-          setRankingSyncMessage(rankingErrorMessage(error, t("adultos.app.no-pude-enviar-tus")));
-        }
-      }
-    };
-    const retryOnline = () => { void publish(); };
-    const timeout = window.setTimeout(() => void publish(), 250);
-    window.addEventListener("online", retryOnline);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timeout);
-      window.removeEventListener("online", retryOnline);
-    };
-  }, [progressRef, rankingClave, rankingDevice, rankingRetry]);
 
   usePausaAutomatica(screen, isTimedScreen(screen), setPaused);
   useMandoEnMenus(!((screen === "game" || screen === "boss") && !paused && !ventanas.ajustes && !ventanas.ayuda && !ventanas.creditos && !ventanas.album), screen, ajustarVolumen);
@@ -345,52 +166,6 @@ export default function App() {
     return [world.id, { complete, total: worldLevels.length, stickers, stickerTotal: stickerCatalog.filter((sticker) => sticker.world === world.id).length, flawless, bossFriend, remembered }];
   })), [progress.levelStats, progress.stickers]);
 
-  const refreshRanking = async () => {
-    setRankingMessage("");
-    setRankingLoading(true);
-    try {
-      if (rankingDevice) setRankingRetry((current) => current + 1);
-      setRankingPlayers(await loadRanking());
-    } catch (error) {
-      setRankingMessage(rankingErrorMessage(error, t("adultos.app.no-pude-actualizar-el")));
-    } finally {
-      setRankingLoading(false);
-    }
-  };
-
-  const openRanking = () => {
-    abrir("tablon");
-    void refreshRanking();
-  };
-
-  const joinRanking = async () => {
-    if (rankingJoiningRef.current) return;
-    rankingJoiningRef.current = true;
-    setRankingJoining(true);
-    setRankingMessage("");
-    try {
-      const device = await registerRankingDevice(readRankingDevice()?.registrationPending ? readRankingDevice()!.alias : rankingAlias);
-      setRankingDevice(device);
-      setEnrollmentDeferred(false);
-      setEnrollmentMessage("");
-      setEnrollmentStorageBlocked(false);
-      setRankingMessage(t("adultos.app.hola-alias-tu-tarjeta", { alias: device.alias }));
-      if (enrollmentRequiredRef.current) finishEnrollment();
-      else void refreshRanking();
-    } catch (error) {
-      const pendingDevice = readRankingDevice();
-      setRankingDevice(pendingDevice);
-      const message = rankingErrorMessage(error, t("adultos.app.no-pude-guardar-ese"));
-      setRankingMessage(message);
-      setEnrollmentStorageBlocked(enrollmentFailure(error) === "storage");
-      if (enrollmentRequiredRef.current && enrollmentFailure(error) === "defer") deferEnrollment(message);
-    } finally {
-      rankingJoiningRef.current = false;
-      setRankingJoining(false);
-      window.requestAnimationFrame(() => rankingAliasRef.current?.focus());
-    }
-  };
-
   const isLevelUnlocked = (index: number) => {
     const level = levels[index] ?? detourLevels[index - levels.length] ?? restStopLevels[index - levels.length - detourLevels.length];
     if (!level) return false;
@@ -405,17 +180,15 @@ export default function App() {
     const level = levels[index];
     if (!level.boss || !progress.levelStats[level.id]?.completed) return;
     cerrar("album");
-    void requestAdventure(() => {
-      setBossReplayReturn(screen === "home" ? "home" : "map");
-      setActiveIndex(index);
-      setMapReturnWorld(undefined);
-      setLevelRun((current) => current + 1);
-      setLives(MAX_LIVES);
-      setSnapshot(emptySnapshot);
-      setPaused(false);
-      setBossReplay(true);
-      setScreen("boss");
-    });
+    setBossReplayReturn(screen === "home" ? "home" : "map");
+    setActiveIndex(index);
+    setMapReturnWorld(undefined);
+    setLevelRun((current) => current + 1);
+    setLives(MAX_LIVES);
+    setSnapshot(emptySnapshot);
+    setPaused(false);
+    setBossReplay(true);
+    setScreen("boss");
   };
 
   const finishBossReplay = (challengeCompleted = false) => {
@@ -427,16 +200,14 @@ export default function App() {
 
   const beginLevel = (index: number) => {
     if (!isLevelUnlocked(index)) return;
-    void requestAdventure(() => {
-      setActiveIndex(index);
-      setMapReturnWorld(undefined);
-      setLevelRun((current) => current + 1);
-      setLives(MAX_LIVES);
-      setSnapshot(emptySnapshot);
-      setPaused(false);
-      setBossReplay(false);
-      setScreen("game");
-    });
+    setActiveIndex(index);
+    setMapReturnWorld(undefined);
+    setLevelRun((current) => current + 1);
+    setLives(MAX_LIVES);
+    setSnapshot(emptySnapshot);
+    setPaused(false);
+    setBossReplay(false);
+    setScreen("game");
   };
 
   const handleLoseLife = useCallback(() => {
@@ -585,15 +356,13 @@ export default function App() {
     <main className={`app-shell ${reduceMotion ? "reduce-motion" : ""} ${touchControls === "always" ? "touch-controls-always" : ""}`}>
       <Avisos esperar={(screen === "game" || screen === "boss") && !paused} cerrados={avisosCerrados} onCerrar={cerrarAviso} avisos={[
         ...(saveError ? [{ id: "guardar", clase: "save-warning", rol: "alert" as const, contenido: t("adultos.app.no-se-pudo-guardar") }] : []),
-        ...(enrollmentChecking ? [{ id: "tablon-conectando", clase: "ranking-sync-warning", rol: "status" as const, contenido: t("adultos.app.conectando-el-tablon-en") }] : []),
-        ...(enrollmentMessage ? [{ id: `tablon:${enrollmentMessage}`, clase: "ranking-sync-warning", rol: "status" as const, contenido: enrollmentMessage }] : []),
-        ...(rankingDevice && rankingSyncState === "pending" ? [{ id: `tablon-pendiente:${rankingSyncMessage}:${rankingRetry}`, clase: "ranking-sync-warning", rol: "status" as const, contenido: <>{t("adultos.app.tus-logros-del-tablon")} {rankingSyncMessage} {saveError ? t("adultos.app.puedes-seguir-jugando-aunque") : t("adultos.app.tu-partida-sigue-guardada")} <button type="button" onClick={() => setRankingRetry((current) => current + 1)}>{t("adultos.app.reintentar-envio")}</button></> }] : []),
+        ...(tablon.activo && tablon.device && tablon.syncState === "pending" ? [{ id: `tablon-pendiente:${tablon.syncMessage}`, clase: "ranking-sync-warning", rol: "status" as const, contenido: <>{t("adultos.app.tus-logros-del-tablon")} {tablon.syncMessage} {saveError ? t("adultos.app.puedes-seguir-jugando-aunque") : t("adultos.app.tu-partida-sigue-guardada")} <button type="button" onClick={tablon.reintentarEnvio}>{t("adultos.app.reintentar-envio")}</button></> }] : []),
         ...(audioMessage && !muted && musicVolume > 0 ? [{ id: `musica:${audioMessage}`, clase: "audio-warning", rol: "status" as const, contenido: audioMessage }] : []),
       ]} />
       {screen === "home" && <PantallaInicio albumFound={albumFound} albumTotal={albumStickers.length} knownBosses={knownBosses} jefesTotal={bossLevels.length} muted={muted}
         partidaEmpezada={progress.unlocked > 0} secretUnlocked={progress.secretUnlocked} saveError={saveError} completedLevels={completedLevels} campaignLevelCount={campaignLevelCount}
-        onJugar={() => void requestAdventure(() => setScreen("map"))} onAyuda={() => abrir("ayuda")} onColeccion={openCollection} onSonido={alternarSonido}
-        onAjustes={() => abrir("ajustes")} onTablon={openRanking} onCreditos={() => abrir("creditos")} />}
+        onJugar={() => setScreen("map")} onAyuda={() => abrir("ayuda")} onColeccion={openCollection} onSonido={alternarSonido}
+        onAjustes={() => abrir("ajustes")} onTablon={tablon.activo ? tablon.abrirTablon : undefined} onCreditos={() => abrir("creditos")} />}
 
       {screen === "map" && (
         <section className="map-screen">
@@ -611,12 +380,12 @@ export default function App() {
             </div>
             {menuMapa && <div className="map-menu-adultos">
               <button className="album-button" type="button" onClick={() => abrir("ajustes")}>{t("mapa.ajustes")}</button>
-              <button className="album-button" type="button" onClick={openRanking}>{t("adultos.app.tablon")}</button>
+              {tablon.activo && <button className="album-button" type="button" onClick={tablon.abrirTablon}>{t("adultos.app.tablon")}</button>}
               <button className="text-button reset-button" type="button" onClick={resetProgress}>{t("mapa.borrarProgreso")}</button>
             </div>}
           </header>
           <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
-            <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} onOpenAvioneta={() => void requestAdventure(() => { setAvionetaGift(false); setPaused(false); setScreen("avioneta"); })} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal}
+            <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} onOpenAvioneta={() => { setAvionetaGift(false); setPaused(false); setScreen("avioneta"); }} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal}
               onOpenCasa={funciones.casa && casaAbierta(progress.levelStats) ? () => setScreen("casa") : undefined} menuAdultos={menuMapa} />
           </Suspense>
         </section>
@@ -730,12 +499,13 @@ export default function App() {
       )}
 
       {ventanas.ajustes && <VentanaAjustes musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotionAjuste} touchControls={touchControls}
+        tablonActivo={tablon.activo} onTablonActivo={(activo) => { if (activo) cerrar("ajustes"); tablon.activar(activo); }}
         onMusicVolume={(volumen) => ajustarVolumen("musica", volumen)} onEffectsVolume={(volumen) => ajustarVolumen("efectos", volumen)}
         onReduceMotion={setReduceMotion} onTouchControls={setTouchControls} onClose={() => cerrar("ajustes")} />}
 
       {ventanas.ayuda && (
         <Ventana id="help-title" titulo="inicio.ayuda.titulo.rotulo" className="ventana-ayuda" onClose={() => cerrar("ayuda")}
-          botones={<Boton tipo="seguir" clave="inicio.ayuda.lista.rotulo" data-gamepad-default disabled={enrollmentChecking} onClick={() => { cerrar("ayuda"); void requestAdventure(() => setScreen("map")); }} />}>
+          botones={<Boton tipo="seguir" clave="inicio.ayuda.lista.rotulo" data-gamepad-default onClick={() => { cerrar("ayuda"); setScreen("map"); }} />}>
           <BotonControl className="ventana-cerrar" pictograma="cerrar" etiqueta="inicio.ayuda.cerrar.oculto" data-gamepad-back onClick={() => cerrar("ayuda")} />
           <div className="ayuda-tarjetas">
               <div className="ayuda-tarjeta"><Pictograma nombre="camina" doble /><div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="inicio.ayuda.camina.rotulo" /></p><p className="juntos">{t("inicio.ayuda.camina.juntos")}</p></div></div>
@@ -766,10 +536,7 @@ export default function App() {
       {ventanas.album && <VentanaAlbum progress={progress} collectionTab={ventanas.pestana} albumStickers={albumStickers} albumHints={ventanas.pistas} setAlbumHints={ventanas.setPistas}
         bossLevels={bossLevels} knownBosses={knownBosses} worldProgress={worldProgress} onTab={ventanas.setPestana} onReplayBoss={replayBoss}
         onHeart={acciones.amistad} onClose={() => cerrar("album")} />}
-      {ventanas.tablon && <VentanaTablon enrollmentRequired={enrollmentRequired} enrollmentStorageBlocked={enrollmentStorageBlocked} rankingDevice={rankingDevice}
-        rankingAlias={rankingAlias} rankingAliasRef={rankingAliasRef} rankingJoining={rankingJoining} rankingSyncState={rankingSyncState} rankingSyncMessage={rankingSyncMessage}
-        rankingMessage={rankingMessage} rankingPlayers={rankingPlayers} rankingLoading={rankingLoading} campaignLevelCount={campaignLevelCount}
-        onAliasChange={setRankingAlias} onJoin={() => void joinRanking()} onDefer={deferEnrollment} onRefresh={() => void refreshRanking()} onClose={() => cerrar("tablon")} />}
+      {ventanas.tablon && <VentanaTablon tablon={tablon} campaignLevelCount={campaignLevelCount} />}
     </main>
   );
 }

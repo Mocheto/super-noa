@@ -6,7 +6,7 @@ export type TextoSuelto = { archivo: string; linea: number; texto: string };
 
 /** Atributos JSX y propiedades de objeto cuyo valor es técnico (clases, rutas, identificadores), no texto visible. */
 const atributosTecnicos = /^(className|key|id|type|role|href|src|rel|htmlFor|labelledBy|kind|data-.*|aria-labelledby|aria-describedby|aria-controls|viewBox|d|fill|stroke|style|name|loading|decoding|inputMode|autoComplete|lang|method|target|value)$/;
-const propiedadesTecnicas = /^(id|kind|theme|world|type|src|path|key|className|track|music|asset|image|sprite|atlas|color|fill|stroke|font|mode|power|orientation|shape|variant|pose|easing|direction|face|mood|tone|cue|sound|instrument|sfx|from|to|next|route|backgroundPosition|backgroundSize|backgroundImage|transform|left|top|width|height|method|--.*)$/;
+const propiedadesTecnicas = /^(id|kind|theme|world|type|src|path|key|className|track|music|asset|image|sprite|atlas|color|fill|stroke|font|mode|power|orientation|shape|variant|pose|easing|direction|face|mood|tone|cue|sound|instrument|sfx|from|to|next|route|Authorization|backgroundPosition|backgroundSize|backgroundImage|transform|left|top|width|height|method|--.*)$/;
 const llamadasTecnicas = /^(console\.|new Error|Error|querySelector|document\.|classList|addEventListener|localStorage|setAttribute|fetch|require)|(querySelector|getItem|setItem|addEventListener|startsWith|endsWith|includes|split|replace|match|test|classList\.\w+)$/;
 
 /**
@@ -96,9 +96,10 @@ export function textosSueltos(archivo: string, codigo: string): TextoSuelto[] {
   return encontrados;
 }
 
-/** Recorre `src/App.tsx` y los archivos de `src/game/` que no son pruebas, y agrupa los textos sueltos por archivo. */
+/** Recorre `src/App.tsx` y los archivos de `src/game/` y `src/revision/` que no son pruebas, y agrupa los textos sueltos por archivo. */
 export function textosSueltosPorArchivo(raiz: URL): Map<string, TextoSuelto[]> {
-  const archivos = ["App.tsx", ...readdirSync(new URL("game/", raiz)).filter((nombre) => /\.tsx?$/.test(nombre) && !/\.test\./.test(nombre)).map((nombre) => `game/${nombre}`)];
+  const de = (carpeta: string) => readdirSync(new URL(`${carpeta}/`, raiz)).filter((nombre) => /\.tsx?$/.test(nombre) && !/\.test\./.test(nombre)).map((nombre) => `${carpeta}/${nombre}`);
+  const archivos = ["App.tsx", ...de("game"), ...de("revision")];
   const resultado = new Map<string, TextoSuelto[]>();
   for (const archivo of archivos) {
     const nombre = archivo.split("/").pop() ?? archivo;

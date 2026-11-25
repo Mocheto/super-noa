@@ -1,33 +1,29 @@
-import { RankingError, type RankingDevice } from "./ranking.ts";
+import type { RankingDevice, RankingOwn, RankingPlayer } from "./ranking.ts";
 
-export const ENROLLMENT_RETRY_MS = 60_000;
+/**
+ * Apuntarse al tablón es opcional y viene desactivado: lo enciende una persona adulta en Ajustes, tras la puerta para
+ * adultos. Un dispositivo que ya tenía tarjeta (también una pendiente de confirmar) sigue con el tablón encendido.
+ */
+export const TABLON_ACTIVO_KEY = "super-noa-tablon-activo";
 
 export function isEnrolled(device: RankingDevice | null): boolean {
   return Boolean(device && !device.registrationPending);
 }
 
-export function enrollmentFailure(error: unknown): "validate" | "storage" | "defer" {
-  if (error instanceof RankingError) {
-    if (error.code === "storage_unavailable") return "storage";
-    if (["invalid_alias", "alias_not_allowed", "alias_taken", "device_exists"].includes(error.code)) return "validate";
-  }
-  return "defer";
+/** Lo guardado manda (`"1"` o `"0"`); sin nada guardado, encendido solo si este dispositivo ya tenía tarjeta. */
+export function tablonActivo(guardado: string | null, device: RankingDevice | null): boolean {
+  if (guardado === "1") return true;
+  if (guardado === "0") return false;
+  return device !== null;
 }
 
-export function safeEnrollmentMoment(screen: string, overlayOpen: boolean): boolean {
-  return (screen === "home" || screen === "map") && !overlayOpen;
+/** Al abrir el juego se pide otro alias si la revisión rechazó el que había. Sin motivo, y una sola vez por visita. */
+export function pideOtroAlias(own: RankingOwn | null): boolean {
+  return own?.aliasStatus === "rejected";
 }
 
-export function createEnrollmentRecovery(
-  retryAt: { current: number },
-  isSafe: () => boolean,
-  request: () => void,
-  now: () => number = Date.now,
-) {
-  const retry = () => {
-    if (now() < retryAt.current || !isSafe()) return;
-    request();
-  };
-  const online = () => { retryAt.current = 0; retry(); };
-  return { retry, online };
+/** La fila propia del tablón: los demás (y la lista) ven el nombre público, que puede ser el provisional. */
+export function esFilaPropia(player: RankingPlayer, own: RankingOwn | null, device: RankingDevice | null): boolean {
+  const nombre = own?.publicAlias || (own ? null : device?.alias);
+  return Boolean(nombre) && player.alias.toLocaleLowerCase("es") === nombre!.toLocaleLowerCase("es");
 }

@@ -18,7 +18,8 @@ type Props = {
   onColeccion: (pestana: "stickers" | "bosses") => void;
   onSonido: () => void;
   onAjustes: () => void;
-  onTablon: () => void;
+  /** Solo con el tablón encendido. */
+  onTablon?: () => void;
   onCreditos: () => void;
 };
 
@@ -49,7 +50,7 @@ export function PantallaInicio({ albumFound, albumTotal, knownBosses, jefesTotal
       <nav className="inicio-adultos" aria-label={t("inicio.opciones.oculto")}>
         {partidaEmpezada && !saveError && <span>{t(secretUnlocked ? "inicio.partidaGuardadaConSecreto" : "inicio.partidaGuardada", { hechas: completedLevels, total: campaignLevelCount })}</span>}
         <button type="button" onClick={onAjustes}>{t("adultos.app.ajustes")}</button>
-        <button type="button" onClick={onTablon}>{t("adultos.app.tablon-mundial")}</button>
+        {onTablon && <button type="button" onClick={onTablon}>{t("adultos.app.tablon-mundial")}</button>}
         <button type="button" onClick={onCreditos}>{t("adultos.app.creditos")}</button>
       </nav>
     </section>

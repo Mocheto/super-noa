@@ -4,8 +4,6 @@ import { RANKING_URL } from "../game/rankingServidor";
 import { t } from "../textos";
 import { accionesDe, clienteRevision, ErrorRevision, estadosAlias, guardarClave, leerClave, type AccionAlias, type AliasEnRevision, type EstadoAlias, type FalloRevision } from "./revisionAlias";
 
-/** En desarrollo, `?servidor=http://localhost:8088` prueba la página contra un servidor local. */
-const servidor = (import.meta.env.DEV && new URLSearchParams(window.location.search).get("servidor")) || RANKING_URL;
 const almacen = (() => { try { return window.localStorage; } catch { return null; } })();
 const fecha = new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" });
 
@@ -34,7 +32,7 @@ export function RevisionAlias() {
   const [lista, setLista] = useState<AliasEnRevision[] | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState<Aviso | null>(null);
-  const cliente = useMemo(() => clave ? clienteRevision(servidor, clave) : null, [clave]);
+  const cliente = useMemo(() => clave ? clienteRevision(RANKING_URL, clave) : null, [clave]);
 
   const fallar = useCallback((error: unknown) => {
     const fallo: FalloRevision = error instanceof ErrorRevision ? error.fallo : { tipo: "conexion" };

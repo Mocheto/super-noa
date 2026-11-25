@@ -492,6 +492,13 @@ dialog.modal-backdrop::backdrop { background: transparent; }
 .settings-toggle input { width: 22px; height: 22px; accent-color: #a84265; }
 .settings-toggle label { display: grid; gap: 3px; cursor: pointer; }
 .settings-toggle small, .settings-help { color: #6d5a72; font-family: system-ui, sans-serif; }
+/* Puerta para adultos del tablón: pregunta, respuesta numérica y botones de 44 px. */
+.puerta-adultos { display: grid; gap: 8px; margin: -6px 0 15px; border: 3px dashed #78508d; padding: 12px; background: #fffdf6; font-family: system-ui, sans-serif; }
+.puerta-adultos-titulo { margin: 0; }
+.puerta-adultos input { min-height: 44px; font: inherit; font-size: 1.1rem; padding: 0 10px; border: 2px solid #78508d; }
+.puerta-adultos-fallo { margin: 0; color: #9b2c22; font-weight: 600; }
+.puerta-adultos-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.ranking-alias-status { font-family: system-ui, sans-serif; background: #fff3cf; border: 2px solid #d8a640; padding: 8px 10px; }
 .settings-controls { display: grid; gap: 8px; margin: 15px 0; border: 3px solid #79558a; padding: 12px; }
 .settings-controls legend { padding-inline: 5px; color: #633977; font-weight: 900; }
 .settings-controls label { font-family: system-ui, sans-serif; cursor: pointer; }

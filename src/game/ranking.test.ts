@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test, { type TestContext } from "node:test";
 import { emptyProgress } from "./progress.ts";
-import { checkRankingAvailability, loadRanking, parseRetryAfter, RankingError, rankingProgress, readRankingDevice, registerRankingDevice, resetRankingCooldowns, syncRanking } from "./ranking.ts";
+import { changeRankingAlias, loadRanking, parseRetryAfter, RankingError, rankingProgress, readOwnRanking, readRankingDevice, registerRankingDevice, resetRankingCooldowns, syncRanking } from "./ranking.ts";
 
 test("el tablón reconoce el mundo 12 y sus pantallas de campaña", () => {
   const levelStats = Object.fromEntries(["1-1", "9-1", "12-1"].map((id) => [id, {
@@ -206,24 +206,36 @@ test("lee el avance completo del Reino Celeste", async (t) => {
   assert.equal(player.bossChallenges, 17);
 });
 
-test("la disponibilidad comprueba la base de datos, no solo el health antiguo", async (t) => {
-  const paths: string[] = [];
-  t.mock.method(globalThis, "fetch", async (url: string) => {
-    paths.push(new URL(url).pathname);
-    return url.endsWith("/health") ? jsonResponse({ registrationVersion: 2 })
-      : jsonResponse({ error: "Base de datos no disponible" }, 503);
+test("la tarjeta propia trae su alias, su estado y el nombre que ven los demás, con sus credenciales en cabeceras", async (t) => {
+  let headers: Record<string, string> = {};
+  t.mock.method(globalThis, "fetch", async (_url: string, init?: RequestInit) => {
+    headers = init?.headers as Record<string, string>;
+    return jsonResponse({ alias: "Luna", aliasStatus: "pending", publicAlias: "Koala 65" });
   });
-  await assert.rejects(checkRankingAvailability(), (error: unknown) => error instanceof RankingError && error.code === "server_unavailable");
-  assert.deepEqual(paths, ["/health", "/v1/leaderboard"]);
+  const device = { id: "6f0c8f3e-2b1a-4c3d-9e8f-0a1b2c3d4e5f", token: "token", alias: "Luna" };
+  assert.deepEqual(await readOwnRanking(device), { alias: "Luna", aliasStatus: "pending", publicAlias: "Koala 65" });
+  assert.equal(headers["X-Super-Noa-Device"], device.id);
+  assert.equal(headers["X-Super-Noa-Token"], device.token);
+  t.mock.method(globalThis, "fetch", async () => jsonResponse({ alias: "Luna", aliasStatus: "raro", publicAlias: "Koala 65" }));
+  await assert.rejects(readOwnRanking(device), (error: unknown) => error instanceof RankingError && error.code === "invalid_response");
 });
 
-test("la disponibilidad tolera health antiguo con base de datos funcional y detecta timeouts", async (t) => {
-  const mock = t.mock.method(globalThis, "fetch", async (url: string) =>
-    jsonResponse(url.endsWith("/health") ? { registrationVersion: 2 } : { players: [] }));
-  await checkRankingAvailability();
-  mock.mock.restore();
-  t.mock.method(globalThis, "fetch", async () => { throw new DOMException("Tarda", "TimeoutError"); });
-  await assert.rejects(checkRankingAvailability(), (error: unknown) => error instanceof RankingError && error.code === "timeout");
+test("cambiar el alias guarda el nuevo en la tarjeta y explica al momento el que no pasa el filtro", async (t) => {
+  const device = { id: "6f0c8f3e-2b1a-4c3d-9e8f-0a1b2c3d4e5f", token: "token", alias: "Luna" };
+  storageFixture(t).set("super-noa-ranking-device-v1", JSON.stringify(device));
+  const paths: string[] = [];
+  t.mock.method(globalThis, "fetch", async (url: string, init?: RequestInit) => {
+    paths.push(`${init?.method ?? "GET"} ${new URL(url).pathname}`);
+    if (init?.method === "POST") return jsonResponse({ alias: JSON.parse(init.body as string).alias, aliasStatus: "pending" });
+    return jsonResponse({ alias: "Sirena", aliasStatus: "pending", publicAlias: "Luna" });
+  });
+  assert.deepEqual(await changeRankingAlias(device, "  Sirena "), { alias: "Sirena", aliasStatus: "pending", publicAlias: "Luna" });
+  assert.deepEqual(paths, ["POST /v1/alias", "GET /v1/device"]);
+  assert.equal(readRankingDevice()?.alias, "Sirena");
+  await assert.rejects(changeRankingAlias(device, "x"), (error: unknown) => error instanceof RankingError && error.code === "invalid_alias");
+  t.mock.method(globalThis, "fetch", async () => jsonResponse({ error: "texto del servidor", code: "alias_not_allowed" }, 400));
+  await assert.rejects(changeRankingAlias(device, "Feo"), (error: unknown) => error instanceof RankingError && error.code === "alias_not_allowed" && error.message === "Ese nombre no vale. Prueba otro.");
+  assert.equal(readRankingDevice()?.alias, "Sirena");
 });
 
 test("dos clics comparten el registro y las credenciales pendientes", async (t) => {

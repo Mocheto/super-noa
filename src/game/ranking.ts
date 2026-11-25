@@ -10,6 +10,11 @@ export const rankingConnectionMessage = t("adultos.ranking.sin-conexion");
 
 export type RankingDevice = { id: string; token: string; alias: string; registrationPending?: boolean };
 export type RankingPlayer = { alias: string; world: number; campaignWorld: number | null; completedLevels: number; stickers: number; bossChallenges: number; totalApples: number | null; achievedAt: string | null };
+/** Estado del alias de una tarjeta en la revisión del servidor. */
+export type RankingAliasStatus = "pending" | "approved" | "rejected" | "hidden";
+const aliasStatuses: readonly RankingAliasStatus[] = ["pending", "approved", "rejected", "hidden"];
+/** Lo que el servidor sabe de la tarjeta propia: el alias, su estado y cómo la ven los demás (alias aprobado o nombre provisional). */
+export type RankingOwn = { alias: string; aliasStatus: RankingAliasStatus; publicAlias: string };
 export type RankingErrorCode = "network" | "timeout" | "storage_unavailable" | "invalid_alias" | "alias_not_allowed" | "alias_taken" | "device_invalid" | "device_exists" | "backend_outdated" | "invalid_response" | "server_unavailable" | "rate_limited" | "request_failed";
 const rankingErrorCodes: readonly RankingErrorCode[] = ["network", "timeout", "storage_unavailable", "invalid_alias", "alias_not_allowed", "alias_taken", "device_invalid", "device_exists", "backend_outdated", "invalid_response", "server_unavailable", "rate_limited", "request_failed"];
 
@@ -113,7 +118,9 @@ async function request(path: string, init?: RequestInit) {
         ? isRecord(body) && body.code === "device_exists" ? "device_exists" : "alias_taken"
         : response.status >= 500 ? "server_unavailable" : "request_failed";
       const code = isRecord(body) && rankingErrorCodes.includes(body.code as RankingErrorCode) ? body.code as RankingErrorCode : fallbackCode;
-      throw new RankingError(code, isRecord(body) && typeof body.error === "string" ? body.error : "No pude hablar con el ranking.",
+      // El filtro de alias se explica con el texto del catálogo, no con el del servidor.
+      throw new RankingError(code, code === "alias_not_allowed" ? t("adultos.tablon.alias-no-vale")
+        : isRecord(body) && typeof body.error === "string" ? body.error : "No pude hablar con el ranking.",
         response.status >= 500 || response.status === 408 || response.status === 429, response.status);
     }
     if (!isRecord(body)) throw new RankingError("invalid_response", "El ranking ha respondido de una forma que no entiendo. Puedes volver a intentarlo.", true);
@@ -181,20 +188,11 @@ async function registerDevice(alias: string): Promise<RankingDevice> {
 
 export async function syncRanking(device: RankingDevice, progress: Progress) {
   const registered = device.registrationPending ? await registerRankingDevice(device.alias) : device;
-  await request("/v1/progress", { method: "POST", headers: { "Content-Type": "application/json", "X-Super-Noa-Device": registered.id, "X-Super-Noa-Token": registered.token }, body: JSON.stringify(rankingProgress(progress)) });
+  await request("/v1/progress", { method: "POST", headers: { "Content-Type": "application/json", ...deviceHeaders(registered) }, body: JSON.stringify(rankingProgress(progress)) });
   const health = await request("/health");
   if (typeof health.progressVersion !== "number" || health.progressVersion < 2) {
     throw new RankingError("backend_outdated", "El tablón aún no guarda las manzanas totales ni la fecha. Las conservamos aquí para enviarlas cuando esté listo.", true);
   }
-}
-
-export async function checkRankingAvailability(): Promise<void> {
-  const health = await request("/health");
-  if (typeof health.registrationVersion !== "number" || health.registrationVersion < 2) {
-    throw new RankingError("backend_outdated", "El tablón se está preparando. Puedes jugar y apuntarte más tarde.", true);
-  }
-  // Los servidores anteriores podían responder a /health sin tener acceso a la base de datos.
-  await loadRanking();
 }
 
 export async function loadRanking(): Promise<RankingPlayer[]> {
@@ -212,4 +210,37 @@ export async function loadRanking(): Promise<RankingPlayer[]> {
     return { ...player, campaignWorld: player.campaignWorld === undefined ? campaignWorld(player.world as number) : player.campaignWorld,
       totalApples: player.totalApples ?? null, achievedAt: normalizeProgressDate(player.achievedAt) } as RankingPlayer;
   });
+}
+
+const deviceHeaders = (device: RankingDevice) => ({ "X-Super-Noa-Device": device.id, "X-Super-Noa-Token": device.token });
+
+function ownFrom(body: Record<string, unknown>): RankingOwn {
+  if (typeof body.alias !== "string" || !aliasStatuses.includes(body.aliasStatus as RankingAliasStatus) || typeof body.publicAlias !== "string") {
+    throw new RankingError("invalid_response", "No pude leer tu tarjeta del tablón. Puedes volver a intentarlo.", true);
+  }
+  return { alias: body.alias, aliasStatus: body.aliasStatus as RankingAliasStatus, publicAlias: body.publicAlias };
+}
+
+/** La tarjeta propia según el servidor: su alias, si está pendiente, aprobado, rechazado u oculto, y el nombre que ven los demás. */
+export async function readOwnRanking(device: RankingDevice): Promise<RankingOwn> {
+  return ownFrom(await request("/v1/device", { headers: deviceHeaders(device) }));
+}
+
+/**
+ * Cambia el alias de una tarjeta ya registrada. El nuevo pasa por el filtro y queda pendiente; hasta que se apruebe, los
+ * demás ven el aprobado anterior o el nombre provisional. La tarjeta guardada aquí se queda con el alias nuevo.
+ */
+export async function changeRankingAlias(device: RankingDevice, alias: string): Promise<RankingOwn> {
+  const normalized = alias.trim().replace(/\s+/g, " ");
+  if (!/^[\p{L}\p{N} _-]{3,16}$/u.test(normalized)) throw new RankingError("invalid_alias", "Elige un nombre de entre 3 y 16 letras o números.", false);
+  const body = await request("/v1/alias", {
+    method: "POST", headers: { "Content-Type": "application/json", ...deviceHeaders(device) }, body: JSON.stringify({ alias: normalized }),
+  });
+  if (typeof body.alias !== "string" || !aliasStatuses.includes(body.aliasStatus as RankingAliasStatus)) {
+    throw new RankingError("invalid_response", "No pude confirmar el alias nuevo. Puedes volver a intentarlo.", true);
+  }
+  const renamed = { id: device.id, token: device.token, alias: body.alias };
+  persistDevice(renamed);
+  // El nombre que ven los demás no cambia hasta la revisión: se vuelve a leer con la tarjeta.
+  return readOwnRanking(renamed);
 }

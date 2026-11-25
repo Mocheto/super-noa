@@ -1,73 +1,46 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { RankingError } from "./ranking.ts";
-import { createEnrollmentRecovery, ENROLLMENT_RETRY_MS, enrollmentFailure, isEnrolled, safeEnrollmentMoment } from "./rankingOnboarding.ts";
+import { esFilaPropia, isEnrolled, pideOtroAlias, tablonActivo } from "./rankingOnboarding.ts";
+import { preguntaPuerta, respuestaPuerta } from "./puertaAdultos.ts";
 
-test("una tarjeta pendiente no permite saltarse el alta, una confirmada sí", () => {
+const device = { id: "device", token: "token", alias: "Luna" };
+const fila = (alias: string) => ({ alias, world: 1, campaignWorld: 1, completedLevels: 1, stickers: 0, bossChallenges: 0, totalApples: 3, achievedAt: null });
+
+test("una tarjeta pendiente aún no está apuntada; una confirmada sí", () => {
   assert.equal(isEnrolled(null), false);
-  const device = { id: "device", token: "token", alias: "Luna" };
   assert.equal(isEnrolled({ ...device, registrationPending: true }), false);
   assert.equal(isEnrolled(device), true);
 });
 
-test("las recuperaciones esperan un menú seguro sin otro diálogo", () => {
-  for (const screen of ["home", "map"]) {
-    assert.equal(safeEnrollmentMoment(screen, false), true);
-    assert.equal(safeEnrollmentMoment(screen, true), false);
-  }
-  for (const screen of ["game", "boss", "secret-transition", "complete", "finished", "gameover"]) {
-    assert.equal(safeEnrollmentMoment(screen, false), false);
-    assert.equal(safeEnrollmentMoment(screen, true), false);
-  }
-  assert.ok(ENROLLMENT_RETRY_MS >= 30_000);
+test("el tablón viene apagado; los dispositivos con tarjeta siguen encendidos y lo guardado manda", () => {
+  assert.equal(tablonActivo(null, null), false);
+  assert.equal(tablonActivo(null, device), true);
+  assert.equal(tablonActivo(null, { ...device, registrationPending: true }), true);
+  assert.equal(tablonActivo("0", device), false);
+  assert.equal(tablonActivo("1", null), true);
 });
 
-test("validación mantiene el diálogo, fallos de servicio aplazan y almacenamiento ofrece salida explícita", () => {
-  for (const code of ["invalid_alias", "alias_not_allowed", "alias_taken", "device_exists"] as const) {
-    assert.equal(enrollmentFailure(new RankingError(code, "Elige otro alias", false)), "validate");
-  }
-  assert.equal(enrollmentFailure(new RankingError("storage_unavailable", "No se puede guardar", false)), "storage");
-  for (const code of ["network", "timeout", "server_unavailable", "invalid_response", "backend_outdated", "request_failed"] as const) {
-    assert.equal(enrollmentFailure(new RankingError(code, "No disponible", true)), "defer");
-  }
-  assert.equal(enrollmentFailure(new TypeError("Sin red")), "defer");
+test("solo un alias rechazado pide otro al abrir el juego", () => {
+  assert.equal(pideOtroAlias(null), false);
+  for (const aliasStatus of ["pending", "approved", "hidden"] as const) assert.equal(pideOtroAlias({ alias: "Luna", aliasStatus, publicAlias: "Koala 65" }), false);
+  assert.equal(pideOtroAlias({ alias: "Luna", aliasStatus: "rejected", publicAlias: "Koala 65" }), true);
 });
 
-test("recuperar conexión en partida espera al mapa sin bloquear su propio reintento", () => {
-  const now = 1_000;
-  const retryAt = { current: now + ENROLLMENT_RETRY_MS };
-  let screen = "game";
-  let prompts = 0;
-  const recovery = createEnrollmentRecovery(retryAt, () => safeEnrollmentMoment(screen, false), () => {
-    if (now < retryAt.current) return;
-    prompts++;
-  }, () => now);
-  recovery.online();
-  assert.equal(prompts, 0);
-  assert.equal(retryAt.current, 0);
-  screen = "map";
-  recovery.retry();
-  assert.equal(prompts, 1);
-  assert.equal(retryAt.current, 0);
+test("la fila propia se reconoce por el nombre que ven los demás, también el provisional", () => {
+  const pendiente = { alias: "Luna", aliasStatus: "pending" as const, publicAlias: "Koala 65" };
+  assert.equal(esFilaPropia(fila("Koala 65"), pendiente, device), true);
+  assert.equal(esFilaPropia(fila("Luna"), pendiente, device), false);
+  assert.equal(esFilaPropia(fila("luna"), null, device), true);
+  assert.equal(esFilaPropia(fila("Luna"), null, null), false);
 });
 
-test("el reintento automático vencido solo aplaza tras un nuevo fallo real", () => {
-  let now = 1_000;
-  const retryAt = { current: now + ENROLLMENT_RETRY_MS };
-  let attempts = 0;
-  const recovery = createEnrollmentRecovery(retryAt, () => true, () => {
-    assert.ok(now >= retryAt.current);
-    attempts++;
-    retryAt.current = now + ENROLLMENT_RETRY_MS;
-  }, () => now);
-  recovery.retry();
-  assert.equal(attempts, 0);
-  now = retryAt.current;
-  recovery.retry();
-  assert.equal(attempts, 1);
-  recovery.retry();
-  assert.equal(attempts, 1);
-  now = retryAt.current;
-  recovery.retry();
-  assert.equal(attempts, 2);
+test("puerta para adultos: multiplicación del 6 al 9 y solo vale el número exacto", () => {
+  for (const azar of [0, 0.3, 0.6, 0.99999]) {
+    const { a, b } = preguntaPuerta(() => azar);
+    assert.ok(a >= 6 && a <= 9 && b >= 6 && b <= 9);
+  }
+  const pregunta = { a: 7, b: 8 };
+  assert.equal(respuestaPuerta(pregunta, "56"), true);
+  assert.equal(respuestaPuerta(pregunta, " 56 "), true);
+  for (const mala of ["", "15", "56.0", "5 6", "cincuenta y seis", "-56"]) assert.equal(respuestaPuerta(pregunta, mala), false);
 });

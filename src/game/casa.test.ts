@@ -45,7 +45,7 @@ test("el bocadillo enseña una sola cosa, la más urgente en orden: comer, mimos
   assert.equal(bocadilloDe(casa.gatitos[1]), "comer");
   const comido = cuidar(casa, 1, "comer", a(18, 20)).casa;
   assert.equal(bocadilloDe(comido.gatitos[1]), "mimos");
-  const mimado = cuidar(comido, 1, "frotar", a(18, 20)).casa;
+  const mimado = cuidar(comido, 1, "acariciar", a(18, 20)).casa;
   assert.equal(bocadilloDe(mimado.gatitos[1]), "bano");
   assert.deepEqual(pistasDe(avanzar(conGatitos(a(18, 8), 1), a(18, 13)).gatitos[1]), ["comer", "mimos", "jugar"], "a las 5 h el baño aún está bien");
 });
@@ -58,7 +58,7 @@ test("cuidar lo que hace falta da las gracias y un corazón; lo que no, nunca es
   const otraVez = cuidar(comer.casa, 1, "comer", a(18, 11));
   assert.deepEqual([otraVez.respuesta, otraVez.corazon], ["ahoraNo", false], "con el cuenco lleno lo huele y gira la cabeza");
   assert.equal(cuidar(comer.casa, 1, "esponja", a(18, 11)).respuesta, "ahoraNo", "limpio, se sacude y se va");
-  assert.equal(cuidar(comer.casa, 1, "frotar", a(18, 11)).respuesta, "ronronea", "los mimos siempre gustan");
+  assert.equal(cuidar(comer.casa, 1, "acariciar", a(18, 11)).respuesta, "ronronea", "los mimos siempre gustan");
   assert.equal(cuidar(comer.casa, 1, "pelota", a(18, 11)).respuesta, "juegaIgual");
 });
 
@@ -78,7 +78,7 @@ test("jugar pide tres pelotas atrapadas", () => {
 test("dos corazones al día como mucho, cinco para ser mejor amigo y nunca se pierden", () => {
   let casa = avanzar(conGatitos(a(18, 8), 1), a(18, 20));
   const corazones = [];
-  for (const cuidado of ["comer", "frotar", "esponja"] as const) {
+  for (const cuidado of ["comer", "acariciar", "esponja"] as const) {
     const resultado = cuidar(casa, 1, cuidado, a(18, 20));
     corazones.push(resultado.corazon);
     casa = resultado.casa;
@@ -87,7 +87,7 @@ test("dos corazones al día como mucho, cinco para ser mejor amigo y nunca se pi
   for (const dia of [19, 20]) {
     casa = avanzar(casa, a(dia, 20));
     casa = cuidar(casa, 1, "comer", a(dia, 20)).casa;
-    casa = cuidar(casa, 1, "frotar", a(dia, 20)).casa;
+    casa = cuidar(casa, 1, "acariciar", a(dia, 20)).casa;
   }
   assert.equal(casa.gatitos[1].corazones, 5);
   assert.equal(saludoAlEntrar(casa.gatitos[1]), "cantar", "el mejor amigo canta al entrar Noa");

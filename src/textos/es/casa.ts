@@ -6,6 +6,10 @@ export const casa = {
   titulo: { oculto: "La casa de los gatitos" },
   gatito: { oculto: "{nombre}, en la casa" },
   salir: { oculto: "Volver al mapa" },
+  menu: {
+    oculto: "Qué hacer con {nombre}",
+    acaricia: { rotulo: "{pictograma:amigos} ACARICIA" },
+  },
   bandeja: { oculto: "Cosas para cuidar a los gatitos" },
   bano: {
     titulo: { oculto: "Baño de {nombre}" },

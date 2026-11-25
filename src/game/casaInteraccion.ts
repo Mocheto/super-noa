@@ -1,7 +1,7 @@
 /**
- * Arrastrar y frotar en la casa (prototipo «Arrastrar y frotar en la habitación»). Solo cuentas y medidas, sin
+ * Tocar y arrastrar en la casa (prototipo «Arrastrar y frotar en la habitación»). Solo cuentas y medidas, sin
  * React, para probarlas. Los números que hay que fijar jugando con Noa se pueden cambiar desde la URL, también en la web:
- * `?casaFrotar=1500` (milisegundos frotando), `?casaObjeto=96` (tamaño de los objetos de la bandeja, en px de la
+ * `?casaObjeto=96` (tamaño de los objetos de la bandeja, en px de la
  * escena), `?casaToque=90` (radio para soltar algo sobre un gatito) y `?casaNecesidades=pide|senota` (para probar con
  * los gatitos pidiendo o con pistas).
  */
@@ -25,22 +25,16 @@ export type Herramienta = "cuenco" | "pelota" | "esponja" | "escoba";
 /** Objetos de la bandeja. La esponja ya no está: para bañar se coge al gatito y se lleva a la bañera. */
 export const HERRAMIENTAS: readonly Herramienta[] = ["cuenco", "pelota", "escoba"];
 /**
- * Con el dedo casi quieto este tiempo sobre un gatito, se coge; si se mueve más de `MOVER_PARA_FROTAR` px antes, es
- * frotar. Corto y con margen porque a una niña de cinco años le tiembla el dedo (antes, 500 ms y 8 px: nunca lo cogía).
+ * Sobre un gatito, mover el dedo al menos estos px de pantalla lo coge; levantarlo antes es un toque y abre su menú.
+ * Con margen, porque a una niña de cinco años le tiembla el dedo.
  */
-export const MANTENER_PARA_COGER_MS = 300;
-export const MOVER_PARA_FROTAR = 24;
-
-/** ¿Se coge? El dedo lleva casi quieto (menos de `MOVER_PARA_FROTAR` px de pantalla) al menos `MANTENER_PARA_COGER_MS`. */
-export const seCoge = (ms: number, movido: number) => ms >= MANTENER_PARA_COGER_MS && movido < MOVER_PARA_FROTAR;
+export const MOVER_PARA_COGER = 24;
 export const CUIDADO_DE: Readonly<Record<Exclude<Herramienta, "escoba">, Cuidado>> = { cuenco: "comer", pelota: "pelota", esponja: "esponja" };
 
 export type AjustesCasa = {
-  /** Tiempo frotando (con el dedo o la esponja) hasta que cuenta. */
-  frotarMs: number;
   /** Tamaño de los objetos de la bandeja, en px de la escena. */
   objeto: number;
-  /** Radio alrededor del gatito en el que cuenta soltar o frotar, en px de la escena. */
+  /** Radio alrededor del gatito en el que cuenta tocar o soltar, en px de la escena. */
   toque: number;
   /** Para probar: necesidades al entrar. */
   necesidades: "pide" | "senota" | null;
@@ -50,7 +44,7 @@ export type AjustesCasa = {
   hora: number | null;
 };
 
-export const AJUSTES_CASA: AjustesCasa = { frotarMs: 1500, objeto: 96, toque: 90, necesidades: null, hora: null };
+export const AJUSTES_CASA: AjustesCasa = { objeto: 96, toque: 90, necesidades: null, hora: null };
 
 const numero = (valor: string | null, minimo: number, maximo: number, defecto: number) => {
   const leido = Number(valor);
@@ -61,7 +55,6 @@ export function leerAjustesCasa(busqueda: string | null): AjustesCasa {
   const parametros = new URLSearchParams(busqueda ?? "");
   const necesidades = parametros.get("casaNecesidades");
   return {
-    frotarMs: numero(parametros.get("casaFrotar"), 200, 6000, AJUSTES_CASA.frotarMs),
     objeto: numero(parametros.get("casaObjeto"), 48, 200, AJUSTES_CASA.objeto),
     toque: numero(parametros.get("casaToque"), 40, 200, AJUSTES_CASA.toque),
     necesidades: necesidades === "pide" || necesidades === "senota" ? necesidades : null,
@@ -97,22 +90,6 @@ export const gatitoMasCerca = (x: number, sitios: readonly number[]) =>
 export function huellaEn(x: number, y: number, huellas: readonly { x: number }[], radio = 60): number {
   if (Math.abs(y - (ESCENA_CASA.suelo + 30)) > radio) return -1;
   return huellas.findIndex((huella) => Math.abs(huella.x - x) <= radio);
-}
-
-/**
- * Frotar: suma el tiempo entre movimientos seguidos sobre el mismo gatito. Un parón de más de 250 ms no suma, y
- * cambiar de gatito empieza de cero. Devuelve el nuevo estado y si ya ha frotado bastante.
- */
-export type Frote = { gatito: number; ms: number; ultimo: number };
-export const PARON_MS = 250;
-
-export function frotar(frote: Frote | null, gatito: number, ahora: number, objetivoMs: number): { frote: Frote | null; listo: boolean } {
-  if (gatito < 0) return { frote, listo: false };
-  if (!frote || frote.gatito !== gatito) return { frote: { gatito, ms: 0, ultimo: ahora }, listo: false };
-  const paso = ahora - frote.ultimo;
-  const ms = frote.ms + (paso > 0 && paso <= PARON_MS ? paso : 0);
-  if (ms >= objetivoMs) return { frote: null, listo: true };
-  return { frote: { gatito, ms, ultimo: ahora }, listo: false };
 }
 
 /**

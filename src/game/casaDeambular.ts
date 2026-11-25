@@ -123,7 +123,7 @@ export function decidir(andante: Andante, gatito: GatitoCasa, otros: readonly An
   return quedarse(andante, eleccion.estado, eleccion.segundos, ahora);
 }
 
-/** Al tocarlo (frotar o soltarle algo encima), se para en el acto. */
+/** Al tocarlo (con el dedo o soltándole algo encima), se para en el acto. */
 export const parar = (andante: Andante, ahora: number): Andante =>
   andando(andante) ? { ...andante, destino: null, pose: andante.pose === "pedir" ? "pedir" : "sentarse", desde: ahora, hasta: ahora + QUIETO_AL_TOCAR_MS } : andante;
 

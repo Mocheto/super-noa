@@ -96,7 +96,11 @@ Estado de una necesidad que ya no puede esperar: el gatito lloriquea con un boca
 _Avoid_: Llora (el gatito nunca está triste de verdad), urgente
 
 **Cuidado**:
-Lo que hace Noa para atender una necesidad: dar de comer, frotar para los mimos, bañar con la esponja o jugar a la pelota.
+Lo que hace Noa para atender una necesidad: dar de comer, acariciar para los mimos, bañar o jugar a la pelota.
+_Avoid_: Frotar para los mimos (frotar queda para el baño)
+
+**Menú del gatito**:
+Lo que sale junto a un gatito de la casa al tocarlo sin moverlo, con ACARICIA como única opción. Moverlo con el dedo no abre el menú: lo coge. No sale con un gatito dormido o arropado.
 
 **Deambular**:
 Lo que hace un gatito de la casa por su cuenta: andar por todo el suelo de la habitación, en cualquier dirección y con profundidad, hacia un sitio cualquiera o hacia un sitio de interés (cama, rascador, ventana).

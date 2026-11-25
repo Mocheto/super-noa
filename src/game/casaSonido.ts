@@ -1,6 +1,6 @@
 /**
  * Sonido de la casa de los gatitos: maullidos con los samples de la fiesta (`miau-gatito-1/2`) en un tono distinto
- * para cada gatito, el ronroneo mientras se frota, el bote de la pelota y una canción corta, generada por código,
+ * para cada gatito, el ronroneo de la caricia, el bote de la pelota y una canción corta, generada por código,
  * cuando un gatito canta (si cantan dos a la vez, suenan a coro). Respeta el silencio y el volumen de efectos.
  */
 import type { SampleBank } from "./catPartySamples";
@@ -168,7 +168,7 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
         osc.stop(inicio + NOTA_S);
       });
     },
-    /** Ronroneo grave y ondulado mientras se frota; se para al soltar. */
+    /** Ronroneo grave y ondulado de la caricia; se para con `ronronear(false)`. */
     ronronear(activo: boolean) {
       if (!activo) { ronroneo?.parar(); ronroneo = null; return; }
       if (ronroneo) return;

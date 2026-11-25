@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { aEscena, AJUSTES_CASA, autodeslizar, centrarEn, ESCALA_MINIMA, escalaCasa, frotar, gatitoEn, gatitoMasCerca, huellaEn, leerAjustesCasa, limitarVista, PARON_MS, SITIOS_CASA } from "./casaInteraccion.ts";
+import { aEscena, AJUSTES_CASA, autodeslizar, centrarEn, ESCALA_MINIMA, escalaCasa, gatitoEn, gatitoMasCerca, huellaEn, leerAjustesCasa, limitarVista, SITIOS_CASA } from "./casaInteraccion.ts";
 
 test("los ajustes del prototipo se leen de la URL dentro de unos límites", () => {
   assert.deepEqual(leerAjustesCasa(null), AJUSTES_CASA);
-  assert.deepEqual(leerAjustesCasa("?casaFrotar=800&casaObjeto=120&casaToque=60&casaNecesidades=pide"), { frotarMs: 800, objeto: 120, toque: 60, necesidades: "pide", hora: null });
+  assert.deepEqual(leerAjustesCasa("?casaObjeto=120&casaToque=60&casaNecesidades=pide"), { objeto: 120, toque: 60, necesidades: "pide", hora: null });
   assert.equal(leerAjustesCasa("?casaHora=20").hora, 20);
   assert.equal(leerAjustesCasa("?casaHora=99").hora, 23);
-  assert.deepEqual(leerAjustesCasa("?casaFrotar=1&casaObjeto=9999&casaNecesidades=hambre"), { ...AJUSTES_CASA, frotarMs: 200, objeto: 200 });
+  assert.deepEqual(leerAjustesCasa("?casaObjeto=9999&casaNecesidades=hambre"), { ...AJUSTES_CASA, objeto: 200 });
 });
 
 test("un punto de la pantalla se pasa a la escena de 1280 × 540", () => {
@@ -30,7 +30,7 @@ test("la habitación cabe a lo alto y en el móvil vertical no baja de 0,75: ent
   assert.deepEqual([autodeslizar(110, 100, 500), autodeslizar(300, 100, 500), autodeslizar(470, 100, 500)], [-1, 0, 1]);
 });
 
-test("soltar o frotar cuenta sobre el gatito más cercano dentro del radio", () => {
+test("tocar o soltar cuenta sobre el gatito más cercano dentro del radio", () => {
   assert.equal(gatitoEn(SITIOS_CASA[1] + 30, 400, SITIOS_CASA), 1);
   assert.equal(gatitoEn(SITIOS_CASA[1], 100, SITIOS_CASA), -1, "en la pared, lejos del gatito");
   assert.equal(gatitoEn(SITIOS_CASA[0] - 150, 400, SITIOS_CASA), -1, "lejos de cualquier gatito");
@@ -43,24 +43,9 @@ test("la escoba barre la huella que toca", () => {
   assert.equal(huellaEn(610, 200, huellas), -1);
 });
 
-test("frotar suma el tiempo moviéndose sobre el mismo gatito; un parón o cambiar de gatito no suma", () => {
-  let estado = frotar(null, 0, 0, 500);
-  for (let ms = 100; ms <= 400; ms += 100) estado = frotar(estado.frote, 0, ms, 500);
-  assert.equal(estado.listo, false);
-  assert.equal(frotar(estado.frote, 0, 500, 500).listo, true);
-  const paron = frotar(estado.frote, 0, 400 + PARON_MS + 1, 500);
-  assert.equal(paron.listo, false, "tras un parón no suma");
-  assert.equal(frotar(estado.frote, 1, 500, 500).frote?.ms, 0, "otro gatito empieza de cero");
-  assert.equal(frotar(estado.frote, -1, 500, 500).frote, estado.frote, "fuera de un gatito no cambia");
-});
-
-test("con el dedo quieto medio segundo se coge al gatito; si se mueve antes, es frotar", async () => {
-  const { seCoge, MANTENER_PARA_COGER_MS, HERRAMIENTAS } = await import("./casaInteraccion.ts");
-  assert.equal(seCoge(MANTENER_PARA_COGER_MS, 2), true);
-  assert.equal(seCoge(MANTENER_PARA_COGER_MS - 50, 0), false, "aún no");
-  assert.equal(seCoge(MANTENER_PARA_COGER_MS, 20), true, "un dedo que tiembla sigue cogiendo");
-  assert.equal(seCoge(MANTENER_PARA_COGER_MS, 40), false, "se ha movido: frota");
-  assert.ok(MANTENER_PARA_COGER_MS <= 300);
+test("el dedo tiembla sin coger y la esponja no está en la bandeja", async () => {
+  const { MOVER_PARA_COGER, HERRAMIENTAS } = await import("./casaInteraccion.ts");
+  assert.ok(MOVER_PARA_COGER >= 20 && MOVER_PARA_COGER <= 30);
   assert.ok(!HERRAMIENTAS.includes("esponja"), "la esponja sale de la bandeja");
 });
 

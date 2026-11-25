@@ -22,7 +22,7 @@ export {
 export type { CasaProgress, GatitoCasa, HuellaDeBarro, NecesidadId };
 
 export type EstadoNecesidad = "bien" | "seNota" | "pide";
-export type Cuidado = "comer" | "frotar" | "esponja" | "pelota";
+export type Cuidado = "comer" | "acariciar" | "esponja" | "pelota";
 
 /** Horas despierto hasta que una necesidad pasa de «bien» a «pide». «Se nota» llega a la mitad. */
 export const HORAS_HASTA_PIDE: Readonly<Record<NecesidadId, number>> = { comer: 6, mimos: 8, jugar: 10, bano: 12 };
@@ -129,12 +129,12 @@ export const pistasDe = (gatito: GatitoCasa): NecesidadId[] => NECESIDADES.filte
 
 export const esMejorAmigo = (gatito: GatitoCasa) => gatito.corazones >= CORAZONES_MEJOR_AMIGO;
 
-const necesidadDe: Record<Cuidado, NecesidadId> = { comer: "comer", frotar: "mimos", esponja: "bano", pelota: "jugar" };
+const necesidadDe: Record<Cuidado, NecesidadId> = { comer: "comer", acariciar: "mimos", esponja: "bano", pelota: "jugar" };
 
 /**
  * Cómo responde el gatito a un cuidado:
  * - `gracias`: atendió una necesidad que se notaba o pedía;
- * - `ronronea`: lo frotaste sin que le hicieran falta mimos (siempre le gusta);
+ * - `ronronea`: lo acariciaste sin que le hicieran falta mimos (siempre le gusta);
  * - `ahoraNo`: el cuenco o la esponja cuando no hace falta (lo huele y gira la cabeza, o se sacude y se va);
  * - `sigueJugando`: atrapó la pelota y aún quiere más;
  * - `juegaIgual`: atrapó la pelota sin tener ganas de jugar.
@@ -155,7 +155,7 @@ export function cuidar(casa: CasaProgress, mundo: number, cuidado: Cuidado, ahor
 
   if (!haciaFalta) {
     if (cuidado === "pelota") return guardar("juegaIgual", false);
-    return guardar(cuidado === "frotar" ? "ronronea" : "ahoraNo", false);
+    return guardar(cuidado === "acariciar" ? "ronronea" : "ahoraNo", false);
   }
   if (cuidado === "pelota" && gatito.lanzamientos + 1 < LANZAMIENTOS_PARA_JUGAR) {
     gatito.lanzamientos += 1;

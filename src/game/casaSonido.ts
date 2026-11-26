@@ -4,6 +4,7 @@
  * cuando un gatito canta (si cantan dos a la vez, suenan a coro). Respeta el silencio y el volumen de efectos.
  */
 import type { SonidoPecera } from "./casaPecera.ts";
+import type { SonidoJaula } from "./casaHamsters.ts";
 import type { SampleBank } from "./catPartySamples";
 import { busDeZona, contextoAudio, soltarBus } from "./audio.ts";
 
@@ -77,6 +78,29 @@ export const NOTAS_PECERA: Readonly<Record<SonidoPecera, readonly NotaPecera[]>>
   zzz: [{ onda: "sine", desde: 240, hasta: 200, dura: 0.5, volumen: 0.025, retraso: 0 }],
 };
 
+const nota = (onda: OscillatorType, desde: number, hasta: number, dura: number, volumen: number, retraso = 0): NotaPecera => ({ onda, desde, hasta, dura, volumen, retraso });
+/** Un sonido corto propio para cada cosa de la jaula de hámsters (mapa «Jaula de hamsters en la casa de los gatitos»). */
+export const NOTAS_JAULA: Readonly<Record<SonidoJaula, readonly NotaPecera[]>> = {
+  // Tubo: un «uuuiii» hueco que sube.
+  tubo: [nota("sine", 320, 860, 0.22, 0.09), nota("sine", 480, 1290, 0.2, 0.04, 0.03)],
+  // Rueda: tic tic tic de madera.
+  rueda: [0, 0.09, 0.18, 0.27, 0.36].map((retraso) => nota("square", 900, 700, 0.03, 0.03, retraso)),
+  // Columpio: un vaivén, arriba y abajo.
+  columpio: [nota("triangle", 520, 780, 0.2, 0.08), nota("triangle", 780, 520, 0.22, 0.08, 0.22)],
+  // Casita: «shhh» grave y dormilón.
+  casita: [nota("sine", 360, 240, 0.28, 0.08), nota("sine", 280, 200, 0.3, 0.05, 0.2)],
+  // Comida: semillas que crujen.
+  comida: [0, 0.06, 0.13, 0.21].map((retraso, i) => nota("triangle", 1400 - i * 90, 900, 0.045, 0.06, retraso)),
+  // Agua: tres gotas.
+  agua: [0, 0.11, 0.22].map((retraso, i) => nota("sine", 700 + i * 120, 1300 + i * 120, 0.08, 0.08, retraso)),
+  // Escapada: «¡uy, uy!» que baja corriendo.
+  escapa: [nota("triangle", 1100, 700, 0.12, 0.09), nota("triangle", 950, 550, 0.12, 0.09, 0.14), nota("triangle", 800, 420, 0.18, 0.09, 0.28)],
+  // Vuelta: tres notas alegres hacia arriba.
+  vuelve: [523, 659, 784].map((hz, i) => nota("triangle", hz, hz, 0.14, 0.09, i * 0.11)),
+  // Un hámster: chillidito.
+  hamster: [nota("sine", 1700, 2300, 0.07, 0.06), nota("sine", 2100, 1700, 0.08, 0.05, 0.08)],
+};
+
 /** Motor de sonido de la casa. Se crea una vez por visita; el contexto de audio arranca con el primer toque. */
 export function crearSonidoCasa(ajustesIniciales: Ajustes) {
   let ajustes = ajustesIniciales;
@@ -103,6 +127,24 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
     if (!ctx || !salida) return null;
     if (ctx.state === "suspended") void ctx.resume();
     return ctx;
+  };
+  /** Toca una lista de notas cortas. */
+  const tocarNotas = (notas: readonly NotaPecera[]) => {
+    const ctx = listo();
+    if (!ctx || !salida) return;
+    for (const { onda, desde, hasta, dura, volumen, retraso } of notas) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const inicio = ctx.currentTime + retraso;
+      osc.type = onda;
+      osc.frequency.setValueAtTime(desde, inicio);
+      osc.frequency.exponentialRampToValueAtTime(hasta, inicio + dura);
+      gain.gain.setValueAtTime(volumen, inicio);
+      gain.gain.exponentialRampToValueAtTime(0.0001, inicio + dura);
+      osc.connect(gain).connect(salida);
+      osc.start(inicio);
+      osc.stop(inicio + dura + 0.02);
+    }
   };
 
   const tocarSample = (id: "miau-gatito-1" | "miau-gatito-2" | "plop-ovillo", tono: number, volumen: number) => {
@@ -299,22 +341,11 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
     },
     /** Sonidos de la pecera: burbujas, ñam, chapoteo, el globo que se infla, un beso, la luz y las zetas. Cada uno, una o dos notas cortas. */
     pecera(tipo: SonidoPecera) {
-      const ctx = listo();
-      if (!ctx || !salida) return;
-      const notas = NOTAS_PECERA[tipo];
-      for (const nota of notas) {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const inicio = ctx.currentTime + nota.retraso;
-        osc.type = nota.onda;
-        osc.frequency.setValueAtTime(nota.desde, inicio);
-        osc.frequency.exponentialRampToValueAtTime(nota.hasta, inicio + nota.dura);
-        gain.gain.setValueAtTime(nota.volumen, inicio);
-        gain.gain.exponentialRampToValueAtTime(0.0001, inicio + nota.dura);
-        osc.connect(gain).connect(salida!);
-        osc.start(inicio);
-        osc.stop(inicio + nota.dura + 0.02);
-      }
+      tocarNotas(NOTAS_PECERA[tipo]);
+    },
+    /** Sonidos de la jaula de hámsters, por el mismo bus que lo demás. */
+    jaula(tipo: SonidoJaula) {
+      tocarNotas(NOTAS_JAULA[tipo]);
     },
     cerrar() {
       ronroneo?.parar();

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
-import { CANCION, MAULLIDOS, notaHz, PIDE_CADA_MS, tonoDe } from "./casaSonido.ts";
+import { CANCION, MAULLIDOS, notaHz, NOTAS_JAULA, PIDE_CADA_MS, tonoDe } from "./casaSonido.ts";
 import { MUNDOS_CASA } from "./casaRescate.ts";
 
 test("cada gatito de la casa maúlla en su tono: Bruma más grave y Pino más agudo que Miel", () => {
@@ -35,4 +35,13 @@ test("el baño suena: agua y secador mientras se frota, burbujas, cepillo y camp
   assert.deepEqual(sonidoDelBano("todaviaNo", "peine"), { bucle: null, maullido: "ahoraNo" });
   assert.deepEqual(sonidoDelBano("terminado", null), { bucle: null, maullido: "gracias", cantar: true });
   assert.ok(GOLPE_BANO_CADA_MS >= 100, "frotar no suena a ametralladora");
+});
+
+test("cada cosa de la jaula de hámsters tiene su sonido, corto y suave", () => {
+  const sonidos = Object.values(NOTAS_JAULA);
+  assert.equal(new Set(sonidos.map((notas) => JSON.stringify(notas))).size, 9);
+  for (const notas of sonidos) {
+    assert.ok(notas.length > 0);
+    assert.ok(notas.every((n) => n.volumen <= 0.1 && n.retraso + n.dura <= 0.6 && n.desde > 0 && n.hasta > 0));
+  }
 });

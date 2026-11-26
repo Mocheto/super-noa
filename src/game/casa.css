@@ -472,6 +472,8 @@
 .casa-escena.is-jardin .casa-pecera { display: none; }
 .casa-pecera > * { position: absolute; }
 .casa-pecera-fondo, .casa-pecera-cristal { left: 0; top: 0; width: 412px; height: 354px; image-rendering: pixelated; pointer-events: none; }
+.casa-pecera-cofre { background-repeat: no-repeat; image-rendering: pixelated; pointer-events: none; }
+.casa-pecera-cofre.is-abierto { background-position: -56px 0; }
 .casa-pez { background-repeat: no-repeat; image-rendering: pixelated; pointer-events: none; will-change: transform; }
 .casa-pecera-copo, .casa-pecera-efecto { background-repeat: no-repeat; image-rendering: pixelated; transform: translate(-50%, -50%); pointer-events: none; }
 /* Sin luz, el agua se oscurece y el interruptor se pone rojo; de noche con la luz encendida, la pecera brilla por encima de la oscuridad. */

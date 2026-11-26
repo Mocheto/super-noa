@@ -105,9 +105,17 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     pintar(fondoPecera, entera(fondoPecera), caja);
     const hojaPeces = await cargar(PECERA.peces);
     const { ancho: anchoPez, alto: altoPez } = PECERA.cuadroPez;
+    const hojaCaballito = await cargar(PECERA.caballito.hoja);
+    const { cuadro: cuadroCaballito, mostrar: ladoCaballito } = PECERA.caballito;
     for (const pez of crearPecera(0, () => 0.5).peces) {
+      if (pez.especie === 4) {
+        pintar(hojaCaballito, { x: 0, y: 0, ancho: cuadroCaballito, alto: cuadroCaballito }, { x: PECERA.left + pez.x - ladoCaballito / 2, y: PECERA.top + pez.y - ladoCaballito / 2, ancho: ladoCaballito, alto: ladoCaballito }, pez.mira < 0);
+        continue;
+      }
       pintar(hojaPeces, { x: 0, y: pez.especie * altoPez, ancho: anchoPez, alto: altoPez }, { x: PECERA.left + pez.x - anchoPez / 2, y: PECERA.top + pez.y - altoPez / 2, ancho: anchoPez, alto: altoPez }, pez.mira < 0);
     }
+    const hojaCofre = await cargar(PECERA.cofre.hoja);
+    pintar(hojaCofre, { x: 0, y: 0, ancho: hojaCofre.naturalHeight, alto: hojaCofre.naturalHeight }, { x: PECERA.left + PECERA.cofre.izquierda, y: PECERA.top + PECERA.cofre.arriba, ancho: PECERA.cofre.mostrar, alto: PECERA.cofre.mostrar });
     const cristal = await cargar(PECERA.cristal);
     pintar(cristal, entera(cristal), caja);
   }

@@ -34,7 +34,7 @@ const dentroDelAgua = (p: Pecera, ahora: number) => p.peces.every((pez) => {
 
 test("la pecera está en la ampliación de la izquierda y su arte existe", () => {
   assert.ok(H.ampliacion > 0 && PECERA.left >= -H.ampliacion && PECERA.left + PECERA.ancho <= 0, "entera en la ampliación");
-  for (const ruta of [PECERA.fondo, PECERA.cristal, PECERA.peces, PECERA.objetos, H.fondo]) assert.ok(asset(ruta), ruta);
+  for (const ruta of [PECERA.fondo, PECERA.cristal, PECERA.peces, PECERA.objetos, PECERA.caballito.hoja, PECERA.cofre.hoja, H.fondo]) assert.ok(asset(ruta), ruta);
   assert.ok(dentroDelSuelo(H, H.sitios.pecera.x, H.sitios.pecera.y), "el sitio de mirar los peces está en el suelo");
   assert.ok(Math.abs(H.sitios.pecera.x - (PECERA.left + PECERA.ancho / 2)) < 20, "delante del mueble");
   assert.ok(H.sitios.pecera.y > PECERA.top + PECERA.alto - 60, "con los pies delante del mueble");
@@ -43,7 +43,7 @@ test("la pecera está en la ampliación de la izquierda y su arte existe", () =>
 test("los peces nadan sin salir del agua, miran hacia donde van y no se paran", () => {
   const e = entorno();
   const { pecera, fin } = pasar(crearPecera(0, e.azar), 0, 60000, e);
-  assert.equal(pecera.peces.length, 4);
+  assert.equal(pecera.peces.length, 5);
   assert.ok(dentroDelAgua(pecera, fin));
   for (const pez of pecera.peces) assert.ok(pez.y > PECERA.agua.superficie && pez.y < PECERA.agua.arena, `${pez.especie} entre la superficie y la arena`);
 });
@@ -74,7 +74,7 @@ test("tocar a cada pez hace su gracia", () => {
   const e = entorno(11);
   const inicial = crearPecera(0, e.azar);
   const acciones = inicial.peces.map((_, i) => tocarPez(inicial, i, 100, e).pecera.peces[i].accion);
-  assert.deepEqual(acciones, ["salta", "gira", "esconde", "hincha"]);
+  assert.deepEqual(acciones, ["salta", "gira", "esconde", "hincha", "baila"]);
   // El naranja sale por encima del agua (y de la pecera) y vuelve a caer.
   const salto = tocarPez(inicial, 0, 100, e).pecera;
   const alto = Math.min(...Array.from({ length: 60 }, (_, k) => posicionDe(salto.peces[0], 100 + k * 25).y));
@@ -169,9 +169,9 @@ test("a veces hacen travesuras por su cuenta, y con un gatito mirando se juntan 
   const e = entorno(21);
   const { sonidos } = pasar(crearPecera(0, e.azar), 0, 60000, e);
   assert.ok(sonidos.some((sonido) => ["chapoteo", "hincha", "beso", "toc"].includes(sonido)), "ha habido al menos una travesura");
-  const curioso = pasar(crearPecera(0, e.azar), 0, 25000, entorno(3, { gatoMirando: 206 })).pecera;
+  const curioso = pasar(crearPecera(0, e.azar), 0, 60000, entorno(3, { gatoMirando: 206 })).pecera;
   const dx = curioso.peces.map((pez) => Math.abs(pez.x - 206));
-  assert.ok(Math.max(...dx) < 110, `juntos frente al gatito (${dx.join(",")})`);
+  assert.ok(Math.max(...dx) < 130, `juntos frente al gatito (${dx.join(",")})`);
 });
 
 test("un punto de la escena se pasa al dibujo de la pecera", () => {

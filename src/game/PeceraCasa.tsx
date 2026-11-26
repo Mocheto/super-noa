@@ -89,6 +89,7 @@ export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido }
     meter(pez >= 0 ? tocarPez(actual, pez, momento, entornoRef.current) : llamar(actual, toque.x, toque.y, momento, Math.random));
   }, [toque]);
 
+  const abierto = pecera.luz && pecera.peces.every((pez) => pez.llenoHasta > ahora);
   const claseLuz = pecera.luz ? (noche ? " is-brilla" : "") : " is-apagada";
   return (
     <div className={`casa-pecera${claseLuz}`} style={{ left: PECERA.left, top: PECERA.top, width: PECERA.ancho, height: PECERA.alto }}>
@@ -96,13 +97,22 @@ export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido }
       {pecera.copos.filter((copo) => copo.comidoEn === null && ahora >= copo.nace).map((copo) => (
         <i key={copo.id} className="casa-pecera-copo" style={{ left: copo.x, top: copo.y, ...objetoEn(OBJETO.copo, 24) }} />
       ))}
+      {/* El cofre se abre cuando todos los peces están llenos (la fiesta de los copos). */}
+      <i className={`casa-pecera-cofre${abierto ? " is-abierto" : ""}`} style={{
+        left: PECERA.cofre.izquierda, top: PECERA.cofre.arriba, width: PECERA.cofre.mostrar, height: PECERA.cofre.mostrar,
+        backgroundImage: cssAssetUrl(PECERA.cofre.hoja), backgroundSize: `${2 * PECERA.cofre.mostrar}px ${PECERA.cofre.mostrar}px`,
+      }} />
       {pecera.peces.map((pez, indice) => {
         const sitio = posicionDe(pez, ahora);
         const aspecto = aspectoDe(pez, ahora);
+        const caballito = pez.especie === 4;
+        const lado = PECERA.caballito.mostrar;
+        const hoja: CSSProperties = caballito
+          ? { width: lado, height: lado, backgroundImage: cssAssetUrl(PECERA.caballito.hoja), backgroundSize: `${5 * lado}px ${lado}px`, backgroundPosition: `${-aspecto.cuadro * lado}px 0px` }
+          : { width: PECERA.cuadroPez.ancho, height: PECERA.cuadroPez.alto, backgroundImage: cssAssetUrl(PECERA.peces), backgroundPosition: `${-aspecto.cuadro * PECERA.cuadroPez.ancho}px ${-pez.especie * PECERA.cuadroPez.alto}px` };
         return (
           <i key={indice} className={`casa-pez is-${pez.accion}`} style={{
-            left: sitio.x + aspecto.sacude, top: sitio.y, width: PECERA.cuadroPez.ancho, height: PECERA.cuadroPez.alto,
-            backgroundImage: cssAssetUrl(PECERA.peces), backgroundPosition: `${-aspecto.cuadro * PECERA.cuadroPez.ancho}px ${-pez.especie * PECERA.cuadroPez.alto}px`,
+            left: sitio.x + aspecto.sacude, top: sitio.y, ...hoja,
             visibility: aspecto.visible ? "visible" : "hidden",
             transform: `translate(-50%, -50%) scaleX(${pez.mira}) rotate(${aspecto.giro}deg) scale(${aspecto.escala})`,
           }} />

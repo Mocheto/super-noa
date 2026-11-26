@@ -15,6 +15,10 @@ export const PECERA = {
   cristal: "./assets/sprites/casa-pecera-cristal-v1.webp",
   peces: "./assets/sprites/casa-peces-v1.webp",
   objetos: "./assets/sprites/casa-pecera-objetos-v1.webp",
+  /** El caballito: cinco cuadros de 96 × 96 en una fila (mismas poses que los peces), que se muestran a `mostrar` px. */
+  caballito: { hoja: "./assets/sprites/casa-pez-caballito-v1.webp", cuadro: 96, mostrar: 56 },
+  /** El cofre del fondo: dos cuadros de 64 × 64 (cerrado y abierto), en el suelo de arena. */
+  cofre: { hoja: "./assets/sprites/casa-pecera-cofre-v1.webp", mostrar: 56, izquierda: 52, arriba: 126 },
   /** Dónde está el dibujo en la escena (px): delante de la pared de la ampliación, apoyado en el suelo. */
   left: -416,
   top: 56,
@@ -31,8 +35,8 @@ export const PECERA = {
   cuadroObjeto: 48,
 } as const;
 
-export const ESPECIES = ["naranja", "azul", "payaso", "globo"] as const;
-export type Especie = 0 | 1 | 2 | 3;
+export const ESPECIES = ["naranja", "azul", "payaso", "globo", "caballito"] as const;
+export type Especie = 0 | 1 | 2 | 3 | 4;
 /** Cuadros de la hoja de peces. */
 export const CUADRO = { nadaA: 0, nadaB: 1, nam: 2, susto: 3, dormido: 4 } as const;
 /** Objetos de la hoja de objetos. */
@@ -102,7 +106,7 @@ export type Salida = { pecera: Pecera; sonidos: SonidoPecera[] };
 const MARGEN_X = 34;
 const MARGEN_ARRIBA = 16;
 const MARGEN_ABAJO = 14;
-const VELOCIDAD: Readonly<Record<Especie, number>> = { 0: 42, 1: 52, 2: 34, 3: 24 };
+const VELOCIDAD: Readonly<Record<Especie, number>> = { 0: 42, 1: 52, 2: 34, 3: 24, 4: 30 };
 const GRAVEDAD = 900;
 const COPOS_A_LA_VEZ = 12;
 const COPOS_POR_PUÑADO = 6;
@@ -140,13 +144,13 @@ function sitioLibre(azar: () => number, alrededorDe?: { x: number; y: number }, 
   return { x: l.izquierda + azar() * (l.derecha - l.izquierda), y: l.arriba + azar() * (l.abajo - l.arriba) };
 }
 
-/** Los cuatro peces de siempre, repartidos por el agua. */
+/** Los cinco peces (los cuatro de siempre y el caballito), repartidos por el agua. */
 export function crearPecera(ahora: number, azar: () => number = Math.random): Pecera {
   const l = limites();
-  const huecos = [0.2, 0.42, 0.64, 0.84];
-  const peces: Pez[] = ([0, 1, 2, 3] as const).map((especie, i) => {
+  const huecos = [0.2, 0.42, 0.64, 0.84, 0.3];
+  const peces: Pez[] = ([0, 1, 2, 3, 4] as const).map((especie, i) => {
     const x = l.izquierda + huecos[i] * (l.derecha - l.izquierda);
-    const y = l.arriba + (especie === 3 ? 0.55 : especie === 2 ? 0.75 : 0.25 + 0.2 * i) * (l.abajo - l.arriba);
+    const y = l.arriba + (especie === 4 ? 0.4 : especie === 3 ? 0.55 : especie === 2 ? 0.75 : 0.25 + 0.2 * i) * (l.abajo - l.arriba);
     return {
       especie, x, y, mira: i % 2 === 0 ? 1 : -1, accion: "nada", desde: ahora, hasta: Infinity,
       destino: sitioLibre(azar), cambiaEn: ahora + 500 + azar() * 2500, comidos: 0, llenoHasta: 0, comeHasta: 0, copo: null, salto: null, fase: azar() * 6,
@@ -307,6 +311,13 @@ export function tocarPez(p: Pecera, indice: number, ahora: number, entorno: Ento
       sonidos.push("toc");
       break;
     }
+    case 4: {
+      // El caballito baila un momento y suelta una burbuja.
+      pecera = cambiarPez(pecera, indice, { accion: "baila", desde: ahora, hasta: ahora + BAILA_MS });
+      pecera = conEfecto(pecera, "burbuja", centro.x + 14 * pez.mira, centro.y - 10, ahora, 3 * pez.mira);
+      sonidos.push("beso");
+      break;
+    }
     default: {
       // El globo se infla y se queda un rato redondo antes de soltar el aire.
       pecera = cambiarPez(pecera, indice, { accion: "hincha", desde: ahora, hasta: ahora + HINCHA_MS });
@@ -457,7 +468,7 @@ export function avanzar(anterior: Pecera, ahora: number, entorno: Entorno): Sali
     if (curioso) {
       // Frente al gatito, en abanico y a distintas alturas para no taparse (con el centro dentro de lo que cabe).
       const centro = entre(entorno.gatoMirando!, l.izquierda + 95, l.derecha - 95);
-      const frente = { x: centro + (indice - 1.5) * 62, y: l.arriba + (l.abajo - l.arriba) * [0.25, 0.7, 0.35, 0.8][indice % 4] };
+      const frente = { x: centro + (indice - 2) * 62, y: l.arriba + (l.abajo - l.arriba) * [0.25, 0.7, 0.35, 0.8, 0.5][indice] };
       destino = frente;
     } else if (!copoActual && pez.accion === "nada" && ahora >= pez.cambiaEn) {
       destino = sitioLibre(azar);

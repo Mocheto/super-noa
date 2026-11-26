@@ -122,8 +122,8 @@ test("tocar el agua llama a los peces; tocar el cristal fuera del agua, no", () 
   for (const pez of pecera.peces) assert.ok(Math.abs(pez.destino.x - 150) <= 40 && Math.abs(pez.destino.y - 150) <= 30);
   assert.ok(pecera.efectos.some((efecto) => efecto.tipo === "burbuja"));
   assert.equal(zonaDe(150, 150), "agua");
-  assert.equal(zonaDe(270, 14), "bote");
-  assert.equal(zonaDe(280, 40), "interruptor");
+  assert.equal(zonaDe(320, 25), "bote");
+  assert.equal(zonaDe(370, 55), "interruptor");
   assert.equal(zonaDe(5, 5), null);
   assert.equal(zonaDe(150, 300), null, "el mueble no es agua");
 });
@@ -169,8 +169,8 @@ test("a veces hacen travesuras por su cuenta, y con un gatito mirando se juntan 
   const e = entorno(21);
   const { sonidos } = pasar(crearPecera(0, e.azar), 0, 60000, e);
   assert.ok(sonidos.some((sonido) => ["chapoteo", "hincha", "beso", "toc"].includes(sonido)), "ha habido al menos una travesura");
-  const curioso = pasar(crearPecera(0, e.azar), 0, 25000, entorno(3, { gatoMirando: 160 })).pecera;
-  const dx = curioso.peces.map((pez) => Math.abs(pez.x - 160));
+  const curioso = pasar(crearPecera(0, e.azar), 0, 25000, entorno(3, { gatoMirando: 206 })).pecera;
+  const dx = curioso.peces.map((pez) => Math.abs(pez.x - 206));
   assert.ok(Math.max(...dx) < 110, `juntos frente al gatito (${dx.join(",")})`);
 });
 

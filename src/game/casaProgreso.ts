@@ -58,6 +58,8 @@ export type CasaProgress = {
   jardin?: JardinProgress;
   /** Última visita de un animal amigo (`tocaVisita`): como mucho una al día. */
   visitante?: VisitanteProgress;
+  /** La jaula de los hámsters (`casaHamsters.ts`); si falta, comedero y bebedero llenos. */
+  hamsters?: HamstersProgress;
 };
 
 const porMundo = (a: number, b: number) => a - b;
@@ -358,6 +360,21 @@ export function normalizeFotos(raw: unknown): FotoCasa[] {
   }).slice(0, MAX_FOTOS);
 }
 
+// --- La jaula de los hámsters (`casaHamsters.ts`) --------------------------------------------------------------------
+
+/** Raciones que caben en el comedero y en el bebedero. */
+export const RACIONES = 3;
+export type HamstersProgress = { comida: number; agua: number };
+export const HAMSTERS_LLENOS: Readonly<HamstersProgress> = { comida: RACIONES, agua: RACIONES };
+
+/** Lectura tolerante: lo que no se entiende está lleno y, con todo lleno, `undefined` (es como empieza). */
+export function normalizeHamsters(raw: unknown): HamstersProgress | undefined {
+  if (!esRegistro(raw)) return undefined;
+  const raciones = (valor: unknown) => (typeof valor === "number" && Number.isFinite(valor) ? Math.max(0, Math.min(RACIONES, Math.floor(valor))) : RACIONES);
+  const hamsters = { comida: raciones(raw.comida), agua: raciones(raw.agua) };
+  return hamsters.comida === RACIONES && hamsters.agua === RACIONES ? undefined : hamsters;
+}
+
 // --- La casa entera --------------------------------------------------------------------------------------------------
 
 /** Lectura tolerante del campo opcional `casa` del progreso. Lo que no se entiende se descarta; si no hay casa, `undefined`. */
@@ -396,11 +413,13 @@ export function normalizeCasa(raw: unknown): CasaProgress | undefined {
   const enJardin = normalizeEnJardin(raw.enJardin, esGatito);
   const jardin = normalizeJardin(raw.jardin);
   const visitante = normalizeVisitante(raw.visitante);
+  const hamsters = normalizeHamsters(raw.hamsters);
   return {
     gatitos, huellas, calculadoEn: fecha, presentados,
     ...(decoracion && !esDeSiempre(decoracion) ? { decoracion } : {}), ...(enCasa ? { enCasa } : {}), ...(dormir ? { dormir } : {}),
     ...(fotos.length ? { fotos } : {}),
     ...(ropa ? { ropa } : {}), ...(favoritas ? { favoritas } : {}), ...(enJardin ? { enJardin } : {}), ...(jardin ? { jardin } : {}),
     ...(visitante ? { visitante } : {}),
+    ...(hamsters ? { hamsters } : {}),
   };
 }

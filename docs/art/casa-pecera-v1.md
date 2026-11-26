@@ -1,6 +1,8 @@
 # Casa de los gatitos: la pecera y la ampliación de la habitación
 
-Dossier del arte del mapa «Pecera en la casa». A diferencia de otras láminas de la casa, **no sale de un generador de imágenes**: lo pinta `prototypes/tools/casa-pecera-arte.py` por código, en una rejilla de «píxeles» de 4 px de escena (como el resto del arte de la casa) que se amplía sin suavizar. Si se quiere repintar a mano o con un modelo, basta con sustituir los cinco archivos que salen de abajo respetando sus medidas.
+Dossier del arte del mapa «Pecera en la casa». **Actualización (26-11-2026):** el arte del mueble, el cristal, los peces y los objetos ya sale de láminas generadas, recortadas por `prototypes/tools/casa-pecera-recorte.py` (con las medidas de la tabla de abajo cambiadas: mueble y cristal de 412 × 354, ver `PECERA`; peces de 96 × 72 con el pez de unos 50 px; objetos igual). Los prompts están en el hilo del proyecto («Prompts de arte de la pecera»). `casa-pecera-arte.py` solo se usa ya para la habitación ampliada (`casa-habitacion-vacia-v2.webp`); no lo vuelvas a ejecutar para el resto, pisaría el arte nuevo.
+
+Antes, el arte lo pintaba `prototypes/tools/casa-pecera-arte.py` por código, en una rejilla de «píxeles» de 4 px de escena (como el resto del arte de la casa) que se amplía sin suavizar. Si se quiere repintar a mano o con un modelo, basta con sustituir los cinco archivos que salen de abajo respetando sus medidas.
 
 ## Qué sale
 

@@ -471,16 +471,16 @@
 .casa-pecera { overflow: visible; pointer-events: none; image-rendering: pixelated; }
 .casa-escena.is-jardin .casa-pecera { display: none; }
 .casa-pecera > * { position: absolute; }
-.casa-pecera-fondo, .casa-pecera-cristal { left: 0; top: 0; width: 324px; height: 352px; image-rendering: pixelated; pointer-events: none; }
+.casa-pecera-fondo, .casa-pecera-cristal { left: 0; top: 0; width: 412px; height: 354px; image-rendering: pixelated; pointer-events: none; }
 .casa-pez { background-repeat: no-repeat; image-rendering: pixelated; pointer-events: none; will-change: transform; }
 .casa-pecera-copo, .casa-pecera-efecto { background-repeat: no-repeat; image-rendering: pixelated; transform: translate(-50%, -50%); pointer-events: none; }
 /* Sin luz, el agua se oscurece y el interruptor se pone rojo; de noche con la luz encendida, la pecera brilla por encima de la oscuridad. */
-.casa-pecera-oscuro { left: 16px; top: 64px; width: 292px; height: 168px; background: #0e1850; opacity: 0; transition: opacity .8s; pointer-events: none; }
+.casa-pecera-oscuro { left: 24px; top: 76px; width: 364px; height: 134px; background: #0e1850; opacity: 0; transition: opacity .8s; pointer-events: none; }
 .casa-pecera.is-apagada .casa-pecera-oscuro { opacity: .58; }
-.casa-pecera-luz { left: 16px; top: 52px; width: 292px; height: 170px; background: linear-gradient(#fff8c0aa, #fff8c000 80%); mix-blend-mode: screen; opacity: 0; transition: opacity .8s; pointer-events: none; }
+.casa-pecera-luz { left: 24px; top: 64px; width: 364px; height: 136px; background: linear-gradient(#fff8c0aa, #fff8c000 80%); mix-blend-mode: screen; opacity: 0; transition: opacity .8s; pointer-events: none; }
 .casa-pecera.is-brilla { z-index: 1001; filter: drop-shadow(0 0 22px #a8e8ffcc); }
 .casa-pecera.is-brilla .casa-pecera-luz { opacity: 1; }
-.casa-pecera-led { left: 272px; top: 36px; width: 20px; height: 8px; background: #3cc878; pointer-events: none; transition: background .3s; }
+.casa-pecera-led { left: 378px; top: 43px; width: 5px; height: 5px; background: #3cc878; pointer-events: none; transition: background .3s; }
 .casa-pecera.is-apagada .casa-pecera-led { background: #d85a5a; }
 .casa-pecera-efecto { animation: casa-pecera-sube 1.6s ease-out forwards; }
 .casa-pecera-efecto.is-gota { animation-name: casa-pecera-gota; }

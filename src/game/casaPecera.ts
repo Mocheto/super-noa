@@ -6,7 +6,7 @@
  * duermen) y, si un gatito se sienta a mirarlos, se juntan a curiosear. Solo lógica: sin dibujo ni tiempo propio; el
  * componente `PeceraCasa.tsx` pasa el reloj y el azar y pinta lo que sale de aquí.
  *
- * Todas las medidas de dentro de la pecera (`x`, `y`) van en px de su dibujo (324 × 352, de
+ * Todas las medidas de dentro de la pecera (`x`, `y`) van en px de su dibujo (412 × 354, de
  * `prototypes/tools/casa-pecera-arte.py`); `PECERA.left`/`top` lo colocan en la escena.
  */
 
@@ -16,16 +16,16 @@ export const PECERA = {
   peces: "./assets/sprites/casa-peces-v1.webp",
   objetos: "./assets/sprites/casa-pecera-objetos-v1.webp",
   /** Dónde está el dibujo en la escena (px): delante de la pared de la ampliación, apoyado en el suelo. */
-  left: -372,
-  top: 58,
-  ancho: 324,
-  alto: 352,
+  left: -416,
+  top: 56,
+  ancho: 412,
+  alto: 354,
   /** El agua: de la superficie a la arena, entre los cristales. */
-  agua: { izquierda: 16, derecha: 308, superficie: 64, arena: 212 },
+  agua: { izquierda: 24, derecha: 388, superficie: 76, arena: 174 },
   /** Bote de comida sobre la tapa, interruptor de la luz y puerta del castillo (para esconderse). */
-  bote: { izquierda: 240, derecha: 300, arriba: 0, abajo: 32 },
-  interruptor: { izquierda: 264, derecha: 300, arriba: 30, abajo: 50 },
-  castillo: { x: 242, y: 190 },
+  bote: { izquierda: 296, derecha: 346, arriba: 8, abajo: 52 },
+  interruptor: { izquierda: 356, derecha: 390, arriba: 34, abajo: 78 },
+  castillo: { x: 328, y: 178 },
   /** Cuadro de un pez en su hoja (5 cuadros por especie, una fila por especie) y de un objeto (6 cuadros en fila). */
   cuadroPez: { ancho: 96, alto: 72 },
   cuadroObjeto: 48,
@@ -99,9 +99,9 @@ export type Salida = { pecera: Pecera; sonidos: SonidoPecera[] };
 // --- Medidas del movimiento -----------------------------------------------------------------------------------------
 
 /** Cuánto se acerca a los cristales un pez (su centro) y a la superficie y la arena. */
-const MARGEN_X = 50;
-const MARGEN_ARRIBA = 24;
-const MARGEN_ABAJO = 22;
+const MARGEN_X = 34;
+const MARGEN_ARRIBA = 16;
+const MARGEN_ABAJO = 14;
 const VELOCIDAD: Readonly<Record<Especie, number>> = { 0: 42, 1: 52, 2: 34, 3: 24 };
 const GRAVEDAD = 900;
 const COPOS_A_LA_VEZ = 12;
@@ -117,7 +117,7 @@ const BAILA_MS = 900;
 const SUSTO_MS = 900;
 const DENTRO_MS = 1400;
 const ASOMA_MS = 700;
-const RADIO_TOQUE = { x: 40, y: 28 };
+const RADIO_TOQUE = { x: 32, y: 24 };
 const PASO_MAXIMO_MS = 80;
 
 const limites = () => ({

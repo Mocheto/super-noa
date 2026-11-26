@@ -59,9 +59,10 @@ test("el gatito se suelta sobre la bañera o aterriza en el suelo", async () => 
 });
 
 test("la vista de la habitación llega hasta la ampliación de la izquierda y la del jardín, no", () => {
-  assert.equal(VISTA_MINIMA_HABITACION, -420);
-  assert.equal(limitarVista(-900, 600, VISTA_MINIMA_HABITACION), -420);
+  assert.equal(VISTA_MINIMA_HABITACION, -1140);
+  assert.equal(limitarVista(-1900, 600, VISTA_MINIMA_HABITACION), -1140);
   assert.equal(limitarVista(-900, 600), 0, "sin mínimo, como siempre");
   assert.equal(limitarVista(5000, 600, VISTA_MINIMA_HABITACION), 1280 - 600);
-  assert.equal(centrarEn(-215, 600, VISTA_MINIMA_HABITACION), -420, "centrar la pecera llega al borde izquierdo");
+  assert.equal(centrarEn(-215, 600, VISTA_MINIMA_HABITACION), -515, "la pecera se puede centrar");
+  assert.equal(centrarEn(-780, 720, VISTA_MINIMA_HABITACION), -1140, "la jaula de hámsters llega al borde izquierdo");
 });

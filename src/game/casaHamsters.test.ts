@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   abrirPuerta, aDibujo, aEscena, arrastrar, avanzar, CAMINOS, coger, COSAS, crearJaula, DIBUJO, ESCONDITES, guardadoDe,
-  JAULA_EN_ESCENA, NODOS, pista, PISTA_MS, RACIONES, RADIO_JAULA, rellenar, ruta, SITIO_JAULA, soltar, tocarCosa, tocarTubo,
+  fugadoEn, JAULA_EN_ESCENA, NODOS, PUERTA_JAULA, queHayEn, pista, PISTA_MS, RACIONES, RADIO_JAULA, rellenar, ruta, SITIO_JAULA, soltar, tocarCosa, tocarTubo,
   type Cosa, type Jaula, type NodoId, type SonidoJaula,
 } from "./casaHamsters.ts";
 import { normalizeCasa, normalizeHamsters } from "./casaProgreso.ts";
@@ -109,6 +109,21 @@ test("escapada: sale uno, se esconde, hay pista a los 20 s y vuelve al soltarlo 
   assert.deepEqual(cerca.sonidos, ["vuelve"]);
   assert.equal(cerca.jaula.hamsters.find((h) => h.id === fugado.id)!.fuera, null);
   assert.equal(cerca.jaula.puertaAbierta, false);
+});
+
+test("el dedo encuentra la puerta, las cosas, los tubos y al hámster escapado", () => {
+  const azar = azarDe(13);
+  const jaula = crearJaula(undefined, 0, azar);
+  assert.deepEqual(queHayEn(jaula, aEscena({ x: PUERTA_JAULA.x + 20, y: PUERTA_JAULA.y + 20 })), { tipo: "puerta" });
+  assert.deepEqual(queHayEn(jaula, aEscena({ x: NODOS.f3.x, y: NODOS.f3.y - 20 })), { tipo: "cosa", cosa: "columpio" });
+  assert.deepEqual(queHayEn(jaula, aEscena({ x: NODOS.f4.x, y: NODOS.f4.y - 38 })), { tipo: "cosa", cosa: "agua" });
+  assert.equal(queHayEn(jaula, aEscena({ x: 500, y: 60 }))?.tipo, "tubo");
+  assert.deepEqual(queHayEn(jaula, aEscena(jaula.hamsters[0])), { tipo: "hamster", id: "perla" });
+  assert.equal(queHayEn(jaula, aEscena({ x: 560, y: 380 })), null);
+  assert.equal(fugadoEn(jaula, aEscena(jaula.hamsters[0])), null);
+  const fuera = abrirPuerta(jaula, 0, azar).jaula;
+  const fugado = fuera.hamsters.find((h) => h.fuera)!;
+  assert.equal(fugadoEn(fuera, { x: fugado.x + 50, y: fugado.y }), fugado.id);
 });
 
 test("el progreso guarda solo las raciones y se lee con tolerancia", () => {

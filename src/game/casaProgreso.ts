@@ -279,8 +279,8 @@ export function normalizeVisitante(raw: unknown): VisitanteProgress | undefined 
 export const MAX_FOTOS = 12;
 /** Medidas de la escena de la casa (px). */
 const ANCHO_ESCENA = 1280;
-/** Lo que la habitación se ha ampliado por la izquierda (mapa «Pecera en la casa»): sus x llegan hasta -420. */
-const AMPLIACION_ESCENA = 420;
+/** Lo que la habitación se ha ampliado por la izquierda (la pecera y la jaula de hámsters): sus x llegan hasta -1140. */
+const AMPLIACION_ESCENA = 1140;
 const ALTO_ESCENA = 540;
 const MACETEROS = 3;
 

@@ -36,7 +36,7 @@ export const aDibujo = (p: Punto): Punto => ({
 
 /** La reja de la jaula, en el dibujo, y su puerta (delante, abajo). */
 export const REJA = { x0: 390, y0: 190, x1: 760, y1: 520 } as const;
-export const PUERTA_JAULA = { x: 605, y: 420, ancho: 76, alto: 55 } as const;
+export const PUERTA_JAULA = { x: 545, y: 205, ancho: 76, alto: 62 } as const;
 export const REPISA = { x: 400, y: 330, ancho: 350 } as const;
 
 /** Nodos: dónde está el centro de un hámster. */
@@ -385,7 +385,7 @@ export function abrirPuerta(anterior: Jaula, ahora: number, azar: Azar): Salida 
   const jaula = copiar(anterior);
   const hamster = elige(azar, jaula.hamsters);
   jaula.puertaAbierta = true;
-  Object.assign(hamster, aEscena({ x: PUERTA_JAULA.x + PUERTA_JAULA.ancho / 2, y: REJA.y1 - 62 }));
+  Object.assign(hamster, aEscena({ x: PUERTA_JAULA.x + PUERTA_JAULA.ancho / 2, y: PUERTA_JAULA.y + PUERTA_JAULA.alto / 2 }));
   Object.assign(hamster, { camino: null, plan: [], meta: null, hace: null, angulo: 0 });
   hamster.fuera = { fase: "corre", escondite: elige(azar, IDS_ESCONDITE), desde: ahora };
   return { jaula, sonidos: ["escapa"] };
@@ -426,6 +426,45 @@ export function soltar(anterior: Jaula, id: HamsterId, ahora: number, azar: Azar
   Object.assign(hamster, NODOS.f3, { fuera: null, nodo: "f3", camino: null, anterior: null, angulo: 0, hasta: ahora + 800 });
   jaula.puertaAbierta = hayAlguienFuera(jaula);
   return { jaula, sonidos: ["vuelve"] };
+}
+
+export type Tocado =
+  | { tipo: "puerta" }
+  | { tipo: "hamster"; id: HamsterId }
+  | { tipo: "cosa"; cosa: Cosa }
+  | { tipo: "tubo"; indice: number };
+
+/** Centro de cada cosa respecto a su nodo, en el dibujo: hasta dónde llega el dedo. */
+const TOQUE_COSA: Readonly<Record<Cosa, { dy: number; radio: number }>> = {
+  rueda: { dy: -20, radio: 45 }, casita: { dy: -12, radio: 42 }, columpio: { dy: -20, radio: 38 }, comida: { dy: 8, radio: 32 }, agua: { dy: -38, radio: 34 },
+};
+const RADIO_HAMSTER = 32;
+const RADIO_TUBO = 26;
+/** El dedo coge a un hámster escapado a esta distancia (px de escena): los niños no apuntan fino. */
+const RADIO_COGER = 70;
+
+/** El hámster escapado (corriendo o escondido) que hay bajo el dedo (px de escena). */
+export function fugadoEn(jaula: Jaula, punto: Punto): HamsterId | null {
+  return jaula.hamsters.find((h) => h.fuera && distancia(h, punto) <= RADIO_COGER)?.id ?? null;
+}
+
+/** Qué hay en la jaula bajo un toque (px de escena). */
+export function queHayEn(jaula: Jaula, punto: Punto): Tocado | null {
+  const p = aDibujo(punto);
+  if (p.x >= PUERTA_JAULA.x && p.x <= PUERTA_JAULA.x + PUERTA_JAULA.ancho && p.y >= PUERTA_JAULA.y && p.y <= PUERTA_JAULA.y + PUERTA_JAULA.alto) return { tipo: "puerta" };
+  const hamster = jaula.hamsters.find((h) => !h.fuera && distancia(h, p) <= RADIO_HAMSTER);
+  if (hamster) return { tipo: "hamster", id: hamster.id };
+  const cosa = (Object.keys(COSAS) as Cosa[]).find((c) => distancia({ x: NODOS[COSAS[c]].x, y: NODOS[COSAS[c]].y + TOQUE_COSA[c].dy }, p) <= TOQUE_COSA[c].radio);
+  if (cosa) return { tipo: "cosa", cosa };
+  let mejor: { indice: number; lejos: number } | null = null;
+  for (const [indice, camino] of CAMINOS.entries()) {
+    if (camino.tipo !== "tubo") continue;
+    for (let s = 0; s <= camino.largo; s += 12) {
+      const lejos = distancia(puntoDe(camino, s), p);
+      if (lejos <= RADIO_TUBO && (!mejor || lejos < mejor.lejos)) mejor = { indice, lejos };
+    }
+  }
+  return mejor ? { tipo: "tubo", indice: mejor.indice } : null;
 }
 
 /** El escondite que señala la flecha: el de un hámster que lleva 20 s escondido. */

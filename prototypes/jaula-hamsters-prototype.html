@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PROTOTIPO — jaula de hamsters (#407)</title>
+<!-- PROTOTIPO DESECHABLE para la ticket #407 de Mocheto/super-noa.
+     Pregunta: cómo se ve y se comporta la jaula. Tres disposiciones con ?variante=A|B|C o con las flechas. -->
+<style>
+  :root { --bg:#f7efe2; --room:#fbf6ec; --wall:#e9dcc6; --cage:#d9c7a6; --ink:#3b2f25; --accent:#e8875b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#2a2320; --room:#342c27; --wall:#41372f; --cage:#6b5a48; --ink:#f3e8d8; --accent:#f0a07a; } }
+  :root[data-theme="dark"] { --bg:#2a2320; --room:#342c27; --wall:#41372f; --cage:#6b5a48; --ink:#f3e8d8; --accent:#f0a07a; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--ink); font-family: system-ui, sans-serif; }
+  #wrap { position:relative; width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  #stage { position:absolute; width:960px; height:540px; left:50%; top:50%; transform-origin:center; background:var(--room); border:4px solid var(--wall); border-radius:16px; overflow:hidden; }
+  .zona { position:absolute; }
+  #cage { left:30px; top:90px; width:300px; height:340px; background:var(--cage); border:6px solid #8a6f4d; border-radius:14px; box-sizing:border-box; }
+  #cage .barra { position:absolute; top:0; bottom:0; width:4px; background:#8a6f4d; opacity:.55; }
+  #puerta { position:absolute; right:-10px; top:120px; width:14px; height:90px; background:var(--accent); border-radius:6px; cursor:pointer; }
+  #puerta.abierta { transform:translateY(-60px) rotate(-25deg); transform-origin:bottom; }
+  #room { left:360px; top:0; width:600px; height:540px; background:var(--room); }
+  .obj { position:absolute; width:110px; height:90px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer; user-select:none; }
+  .obj:active { transform:scale(.97); }
+  .tubo { height:24px; border-radius:12px; border:4px solid rgba(0,0,0,.15); }
+  .hamster { position:absolute; width:64px; height:52px; cursor:grab; transition:left .6s ease, top .6s ease; touch-action:none; }
+  .hamster .cuerpo { position:absolute; inset:0; border-radius:50% 50% 45% 45%; }
+  .hamster .oreja { position:absolute; top:-6px; width:16px; height:16px; border-radius:50%; background:inherit; }
+  .hamster .ojo { position:absolute; top:18px; width:5px; height:5px; border-radius:50%; background:#222; }
+  .hamster.peque { transform:scale(.85); }
+  .hamster.oculto { display:none; }
+  .hamster.asomado { outline:3px dashed var(--accent); }
+  #perla .cuerpo { background:linear-gradient(#b8763f 60%, #fff 60%); }
+  #perla .oreja { left:4px; } #perla .oreja.d { left:44px; }
+  #bolita .cuerpo { background:linear-gradient(#9c9c9c 55%, #f2f2f2 55%); }
+  #bolita .oreja { left:8px; height:8px; width:8px; } #bolita .oreja.d { left:42px; }
+  #comedero, #bebedero { position:absolute; width:70px; height:50px; border-radius:10px; background:#d5d0c4; border:3px solid #9b9280; font-size:11px; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  #bebedero { width:44px; height:90px; border-radius:22px; background:#cfe6f2; }
+  #nivel { position:absolute; bottom:3px; left:3px; right:3px; background:#6fb7de; border-radius:0 0 18px 18px; }
+  #flecha { position:absolute; right:6px; width:0; height:0; border-top:12px solid transparent; border-bottom:12px solid transparent; border-left:20px solid var(--accent); display:none; }
+  #avisos { position:absolute; left:0; right:0; top:6px; text-align:center; font-size:15px; color:var(--ink); pointer-events:none; }
+  #aviso { display:inline-block; padding:4px 12px; border-radius:12px; background:rgba(0,0,0,.08); }
+  #panel { position:absolute; left:16px; top:440px; display:flex; gap:10px; flex-wrap:wrap; }
+  .btn { font:inherit; font-size:14px; padding:8px 12px; border-radius:12px; border:2px solid var(--ink); background:transparent; color:var(--ink); cursor:pointer; }
+  #barra { position:fixed; bottom:10px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:10px; background:#222; color:#fff; padding:6px 12px; border-radius:999px; box-shadow:0 4px 16px rgba(0,0,0,.35); font-size:14px; z-index:10; }
+  #barra button { background:#444; color:#fff; border:0; border-radius:999px; width:34px; height:34px; font-size:16px; cursor:pointer; }
+  #barra span { min-width:200px; text-align:center; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="stage">
+    <div id="cage" class="zona">
+      <div class="barra" style="left:70px"></div><div class="barra" style="left:140px"></div><div class="barra" style="left:210px"></div>
+      <div id="puerta" title="Abrir / cerrar la puerta"></div>
+      <div id="comedero" class="zona" style="left:12px;bottom:12px" title="Dar de comer">Comida</div>
+      <div id="bebedero" class="zona" style="right:12px;top:12px" title="Rellenar agua"><div id="nivel"></div></div>
+    </div>
+    <div id="room" class="zona"></div>
+    <div id="avisos"><span id="aviso"></span></div>
+    <div id="flecha"></div>
+    <div id="panel">
+      <button class="btn" id="btnAbrir">Abrir la puerta</button>
+      <button class="btn" id="btnAgua">Rellenar agua</button>
+      <button class="btn" id="btnComida">Poner comida</button>
+    </div>
+  </div>
+</div>
+<div id="barra">
+  <button id="prev" aria-label="Anterior">←</button>
+  <span id="etiqueta"></span>
+  <button id="next" aria-label="Siguiente">→</button>
+</div>
+
+<script>
+// ---- Tres disposiciones (cada una coloca los objetos en coordenadas del escenario 960×540) ----
+const VARIANTES = {
+  A: { nombre: "Tubos arriba", objetos: {
+    tubo1:{x:50,y:110,w:270,h:24}, tubo2:{x:50,y:170,w:200,h:24}, tubo3:{x:160,y:230,w:150,h:24},
+    rueda:{x:420,y:330,w:110,h:110}, columpio:{x:600,y:150,w:120,h:90}, casita:{x:790,y:340,w:120,h:110}
+  }, cama:{x:380,y:430,w:110,h:70}, rascador:{x:560,y:330,w:60,h:150} },
+  B: { nombre: "Columpio en la jaula", objetos: {
+    tubo1:{x:50,y:260,w:270,h:24}, tubo2:{x:50,y:320,w:200,h:24}, tubo3:{x:160,y:380,w:150,h:24},
+    rueda:{x:200,y:110,w:100,h:100}, columpio:{x:400,y:120,w:120,h:90}, casita:{x:800,y:200,w:120,h:110}
+  }, cama:{x:380,y:430,w:110,h:70}, rascador:{x:600,y:300,w:60,h:180} },
+  C: { nombre: "Tubos por el suelo", objetos: {
+    tubo1:{x:380,y:460,w:200,h:24}, tubo2:{x:580,y:420,w:160,h:24}, tubo3:{x:780,y:380,w:140,h:24},
+    rueda:{x:440,y:150,w:110,h:110}, columpio:{x:640,y:110,w:120,h:90}, casita:{x:820,y:200,w:110,h:110}
+  }, cama:{x:380,y:160,w:110,h:70}, rascador:{x:560,y:250,w:60,h:150} }
+};
+const COLORES_TUBO = ["#e05a4f", "#4f86e0", "#f2c94c"];
+const ETIQUETAS = { tubo1:"Tubo rojo", tubo2:"Tubo azul", tubo3:"Tubo amarillo", rueda:"Rueda", columpio:"Columpio", casita:"Casita" };
+const SONIDOS = { tubo1:"¡uy!", tubo2:"¡uy!", tubo3:"¡uy!", rueda:"tic-tac", columpio:"¡hala!", casita:"…shhh" };
+
+let variante = "A";
+let estado = { comida: 100, agua: 100, escapado: false, puertaAbierta: false, escondido: null, visto: 0, aviso: "" };
+const hamsters = [
+  { id:"perla", nombre:"Perla", peque:false, x:70, y:200, destino:null, hambre:60, sed:60, enCasa:"jaula", oculto:false, asomado:0, escapadoAt:0 },
+  { id:"bolita", nombre:"Bolita", peque:true, x:200, y:300, destino:null, hambre:60, sed:60, enCasa:"jaula", oculto:false, asomado:0, escapadoAt:0 }
+];
+
+const $ = (s) => document.querySelector(s);
+const room = $("#room"), cage = $("#cage"), stage = $("#stage");
+const mostrarAviso = (t) => { $("#aviso").textContent = t; clearTimeout(mostrarAviso.t); mostrarAviso.t = setTimeout(() => $("#aviso").textContent = "", 2200); };
+
+// ---- Dibujo ----
+function construir() {
+  room.innerHTML = "";
+  const v = VARIANTES[variante];
+  for (const [id, p] of Object.entries(v.objetos)) {
+    const el = document.createElement("div");
+    el.className = id.startsWith("tubo") ? "obj tubo zona" : "obj zona";
+    el.dataset.id = id;
+    el.title = ETIQUETAS[id];
+    Object.assign(el.style, { left:p.x+"px", top:p.y+"px", width:p.w+"px", height:p.h+"px" });
+    if (id.startsWith("tubo")) el.style.background = COLORES_TUBO[+id.slice(-1)-1];
+    else el.textContent = ETIQUETAS[id];
+    el.addEventListener("click", () => jugar(id));
+    // Los tubos de la jaula van dentro de la jaula en A y B
+    room.appendChild(el);
+  }
+  // Escondites de la habitación
+  for (const [id, p] of Object.entries({ cama:v.cama, rascador:v.rascador })) {
+    const el = document.createElement("div");
+    el.className = "obj zona"; el.dataset.id = id; el.textContent = id === "cama" ? "Cama" : "Rascador";
+    Object.assign(el.style, { left:p.x+"px", top:p.y+"px", width:p.w+"px", height:p.h+"px", background:"#c9b08a" });
+    el.addEventListener("click", () => esconderseEn(id));
+    room.appendChild(el);
+  }
+  // Los tubos y la rueda de la jaula se ponen dentro de la jaula en A y B; C los deja en la habitación
+  etiqueta();
+  pintarHamsters();
+}
+
+function pintarHamsters() {
+  document.querySelectorAll(".hamster").forEach(e => e.remove());
+  hamsters.forEach(h => {
+    const el = document.createElement("div");
+    el.className = "hamster " + (h.peque ? "peque " : "") + (h.id === "perla" ? "" : "");
+    el.id = h.id;
+    el.innerHTML = '<div class="cuerpo"></div><div class="oreja"></div><div class="oreja d"></div><div class="ojo" style="left:14px"></div><div class="ojo" style="left:42px"></div>';
+    el.style.background = "transparent";
+    el.title = h.nombre;
+    el.addEventListener("pointerdown", (ev) => arrastrar(ev, h, el));
+    el.addEventListener("click", () => tocarHamster(h));
+    stage.appendChild(el);
+    posicionar(h, el);
+  });
+}
+
+function posicionar(h, el) {
+  el = el || document.getElementById(h.id);
+  el.style.left = (h.x) + "px"; el.style.top = (h.y) + "px";
+  el.classList.toggle("oculto", h.oculto);
+  el.classList.toggle("asomado", h.asomado > Date.now());
+}
+
+function etiqueta() {
+  $("#etiqueta").textContent = `${variante} · ${VARIANTES[variante].nombre}`;
+  const q = new URLSearchParams(location.search);
+  q.set("variante", variante);
+  history.replaceState(null, "", "?" + q.toString());
+}
+
+// ---- Comportamiento ----
+function areaDe(h) { return h.enCasa === "jaula" ? { x0:50, x1:310, y0:110, y1:400 } : { x0:370, x1:940, y0:20, y1:520 }; }
+function puntoLibre(h) { const a = areaDe(h); return { x: a.x0 + Math.random()*(a.x1-a.x0-64), y: a.y0 + Math.random()*(a.y1-a.y0-52) }; }
+function mover(h, x, y) { h.x = x; h.y = y; posicionar(h); }
+
+function ciclo() {
+  const ahora = Date.now();
+  // Comida y agua bajan despacio
+  estado.comida = Math.max(0, estado.comida - 0.02);
+  estado.agua = Math.max(0, estado.agua - 0.03);
+  $("#nivel").style.height = (estado.agua) + "%";
+
+  hamsters.forEach(h => {
+    h.hambre = Math.max(0, h.hambre - 0.05);
+    h.sed = Math.max(0, h.sed - 0.05);
+    if (h.oculto) return;
+    if (h.escapado) {
+      // se escondió al cabo de 6 s; después de 20 s sin encontrarlo, flecha
+      if (!h.oculto && ahora - h.escapadoAt > 6000 && Math.random() < 0.02) { h.oculto = true; h.escondidoEn = h.x; }
+    }
+    // Acción al azar cada 10-20 s
+    if (!h.proxima || ahora > h.proxima) {
+      h.proxima = ahora + 10000 + Math.random()*10000;
+      if (h.hambre < 30 && estado.comida > 0) { h.destino = { x:60, y:370 }; }
+      else if (h.sed < 30 && estado.agua > 0) { h.destino = { x:320, y:60 }; }
+      else { const p = puntoLibre(h); h.destino = p; }
+    }
+    if (h.destino) {
+      const dx = h.destino.x - h.x, dy = h.destino.y - h.y, d = Math.hypot(dx, dy);
+      if (d < 4) { h.destino = null; if (Math.abs(h.x-60)<20 && Math.abs(h.y-370)<20) h.hambre = 100; if (Math.abs(h.x-320)<20 && Math.abs(h.y-60)<20) h.sed = 100; }
+      else { h.x += dx/d * 1.6; h.y += dy/d * 1.6; posicionar(h); }
+    }
+  });
+
+  // Pista: si un hamster escapado lleva 20 s escondido, aparece la flecha
+  const esc = hamsters.find(h => h.escapado && h.oculto && ahora - h.escapadoAt > 20000);
+  const flecha = $("#flecha");
+  if (esc) { flecha.style.display = "block"; flecha.style.top = (esc.escondidoEn||200)+"px"; } else flecha.style.display = "none";
+  requestAnimationFrame(ciclo);
+}
+
+function jugar(id) {
+  const h = hamsters.find(x => x.enCasa === "jaula" || x.enCasa === "casa");
+  const quien = hamsters[(Math.random() < 0.5) ? 0 : 1];
+  quien.destino = { x: VARIANTES[variante].objetos[id].x, y: VARIANTES[variante].objetos[id].y };
+  mostrarAviso(`${quien.nombre}: ${SONIDOS[id]}`);
+}
+
+function tocarHamster(h) { mostrarAviso(`${h.nombre} ${h.hambre < 30 ? "tiene hambre" : h.sed < 30 ? "tiene sed" : "está contento"}`); }
+
+function esconderseEn(sitio) {
+  const esc = hamsters.find(h => h.escapado && !h.oculto);
+  if (!esc) return;
+  esc.oculto = true; esc.escondidoEn = VARIANTES[variante][sitio] ? VARIANTES[variante][sitio].y : 200;
+  mostrarAviso(`${esc.nombre} se ha escondido`);
+}
+
+// Arrastrar un hamster fuera de la habitación dentro de la jaula
+function arrastrar(ev, h, el) {
+  if (!h.escapado && h.enCasa === "jaula") return;
+  ev.preventDefault();
+  const sx = ev.clientX, sy = ev.clientY, ox = h.x, oy = h.y;
+  if (h.oculto) { h.oculto = false; h.asomado = Date.now() + 3000; posicionar(h, el); }
+  const mueve = (e) => {
+    const k = 1 / (parseFloat(stage.style.transform?.match(/scale\(([^)]+)\)/)?.[1]) || 1);
+    h.x = ox + (e.clientX - sx) * k; h.y = oy + (e.clientY - sy) * k; posicionar(h, el);
+  };
+  const suelta = () => {
+    window.removeEventListener("pointermove", mueve); window.removeEventListener("pointerup", suelta);
+    const cx = 180, cy = 260;
+    if (Math.hypot(h.x - cx, h.y - cy) < 150) {
+      h.escapado = false; h.enCasa = "jaula"; h.x = 60 + Math.random()*200; h.y = 150 + Math.random()*180; h.oculto = false;
+      posicionar(h, el);
+      if (!hamsters.some(x => x.escapado)) { estado.puertaAbierta = false; $("#puerta").classList.remove("abierta"); }
+      mostrarAviso(`${h.nombre} ha vuelto a la jaula`);
+    }
+  };
+  window.addEventListener("pointermove", mueve);
+  window.addEventListener("pointerup", suelta);
+}
+
+$("#puerta").addEventListener("click", () => abrirPuerta());
+$("#btnAbrir").addEventListener("click", () => abrirPuerta());
+function abrirPuerta() {
+  estado.puertaAbierta = !estado.puertaAbierta;
+  $("#puerta").classList.toggle("abierta", estado.puertaAbierta);
+  if (estado.puertaAbierta) {
+    const h = hamsters[0];
+    h.escapado = true; h.enCasa = "casa"; h.escapadoAt = Date.now(); h.oculto = false;
+    h.x = 380 + Math.random()*400; h.y = 300 + Math.random()*150;
+    posicionar(h);
+    mostrarAviso(`¡${h.nombre} se ha escapado!`);
+  }
+}
+$("#btnAgua").addEventListener("click", () => { estado.agua = 100; mostrarAviso("Agua rellenada"); });
+$("#btnComida").addEventListener("click", () => { estado.comida = 100; mostrarAviso("Comida puesta"); });
+$("#comedero").addEventListener("click", () => { estado.comida = 100; mostrarAviso("Comida"); });
+$("#bebedero").addEventListener("click", () => { estado.agua = 100; mostrarAviso("Agua rellenada"); });
+
+// ---- Variantes ----
+function cambiar(d) {
+  const ks = Object.keys(VARIANTES);
+  variante = ks[(ks.indexOf(variante) + d + ks.length) % ks.length];
+  construir();
+}
+$("#prev").addEventListener("click", () => cambiar(-1));
+$("#next").addEventListener("click", () => cambiar(1));
+window.addEventListener("keydown", (e) => {
+  if (e.target.matches("input, textarea, [contenteditable]")) return;
+  if (e.key === "ArrowLeft") cambiar(-1);
+  if (e.key === "ArrowRight") cambiar(1);
+});
+
+// Escala al tamaño de la ventana
+function escalar() {
+  const k = Math.min(innerWidth / 1000, (innerHeight - 60) / 580);
+  stage.style.transform = `scale(${k})`;
+}
+addEventListener("resize", escalar);
+
+// Variante inicial por URL
+const q = new URLSearchParams(location.search).get("variante");
+if (q && VARIANTES[q.toUpperCase()]) variante = q.toUpperCase();
+escalar();
+construir();
+requestAnimationFrame(ciclo);
+</script>
+</body>
+</html>

@@ -12,6 +12,8 @@ import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, 
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
 import { enLaPecera, PECERA, type SonidoPecera } from "./casaPecera";
 import { PeceraCasa, type ToquePecera } from "./PeceraCasa";
+import { JaulaHamsters, type MandosJaula } from "./JaulaHamsters";
+import { ESCONDITES, SITIO_JAULA, type EsconditeId, type HamstersProgress, type SonidoJaula } from "./casaHamsters";
 import { apuntarVisita, comidaFavoritaDe, OLER_TRAS_ENTRAR_MS, SITIOS_PARA_OLER, COMIDAS_AMIGOS, cuerpoDelVisitante, darDeComerAlVisitante, DESPEDIDA_MS, elegirVisitante, HOJA_COMIDAS_AMIGOS, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, SE_VA_TRAS_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";
 import { DibujoAmigo } from "./DibujoAmigo";
 import { friendCatalog, type FriendFood } from "./friends";
@@ -97,6 +99,19 @@ const ALTO_BANDEJA_VERTICAL = 130;
 const ALTO_PARA_BANDEJA_DEBAJO = 500;
 /** Ancho que ocupa la bandeja al lado de la habitación (dos columnas de botones y su margen). */
 const ANCHO_BANDEJA_LADO = 150;
+
+/** Cuánto se ve el rótulo de la escapada o de la vuelta de un hámster. */
+const AVISO_HAMSTER_MS = 2200;
+/** Centro de la jaula de hámsters, para llevar la vista allí. */
+const CENTRO_JAULA = (SITIO_JAULA.zona.desde + SITIO_JAULA.zona.hasta) / 2;
+/** En desarrollo, `?prueba=casa&jaula=1` abre la casa mirando la jaula de hámsters. */
+const verJaula = import.meta.env.DEV && new URLSearchParams(window.location.search).has("jaula");
+
+/** Cara de hámster, para el botón que lleva a la jaula y la pista. */
+const CaraHamster = () => <svg viewBox="0 0 32 32" width="80%" height="80%" aria-hidden="true" stroke="#2f1d33" strokeWidth="2">
+  <circle cx="8" cy="9" r="5" fill="#b8763b" /><circle cx="24" cy="9" r="5" fill="#b8763b" /><ellipse cx="16" cy="18" rx="13" ry="11" fill="#b8763b" />
+  <ellipse cx="16" cy="23" rx="8" ry="5" fill="#fff3e2" stroke="none" /><circle cx="11" cy="16" r="1.5" fill="#2f1d33" /><circle cx="21" cy="16" r="1.5" fill="#2f1d33" /><circle cx="16" cy="21" r="1.5" fill="#e0707c" stroke="none" />
+</svg>;
 
 /** Necesidad que enseña cada objeto en el bocadillo. */
 const OBJETO_DE: Record<NecesidadId, Herramienta | "mano"> = { comer: "cuenco", mimos: "mano", bano: "esponja", jugar: "pelota" };
@@ -279,6 +294,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [toquePecera, setToquePecera] = useState<ToquePecera | null>(null);
   const toquesPeceraRef = useRef(0);
   const estadosRef = useRef<Record<number, EstadoVida>>({});
+  // La jaula de hámsters: lleva su propio estado; aquí van sus mandos, el hámster cogido, la pista y el rótulo.
+  const jaulaRef = useRef<MandosJaula>(null);
+  const llevaHamsterRef = useRef<{ clienteX: number; clienteY: number } | null>(null);
+  const [llevaHamster, setLlevaHamster] = useState(false);
+  const [pistaHamster, setPistaHamster] = useState<EsconditeId | null>(null);
+  const [avisoHamster, ponerAvisoHamster] = useEfimero<{ aviso: "escapa" | "vuelve" }>(temporizadores);
   useEffect(() => { casaRef.current = casa; }, [casa]);
 
   // Sonido: se crea al entrar, sigue el silencio y el volumen del juego y se cierra al salir.
@@ -356,7 +377,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   useEffect(() => {
     if (vista !== null || !medidas.medido) return;
     const pide = gatitos.findIndex((mundo) => bocadilloDe(casaRef.current.gatitos[mundo]));
-    setVista(centrarEn(pide >= 0 ? sitios[pide] : SITIOS_CASA[1], anchoVisible, vistaMin));
+    setVista(centrarEn(verJaula ? CENTRO_JAULA : pide >= 0 ? sitios[pide] : SITIOS_CASA[1], anchoVisible, vistaMin));
   }, [vista, medidas, gatitos, sitios, anchoVisible, vistaMin]);
 
   const guardar = useCallback((nueva: CasaProgress) => {
@@ -364,6 +385,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setCasa(nueva);
     onGuardar(nueva);
   }, [onGuardar]);
+
+  const guardarHamsters = (hamsters: HamstersProgress) => guardar({ ...casaRef.current, hamsters });
+  const sonarJaula = (sonido: SonidoJaula) => { void sonido; };
+  const avisarHamster = (aviso: "escapa" | "vuelve") => ponerAvisoHamster({ aviso }, AVISO_HAMSTER_MS);
 
   // La pared, con el tono elegido (pintado por código sobre el fondo).
   const decoracion = decoracionDe(casa);
@@ -976,12 +1001,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   }, [conPluma, gatitos, reduceMotion]);
 
   // Con un objeto cerca del borde de la vista, la habitación se desliza sola hacia ese lado.
-  const arrastrando = arrastre !== null;
+  const arrastrando = arrastre !== null || llevaHamster;
   useEffect(() => {
     if (!arrastrando) return;
     let fotograma = 0;
     const paso = () => {
       if (autoRef.current) setVista((actual) => limitarVista((actual ?? 0) + autoRef.current * AUTODESLIZAR_PX, anchoVisible, vistaMin));
+      // Con un hámster en el dedo quieto en el borde, sigue bajo el dedo mientras la habitación se desliza.
+      const dedo = llevaHamsterRef.current;
+      const caja = escenaRef.current?.getBoundingClientRect();
+      if (dedo && caja && autoRef.current) jaulaRef.current?.mover(aEscena(dedo.clienteX, dedo.clienteY, caja));
       fotograma = requestAnimationFrame(paso);
     };
     fotograma = requestAnimationFrame(paso);
@@ -1064,6 +1093,13 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (fase !== "casa" || arrastre || event.button !== 0) return;
     const punto = enEscena(event);
     if (!punto) return;
+    // Un hámster escapado se coge al momento, antes que nada.
+    if (!decorando && !enJardin && jaulaRef.current?.coger(punto)) {
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* sin captura, el arrastre sigue dentro de la escena */ }
+      llevaHamsterRef.current = { clienteX: event.clientX, clienteY: event.clientY };
+      setLlevaHamster(true);
+      return;
+    }
     if (decorando) {
       // Decorando, el dedo no toca a los gatitos: desliza la habitación o, si no se mueve, elige el mueble.
       try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* sin captura, el toque sigue funcionando */ }
@@ -1088,6 +1124,14 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   };
   const moverDedo = (event: ReactPointerEvent<HTMLDivElement>) => {
     if (arrastre) return;
+    if (llevaHamsterRef.current) {
+      llevaHamsterRef.current = { clienteX: event.clientX, clienteY: event.clientY };
+      const caja = visorRef.current?.getBoundingClientRect();
+      autoRef.current = caja ? autodeslizar(event.clientX, caja.left, caja.right) : 0;
+      const punto = enEscena(event);
+      if (punto) jaulaRef.current?.mover(punto);
+      return;
+    }
     const enBrazos = cogidoRef.current;
     if (enBrazos) {
       const punto = enEscena(event);
@@ -1113,6 +1157,13 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }
   };
   const acabarDedo = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (llevaHamsterRef.current) {
+      llevaHamsterRef.current = null;
+      autoRef.current = 0;
+      setLlevaHamster(false);
+      jaulaRef.current?.soltar();
+      return;
+    }
     const tocado = deslizRef.current;
     if (decorando && tocado?.punto && !tocado.moviendo) setElegido(muebleEn(tocado.punto.x, tocado.punto.y));
     else if (noche && !enJardin && tocado?.punto && !tocado.moviendo && enLaLampara(tocado.punto)) cambiarLampara();
@@ -1121,6 +1172,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       toquesPeceraRef.current += 1;
       setToquePecera({ id: toquesPeceraRef.current, ...enElDibujo });
     }
+    else if (!enJardin && tocado?.punto && !tocado.moviendo && tocado.punto.x < SITIO_JAULA.zona.hasta) jaulaRef.current?.tocar(tocado.punto);
     else if (tocado?.punto && !tocado.moviendo && sobreVisitante(tocado.punto)) tocarVisitante();
     else if (mariposasVisibles && tocado?.punto && !tocado.moviendo && mariposaBajo(tocado.punto, mariposasEn(event.timeStamp).map((m) => m.activa ? null : m)) >= 0) setToqueMariposa({ punto: tocado.punto, ms: event.timeStamp });
     else if (tocado?.punto && !tocado.moviendo && sobreLaPuerta(estancia, tocado.punto.x, tocado.punto.y)) cruzarPuerta();
@@ -1198,6 +1250,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const lado = sitios[indice] < vistaX + 40 ? "izquierda" : sitios[indice] > vistaX + anchoVisible - 40 ? "derecha" : null;
     return lado ? { mundo, lado, objeto: OBJETO_DE[pide] } : null;
   }).filter((aviso): aviso is { mundo: number; lado: "izquierda" | "derecha"; objeto: Herramienta | "mano" } => aviso !== null) : [];
+  // Mirando la jaula de hámsters, la bandeja ofrece lo suyo.
+  const mirandoJaula = !enJardin && vistaX + anchoVisible / 2 < SITIO_JAULA.zona.hasta;
+  // La pista del hámster escondido: sobre su escondite o, si no se ve, en el borde.
+  const pistaX = pistaHamster && !enJardin ? ESCONDITES[pistaHamster].x : null;
+  const pistaLado = pistaX === null ? null : pistaX < vistaX + 40 ? "izquierda" : pistaX > vistaX + anchoVisible - 40 ? "derecha" : null;
   const quedaIzquierda = vistaX > vistaMin + 1;
   const quedaDerecha = vistaX < ESCENA_CASA.ancho - anchoVisible - 1;
 
@@ -1312,6 +1369,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               style={{ left: dibujo.x, top: dibujo.y, width: dibujo.ancho, height: dibujo.alto, ...celdaDeMueble(mueble, decoracion[mueble]) }} />;
           })}
           <PeceraCasa toque={toquePecera} noche={noche} reduceMotion={reduceMotion} gatoMirando={mirandoLaPecera ? mirandoLaPecera.x - PECERA.left : null} onSonido={sonarPecera} />
+          <JaulaHamsters ref={jaulaRef} guardado={inicial.hamsters} visible={!enJardin} reduceMotion={reduceMotion}
+            onGuardar={guardarHamsters} onSonido={sonarJaula} onPista={setPistaHamster} onAviso={avisarHamster} />
           {decorando && <>
             <button type="button" className={`casa-mueble-zona is-pared${elegido === "pared" ? " is-elegido" : ""}`} style={{ left: -HABITACION.ampliacion, top: 0, width: HABITACION.ancho + HABITACION.ampliacion, height: PARED_HASTA }}
               aria-label={tClave("casa.decorar.mueble.pared.oculto")} onClick={(event) => { if (event.detail === 0) setElegido("pared"); }} />
@@ -1409,6 +1468,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           <button type="button" key={`visita-${visita.llamadas}`} className={`casa-aviso casa-aviso-visita is-${enJardin ? "derecha" : "izquierda"}`}
             aria-label={t("casa.visitante.llama.oculto", { nombre: nombreDeAmigo(visita.animal) })}
             onClick={() => setVista(enJardin ? centrarEn(VISITANTE_ASOMA.x, anchoVisible) : 0)}><DibujoAmigo animal={visita.animal} size={64} /></button>}
+        {pistaX !== null && (pistaLado
+          ? <button type="button" className={`casa-aviso casa-aviso-visita is-${pistaLado}`} aria-label={t("casa.hamsters.pista.oculto")} onClick={() => setVista(centrarEn(pistaX, anchoVisible, vistaMin))}><CaraHamster /></button>
+          : <span className="casa-pista" role="img" aria-label={t("casa.hamsters.pista.oculto")} style={{ left: (pistaX - vistaX) * medidas.escala, top: (ESCONDITES[pistaHamster!].y - 110) * medidas.escala }}>⬇</span>)}
+        {avisoHamster && <p className="casa-hamsters-rotulo" role="status"><Texto clave={`casa.hamsters.${avisoHamster.aviso}.rotulo`} /></p>}
         {fuera.map((aviso) => <span key={aviso.mundo} className={`casa-aviso is-${aviso.lado}`} aria-hidden="true"><i className={`casa-objeto is-${aviso.objeto}`} /></span>)}
         {flash > 0 && <span key={flash} className="casa-flash" aria-hidden="true"><i className="casa-foto-vuela" /></span>}
       </div>
@@ -1438,12 +1501,25 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           <i className={`casa-objeto is-lampara${lamparaApagada ? " is-apagada" : ""}`} />
         </button>
       </div>}
-      {fase === "casa" && bano === null && !decorando && !acostando && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
+      {fase === "casa" && bano === null && !decorando && !acostando && mirandoJaula && <div className="casa-bandeja" aria-label={t("casa.hamsters.bandeja.oculto")} role="toolbar">
+        <span className="casa-bandeja-modos">
+          <BotonControl className="casa-bandeja-modo" pictograma="vuelve" etiqueta="casa.hamsters.volver.oculto" onClick={() => setVista(centrarEn(SITIOS_CASA[1], anchoVisible, vistaMin))} />
+          <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
+        </span>
+        <button type="button" className="casa-bandeja-objeto casa-bandeja-hamster" aria-label={t("casa.hamsters.comida.oculto")} onClick={() => jaulaRef.current?.rellenar("comida")}>
+          <svg viewBox="0 0 48 48" aria-hidden="true" stroke="#2f1d33" strokeWidth="2.5"><path d="M12,12 L36,12 L41,44 L7,44 Z" fill="#d8b27a" /><path d="M15,12 L12,4 L36,4 L33,12 Z" fill="#c49560" /><g fill="#f4c22b"><ellipse cx="19" cy="28" rx="4" ry="6" /><ellipse cx="29" cy="32" rx="4" ry="6" /></g></svg>
+        </button>
+        <button type="button" className="casa-bandeja-objeto casa-bandeja-hamster" aria-label={t("casa.hamsters.agua.oculto")} onClick={() => jaulaRef.current?.rellenar("agua")}>
+          <svg viewBox="0 0 48 48" aria-hidden="true" stroke="#2f1d33" strokeWidth="2.5"><path d="M33,14 C46,14 46,32 33,32" fill="none" /><path d="M10,8 L35,8 L33,44 L12,44 Z" fill="#eaf6fc" /><path d="M11,20 L34,20 L33,44 L12,44 Z" fill="#6cc4ee" /></svg>
+        </button>
+      </div>}
+      {fase === "casa" && bano === null && !decorando && !acostando && !mirandoJaula && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
         <span className="casa-bandeja-modos">
           {horaDeDormir && <BotonControl className="casa-bandeja-modo casa-dormir" pictograma="estrella" etiqueta="casa.dormir.empezar.oculto" onClick={empezarADormir} />}
           {/* Decorar, solo en la habitación. */}
           {!enJardin && <BotonControl className="casa-bandeja-modo" pictograma="flor" etiqueta="casa.decorar.boton.oculto" onClick={cambiarDecorar} />}
           <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
+          {!enJardin && <button type="button" className="boton-control casa-bandeja-modo" aria-label={t("casa.hamsters.ver.oculto")} onClick={() => setVista(centrarEn(CENTRO_JAULA, anchoVisible, vistaMin))}><CaraHamster /></button>}
           <BotonControl className="casa-bandeja-modo" pictograma="gato" etiqueta="casa.enCasa.boton.oculto" onClick={() => setEligiendo({ orden: [...enCasaDe(casaRef.current), ...dePaseoDe(casaRef.current)], antes: enCasaDe(casaRef.current) })} />
         </span>
         {HERRAMIENTAS.filter((herramienta) => !enJardin || (herramienta !== "escoba" && !(herramienta === "pelota" && visita?.fase === "dentro"))).map((herramienta) => herramienta === "cuenco"

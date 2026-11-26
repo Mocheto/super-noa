@@ -31,7 +31,7 @@
 .casa-escena > * { position: absolute; }
 
 /* Habitación dibujada (casa-habitacion-v1.webp) y la ventana de noche encima de la de día. */
-.casa-fondo { left: -420px; top: 0; width: 1700px; height: 540px; image-rendering: pixelated; pointer-events: none; }
+.casa-fondo { left: -1140px; top: 0; width: 2420px; height: 540px; image-rendering: pixelated; pointer-events: none; }
 /* En la habitación el fondo recoge los toques de la ampliación (la escena mide 1280 y ahí no hay nada más debajo del dedo); se pasan a la escena. */
 .casa-escena:not(.is-jardin) .casa-fondo { pointer-events: auto; }
 /* El jardín no tiene ampliación: su fondo mide 1280 y empieza en x = 0. */
@@ -48,7 +48,7 @@
 @keyframes casa-luz-puerta { from { opacity: 0; } 30% { opacity: 1; } to { opacity: 0; } }
 
 /* Noche (21–8 h): tono azul, lámpara encendida y ventana con luna. */
-.casa-luz-noche { left: -420px; top: 0; width: 1700px; height: 540px; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at var(--lampara, 1215px 175px), #ffe7a077 0 110px, transparent 260px), #1e2a6e59; }
+.casa-luz-noche { left: -1140px; top: 0; width: 2420px; height: 540px; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at var(--lampara, 1215px 175px), #ffe7a077 0 110px, transparent 260px), #1e2a6e59; }
 .casa-escena.is-noche .casa-luz-noche { opacity: 1; }
 
 /* Gatito: cuadro de 160 × 160 de la hoja pintada con su paleta. El componente lo coloca con los pies (fila 152) en su
@@ -494,3 +494,14 @@
 @keyframes casa-pecera-quieto { from { opacity: 0; } 20% { opacity: 1; } to { opacity: 0; } }
 .casa-pecera-zona { padding: 0; border: 0; background: transparent; opacity: 0; pointer-events: none; }
 .casa-pecera-zona:focus-visible { opacity: 1; outline: 4px solid #ffd76a; outline-offset: -4px; border-radius: 6px; }
+
+/* La jaula de hámsters (casaHamsters.ts), a la izquierda de la pecera; el escapado va por encima de la habitación. */
+.casa-jaula { overflow: visible; pointer-events: none; }
+.casa-jaula-nombre { font: 700 22px system-ui, sans-serif; fill: #2f1d33; stroke: #fff8e9; stroke-width: 6px; paint-order: stroke; }
+.casa-escena > .casa-fugados { z-index: 999; overflow: visible; pointer-events: none; }
+.casa-fugados .is-cogido { filter: drop-shadow(0 10px 6px #2f1d3366); }
+.casa-pista { position: absolute; z-index: 3; translate: -50% 0; font-size: 40px; color: #e8751a; text-shadow: 0 0 6px #fff8e9, 0 0 6px #fff8e9; pointer-events: none; animation: casa-bocadillo 1s ease-in-out infinite alternate; }
+.casa-hamsters-rotulo { position: absolute; left: 50%; top: 10px; z-index: 6; translate: -50% 0; margin: 0; padding: 8px 14px; white-space: nowrap; border: 3px solid #2f1d33; border-radius: 14px; background: #fff8e9; font-family: "Press Start 2P", monospace; font-size: 14px; color: #2f1d33; pointer-events: none; }
+.casa-bandeja-hamster { cursor: pointer; }
+.casa-bandeja-hamster svg { width: var(--objeto, 64px); height: var(--objeto, 64px); }
+.casa-bandeja-hamster:active { transform: translateY(3px); }

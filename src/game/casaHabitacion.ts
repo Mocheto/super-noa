@@ -42,13 +42,14 @@ export type SueloDeEstancia = Pick<Habitacion, "suelo" | "escala"> & { sitios: R
 export const HABITACION_CASA: Habitacion = {
   id: "salon",
   ancho: 1280,
-  ampliacion: 420,
+  ampliacion: 1140,
   alto: 540,
   /**
-   * La habitación vacía, con la ampliación de la izquierda (1700 × 540: su esquina de arriba a la izquierda es
-   * x = -420): la cama, la alfombra, el cuadro y la planta se ponen encima según la decoración.
+   * La habitación vacía, con la ampliación de la izquierda (2420 × 540: su esquina de arriba a la izquierda es
+   * x = -1140): la cama, la alfombra, el cuadro y la planta se ponen encima según la decoración. Los primeros 720 px
+   * son de la jaula de hámsters (`casaHamsters.ts`), donde los gatitos no entran; los 420 siguientes, de la pecera.
    */
-  fondo: "./assets/worlds/casa-habitacion-vacia-v2.webp",
+  fondo: "./assets/worlds/casa-habitacion-vacia-v3.webp",
   suelo: { fondo: 405, delante: 520, izquierda: -330, derecha: 1170 },
   escala: { fondo: 0.8, delante: 1 },
   sitios: {

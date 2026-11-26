@@ -387,7 +387,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   }, [onGuardar]);
 
   const guardarHamsters = (hamsters: HamstersProgress) => guardar({ ...casaRef.current, hamsters });
-  const sonarJaula = (sonido: SonidoJaula) => { void sonido; };
+  const sonarJaula = (sonido: SonidoJaula) => sonidoRef.current?.jaula(sonido);
   const avisarHamster = (aviso: "escapa" | "vuelve") => ponerAvisoHamster({ aviso }, AVISO_HAMSTER_MS);
 
   // La pared, con el tono elegido (pintado por código sobre el fondo).

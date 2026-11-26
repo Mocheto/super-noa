@@ -106,6 +106,11 @@ export const casa = {
   foto: {
     boton: { oculto: "Hacer una foto de la casa" },
   },
+  pecera: {
+    agua: { oculto: "Pecera: toca el agua para llamar a los peces, o toca un pez para ver qué hace" },
+    comida: { oculto: "Bote de comida: échales comida a los peces" },
+    luz: { oculto: "Luz de la pecera: apágala para que los peces duerman o enciéndela para despertarlos" },
+  },
   jardin: {
     mariposa: { oculto: "Mariposa: tócala para que se pose junto a un gatito" },
     macetero: {

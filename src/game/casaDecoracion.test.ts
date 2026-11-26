@@ -35,7 +35,7 @@ test("cada mueble está dentro de la habitación y su gatito va a olerlo por el 
 test("los sitios de interés de los gatitos no se mueven al decorar", () => {
   assert.deepEqual(
     Object.fromEntries(Object.entries(H.sitios).map(([id, s]) => [id, [s.x, s.y]])),
-    { puerta: [140, 420], cama: [360, 425], rascador: [545, 412], ventana: [740, 408], alfombra: [650, 505], banera: [1085, 440], cojin: [240, 500] },
+    { puerta: [140, 420], cama: [360, 425], rascador: [545, 412], ventana: [740, 408], alfombra: [650, 505], banera: [1085, 440], cojin: [240, 500], pecera: [-215, 462] },
   );
 });
 

@@ -31,7 +31,11 @@
 .casa-escena > * { position: absolute; }
 
 /* Habitación dibujada (casa-habitacion-v1.webp) y la ventana de noche encima de la de día. */
-.casa-fondo { inset: 0; width: 1280px; height: 540px; image-rendering: pixelated; pointer-events: none; }
+.casa-fondo { left: -420px; top: 0; width: 1700px; height: 540px; image-rendering: pixelated; pointer-events: none; }
+/* En la habitación el fondo recoge los toques de la ampliación (la escena mide 1280 y ahí no hay nada más debajo del dedo); se pasan a la escena. */
+.casa-escena:not(.is-jardin) .casa-fondo { pointer-events: auto; }
+/* El jardín no tiene ampliación: su fondo mide 1280 y empieza en x = 0. */
+.casa-escena.is-jardin .casa-fondo { left: 0; width: 1280px; }
 .casa-ventana-noche { opacity: 0; transition: opacity 1s; image-rendering: pixelated; pointer-events: none; }
 .casa-escena.is-noche .casa-ventana-noche { opacity: 1; }
 /* Armario de la ropa: brilla mientras se lleva a un gatito cogido, como pista de que se le puede llevar ahí. */
@@ -44,7 +48,7 @@
 @keyframes casa-luz-puerta { from { opacity: 0; } 30% { opacity: 1; } to { opacity: 0; } }
 
 /* Noche (21–8 h): tono azul, lámpara encendida y ventana con luna. */
-.casa-luz-noche { inset: 0; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at var(--lampara, 1215px 175px), #ffe7a077 0 110px, transparent 260px), #1e2a6e59; }
+.casa-luz-noche { left: -420px; top: 0; width: 1700px; height: 540px; z-index: 1000; pointer-events: none; opacity: 0; transition: opacity 1s; background: radial-gradient(circle at var(--lampara, 1215px 175px), #ffe7a077 0 110px, transparent 260px), #1e2a6e59; }
 .casa-escena.is-noche .casa-luz-noche { opacity: 1; }
 
 /* Gatito: cuadro de 160 × 160 de la hoja pintada con su paleta. El componente lo coloca con los pies (fila 152) en su
@@ -461,3 +465,32 @@
 
 /* El clima (issue 346): lienzo de la escena entera sobre el fondo y la ventana de noche. */
 .casa-clima { position: absolute; left: 0; top: 0; width: 1280px; height: 540px; image-rendering: pixelated; pointer-events: none; }
+
+/* La pecera (mapa «Pecera en la casa»): el mueble en la ampliación de la izquierda, con los peces entre el fondo y el cristal.
+   Todo va en px de su dibujo (324 × 352); los toques los recoge la escena y los botones son para el teclado. */
+.casa-pecera { overflow: visible; pointer-events: none; image-rendering: pixelated; }
+.casa-escena.is-jardin .casa-pecera { display: none; }
+.casa-pecera > * { position: absolute; }
+.casa-pecera-fondo, .casa-pecera-cristal { left: 0; top: 0; width: 324px; height: 352px; image-rendering: pixelated; pointer-events: none; }
+.casa-pez { background-repeat: no-repeat; image-rendering: pixelated; pointer-events: none; will-change: transform; }
+.casa-pecera-copo, .casa-pecera-efecto { background-repeat: no-repeat; image-rendering: pixelated; transform: translate(-50%, -50%); pointer-events: none; }
+/* Sin luz, el agua se oscurece y el interruptor se pone rojo; de noche con la luz encendida, la pecera brilla por encima de la oscuridad. */
+.casa-pecera-oscuro { left: 16px; top: 64px; width: 292px; height: 168px; background: #0e1850; opacity: 0; transition: opacity .8s; pointer-events: none; }
+.casa-pecera.is-apagada .casa-pecera-oscuro { opacity: .58; }
+.casa-pecera-luz { left: 16px; top: 52px; width: 292px; height: 170px; background: linear-gradient(#fff8c0aa, #fff8c000 80%); mix-blend-mode: screen; opacity: 0; transition: opacity .8s; pointer-events: none; }
+.casa-pecera.is-brilla { z-index: 1001; filter: drop-shadow(0 0 22px #a8e8ffcc); }
+.casa-pecera.is-brilla .casa-pecera-luz { opacity: 1; }
+.casa-pecera-led { left: 272px; top: 36px; width: 20px; height: 8px; background: #3cc878; pointer-events: none; transition: background .3s; }
+.casa-pecera.is-apagada .casa-pecera-led { background: #d85a5a; }
+.casa-pecera-efecto { animation: casa-pecera-sube 1.6s ease-out forwards; }
+.casa-pecera-efecto.is-gota { animation-name: casa-pecera-gota; }
+.casa-pecera-efecto.is-brillo { animation-name: casa-pecera-brillo; }
+.casa-pecera-efecto.is-zeta { animation-name: casa-pecera-zeta; }
+@keyframes casa-pecera-sube { from { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 15% { opacity: 1; } to { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% - 64px)) scale(1); } }
+@keyframes casa-pecera-gota { from { opacity: 1; transform: translate(-50%, -50%); } 45% { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% - 30px)); } to { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px) * 2), calc(-50% + 10px)); } }
+@keyframes casa-pecera-brillo { from { opacity: 0; transform: translate(-50%, -50%) scale(.3) rotate(0); } 40% { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(45deg); } to { opacity: 0; transform: translate(-50%, -50%) scale(1.4) rotate(90deg); } }
+@keyframes casa-pecera-zeta { from { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 20% { opacity: 1; } to { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% - 44px)) scale(1.1); } }
+.casa-gatitos.is-quieta .casa-pecera-efecto { animation-name: casa-pecera-quieto; }
+@keyframes casa-pecera-quieto { from { opacity: 0; } 20% { opacity: 1; } to { opacity: 0; } }
+.casa-pecera-zona { padding: 0; border: 0; background: transparent; opacity: 0; pointer-events: none; }
+.casa-pecera-zona:focus-visible { opacity: 1; outline: 4px solid #ffd76a; outline-offset: -4px; border-radius: 6px; }

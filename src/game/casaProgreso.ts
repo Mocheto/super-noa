@@ -277,6 +277,8 @@ export function normalizeVisitante(raw: unknown): VisitanteProgress | undefined 
 export const MAX_FOTOS = 12;
 /** Medidas de la escena de la casa (px). */
 const ANCHO_ESCENA = 1280;
+/** Lo que la habitación se ha ampliado por la izquierda (mapa «Pecera en la casa»): sus x llegan hasta -420. */
+const AMPLIACION_ESCENA = 420;
 const ALTO_ESCENA = 540;
 const MACETEROS = 3;
 
@@ -324,7 +326,7 @@ function normalizeJardinEnFoto(raw: unknown): FotoCasa["jardin"] | undefined {
 function normalizeGatitoEnFoto(raw: unknown): GatitoEnFoto | null {
   if (!esRegistro(raw)) return null;
   const mundo = Number(raw.mundo);
-  const x = entre(raw.x, 0, ANCHO_ESCENA);
+  const x = entre(raw.x, -AMPLIACION_ESCENA, ANCHO_ESCENA);
   const y = entre(raw.y, 0, ALTO_ESCENA);
   if (!Number.isInteger(mundo) || mundo < 1 || mundo > 17 || x === null || y === null) return null;
   const animacion = typeof raw.animacion === "string" && Object.hasOwn(ANIMACIONES_GATO, raw.animacion) ? raw.animacion as AnimacionGato : "sentado";
@@ -339,7 +341,7 @@ export function normalizeFotos(raw: unknown): FotoCasa[] {
   return raw.flatMap((foto): FotoCasa[] => {
     if (!esRegistro(foto) || typeof foto.hecha !== "string" || !Number.isFinite(Date.parse(foto.hecha)) || !esRegistro(foto.vista)) return [];
     const ancho = entre(foto.vista.ancho, 100, ANCHO_ESCENA);
-    const x = entre(foto.vista.x, 0, ANCHO_ESCENA);
+    const x = entre(foto.vista.x, -AMPLIACION_ESCENA, ANCHO_ESCENA);
     if (ancho === null || x === null) return [];
     const jardin = normalizeJardinEnFoto(foto.jardin);
     const gatitos = (Array.isArray(foto.gatitos) ? foto.gatitos : []).map(normalizeGatitoEnFoto).filter((g): g is GatitoEnFoto => g !== null).slice(0, MAX_EN_CASA);

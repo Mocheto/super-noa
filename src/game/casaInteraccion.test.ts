@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { aEscena, AJUSTES_CASA, autodeslizar, centrarEn, ESCALA_MINIMA, escalaCasa, gatitoEn, gatitoMasCerca, huellaEn, leerAjustesCasa, limitarVista, SITIOS_CASA } from "./casaInteraccion.ts";
+import { aEscena, AJUSTES_CASA, autodeslizar, centrarEn, ESCALA_MINIMA, escalaCasa, gatitoEn, gatitoMasCerca, huellaEn, leerAjustesCasa, limitarVista, SITIOS_CASA, VISTA_MINIMA_HABITACION } from "./casaInteraccion.ts";
 
 test("los ajustes del prototipo se leen de la URL dentro de unos límites", () => {
   assert.deepEqual(leerAjustesCasa(null), AJUSTES_CASA);
@@ -56,4 +56,12 @@ test("el gatito se suelta sobre la bañera o aterriza en el suelo", async () => 
   const suelo = aterrizar(H, 300, 100);
   assert.ok(dentroDelSuelo(H, suelo.x, suelo.y), "soltado en la pared, aterriza en el suelo");
   assert.deepEqual(aterrizar(H, 600, 470), { x: 600, y: 470 });
+});
+
+test("la vista de la habitación llega hasta la ampliación de la izquierda y la del jardín, no", () => {
+  assert.equal(VISTA_MINIMA_HABITACION, -420);
+  assert.equal(limitarVista(-900, 600, VISTA_MINIMA_HABITACION), -420);
+  assert.equal(limitarVista(-900, 600), 0, "sin mínimo, como siempre");
+  assert.equal(limitarVista(5000, 600, VISTA_MINIMA_HABITACION), 1280 - 600);
+  assert.equal(centrarEn(-215, 600, VISTA_MINIMA_HABITACION), -420, "centrar la pecera llega al borde izquierdo");
 });

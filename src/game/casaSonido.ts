@@ -3,6 +3,7 @@
  * para cada gatito, el ronroneo de la caricia, el bote de la pelota y una canción corta, generada por código,
  * cuando un gatito canta (si cantan dos a la vez, suenan a coro). Respeta el silencio y el volumen de efectos.
  */
+import type { SonidoPecera } from "./casaPecera.ts";
 import type { SampleBank } from "./catPartySamples";
 import { busDeZona, contextoAudio, soltarBus } from "./audio.ts";
 
@@ -60,6 +61,21 @@ export function sonidoDelBano(evento: EventoBano, utensilio: UtensilioSonido | n
   if (utensilio === "peine") return { golpe: "cepillo" };
   return {};
 }
+
+type NotaPecera = { onda: OscillatorType; desde: number; hasta: number; dura: number; volumen: number; retraso: number };
+/** Cada sonido de la pecera como notas cortas (Hz, segundos): redondeados y suaves, sin ruidos fuertes. */
+export const NOTAS_PECERA: Readonly<Record<SonidoPecera, readonly NotaPecera[]>> = {
+  toc: [{ onda: "sine", desde: 520, hasta: 980, dura: 0.09, volumen: 0.09, retraso: 0 }],
+  copos: [0, 0.07, 0.13].map((retraso, i) => ({ onda: "triangle" as const, desde: 1500 - i * 140, hasta: 1100 - i * 100, dura: 0.05, volumen: 0.03, retraso })),
+  nam: [{ onda: "sine", desde: 300, hasta: 520, dura: 0.07, volumen: 0.1, retraso: 0 }, { onda: "sine", desde: 520, hasta: 300, dura: 0.08, volumen: 0.09, retraso: 0.07 }],
+  chapoteo: [{ onda: "sine", desde: 900, hasta: 200, dura: 0.22, volumen: 0.1, retraso: 0 }, { onda: "triangle", desde: 500, hasta: 140, dura: 0.18, volumen: 0.06, retraso: 0.05 }],
+  hincha: [{ onda: "triangle", desde: 260, hasta: 900, dura: 0.9, volumen: 0.07, retraso: 0 }],
+  desinfla: [{ onda: "sawtooth", desde: 900, hasta: 140, dura: 0.7, volumen: 0.035, retraso: 0 }],
+  beso: [{ onda: "sine", desde: 880, hasta: 1320, dura: 0.08, volumen: 0.08, retraso: 0 }, { onda: "sine", desde: 1320, hasta: 1760, dura: 0.1, volumen: 0.07, retraso: 0.09 }],
+  luz: [{ onda: "square", desde: 1200, hasta: 800, dura: 0.04, volumen: 0.04, retraso: 0 }],
+  asoma: [{ onda: "sine", desde: 400, hasta: 1200, dura: 0.14, volumen: 0.09, retraso: 0 }],
+  zzz: [{ onda: "sine", desde: 240, hasta: 200, dura: 0.5, volumen: 0.025, retraso: 0 }],
+};
 
 /** Motor de sonido de la casa. Se crea una vez por visita; el contexto de audio arranca con el primer toque. */
 export function crearSonidoCasa(ajustesIniciales: Ajustes) {
@@ -280,6 +296,25 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
         osc.start(inicio);
         osc.stop(inicio + 0.05);
       });
+    },
+    /** Sonidos de la pecera: burbujas, ñam, chapoteo, el globo que se infla, un beso, la luz y las zetas. Cada uno, una o dos notas cortas. */
+    pecera(tipo: SonidoPecera) {
+      const ctx = listo();
+      if (!ctx || !salida) return;
+      const notas = NOTAS_PECERA[tipo];
+      for (const nota of notas) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const inicio = ctx.currentTime + nota.retraso;
+        osc.type = nota.onda;
+        osc.frequency.setValueAtTime(nota.desde, inicio);
+        osc.frequency.exponentialRampToValueAtTime(nota.hasta, inicio + nota.dura);
+        gain.gain.setValueAtTime(nota.volumen, inicio);
+        gain.gain.exponentialRampToValueAtTime(0.0001, inicio + nota.dura);
+        osc.connect(gain).connect(salida!);
+        osc.start(inicio);
+        osc.stop(inicio + nota.dura + 0.02);
+      }
     },
     cerrar() {
       ronroneo?.parar();

@@ -5,12 +5,14 @@
  */
 import type { EstadoVida } from "./casa.ts";
 
-export type SitioId = "puerta" | "cama" | "rascador" | "ventana" | "alfombra" | "banera" | "cojin";
+export type SitioId = "puerta" | "cama" | "rascador" | "ventana" | "alfombra" | "banera" | "cojin" | "pecera";
 export type SitioInteres = { x: number; y: number; /** Lo que va a hacer allí un gatito que va a propósito. */ para: EstadoVida | null };
 
 export type Habitacion = {
   id: string;
   ancho: number;
+  /** Lo que la habitación se ha ampliado por la izquierda (mapa «Pecera en la casa»): su fondo empieza en x = -`ampliacion`. */
+  ampliacion: number;
   alto: number;
   fondo: string;
   /** Franja de suelo por la que se anda: de `fondo` (más lejos) a `delante` (más cerca), entre `izquierda` y `derecha`. */
@@ -40,10 +42,14 @@ export type SueloDeEstancia = Pick<Habitacion, "suelo" | "escala"> & { sitios: R
 export const HABITACION_CASA: Habitacion = {
   id: "salon",
   ancho: 1280,
+  ampliacion: 420,
   alto: 540,
-  /** La habitación vacía: la cama, la alfombra, el cuadro y la planta se ponen encima según la decoración. */
-  fondo: "./assets/worlds/casa-habitacion-vacia-v1.webp",
-  suelo: { fondo: 405, delante: 520, izquierda: 110, derecha: 1170 },
+  /**
+   * La habitación vacía, con la ampliación de la izquierda (1700 × 540: su esquina de arriba a la izquierda es
+   * x = -420): la cama, la alfombra, el cuadro y la planta se ponen encima según la decoración.
+   */
+  fondo: "./assets/worlds/casa-habitacion-vacia-v2.webp",
+  suelo: { fondo: 405, delante: 520, izquierda: -330, derecha: 1170 },
   escala: { fondo: 0.8, delante: 1 },
   sitios: {
     puerta: { x: 140, y: 420, para: null },
@@ -54,6 +60,8 @@ export const HABITACION_CASA: Habitacion = {
     banera: { x: 1085, y: 440, para: null },
     // El cojín (mapa «Más decoraciones y accesorios para la casa»): de día, otro sitio para echarse a dormir.
     cojin: { x: 240, y: 500, para: "dormir" },
+    // La pecera (mapa «Pecera en la casa»): delante del mueble, de pie mirando los peces.
+    pecera: { x: -215, y: 462, para: "sentarse" },
   },
   sitiosDia: [{ x: 570, y: 465 }, { x: 680, y: 495 }, { x: 790, y: 465 }, { x: 900, y: 495 }, { x: 1010, y: 465 }],
   // De noche, tres en la cama y dos en la alfombra.

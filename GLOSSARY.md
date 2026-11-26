@@ -190,6 +190,18 @@ _Avoid_: Maceta, jardinera
 Animal amigo, de una pantalla que Noa ya ha completado, que llama a la puerta de la casa y pasa un rato en el jardín. Noa lo saluda y le da de comer; con su comida favorita gana un corazón de amistad. Como mucho uno al día.
 _Avoid_: Visita (es la vista de la pestaña Amigos), invitado, mascota
 
+**Ampliación**:
+Trozo de la habitación a la izquierda de la puerta, al que se llega deslizando la vista; ahí están la pecera y su mueble. Los gatitos también andan por ella. El jardín no tiene.
+_Avoid_: Ala, habitación nueva, estancia (la ampliación es parte de la habitación)
+
+**Pecera**:
+Pecera grande sobre un mueble, al fondo de la ampliación, con cuatro peces (naranja, azul, payaso y globo). Noa toca el agua para llamarlos, el bote para darles de comer, un pez para ver su gracia y el interruptor para apagar la luz y que duerman. De noche se apaga sola. Un gatito sentado delante la mira y los peces se juntan a mirarlo.
+_Avoid_: Acuario
+
+**Gracia (de un pez)**:
+Lo que hace un pez al tocarlo o al llenarse de comer: el naranja salta fuera de la pecera, el azul gira y suelta corazones, el payaso se esconde en el castillo y vuelve a asomar, el globo se infla. Con movimiento tranquilo solo salen un corazón y una burbuja.
+_Avoid_: Truco, habilidad
+
 **Huella de barro**:
 Mancha que deja en el suelo un gatito con la suciedad en «se nota» o «pide»; se barre con la escoba.
 

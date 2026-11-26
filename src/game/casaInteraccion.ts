@@ -10,6 +10,8 @@ import { HABITACION_CASA } from "./casaHabitacion.ts";
 
 /** La habitación mide 1280 × 540 y se desliza con el dedo («La habitación de la casa»). */
 export const ESCENA_CASA = { ancho: HABITACION_CASA.ancho, alto: HABITACION_CASA.alto, suelo: HABITACION_CASA.sitiosDia[0].y } as const;
+/** Hasta dónde se desliza la vista a la izquierda: la habitación tiene una ampliación (x negativas); el jardín, no. */
+export const VISTA_MINIMA_HABITACION = -HABITACION_CASA.ampliacion;
 /** Sitio de cada gatito sobre la alfombra, por su orden entre los gatitos en casa (de los datos de la habitación). */
 export const SITIOS_CASA = HABITACION_CASA.sitiosDia.map((sitio) => sitio.x);
 /** De noche duermen juntos en la cama redonda. */
@@ -106,10 +108,10 @@ export function escalaCasa(anchoDisponible: number, altoDisponible: number, vert
 }
 
 /** Desplazamiento de la vista (en px de escena) dentro de los límites de la habitación. */
-export const limitarVista = (x: number, anchoVisible: number) => Math.max(0, Math.min(Math.max(0, ESCENA_CASA.ancho - anchoVisible), x));
+export const limitarVista = (x: number, anchoVisible: number, minimo = 0) => Math.max(minimo, Math.min(Math.max(minimo, ESCENA_CASA.ancho - anchoVisible), x));
 
 /** Vista que deja `objetivo` en el centro, si cabe. */
-export const centrarEn = (objetivo: number, anchoVisible: number) => limitarVista(objetivo - anchoVisible / 2, anchoVisible);
+export const centrarEn = (objetivo: number, anchoVisible: number, minimo = 0) => limitarVista(objetivo - anchoVisible / 2, anchoVisible, minimo);
 
 /** -1, 0 o 1: hacia dónde se desliza sola la vista con un objeto cerca del borde (coordenadas de pantalla). */
 export function autodeslizar(clienteX: number, izquierda: number, derecha: number): -1 | 0 | 1 {

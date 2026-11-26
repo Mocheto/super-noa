@@ -2,7 +2,7 @@ import "../textos/zonas/casa";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { avanzar, barrer, bocadilloDe, LANZAMIENTOS_PARA_JUGAR, casaLimpia, cuidar, decoracionDe, dejarHuella, dePaseoDe, enCasaDe, esDeNoche, llegadasDePaseo, mandarDePaseo, MAX_EN_CASA, traerACasa, esMejorAmigo, estadoDe, llegadasPendientes, NECESIDADES, prepararCasa, presentar, type CasaProgress, type Cuidado, type EstadoVida, type NecesidadId, type RespuestaCuidado } from "./casa";
 import {
-  aEscena, ANCHO_VERTICAL_CASA, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista,
+  aEscena, ANCHO_VERTICAL_CASA, autodeslizar, centrarEn, CUIDADO_DE, ESCENA_CASA, escalaCasa, HERRAMIENTAS, huellaEn, leerAjustesCasa, limitarVista, VISTA_MINIMA_HABITACION,
   MOVER_PARA_COGER, relojCasa, SITIOS_CASA, type Herramienta,
 } from "./casaInteraccion";
 import { crearSonidoCasa, sonidoDelBano, type SonidoCasa } from "./casaSonido";
@@ -10,6 +10,8 @@ import { crearNana, type Nana } from "./casaNana";
 import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, modeloDibujado, type AnimacionGato } from "./casaGatoArte";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
+import { enLaPecera, PECERA, type SonidoPecera } from "./casaPecera";
+import { PeceraCasa, type ToquePecera } from "./PeceraCasa";
 import { apuntarVisita, comidaFavoritaDe, OLER_TRAS_ENTRAR_MS, SITIOS_PARA_OLER, COMIDAS_AMIGOS, cuerpoDelVisitante, darDeComerAlVisitante, DESPEDIDA_MS, elegirVisitante, HOJA_COMIDAS_AMIGOS, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, SE_VA_TRAS_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";
 import { DibujoAmigo } from "./DibujoAmigo";
 import { friendCatalog, type FriendFood } from "./friends";
@@ -273,6 +275,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const deslizRef = useRef<Desliz | null>(null);
   const autoRef = useRef<-1 | 0 | 1>(0);
   const sonidoRef = useRef<SonidoCasa | null>(null);
+  /** El último toque de Noa sobre la pecera (en px de su dibujo) y cuántos van. */
+  const [toquePecera, setToquePecera] = useState<ToquePecera | null>(null);
+  const toquesPeceraRef = useRef(0);
   const estadosRef = useRef<Record<number, EstadoVida>>({});
   useEffect(() => { casaRef.current = casa; }, [casa]);
 
@@ -323,7 +328,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setAndantes((actuales) => actuales[mundo] && andando(actuales[mundo]) ? { ...actuales, [mundo]: parar(actuales[mundo], performance.now()) } : actuales);
   }, [gatitos]);
   const anchoVisible = medidas.anchoVisor / medidas.escala;
-  const vistaX = limitarVista(vista ?? 0, anchoVisible);
+  // La habitación se desliza también por su ampliación de la izquierda (x negativas); el jardín, no.
+  const vistaMin = enJardin ? 0 : VISTA_MINIMA_HABITACION;
+  const vistaX = limitarVista(vista ?? 0, anchoVisible, vistaMin);
 
   // La habitación cabe a lo alto; en pantallas estrechas no baja de 0,75 y se desliza.
   useLayoutEffect(() => {
@@ -349,8 +356,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   useEffect(() => {
     if (vista !== null || !medidas.medido) return;
     const pide = gatitos.findIndex((mundo) => bocadilloDe(casaRef.current.gatitos[mundo]));
-    setVista(centrarEn(pide >= 0 ? sitios[pide] : SITIOS_CASA[1], anchoVisible));
-  }, [vista, medidas, gatitos, sitios, anchoVisible]);
+    setVista(centrarEn(pide >= 0 ? sitios[pide] : SITIOS_CASA[1], anchoVisible, vistaMin));
+  }, [vista, medidas, gatitos, sitios, anchoVisible, vistaMin]);
 
   const guardar = useCallback((nueva: CasaProgress) => {
     casaRef.current = nueva;
@@ -924,7 +931,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const plumaConTeclado = () => {
     if (fase !== "casa" || !gatitos.length) return;
     const indice = Math.max(0, gatitos.findIndex((mundo) => quiereLaPluma(casaRef.current.gatitos[mundo])));
-    setVista(centrarEn(sitios[indice], anchoVisible));
+    setVista(centrarEn(sitios[indice], anchoVisible, vistaMin));
     atraparLaPluma(indice, performance.now());
   };
 
@@ -974,12 +981,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (!arrastrando) return;
     let fotograma = 0;
     const paso = () => {
-      if (autoRef.current) setVista((actual) => limitarVista((actual ?? 0) + autoRef.current * AUTODESLIZAR_PX, anchoVisible));
+      if (autoRef.current) setVista((actual) => limitarVista((actual ?? 0) + autoRef.current * AUTODESLIZAR_PX, anchoVisible, vistaMin));
       fotograma = requestAnimationFrame(paso);
     };
     fotograma = requestAnimationFrame(paso);
     return () => cancelAnimationFrame(fotograma);
-  }, [arrastrando, anchoVisible]);
+  }, [arrastrando, anchoVisible, vistaMin]);
 
   // Arrastrar un objeto de la bandeja: se sigue al dedo por toda la pantalla, aunque salga de la escena.
   useEffect(() => {
@@ -1046,7 +1053,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const cuidado = CUIDADO_DE[herramienta];
     const necesidad = NECESIDADES.find((id) => OBJETO_DE[id] === herramienta)!;
     const indice = Math.max(0, gatitos.findIndex((mundo) => estadoDe(casaRef.current.gatitos[mundo].necesidades[necesidad]) !== "bien"));
-    setVista(centrarEn(sitios[indice], anchoVisible));
+    setVista(centrarEn(sitios[indice], anchoVisible, vistaMin));
     if (herramienta === "pelota") lanzar(lista[indice].x, lista[indice].y - 40);
     else if (comida) { setAbanico(false); atenderComida(indice, comida); }
     else atender(indice, cuidado);
@@ -1101,7 +1108,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       const distancia = event.clientX - desliz.clienteX;
       if (desliz.moviendo || Math.abs(distancia) > UMBRAL_DESLIZAR) {
         desliz.moviendo = true;
-        setVista(limitarVista(desliz.vista - distancia / medidas.escala, anchoVisible));
+        setVista(limitarVista(desliz.vista - distancia / medidas.escala, anchoVisible, vistaMin));
       }
     }
   };
@@ -1109,6 +1116,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const tocado = deslizRef.current;
     if (decorando && tocado?.punto && !tocado.moviendo) setElegido(muebleEn(tocado.punto.x, tocado.punto.y));
     else if (noche && !enJardin && tocado?.punto && !tocado.moviendo && enLaLampara(tocado.punto)) cambiarLampara();
+    else if (!enJardin && tocado?.punto && !tocado.moviendo && enLaPecera(tocado.punto.x, tocado.punto.y)) {
+      const enElDibujo = enLaPecera(tocado.punto.x, tocado.punto.y)!;
+      toquesPeceraRef.current += 1;
+      setToquePecera({ id: toquesPeceraRef.current, ...enElDibujo });
+    }
     else if (tocado?.punto && !tocado.moviendo && sobreVisitante(tocado.punto)) tocarVisitante();
     else if (mariposasVisibles && tocado?.punto && !tocado.moviendo && mariposaBajo(tocado.punto, mariposasEn(event.timeStamp).map((m) => m.activa ? null : m)) >= 0) setToqueMariposa({ punto: tocado.punto, ms: event.timeStamp });
     else if (tocado?.punto && !tocado.moviendo && sobreLaPuerta(estancia, tocado.punto.x, tocado.punto.y)) cruzarPuerta();
@@ -1186,9 +1198,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const lado = sitios[indice] < vistaX + 40 ? "izquierda" : sitios[indice] > vistaX + anchoVisible - 40 ? "derecha" : null;
     return lado ? { mundo, lado, objeto: OBJETO_DE[pide] } : null;
   }).filter((aviso): aviso is { mundo: number; lado: "izquierda" | "derecha"; objeto: Herramienta | "mano" } => aviso !== null) : [];
-  const quedaIzquierda = vistaX > 1;
+  const quedaIzquierda = vistaX > vistaMin + 1;
   const quedaDerecha = vistaX < ESCENA_CASA.ancho - anchoVisible - 1;
 
+  // Un gatito sentado delante de la pecera mira los peces, y los peces se juntan a mirarlo (x del dibujo de la pecera).
+  const sitioPecera = HABITACION.sitios.pecera;
+  const mirandoLaPecera = enJardin ? undefined : lista.find((andante) => !andando(andante) && andante.pose === "sentarse" && Math.hypot(andante.x - sitioPecera.x, andante.y - sitioPecera.y) < 60);
   // Con nieve, el primer gatito sentado en la ventana se queda mirando moviendo la cola.
   const ventanaSitio = HABITACION.sitios.ventana;
   const mirandoLaNieve = clima === "nieve" && !enJardin && ventanaSitio
@@ -1226,7 +1241,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     // La foto guarda al menos una ventana 4:3 de la habitación, centrada en lo que se ve: en una pantalla estrecha no sale
     // solo un trozo de puerta (issue 332).
     const anchoFoto = Math.min(ESCENA_CASA.ancho, Math.max(anchoVisible, ANCHO_VERTICAL_CASA));
-    const xFoto = limitarVista(vistaX + anchoVisible / 2 - anchoFoto / 2, anchoFoto);
+    const xFoto = limitarVista(vistaX + anchoVisible / 2 - anchoFoto / 2, anchoFoto, vistaMin);
     const foto: FotoCasa = {
       hecha: new Date().toISOString(),
       vista: { x: Math.round(xFoto), ancho: Math.round(anchoFoto) },
@@ -1251,7 +1266,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   };
 
   const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.webp"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--regadera": cssAssetUrl(REGADERA), "--pluma": cssAssetUrl(HOJA_PLUMA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
-  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--maceteros": cssAssetUrl(HOJA_MACETEROS), "--regadera": cssAssetUrl(REGADERA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--lampara": `${HABITACION.lampara.x}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
+  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--maceteros": cssAssetUrl(HOJA_MACETEROS), "--regadera": cssAssetUrl(REGADERA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--lampara": `${HABITACION.lampara.x + HABITACION.ampliacion}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
   const hojaBano = bano !== null ? hojaDe(bano) : undefined;
@@ -1265,6 +1280,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (maullido) sonido.maullar(bano, maullido);
     if (cantar) sonido.cantar(bano);
   };
+  /** Sonidos de la pecera: burbujas, ñam, chapoteo, el globo y la luz. */
+  const sonarPecera = useCallback((sonido: SonidoPecera) => sonidoRef.current?.pecera(sonido), []);
   /** «¡LISTO!» en el vestidor: se queda con lo que lleva y, de vuelta en la habitación, ronronea (sin corazón). */
   const salirDelVestidor = (ropa: Ropa) => {
     const mundo = vestidor;
@@ -1294,8 +1311,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             return <i key={mueble} className={`casa-mueble${esMuebleMagico(mueble, decoracion[mueble]) ? " is-magica" : ""}`} aria-hidden="true"
               style={{ left: dibujo.x, top: dibujo.y, width: dibujo.ancho, height: dibujo.alto, ...celdaDeMueble(mueble, decoracion[mueble]) }} />;
           })}
+          <PeceraCasa toque={toquePecera} noche={noche} reduceMotion={reduceMotion} gatoMirando={mirandoLaPecera ? mirandoLaPecera.x - PECERA.left : null} onSonido={sonarPecera} />
           {decorando && <>
-            <button type="button" className={`casa-mueble-zona is-pared${elegido === "pared" ? " is-elegido" : ""}`} style={{ left: 0, top: 0, width: HABITACION.ancho, height: PARED_HASTA }}
+            <button type="button" className={`casa-mueble-zona is-pared${elegido === "pared" ? " is-elegido" : ""}`} style={{ left: -HABITACION.ampliacion, top: 0, width: HABITACION.ancho + HABITACION.ampliacion, height: PARED_HASTA }}
               aria-label={tClave("casa.decorar.mueble.pared.oculto")} onClick={(event) => { if (event.detail === 0) setElegido("pared"); }} />
             {MUEBLES_DECORABLES.map((mueble) => {
               const caja = MUEBLES_CASA[mueble].caja!;

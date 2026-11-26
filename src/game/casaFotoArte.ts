@@ -10,6 +10,7 @@ import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte.ts";
 import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito, modeloDibujado } from "./casaGatoArte.ts";
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
+import { crearPecera, PECERA } from "./casaPecera.ts";
 import { CAPA_VISIBLE, laminaDePieza, piezasEnCuadro, type PiezaEnCuadro } from "./casaVestidorArte.ts";
 import { conComplemento } from "./casaComplementos.ts";
 import { CELDAS_MACETEROS, HOJA_MACETEROS, JARDIN, LUCIERNAGAS, luciernagaEn } from "./casaJardin.ts";
@@ -94,7 +95,22 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
 
   // Fondo con la pared de su tono.
   const fondo = enJardin ? null : await cargar(await fondoConPared(HABITACION.fondo, foto.decoracion.pared));
-  if (fondo) contexto.drawImage(fondo, foto.vista.x, 0, foto.vista.ancho, ALTO, 0, 0, ancho, ALTO * escala);
+  // El fondo de la habitación empieza en x = -ampliacion de la escena (la ampliación de la izquierda).
+  if (fondo) contexto.drawImage(fondo, foto.vista.x + HABITACION.ampliacion, 0, foto.vista.ancho, ALTO, 0, 0, ancho, ALTO * escala);
+  // La pecera de la ampliación: el mueble, los cuatro peces como al empezar y el cristal por delante.
+  if (!enJardin && foto.vista.x < PECERA.left + PECERA.ancho) {
+    const caja = { x: PECERA.left, y: PECERA.top, ancho: PECERA.ancho, alto: PECERA.alto };
+    const entera = (imagen: HTMLImageElement) => ({ x: 0, y: 0, ancho: imagen.naturalWidth, alto: imagen.naturalHeight });
+    const fondoPecera = await cargar(PECERA.fondo);
+    pintar(fondoPecera, entera(fondoPecera), caja);
+    const hojaPeces = await cargar(PECERA.peces);
+    const { ancho: anchoPez, alto: altoPez } = PECERA.cuadroPez;
+    for (const pez of crearPecera(0, () => 0.5).peces) {
+      pintar(hojaPeces, { x: 0, y: pez.especie * altoPez, ancho: anchoPez, alto: altoPez }, { x: PECERA.left + pez.x - anchoPez / 2, y: PECERA.top + pez.y - altoPez / 2, ancho: anchoPez, alto: altoPez }, pez.mira < 0);
+    }
+    const cristal = await cargar(PECERA.cristal);
+    pintar(cristal, entera(cristal), caja);
+  }
 
   // Muebles en su versión (las cortinas, más abajo: delante de la ventana de noche y del clima).
   const pintarMueble = async (mueble: MuebleId) => {

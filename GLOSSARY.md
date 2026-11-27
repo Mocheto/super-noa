@@ -198,6 +198,14 @@ _Avoid_: Ala, habitación nueva, estancia (la ampliación es parte de la habitac
 Pecera grande sobre un mueble, al fondo de la ampliación, con cuatro peces (naranja, azul, payaso y globo). Noa toca el agua para llamarlos, el bote para darles de comer, un pez para ver su gracia y el interruptor para apagar la luz y que duerman. De noche se apaga sola. Un gatito sentado delante la mira y los peces se juntan a mirarlo.
 _Avoid_: Acuario
 
+**Mueble de la pecera**:
+El mueble de madera sobre el que está la pecera, con dos puertas que se abren a la vez sobre un único hueco; dentro hay botes de comida de los peces y una red, de adorno. Al decorar cambia de color.
+_Avoid_: Armario (es solo el de vestir)
+
+**Escondite**:
+El hueco del mueble de la pecera cuando se usa para esconderse: cabe un solo gatito despierto. Noa lo suelta sobre el mueble o, a veces, uno se cuela solo de día. Con las puertas cerradas asoma la cola y maúlla; al abrir sale con «¡CUCU!», y si nadie abre sale solo al minuto o a la hora de dormir. No se guarda ni sale en las fotos.
+_Avoid_: Armario, casita (es la de los hámsters), caja
+
 **Gracia (de un pez)**:
 Lo que hace un pez al tocarlo o al llenarse de comer: el naranja salta fuera de la pecera, el azul gira y suelta corazones, el payaso se esconde en el castillo y vuelve a asomar, el globo se infla. Con movimiento tranquilo solo salen un corazón y una burbuja.
 _Avoid_: Truco, habilidad

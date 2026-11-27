@@ -6,6 +6,7 @@ import {
 } from "./casaPecera";
 import { cssAssetUrl } from "./assets";
 import { tClave } from "../textos/index.ts";
+import { PALETAS_GATITOS } from "./casaGatoArte";
 
 /** Un toque sobre la pecera, en px de su dibujo; `id` distingue dos toques seguidos en el mismo sitio. */
 export type ToquePecera = { id: number; x: number; y: number };
@@ -26,6 +27,13 @@ type Props = {
   adorno: string;
   /** Decorando no se juega con la pecera: tampoco con el teclado. */
   decorando: boolean;
+  /** El escondite del mueble: puertas abiertas, gatito de dentro (por su mundo) y si brilla porque Noa lleva uno. */
+  escondite: { abierto: boolean; gatito: number | null; brilla: boolean };
+  /** Con el teclado: abrir o cerrar las puertas y esconder un gatito (a la hora de dormir no hay botón). */
+  onPuertas: () => void;
+  onEsconder: (() => void) | null;
+  /** Al llegar el foco del teclado a los botones del mueble, para llevar allí la vista. */
+  onFocoMueble: () => void;
 };
 
 /** Tamaño en pantalla de cada objeto de la hoja (la hoja es de 48 px por cuadro): burbujas, gotas y copos, a la mitad; el resto, a ¾. */
@@ -41,7 +49,7 @@ const objetoEn = (indice: number, lado: number): CSSProperties => ({
  * copos del bote, hacen su gracia al tocarlos y duermen con la luz apagada. Solo dibuja y lleva el reloj; las reglas
  * están en `casaPecera.ts`. Cada pez y cada efecto es un elemento propio para que se muevan con `transform`.
  */
-export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido, fondo, adorno, decorando }: Props) {
+export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido, fondo, adorno, decorando, escondite, onPuertas, onEsconder, onFocoMueble }: Props) {
   const [pecera, setPecera] = useState<Pecera>(() => crearPecera(performance.now()));
   const [ahora, setAhora] = useState(() => performance.now());
   const ref = useRef(pecera);
@@ -100,6 +108,7 @@ export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido, 
   return (
     <div className={`casa-pecera${claseLuz}`} style={{ left: PECERA.left, top: PECERA.top, width: PECERA.ancho, height: PECERA.alto }}>
       <img className="casa-pecera-fondo" src={fondo} alt="" draggable={false} />
+      <MuebleEscondite fondo={fondo} escondite={escondite} />
       <img className="casa-pecera-adorno" src={adorno} alt="" draggable={false} />
       {pecera.copos.filter((copo) => copo.comidoEn === null && ahora >= copo.nace).map((copo) => (
         <i key={copo.id} className="casa-pecera-copo" style={{ left: copo.x, top: copo.y, ...objetoEn(OBJETO.copo, 24) }} />
@@ -134,6 +143,12 @@ export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido, 
           style={{ left: efecto.x, top: efecto.y, "--dx": `${efecto.dx}px`, animationDuration: `${efecto.dura}ms`, ...objetoEn(OBJETO[efecto.tipo], LADO_EFECTO[efecto.tipo]) } as CSSProperties} />
       ))}
       {!decorando && <>
+        <button type="button" className="casa-pecera-zona is-puertas" aria-label={tClave("casa.escondite.puertas.oculto")} aria-pressed={escondite.abierto}
+          style={{ left: PECERA.puertas.izquierda, top: PECERA.puertas.arriba, width: PECERA.puertas.derecha - PECERA.puertas.izquierda, height: PECERA.puertas.abajo - PECERA.puertas.arriba }}
+          onFocus={onFocoMueble} onClick={(evento) => { if (evento.detail === 0) onPuertas(); }} />
+        {onEsconder && <button type="button" className="casa-pecera-zona is-esconder" aria-disabled={escondite.gatito !== null} aria-label={tClave("casa.escondite.meter.oculto")}
+          style={{ left: PECERA.puertas.izquierda, top: PECERA.alto - 24, width: PECERA.puertas.derecha - PECERA.puertas.izquierda, height: 24 }}
+          onFocus={onFocoMueble} onClick={(evento) => { if (evento.detail === 0) onEsconder(); }} />}
         {/* Para el teclado y el lector de pantalla: los toques con el dedo los recoge la escena. */}
         <button type="button" className="casa-pecera-zona is-agua" aria-label={tClave("casa.pecera.agua.oculto")}
           style={{ left: PECERA.agua.izquierda, top: PECERA.agua.superficie, width: PECERA.agua.derecha - PECERA.agua.izquierda, height: PECERA.agua.arena - PECERA.agua.superficie }}
@@ -147,4 +162,60 @@ export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido, 
       </>}
     </div>
   );
+}
+
+const HUECO = { ancho: PECERA.puertas.derecha - PECERA.puertas.izquierda, alto: PECERA.puertas.abajo - PECERA.puertas.arriba };
+/** Ancho de una puerta del dibujo (cada una, con su marco). */
+const PUERTA_ANCHO = 148;
+
+/** Botes de comida de los peces y la red que se ven dentro, de adorno (provisional hasta el arte final). */
+function DentroDelMueble() {
+  const bote = (x: number, ancho: number, alto: number, color: string) => <g key={x} transform={`translate(${x} ${76 - alto})`}>
+    <rect width={ancho} height={alto} fill={color} stroke="#2f1d33" strokeWidth="3" />
+    <rect x="-2" y="-7" width={ancho + 4} height="8" fill="#e8b93c" stroke="#2f1d33" strokeWidth="3" />
+    <rect x="5" y={alto / 2 - 9} width={ancho - 10} height="18" fill="#ffe6c2" />
+    <path d={`M${ancho / 2 - 8} ${alto / 2}q7 -9 14 0q-7 9 -14 0l-5 -6v12z`} fill="#e2463f" />
+  </g>;
+  return <svg width={HUECO.ancho} height={HUECO.alto} viewBox={`0 0 ${HUECO.ancho} ${HUECO.alto}`} shapeRendering="crispEdges" aria-hidden="true">
+    <rect width={HUECO.ancho} height={HUECO.alto} fill="#4a2a3c" />
+    <rect width={HUECO.ancho} height="12" fill="#2f1d33" />
+    <rect y="76" width={HUECO.ancho} height="8" fill="#7a4a4a" />
+    {bote(18, 36, 46, "#e2463f")}
+    {bote(62, 30, 34, "#3f8f4a")}
+    {bote(100, 34, 40, "#3d8be0")}
+    <line x1="296" y1="8" x2="258" y2="48" stroke="#c98e5c" strokeWidth="6" />
+    <path d="M224 46h48q-2 28 -24 28t-24 -28z" fill="#cfe9e455" stroke="#e8f4ff" strokeWidth="3" />
+    <path d="M232 48l30 22M244 48l22 16M224 52l30 20M264 48l-30 22M252 48l-22 16M272 52l-30 20" stroke="#e8f4ff" strokeWidth="1.5" fill="none" />
+    <rect x="222" y="43" width="52" height="6" fill="#e8b93c" stroke="#2f1d33" strokeWidth="2" />
+  </svg>;
+}
+
+/**
+ * Las puertas del mueble de la pecera, que esconden un gatito. Cerradas son las del propio dibujo; abiertas, el hueco
+ * con las dos hojas hacia los lados, recortadas del mueble ya pintado (así respetan el color elegido al decorar). Con
+ * alguien dentro y cerradas, le asoma la cola, de su color (provisional hasta el arte final).
+ */
+function MuebleEscondite({ fondo, escondite }: { fondo: string; escondite: Props["escondite"] }) {
+  const { izquierda, arriba } = PECERA.puertas;
+  const paleta = escondite.gatito !== null ? PALETAS_GATITOS[escondite.gatito] : null;
+  const color = paleta ? `rgb(${paleta.pelo.join(" ")})` : "";
+  const punta = paleta ? `rgb(${paleta.peloOscuro.join(" ")})` : "";
+  const hoja = (x: number): CSSProperties => ({ width: PUERTA_ANCHO, height: HUECO.alto, backgroundImage: `url("${fondo}")`, backgroundSize: `${PECERA.ancho}px ${PECERA.alto}px`, backgroundPosition: `${-x}px ${-arriba}px` });
+  return <>
+    {escondite.brilla && <div className="casa-mueble-brillo" style={{ left: 0, top: 0, width: PECERA.ancho, height: PECERA.alto }}>
+      <img src={fondo} alt="" draggable={false} />
+    </div>}
+    {escondite.abierto && <div className="casa-escondite" style={{ left: izquierda, top: arriba, width: HUECO.ancho, height: HUECO.alto }}>
+      <DentroDelMueble />
+      <i className="casa-puertecita is-izquierda" style={{ left: 0, ...hoja(izquierda) }} />
+      <i className="casa-puertecita is-derecha" style={{ right: 0, ...hoja(PECERA.puertas.derecha - PUERTA_ANCHO) }} />
+    </div>}
+    {paleta && !escondite.abierto && <svg className="casa-cola" style={{ left: 280, top: PECERA.puertas.abajo - 12 }} width="64" height="56" viewBox="0 0 64 56" aria-hidden="true">
+      <g fill="none" strokeLinecap="round">
+        <path d="M12 6C10 30 18 44 34 44S52 34 48 24" stroke="#2f1d33" strokeWidth="19" />
+        <path d="M12 6C10 30 18 44 34 44S52 34 48 24" stroke={color} strokeWidth="13" />
+        <path d="M50 31Q50 28 48 24" stroke={punta} strokeWidth="13" />
+      </g>
+    </svg>}
+  </>;
 }

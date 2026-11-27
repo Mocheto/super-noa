@@ -36,6 +36,8 @@ export const PECERA = {
   bote: { izquierda: 296, derecha: 346, arriba: 8, abajo: 52 },
   interruptor: { izquierda: 356, derecha: 390, arriba: 34, abajo: 78 },
   castillo: { x: 328, y: 178 },
+  /** Las dos puertas del mueble, que esconden un gatito (`casaEscondite.ts`): juntas, sobre un único hueco. */
+  puertas: { izquierda: 46, derecha: 366, arriba: 240, abajo: 324 },
   /** Cuadro de un pez en su hoja (5 cuadros por especie, una fila por especie) y de un objeto (6 cuadros en fila). */
   cuadroPez: { ancho: 96, alto: 72 },
   cuadroObjeto: 48,
@@ -348,13 +350,18 @@ export const cambiarLuz = (p: Pecera, ahora: number): Salida => (p.luz ? apagarL
 
 // --- El paso del tiempo ----------------------------------------------------------------------------------------------
 
-/** ¿Está el punto (x, y) del dibujo sobre el bote de comida, el interruptor, el agua o fuera? */
-export function zonaDe(x: number, y: number): "bote" | "interruptor" | "agua" | null {
+/** Margen alrededor de las puertas al tocarlas, para que cuenten también las hojas abiertas a los lados. */
+const MARGEN_PUERTAS = { x: 34, y: 14 };
+
+/** ¿Está el punto (x, y) del dibujo sobre el bote de comida, el interruptor, el agua, las puertas del mueble o fuera? */
+export function zonaDe(x: number, y: number): "bote" | "interruptor" | "agua" | "puertas" | null {
   const dentro = (z: { izquierda: number; derecha: number; arriba: number; abajo: number }) => x >= z.izquierda && x <= z.derecha && y >= z.arriba && y <= z.abajo;
   if (dentro(PECERA.bote)) return "bote";
   if (dentro(PECERA.interruptor)) return "interruptor";
   const a = PECERA.agua;
   if (x >= a.izquierda && x <= a.derecha && y >= a.superficie - 28 && y <= a.arena + 20) return "agua";
+  const m = PECERA.puertas;
+  if (dentro({ izquierda: m.izquierda - MARGEN_PUERTAS.x, derecha: m.derecha + MARGEN_PUERTAS.x, arriba: m.arriba - MARGEN_PUERTAS.y, abajo: m.abajo + MARGEN_PUERTAS.y })) return "puertas";
   return null;
 }
 

@@ -125,7 +125,7 @@ test("tocar el agua llama a los peces; tocar el cristal fuera del agua, no", () 
   assert.equal(zonaDe(320, 25), "bote");
   assert.equal(zonaDe(370, 55), "interruptor");
   assert.equal(zonaDe(5, 5), null);
-  assert.equal(zonaDe(150, 300), null, "el mueble no es agua");
+  assert.equal(zonaDe(150, 300), "puertas", "el mueble no es agua: son sus puertas");
 });
 
 test("encontrar al pez tocado", () => {

@@ -130,6 +130,11 @@ export const casa = {
     comida: { oculto: "Bote de comida: échales comida a los peces" },
     luz: { oculto: "Luz de la pecera: apágala para que los peces duerman o enciéndela para despertarlos" },
   },
+  escondite: {
+    puertas: { oculto: "Puertas del mueble de la pecera: tócalas para abrirlas o cerrarlas" },
+    meter: { oculto: "Esconder un gatito en el mueble de la pecera" },
+    cucu: { rotulo: "{pictograma:gato} ¡CUCU!" },
+  },
   jardin: {
     mariposa: { oculto: "Mariposa: tócala para que se pose junto a un gatito" },
     macetero: {

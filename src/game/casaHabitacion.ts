@@ -31,6 +31,10 @@ export type Habitacion = {
   /** Armario de la ropa (mapa «Ropa y accesorios para los gatitos»): su dibujo y la zona donde se suelta a un gatito para vestirlo. */
   armario: { imagen: string; left: number; top: number; width: number; height: number };
   zonaArmario: { izquierda: number; derecha: number; arriba: number; abajo: number };
+  /** Mueble de la pecera (issue 436): donde se suelta a un gatito para que se esconda dentro. */
+  zonaEscondite: { izquierda: number; derecha: number; arriba: number; abajo: number };
+  /** Donde cae el gatito que sale del escondite: delante del todo, para no tapar las puertas. */
+  salidaEscondite: { x: number; y: number };
 };
 
 /**
@@ -73,6 +77,8 @@ export const HABITACION_CASA: Habitacion = {
   // Bajo la balda de la planta, entre la ventana y la bañera, con los pies en el suelo.
   armario: { imagen: "./assets/sprites/casa-armario-v1.webp", left: 878, top: 250, width: 95, height: 150 },
   zonaArmario: { izquierda: 862, derecha: 984, arriba: 240, abajo: 430 },
+  zonaEscondite: { izquierda: -400, derecha: -20, arriba: 262, abajo: 430 },
+  salidaEscondite: { x: -120, y: 512 },
 };
 
 /** ¿Está el punto sobre la bañera? */
@@ -82,6 +88,10 @@ export const sobreLaBanera = (habitacion: Habitacion, x: number, y: number) =>
 /** ¿Está el punto sobre el armario? */
 export const sobreElArmario = (habitacion: Habitacion, x: number, y: number) =>
   x >= habitacion.zonaArmario.izquierda && x <= habitacion.zonaArmario.derecha && y >= habitacion.zonaArmario.arriba && y <= habitacion.zonaArmario.abajo;
+
+/** ¿Está el punto sobre el mueble de la pecera? */
+export const sobreElEscondite = (habitacion: Habitacion, x: number, y: number) =>
+  x >= habitacion.zonaEscondite.izquierda && x <= habitacion.zonaEscondite.derecha && y >= habitacion.zonaEscondite.arriba && y <= habitacion.zonaEscondite.abajo;
 
 /** Punto del suelo donde aterriza un gatito soltado en (x, y): el más cercano dentro del suelo. */
 export const aterrizar = (habitacion: Pick<Habitacion, "suelo">, x: number, y: number) => ({

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
-import { CANCION, MAULLIDOS, notaHz, NOTAS_JAULA, PIDE_CADA_MS, tonoDe } from "./casaSonido.ts";
+import { CANCION, MAULLIDOS, notaHz, NOTAS_ESCONDITE, NOTAS_JAULA, PIDE_CADA_MS, tonoDe } from "./casaSonido.ts";
 import { MUNDOS_CASA } from "./casaRescate.ts";
 
 test("cada gatito de la casa maúlla en su tono: Bruma más grave y Pino más agudo que Miel", () => {
@@ -44,4 +44,10 @@ test("cada cosa de la jaula de hámsters tiene su sonido, corto y suave", () => 
     assert.ok(notas.length > 0);
     assert.ok(notas.every((n) => n.volumen <= 0.1 && n.retraso + n.dura <= 0.6 && n.desde > 0 && n.hasta > 0));
   }
+});
+
+test("las puertas y el maullido del escondite son sonidos cortos generados por código", () => {
+  const sonidos = Object.values(NOTAS_ESCONDITE);
+  assert.equal(new Set(sonidos.map((notas) => JSON.stringify(notas))).size, 3);
+  assert.ok(sonidos.every((notas) => notas.every((n) => n.volumen <= 0.1 && n.retraso + n.dura <= 0.6 && n.desde > 0 && n.hasta > 0)));
 });

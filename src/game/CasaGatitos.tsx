@@ -9,8 +9,9 @@ import { crearSonidoCasa, sonidoDelBano, type SonidoCasa } from "./casaSonido";
 import { crearNana, type Nana } from "./casaNana";
 import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, modeloDibujado, type AnimacionGato } from "./casaGatoArte";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
-import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBanera } from "./casaHabitacion";
-import { enLaPecera, PECERA, type SonidoPecera } from "./casaPecera";
+import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreElEscondite, sobreLaBanera } from "./casaHabitacion";
+import { enLaPecera, PECERA, zonaDe, type SonidoPecera } from "./casaPecera";
+import { cuandoSeCuela, ENTRADA_ESCONDITE, esconder, esconditeVacio, pasarRato, puedeEsconderse, sacar, tocarPuertas, type Escondite } from "./casaEscondite";
 import { PeceraCasa, type ToquePecera } from "./PeceraCasa";
 import { JaulaHamsters, type MandosJaula } from "./JaulaHamsters";
 import { ARTE_JAULA, casitaDe } from "./casaHamstersArte";
@@ -87,6 +88,12 @@ const PASO_PUERTA_MS = 900;
 const RAPIDO_PUERTA = 3;
 /** Velocidad con que se desliza sola la vista al llevar un objeto al borde, en px de escena por fotograma. */
 const AUTODESLIZAR_PX = 9;
+/** Cada cuánto mira la casa el escondite (maullidos y el minuto), cuánto dura el salto al salir y «¡CUCU!». */
+const PASO_ESCONDITE_MS = 250;
+const SALTO_ESCONDITE_MS = 700;
+const CUCU_MS = 1600;
+/** Hueco del mueble de la pecera (pies del gatito que salta desde dentro) y su centro, en px de escena. */
+const HUECO_ESCONDITE = { x: PECERA.left + (PECERA.puertas.izquierda + PECERA.puertas.derecha) / 2, y: PECERA.top + PECERA.puertas.abajo };
 /** Un arrastre que empieza fuera de un gatito desliza la habitación a partir de este movimiento, en px de pantalla. */
 const UMBRAL_DESLIZAR = 6;
 /** Marco caramelo neutro de la casa, color miel. */
@@ -225,6 +232,15 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const seVanRef = useRef(new Set<number>());
   /** Gatitos que botan en la colchoneta del jardín ahora mismo. */
   const [botando, setBotando] = useState<number[]>([]);
+  // El escondite del mueble de la pecera (issue 436): no se guarda, cada visita empieza vacío.
+  const [escondite, setEscondite] = useState<Escondite>(esconditeVacio);
+  const esconditeRef = useRef(escondite);
+  const ponerEscondite = useCallback((nuevo: Escondite) => { esconditeRef.current = nuevo; setEscondite(nuevo); }, []);
+  const [cucu, ponerCucu] = useEfimero<{ visto: true }>(temporizadores);
+  /** Gatito que acaba de salir del mueble (salta o aparece). */
+  const [delEscondite, ponerDelEscondite] = useEfimero<{ mundo: number }>(temporizadores);
+  /** Gatito que anda hacia el mueble para colarse él solo. */
+  const colandoRef = useRef<number | null>(null);
   const botandoRef = useRef<number[]>([]);
   /** Mariposas del jardín que Noa ha hecho posarse junto a un gatito. */
   /** El último riego: a qué macetero y qué ha pasado (crece, brillitos en flor, o ya regado hoy). */
@@ -326,7 +342,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // Las mariposas revolotean por el jardín de día; de noche, las luciérnagas.
   const mariposasVisibles = enJardin && !noche && fase === "casa";
   // Solo los gatitos en casa (cinco como mucho) que están en esta estancia; los de paseo no están.
-  const presentes = [...new Set([...enCasaDe(casa).filter((mundo) => !esperando.includes(mundo) && estanciaDe(casa, mundo) === estancia), ...(enJardin ? [] : saliendo)])].sort((a, b) => a - b).join(",");
+  // El escondido en el mueble no está a la vista: ni se toca, ni anda, ni sale en las fotos.
+  const presentes = [...new Set([...enCasaDe(casa).filter((mundo) => !esperando.includes(mundo) && mundo !== escondite.gatito && estanciaDe(casa, mundo) === estancia), ...(enJardin ? [] : saliendo)])].sort((a, b) => a - b).join(",");
   const gatitos = useMemo(() => presentes ? presentes.split(",").map(Number) : [], [presentes]);
   // Dónde está cada gatito ahora (deambulan por todo el suelo); sin andante aún, en su sitio de día.
   // Cada gatito en casa tiene su sitio de día y de noche, por su orden entre los de casa.
@@ -607,6 +624,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     // A la hora de dormir, todos vuelven del jardín a la habitación.
     if (casaRef.current.enJardin) guardar(todosALaHabitacion(casaRef.current));
     seVanRef.current.clear();
+    sacarADormir(performance.now());
     setEstancia("habitacion");
     setAcostando(true);
     setDecorando(false);
@@ -721,6 +739,140 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }
     responder({ gatito: indice, tipo: resultado.respuesta, cuidado, corazon: resultado.corazon, desde: performance.now() }, RESPUESTA_MS);
   }, [gatitos, guardar, pararGatito, responder, temporizadores]);
+
+  /** El gatito se mete en el mueble y las puertas se cierran. Se queda apuntado delante, para cuando salga. */
+  const meterEnElMueble = (mundo: number, momento: number) => {
+    colandoRef.current = null;
+    seVanRef.current.delete(mundo);
+    rapidosRef.current.delete(mundo);
+    if (menuRef.current === mundo) setMenu(null);
+    ponerEscondite(esconder(esconditeRef.current, mundo, momento));
+    setAndantes((actuales) => ({ ...actuales, [mundo]: { ...nuevoAndante(HABITACION.salidaEscondite, momento), mira: 1 } }));
+    sonidoRef.current?.escondite("cierra");
+  };
+  /**
+   * Salta fuera el que estaba dentro. Jugando (Noa abre o se le acaba el minuto), con «¡CUCU!» y, si tenía ganas, cuenta
+   * como una pelota atrapada; a la hora de dormir sale sin más.
+   */
+  const salirDelMueble = (mundo: number, momento: number, jugando: boolean) => {
+    ponerDelEscondite({ mundo }, SALTO_ESCONDITE_MS);
+    setAndantes((actuales) => ({ ...actuales, [mundo]: { ...nuevoAndante(HABITACION.salidaEscondite, momento), hasta: momento + 2500 } }));
+    if (!jugando) return;
+    ponerCucu({ visto: true }, CUCU_MS);
+    sonidoRef.current?.maullar(mundo, "gracias");
+    const gatito = casaRef.current.gatitos[mundo];
+    if (!gatito || estadoDe(gatito.necesidades.jugar) === "bien") return;
+    const resultado = cuidar(casaRef.current, mundo, "pelota", new Date());
+    guardar(resultado.casa);
+    if (enJardin) return;
+    // Su sitio en la lista cuando vuelva a verse.
+    const indice = [...gatitos.filter((otro) => otro !== mundo), mundo].sort((a, b) => a - b).indexOf(mundo);
+    responder({ gatito: indice, tipo: resultado.respuesta, cuidado: "pelota", corazon: resultado.corazon, desde: momento }, RESPUESTA_MS);
+  };
+  const abrirOCerrar = (momento: number) => {
+    if (fase !== "casa" || decorando) return;
+    const resultado = tocarPuertas(esconditeRef.current);
+    ponerEscondite(resultado.escondite);
+    sonidoRef.current?.escondite(resultado.escondite.abierto ? "abre" : "cierra");
+    if (resultado.sale !== null) salirDelMueble(resultado.sale, momento, true);
+  };
+  /** A la hora de dormir, el escondido sale (y nadie se cuela ya). */
+  const sacarADormir = (momento: number) => {
+    if (colandoRef.current !== null) rapidosRef.current.delete(colandoRef.current);
+    colandoRef.current = null;
+    const resultado = sacar(esconditeRef.current);
+    if (resultado.sale === null) return;
+    ponerEscondite(resultado.escondite);
+    sonidoRef.current?.escondite("abre");
+    salirDelMueble(resultado.sale, momento, false);
+  };
+  /** ¿Cabe en el mueble el gatito `mundo`? Nunca dormido ni arropado. */
+  const cabeEnElMueble = (mundo: number) => puedeEsconderse(esconditeRef.current, {
+    dormido: andantes[mundo] !== undefined && !andando(andantes[mundo]) && andantes[mundo].pose === "dormir",
+    arropado: arropados.includes(mundo),
+    horaDeDormir: acostando,
+  });
+  /** Con el teclado, se esconde el primer gatito despierto que haya en la habitación. */
+  const esconderConTeclado = () => {
+    if (fase !== "casa" || decorando) return;
+    const mundo = gatitos.find((candidato) => cabeEnElMueble(candidato) && !botando.includes(candidato) && !saliendo.includes(candidato));
+    if (mundo !== undefined) meterEnElMueble(mundo, performance.now());
+  };
+  /** El foco del teclado en el mueble lleva allí la vista (y deshace el desplazamiento propio del navegador). */
+  const verElMueble = () => {
+    if (visorRef.current) visorRef.current.scrollLeft = 0;
+    setVista(centrarEn(PECERA.left + PECERA.ancho / 2, anchoVisible, vistaMin));
+  };
+
+  // El escondite: maúlla de vez en cuando y al minuto sale solo (no mientras Noa tiene un gatito en el dedo).
+  const salirRef = useRef(salirDelMueble);
+  useEffect(() => { salirRef.current = salirDelMueble; });
+  const ocupado = escondite.gatito !== null;
+  useEffect(() => {
+    if (!ocupado) return;
+    const reloj = window.setInterval(() => {
+      const momento = performance.now();
+      const rato = pasarRato(esconditeRef.current, momento, Math.random);
+      esconditeRef.current = rato.escondite;
+      if (rato.maulla && !enJardin && document.visibilityState !== "hidden") sonidoRef.current?.escondite("miau", rato.escondite.gatito!);
+      if (!rato.seAcabo || cogidoRef.current || pendienteRef.current) return;
+      const resultado = sacar(rato.escondite);
+      ponerEscondite(resultado.escondite);
+      if (!enJardin) sonidoRef.current?.escondite("abre");
+      if (resultado.sale !== null) salirRef.current(resultado.sale, momento, true);
+    }, PASO_ESCONDITE_MS);
+    return () => window.clearInterval(reloj);
+  }, [ocupado, enJardin, ponerEscondite]);
+
+  // Mandado de paseo desde «EN CASA»: deja el mueble vacío.
+  useEffect(() => {
+    if (escondite.gatito !== null && !enCasaDe(casa).includes(escondite.gatito)) ponerEscondite({ ...esconditeVacio(), abierto: escondite.abierto });
+  }, [casa, escondite, ponerEscondite]);
+
+  // A veces, una vez por visita y de día, uno se cuela solo: anda hasta el mueble y se mete.
+  const [esperaColarse] = useState(() => cuandoSeCuela(Math.random));
+  const colarseRef = useRef<() => boolean>(() => false);
+  useEffect(() => {
+    colarseRef.current = () => {
+      if (noche || acostando) return true; // De noche no pasa: la ocasión se pierde.
+      if (esconditeRef.current.gatito !== null) return true;
+      if (enJardin || decorando || esconditeRef.current.abierto || cogidoRef.current || document.visibilityState === "hidden") return false;
+      const candidatos = gatitos.filter((mundo) => andantes[mundo] && cabeEnElMueble(mundo) && menu !== mundo && bano !== mundo && vestidor !== mundo
+        && !botando.includes(mundo) && !saliendo.includes(mundo) && !seVanRef.current.has(mundo));
+      const mundo = candidatos[Math.floor(Math.random() * candidatos.length)];
+      if (mundo === undefined) return false;
+      colandoRef.current = mundo;
+      rapidosRef.current.add(mundo);
+      const momento = performance.now();
+      setAndantes((actuales) => ({ ...actuales, [mundo]: ir(actuales[mundo], ENTRADA_ESCONDITE, "sentarse", 30, momento) }));
+      return true;
+    };
+  });
+  useEffect(() => {
+    if (fase !== "casa" || esperaColarse === null) return;
+    let reintento: number | undefined;
+    const espera = window.setTimeout(() => {
+      // Si ahora no puede (Noa está en otra cosa), se mira otra vez un poco más tarde.
+      if (colarseRef.current()) return;
+      reintento = window.setInterval(() => { if (colarseRef.current()) window.clearInterval(reintento); }, 5000);
+    }, esperaColarse);
+    return () => { window.clearTimeout(espera); window.clearInterval(reintento); };
+  }, [fase, esperaColarse]);
+  // Al llegar al mueble se mete; si Noa lo para o lo coge por el camino, se le quita la idea.
+  useEffect(() => {
+    const mundo = colandoRef.current;
+    if (mundo === null) return;
+    const andante = andantes[mundo];
+    if (!andante || andando(andante)) return;
+    colandoRef.current = null;
+    rapidosRef.current.delete(mundo);
+    if (Math.hypot(andante.x - ENTRADA_ESCONDITE.x, andante.y - ENTRADA_ESCONDITE.y) < 2 && !noche && gatitos.includes(mundo) && cogidoRef.current === null) meterEnElMueble(mundo, performance.now());
+  }, [andantes]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Si se hace de noche con la casa abierta, el escondido sale y va a dormir.
+  useEffect(() => {
+    if (nocheReloj) sacarADormir(performance.now());
+  }, [nocheReloj]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Darle una comida del abanico: como el cuenco de siempre y, si es su favorita con hambre, «¡ÑAM!» (y queda descubierta). */
   const atenderComida = (indice: number, comida: Comida) => {
@@ -1004,7 +1156,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   }, [conPluma, gatitos, reduceMotion]);
 
   // Con un objeto cerca del borde de la vista, la habitación se desliza sola hacia ese lado.
-  const arrastrando = arrastre !== null || llevaHamster;
+  const arrastrando = arrastre !== null || llevaHamster || cogido !== null;
+  /** Dónde está en pantalla el dedo que lleva a un gatito. */
+  const dedoCogidoRef = useRef<{ clienteX: number; clienteY: number } | null>(null);
   useEffect(() => {
     if (!arrastrando) return;
     let fotograma = 0;
@@ -1014,6 +1168,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       const dedo = llevaHamsterRef.current;
       const caja = escenaRef.current?.getBoundingClientRect();
       if (dedo && caja && autoRef.current) jaulaRef.current?.mover(aEscena(dedo.clienteX, dedo.clienteY, caja));
+      // Y lo mismo con un gatito cogido, para poder llevarlo hasta el mueble de la pecera o el armario.
+      const conGatito = dedoCogidoRef.current;
+      if (conGatito && cogidoRef.current && caja && autoRef.current) llevar({ ...cogidoRef.current, ...aEscena(conGatito.clienteX, conGatito.clienteY, caja) });
       fotograma = requestAnimationFrame(paso);
     };
     fotograma = requestAnimationFrame(paso);
@@ -1137,6 +1294,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }
     const enBrazos = cogidoRef.current;
     if (enBrazos) {
+      const caja = visorRef.current?.getBoundingClientRect();
+      autoRef.current = caja ? autodeslizar(event.clientX, caja.left, caja.right) : 0;
+      dedoCogidoRef.current = { clienteX: event.clientX, clienteY: event.clientY };
       const punto = enEscena(event);
       if (punto) llevar({ ...enBrazos, ...punto });
       return;
@@ -1172,8 +1332,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     else if (noche && !enJardin && tocado?.punto && !tocado.moviendo && enLaLampara(tocado.punto)) cambiarLampara();
     else if (!enJardin && tocado?.punto && !tocado.moviendo && enLaPecera(tocado.punto.x, tocado.punto.y)) {
       const enElDibujo = enLaPecera(tocado.punto.x, tocado.punto.y)!;
-      toquesPeceraRef.current += 1;
-      setToquePecera({ id: toquesPeceraRef.current, ...enElDibujo });
+      if (zonaDe(enElDibujo.x, enElDibujo.y) === "puertas") abrirOCerrar(event.timeStamp);
+      else {
+        toquesPeceraRef.current += 1;
+        setToquePecera({ id: toquesPeceraRef.current, ...enElDibujo });
+      }
     }
     else if (!enJardin && tocado?.punto && !tocado.moviendo && tocado.punto.x < SITIO_JAULA.zona.hasta) jaulaRef.current?.tocar(tocado.punto);
     else if (tocado?.punto && !tocado.moviendo && sobreVisitante(tocado.punto)) tocarVisitante();
@@ -1185,7 +1348,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     pendienteRef.current = null;
     if (tocadoGatito && event.type === "pointerup") abrirMenu(tocadoGatito.indice);
     const suelto = cogidoRef.current;
-    if (suelto) soltarGatito(suelto, event.timeStamp);
+    if (suelto) {
+      autoRef.current = 0;
+      dedoCogidoRef.current = null;
+      soltarGatito(suelto, event.timeStamp);
+    }
   };
 
   /** El menú no se abre con un gatito dormido o arropado, ni con uno que bota o está entrando o saliendo. */
@@ -1213,6 +1380,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       return;
     }
     if (enJardin && sobreLaColchoneta(suelto.x, suelto.y + COGIDO_PIES)) { empezarABotar(mundo, momento); return; }
+    // Soltado en el mueble de la pecera (el dedo o los pies encima): se esconde dentro, si cabe.
+    if (!enJardin && (sobreElEscondite(HABITACION, suelto.x, suelto.y + COGIDO_PIES) || sobreElEscondite(HABITACION, suelto.x, suelto.y)) && cabeEnElMueble(mundo)) {
+      meterEnElMueble(mundo, momento);
+      return;
+    }
     const enBanera = !enJardin && sobreLaBanera(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
     const enArmario = !enJardin && !enBanera && sobreElArmario(HABITACION, suelto.x, suelto.y + COGIDO_PIES);
     const sucio = estadoDe(casaRef.current.gatitos[mundo].necesidades.bano) !== "bien";
@@ -1371,7 +1543,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             return <i key={mueble} className={`casa-mueble${esMuebleMagico(mueble, decoracion[mueble]) ? " is-magica" : ""}`} aria-hidden="true"
               style={{ left: dibujo.x, top: dibujo.y, width: dibujo.ancho, height: dibujo.alto, ...celdaDeMueble(mueble, decoracion[mueble]) }} />;
           })}
-          <PeceraCasa toque={toquePecera} noche={noche} reduceMotion={reduceMotion} gatoMirando={mirandoLaPecera ? mirandoLaPecera.x - PECERA.left : null} onSonido={sonarPecera} fondo={dibujoPecera} adorno={PECERA.adornos[decoracion.adornoPecera]} decorando={decorando} />
+          <PeceraCasa toque={toquePecera} noche={noche} reduceMotion={reduceMotion} gatoMirando={mirandoLaPecera ? mirandoLaPecera.x - PECERA.left : null} onSonido={sonarPecera} fondo={dibujoPecera} adorno={PECERA.adornos[decoracion.adornoPecera]} decorando={decorando}
+            escondite={{ abierto: escondite.abierto, gatito: escondite.gatito, brilla: cogido !== null && gatitos[cogido.indice] !== undefined && cabeEnElMueble(gatitos[cogido.indice]) }}
+            onPuertas={() => abrirOCerrar(performance.now())} onEsconder={fase === "casa" && !acostando ? esconderConTeclado : null} onFocoMueble={verElMueble} />
           <JaulaHamsters ref={jaulaRef} guardado={inicial.hamsters} visible={!enJardin} reduceMotion={reduceMotion}
             onGuardar={guardarHamsters} onSonido={sonarJaula} onPista={setPistaHamster} onAviso={avisarHamster}
             base={dibujoJaula} tubos={JUEGOS_TUBOS[decoracion.tubos]} casita={decoracion.casita} />
@@ -1438,8 +1612,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               ? { backgroundImage: `url("${arropado}")`, backgroundSize: `${CUADROS_ARROPADO * CUADRO_GATO}px ${CUADRO_GATO}px`, backgroundPosition: `${-(cuadro % CUADROS_ARROPADO) * CUADRO_GATO}px 0` }
               : { backgroundImage: hoja ? `url("${hoja}")` : undefined, backgroundSize: `${COLUMNAS_GATO * CUADRO_GATO}px ${FILAS_GATO * CUADRO_GATO}px`, backgroundPosition: `${-cuadro * CUADRO_GATO}px ${-fila * CUADRO_GATO}px` };
             return <div key={mundo} role="img" aria-label={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })}
-              className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${respuesta?.favorita ? " is-favorita" : ""}${dormido ? " is-dormido" : ""}${botando.includes(mundo) ? " is-botando" : ""}${animacion === "andar" ? " is-andando" : ""}${ropaDe(casa, mundo).alas ? " con-alas" : ""}`}
-              style={{ left: andante.x, top: andante.y - PIES_GATITO, zIndex: enBrazos ? 1500 : Math.round(andante.y), "--escala": escala, "--bote": `${BOTAR_MS / BOTES}ms` } as CSSProperties}>
+              className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta ? ` is-${respuesta.tipo}` : ""}${respuesta?.favorita ? " is-favorita" : ""}${dormido ? " is-dormido" : ""}${botando.includes(mundo) ? " is-botando" : ""}${animacion === "andar" ? " is-andando" : ""}${ropaDe(casa, mundo).alas ? " con-alas" : ""}${delEscondite?.mundo === mundo ? " is-del-escondite" : ""}`}
+              style={{ left: andante.x, top: andante.y - PIES_GATITO, zIndex: enBrazos ? 1500 : Math.round(andante.y), "--escala": escala, "--bote": `${BOTAR_MS / BOTES}ms`,
+                ...(delEscondite?.mundo === mundo ? { "--dx": `${HUECO_ESCONDITE.x - andante.x}px`, "--dy": `${HUECO_ESCONDITE.y - andante.y}px` } : {}) } as CSSProperties}>
               <span className="casa-gatito-dibujo" style={{ transform: mira < 0 ? "scaleX(-1)" : undefined }}>
                 {/* Sus accesorios, en su sitio en este cuadro (alas y capa detrás de él); arropado, no se ven. */}
                 {(() => {
@@ -1473,6 +1648,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         {pistaX !== null && (pistaLado
           ? <button type="button" className={`casa-aviso casa-aviso-visita is-${pistaLado}`} aria-label={t("casa.hamsters.pista.oculto")} onClick={() => setVista(centrarEn(pistaX, anchoVisible, vistaMin))}><CaraHamster /></button>
           : <span className="casa-pista" role="img" aria-label={t("casa.hamsters.pista.oculto")} style={{ left: (pistaX - vistaX) * medidas.escala, top: (ESCONDITES[pistaHamster!].y - 110) * medidas.escala }}>⬇</span>)}
+        {/* «¡CUCU!» va a tamaño de pantalla, sobre el mueble (o en el borde, si no se ve). */}
+        {cucu && !enJardin && <p key={cucu.id} className="casa-cucu texto-noa" role="status"
+          style={{ left: Math.max(90, Math.min(medidas.anchoVisor - 90, (HUECO_ESCONDITE.x - vistaX) * medidas.escala)), top: (PECERA.top + PECERA.puertas.arriba - 70) * medidas.escala }}><Texto clave="casa.escondite.cucu.rotulo" /></p>}
         {avisoHamster && <p className="casa-hamsters-rotulo" role="status"><Texto clave={`casa.hamsters.${avisoHamster.aviso}.rotulo`} /></p>}
         {fuera.map((aviso) => <span key={aviso.mundo} className={`casa-aviso is-${aviso.lado}`} aria-hidden="true"><i className={`casa-objeto is-${aviso.objeto}`} /></span>)}
         {flash > 0 && <span key={flash} className="casa-flash" aria-hidden="true"><i className="casa-foto-vuela" /></span>}

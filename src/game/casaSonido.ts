@@ -101,6 +101,17 @@ export const NOTAS_JAULA: Readonly<Record<SonidoJaula, readonly NotaPecera[]>> =
   hamster: [nota("sine", 1700, 2300, 0.07, 0.06), nota("sine", 2100, 1700, 0.08, 0.05, 0.08)],
 };
 
+/**
+ * El escondite del mueble de la pecera (issue 436): las puertas (un «ñiic» al abrir y un golpe de madera al cerrar) y
+ * el maullido de dentro, bajito y apagado. Todo por código.
+ */
+export type SonidoEscondite = "abre" | "cierra" | "miau";
+export const NOTAS_ESCONDITE: Readonly<Record<SonidoEscondite, readonly NotaPecera[]>> = {
+  abre: [nota("triangle", 240, 520, 0.18, 0.07), nota("triangle", 190, 110, 0.07, 0.1, 0.16)],
+  cierra: [nota("triangle", 480, 260, 0.1, 0.05), nota("triangle", 170, 90, 0.09, 0.1, 0.1)],
+  miau: [nota("triangle", 520, 780, 0.12, 0.07), nota("triangle", 780, 440, 0.3, 0.07, 0.11)],
+};
+
 /** Motor de sonido de la casa. Se crea una vez por visita; el contexto de audio arranca con el primer toque. */
 export function crearSonidoCasa(ajustesIniciales: Ajustes) {
   let ajustes = ajustesIniciales;
@@ -129,7 +140,7 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
     return ctx;
   };
   /** Toca una lista de notas cortas. */
-  const tocarNotas = (notas: readonly NotaPecera[]) => {
+  const tocarNotas = (notas: readonly NotaPecera[], tono = 1) => {
     const ctx = listo();
     if (!ctx || !salida) return;
     for (const { onda, desde, hasta, dura, volumen, retraso } of notas) {
@@ -137,8 +148,8 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
       const gain = ctx.createGain();
       const inicio = ctx.currentTime + retraso;
       osc.type = onda;
-      osc.frequency.setValueAtTime(desde, inicio);
-      osc.frequency.exponentialRampToValueAtTime(hasta, inicio + dura);
+      osc.frequency.setValueAtTime(desde * tono, inicio);
+      osc.frequency.exponentialRampToValueAtTime(hasta * tono, inicio + dura);
       gain.gain.setValueAtTime(volumen, inicio);
       gain.gain.exponentialRampToValueAtTime(0.0001, inicio + dura);
       osc.connect(gain).connect(salida);
@@ -342,6 +353,10 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
     /** Sonidos de la pecera: burbujas, ñam, chapoteo, el globo que se infla, un beso, la luz y las zetas. Cada uno, una o dos notas cortas. */
     pecera(tipo: SonidoPecera) {
       tocarNotas(NOTAS_PECERA[tipo]);
+    },
+    /** Puertas y maullido del escondite; el maullido, con el tono del gatito de dentro. */
+    escondite(tipo: SonidoEscondite, mundo?: number) {
+      tocarNotas(NOTAS_ESCONDITE[tipo], mundo === undefined ? 1 : tonoDe(mundo));
     },
     /** Sonidos de la jaula de hámsters, por el mismo bus que lo demás. */
     jaula(tipo: SonidoJaula) {

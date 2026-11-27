@@ -49,7 +49,21 @@ const DORADAS: Partial<Record<PoseNoa, string>> = {
 
 /** Arte ya montado de los trajes nuevos (nombre del archivo, sin carpeta ni extensión). Lo que falte sale del peto. */
 export type ArteTrajes = Partial<Record<TrajeId, Partial<Record<PoseNoa, string>>>>;
-export const ARTE_TRAJES: ArteTrajes = {};
+/** Los once archivos de un traje, como los deja `prototypes/tools/trajes-recorte.py`. */
+const montado = (traje: string): Record<PoseNoa, string> => ({
+  hoja: `noa-${traje}-sheet-v1`,
+  salto: `noa-${traje}-jump-v1`,
+  gataQuieta: `noa-${traje}-cat-yarn-v1`,
+  gataCorrer: `noa-${traje}-cat-run-v1`,
+  gataSalto: `noa-${traje}-cat-jump-v1`,
+  gataTirar: `noa-${traje}-cat-throw-v1`,
+  nadar: `noa-${traje}-swim-v1`,
+  piedra: `noa-${traje}-rps-0-v1`,
+  papel: `noa-${traje}-rps-1-v1`,
+  tijera: `noa-${traje}-rps-2-v1`,
+  victoria: `noa-${traje}-rps-3-v1`,
+});
+export const ARTE_TRAJES: ArteTrajes = { caballera: montado("caballera") };
 
 const ruta = (nombre: string) => `./assets/sprites/${nombre}.webp`;
 

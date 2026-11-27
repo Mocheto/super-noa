@@ -16,12 +16,17 @@ Si un traje sale igual en sus 18 dibujos: quieta, cuatro de correr, salto, cuatr
 | 6 | Gestos del duelo | `caballera-16x9.png` | `caballera-gestos.png` |
 | 7 | Solo las tijeras | `caballera-piedra.png` | `caballera-tijera.png` |
 
-- **Paso 1:** aprobado el 27-11-2026 (`caballera-quieta.webp`).
-- **Salto y gata (pasos 3 y 4):** valen (`caballera-salto.webp`; de la de gata, que trajo cinco, sirven el ovillo, correr, saltar y lanzar).
-- **Gestos (paso 6):** valen piedra, papel y victoria; las tijeras salieron hacia el otro lado y se repiten solas (paso 7).
-- **Correr (paso 2):** las cuatro casi iguales; se repite con las piernas descritas una a una.
-- **Nadar (paso 5):** el generador rechazó la petición («third-party content providers»); reescrita sin nombrar niña, juego ni agua.
-- **Resto:** El juego separa cada dibujo, iguala la escala y alinea los pies: no hace falta pedir medidas. Si salen dibujos de más, se elige; si algo no sale tras tres intentos, se cambia de modelo.
+**Resultado (27-11-2026): la prueba sale.** Los 18 dibujos de la caballera son coherentes y están montados.
+
+Receta que queda:
+1. Generar y aprobar la quieta, adjuntando `noa-quieta.png`.
+2. Pedir todo lo demás adjuntando solo esa quieta aprobada, recompuesta en el formato de salida.
+3. Si un gesto sale hacia el otro lado, repetirlo solo, adjuntando otro gesto bueno y cambiando la mano.
+4. El nado, sin las palabras «little girl», «16-bit game», «swim» ni «water»: el generador rechazó la petición.
+5. En correr, las cuatro salen parecidas; las del peto también lo son, así que vale mientras cambien las piernas.
+6. Recortar con `prototypes/tools/trajes-recorte.py` (cada dibujo ocupa el sitio del dibujo del peto) y apuntar el traje en `ARTE_TRAJES`.
+
+Peso: 1830 KB los once archivos de la caballera (5302 KB los del peto). Se usaron `caballera-correr.png` (segundo intento) y `caballera-tijera` (aparte).
 
 Los adjuntos y los originales van fuera del repositorio, en `../super-noa-arte-original/trajes-v1/` (adjuntos en `referencias/`). Un adjunto nuevo se prepara con `prototypes/tools/trajes-referencia.py`.
 

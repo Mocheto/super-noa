@@ -19,6 +19,8 @@ import { ESCONDITES, SITIO_JAULA, type EsconditeId, type HamstersProgress, type 
 import { apuntarVisita, comidaFavoritaDe, OLER_TRAS_ENTRAR_MS, SITIOS_PARA_OLER, COMIDAS_AMIGOS, cuerpoDelVisitante, darDeComerAlVisitante, DESPEDIDA_MS, elegirVisitante, HOJA_COMIDAS_AMIGOS, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, SE_VA_TRAS_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";
 import { DibujoAmigo } from "./DibujoAmigo";
 import { friendCatalog, type FriendFood } from "./friends";
+import { AMPLIACION_JARDIN, CORTE } from "./casaConejos";
+import { FLECHA_BAJAR, FLECHA_SUBIR, LIENZO_CORTE, LIENZO_PRADERA, pintarCorte, pintarPradera, sobreFlecha } from "./casaMadrigueraArte";
 import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, CELDAS_MACETEROS, HOJA_MACETEROS, jardinDe, LUCIERNAGAS, luciernagaEn, maceteroBajo, maceteroPorRegar, regar, REGADERA, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
@@ -117,12 +119,28 @@ const CENTRO_JAULA = (SITIO_JAULA.zona.desde + SITIO_JAULA.zona.hasta) / 2;
 const verJaula = import.meta.env.DEV && new URLSearchParams(window.location.search).has("jaula");
 
 /** Cara de hámster (Perla asomada, la séptima pose de su hoja), para el botón que lleva a la jaula y la pista. */
+/** La cara de un conejo para el botón de la bandeja que lleva a la madriguera (provisional, por código). */
+const CaraConejo = () => <svg className="casa-cara-conejo" viewBox="0 0 32 32" aria-hidden="true">
+  <path d="M11 17C7 8 8 2 11 2s5 7 4 14zM21 17c4-9 3-15 0-15s-5 7-4 14z" fill="#fdf6ee" stroke="#2f1d33" strokeWidth="2" />
+  <ellipse cx="16" cy="22" rx="10" ry="8" fill="#fdf6ee" stroke="#2f1d33" strokeWidth="2" />
+  <path d="M12 20h2v2h-2zM18 20h2v2h-2z" fill="#2f1d33" /><path d="M15 24h2v2h-2z" fill="#e8849a" />
+</svg>;
+/** La flecha para bajar a la madriguera o subir; el dedo la toca en la escena y el botón es para el teclado. */
+const FlechaMadriguera = ({ sentido, etiqueta, onUsar }: { sentido: "bajar" | "subir"; etiqueta: string; onUsar: () => void }) => {
+  const { x, y } = sentido === "bajar" ? FLECHA_BAJAR : FLECHA_SUBIR;
+  return <button type="button" className={`casa-flecha-madriguera is-${sentido}`} style={{ left: x, top: y }} aria-label={etiqueta}
+    onClick={(event) => { if (event.detail === 0) onUsar(); }}>
+    <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M13 4h14v16h9L20 37 4 20h9z" fill="#ffd76a" stroke="#2f1d33" strokeWidth="3" /></svg>
+  </button>;
+};
 const CaraHamster = () => <i className="casa-cara-hamster" aria-hidden="true" style={{ backgroundImage: cssAssetUrl(ARTE_JAULA.hamsters.perla) }} />;
 
 /** Necesidad que enseña cada objeto en el bocadillo. */
 const OBJETO_DE: Record<NecesidadId, Herramienta | "mano"> = { comer: "cuenco", mimos: "mano", bano: "esponja", jugar: "pelota" };
 
 // Los ajustes de prueba también se leen en la web publicada, para probar la casa con Noa en su móvil.
+/** Lo que tarda la vista en bajar o subir (o el fundido, con movimiento tranquilo). */
+const PASO_MADRIGUERA_MS = 600;
 const ajustes = leerAjustesCasa(window.location.search);
 /** `?casaClima=lluvia|nieve|arcoiris|sol` fuerza el clima (mapa «Idea: clima en la ventana»). */
 const climaForzado = climaDePrueba(window.location.search);
@@ -228,6 +246,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   /** Estancia que se ve: la habitación o el jardín (mapa «Jardín de la casa»). */
   const [estancia, setEstancia] = useState<Estancia>("habitacion");
   const enJardin = estancia === "jardin";
+  // La madriguera (mapa «La madriguera de los conejos»): si se está viendo bajo tierra, y el paso entre una vista y otra.
+  const [bajoTierra, setBajoTierra] = useState(false);
+  const [paso, ponerPaso] = useEfimero<{ visto: true }>(temporizadores);
+  const praderaLienzoRef = useRef<HTMLCanvasElement | null>(null);
+  const corteLienzoRef = useRef<HTMLCanvasElement | null>(null);
   /** Gatitos que van solos hacia la puerta para cambiar de estancia. */
   const seVanRef = useRef(new Set<number>());
   /** Gatitos que botan en la colchoneta del jardín ahora mismo. */
@@ -365,8 +388,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setAndantes((actuales) => actuales[mundo] && andando(actuales[mundo]) ? { ...actuales, [mundo]: parar(actuales[mundo], performance.now()) } : actuales);
   }, [gatitos]);
   const anchoVisible = medidas.anchoVisor / medidas.escala;
-  // La habitación se desliza también por su ampliación de la izquierda (x negativas); el jardín, no.
-  const vistaMin = enJardin ? 0 : VISTA_MINIMA_HABITACION;
+  // Las dos estancias se deslizan también por su ampliación de la izquierda (x negativas).
+  const vistaMin = enJardin ? -AMPLIACION_JARDIN : VISTA_MINIMA_HABITACION;
   const vistaX = limitarVista(vista ?? 0, anchoVisible, vistaMin);
 
   // La habitación cabe a lo alto; en pantallas estrechas no baja de 0,75 y se desliza.
@@ -467,6 +490,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     // Si llamaba un visitante, al abrir pasa al jardín.
     if (!enJardin && visita?.fase === "llama") setVisita({ ...visita, fase: "dentro" });
     setEstancia(enJardin ? "habitacion" : "jardin");
+    setBajoTierra(false);
     setVista(0);
     setAbanico(false);
     setArrastre(null);
@@ -627,6 +651,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     seVanRef.current.clear();
     sacarADormir(performance.now());
     setEstancia("habitacion");
+    setBajoTierra(false);
+    // Desde la madriguera, la vista no se queda en la ampliación: en la habitación ahí está la pecera.
+    if (enJardin) setVista((actual) => actual === null ? actual : Math.max(0, actual));
     setAcostando(true);
     setDecorando(false);
     setElegido(null);
@@ -1072,16 +1099,46 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     return () => { window.clearInterval(huellas); window.clearInterval(reloj); };
   }, [fase, gatitos, sitios, guardar, pestanaVisible]);
 
+  // El dibujo provisional de la madriguera, una vez al entrar en el jardín.
+  useEffect(() => {
+    if (!enJardin) return;
+    for (const [lienzo, zona, pintar] of [[praderaLienzoRef.current, LIENZO_PRADERA, pintarPradera], [corteLienzoRef.current, LIENZO_CORTE, pintarCorte]] as const) {
+      const contexto = lienzo?.getContext("2d");
+      if (!contexto) continue;
+      contexto.setTransform(1, 0, 0, 1, -zona.x, -zona.y);
+      pintar(contexto);
+    }
+  }, [enJardin]);
+
+  /** La flecha: baja a ver la madriguera en corte o vuelve arriba. */
+  const mirarMadriguera = (abajo: boolean) => {
+    if (fase !== "casa" || abajo === bajoTierra || arrastre) return;
+    setBajoTierra(abajo);
+    setAbanico(false);
+    setAbanicoAmigos(false);
+    setMenu(null);
+    ponerPaso({ visto: true }, PASO_MADRIGUERA_MS);
+  };
+  // Con teclado, el foco pasa a la flecha de la vista a la que se llega.
+  const flechaRef = useRef(bajoTierra);
+  useEffect(() => {
+    if (flechaRef.current === bajoTierra) return;
+    flechaRef.current = bajoTierra;
+    seccionRef.current?.querySelector<HTMLButtonElement>(".casa-flecha-madriguera")?.focus({ preventScroll: true });
+  }, [bajoTierra]);
+
   useEffect(() => {
     // El «atrás» (Escape en el teclado) vuelve al mapa guardando la casa, salvo con la ventana de llegada abierta.
     const alPulsar = (event: KeyboardEvent) => {
       if (event.key !== "Escape" || fase === "hola") return;
+      // Bajo tierra, «atrás» sube.
+      if (bajoTierra) { setBajoTierra(false); ponerPaso({ visto: true }, PASO_MADRIGUERA_MS); return; }
       onGuardar(casaRef.current);
       onSalir();
     };
     window.addEventListener("keydown", alPulsar);
     return () => window.removeEventListener("keydown", alPulsar);
-  }, [fase, onGuardar, onSalir]);
+  }, [fase, onGuardar, onSalir, bajoTierra, ponerPaso]);
 
   const enEscena = (event: { clientX: number; clientY: number }) => {
     const caja = escenaRef.current?.getBoundingClientRect();
@@ -1164,7 +1221,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (!arrastrando) return;
     let fotograma = 0;
     const paso = () => {
-      if (autoRef.current) setVista((actual) => limitarVista((actual ?? 0) + autoRef.current * AUTODESLIZAR_PX, anchoVisible, vistaMin));
+      // Llevando algo, en el jardín la vista no se desliza sola a la ampliación: allí no hay nada que hacer con ello.
+      if (autoRef.current) setVista((actual) => limitarVista((actual ?? 0) + autoRef.current * AUTODESLIZAR_PX, anchoVisible, enJardin ? Math.min(0, actual ?? 0) : vistaMin));
       // Con un hámster en el dedo quieto en el borde, sigue bajo el dedo mientras la habitación se desliza.
       const dedo = llevaHamsterRef.current;
       const caja = escenaRef.current?.getBoundingClientRect();
@@ -1176,7 +1234,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     };
     fotograma = requestAnimationFrame(paso);
     return () => cancelAnimationFrame(fotograma);
-  }, [arrastrando, anchoVisible, vistaMin]);
+  }, [arrastrando, anchoVisible, vistaMin, enJardin]);
 
   // Arrastrar un objeto de la bandeja: se sigue al dedo por toda la pantalla, aunque salga de la escena.
   useEffect(() => {
@@ -1254,6 +1312,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (fase !== "casa" || arrastre || event.button !== 0) return;
     const punto = enEscena(event);
     if (!punto) return;
+    // Bajo tierra no se desliza: solo se toca.
+    if (bajoTierra) {
+      deslizRef.current = { clienteX: event.clientX, vista: vistaX, moviendo: false, punto };
+      return;
+    }
     // Un hámster escapado se coge al momento, antes que nada.
     if (!decorando && !enJardin && jaulaRef.current?.coger(punto)) {
       try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* sin captura, el arrastre sigue dentro de la escena */ }
@@ -1312,7 +1375,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       return;
     }
     const desliz = deslizRef.current;
-    if (desliz) {
+    if (desliz && !bajoTierra) {
       const distancia = event.clientX - desliz.clienteX;
       if (desliz.moviendo || Math.abs(distancia) > UMBRAL_DESLIZAR) {
         desliz.moviendo = true;
@@ -1329,7 +1392,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       return;
     }
     const tocado = deslizRef.current;
-    if (decorando && tocado?.punto && !tocado.moviendo) setElegido(muebleEn(tocado.punto.x, tocado.punto.y));
+    const toque = tocado && !tocado.moviendo ? tocado.punto : undefined;
+    if (bajoTierra) { if (toque && sobreFlecha(FLECHA_SUBIR, toque)) mirarMadriguera(false); }
+    else if (enJardin && toque && sobreFlecha(FLECHA_BAJAR, toque)) mirarMadriguera(true);
+    else if (decorando && tocado?.punto && !tocado.moviendo) setElegido(muebleEn(tocado.punto.x, tocado.punto.y));
     else if (noche && !enJardin && tocado?.punto && !tocado.moviendo && enLaLampara(tocado.punto)) cambiarLampara();
     else if (!enJardin && tocado?.punto && !tocado.moviendo && enLaPecera(tocado.punto.x, tocado.punto.y)) {
       const enElDibujo = enLaPecera(tocado.punto.x, tocado.punto.y)!;
@@ -1431,8 +1497,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // La pista del hámster escondido: sobre su escondite o, si no se ve, en el borde.
   const pistaX = pistaHamster && !enJardin ? ESCONDITES[pistaHamster].x : null;
   const pistaLado = pistaX === null ? null : pistaX < vistaX + 40 ? "izquierda" : pistaX > vistaX + anchoVisible - 40 ? "derecha" : null;
-  const quedaIzquierda = vistaX > vistaMin + 1;
-  const quedaDerecha = vistaX < ESCENA_CASA.ancho - anchoVisible - 1;
+  const quedaIzquierda = !bajoTierra && vistaX > vistaMin + 1;
+  const quedaDerecha = !bajoTierra && vistaX < ESCENA_CASA.ancho - anchoVisible - 1;
+  // Mirando la madriguera, la bandeja ofrece lo suyo. Bajo tierra la cámara se centra en el corte.
+  const mirandoMadriguera = enJardin && (bajoTierra || vistaX <= -AMPLIACION_JARDIN / 2);
+  const camara = bajoTierra ? { x: CORTE.x + CORTE.ancho / 2 - anchoVisible / 2, y: CORTE.y } : { x: vistaX, y: 0 };
 
   // Un gatito sentado delante de la pecera mira los peces, y los peces se juntan a mirarlo (x del dibujo de la pecera).
   const sitioPecera = HABITACION.sitios.pecera;
@@ -1499,7 +1568,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   };
 
   const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.webp"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--regadera": cssAssetUrl(REGADERA), "--pluma": cssAssetUrl(HOJA_PLUMA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
-  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--maceteros": cssAssetUrl(HOJA_MACETEROS), "--regadera": cssAssetUrl(REGADERA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--lampara": `${HABITACION.lampara.x + HABITACION.ampliacion}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translateX(${-vistaX * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
+  const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--maceteros": cssAssetUrl(HOJA_MACETEROS), "--regadera": cssAssetUrl(REGADERA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--lampara": `${HABITACION.lampara.x + HABITACION.ampliacion}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translate(${-camara.x * medidas.escala}px, ${-camara.y * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
   const hojaBano = bano !== null ? hojaDe(bano) : undefined;
@@ -1535,9 +1604,17 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     <BotonControl className="casa-salir" pictograma="mapa" etiqueta="casa.salir.oculto" onClick={salir} disabled={fase === "hola"} />
     <div className="casa-marco game-frame" style={estiloMarco}>
       <div className="casa-visor" ref={visorRef} style={{ width: medidas.anchoVisor, height: ESCENA_CASA.alto * medidas.escala }}>
-        <div className={`casa-escena${noche ? " is-noche" : ""}${enJardin ? " is-jardin" : ""}${noche && lamparaApagada ? " is-apagada" : ""}`} ref={escenaRef} style={estiloEscena}
+        <div className={`casa-escena${paso && !reduceMotion ? " is-bajando" : ""}${noche ? " is-noche" : ""}${enJardin ? " is-jardin" : ""}${noche && lamparaApagada ? " is-apagada" : ""}`} ref={escenaRef} style={estiloEscena}
           onPointerDown={empezarDedo} onPointerMove={moverDedo} onPointerUp={acabarDedo} onPointerCancel={acabarDedo}>
           <img className="casa-fondo" src={enJardin ? JARDIN.fondo : fondo} alt="" draggable={false} />
+          {enJardin && <>
+            <canvas ref={praderaLienzoRef} className="casa-madriguera" aria-hidden="true" width={LIENZO_PRADERA.ancho} height={LIENZO_PRADERA.alto}
+              style={{ left: LIENZO_PRADERA.x, top: LIENZO_PRADERA.y, width: LIENZO_PRADERA.ancho, height: LIENZO_PRADERA.alto }} />
+            <canvas ref={corteLienzoRef} className="casa-madriguera" aria-hidden="true" width={LIENZO_CORTE.ancho} height={LIENZO_CORTE.alto}
+              style={{ left: LIENZO_CORTE.x, top: LIENZO_CORTE.y, width: LIENZO_CORTE.ancho, height: LIENZO_CORTE.alto }} />
+            {fase === "casa" && !bajoTierra && <FlechaMadriguera sentido="bajar" etiqueta={t("casa.madriguera.bajar.oculto")} onUsar={() => mirarMadriguera(true)} />}
+            {bajoTierra && <FlechaMadriguera sentido="subir" etiqueta={t("casa.madriguera.subir.oculto")} onUsar={() => mirarMadriguera(false)} />}
+          </>}
           {/* Muebles, cada uno en la versión elegida, sobre la habitación vacía. */}
           {!enJardin && MUEBLES_DE_LAMINA.map((mueble) => {
             const dibujo = MUEBLES_CASA[mueble].dibujo!;
@@ -1567,7 +1644,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           <img className="casa-ventana-noche" src={VENTANA.imagen} alt="" draggable={false} style={{ left: VENTANA.left, top: VENTANA.top, width: VENTANA.width, height: VENTANA.height }} /></>}
           <canvas ref={climaLienzoRef} className="casa-clima" width={ESCENA_CASA.ancho} height={ESCENA_CASA.alto} aria-hidden="true" />
           {/* La puerta del corazón lleva a la otra estancia; con el dedo se toca en la escena, aquí para el teclado. */}
-          {fase === "casa" && !acostando && <button type="button" className={`casa-puerta${cogido || (llamando && !enJardin) ? " is-brilla" : ""}${llamando && !enJardin ? " is-llama" : ""}`} aria-label={tClave(enJardin ? "casa.puerta.casa.oculto" : "casa.puerta.jardin.oculto")}
+          {fase === "casa" && !acostando && !bajoTierra && <button type="button" className={`casa-puerta${cogido || (llamando && !enJardin) ? " is-brilla" : ""}${llamando && !enJardin ? " is-llama" : ""}`} aria-label={tClave(enJardin ? "casa.puerta.casa.oculto" : "casa.puerta.jardin.oculto")}
             style={{ left: zonaPuertaDe(estancia).izquierda, top: zonaPuertaDe(estancia).arriba, width: zonaPuertaDe(estancia).derecha - zonaPuertaDe(estancia).izquierda, height: zonaPuertaDe(estancia).abajo - zonaPuertaDe(estancia).arriba }}
             onClick={(event) => { if (event.detail === 0) cruzarPuerta(); }} />}
           {(fase === "entrando" || luzPuerta > 0) && <div key={`luz-${luzPuerta}`} className="casa-luz-puerta" style={{ left: porcentajeX(enJardin ? JARDIN.sitios.puerta.x : PUERTA_X) }} />}
@@ -1603,7 +1680,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             const { x, y } = luciernagaEn(indice, reduceMotion ? indice * 7000 : ahora);
             return <i key={indice} className="casa-luciernaga" aria-hidden="true" style={{ left: x, top: y, animationDelay: `${-indice * 0.37}s` }} />;
           })}
-          {mariposasVisibles && mariposasEn(ahora).map((mariposa, indice) => <button key={indice} type="button" aria-label={t("casa.jardin.mariposa.oculto")}
+          {mariposasVisibles && !bajoTierra && mariposasEn(ahora).map((mariposa, indice) => <button key={indice} type="button" aria-label={t("casa.jardin.mariposa.oculto")}
             className={`casa-mariposa${mariposa.quieta ? " is-posada" : ""}${indice % 2 ? " is-otra" : ""}`} style={{ left: mariposa.x, top: mariposa.y }}
             data-indice={indice} onClick={mariposaConTeclado} />)}
           {!enJardin && casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
@@ -1639,11 +1716,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           {arrastre?.herramienta === "pluma" && <CapaPluma capaRef={capaPlumaRef} ancho={ESCENA_CASA.ancho} alto={ESCENA_CASA.alto} />}
           {arrastre && arrastre.herramienta !== "pluma" && <i className={`${arrastre.comidaAmigo ? `casa-comida-amigo is-${arrastre.comidaAmigo}` : arrastre.comida ? `casa-comida is-${arrastre.comida}` : `casa-objeto is-${arrastre.herramienta}`} casa-arrastrado`} style={{ left: porcentajeX(arrastre.x), top: porcentajeY(arrastre.y) }} />}
         </div>
-        {conMenu && <MenuGatito nombre={nombreDe(conMenu.mundo)} x={(conMenu.andante.x - vistaX) * medidas.escala} y={conMenu.andante.y * medidas.escala}
+        {paso && reduceMotion && <span key={String(bajoTierra)} className="casa-fundido" aria-hidden="true" />}
+        {conMenu && !bajoTierra && <MenuGatito nombre={nombreDe(conMenu.mundo)} x={(conMenu.andante.x - vistaX) * medidas.escala} y={conMenu.andante.y * medidas.escala}
           alto={PIES_GATITO * conMenu.escala * medidas.escala} anchoVisor={medidas.anchoVisor} onAcariciar={() => acariciar(conMenu.indice)} />}
         {quedaIzquierda && <span className="casa-borde is-izquierda" aria-hidden="true" />}
         {quedaDerecha && <span className="casa-borde is-derecha" aria-hidden="true" />}
-        {llamando && visita && (enJardin ? VISITANTE_ASOMA.x > vistaX + anchoVisible - 40 : zonaPuertaDe("habitacion").derecha < vistaX + 20) &&
+        {llamando && !bajoTierra && visita && (enJardin ? VISITANTE_ASOMA.x > vistaX + anchoVisible - 40 : zonaPuertaDe("habitacion").derecha < vistaX + 20) &&
           <button type="button" key={`visita-${visita.llamadas}`} className={`casa-aviso casa-aviso-visita is-${enJardin ? "derecha" : "izquierda"}`}
             aria-label={t("casa.visitante.llama.oculto", { nombre: nombreDeAmigo(visita.animal) })}
             onClick={() => setVista(enJardin ? centrarEn(VISITANTE_ASOMA.x, anchoVisible) : 0)}><DibujoAmigo animal={visita.animal} size={64} /></button>}
@@ -1654,7 +1732,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
         {cucu && !enJardin && <p key={cucu.id} className="casa-cucu texto-noa" role="status"
           style={{ left: Math.max(90, Math.min(medidas.anchoVisor - 90, (HUECO_ESCONDITE.x - vistaX) * medidas.escala)), top: (PECERA.top + PECERA.puertas.arriba - 70) * medidas.escala }}><Texto clave="casa.escondite.cucu.rotulo" /></p>}
         {avisoHamster && <p className="casa-hamsters-rotulo" role="status"><Texto clave={`casa.hamsters.${avisoHamster.aviso}.rotulo`} /></p>}
-        {fuera.map((aviso) => <span key={aviso.mundo} className={`casa-aviso is-${aviso.lado}`} aria-hidden="true"><i className={`casa-objeto is-${aviso.objeto}`} /></span>)}
+        {!bajoTierra && fuera.map((aviso) => <span key={aviso.mundo} className={`casa-aviso is-${aviso.lado}`} aria-hidden="true"><i className={`casa-objeto is-${aviso.objeto}`} /></span>)}
         {flash > 0 && <span key={flash} className="casa-flash" aria-hidden="true"><i className="casa-foto-vuela" /></span>}
       </div>
       {fase === "casa" && bano === null && decorando && <div className="casa-bandeja is-decorar" aria-label={t("casa.decorar.bandeja.oculto")} role="toolbar">
@@ -1696,13 +1774,25 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           <i className="casa-boton-jaula is-agua" style={{ backgroundImage: cssAssetUrl(ARTE_JAULA.bandeja) }} />
         </button>
       </div>}
-      {fase === "casa" && bano === null && !decorando && !acostando && !mirandoJaula && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
+      {fase === "casa" && bano === null && !decorando && !acostando && mirandoMadriguera && <div className="casa-bandeja" aria-label={t("casa.madriguera.bandeja.oculto")} role="toolbar">
+        <span className="casa-bandeja-modos is-madriguera">
+          {bajoTierra
+            ? <BotonControl className="casa-bandeja-modo" pictograma="vuelve" etiqueta="casa.madriguera.subir.oculto" onClick={() => mirarMadriguera(false)} />
+            : <>
+              <BotonControl className="casa-bandeja-modo" pictograma="vuelve" etiqueta="casa.madriguera.volver.oculto" onClick={() => setVista(0)} />
+              <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
+              {horaDeDormir && <BotonControl className="casa-bandeja-modo casa-dormir" pictograma="estrella" etiqueta="casa.dormir.empezar.oculto" onClick={empezarADormir} />}
+            </>}
+        </span>
+      </div>}
+      {fase === "casa" && bano === null && !decorando && !acostando && !mirandoJaula && !mirandoMadriguera && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
         <span className="casa-bandeja-modos">
           {horaDeDormir && <BotonControl className="casa-bandeja-modo casa-dormir" pictograma="estrella" etiqueta="casa.dormir.empezar.oculto" onClick={empezarADormir} />}
           {/* Decorar, solo en la habitación. */}
           {!enJardin && <BotonControl className="casa-bandeja-modo" pictograma="flor" etiqueta="casa.decorar.boton.oculto" onClick={cambiarDecorar} />}
           <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
           {!enJardin && <button type="button" className="boton-control casa-bandeja-modo" aria-label={t("casa.hamsters.ver.oculto")} onClick={() => setVista(centrarEn(CENTRO_JAULA, anchoVisible, vistaMin))}><CaraHamster /></button>}
+          {enJardin && <button type="button" className="boton-control casa-bandeja-modo" aria-label={t("casa.madriguera.ver.oculto")} onClick={() => setVista(-AMPLIACION_JARDIN)}><CaraConejo /></button>}
           <BotonControl className="casa-bandeja-modo" pictograma="gato" etiqueta="casa.enCasa.boton.oculto" onClick={() => setEligiendo({ orden: [...enCasaDe(casaRef.current), ...dePaseoDe(casaRef.current)], antes: enCasaDe(casaRef.current) })} />
         </span>
         {HERRAMIENTAS.filter((herramienta) => !enJardin || (herramienta !== "escoba" && !(herramienta === "pelota" && visita?.fase === "dentro"))).map((herramienta) => herramienta === "cuenco"

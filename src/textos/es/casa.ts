@@ -135,6 +135,13 @@ export const casa = {
     meter: { oculto: "Esconder un gatito en el mueble de la pecera" },
     cucu: { rotulo: "{pictograma:gato} ¡CUCU!" },
   },
+  madriguera: {
+    ver: { oculto: "Ir a ver a los conejos" },
+    volver: { oculto: "Volver al jardín" },
+    bajar: { oculto: "Bajar a la madriguera" },
+    subir: { oculto: "Subir de la madriguera" },
+    bandeja: { oculto: "Cosas de la madriguera" },
+  },
   jardin: {
     mariposa: { oculto: "Mariposa: tócala para que se pose junto a un gatito" },
     macetero: {

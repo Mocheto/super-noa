@@ -11,6 +11,7 @@ import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito, modeloDibujado } from "./c
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
 import { crearPecera, PECERA } from "./casaPecera.ts";
+import { pintarPradera } from "./casaMadrigueraArte.ts";
 import { pintarJaulaEnFoto, saleLaJaula } from "./casaHamstersFoto.ts";
 import { CAPA_VISIBLE, laminaDePieza, piezasEnCuadro, type PiezaEnCuadro } from "./casaVestidorArte.ts";
 import { conComplemento } from "./casaComplementos.ts";
@@ -82,7 +83,14 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
   if (foto.jardin) {
     // En el jardín: su fondo, la colchoneta y cada macetero como estaba.
     const fondo = await cargar(JARDIN.fondo);
-    contexto.drawImage(fondo, foto.vista.x, 0, foto.vista.ancho, ALTO, 0, 0, ancho, ALTO * escala);
+    // El jardín dibujado empieza en x = 0; a su izquierda, la ampliación con la madriguera.
+    if (foto.vista.x < 0) {
+      contexto.save();
+      contexto.setTransform(escala, 0, 0, escala, -foto.vista.x * escala, 0);
+      pintarPradera(contexto);
+      contexto.restore();
+    }
+    contexto.drawImage(fondo, 0, 0, JARDIN.ancho, ALTO, -foto.vista.x * escala, 0, JARDIN.ancho * escala, ALTO * escala);
     const colchoneta = await cargar(JARDIN.colchoneta.imagen);
     const { left, top, width, height } = JARDIN.colchoneta;
     pintar(colchoneta, { x: 0, y: 0, ancho: colchoneta.naturalWidth, alto: colchoneta.naturalHeight }, { x: left, y: top, ancho: width, alto: height });

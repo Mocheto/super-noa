@@ -463,6 +463,25 @@
 .casa-objeto.is-pluma { background: var(--pluma) no-repeat 0 0 / 300% 100%; image-rendering: pixelated; }
 .casa-pluma-capa { position: absolute; left: 0; top: 0; z-index: 2000; overflow: visible; pointer-events: none; filter: drop-shadow(0 6px 4px #2f1d3366); }
 
+/* La madriguera (mapa «La madriguera de los conejos»): la ampliación del jardín y, por debajo, el corte de tierra.
+   Sus lienzos recogen el dedo para poder deslizar desde ellos. */
+.casa-escena.is-bajando { transition: transform .6s ease-in-out; }
+.casa-madriguera { image-rendering: pixelated; }
+.casa-flecha-madriguera { z-index: 1001; width: 64px; height: 64px; margin: -32px 0 0 -32px; padding: 0; border: 0; border-radius: 50%; background: transparent; pointer-events: none; animation: casa-flecha-bota .8s ease-in-out infinite alternate; }
+.casa-flecha-madriguera svg { display: block; width: 100%; height: 100%; }
+.casa-flecha-madriguera.is-subir { animation-name: casa-flecha-bota-arriba; }
+.casa-flecha-madriguera.is-subir svg { transform: rotate(180deg); }
+.casa-flecha-madriguera:focus-visible { outline: 4px solid #fff8e9; }
+@keyframes casa-flecha-bota { to { translate: 0 10px; } }
+@keyframes casa-flecha-bota-arriba { to { translate: 0 -10px; } }
+.casa-cara-conejo { width: 74%; height: 74%; }
+/* Su bandeja tiene uno o tres botones: en fila y centrados. */
+.casa-gatitos .casa-bandeja .casa-bandeja-modos.is-madriguera { display: flex; flex-wrap: wrap; justify-content: center; }
+.casa-fundido { position: absolute; inset: 0; z-index: 30; pointer-events: none; background: #2f1d33; animation: casa-fundido .6s ease-out forwards; }
+@keyframes casa-fundido { to { opacity: 0; } }
+.casa-gatitos.is-quieta .casa-flecha-madriguera { animation: none; }
+@media (prefers-reduced-motion: reduce) { .casa-flecha-madriguera { animation: none; } .casa-escena.is-bajando { transition: none; } }
+
 /* El clima (issue 346): lienzo de la escena entera sobre el fondo y la ventana de noche. */
 .casa-clima { position: absolute; left: 0; top: 0; width: 1280px; height: 540px; image-rendering: pixelated; pointer-events: none; }
 

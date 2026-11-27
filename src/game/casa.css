@@ -616,8 +616,8 @@
   .casa-gatito.is-del-escondite { animation: casa-aparece .7s ease-in; }
 }
 
-/* El regalo (boceto del regalo). La caja es provisional (SVG) hasta su arte. */
-.casa-escena > .casa-regalo { position: absolute; z-index: 1002; padding: 0; border: 0; cursor: pointer; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g stroke='%232f1d33' stroke-width='4' stroke-linejoin='round'><path fill='%235aa9e6' d='M14 42h72v52H14z'/><path fill='%237cc0f2' d='M8 28h84v18H8z'/><path fill='%23ffd76a' d='M42 28h16v66H42z'/><path fill='%23e5484d' d='M50 28 24 8v22zM50 28 76 8v22z'/><circle fill='%23e5484d' cx='50' cy='26' r='8'/></g></svg>") center / contain no-repeat; animation: casa-regalo 1.4s infinite; }
+/* El regalo (boceto del regalo). El dibujo de la caja, `.dibujo-regalo`, está en `interfaz.css`. */
+.casa-escena > .casa-regalo { position: absolute; z-index: 1002; padding: 0; border: 0; cursor: pointer; animation: casa-regalo 1.4s infinite; }
 .casa-escena > .casa-regalo:focus-visible { outline: 4px solid #ffd76a; }
 @keyframes casa-regalo { 0%, 70%, 100% { transform: none; } 78% { transform: translateY(-14px) rotate(-5deg); } 86% { transform: rotate(5deg); } }
 .casa-escena > .casa-confeti { position: absolute; z-index: 1450; pointer-events: none; }

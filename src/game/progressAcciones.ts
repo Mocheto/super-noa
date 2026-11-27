@@ -3,8 +3,9 @@
  * envuelve en `setProgress`; aquí se prueban sin React.
  */
 import { recordFlight } from "./avioneta.ts";
-import type { CasaProgress } from "./casaProgreso.ts";
-import type { RegalosProgress } from "./regalos.ts";
+import { DECORACION_DE_SIEMPRE, type CasaProgress } from "./casaProgreso.ts";
+import { casaAbierta } from "./casaRescate.ts";
+import { ganarRegalo, type RegalosProgress } from "./regalos.ts";
 import { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
 import { visitDetour } from "./detourProgress.ts";
 import { addHeart } from "./friendProgress.ts";
@@ -54,6 +55,13 @@ export function completarPantalla(
   });
 }
 
+/** Tras superar una pantalla: llega un regalo si la casa ya está abierta y toca. Si no, el mismo objeto. */
+export function ganarRegaloDePantalla(current: Progress, ahora: Date): Progress {
+  if (!casaAbierta(current.levelStats)) return current;
+  const regalos = ganarRegalo(current.regalos, current.casa?.decoracion ?? DECORACION_DE_SIEMPRE, ahora);
+  return regalos === current.regalos ? current : { ...current, regalos };
+}
+
 export const desbloquearAgua = (current: Progress): Progress => progressMilestone(current, { ...current, waterUnlocked: true });
 export const desbloquearSecreto = (current: Progress): Progress => progressMilestone(current, { ...current, secretUnlocked: true });
 
@@ -86,6 +94,7 @@ export const accionesProgreso = {
   saludar: (current: Progress, world: number, kind: string) => greetFriend(current, world, kind),
   visitarPaseo: (current: Progress, world: number) => visitRestStop(current, world),
   completarPantalla,
+  ganarRegaloDePantalla,
   desbloquearAgua,
   desbloquearSecreto,
   retoDeJefe,

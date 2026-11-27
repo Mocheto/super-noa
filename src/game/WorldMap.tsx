@@ -36,11 +36,13 @@ type WorldMapProps = {
   onOpenAvioneta?: () => void;
   /** Abre la casa de los gatitos; sin él, no hay botón CASA. */
   onOpenCasa?: () => void;
+  /** Hay un regalo sin abrir: el botón CASA lleva un lazo. */
+  regaloEnCasa?: boolean;
   /** Menú para adultos abierto (issue 333): vista de lista, zoom, ver todo y la ayuda. Para Noa quedan NOA y CASA. */
   menuAdultos?: boolean;
 };
 
-export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal, onOpenAvioneta, onOpenCasa, menuAdultos = false }: WorldMapProps) {
+export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal, onOpenAvioneta, onOpenCasa, regaloEnCasa = false, menuAdultos = false }: WorldMapProps) {
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedWorld, setSelectedWorld] = useState<WorldId | null>(null);
   const [openObjectives, setOpenObjectives] = useState<{ levelId: string; pinned: boolean } | null>(null);
@@ -204,7 +206,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
       {/* Para Noa, grandes y flotando sobre el mapa: volver a Noa y la casa. */}
       {view === "map" && <div className="map-noa-botones" inert={selectedWorld !== null}>
         <Boton className="map-volver-noa" clave="mapa.volverANoa.rotulo" onClick={() => camera.showNear(noaPosition)} />
-        {onOpenCasa && <Boton tipo="seguir" className="map-casa" clave="mapa.casa.rotulo" onClick={onOpenCasa} />}
+        {onOpenCasa && <Boton tipo="seguir" className={`map-casa${regaloEnCasa ? " con-regalo" : ""}`} clave="mapa.casa.rotulo" onClick={onOpenCasa} />}
       </div>}
       <div className="map-scroll" inert={selectedWorld !== null} hidden={view !== "map"} role="region" aria-label={t("mapa.mapaIlustrado.oculto")}
         ref={viewportRef} {...camera.viewportEvents}>

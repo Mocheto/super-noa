@@ -32,6 +32,8 @@ import { restStopFor, restStopIndex, restStopResumenes as restStopLevels, restSt
 import { funciones } from "./game/funciones";
 import { trajePuesto } from "./game/trajes";
 import { casaAbierta, conMundosCompletos, llegadasPorVer } from "./game/casaRescate";
+import { completarPantalla, ganarRegaloDePantalla } from "./game/progressAcciones";
+import { regaloEsperando } from "./game/regalos";
 import { t } from "./textos";
 import { Boton, BotonControl, Pictograma, Texto } from "./textos/Texto";
 import { Medalla, Ventana } from "./game/Ventana";
@@ -104,6 +106,8 @@ export default function App() {
   const cerrarAviso = useCallback((id: string) => setAvisosCerrados((cerrados) => new Set(cerrados).add(id)), []);
   const { muted, musicVolume, effectsVolume, reduceMotion, reduceMotionAjuste, touchControls, alternarSonido, ajustarVolumen, setReduceMotion, setTouchControls } = useAjustes();
   const [mapReturnWorld, setMapReturnWorld] = useState<WorldId>();
+  /** La pantalla recién superada ha traído un regalo para la casa. */
+  const [regaloNuevo, setRegaloNuevo] = useState(false);
   const [showCatPartyInvite, setShowCatPartyInvite] = useState(false);
   const [bossReplay, setBossReplay] = useState(false);
   const [bossReplayReturn, setBossReplayReturn] = useState<"home" | "map">("map");
@@ -249,7 +253,14 @@ export default function App() {
       return;
     }
     setShowCatPartyInvite(activeLevel.id === CAT_PARTY_LEVEL_ID && !forestComplete);
-    acciones.completarPantalla(activeLevel, finalSnapshot, { sinCaer: lives === MAX_LIVES, reto: challengeCompleted });
+    const como = { sinCaer: lives === MAX_LIVES, reto: challengeCompleted };
+    acciones.completarPantalla(activeLevel, finalSnapshot, como);
+    if (funciones.regalos) {
+      const ahora = new Date();
+      const despues = completarPantalla(progress, activeLevel, finalSnapshot, como);
+      setRegaloNuevo(ganarRegaloDePantalla(despues, ahora) !== despues);
+      acciones.ganarRegaloDePantalla(ahora);
+    }
     // La primera vez que se vence a la Reina Arcoíris, ella regala la avioneta y el vuelo empieza solo.
     if (activeLevel.world === 7 && activeLevel.boss && !progress.avioneta?.flown) {
       setAvionetaGift(true);
@@ -257,7 +268,7 @@ export default function App() {
       return;
     }
     setScreen(activeLevel.route?.finale ? "finished" : "complete");
-  }, [acciones, activeLevel, forestComplete, lives, snapshot, progress.avioneta?.flown]);
+  }, [acciones, activeLevel, forestComplete, lives, snapshot, progress]);
 
   const handleCanvasComplete = useCallback((finalSnapshot: GameSnapshot) => handleComplete(false, finalSnapshot), [handleComplete]);
 
@@ -388,7 +399,7 @@ export default function App() {
           </header>
           <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
             <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} onOpenAvioneta={() => { setAvionetaGift(false); setPaused(false); setScreen("avioneta"); }} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal}
-              onOpenCasa={funciones.casa && casaAbierta(progress.levelStats) ? () => setScreen("casa") : undefined} menuAdultos={menuMapa} />
+              onOpenCasa={funciones.casa && casaAbierta(progress.levelStats) ? () => setScreen("casa") : undefined} regaloEnCasa={funciones.regalos && regaloEsperando(progress.regalos)} menuAdultos={menuMapa} />
           </Suspense>
         </section>
       )}
@@ -440,7 +451,7 @@ export default function App() {
               botones={<>
                 {showCatPartyInvite && <Boton tipo="seguir" clave="ventanas.completada.fiesta.rotulo" data-gamepad-default onClick={openCatParty} />}
                 {!showCatPartyInvite && activeLevel.world !== 7 && <Boton tipo="seguir" clave="ventanas.completada.siguiente.rotulo" data-gamepad-default onClick={nextLevel} />}
-                {funciones.casa && llegadasPorVer(progress.casa, progress.levelStats).includes(activeLevel.world) && <Boton clave="ventanas.completada.casa.rotulo" onClick={() => setScreen("casa")} />}
+                {funciones.casa && (regaloNuevo || llegadasPorVer(progress.casa, progress.levelStats).includes(activeLevel.world)) && <Boton clave="ventanas.completada.casa.rotulo" onClick={() => setScreen("casa")} />}
                 {funciones.paseos && activeLevel.boss && restStopFor(activeLevel.world) && <Boton clave="ventanas.completada.paseo.rotulo" onClick={() => beginLevel(levels.length + detourLevels.length + restStopIndex(activeLevel.world))} />}
                 <Boton tipo={activeLevel.world === 7 ? "seguir" : "secundario"} clave="ventanas.completada.mapa.rotulo" data-gamepad-back onClick={() => setScreen("map")} />
               </>}>
@@ -452,6 +463,7 @@ export default function App() {
               </div>
               {snapshot.stickers.length > 0 && <div className="rotulo-con-frase"><p className="texto-noa"><Texto clave="ventanas.completada.insignia.rotulo" /></p><p className="juntos">{t("ventanas.completada.insignia.juntos", { n: snapshot.stickers.length })}</p></div>}
               <p className="juntos">{t("ventanas.completada.manzanas.juntos", { n: snapshot.apples })} {t(activeLevel.world === 7 ? "ventanas.completada.reina.juntos" : activeLevel.boss ? "ventanas.completada.guardian.juntos" : "ventanas.completada.siguienteAventura.juntos")}</p>
+              {regaloNuevo && <div className="rotulo-con-frase aviso-regalo"><i className="dibujo-regalo" aria-hidden="true" /><p className="texto-noa"><Texto clave="ventanas.completada.regalo.rotulo" /></p><p className="juntos">{t("ventanas.completada.regalo.juntos")}</p></div>}
               {showCatPartyInvite && <p className="juntos">{t("ventanas.completada.fiesta.juntos")}</p>}
               {!showCatPartyInvite && activeLevel.world !== 7 && activeLevel.route?.nextLabel && <p className="juntos">{activeLevel.route.nextLabel}</p>}
             </Ventana>

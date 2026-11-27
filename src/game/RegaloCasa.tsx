@@ -1,6 +1,6 @@
 /**
  * El regalo en la casa (mapa «Ganar decoraciones de la casa», boceto del regalo): la caja que salta en la alfombra, el
- * confeti al abrirla y la tarjeta grande con lo que ha tocado. El dibujo de la caja es provisional (`casa.css`).
+ * confeti al abrirla y la tarjeta grande con lo que ha tocado. El dibujo de la caja es provisional (`interfaz.css`).
  */
 import "../textos/zonas/casa";
 import type { CSSProperties, ReactNode } from "react";
@@ -16,7 +16,7 @@ export const enLaCajaDeRegalo = (punto: { x: number; y: number }) =>
 
 /** El toque con el dedo lo recoge la casa (`enLaCajaDeRegalo`); el botón es para el teclado y el mando. */
 export function CajaRegalo({ onAbrir }: { onAbrir: () => void }) {
-  return <button type="button" className="casa-regalo" aria-label={t("casa.regalo.caja.oculto")}
+  return <button type="button" className="casa-regalo dibujo-regalo" aria-label={t("casa.regalo.caja.oculto")}
     style={{ left: CAJA_REGALO.x, top: CAJA_REGALO.y, width: CAJA_REGALO.ancho, height: CAJA_REGALO.alto }}
     onClick={(event) => { if (event.detail === 0) onAbrir(); }} />;
 }

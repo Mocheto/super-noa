@@ -40,7 +40,8 @@ def dibujo(imagen, caja=None):
     """El dibujo de una lámina sin su fondo verde, recortado a su tamaño."""
     rgb = np.array(imagen.crop(caja) if caja else imagen).astype(int)
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
-    fondo = (g > 140) & (g > r * 1.5) & (g > b * 1.5)
+    # Solo el verde vivo del fondo: el pañuelo verde de la exploradora (#3E9B52) se queda.
+    fondo = (g > 180) & (r < 130) & (b < 120)
     solido = ~fondo
     # Fuera las motas sueltas.
     marcas, n = ndimage.label(solido)

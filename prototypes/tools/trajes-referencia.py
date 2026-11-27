@@ -21,7 +21,7 @@ if len(sys.argv) > 4:
     dibujo = dibujo.crop((x, y, x + w, y + h))
 if dibujo.getchannel("A").getextrema()[0] == 255:
     # Lámina ya generada, sobre verde: se separa del fondo para recomponerla en el formato pedido.
-    dibujo.putdata([(r, g, b, 0 if g > 150 and r < 120 and b < 120 else 255) for r, g, b, _ in dibujo.getdata()])
+    dibujo.putdata([(r, g, b, 0 if g > 180 and r < 130 and b < 120 else 255) for r, g, b, _ in dibujo.getdata()])
 alfa = dibujo.getchannel("A")
 # El halo casi transparente que rodea las hojas se quita para que el contorno quede limpio sobre el verde.
 dibujo.putalpha(alfa.point(lambda v: 255 if v > 160 else 0))

@@ -5,7 +5,7 @@
  */
 import type { FotoCasa, GatitoEnFoto } from "./casaFoto.ts";
 import { DELANTE_DE_LA_VENTANA, MUEBLES, MUEBLES_CASA, VERSIONES, type MuebleId } from "./casaDecoracion.ts";
-import { fondoConPared } from "./casaDecoracionArte.ts";
+import { dibujoDeColor, fondoConPared } from "./casaDecoracionArte.ts";
 import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte.ts";
 import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito, modeloDibujado } from "./casaGatoArte.ts";
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
@@ -104,7 +104,7 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
   if (!enJardin && foto.vista.x < PECERA.left + PECERA.ancho) {
     const caja = { x: PECERA.left, y: PECERA.top, ancho: PECERA.ancho, alto: PECERA.alto };
     const entera = (imagen: HTMLImageElement) => ({ x: 0, y: 0, ancho: imagen.naturalWidth, alto: imagen.naturalHeight });
-    const fondoPecera = await cargar(PECERA.fondo);
+    const fondoPecera = await cargar(await dibujoDeColor(PECERA.fondo, "mueblePecera", foto.decoracion.mueblePecera));
     pintar(fondoPecera, entera(fondoPecera), caja);
     const hojaPeces = await cargar(PECERA.peces);
     const { ancho: anchoPez, alto: altoPez } = PECERA.cuadroPez;

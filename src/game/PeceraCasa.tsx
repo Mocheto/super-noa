@@ -20,6 +20,10 @@ type Props = {
   /** Dónde está (x del dibujo) el gatito que mira la pecera sentado delante, o `null`. */
   gatoMirando: number | null;
   onSonido: (sonido: SonidoPecera) => void;
+  /** El dibujo del mueble, en el color elegido al decorar. */
+  fondo: string;
+  /** Decorando no se juega con la pecera: tampoco con el teclado. */
+  decorando: boolean;
 };
 
 /** Tamaño en pantalla de cada objeto de la hoja (la hoja es de 48 px por cuadro): burbujas, gotas y copos, a la mitad; el resto, a ¾. */
@@ -35,7 +39,7 @@ const objetoEn = (indice: number, lado: number): CSSProperties => ({
  * copos del bote, hacen su gracia al tocarlos y duermen con la luz apagada. Solo dibuja y lleva el reloj; las reglas
  * están en `casaPecera.ts`. Cada pez y cada efecto es un elemento propio para que se muevan con `transform`.
  */
-export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido }: Props) {
+export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido, fondo, decorando }: Props) {
   const [pecera, setPecera] = useState<Pecera>(() => crearPecera(performance.now()));
   const [ahora, setAhora] = useState(() => performance.now());
   const ref = useRef(pecera);
@@ -93,7 +97,7 @@ export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido }
   const claseLuz = pecera.luz ? (noche ? " is-brilla" : "") : " is-apagada";
   return (
     <div className={`casa-pecera${claseLuz}`} style={{ left: PECERA.left, top: PECERA.top, width: PECERA.ancho, height: PECERA.alto }}>
-      <img className="casa-pecera-fondo" src={PECERA.fondo} alt="" draggable={false} />
+      <img className="casa-pecera-fondo" src={fondo} alt="" draggable={false} />
       {pecera.copos.filter((copo) => copo.comidoEn === null && ahora >= copo.nace).map((copo) => (
         <i key={copo.id} className="casa-pecera-copo" style={{ left: copo.x, top: copo.y, ...objetoEn(OBJETO.copo, 24) }} />
       ))}
@@ -126,16 +130,18 @@ export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido }
         <i key={efecto.id} className={`casa-pecera-efecto is-${efecto.tipo}`}
           style={{ left: efecto.x, top: efecto.y, "--dx": `${efecto.dx}px`, animationDuration: `${efecto.dura}ms`, ...objetoEn(OBJETO[efecto.tipo], LADO_EFECTO[efecto.tipo]) } as CSSProperties} />
       ))}
-      {/* Para el teclado y el lector de pantalla: los toques con el dedo los recoge la escena. */}
-      <button type="button" className="casa-pecera-zona is-agua" aria-label={tClave("casa.pecera.agua.oculto")}
-        style={{ left: PECERA.agua.izquierda, top: PECERA.agua.superficie, width: PECERA.agua.derecha - PECERA.agua.izquierda, height: PECERA.agua.arena - PECERA.agua.superficie }}
-        onClick={(evento) => { if (evento.detail === 0) meter(llamar(ref.current, 150, 140, performance.now(), Math.random)); }} />
-      <button type="button" className="casa-pecera-zona" aria-label={tClave("casa.pecera.comida.oculto")}
-        style={{ left: PECERA.bote.izquierda, top: PECERA.bote.arriba, width: PECERA.bote.derecha - PECERA.bote.izquierda, height: PECERA.bote.abajo - PECERA.bote.arriba }}
-        onClick={(evento) => { if (evento.detail === 0) meter(soltarComida(ref.current, performance.now(), Math.random)); }} />
-      <button type="button" className="casa-pecera-zona" aria-label={tClave("casa.pecera.luz.oculto")}
-        style={{ left: PECERA.interruptor.izquierda, top: PECERA.interruptor.arriba, width: PECERA.interruptor.derecha - PECERA.interruptor.izquierda, height: PECERA.interruptor.abajo - PECERA.interruptor.arriba }}
-        onClick={(evento) => { if (evento.detail === 0) meter(cambiarLuz(ref.current, performance.now())); }} />
+      {!decorando && <>
+        {/* Para el teclado y el lector de pantalla: los toques con el dedo los recoge la escena. */}
+        <button type="button" className="casa-pecera-zona is-agua" aria-label={tClave("casa.pecera.agua.oculto")}
+          style={{ left: PECERA.agua.izquierda, top: PECERA.agua.superficie, width: PECERA.agua.derecha - PECERA.agua.izquierda, height: PECERA.agua.arena - PECERA.agua.superficie }}
+          onClick={(evento) => { if (evento.detail === 0) meter(llamar(ref.current, 150, 140, performance.now(), Math.random)); }} />
+        <button type="button" className="casa-pecera-zona" aria-label={tClave("casa.pecera.comida.oculto")}
+          style={{ left: PECERA.bote.izquierda, top: PECERA.bote.arriba, width: PECERA.bote.derecha - PECERA.bote.izquierda, height: PECERA.bote.abajo - PECERA.bote.arriba }}
+          onClick={(evento) => { if (evento.detail === 0) meter(soltarComida(ref.current, performance.now(), Math.random)); }} />
+        <button type="button" className="casa-pecera-zona" aria-label={tClave("casa.pecera.luz.oculto")}
+          style={{ left: PECERA.interruptor.izquierda, top: PECERA.interruptor.arriba, width: PECERA.interruptor.derecha - PECERA.interruptor.izquierda, height: PECERA.interruptor.abajo - PECERA.interruptor.arriba }}
+          onClick={(evento) => { if (evento.detail === 0) meter(cambiarLuz(ref.current, performance.now())); }} />
+      </>}
     </div>
   );
 }

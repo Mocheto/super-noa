@@ -381,6 +381,16 @@ export function tocarTubo(anterior: Jaula, indice: number, ahora: number, azar: 
   return { jaula, sonidos: ["tubo"] };
 }
 
+/**
+ * Se ha cambiado una parte de la jaula al decorar: un hámster va a la casita nueva, cruza un tubo o, si es la base, da
+ * una vuelta en la rueda.
+ */
+export function estrenar(anterior: Jaula, parte: "casita" | "baseJaula" | "tubos", ahora: number, azar: Azar): Salida {
+  if (parte !== "tubos") return tocarCosa(anterior, parte === "casita" ? "casita" : "rueda", ahora, azar);
+  const tubos = CAMINOS.flatMap((camino, indice) => (camino.tipo === "tubo" ? [indice] : []));
+  return tocarTubo(anterior, elige(azar, tubos), ahora, azar);
+}
+
 /** Rellenar el comedero o el bebedero desde la bandeja. */
 export function rellenar(anterior: Jaula, cual: "comida" | "agua"): Salida {
   if (anterior[cual] >= RACIONES) return { jaula: anterior, sonidos: [] };

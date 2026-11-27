@@ -4,8 +4,10 @@
  */
 import { CAMINOS, CUBOS, DIBUJO, NODOS, PUERTA_JAULA, REPISA, SITIO_JAULA, type HamsterId, type Punto } from "./casaHamsters.ts";
 import {
-  AGUA_EN_BOTELLA, ARTE_JAULA, CAJA_JAULA, cajaDeHamster, CELDA_OBJETO, COLOCADOS, CUADRO_HAMSTER, FONDO_JAULA, POSES, TUBO, type Colocado,
+  AGUA_EN_BOTELLA, ARTE_JAULA, CAJA_JAULA, cajaDeHamster, CELDA_OBJETO, COLOCADOS, CUADRO_HAMSTER, FONDO_JAULA, POSES, type Colocado,
 } from "./casaHamstersArte.ts";
+import { JUEGOS_TUBOS } from "./casaDecoracion.ts";
+import { dibujoDeColor } from "./casaDecoracionArte.ts";
 import type { FotoCasa } from "./casaProgreso.ts";
 
 /** Dónde posan en las fotos (centro, en px del dibujo). */
@@ -15,8 +17,10 @@ export const POSADO: Readonly<Record<HamsterId, Punto>> = { perla: { x: 480, y: 
 export const saleLaJaula = (foto: Pick<FotoCasa, "vista" | "jardin">) => !foto.jardin && foto.vista.x < SITIO_JAULA.zona.hasta;
 
 /** Pinta la jaula en el lienzo de una foto de `escala` px por px de escena. */
-export async function pintarJaulaEnFoto(contexto: CanvasRenderingContext2D, foto: Pick<FotoCasa, "vista">, escala: number, cargar: (ruta: string) => Promise<HTMLImageElement>): Promise<void> {
-  const [jaula, objetos, perla, bolita] = await Promise.all([ARTE_JAULA.jaula, ARTE_JAULA.objetos, ARTE_JAULA.hamsters.perla, ARTE_JAULA.hamsters.bolita].map(cargar));
+export async function pintarJaulaEnFoto(contexto: CanvasRenderingContext2D, foto: Pick<FotoCasa, "vista" | "decoracion">, escala: number, cargar: (ruta: string) => Promise<HTMLImageElement>): Promise<void> {
+  const tubos = JUEGOS_TUBOS[foto.decoracion.tubos];
+  const base = await dibujoDeColor(ARTE_JAULA.jaula, "baseJaula", foto.decoracion.baseJaula);
+  const [jaula, objetos, perla, bolita] = await Promise.all([base, ARTE_JAULA.objetos, ARTE_JAULA.hamsters.perla, ARTE_JAULA.hamsters.bolita].map(cargar));
   const hojas: Readonly<Record<HamsterId, HTMLImageElement>> = { perla, bolita };
   contexto.save();
   contexto.setTransform(escala, 0, 0, escala, -foto.vista.x * escala, 0);
@@ -68,7 +72,7 @@ export async function pintarJaulaEnFoto(contexto: CanvasRenderingContext2D, foto
 
   contexto.lineJoin = "round";
   for (const camino of CAMINOS.filter((c) => c.tipo === "tubo")) {
-    const color = TUBO[camino.color ?? "rojo"];
+    const color = tubos[camino.color ?? "rojo"];
     linea(camino.linea, color, 46, 0.22);
     linea(camino.linea, "#fff", 36, 0.1);
     contexto.setLineDash([9, 45]);
@@ -90,7 +94,7 @@ export async function pintarJaulaEnFoto(contexto: CanvasRenderingContext2D, foto
     contexto.lineWidth = 3;
     contexto.fillRect(x - 36, y - 36, 72, 72);
     contexto.strokeRect(x - 36, y - 36, 72, 72);
-    for (const [dx, dy, w, h, color] of [[-16, -41, 32, 10, TUBO.rojo], [-16, 31, 32, 10, TUBO.azul], [-41, -16, 10, 32, TUBO.amarillo], [31, -16, 10, 32, TUBO.azul]] as const) {
+    for (const [dx, dy, w, h, color] of [[-16, -41, 32, 10, tubos.rojo], [-16, 31, 32, 10, tubos.azul], [-41, -16, 10, 32, tubos.amarillo], [31, -16, 10, 32, tubos.azul]] as const) {
       contexto.fillStyle = color;
       contexto.fillRect(x + dx, y + dy, w, h);
     }

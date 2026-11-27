@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
 import { casaVacia, decoracionDe, normalizeCasa } from "./casa.ts";
-import { cambiarMueble, cambiarTonoPared, DECORACION_DE_SIEMPRE, muebleEn, MUEBLES, MUEBLES_CASA, normalizeDecoracion, PARED_HASTA, TONOS_PARED, VERSIONES } from "./casaDecoracion.ts";
+import { cajasDe, cambiarMueble, cambiarTonoPared, DECORACION_DE_SIEMPRE, JUEGOS_TUBOS, MADERA_DESDE, muebleEn, MUEBLES, MUEBLES_CASA, normalizeDecoracion, PARED_HASTA, recolorear, SIN_ARTE, TONOS_PARED, VERSIONES } from "./casaDecoracion.ts";
+import { crearJaula, estrenar } from "./casaHamsters.ts";
 import { dentroDelSuelo, HABITACION_CASA as H } from "./casaHabitacion.ts";
 import { parseProgress, serializeProgress, emptyProgress } from "./progress.ts";
 
-test("ocho muebles con cinco versiones cada uno; la pared, con cinco tonos", () => {
-  assert.deepEqual([...MUEBLES], ["cama", "alfombra", "cuadro", "planta", "pared", "cortinas", "estanteria", "cojin"]);
+test("cada mueble y parte con cinco versiones; la pared, con cinco tonos", () => {
+  assert.deepEqual([...MUEBLES], ["cama", "alfombra", "cuadro", "planta", "pared", "cortinas", "estanteria", "cojin", "mueblePecera", "adornoPecera", "casita", "baseJaula", "tubos"]);
   assert.equal(VERSIONES.length, 5);
   assert.equal(TONOS_PARED.length, 5);
   for (const tono of TONOS_PARED) for (const color of tono) assert.match(color, /^#[0-9a-f]{6}$/);
@@ -15,13 +16,15 @@ test("ocho muebles con cinco versiones cada uno; la pared, con cinco tonos", () 
 
 test("cada mueble está dentro de la habitación y su gatito va a olerlo por el suelo", () => {
   for (const id of MUEBLES) {
-    const { caja, oler } = MUEBLES_CASA[id];
-    if (caja) assert.ok(caja.x >= 0 && caja.y >= 0 && caja.x + caja.ancho <= H.ancho && caja.y + caja.alto <= H.alto, id);
-    assert.ok(dentroDelSuelo(H, oler.x, oler.y), id);
+    const { oler } = MUEBLES_CASA[id];
+    for (const trozo of cajasDe(id)) assert.ok(trozo.x >= -H.ampliacion && trozo.y >= 0 && trozo.x + trozo.ancho <= H.ancho && trozo.y + trozo.alto <= H.alto, id);
+    // En la jaula nadie va a oler: reaccionan los hámsters.
+    if (oler) assert.ok(dentroDelSuelo(H, oler.x, oler.y), id);
+    else assert.ok(["casita", "baseJaula", "tubos"].includes(id), id);
   }
-  // Solo la pared va sin caja ni dibujo; cada dibujo existe, cabe en la escena y se apoya abajo y centrado en su caja.
+  // Solo la pared va sin caja y, con las partes de la pecera y la jaula, sin dibujo; cada dibujo existe, cabe en la escena y se apoya abajo y centrado en su caja.
   assert.deepEqual(MUEBLES.filter((id) => MUEBLES_CASA[id].caja === null), ["pared"]);
-  assert.deepEqual(MUEBLES.filter((id) => MUEBLES_CASA[id].dibujo === null), ["pared"]);
+  assert.deepEqual(MUEBLES.filter((id) => MUEBLES_CASA[id].dibujo === null), ["pared", "mueblePecera", "adornoPecera", "casita", "baseJaula", "tubos"]);
   for (const id of MUEBLES) {
     const { caja, dibujo } = MUEBLES_CASA[id];
     if (!caja || !dibujo) continue;
@@ -42,7 +45,7 @@ test("los sitios de interés de los gatitos no se mueven al decorar", () => {
 test("la decoración se lee con tolerancia: lo que falta o no vale es la de siempre", () => {
   assert.deepEqual(normalizeDecoracion(undefined), DECORACION_DE_SIEMPRE);
   assert.deepEqual(normalizeDecoracion([1, 2]), DECORACION_DE_SIEMPRE);
-  assert.deepEqual(normalizeDecoracion({ cama: 4, alfombra: 7, cuadro: "1", planta: 1, pared: 5, sofa: 2 }), { cama: 4, alfombra: 0, cuadro: 0, planta: 1, pared: 0, cortinas: 0, estanteria: 0, cojin: 0 });
+  assert.deepEqual(normalizeDecoracion({ cama: 4, alfombra: 7, cuadro: "1", planta: 1, pared: 5, sofa: 2, tubos: 3 }), { ...DECORACION_DE_SIEMPRE, cama: 4, planta: 1, tubos: 3 });
   assert.deepEqual(cambiarMueble(DECORACION_DE_SIEMPRE, "pared", 2), { ...DECORACION_DE_SIEMPRE, pared: 2 });
 });
 
@@ -90,4 +93,47 @@ test("la pared cambia el tono de sus rayas y deja igual lo demás", () => {
   suelo.set([0xfb, 0xea, 0xd2, 255], ultima);
   cambiarTonoPared(suelo, 1, PARED_HASTA + 1, 2);
   assert.deepEqual([...suelo.slice(ultima)], [0xfb, 0xea, 0xd2, 255]);
+});
+
+test("las partes de color no mueven el sitio de los gatitos ante la pecera", () => {
+  assert.deepEqual(MUEBLES_CASA.mueblePecera.oler, { x: H.sitios.pecera.x, y: H.sitios.pecera.y });
+});
+
+test("las partes de la pecera y la jaula se tocan por su sitio; las que esperan su arte, todavía no", () => {
+  const centro = (caja: { x: number; y: number; ancho: number; alto: number }) => [caja.x + caja.ancho / 2, caja.y + caja.alto / 2] as const;
+  for (const id of ["mueblePecera", "baseJaula"] as const) for (const caja of cajasDe(id)) assert.equal(muebleEn(...centro(caja)), id);
+  assert.equal(cajasDe("baseJaula").length, 2, "bandeja y tejado");
+  assert.equal(muebleEn(-1000, 300), "tubos");
+  assert.deepEqual([...SIN_ARTE], ["adornoPecera", "casita"]);
+  assert.equal(muebleEn(...centro(cajasDe("casita")[0])), "tubos");
+  assert.notEqual(muebleEn(...centro(cajasDe("adornoPecera")[0])), "adornoPecera");
+});
+
+test("el recoloreado cambia la madera y la base, y respeta contornos, barrotes y la versión de siempre", () => {
+  const pixel = (r: number, g: number, b: number) => new Uint8ClampedArray([r, g, b, 255]);
+  const madera = pixel(200, 110, 70);
+  recolorear(madera, 1, "mueblePecera", 3);
+  assert.deepEqual([...madera], [200, 110, 70, 255], "por encima del mueble (la pecera) no cambia");
+  const abajo = new Uint8ClampedArray(4 * (MADERA_DESDE + 1));
+  abajo.set([200, 110, 70, 255], 4 * MADERA_DESDE);
+  recolorear(abajo, 1, "mueblePecera", 3);
+  assert.ok(abajo[4 * MADERA_DESDE + 2] > abajo[4 * MADERA_DESDE], "azul");
+  for (const [r, g, b] of [[47, 29, 51], [110, 200, 210]]) {
+    const quieto = pixel(r, g, b);
+    recolorear(quieto, 1, "baseJaula", 1);
+    assert.deepEqual([...quieto], [r, g, b, 255]);
+  }
+  const base = pixel(40, 140, 220);
+  recolorear(base, 1, "baseJaula", 0);
+  assert.deepEqual([...base], [40, 140, 220, 255]);
+  recolorear(base, 1, "baseJaula", 1);
+  assert.ok(base[0] > base[2], "rosa");
+  assert.equal(new Set(VERSIONES.map((v) => Object.values(JUEGOS_TUBOS[v]).join())).size, 5);
+});
+
+test("al estrenar una parte de la jaula, un hámster va a verla", () => {
+  const jaula = crearJaula(undefined, 0, () => 0);
+  assert.ok(estrenar(jaula, "casita", 10, () => 0).jaula.hamsters.some((h) => h.meta === "casita"));
+  assert.ok(estrenar(jaula, "baseJaula", 10, () => 0).jaula.hamsters.some((h) => h.meta === "rueda"));
+  assert.deepEqual(estrenar(jaula, "tubos", 10, () => 0).sonidos, ["tubo"]);
 });

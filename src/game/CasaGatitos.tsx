@@ -27,8 +27,9 @@ import { PiezaAccesorio } from "./PiezaAccesorio";
 import { arropadosDe, arropar, puedeDormir, todosArropados } from "./casaDormir";
 import { arropadoDe, CUADROS_ARROPADO, HOJA_MANTITA } from "./casaDormirArte";
 import { guardarFoto, type FotoCasa } from "./casaFoto";
-import { cambiarMueble, esMuebleMagico, muebleEn, MUEBLES_CASA, PARED_HASTA, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
+import { cajasDe, cambiarMueble, esMuebleMagico, JUEGOS_TUBOS, MADERA_DESDE, muebleEn, MUEBLES_CASA, PARED_HASTA, sePuedeDecorar, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
 import { fondoConPared } from "./casaDecoracionArte";
+import { useDibujoDeColor } from "./useDibujoDeColor";
 import { cssAssetUrl } from "./assets";
 import { Ventana } from "./Ventana";
 import { BanoGatito } from "./BanoGatito";
@@ -390,6 +391,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
 
   // La pared, con el tono elegido (pintado por código sobre el fondo).
   const decoracion = decoracionDe(casa);
+  const dibujoPecera = useDibujoDeColor(PECERA.fondo, "mueblePecera", decoracion.mueblePecera);
+  const dibujoJaula = useDibujoDeColor(ARTE_JAULA.jaula, "baseJaula", decoracion.baseJaula);
   useEffect(() => {
     let vivo = true;
     void fondoConPared(HABITACION.fondo, decoracion.pared).then((url) => { if (vivo) setFondo(url); });
@@ -691,9 +694,11 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     guardar({ ...casaRef.current, decoracion: cambiarMueble(decoracionDe(casaRef.current), mueble, version) });
     ponerDestello({ mueble }, DESTELLO_MS);
     sonidoRef.current?.golpeBano("campanita");
-    // De noche duermen (y los arropados llevan su mantita): nadie se levanta a olerlo.
-    if (noche) return;
+    // En la jaula va un hámster, también de noche.
+    if (mueble === "casita" || mueble === "baseJaula" || mueble === "tubos") jaulaRef.current?.estrenar(mueble);
     const { oler } = MUEBLES_CASA[mueble];
+    // De noche duermen (y los arropados llevan su mantita): nadie se levanta a olerlo.
+    if (noche || !oler) return;
     setAndantes((actuales) => {
       const libres = gatitos.filter((mundo, indice) => actuales[mundo] && cogidoRef.current?.indice !== indice && bano !== mundo);
       const cerca = libres.sort((a, b) => Math.hypot(actuales[a].x - oler.x, actuales[a].y - oler.y) - Math.hypot(actuales[b].x - oler.x, actuales[b].y - oler.y))[0];
@@ -1361,26 +1366,25 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           onPointerDown={empezarDedo} onPointerMove={moverDedo} onPointerUp={acabarDedo} onPointerCancel={acabarDedo}>
           <img className="casa-fondo" src={enJardin ? JARDIN.fondo : fondo} alt="" draggable={false} />
           {/* Muebles, cada uno en la versión elegida, sobre la habitación vacía. */}
-          {!enJardin && MUEBLES_DECORABLES.map((mueble) => {
+          {!enJardin && MUEBLES_DE_LAMINA.map((mueble) => {
             const dibujo = MUEBLES_CASA[mueble].dibujo!;
             return <i key={mueble} className={`casa-mueble${esMuebleMagico(mueble, decoracion[mueble]) ? " is-magica" : ""}`} aria-hidden="true"
               style={{ left: dibujo.x, top: dibujo.y, width: dibujo.ancho, height: dibujo.alto, ...celdaDeMueble(mueble, decoracion[mueble]) }} />;
           })}
-          <PeceraCasa toque={toquePecera} noche={noche} reduceMotion={reduceMotion} gatoMirando={mirandoLaPecera ? mirandoLaPecera.x - PECERA.left : null} onSonido={sonarPecera} />
+          <PeceraCasa toque={toquePecera} noche={noche} reduceMotion={reduceMotion} gatoMirando={mirandoLaPecera ? mirandoLaPecera.x - PECERA.left : null} onSonido={sonarPecera} fondo={dibujoPecera} decorando={decorando} />
           <JaulaHamsters ref={jaulaRef} guardado={inicial.hamsters} visible={!enJardin} reduceMotion={reduceMotion}
-            onGuardar={guardarHamsters} onSonido={sonarJaula} onPista={setPistaHamster} onAviso={avisarHamster} />
+            onGuardar={guardarHamsters} onSonido={sonarJaula} onPista={setPistaHamster} onAviso={avisarHamster}
+            base={dibujoJaula} tubos={JUEGOS_TUBOS[decoracion.tubos]} />
           {decorando && <>
             <button type="button" className={`casa-mueble-zona is-pared${elegido === "pared" ? " is-elegido" : ""}`} style={{ left: -HABITACION.ampliacion, top: 0, width: HABITACION.ancho + HABITACION.ampliacion, height: PARED_HASTA }}
               aria-label={tClave("casa.decorar.mueble.pared.oculto")} onClick={(event) => { if (event.detail === 0) setElegido("pared"); }} />
-            {MUEBLES_DECORABLES.map((mueble) => {
-              const caja = MUEBLES_CASA[mueble].caja!;
-              return <button key={mueble} type="button" className={`casa-mueble-zona${elegido === mueble ? " is-elegido" : ""}`} style={{ left: caja.x, top: caja.y, width: caja.ancho, height: caja.alto }}
-                aria-label={tClave(`casa.decorar.mueble.${mueble}.oculto`)} onClick={(event) => { if (event.detail === 0) setElegido(mueble); }} />;
-            })}
+            {ZONAS_DE_DECORAR.map(({ mueble, caja, trozo }) => <button key={`${mueble}-${trozo}`} type="button" className={`casa-mueble-zona${elegido === mueble ? " is-elegido" : ""}`}
+              style={{ left: caja.x, top: caja.y, width: caja.ancho, height: caja.alto }} tabIndex={trozo ? -1 : undefined} aria-hidden={trozo ? true : undefined}
+              aria-label={tClave(`casa.decorar.mueble.${mueble}.oculto`)} onClick={(event) => { if (event.detail === 0) setElegido(mueble); }} />)}
           </>}
           {destello && (() => {
             const caja = MUEBLES_CASA[destello.mueble].caja ?? { x: 0, y: 0, ancho: HABITACION.ancho, alto: PARED_HASTA };
-            return <i key={destello.id} className="casa-destello" aria-hidden="true" style={{ left: caja.x + caja.ancho / 2, top: caja.y + caja.alto / 2 }} />;
+            return <i key={`destello-${destello.id}`} className="casa-destello" aria-hidden="true" style={{ left: caja.x + caja.ancho / 2, top: caja.y + caja.alto / 2 }} />;
           })()}
           {!enJardin && <><img className={`casa-armario${cogido ? " is-brilla" : ""}`} src={HABITACION.armario.imagen} alt="" draggable={false}
             style={{ left: HABITACION.armario.left, top: HABITACION.armario.top, width: HABITACION.armario.width, height: HABITACION.armario.height }} />
@@ -1390,7 +1394,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           {fase === "casa" && !acostando && <button type="button" className={`casa-puerta${cogido || (llamando && !enJardin) ? " is-brilla" : ""}${llamando && !enJardin ? " is-llama" : ""}`} aria-label={tClave(enJardin ? "casa.puerta.casa.oculto" : "casa.puerta.jardin.oculto")}
             style={{ left: zonaPuertaDe(estancia).izquierda, top: zonaPuertaDe(estancia).arriba, width: zonaPuertaDe(estancia).derecha - zonaPuertaDe(estancia).izquierda, height: zonaPuertaDe(estancia).abajo - zonaPuertaDe(estancia).arriba }}
             onClick={(event) => { if (event.detail === 0) cruzarPuerta(); }} />}
-          {(fase === "entrando" || luzPuerta > 0) && <div key={luzPuerta} className="casa-luz-puerta" style={{ left: porcentajeX(enJardin ? JARDIN.sitios.puerta.x : PUERTA_X) }} />}
+          {(fase === "entrando" || luzPuerta > 0) && <div key={`luz-${luzPuerta}`} className="casa-luz-puerta" style={{ left: porcentajeX(enJardin ? JARDIN.sitios.puerta.x : PUERTA_X) }} />}
           {enJardin && <img className={`casa-colchoneta${cogido ? " is-brilla" : ""}${botando.length ? " is-bota" : ""}`} src={JARDIN.colchoneta.imagen} alt="" draggable={false}
             style={{ left: JARDIN.colchoneta.left, top: JARDIN.colchoneta.top, width: JARDIN.colchoneta.width, height: JARDIN.colchoneta.height, "--bote": `${BOTAR_MS / BOTES}ms` } as CSSProperties} />}
           {enJardin && jardinDe(casa).maceteros.map((macetero, indice) => {
@@ -1502,6 +1506,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       {fase === "casa" && bano === null && !decorando && !acostando && mirandoJaula && <div className="casa-bandeja" aria-label={t("casa.hamsters.bandeja.oculto")} role="toolbar">
         <span className="casa-bandeja-modos">
           <BotonControl className="casa-bandeja-modo" pictograma="vuelve" etiqueta="casa.hamsters.volver.oculto" onClick={() => setVista(centrarEn(SITIOS_CASA[1], anchoVisible, vistaMin))} />
+          <BotonControl className="casa-bandeja-modo" pictograma="flor" etiqueta="casa.decorar.boton.oculto" onClick={cambiarDecorar} />
           <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
         </span>
         <button type="button" className="casa-bandeja-objeto casa-bandeja-hamster" aria-label={t("casa.hamsters.comida.oculto")} onClick={() => jaulaRef.current?.rellenar("comida")}>
@@ -1603,7 +1608,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   </section>;
 }
 
-const MUEBLES_DECORABLES = (Object.keys(MUEBLES_CASA) as MuebleId[]).filter((mueble) => MUEBLES_CASA[mueble].caja !== null);
+/** Los muebles que se dibujan de su lámina, encima de la habitación vacía. */
+const MUEBLES_DE_LAMINA = (Object.keys(MUEBLES_CASA) as MuebleId[]).filter((mueble) => MUEBLES_CASA[mueble].dibujo !== null);
+/** Lo que brilla al decorar; los tubos van primero, por debajo de las partes que quedan dentro de su caja. */
+const ZONAS_DE_DECORAR = (Object.keys(MUEBLES_CASA) as MuebleId[]).filter(sePuedeDecorar)
+  .sort((a, b) => Number(b === "tubos") - Number(a === "tubos"))
+  .flatMap((mueble) => cajasDe(mueble).map((caja, trozo) => ({ mueble, caja, trozo })));
 const LADO_MUESTRA = 48;
 
 /** Fondo de la celda de la versión `version` en la lámina del mueble (cinco celdas en fila). */
@@ -1612,8 +1622,23 @@ function celdaDeMueble(mueble: MuebleId, version: Version): CSSProperties {
   return { backgroundImage: `url("${dibujo.imagen}")`, backgroundSize: `${VERSIONES.length * 100}% 100%`, backgroundPosition: `${(version / (VERSIONES.length - 1)) * 100}% 0` };
 }
 
-/** Muestra de una versión en la bandeja: el mueble en esa versión, o las rayas de la pared. */
+/** Muestra de un dibujo de la pecera o la jaula en el color de una versión: una puerta del mueble o la jaula entera. */
+function MuestraDeColor({ parte, version }: { parte: "mueblePecera" | "baseJaula"; version: Version }) {
+  const madera = parte === "mueblePecera";
+  const url = useDibujoDeColor(madera ? PECERA.fondo : ARTE_JAULA.jaula, parte, version);
+  const trozo = madera ? { x: 0, y: MADERA_DESDE, ancho: PECERA.ancho / 2, alto: PECERA.alto - MADERA_DESDE } : null;
+  if (!trozo) return <i className="casa-muestra" style={{ backgroundImage: `url("${url}")`, backgroundSize: "contain", backgroundPosition: "center" }} />;
+  const escala = LADO_MUESTRA / trozo.ancho;
+  return <i className="casa-muestra" style={{ height: trozo.alto * escala, backgroundImage: `url("${url}")`, backgroundSize: `${PECERA.ancho * escala}px ${PECERA.alto * escala}px`, backgroundPosition: `${-trozo.x * escala}px ${-trozo.y * escala}px` }} />;
+}
+
+/** Muestra de una versión en la bandeja: el mueble en esa versión, las rayas de la pared o los colores. */
 function Muestra({ mueble, version }: { mueble: MuebleId; version: Version }) {
+  if (mueble === "mueblePecera" || mueble === "baseJaula") return <MuestraDeColor parte={mueble} version={version} />;
+  if (mueble === "tubos") {
+    const { rojo, azul, amarillo } = JUEGOS_TUBOS[version];
+    return <i className="casa-muestra is-pared" style={{ background: `linear-gradient(${rojo} 0 33.4%, ${azul} 0 66.7%, ${amarillo} 0)` }} />;
+  }
   const dibujo = MUEBLES_CASA[mueble].dibujo;
   if (!dibujo) {
     const [claro, oscuro] = TONOS_PARED[version];

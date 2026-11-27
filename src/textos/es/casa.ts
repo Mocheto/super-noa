@@ -115,6 +115,11 @@ export const casa = {
       cortinas: { oculto: "Las cortinas" },
       estanteria: { oculto: "La estantería" },
       cojin: { oculto: "El cojín" },
+      mueblePecera: { oculto: "El mueble de la pecera" },
+      adornoPecera: { oculto: "El adorno de la pecera" },
+      casita: { oculto: "La casita de los hámsters" },
+      baseJaula: { oculto: "La base y el tejado de la jaula" },
+      tubos: { oculto: "Los tubos de los hámsters" },
     },
   },
   foto: {

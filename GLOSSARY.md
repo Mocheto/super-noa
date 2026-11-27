@@ -129,14 +129,14 @@ Escena en la que un gatito, metido en la bañera, se baña en cinco pasos guiado
 _Avoid_: Ducha, baño (a secas es la necesidad)
 
 **Decorar**:
-Modo de la casa en el que la bandeja enseña los muebles y sus versiones, en lugar de los cuidados.
+Modo de la casa en el que la bandeja enseña los muebles y sus versiones, en lugar de los cuidados. La pecera y la jaula de hámsters también se decoran; mientras tanto no se juega con ellas.
 
 **Comida favorita**:
 La comida que más le gusta a un gatito de la casa: pescado, leche, galletas o pollo. Con hambre, cualquier comida le vale, pero con su favorita se pone más contento. Empieza sin saberse y Noa la descubre al dársela.
 _Avoid_: Comida preferida, plato
 
 **Mueble**:
-Pieza de la casa que se puede cambiar por otra versión al decorar (cama, alfombra, cuadro, planta, pared, cortinas, estantería y cojín).
+Pieza de la casa que se puede cambiar por otra versión al decorar (cama, alfombra, cuadro, planta, pared, cortinas, estantería y cojín). De la pecera y la jaula se cambian partes sueltas: el mueble y el adorno del fondo de la pecera, y la base con su tejado, los tubos y la casita de la jaula.
 _Avoid_: Objeto (son los de la bandeja), adorno
 
 **Habitación con tema**:

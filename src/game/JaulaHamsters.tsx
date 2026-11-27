@@ -1,15 +1,16 @@
 import "../textos/zonas/casa";
 import { memo, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import {
-  abrirPuerta, arrastrar, asomoEnCasita, avanzar, CAMINOS, coger, COSAS, crearJaula, CUBOS, DIBUJO, ESCONDITES, fugadoEn, guardadoDe, NODOS, pista, PUERTA_JAULA,
+  abrirPuerta, arrastrar, asomoEnCasita, avanzar, CAMINOS, coger, COSAS, crearJaula, CUBOS, DIBUJO, ESCONDITES, estrenar, fugadoEn, guardadoDe, NODOS, pista, PUERTA_JAULA,
   queHayEn, RACIONES, rellenar, REPISA, SITIO_JAULA, soltar, tocarCosa, tocarTubo,
   type Cosa, type EsconditeId, type Hamster, type HamsterId, type HamstersProgress, type Jaula, type Punto, type Salida, type SonidoJaula,
 } from "./casaHamsters";
 import {
   AGUA_EN_BOTELLA, ARTE_JAULA, ASOMADO, CAJA_JAULA, cajaDeHamster, CELDA_OBJETO, COLOCADOS, CUADRO_HAMSTER, EJE_COLUMPIO, EJE_RUEDA, FONDO_JAULA,
-  OBJETOS_JAULA, POSES, PUERTA_CASITA, TUBO, type Colocado, type Pose,
+  OBJETOS_JAULA, POSES, PUERTA_CASITA, type Colocado, type Pose,
 } from "./casaHamstersArte";
 import { HABITACION_CASA } from "./casaHabitacion";
+import type { ColoresTubos } from "./casaDecoracion";
 import { tClave } from "../textos/index.ts";
 
 /** Lo que la casa le pide a la jaula; los puntos van en px de escena. */
@@ -21,6 +22,8 @@ export type MandosJaula = {
   mover: (punto: Punto) => void;
   soltar: () => void;
   rellenar: (cual: "comida" | "agua") => void;
+  /** Se ha cambiado una parte al decorar: un hámster va a verla. */
+  estrenar: (parte: "casita" | "baseJaula" | "tubos") => void;
 };
 
 type Props = {
@@ -35,6 +38,9 @@ type Props = {
   onPista: (escondite: EsconditeId | null) => void;
   /** Un hámster se escapa o vuelve. */
   onAviso: (aviso: "escapa" | "vuelve") => void;
+  /** El dibujo de la jaula (base y tejado) y el juego de tubos elegidos al decorar. */
+  base: string;
+  tubos: ColoresTubos;
 };
 
 const NOMBRE_MS = 1400;
@@ -97,11 +103,11 @@ function Objeto({ de }: { de: Colocado }) {
   </svg>;
 }
 
-/** La jaula, la repisa y las rampas: no cambian. */
-const Detras = memo(function Detras() {
+/** La jaula, con su base y su tejado en el color elegido, la repisa y las rampas. */
+const Detras = memo(function Detras({ base }: { base: string }) {
   return <g>
     <rect x={FONDO_JAULA.x} y={FONDO_JAULA.y} width={FONDO_JAULA.ancho} height={FONDO_JAULA.alto} fill="#eaf6fc" opacity="0.65" />
-    <image href={ARTE_JAULA.jaula} x={CAJA_JAULA.x} y={CAJA_JAULA.y} width={CAJA_JAULA.ancho} height={CAJA_JAULA.alto} preserveAspectRatio="none" />
+    <image href={base} x={CAJA_JAULA.x} y={CAJA_JAULA.y} width={CAJA_JAULA.ancho} height={CAJA_JAULA.alto} preserveAspectRatio="none" />
     <rect x={REPISA.x} y={REPISA.y} width={REPISA.ancho} height="11" rx="5" fill="#f59ac0" stroke="#2f1d33" strokeWidth="2" />
     {CAMINOS.filter((c) => c.tipo === "rampa").map((c) => <g key={`${c.a}${c.b}`}>
       <line x1={NODOS[c.a].x} y1={NODOS[c.a].y + 17} x2={NODOS[c.b].x} y2={NODOS[c.b].y + 17} stroke="#2f1d33" strokeWidth="11" strokeLinecap="round" />
@@ -112,10 +118,10 @@ const Detras = memo(function Detras() {
 });
 
 /** Los tubos y los cubos: se dibujan encima de los hámsters, que se ven a través. */
-const Delante = memo(function Delante() {
+const Delante = memo(function Delante({ tubos }: { tubos: ColoresTubos }) {
   return <g>
     {CAMINOS.filter((c) => c.tipo === "tubo").map((c, i) => {
-      const color = TUBO[c.color ?? "rojo"];
+      const color = tubos[c.color ?? "rojo"];
       const puntos = camino(c.linea);
       return <g key={i} fill="none" strokeLinejoin="round">
         <polyline points={puntos} stroke={color} strokeWidth="46" opacity="0.22" />
@@ -127,7 +133,7 @@ const Delante = memo(function Delante() {
     })}
     {CUBOS.map((id) => <g key={id} transform={`translate(${NODOS[id].x},${NODOS[id].y})`}>
       <rect x="-36" y="-36" width="72" height="72" rx="10" fill="#fff" fillOpacity="0.35" stroke="#8d9aa8" strokeWidth="3" />
-      {[[-16, -41, 32, 10, TUBO.rojo], [-16, 31, 32, 10, TUBO.azul], [-41, -16, 10, 32, TUBO.amarillo], [31, -16, 10, 32, TUBO.azul]].map(([x, y, w, h, color]) =>
+      {[[-16, -41, 32, 10, tubos.rojo], [-16, 31, 32, 10, tubos.azul], [-41, -16, 10, 32, tubos.amarillo], [31, -16, 10, 32, tubos.azul]].map(([x, y, w, h, color]) =>
         <rect key={`${x},${y}`} x={x} y={y} width={w} height={h} rx="3" fill={String(color)} />)}
     </g>)}
   </g>;
@@ -161,7 +167,7 @@ function Cosas({ jaula, ahora, quieto }: { jaula: Jaula; ahora: number; quieto: 
  * la casa; las reglas están en `casaHamsters.ts`. Fuera de la jaula, el hámster se dibuja en una capa por encima de la
  * habitación entera.
  */
-export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar, onSonido, onPista, onAviso }: Props) {
+export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar, onSonido, onPista, onAviso, base, tubos }: Props) {
   const [jaula, setJaula] = useState<Jaula>(() => crearJaula(guardado, performance.now(), Math.random));
   const [ahora, setAhora] = useState(() => performance.now());
   const [nombrado, setNombrado] = useState<{ id: HamsterId; hasta: number } | null>(null);
@@ -235,6 +241,7 @@ export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar,
       if (id) meterRef.current(soltar(jaulaRef.current, id, performance.now(), Math.random));
     },
     rellenar: (cual) => meterRef.current(rellenar(jaulaRef.current, cual)),
+    estrenar: (parte) => meterRef.current(estrenar(jaulaRef.current, parte, performance.now(), Math.random)),
   }), []);
 
   const dentro = jaula.hamsters.filter((h) => !h.fuera);
@@ -245,10 +252,10 @@ export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar,
   return <>
     <svg className="casa-jaula" role="img" aria-label={tClave("casa.hamsters.jaula.oculto")} viewBox={`${DIBUJO.x} ${DIBUJO.y} ${DIBUJO.ancho} ${DIBUJO.alto}`}
       style={{ left: SITIO_JAULA.left, top: SITIO_JAULA.top, width: DIBUJO.ancho * SITIO_JAULA.escala, height: DIBUJO.alto * SITIO_JAULA.escala, display: visible ? undefined : "none" }}>
-      <Detras />
+      <Detras base={base} />
       <Cosas jaula={jaula} ahora={ahora} quieto={reduceMotion} />
       {dentro.filter((h) => h.hace !== "casita").map((h) => <Dibujado key={h.id} hamster={h} ahora={ahora} quieto={reduceMotion} />)}
-      <Delante />
+      <Delante tubos={tubos} />
       {/* La casita, por delante de los tubos: si no, la boca del tubo rojo tapa la puerta. */}
       <Objeto de={COLOCADOS.casita} />
       {dentro.filter((h) => h.hace === "casita").map((h) => <EnLaCasita key={h.id} hamster={h} ahora={ahora} quieto={reduceMotion} />)}

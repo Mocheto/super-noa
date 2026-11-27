@@ -4,6 +4,8 @@
  * salta, la sujeta y la empuja. Solo lógica: el componente la llama en cada cuadro y dibuja.
  */
 import type { Andante, Punto } from "./casaDeambular.ts";
+import type { ModeloGatito } from "./casaGatoArte.ts";
+import type { PosePelota } from "./casaGatoAnclas.ts";
 
 /** Trozo de suelo por el que puede ir la pelota (`y` es la profundidad). */
 export type Limites = { izquierda: number; derecha: number; fondo: number; delante: number };
@@ -95,10 +97,13 @@ export const SOLA_PARADA_MS = 2000;
 /** Velocidad mínima al correr, y lo más que tarda en llegar desde lejos. */
 export const VELOCIDAD_CORRER = 260;
 export const LLEGA_EN_MS = 1500;
-/** Distancias del gatito a la pelota: al agazaparse, al caer sobre ella y la pelota entre sus patas. */
+/** Distancias del gatito a la pelota: al agazaparse y al abrazarla tumbado (el hueco de sus patas en la hoja). */
 export const AL_ACECHO = 80;
-export const AL_ALCANCE = 38;
-const ALTO_PATAS = 6;
+export const AL_ALCANCE = 16;
+/** Altura de la pelota entre las patas de cada modelo tumbado (el hueco que mide `casa-pelota-recorte.py`, menos el radio, hundida un poco entre ellas). */
+export const ALTO_ABRAZO: Readonly<Record<ModeloGatito, number>> = { atigrado: 48, esmoquin: 32, melena: 50, nube: 26 };
+/** Al empujarla sale de delante de su pata. */
+const DE_LA_PATA = { x: 60, z: 10 };
 
 export type Juego = {
   bola: Bola;
@@ -110,10 +115,12 @@ export type Juego = {
   velocidad: number;
   /** Desde dónde saltó. */
   desde: Punto;
+  /** A qué altura la abraza su gatito. */
+  abrazo: number;
 };
 
-export const nuevoJuego = (bola: Bola, limites: Limites, conGatito: boolean): Juego =>
-  ({ bola, limites, fase: conGatito ? "mira" : "sola", t: 0, velocidad: VELOCIDAD_CORRER, desde: { x: bola.x, y: bola.y } });
+export const nuevoJuego = (bola: Bola, limites: Limites, conGatito: boolean, abrazo: number = ALTO_ABRAZO.atigrado): Juego =>
+  ({ bola, limites, fase: conGatito ? "mira" : "sola", t: 0, velocidad: VELOCIDAD_CORRER, desde: { x: bola.x, y: bola.y }, abrazo });
 
 /** El gatito deja de jugar (lo cogen, lo llaman…): la pelota sigue sola. */
 export const sinGatito = (juego: Juego): Juego => ({ ...juego, fase: "sola", t: 0 });
@@ -171,14 +178,14 @@ export function pasoJuego(juego: Juego, gatito: Andante | null, ms: number, ahor
     const tramo = Math.min(1, t / DURACION.salta);
     const quien = { ...sentado(gatito, ahora), x: juego.desde.x + (llega.x - juego.desde.x) * tramo, y: juego.desde.y + (llega.y - juego.desde.y) * tramo, mira: hacia as 1 | -1 };
     if (tramo < 1) return paso({}, quien);
-    bola = { ...bola, z: ALTO_PATAS };
+    bola = { ...bola, z: juego.abrazo };
     return { ...pasar("sujeta", quien), atrapa: true };
   }
   if (juego.fase === "sujeta") {
     bola = { ...juego.bola, vx: 0, vz: 0 };
     const quien = sentado(gatito, ahora);
     if (t < DURACION.sujeta) return paso({}, quien);
-    bola = { ...bola, vx: gatito.mira * 430, vz: 260 };
+    bola = { ...bola, x: entre(gatito.x + gatito.mira * DE_LA_PATA.x, juego.limites.izquierda, juego.limites.derecha), z: DE_LA_PATA.z, vx: gatito.mira * 430, vz: 260 };
     return pasar("empuja", quien);
   }
   return paso({}, sentado(gatito, ahora), { acaba: t >= DURACION.empuja });
@@ -187,21 +194,34 @@ export function pasoJuego(juego: Juego, gatito: Andante | null, ms: number, ahor
 /** Con movimiento tranquilo: sin vuelo ni carrera, la pelota ya está entre las patas del gatito. */
 export function atrapadaSinMoverse(juego: Juego, gatito: Andante, ahora: number): { juego: Juego; gatito: Andante } {
   const lado = gatito.x <= juego.bola.x ? 1 : -1;
-  const bola = { ...juego.bola, z: ALTO_PATAS, vx: 0, vz: 0 };
+  const bola = { ...juego.bola, z: juego.abrazo, vx: 0, vz: 0 };
   return {
     juego: { ...juego, bola, fase: "sujeta", t: 0 },
     gatito: { ...sentado(gatito, ahora), x: bola.x - lado * AL_ALCANCE, y: bola.y, mira: lado },
   };
 }
 
-/** Cuadro de la hoja del gato para cada fase (las poses de hoy; `null`: la que le toque). */
-export function poseDeJuego(fase: FaseJuego, t: number): { animacion: "andar" | "pelota" | "sentado"; cuadro: number } | null {
+export type PoseDeJuego = {
+  /** El cuadro de la hoja de siempre que más se le parece: es el que guardan las fotos. */
+  animacion: "andar" | "pelota" | "sentado";
+  cuadro: number;
+  /** El cuadro de su hoja de jugar con la pelota, si en esta fase se dibuja de ella. */
+  deJuego?: { hoja: PosePelota; cuadro: number };
+};
+
+/** Cómo se dibuja el gatito en cada fase (`null`: como le toque). */
+export function poseDeJuego(fase: FaseJuego, t: number): PoseDeJuego | null {
+  const de = (hoja: PosePelota, cuadro: number) => ({ hoja, cuadro });
   if (fase === "mira") return { animacion: "sentado", cuadro: 0 };
-  if (fase === "corre") return { animacion: "andar", cuadro: Math.floor(t / 80) % 4 };
-  if (fase === "agazapa") return { animacion: "pelota", cuadro: 1 };
-  if (fase === "salta") return { animacion: "pelota", cuadro: 2 };
-  if (fase === "sujeta") return { animacion: "pelota", cuadro: 3 };
-  if (fase === "empuja") return { animacion: "pelota", cuadro: t < 250 ? 1 : 3 };
+  if (fase === "corre") {
+    const cuadro = Math.floor(t / 90) % 4;
+    return { animacion: "andar", cuadro, deJuego: de("carrera", cuadro) };
+  }
+  if (fase === "agazapa") return { animacion: "pelota", cuadro: 1, deJuego: de("carrera", 0) };
+  if (fase === "salta") return { animacion: "pelota", cuadro: 2, deJuego: de("carrera", 2) };
+  // Panza arriba, abrazándola: la mira y se ríe.
+  if (fase === "sujeta") return { animacion: "pelota", cuadro: 3, deJuego: de("juego", 2 + (Math.floor(t / 350) % 2)) };
+  if (fase === "empuja") return { animacion: "pelota", cuadro: t < 250 ? 1 : 3, deJuego: de("juego", t < 250 ? 0 : 1) };
   return null;
 }
 

@@ -3,7 +3,7 @@
  * el gatito grande con sus anclas, la lámina de las piezas y las baldas del armario abierto. Las cuentas de dónde va
  * cada pieza son puras; se dan en % de la caja que las contiene, así escalan con la pantalla.
  */
-import { ANCLAS_POR_MODELO } from "./casaGatoAnclas.ts";
+import { ANCLAS_PELOTA, ANCLAS_POR_MODELO, type PosePelota } from "./casaGatoAnclas.ts";
 import { CUADRO_GATO, type AnimacionGato, type ModeloGatito } from "./casaGatoArte.ts";
 import { ACCESORIOS, type TipoAccesorio } from "./casaRopa.ts";
 import { complementoDe, COMPLEMENTOS, esComplemento, HOJA_COMPLEMENTOS, HOJA_COMPLEMENTOS_CAPAS, type Puestas } from "./casaComplementos.ts";
@@ -208,10 +208,11 @@ export type PiezaEnCuadro = { tipo: TipoAccesorio; pieza: string; caja: CajaPorc
  * Las piezas que lleva un gatito de la casa en un cuadro de su hoja, con su caja en % del cuadro de 160 × 160, en orden
  * de dibujo (alas y capa, detrás del gatito; luego bufanda, gafas y sombrero). Las que no tienen sitio en ese cuadro
  * (gafas de espaldas, bufanda o capa dormido) no salen.
+ * Con `deJuego`, el cuadro es el de su hoja de jugar con la pelota.
  */
-export function piezasEnCuadro(ropa: Puestas, animacion: AnimacionGato, cuadro: number, modelo: ModeloGatito = "atigrado"): PiezaEnCuadro[] {
+export function piezasEnCuadro(ropa: Puestas, animacion: AnimacionGato, cuadro: number, modelo: ModeloGatito = "atigrado", deJuego?: { hoja: PosePelota; cuadro: number }): PiezaEnCuadro[] {
   const tabla = ANCLAS_POR_MODELO[modelo] ?? ANCLAS_POR_MODELO.atigrado;
-  const anclas = tabla[animacion][cuadro] ?? tabla[animacion][0];
+  const anclas = deJuego ? ANCLAS_PELOTA[modelo][deJuego.hoja][deJuego.cuadro] : tabla[animacion][cuadro] ?? tabla[animacion][0];
   const factor = escalaEnCasa(modelo) * tamanoDelCuadro(tabla, anclas);
   return ORDEN_DE_DIBUJO.flatMap((tipo): PiezaEnCuadro[] => {
     const pieza = ropa[tipo];

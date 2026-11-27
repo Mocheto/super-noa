@@ -155,7 +155,7 @@ export function hojaPintada(src: string, mundo: number, variante: VarianteGatito
     const tabla = tablaDeColores(paleta, variante, MARCAS_GATITOS[mundo]);
     // El pañuelo del atigrado se borra: en su sitio va el complemento de cada gatito (los modelos nuevos llevan solo
     // un collar fino, que se queda). Debajo del pañuelo está el pecho, así que toma el color de la barriga.
-    if (src === HOJA_GATO) for (const clave of [CLAVES_GATO.collar, CLAVES_GATO.collarSombra]) tabla.set(claveRgb(clave), paleta.barriga);
+    if (src === HOJA_GATO || src === HOJAS_PELOTA.atigrado) for (const clave of [CLAVES_GATO.collar, CLAVES_GATO.collarSombra]) tabla.set(claveRgb(clave), paleta.barriga);
     recolorear(datos.data, tabla);
     contexto.putImageData(datos, 0, 0);
     return new Promise<string>((resolver) => lienzo.toBlob((blob) => resolver(blob ? URL.createObjectURL(blob) : lienzo.toDataURL())));
@@ -187,3 +187,18 @@ export function modeloDibujado(mundo: number): ModeloGatito {
 /** URL de la hoja del gato de la casa, la de su modelo, pintada para un gatito y una variante. */
 export const hojaDeGatito = (mundo: number, variante: VarianteGatito): Promise<string> =>
   hojaPintada(HOJAS_MODELO[modeloDibujado(mundo)] ?? HOJA_GATO, mundo, variante);
+
+/**
+ * Hojas de jugar con la pelota (docs/art/casa-pelota-v1.md, de `prototypes/tools/casa-pelota-recorte.py`): 4 × 2
+ * cuadros de 160 × 160 en colores clave, la carrera arriba y el juego abajo.
+ */
+export const HOJAS_PELOTA: Readonly<Record<ModeloGatito, string>> = {
+  atigrado: "./assets/sprites/gato-casa-pelota-atigrado-v1.webp",
+  esmoquin: "./assets/sprites/gato-casa-pelota-esmoquin-v1.webp",
+  melena: "./assets/sprites/gato-casa-pelota-melena-v1.webp",
+  nube: "./assets/sprites/gato-casa-pelota-nube-v1.webp",
+};
+export const FILAS_PELOTA = ["carrera", "juego"] as const;
+
+export const hojaDePelota = (mundo: number, variante: VarianteGatito): Promise<string> =>
+  hojaPintada(HOJAS_PELOTA[modeloDibujado(mundo)], mundo, variante);

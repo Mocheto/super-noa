@@ -33,6 +33,8 @@ export type Lanzamiento = {
   /** El que iría a por ella si nadie está jugando ya. */
   mundo: number | null;
   andanteDe: (mundo: number) => Andante;
+  /** Altura a la que la abraza ese gatito. */
+  abrazoDe: (mundo: number) => number;
 };
 
 export function useJuegoPelota(capaRef: RefObject<HTMLDivElement | null>, casa: Casa) {
@@ -47,7 +49,8 @@ export function useJuegoPelota(capaRef: RefObject<HTMLDivElement | null>, casa: 
     if (!capa || !enMarcha) return;
     const { x, y, z, giro } = enMarcha.juego.bola;
     capa.style.transform = `translate(${x}px, ${y}px) scale(${casaRef.current.escalaDe(y)})`;
-    capa.style.zIndex = String(Math.round(y) + 1);
+    // Abrazada, queda detrás de sus patas.
+    capa.style.zIndex = String(Math.round(y) + (enMarcha.juego.fase === "sujeta" ? -1 : 1));
     capa.style.setProperty("--alto", `${-z}px`);
     capa.style.setProperty("--giro", `${giro}deg`);
     capa.style.setProperty("--sombra", String(Math.max(0.4, 1 - z / 400)));
@@ -58,7 +61,7 @@ export function useJuegoPelota(capaRef: RefObject<HTMLDivElement | null>, casa: 
     setJugada(enMarcha && { mundo: enMarcha.mundo, fase: enMarcha.juego.fase, desde: performance.now() - enMarcha.juego.t });
   }, []);
 
-  const lanzar = useCallback(({ punto, dedo, suelo, vista, mundo, andanteDe }: Lanzamiento) => {
+  const lanzar = useCallback(({ punto, dedo, suelo, vista, mundo, andanteDe, abrazoDe }: Lanzamiento) => {
     const { reduceMotion, puede, mover, atrapa, bote } = casaRef.current;
     const antes = enMarchaRef.current;
     // Si uno ya va a por la anterior, sigue con esta.
@@ -67,7 +70,7 @@ export function useJuegoPelota(capaRef: RefObject<HTMLDivElement | null>, casa: 
     const limites = limitesDe(suelo, vista);
     let bola = nuevaBola(punto, dedo, limites);
     if (reduceMotion) bola = { ...bola, z: 0, vx: 0, vz: 0 };
-    let juego = nuevoJuego(bola, limites, quien !== null);
+    let juego = nuevoJuego(bola, limites, quien !== null, quien === null ? undefined : abrazoDe(quien));
     let gatito = sigue ? sigue.gatito : quien === null ? null : andanteDe(quien);
     if (sigue && sigue.juego.fase !== "mira") juego = { ...juego, fase: "corre", velocidad: sigue.juego.velocidad };
     if (reduceMotion && quien !== null && gatito) {

@@ -4,16 +4,14 @@ Dossier del arte de la pelota. Mapa: [La pelota de la casa, a la vista](https://
 
 ## Estado
 
-- **Recibidas** `pelota`, `esmoquin-carrera` y `melena-carrera`.
-- **Faltan** `atigrado-carrera`, `atigrado-juego`, `esmoquin-juego` (repetir: salió con el cuerpo oscuro al tumbarse), `melena-juego`, `nube-carrera` y `nube-juego`.
-- **No adjuntar la hoja entera:** el generador copia su forma alta y devuelve la misma hoja con retoques. Se adjunta el gatito sentado solo, en `../super-noa-arte-original/casa-pelota-v1/referencias/<modelo>-sentado.png` (1408 × 768, el cuadro sentado de su hoja ampliado ×4 sobre verde).
-- Mientras tanto el juego usa una pelota rayada dibujada en `src/game/casa.css` (SVG) y las poses de hoy: `andar` para correr y los cuadros de `pelota` para agazaparse, saltar y sujetar (`poseDeJuego` en `src/game/casaPelota.ts`).
+- **Montado** el 27-11-2026 con las nueve láminas (originales en `../super-noa-arte-original/casa-pelota-v1/`).
+- **No adjuntar la hoja entera** al generar: el generador copia su forma alta y devuelve la misma hoja con retoques. Se adjunta el gatito sentado solo, en `../super-noa-arte-original/casa-pelota-v1/referencias/<modelo>-sentado.png` (1408 × 768, el cuadro sentado de su hoja ampliado ×4 sobre verde).
 
 ## Cómo funciona en el juego
 
 - La pelota cae, bota, rueda girando (el juego la gira por código, así que va **de frente y sin sombra**) y tiene su sombra por código.
-- Un gatito la mira, galopa hacia ella, se agazapa, salta, la sujeta y la empuja. **La pelota no se dibuja con el gatito:** el juego la coloca entre sus patas.
-- Las poses nuevas irán en una hoja aparte por modelo (`sprites/gato-casa-pelota-<modelo>-v1.webp`), sin tocar la de trece filas.
+- Un gatito la mira, galopa hacia ella, se agazapa, salta, la abraza panza arriba y la empuja. **La pelota no se dibuja con el gatito:** el juego la coloca entre sus patas, por detrás de ellas.
+- Las poses nuevas van en una hoja aparte por modelo (`sprites/gato-casa-pelota-<modelo>-v1.webp`, 4 × 2: carrera y juego), sin tocar la de trece filas.\n- Las fotos guardan el cuadro de la hoja de siempre más parecido (`poseDeJuego`).
 
 ## Qué hace falta
 
@@ -111,6 +109,6 @@ Chunky, readable pixel art in the style of a charming 16-bit game for young chil
 
 ## Montaje
 
-- Script nuevo (`prototypes/tools/casa-pelota-recorte.py`) a partir de `casa-modelo-recorte.py`: recorta, ajusta a los colores clave, alinea los pies y monta una fila por animación en cuadros de 160 × 160; la pelota, a 64 × 64 (`sprites/casa-pelota-v1.webp`).
-- Anclas de accesorios y complementos para las poses nuevas con `casa-gato-anclas.py` (de espaldas en el suelo, quizá solo sombrero y gafas, o ninguno).
-- Fases: `corre` usa el galope; `sujeta`, el abrazo tumbado; `empuja`, el zarpazo.
+- `prototypes/tools/casa-pelota-recorte.py` recorta las hojas y la pelota (`sprites/casa-pelota-v1.webp`, 128 × 128), borra el círculo del hueco que dibujó el generador, separa el azul de los ojos del del collar y deja el hueco del abrazo siempre en la misma columna. Los centros de los huecos y la nube que sale al revés están en el script.
+- `casa-gato-anclas.py` añade `ANCLAS_PELOTA`; panza arriba no se dibuja ningún accesorio ni complemento.
+- Alturas del abrazo por modelo: `ALTO_ABRAZO` en `src/game/casaPelota.ts`.

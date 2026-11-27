@@ -7,7 +7,7 @@ import {
 } from "./casaInteraccion";
 import { crearSonidoCasa, sonidoDelBano, type SonidoCasa } from "./casaSonido";
 import { crearNana, type Nana } from "./casaNana";
-import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, hojaDeGatito, modeloDibujado, type AnimacionGato } from "./casaGatoArte";
+import { ANIMACIONES_GATO, COLUMNAS_GATO, CUADRO_GATO, cuadroDe, FILAS_GATO, FILAS_PELOTA, hojaDeGatito, hojaDePelota, modeloDibujado, type AnimacionGato } from "./casaGatoArte";
 import { andando, avanzarAndante, decidir, gatitoBajo, ir, nuevoAndante, parar, VELOCIDAD_GATITO, type Andante } from "./casaDeambular";
 import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreElEscondite, sobreLaBanera } from "./casaHabitacion";
 import { enLaPecera, PECERA, zonaDe, type SonidoPecera } from "./casaPecera";
@@ -47,7 +47,7 @@ import { CapaPluma, HOJA_PLUMA, IconoCanaPluma, pintarPluma } from "./casaPlumaA
 import { climaDelDia, climaDePrueba, climaQueSeVe, miranPorLaVentana } from "./casaClima";
 import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte";
 import { useEfimero, useRespuestas, useTemporizadores } from "./useTemporizadores";
-import { mirarPelota, poseDeJuego, quienJuega } from "./casaPelota";
+import { ALTO_ABRAZO, mirarPelota, poseDeJuego, quienJuega } from "./casaPelota";
 import { useJuegoPelota } from "./useJuegoPelota";
 import "./casa.css";
 
@@ -300,6 +300,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [vista, setVista] = useState<number | null>(null);
   const [andantes, setAndantes] = useState<Record<number, Andante>>({});
   const [hojas, setHojas] = useState<Record<string, string>>({});
+  const [hojasPelota, setHojasPelota] = useState<Record<string, string>>({});
   const [ahora, setAhora] = useState(() => performance.now());
   // Decorar: la bandeja cambia a los muebles; `elegido` es el mueble tocado, cuyas versiones salen en la bandeja.
   const [decorando, setDecorando] = useState(false);
@@ -959,12 +960,18 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const variante = variantes.find((v) => v.mundo === mundo);
     return variante && hojas[`${variante.mundo}-${variante.sucio}-${variante.lazo}`];
   };
+  const hojaPelotaDe = (mundo: number) => {
+    const variante = variantes.find((v) => v.mundo === mundo);
+    return variante && hojasPelota[`${variante.mundo}-${variante.sucio}-${variante.lazo}`];
+  };
   useEffect(() => {
     let vivo = true;
     for (const clave of claveHojas.split(",").filter(Boolean)) {
       const [mundo, sucio, lazo] = clave.split("-");
       void hojaDeGatito(Number(mundo), { sucio: sucio === "true", mejorAmigo: lazo === "true" })
         .then((url) => { if (vivo) setHojas((actuales) => actuales[clave] === url ? actuales : { ...actuales, [clave]: url }); });
+      void hojaDePelota(Number(mundo), { sucio: sucio === "true", mejorAmigo: lazo === "true" })
+        .then((url) => { if (vivo) setHojasPelota((actuales) => actuales[clave] === url ? actuales : { ...actuales, [clave]: url }); });
     }
     return () => { vivo = false; };
   }, [claveHojas]);
@@ -1176,6 +1183,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     estanciaPelotaRef.current = estancia;
     pelota.lanzar({
       punto: { x, y }, dedo, mundo, suelo: (enJardin ? JARDIN : HABITACION).suelo, vista: { x: vistaX, ancho: anchoVisible },
+      abrazoDe: (quien) => ALTO_ABRAZO[modeloDibujado(quien)],
       andanteDe: (quien) => {
         // Se le olvida adonde iba: ahora va a por la pelota.
         seVanRef.current.delete(quien);
@@ -1570,7 +1578,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const respuesta = respuestas.find((r) => r.gatito === indice);
     // Jugando con la pelota manda su fase, no la respuesta ni la vida propia.
     const jugando = jugada?.mundo === mundo ? jugada.fase : null;
-    const pose = jugando ? poseDeJuego(jugando, Math.max(0, ahora - jugada!.desde)) : null;
+    // Con movimiento tranquilo, siempre el primer cuadro de la fase.
+    const pose = jugando ? poseDeJuego(jugando, reduceMotion ? 0 : Math.max(0, ahora - jugada!.desde)) : null;
+    const hojaJuego = pose?.deJuego ? hojaPelotaDe(mundo) : undefined;
+    const deJuego = hojaJuego ? pose!.deJuego : undefined;
     const anda = andando(andante);
     const tapado = arropados.includes(mundo) && !enBrazos;
     const dormido = tapado || (!anda && andante.pose === "dormir" && !respuesta);
@@ -1583,7 +1594,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const hoja = hojaDe(mundo);
     const mira = andante.mira;
     const escala = escalaDe(andante.y);
-    return { mundo, indice, enBrazos, andante, llegando, pide, respuesta, jugando, tapado, dormido, animacion, fila, cuadro, hoja, mira, escala };
+    return { mundo, indice, enBrazos, andante, llegando, pide, respuesta, jugando, tapado, dormido, animacion, fila, cuadro, hoja, mira, escala, deJuego, hojaJuego };
   });
 
   // El gatito del menú abierto, si sigue aquí y despierto.
@@ -1619,7 +1630,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setFlash((veces) => veces + 1);
   };
 
-  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.webp"), "--zanahoria": cssAssetUrl(HOJA_ZANAHORIA), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--regadera": cssAssetUrl(REGADERA), "--pluma": cssAssetUrl(HOJA_PLUMA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
+  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.webp"), "--zanahoria": cssAssetUrl(HOJA_ZANAHORIA), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--pelota": cssAssetUrl("./assets/sprites/casa-pelota-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--regadera": cssAssetUrl(REGADERA), "--pluma": cssAssetUrl(HOJA_PLUMA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
   const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--maceteros": cssAssetUrl(HOJA_MACETEROS), "--regadera": cssAssetUrl(REGADERA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--lampara": `${HABITACION.lampara.x + HABITACION.ampliacion}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translate(${-camara.x * medidas.escala}px, ${-camara.y * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
@@ -1738,11 +1749,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             className={`casa-mariposa${mariposa.quieta ? " is-posada" : ""}${indice % 2 ? " is-otra" : ""}`} style={{ left: mariposa.x, top: mariposa.y }}
             data-indice={indice} onClick={mariposaConTeclado} />)}
           {!enJardin && casa.huellas.map((huella, indice) => <i key={`${huella.x}-${indice}`} className={`casa-objeto casa-huella is-${indice % 2 ? "huella-2" : "huella"}`} style={{ left: porcentajeX(huella.x), top: porcentajeY(ESCENA_CASA.suelo + 22 + (indice % 2) * 18) }} />)}
-          {aspectos.map(({ mundo, enBrazos, andante, llegando, pide, respuesta, jugando, tapado, dormido, animacion, fila, cuadro, hoja, mira, escala }) => {
+          {aspectos.map(({ mundo, enBrazos, andante, llegando, pide, respuesta, jugando, tapado, dormido, animacion, fila, cuadro, hoja, mira, escala, deJuego, hojaJuego }) => {
             // Arropado: su pose propia (cabeza fuera, mantita de su color); mientras se pinta, la de dormir.
             const arropado = tapado ? arropadoHoja(mundo) : undefined;
             const dibujo = arropado
               ? { backgroundImage: `url("${arropado}")`, backgroundSize: `${CUADROS_ARROPADO * CUADRO_GATO}px ${CUADRO_GATO}px`, backgroundPosition: `${-(cuadro % CUADROS_ARROPADO) * CUADRO_GATO}px 0` }
+              : deJuego ? { backgroundImage: `url("${hojaJuego}")`, backgroundSize: `${COLUMNAS_GATO * CUADRO_GATO}px ${FILAS_PELOTA.length * CUADRO_GATO}px`, backgroundPosition: `${-deJuego.cuadro * CUADRO_GATO}px ${-FILAS_PELOTA.indexOf(deJuego.hoja) * CUADRO_GATO}px` }
               : { backgroundImage: hoja ? `url("${hoja}")` : undefined, backgroundSize: `${COLUMNAS_GATO * CUADRO_GATO}px ${FILAS_GATO * CUADRO_GATO}px`, backgroundPosition: `${-cuadro * CUADRO_GATO}px ${-fila * CUADRO_GATO}px` };
             return <div key={mundo} role="img" aria-label={t("casa.gatito.oculto", { nombre: nombreDe(mundo) })}
               className={`casa-gatito${enBrazos ? " is-cogido" : ""}${llegando ? " is-llegando" : ""}${respuesta && !jugando ? ` is-${respuesta.tipo}` : ""}${jugando === "salta" ? " is-salta-pelota" : ""}${respuesta?.favorita ? " is-favorita" : ""}${dormido ? " is-dormido" : ""}${botando.includes(mundo) ? " is-botando" : ""}${animacion === "andar" ? " is-andando" : ""}${ropaDe(casa, mundo).alas ? " con-alas" : ""}${delEscondite?.mundo === mundo ? " is-del-escondite" : ""}`}
@@ -1751,7 +1763,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               <span className="casa-gatito-dibujo" style={{ transform: mira < 0 ? "scaleX(-1)" : undefined }}>
                 {/* Sus accesorios, en su sitio en este cuadro (alas y capa detrás de él); arropado, no se ven. */}
                 {(() => {
-                  const piezas = tapado ? [] : piezasEnCuadro(conComplemento(ropaDe(casa, mundo), mundo), animacion, cuadro, modeloDibujado(mundo));
+                  const piezas = tapado ? [] : piezasEnCuadro(conComplemento(ropaDe(casa, mundo), mundo), animacion, cuadro, modeloDibujado(mundo), deJuego);
                   const pintar = ({ tipo, pieza, caja }: (typeof piezas)[number]) => <PiezaAccesorio key={tipo} tipo={tipo} pieza={pieza} caja={caja} />;
                   return <>{piezas.filter((pieza) => pieza.detras).map(pintar)}<b className="casa-gatito-cuerpo" style={dibujo} />{piezas.filter((pieza) => !pieza.detras).map(pintar)}</>;
                 })()}

@@ -255,5 +255,66 @@ export const ANCLAS_POR_MODELO: Readonly<{ atigrado: TablaAnclas } & Partial<Rec
   },
 };
 
+/** Las de la hoja de jugar con la pelota: la carrera y el juego (en el abrazo, ninguna). */
+export type PosePelota = "carrera" | "juego";
+export const ANCLAS_PELOTA: Readonly<Record<ModeloGatito, Readonly<Record<PosePelota, readonly Anclas[]>>>> = {
+  atigrado: {
+    carrera: [
+      {cabeza: {x: 124, y: 51}, ojos: {x: 130, y: 84}, cuello: {x: 100, y: 105}},
+      {cabeza: {x: 126, y: 49}, ojos: {x: 132, y: 86}, cuello: {x: 118, y: 111}},
+      {cabeza: {x: 124, y: 59}, ojos: {x: 131, y: 92}, cuello: {x: 117, y: 120}},
+      {cabeza: {x: 111, y: 49}, ojos: {x: 118, y: 83}, cuello: {x: 92, y: 106}},
+    ],
+    juego: [
+      {cabeza: {x: 109, y: 24}, ojos: {x: 118, y: 58}, cuello: {x: 106, y: 86}},
+      {cabeza: {x: 116, y: 25}, ojos: {x: 125, y: 61}, cuello: {x: 116, y: 90}},
+      {cabeza: null, ojos: null, cuello: null},
+      {cabeza: null, ojos: null, cuello: null},
+    ],
+  },
+  esmoquin: {
+    carrera: [
+      {cabeza: {x: 122, y: 62}, ojos: {x: 123, y: 88}, cuello: {x: 100, y: 105}},
+      {cabeza: {x: 127, y: 68}, ojos: {x: 128, y: 90}, cuello: {x: 107, y: 107}},
+      {cabeza: {x: 128, y: 71}, ojos: {x: 126, y: 93}, cuello: {x: 105, y: 108}},
+      {cabeza: {x: 130, y: 67}, ojos: {x: 128, y: 89}, cuello: {x: 103, y: 101}},
+    ],
+    juego: [
+      {cabeza: {x: 117, y: 23}, ojos: {x: 116, y: 60}, cuello: {x: 97, y: 86}},
+      {cabeza: {x: 125, y: 23}, ojos: {x: 124, y: 60}, cuello: {x: 104, y: 86}},
+      {cabeza: null, ojos: null, cuello: null},
+      {cabeza: null, ojos: null, cuello: null},
+    ],
+  },
+  melena: {
+    carrera: [
+      {cabeza: {x: 136, y: 62}, ojos: {x: 132, y: 90}, cuello: {x: 118, y: 109}},
+      {cabeza: {x: 146, y: 65}, ojos: {x: 146, y: 90}, cuello: {x: 133, y: 110}},
+      {cabeza: {x: 140, y: 67}, ojos: {x: 138, y: 94}, cuello: {x: 127, y: 114}},
+      {cabeza: {x: 122, y: 61}, ojos: {x: 121, y: 88}, cuello: {x: 109, y: 108}},
+    ],
+    juego: [
+      {cabeza: {x: 110, y: 25}, ojos: {x: 120, y: 64}, cuello: {x: 100, y: 81}},
+      {cabeza: {x: 122, y: 24}, ojos: {x: 124, y: 56}, cuello: {x: 112, y: 80}},
+      {cabeza: null, ojos: null, cuello: null},
+      {cabeza: null, ojos: null, cuello: null},
+    ],
+  },
+  nube: {
+    carrera: [
+      {cabeza: {x: 113, y: 55}, ojos: {x: 126, y: 93}, cuello: {x: 110, y: 110}},
+      {cabeza: {x: 126, y: 50}, ojos: {x: 144, y: 86}, cuello: {x: 131, y: 104}},
+      {cabeza: {x: 111, y: 64}, ojos: {x: 125, y: 98}, cuello: {x: 117, y: 118}},
+      {cabeza: {x: 106, y: 53}, ojos: {x: 110, y: 94}, cuello: {x: 111, y: 106}},
+    ],
+    juego: [
+      {cabeza: {x: 110, y: 31}, ojos: {x: 126, y: 64}, cuello: {x: 115, y: 85}},
+      {cabeza: {x: 110, y: 19}, ojos: {x: 130, y: 62}, cuello: {x: 119, y: 86}},
+      {cabeza: null, ojos: null, cuello: null},
+      {cabeza: null, ojos: null, cuello: null},
+    ],
+  },
+};
+
 /** Las del atigrado, el gato base. */
 export const ANCLAS_GATO = ANCLAS_POR_MODELO.atigrado;

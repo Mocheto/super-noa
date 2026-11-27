@@ -32,6 +32,10 @@ def hoja_de(modelo):
 
 
 SALIDA = RAIZ / "src/game/casaGatoAnclas.ts"
+# La hoja de jugar con la pelota de cada modelo (`casa-pelota-recorte.py`).
+FILAS_PELOTA = [("carrera", 4), ("juego", 4)]
+# Tumbado panza arriba, los accesorios quedarían derechos sobre un gato girado: ninguno.
+SIN_ANCLAS = [("juego", 2), ("juego", 3)]
 CELDA = 160
 FILAS = [("andar", 4), ("sentado", 2), ("cola", 1), ("dormir", 2), ("jugarSolo", 3), ("cantar", 2), ("pedir", 2),
          ("comer", 3), ("ronronear", 2), ("bano", 2), ("sacudirse", 3), ("pelota", 4), ("ahoraNo", 2)]
@@ -147,9 +151,9 @@ def huecos_de_la_animacion(tabla, modelo):
             a["cuello"] = {k: a["cabeza"][k] + b["cuello"][k] - b["cabeza"][k] for k in ("x", "y")}
 
 
-def completar(tabla, modelo):
+def completar(tabla, modelo, referencia=None):
     """Los ojos cerrados van donde irían abiertos: en el camino del lazo al cuello, corrido lo que se corren los vistos."""
-    vistos = [a for cuadros in tabla.values() for a in cuadros if a["ojos"]]
+    vistos = [a for cuadros in (referencia or tabla).values() for a in cuadros if a["ojos"] and a["cabeza"] and a["cuello"]]
     dx = float(np.median([a["ojos"]["x"] - en_el_camino(a)[0] for a in vistos]))
     dy = float(np.median([a["ojos"]["y"] - en_el_camino(a)[1] for a in vistos]))
     for nombre, cuadros in tabla.items():
@@ -172,6 +176,34 @@ def tabla_de(modelo):
     completar(tabla, modelo)
     for (nombre, c), a in A_MANO.get(modelo, {}).items():
         tabla[nombre][c] = a
+    return tabla
+
+
+def tabla_pelota(modelo):
+    hoja = np.array(Image.open(SPRITES / f"gato-casa-pelota-{modelo}-v1.webp").convert("RGBA")).astype(int)
+    tabla = {}
+    for fila, (nombre, cuadros) in enumerate(FILAS_PELOTA):
+        tabla[nombre] = [anclas(hoja[fila * CELDA:(fila + 1) * CELDA, c * CELDA:(c + 1) * CELDA], modelo) for c in range(cuadros)]
+    for nombre, c in SIN_ANCLAS:
+        tabla[nombre][c] = {"cabeza": None, "ojos": None, "cuello": None}
+    if modelo != "atigrado":
+        cabeza_centrada(tabla)
+        cabezas_tapadas(tabla)
+        huecos_de_la_animacion(tabla, modelo)
+        for nombre, c in SIN_ANCLAS:
+            tabla[nombre][c] = {"cabeza": None, "ojos": None, "cuello": None}
+    # En estas hojas la clave de los ojos solo está en los ojos: las gafas van en el centro de lo que ocupan.
+    for fila, (nombre, cuadros) in enumerate(FILAS_PELOTA):
+        for c in range(cuadros):
+            a = tabla[nombre][c]
+            a["ojos"] = None
+            if not a["cabeza"]:
+                continue
+            ys, xs = np.nonzero(mascara(hoja[fila * CELDA:(fila + 1) * CELDA, c * CELDA:(c + 1) * CELDA], [OJOS]))
+            # Solo lo que cae en la cara; fuera quedan las motas del contorno.
+            cara = (ys >= a["cabeza"]["y"] + 15) & (ys <= a["cabeza"]["y"] + 55) & (np.abs(xs - a["cabeza"]["x"]) <= 35)
+            if cara.any():
+                a["ojos"] = {"x": int(round((int(xs[cara].min()) + int(xs[cara].max())) / 2)), "y": int(round((int(ys[cara].min()) + int(ys[cara].max())) / 2))}
     return tabla
 
 
@@ -206,6 +238,17 @@ def main():
                 lineas.append("      " + literal(a) + ",")
             lineas.append("    ],")
         lineas.append("  },")
+    lineas += ["};", "", "/** Las de la hoja de jugar con la pelota: la carrera y el juego (en el abrazo, ninguna). */",
+               'export type PosePelota = "carrera" | "juego";',
+               "export const ANCLAS_PELOTA: Readonly<Record<ModeloGatito, Readonly<Record<PosePelota, readonly Anclas[]>>>> = {"]
+    pelotas = {modelo: tabla_pelota(modelo) for modelo in MODELOS}
+    for modelo, tabla in pelotas.items():
+        lineas.append(f"  {modelo}: {{")
+        for nombre, cuadros in tabla.items():
+            lineas.append(f"    {nombre}: [")
+            lineas += ["      " + literal(a) + "," for a in cuadros]
+            lineas.append("    ],")
+        lineas.append("  },")
     lineas += ["};", "", "/** Las del atigrado, el gato base. */", "export const ANCLAS_GATO = ANCLAS_POR_MODELO.atigrado;"]
     SALIDA.write_text("\n".join(lineas) + "\n")
     print(f"escrito {SALIDA.relative_to(RAIZ)}: {', '.join(tablas)}")
@@ -226,6 +269,17 @@ def main():
                             dibujo.ellipse([x - 4, y - 4, x + 4, y + 4], outline=color, width=2)
             imagen.crop((0, 0, 640, 1040)).convert("RGB").save(carpeta / f"anclas-{modelo}-a.png")
             imagen.crop((0, 1040, 640, 2080)).convert("RGB").save(carpeta / f"anclas-{modelo}-b.png")
+            juego = Image.new("RGBA", (CELDA * 4, CELDA * 2), (225, 225, 225, 255))
+            juego.alpha_composite(Image.open(SPRITES / f"gato-casa-pelota-{modelo}-v1.webp").convert("RGBA"))
+            dibujo = ImageDraw.Draw(juego)
+            for fila, (nombre, _) in enumerate(FILAS_PELOTA):
+                for c, a in enumerate(pelotas[modelo][nombre]):
+                    for clave, color in (("cabeza", "magenta"), ("ojos", "lime"), ("cuello", "red")):
+                        p = a[clave]
+                        if p:
+                            x, y = c * CELDA + p["x"], fila * CELDA + p["y"]
+                            dibujo.ellipse([x - 4, y - 4, x + 4, y + 4], outline=color, width=2)
+            juego.convert("RGB").save(carpeta / f"anclas-pelota-{modelo}.png")
 
 
 if __name__ == "__main__":

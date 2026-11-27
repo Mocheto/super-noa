@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ANCLAS_GATO } from "./casaGatoAnclas.ts";
+import { ANCLAS_GATO, ANCLAS_PELOTA } from "./casaGatoAnclas.ts";
 import { ANIMACIONES_GATO, CUADRO_GATO, type AnimacionGato } from "./casaGatoArte.ts";
 
 const animaciones = Object.keys(ANIMACIONES_GATO) as AnimacionGato[];
@@ -33,4 +33,12 @@ test("despierto y fuera del baño se pueden poner los tres; de espaldas, sin gaf
     .map(({ animacion, cuadro }) => `${animacion} ${cuadro}`));
   assert.deepEqual(sinLosTres, ["dormir 0", "dormir 1", "jugarSolo 0", "bano 0", "bano 1"]);
   assert.ok(ANCLAS_GATO.dormir.every((anclas) => anclas.cabeza));
+});
+
+test("la hoja de la pelota tiene anclas por cuadro y, panza arriba, ninguna", () => {
+  for (const tabla of Object.values(ANCLAS_PELOTA)) {
+    for (const cuadros of Object.values(tabla)) assert.equal(cuadros.length, 4);
+    for (const cuadro of [...tabla.carrera, tabla.juego[0], tabla.juego[1]]) assert.ok(cuadro.cabeza && cuadro.ojos && cuadro.cuello);
+    for (const cuadro of [tabla.juego[2], tabla.juego[3]]) assert.deepEqual(cuadro, { cabeza: null, ojos: null, cuello: null });
+  }
 });

@@ -11,6 +11,7 @@ import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito, modeloDibujado } from "./c
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
 import { crearPecera, PECERA } from "./casaPecera.ts";
+import { pintarJaulaEnFoto, saleLaJaula } from "./casaHamstersFoto.ts";
 import { CAPA_VISIBLE, laminaDePieza, piezasEnCuadro, type PiezaEnCuadro } from "./casaVestidorArte.ts";
 import { conComplemento } from "./casaComplementos.ts";
 import { CELDAS_MACETEROS, HOJA_MACETEROS, JARDIN, LUCIERNAGAS, luciernagaEn } from "./casaJardin.ts";
@@ -97,6 +98,8 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
   const fondo = enJardin ? null : await cargar(await fondoConPared(HABITACION.fondo, foto.decoracion.pared));
   // El fondo de la habitación empieza en x = -ampliacion de la escena (la ampliación de la izquierda).
   if (fondo) contexto.drawImage(fondo, foto.vista.x + HABITACION.ampliacion, 0, foto.vista.ancho, ALTO, 0, 0, ancho, ALTO * escala);
+  // La jaula de hámsters, a la izquierda de la pecera.
+  if (saleLaJaula(foto)) await pintarJaulaEnFoto(contexto, foto, escala, cargar);
   // La pecera de la ampliación: el mueble, los cuatro peces como al empezar y el cristal por delante.
   if (!enJardin && foto.vista.x < PECERA.left + PECERA.ancho) {
     const caja = { x: PECERA.left, y: PECERA.top, ancho: PECERA.ancho, alto: PECERA.alto };

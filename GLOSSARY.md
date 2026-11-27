@@ -61,6 +61,12 @@ _Avoid_: Sorpresa (es solo uno de los tipos de giro), twist
 Último tramo, corto y antes de la bandera: una prueba final que junta lo aprendido y en la que la mecánica hace falta.
 _Avoid_: Final (reservado a la pantalla final de la campaña), clímax
 
+## Trajes de Noa
+
+**Traje**:
+Ropa entera que Noa elige llevar en sus viajes (las pantallas y el mapa), como el de exploradora, pirata o caballera; lleva uno a la vez y solo cambia su aspecto. El peto morado de siempre también es un traje. Los minijuegos con disfraz propio no lo usan.
+_Avoid_: Uniforme, disfraz (es el de cada minijuego), accesorio (es de los gatitos), armadura (a secas: la armadura dorada es la protección de la manzana)
+
 ## Laguna
 
 **Roca que asoma**:

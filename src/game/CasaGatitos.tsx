@@ -47,6 +47,9 @@ import { CapaPluma, HOJA_PLUMA, IconoCanaPluma, pintarPluma } from "./casaPlumaA
 import { climaDelDia, climaDePrueba, climaQueSeVe, miranPorLaVentana } from "./casaClima";
 import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte";
 import { useEfimero, useRespuestas, useTemporizadores } from "./useTemporizadores";
+import { funciones } from "./funciones";
+import { abrirRegalo, regaloEsperando, regalosDe, type Premio, type RegalosProgress } from "./regalos";
+import { CajaRegalo, ConfetiRegalo, enLaCajaDeRegalo, TarjetaRegalo } from "./RegaloCasa";
 import { ALTO_ABRAZO, mirarPelota, poseDeJuego, quienJuega } from "./casaPelota";
 import { useJuegoPelota } from "./useJuegoPelota";
 import "./casa.css";
@@ -61,6 +64,9 @@ type Props = {
   musicVolume: number;
   /** Guarda la casa en el progreso: al ver una llegada, tras cada cuidado y al salir. */
   onGuardar: (casa: CasaProgress) => void;
+  /** Lo ganado con los regalos (con `funciones.regalos`). */
+  regalos?: RegalosProgress;
+  onGuardarRegalos?: (regalos: RegalosProgress) => void;
   /** Un visitante gana un corazón de amistad (en el progreso de amigos). */
   onAmistad?: (animal: string) => void;
   onSalir: () => void;
@@ -140,6 +146,9 @@ const OBJETO_DE: Record<NecesidadId, Herramienta | "mano"> = { comer: "cuenco", 
 // Los ajustes de prueba también se leen en la web publicada, para probar la casa con Noa en su móvil.
 /** Lo que tarda la vista en bajar o subir (o el fundido, con movimiento tranquilo). */
 const PASO_MADRIGUERA_MS = 600;
+/** El confeti del regalo y lo que tarda en salir su tarjeta. */
+const CONFETI_MS = 1100;
+const TARJETA_REGALO_MS = 500;
 const ajustes = leerAjustesCasa(window.location.search);
 /** `?casaClima=lluvia|nieve|arcoiris|sol` fuerza el clima (mapa «Idea: clima en la ventana»). */
 const climaForzado = climaDePrueba(window.location.search);
@@ -154,6 +163,12 @@ function nombresJuntos(mundos: readonly number[]): string {
   const nombres = mundos.map(nombreDe);
   if (nombres.length < 2) return nombres[0] ?? "";
   return t("casa.llegada.union.juntos", { primeros: nombres.slice(0, -1).join(", "), ultimo: nombres[nombres.length - 1] });
+}
+
+/** Con `?casaRegalo=1` espera un regalo, para probarlo (con `funciones=regalos`). */
+function conRegaloDePrueba(regalos: RegalosProgress): RegalosProgress {
+  if (new URLSearchParams(window.location.search).get("casaRegalo") !== "1" || regaloEsperando(regalos)) return regalos;
+  return { ...regalos, recibidos: regalos.recibidos + 1 };
 }
 
 /** Con `?casaNecesidades=pide|senota`, los gatitos piden o dan pistas para probar los cuidados. */
@@ -190,7 +205,7 @@ type Medidas = { escala: number; anchoVisor: number; vertical: boolean; medido: 
  * acariciar desde el menú del gatito, lanzar la pelota y barrer las huellas) en una habitación de 1280 × 540 que se
  * desliza con el dedo. La habitación, los objetos y los gatitos son provisionales hasta que llegue su arte.
  */
-export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, effectsVolume, musicVolume, onGuardar, onAmistad, onSalir }: Props) {
+export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, effectsVolume, musicVolume, onGuardar, regalos: regalosGuardados, onGuardarRegalos, onAmistad, onSalir }: Props) {
   const inicial = useMemo(() => conNecesidadesDePrueba(prepararCasa(guardada, levelStats, new Date())), [guardada, levelStats]);
   const [casa, setCasa] = useState(inicial);
   const [llegan] = useState(() => llegadasPendientes(inicial));
@@ -304,6 +319,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [ahora, setAhora] = useState(() => performance.now());
   // Decorar: la bandeja cambia a los muebles; `elegido` es el mueble tocado, cuyas versiones salen en la bandeja.
   const [decorando, setDecorando] = useState(false);
+  // El regalo (mapa «Ganar decoraciones de la casa»): lo que se tiene, lo que acaba de salir y su confeti.
+  const [regalos, setRegalos] = useState(() => funciones.regalos ? conRegaloDePrueba(regalosDe(regalosGuardados, decoracionDe(inicial))) : undefined);
+  const [premio, setPremio] = useState<Premio | null>(null);
+  const [confeti, ponerConfeti] = useEfimero<{ visto: true }>(temporizadores);
   const [elegido, setElegido] = useState<MuebleId | null>(null);
   const [destello, ponerDestello] = useEfimero<{ mueble: MuebleId }>(temporizadores);
   const [fondo, setFondo] = useState(HABITACION.fondo);
@@ -436,6 +455,29 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     void fondoConPared(HABITACION.fondo, decoracion.pared).then((url) => { if (vivo) setFondo(url); });
     return () => { vivo = false; };
   }, [decoracion.pared]);
+
+  // La primera vez se guarda enseguida lo que lleva puesto: así no lo pierde al cambiarlo.
+  useEffect(() => { if (regalos && !regalosGuardados) onGuardarRegalos?.(regalos); }, [regalos, regalosGuardados, onGuardarRegalos]);
+
+  /** Abre la caja: confeti y, enseguida, la tarjeta con lo que ha tocado. */
+  const abrirCaja = () => {
+    const abierto = regalos && abrirRegalo(regalos, Math.random());
+    if (!abierto) return;
+    setRegalos(abierto.regalos);
+    onGuardarRegalos?.(abierto.regalos);
+    sonidoRef.current?.golpeBano("campanita");
+    ponerConfeti({ visto: true }, CONFETI_MS);
+    if (reduceMotion) setPremio(abierto.premio);
+    else temporizadores.despues(TARJETA_REGALO_MS, () => setPremio(abierto.premio));
+  };
+  /** Al cerrar la tarjeta, lo ganado se pone en su sitio y la vista va hasta él. */
+  const ponerPremio = () => {
+    if (!premio) return;
+    setPremio(null);
+    ponerVersion(premio.mueble, premio.version, performance.now());
+    const [caja] = cajasDe(premio.mueble);
+    if (caja) setVista(centrarEn(caja.x + caja.ancho / 2, anchoVisible, vistaMin));
+  };
 
   const cambiarDecorar = () => {
     setDecorando((antes) => !antes);
@@ -1452,6 +1494,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }
     else if (enJardin && toque && sobreFlecha(FLECHA_BAJAR, toque)) mirarMadriguera(true);
     else if (enJardin && toque && conejosRef.current?.tocar(toque)) { /* Un conejo, y nada más. */ }
+    else if (hayCaja && toque && enLaCajaDeRegalo(toque)) abrirCaja();
     else if (decorando && tocado?.punto && !tocado.moviendo) setElegido(muebleEn(tocado.punto.x, tocado.punto.y));
     else if (noche && !enJardin && tocado?.punto && !tocado.moviendo && enLaLampara(tocado.punto)) cambiarLampara();
     else if (!enJardin && tocado?.punto && !tocado.moviendo && enLaPecera(tocado.punto.x, tocado.punto.y)) {
@@ -1596,6 +1639,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     const escala = escalaDe(andante.y);
     return { mundo, indice, enBrazos, andante, llegando, pide, respuesta, jugando, tapado, dormido, animacion, fila, cuadro, hoja, mira, escala, deJuego, hojaJuego };
   });
+
+  // La caja espera en la habitación mientras no se decora ni se acuesta a nadie.
+  const hayCaja = fase === "casa" && !enJardin && !decorando && !acostando && regaloEsperando(regalos);
 
   // El gatito del menú abierto, si sigue aquí y despierto.
   const conMenu = fase === "casa" && !decorando && !cogido ? aspectos.find((aspecto) => aspecto.mundo === menu && !aspecto.dormido) : undefined;
@@ -1778,6 +1824,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           {noche && !enJardin && <button type="button" className={`casa-lampara${lamparaApagada ? " is-apagada" : ""}`} aria-pressed={!lamparaApagada}
             aria-label={t("casa.dormir.lampara.oculto")} style={{ left: LAMPARA.x, top: LAMPARA.y, width: LAMPARA.ancho, height: LAMPARA.alto }}
             onClick={(event) => { if (event.detail === 0) cambiarLampara(); }} />}
+          {hayCaja && <CajaRegalo onAbrir={abrirCaja} />}
+          {confeti && !enJardin && <ConfetiRegalo key={confeti.id} />}
           {jugada && <div ref={pelotaCapaRef} className={`casa-pelota${jugada.fase === "empuja" ? " is-se-va" : ""}`} aria-hidden="true">
             <i className="casa-pelota-sombra" /><b className="casa-pelota-bola"><i className="casa-objeto is-pelota" /></b>
           </div>}
@@ -1942,6 +1990,9 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       </div>
       <p className="juntos">{t("casa.enCasa.frase.juntos", { maximo: MAX_EN_CASA })}</p>
     </Ventana>}
+    {premio && <TarjetaRegalo nombre={tClave(`casa.decorar.mueble.${premio.mueble}.oculto`)} onClose={ponerPremio}>
+      <Muestra mueble={premio.mueble} version={premio.version} />
+    </TarjetaRegalo>}
     {fase === "hola" && <Ventana id="casa-llegada" titulo="casa.llegada.titulo.rotulo" celebracion onClose={seguir}
       botones={<Boton tipo="seguir" clave="casa.llegada.sigue.rotulo" data-gamepad-default onClick={seguir} />}>
       <div className="ventana-dibujo casa-llegada-dibujo">{llegan.slice(0, MAX_EN_CASA).map((mundo) => <img key={mundo} src={worldCatalog.find((world) => world.id === mundo)?.catAsset} alt="" />)}</div>

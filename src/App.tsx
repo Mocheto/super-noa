@@ -405,7 +405,7 @@ export default function App() {
       </Suspense>}
       {screen === "casa" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
         {devPaletas ? <PruebaPaletas /> : <CasaGatitos key={`casa-${casaVersion}`} casa={progress.casa} levelStats={devGatitos ? conMundosCompletos(progress.levelStats, devGatitos) : progress.levelStats}reduceMotion={reduceMotion} muted={muted} effectsVolume={effectsVolume} musicVolume={musicVolume}
-          onGuardar={acciones.guardarCasa} onAmistad={acciones.amistad} onSalir={() => setScreen("map")} />}
+          onGuardar={acciones.guardarCasa} regalos={progress.regalos} onGuardarRegalos={acciones.guardarRegalos} onAmistad={acciones.amistad} onSalir={() => setScreen("map")} />}
       </Suspense>}
       {screen === "cat-party" && <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
         <CatParty paused={paused} muted={muted} musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotion}

@@ -4,6 +4,7 @@
  */
 import { recordFlight } from "./avioneta.ts";
 import type { CasaProgress } from "./casaProgreso.ts";
+import type { RegalosProgress } from "./regalos.ts";
 import { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
 import { visitDetour } from "./detourProgress.ts";
 import { addHeart } from "./friendProgress.ts";
@@ -67,6 +68,7 @@ export const terminarVuelo = (current: Progress, stars: number | null): Progress
   stars === null ? { ...current, avioneta: { bestStars: current.avioneta?.bestStars ?? 0, flown: true } } : recordFlight(current, stars);
 
 export const conCasa = (current: Progress, casa: CasaProgress): Progress => ({ ...current, casa });
+export const conRegalos = (current: Progress, regalos: RegalosProgress): Progress => ({ ...current, regalos });
 
 /** Las acciones con nombre que usa la interfaz; cada una recibe el progreso actual y devuelve el siguiente. */
 export const accionesProgreso = {
@@ -85,6 +87,7 @@ export const accionesProgreso = {
   retoDeJefe,
   terminarVuelo,
   guardarCasa: conCasa,
+  guardarRegalos: conRegalos,
   amistad: (current: Progress, kind: string) => addHeart(current, kind),
   borrar: resetCampaignProgress,
 };

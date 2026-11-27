@@ -216,6 +216,11 @@ export const casa = {
     frase: { juntos: "Toca un gatito para que entre en casa o se vaya de paseo. En casa caben {maximo}." },
     sigue: { rotulo: "{pictograma:jugar} SIGUE" },
   },
+  regalo: {
+    caja: { oculto: "Un regalo: tócalo para abrirlo" },
+    titulo: { rotulo: "{pictograma:gato} ¡REGALO!" },
+    sigue: { rotulo: "{pictograma:jugar} SIGUE" },
+  },
   llegada: {
     titulo: { rotulo: "{pictograma:gato} ¡HOLA!" },
     uno: { juntos: "¡{nombre} ya tiene casa! Dale muchos mimos." },

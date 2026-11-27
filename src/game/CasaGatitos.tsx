@@ -13,6 +13,7 @@ import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBaner
 import { enLaPecera, PECERA, type SonidoPecera } from "./casaPecera";
 import { PeceraCasa, type ToquePecera } from "./PeceraCasa";
 import { JaulaHamsters, type MandosJaula } from "./JaulaHamsters";
+import { ARTE_JAULA } from "./casaHamstersArte";
 import { ESCONDITES, SITIO_JAULA, type EsconditeId, type HamstersProgress, type SonidoJaula } from "./casaHamsters";
 import { apuntarVisita, comidaFavoritaDe, OLER_TRAS_ENTRAR_MS, SITIOS_PARA_OLER, COMIDAS_AMIGOS, cuerpoDelVisitante, darDeComerAlVisitante, DESPEDIDA_MS, elegirVisitante, HOJA_COMIDAS_AMIGOS, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, SE_VA_TRAS_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";
 import { DibujoAmigo } from "./DibujoAmigo";
@@ -107,11 +108,8 @@ const CENTRO_JAULA = (SITIO_JAULA.zona.desde + SITIO_JAULA.zona.hasta) / 2;
 /** En desarrollo, `?prueba=casa&jaula=1` abre la casa mirando la jaula de hámsters. */
 const verJaula = import.meta.env.DEV && new URLSearchParams(window.location.search).has("jaula");
 
-/** Cara de hámster, para el botón que lleva a la jaula y la pista. */
-const CaraHamster = () => <svg viewBox="0 0 32 32" width="80%" height="80%" aria-hidden="true" stroke="#2f1d33" strokeWidth="2">
-  <circle cx="8" cy="9" r="5" fill="#b8763b" /><circle cx="24" cy="9" r="5" fill="#b8763b" /><ellipse cx="16" cy="18" rx="13" ry="11" fill="#b8763b" />
-  <ellipse cx="16" cy="23" rx="8" ry="5" fill="#fff3e2" stroke="none" /><circle cx="11" cy="16" r="1.5" fill="#2f1d33" /><circle cx="21" cy="16" r="1.5" fill="#2f1d33" /><circle cx="16" cy="21" r="1.5" fill="#e0707c" stroke="none" />
-</svg>;
+/** Cara de hámster (Perla asomada, la séptima pose de su hoja), para el botón que lleva a la jaula y la pista. */
+const CaraHamster = () => <i className="casa-cara-hamster" aria-hidden="true" style={{ backgroundImage: cssAssetUrl(ARTE_JAULA.hamsters.perla) }} />;
 
 /** Necesidad que enseña cada objeto en el bocadillo. */
 const OBJETO_DE: Record<NecesidadId, Herramienta | "mano"> = { comer: "cuenco", mimos: "mano", bano: "esponja", jugar: "pelota" };

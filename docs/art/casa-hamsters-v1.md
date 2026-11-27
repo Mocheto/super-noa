@@ -2,11 +2,18 @@
 
 Dossier del arte de la jaula. Tickets: [Prompts del arte](https://github.com/Mocheto/super-noa/issues/414) y [Generar el arte](https://github.com/Mocheto/super-noa/issues/415), del mapa [Jaula de hamsters](https://github.com/Mocheto/super-noa/issues/402). Especificación: [jaula-hamsters.md](../casa/jaula-hamsters.md). Mismo estilo que los [objetos de la bandeja](casa-habitacion-v1.md).
 
+## Estado
+
+- **Montada** en [Montar el arte](https://github.com/Mocheto/super-noa/issues/417). Las originales están en `../super-noa-arte-original/casa-hamsters-v1/` (`jaula`, `objetos`, `perla` y `bolita`, en WebP).
+- `prototypes/tools/casa-hamsters-recorte.py` las recorta. La jaula generada era más ancha que la reja del juego: el tejado se escala sin deformar, los barrotes se estiran a lo alto y la bandeja se encaja abajo (772 × 748, al doble del dibujo).
+- El pitorro que traía la pose de beber de Perla se borra al recortar.
+- Dónde va cada pieza: `src/game/casaHamstersArte.ts`.
+
 ## Qué se genera y qué no
 
 | # | Lámina | Adjuntar | Se publica como | Rejilla final |
 |---|---|---|---|---|
-| 1 | La jaula vacía | La habitación (`worlds/casa-habitacion-vacia-v2.webp`) y el boceto (recorrido B). | `sprites/casa-jaula-v1.webp` | una pieza de 304 × 280 |
+| 1 | La jaula vacía | La habitación (`worlds/casa-habitacion-vacia-v2.webp`) y el boceto (recorrido B). | `sprites/casa-jaula-v1.webp` | una pieza de 772 × 748 |
 | 2 | Cosas de la jaula | La lámina 1. | `sprites/casa-jaula-objetos-v1.webp` | 8 celdas de 96 × 96 en una fila |
 | 3 | Perla | Los objetos de la bandeja (`sprites/casa-objetos-v1.webp`). | `sprites/casa-hamster-perla-v1.webp` | 8 celdas de 96 × 72 en una fila |
 | 4 | Bolita | La lámina 3. | `sprites/casa-hamster-bolita-v1.webp` | 8 celdas de 96 × 72 en una fila |

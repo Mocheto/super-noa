@@ -507,3 +507,6 @@
 .casa-bandeja-hamster { cursor: pointer; }
 .casa-bandeja-hamster svg { width: var(--objeto, 64px); height: var(--objeto, 64px); }
 .casa-bandeja-hamster:active { transform: translateY(3px); }
+.casa-jaula, .casa-fugados { image-rendering: pixelated; }
+/* Perla asomada: séptimo de los ocho cuadros de su hoja, recortado a la cabeza. */
+.casa-cara-hamster { display: block; width: 85%; aspect-ratio: 96 / 72; background-repeat: no-repeat; background-size: 800% 100%; background-position: calc(600% / 7) 0; image-rendering: pixelated; transform: translateY(-18%) scale(1.35); }

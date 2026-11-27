@@ -34,12 +34,11 @@ test("con arte, el traje usa el suyo y la protección es un brillo por encima", 
   assert.equal(dibujoDeNoa("peto", "hoja", false, { peto: { hoja: "otra" } }).src, "./assets/sprites/noa-sprite-sheet.webp");
 });
 
-test("apagados, siempre el peto; se encienden con ?funciones=trajes", () => {
+test("encendidos; apagados saldría siempre el peto", () => {
   assert.equal(trajePuesto("pirata", false), "peto");
   assert.equal(trajePuesto("pirata", true), "pirata");
   assert.equal(trajePuesto(undefined, true), "peto");
-  assert.equal(leerFunciones("").trajes, false);
-  assert.equal(leerFunciones("?funciones=trajes").trajes, true);
+  assert.equal(leerFunciones("").trajes, true);
 });
 
 test("el traje elegido se guarda y se carga; un guardado sin él o con uno desconocido sigue valiendo", () => {
@@ -66,4 +65,9 @@ test("dos pestañas: se queda con el traje que acaba de guardar la otra, tambié
 test("el elegidor solo ofrece el peto y los trajes con arte", () => {
   assert.deepEqual(trajesDisponibles({}), ["peto"]);
   assert.deepEqual(trajesDisponibles({ caballera: { hoja: "x" }, pirata: { hoja: "y" } }), ["peto", "pirata", "caballera"]);
+});
+
+test("los tres trajes nuevos tienen todas sus poses montadas", () => {
+  assert.deepEqual(trajesDisponibles(), [...TRAJES]);
+  for (const traje of TRAJES.slice(1)) assert.deepEqual(Object.keys(ARTE_TRAJES[traje]!).sort(), [...POSES_NOA].sort());
 });

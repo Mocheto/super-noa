@@ -3,7 +3,7 @@
 Cada dibujo nuevo ocupa el sitio del dibujo del peto al que sustituye (misma altura, mismo centro y mismos pies), así
 el juego usa los mismos recortes con cualquier traje.
 
-Entrada: la carpeta con `<traje>-quieta`, `-correr`, `-salto`, `-gata`, `-nadar`, `-gestos` y `-tijera`.
+Entrada: la carpeta con `<traje>-quieta`, `-correr`, `-salto`, `-gata`, `-nadar` y `-gestos` (y `-tijera` si las tijeras se repitieron aparte).
 Salida (WebP sin pérdida): public/assets/sprites/noa-<traje>-*-v1.webp.
 
 Uso: uv run --with pillow --with numpy --with scipy python prototypes/tools/trajes-recorte.py CARPETA TRAJE
@@ -28,7 +28,24 @@ CAJAS = {
         # Las tijeras de la lámina (la tercera) salieron al revés: van aparte.
         "gestos": [(0, 0, 500, 496), (500, 0, 1000, 496), (1500, 0, 2000, 496)],
     },
+    "exploradora": {
+        "correr": [(0, 0, 560, 496), (560, 0, 1060, 496), (1060, 0, 1580, 496), (1580, 0, 2000, 496)],
+        "gata": [(0, 0, 330, 768), (330, 0, 685, 768), (685, 0, 995, 768), (995, 0, 1376, 768)],
+        "nadar": [(0, 0, 610, 440), (610, 0, 1200, 440), (0, 440, 610, 896), (610, 440, 1200, 896)],
+        "gestos": [(0, 0, 360, 768), (360, 0, 685, 768), (685, 0, 1005, 768), (1005, 0, 1376, 768)],
+    },
+    "pirata": {
+        # La tercera de correr salió abierta de piernas en el aire: se repite la primera zancada.
+        "correr": [(0, 0, 385, 768), (385, 0, 660, 768), (0, 0, 385, 768), (1050, 0, 1376, 768)],
+        "gata": [(0, 0, 352, 768), (352, 0, 685, 768), (685, 0, 968, 768), (968, 0, 1376, 768)],
+        "nadar": [(0, 0, 690, 370), (690, 0, 1376, 370), (0, 370, 690, 768), (690, 370, 1376, 768)],
+        "gestos": [(0, 0, 370, 768), (370, 0, 712, 768), (712, 0, 1015, 768), (1015, 0, 1376, 768)],
+    },
 }
+
+
+# Columnas por las que separar dibujos que se tocan en la lámina.
+CORTES = {("pirata", "gestos"): [698]}
 
 
 def lamina(carpeta, nombre):
@@ -36,17 +53,28 @@ def lamina(carpeta, nombre):
     return Image.open(ruta).convert("RGB")
 
 
-def dibujo(imagen, caja=None):
-    """El dibujo de una lámina sin su fondo verde, recortado a su tamaño."""
-    rgb = np.array(imagen.crop(caja) if caja else imagen).astype(int)
+def dibujo(imagen, caja=None, cortes=()):
+    """El dibujo de una lámina sin su fondo verde, recortado a su tamaño.
+
+    Con varios en la lámina, son suyas las piezas sueltas (cuerpo, estrellas, ovillo) cuyo centro cae en `caja`: así una
+    cola o un mechón que se asoma a la caja del vecino no se corta ni se cuela.
+    """
+    rgb = np.array(imagen).astype(int)
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     # Solo el verde vivo del fondo: el pañuelo verde de la exploradora (#3E9B52) se queda.
-    fondo = (g > 180) & (r < 130) & (b < 120)
-    solido = ~fondo
-    # Fuera las motas sueltas.
+    solido = ~((g > 180) & (r < 130) & (b < 120))
+    for x in cortes:
+        solido[:, x - 1:x + 2] = False
     marcas, n = ndimage.label(solido)
-    tamanos = ndimage.sum(solido, marcas, range(1, n + 1))
-    solido = np.isin(marcas, 1 + np.flatnonzero(tamanos > 60))
+    indices = np.arange(1, n + 1)
+    tamanos = ndimage.sum(solido, marcas, indices)
+    # Fuera las motas sueltas.
+    suyas = indices[tamanos > 60]
+    if caja:
+        x0, y0, x1, y1 = caja
+        centros = ndimage.center_of_mass(solido, marcas, suyas)
+        suyas = [marca for marca, (y, x) in zip(suyas, centros) if x0 <= x < x1 and y0 <= y < y1]
+    solido = np.isin(marcas, suyas)
     # El borde mezclado con el verde se queda sin él.
     borde = solido & ~ndimage.binary_erosion(solido, iterations=2)
     rgb[..., 1] = np.where(borde, np.minimum(g, np.maximum(r, b)), g)
@@ -105,8 +133,10 @@ def main():
     sueltas = [("jump", "noa-jump-v2", dibujo(nueva("salto")))]
     gata = [dibujo(nueva("gata"), caja) for caja in cajas["gata"]]
     sueltas += list(zip(["cat-yarn", "cat-run", "cat-jump", "cat-throw"], ["noa-cat-yarn-v2", "noa-cat-run-v2", "noa-cat-jump-v2", "noa-cat-throw-v1"], gata))
-    piedra, papel, victoria = (dibujo(nueva("gestos"), caja) for caja in cajas["gestos"])
-    sueltas += [(f"rps-{i}", f"noa-rps-{i}", figura) for i, figura in enumerate([piedra, papel, dibujo(nueva("tijera")), victoria])]
+    gestos = [dibujo(nueva("gestos"), caja, CORTES.get((traje, "gestos"), ())) for caja in cajas["gestos"]]
+    if len(gestos) == 3:
+        gestos.insert(2, dibujo(nueva("tijera")))
+    sueltas += [(f"rps-{i}", f"noa-rps-{i}", figura) for i, figura in enumerate(gestos)]
     for nombre, referencia, figura in sueltas:
         base = peto(referencia)
         salida = vacio(base)

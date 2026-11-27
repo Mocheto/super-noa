@@ -63,7 +63,7 @@ const montado = (traje: string): Record<PoseNoa, string> => ({
   tijera: `noa-${traje}-rps-2-v1`,
   victoria: `noa-${traje}-rps-3-v1`,
 });
-export const ARTE_TRAJES: ArteTrajes = { caballera: montado("caballera") };
+export const ARTE_TRAJES: ArteTrajes = { exploradora: montado("exploradora"), pirata: montado("pirata"), caballera: montado("caballera") };
 
 /** Los que se pueden elegir: el peto y los que ya tienen su arte montado. */
 export const trajesDisponibles = (arte: ArteTrajes = ARTE_TRAJES): TrajeId[] => TRAJES.filter((id) => id === TRAJE_DE_SIEMPRE || Boolean(arte[id]));

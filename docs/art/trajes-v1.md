@@ -26,6 +26,8 @@ Receta que queda:
 5. En correr, las cuatro salen parecidas; las del peto también lo son, así que vale mientras cambien las piernas.
 6. Recortar con `prototypes/tools/trajes-recorte.py` (cada dibujo ocupa el sitio del dibujo del peto) y apuntar el traje en `ARTE_TRAJES`.
 
+**Montados los tres trajes y encendidos el 27-11-2026.** Exploradora y pirata salieron a la primera. Arreglos en el recorte: en la pirata, la tercera de correr (abierta de piernas en el aire) se cambia por la primera; las piezas de una lámina se reparten por su centro, y los dibujos que se tocan se separan por `CORTES`. La gata pirata al lanzar salió sin cola (se ve solo un instante).
+
 Peso: 1830 KB los once archivos de la caballera (5302 KB los del peto). Se usaron `caballera-correr.png` (segundo intento) y `caballera-tijera` (aparte).
 
 Los adjuntos y los originales van fuera del repositorio, en `../super-noa-arte-original/trajes-v1/` (adjuntos en `referencias/`). Un adjunto nuevo se prepara con `prototypes/tools/trajes-referencia.py`.

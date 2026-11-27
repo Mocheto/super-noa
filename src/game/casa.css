@@ -482,6 +482,36 @@
 .casa-gatitos.is-quieta .casa-flecha-madriguera { animation: none; }
 @media (prefers-reduced-motion: reduce) { .casa-flecha-madriguera { animation: none; } .casa-escena.is-bajando { transition: none; } }
 
+/* Los conejos (dibujo provisional): su botón mide 90 × 100 con los pies en el punto del suelo. Bajo tierra, más
+   pequeños. Con el dedo los toques llegan por la escena. */
+.casa-conejo { z-index: 2; width: 90px; height: 100px; margin: -100px 0 0 -45px; padding: 0; border: 0; background: transparent; font: inherit; overflow: visible; pointer-events: none; }
+.casa-conejo.is-abajo { scale: .75; transform-origin: 50% 100%; }
+.casa-conejo:focus-visible { outline: 4px solid #ffd76a; border-radius: 16px; }
+.casa-conejo-dibujo, .casa-conejo-dibujo svg { position: absolute; inset: 0; display: block; filter: drop-shadow(0 3px 2px #2f1d3355); }
+.casa-conejo-cuerpo, .casa-conejo-cabeza, .casa-conejo-nariz, .casa-conejo-patita { transform-box: fill-box; transform-origin: 50% 100%; }
+.casa-conejo.is-anda .casa-conejo-cuerpo { animation: casa-conejo-salta .32s ease-in-out infinite alternate; }
+.casa-conejo.is-juega .casa-conejo-cuerpo { animation: casa-conejo-brinca .4s ease-out infinite alternate; }
+.casa-conejo.is-mordisquea .casa-conejo-cabeza, .casa-conejo.is-come .casa-conejo-cabeza { transform: translateY(10px); animation: casa-conejo-mordisco .22s ease-in-out infinite alternate; }
+.casa-conejo.is-yergue .casa-conejo-cuerpo { transform: scale(.9, 1.14); }
+.casa-conejo.is-yergue .casa-conejo-nariz, .casa-conejo.is-caricia .casa-conejo-nariz { animation: casa-conejo-nariz .18s linear infinite alternate; }
+.casa-conejo.is-lava .casa-conejo-patita { animation: casa-conejo-lava .3s ease-in-out infinite alternate; }
+.casa-conejo.is-acurruca .casa-conejo-cuerpo, .casa-conejo.is-duerme .casa-conejo-cuerpo { transform: scale(1.08, .78); }
+@keyframes casa-conejo-salta { to { translate: 0 -14px; } }
+@keyframes casa-conejo-brinca { to { translate: 0 -30px; } }
+@keyframes casa-conejo-mordisco { to { translate: 0 3px; } }
+@keyframes casa-conejo-nariz { to { translate: 0 -2px; } }
+@keyframes casa-conejo-lava { to { translate: 4px -30px; } }
+.casa-conejo-zanahoria { position: absolute; bottom: 8px; width: 34px !important; }
+.casa-conejo-corazon { top: -22px; }
+.casa-conejo-sueno { position: absolute; right: -4px; top: 6px; width: 24px; height: 24px; filter: drop-shadow(2px 2px 0 #2f1d33); }
+.casa-conejo-nombre { position: absolute; left: 50%; bottom: 100%; margin: 0; padding: 4px 10px; transform: translateX(-50%); white-space: nowrap; border: 3px solid #2f1d33; border-radius: 12px; background: #fff8e9; color: #2f1d33; }
+.casa-conejo .casa-nam { top: -52px; font-size: 24px; }
+.casa-cueva { z-index: 1; padding: 0; border: 0; border-radius: 50%; background: transparent; pointer-events: none; }
+.casa-cueva:focus-visible { outline: 4px solid #ffd76a; }
+.casa-objeto.is-zanahoria { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M26 10l6-8M27 11l11-3M25 10V2' stroke='%235fa14a' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M22 9q10 0 9 9L4 37q-3 1-1-2z' fill='%23f08a2c' stroke='%232f1d33' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+.casa-gatitos.is-quieta .casa-conejo * { animation: none; }
+@media (prefers-reduced-motion: reduce) { .casa-conejo * { animation: none; } }
+
 /* El clima (issue 346): lienzo de la escena entera sobre el fondo y la ventana de noche. */
 .casa-clima { position: absolute; left: 0; top: 0; width: 1280px; height: 540px; image-rendering: pixelated; pointer-events: none; }
 

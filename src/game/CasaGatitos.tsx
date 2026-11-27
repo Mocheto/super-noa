@@ -20,6 +20,7 @@ import { apuntarVisita, comidaFavoritaDe, OLER_TRAS_ENTRAR_MS, SITIOS_PARA_OLER,
 import { DibujoAmigo } from "./DibujoAmigo";
 import { friendCatalog, type FriendFood } from "./friends";
 import { AMPLIACION_JARDIN, CORTE } from "./casaConejos";
+import { ConejosCasa, type MandosConejos } from "./ConejosCasa";
 import { FLECHA_BAJAR, FLECHA_SUBIR, LIENZO_CORTE, LIENZO_PRADERA, pintarCorte, pintarPradera, sobreFlecha } from "./casaMadrigueraArte";
 import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, CELDAS_MACETEROS, HOJA_MACETEROS, jardinDe, LUCIERNAGAS, luciernagaEn, maceteroBajo, maceteroPorRegar, regar, REGADERA, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
@@ -165,7 +166,7 @@ function conNecesidadesDePrueba(casa: CasaProgress): CasaProgress {
     [mundo, { ...gatito, necesidades: Object.fromEntries(NECESIDADES.map((id) => [id, valor])) as Record<NecesidadId, number> }])) };
 }
 
-type Arrastre = { herramienta: Herramienta | "mantita" | "regadera" | "plato" | "pluma"; /** Con el plato: la comida de los amigos elegida. */ comidaAmigo?: FriendFood; x: number; y: number; /** Con el cuenco: la comida elegida en el abanico. */ comida?: Comida };
+type Arrastre = { herramienta: Herramienta | "mantita" | "regadera" | "plato" | "pluma" | "zanahoria"; /** Con el plato: la comida de los amigos elegida. */ comidaAmigo?: FriendFood; x: number; y: number; /** Con el cuenco: la comida elegida en el abanico. */ comida?: Comida };
 /** Gatito cogido con el dedo: cuelga del dedo (`x`, `y` en la escena) hasta que se suelta. */
 type Cogido = { indice: number; x: number; y: number };
 /** Distancia del dedo a los pies del gatito que cuelga. */
@@ -249,6 +250,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // La madriguera (mapa «La madriguera de los conejos»): si se está viendo bajo tierra, y el paso entre una vista y otra.
   const [bajoTierra, setBajoTierra] = useState(false);
   const [paso, ponerPaso] = useEfimero<{ visto: true }>(temporizadores);
+  const conejosRef = useRef<MandosConejos | null>(null);
   const praderaLienzoRef = useRef<HTMLCanvasElement | null>(null);
   const corteLienzoRef = useRef<HTMLCanvasElement | null>(null);
   /** Gatitos que van solos hacia la puerta para cambiar de estancia. */
@@ -1272,6 +1274,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       } else if (arrastre.herramienta === "plato") {
         setAbanicoAmigos(false);
         if (arrastre.comidaAmigo && sobreVisitante(punto)) darleDeComer(arrastre.comidaAmigo);
+      } else if (arrastre.herramienta === "zanahoria") {
+        conejosRef.current?.zanahoria(punto);
       } else if (arrastre.herramienta === "regadera") {
         const indice = maceteroBajo(punto.x, punto.y);
         if (indice !== null) regarMacetero(indice);
@@ -1287,7 +1291,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     };
   });
 
-  const cogerObjeto = (herramienta: Herramienta | "mantita" | "regadera" | "plato" | "pluma", comida?: Comida, comidaAmigo?: FriendFood) => (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const cogerObjeto = (herramienta: Arrastre["herramienta"], comida?: Comida, comidaAmigo?: FriendFood) => (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (fase !== "casa" || event.button !== 0) return;
     event.preventDefault();
     const punto = enEscena(event) ?? { x: 0, y: 0 };
@@ -1393,8 +1397,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }
     const tocado = deslizRef.current;
     const toque = tocado && !tocado.moviendo ? tocado.punto : undefined;
-    if (bajoTierra) { if (toque && sobreFlecha(FLECHA_SUBIR, toque)) mirarMadriguera(false); }
+    if (bajoTierra) {
+      if (toque && sobreFlecha(FLECHA_SUBIR, toque)) mirarMadriguera(false);
+      else if (toque) conejosRef.current?.tocar(toque);
+    }
     else if (enJardin && toque && sobreFlecha(FLECHA_BAJAR, toque)) mirarMadriguera(true);
+    else if (enJardin && toque && conejosRef.current?.tocar(toque)) { /* Un conejo, y nada más. */ }
     else if (decorando && tocado?.punto && !tocado.moviendo) setElegido(muebleEn(tocado.punto.x, tocado.punto.y));
     else if (noche && !enJardin && tocado?.punto && !tocado.moviendo && enLaLampara(tocado.punto)) cambiarLampara();
     else if (!enJardin && tocado?.punto && !tocado.moviendo && enLaPecera(tocado.punto.x, tocado.punto.y)) {
@@ -1615,6 +1623,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             {fase === "casa" && !bajoTierra && <FlechaMadriguera sentido="bajar" etiqueta={t("casa.madriguera.bajar.oculto")} onUsar={() => mirarMadriguera(true)} />}
             {bajoTierra && <FlechaMadriguera sentido="subir" etiqueta={t("casa.madriguera.subir.oculto")} onUsar={() => mirarMadriguera(false)} />}
           </>}
+          <ConejosCasa ref={conejosRef} visible={enJardin} vista={bajoTierra ? "abajo" : "arriba"} noche={nocheReloj} />
           {/* Muebles, cada uno en la versión elegida, sobre la habitación vacía. */}
           {!enJardin && MUEBLES_DE_LAMINA.map((mueble) => {
             const dibujo = MUEBLES_CASA[mueble].dibujo!;
@@ -1784,6 +1793,12 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               {horaDeDormir && <BotonControl className="casa-bandeja-modo casa-dormir" pictograma="estrella" etiqueta="casa.dormir.empezar.oculto" onClick={empezarADormir} />}
             </>}
         </span>
+        {/* La zanahoria, solo arriba y de día: de noche los conejos duermen. */}
+        {!bajoTierra && !nocheReloj && <button type="button" className={`casa-bandeja-objeto${arrastre?.herramienta === "zanahoria" ? " is-cogido" : ""}`}
+          aria-label={t("casa.madriguera.zanahoria.oculto")} onPointerDown={cogerObjeto("zanahoria")}
+          onClick={(event) => { if (event.detail === 0) conejosRef.current?.zanahoriaAlCercano(camara.x + anchoVisible / 2); }}>
+          <i className="casa-objeto is-zanahoria" />
+        </button>}
       </div>}
       {fase === "casa" && bano === null && !decorando && !acostando && !mirandoJaula && !mirandoMadriguera && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">
         <span className="casa-bandeja-modos">

@@ -141,6 +141,17 @@ export const casa = {
     bajar: { oculto: "Bajar a la madriguera" },
     subir: { oculto: "Subir de la madriguera" },
     bandeja: { oculto: "Cosas de la madriguera" },
+    nombre: {
+      canela: { rotulo: "CANELA" },
+      algodon: { rotulo: "ALGODON" },
+    },
+    conejo: { oculto: "{nombre}: tócalo para acariciarlo" },
+    zanahoria: { oculto: "Zanahoria: arrástrala hasta un conejo" },
+    cueva: {
+      dormitorio: { oculto: "Dormitorio de los conejos: tócalo para que vaya uno" },
+      despensa: { oculto: "Despensa de zanahorias: tócala para que vaya un conejo" },
+      juegos: { oculto: "Cueva de juegos: tócala para que vaya un conejo" },
+    },
   },
   jardin: {
     mariposa: { oculto: "Mariposa: tócala para que se pose junto a un gatito" },

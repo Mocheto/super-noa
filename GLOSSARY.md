@@ -191,8 +191,12 @@ Animal amigo, de una pantalla que Noa ya ha completado, que llama a la puerta de
 _Avoid_: Visita (es la vista de la pestaña Amigos), invitado, mascota
 
 **Ampliación**:
-Trozo de la habitación a la izquierda de la puerta, al que se llega deslizando la vista; ahí están la pecera y su mueble. Los gatitos también andan por ella. El jardín no tiene.
-_Avoid_: Ala, habitación nueva, estancia (la ampliación es parte de la habitación)
+Trozo añadido a la izquierda de una estancia, al que se llega deslizando la vista y que sigue siendo parte de ella. La de la habitación tiene la pecera y la jaula de hámsters, y los gatitos andan por parte de ella; la del jardín tiene la madriguera.
+_Avoid_: Ala, habitación nueva, estancia
+
+**Madriguera**:
+El hogar de los dos conejos de la casa, en la ampliación del jardín: un montículo por fuera y, bajo tierra, unos túneles que se ven en corte al bajar con la flecha. No es una estancia: los gatitos no entran.
+_Avoid_: Conejera, jaula, cueva
 
 **Pecera**:
 Pecera grande sobre un mueble, al fondo de la ampliación, con cuatro peces (naranja, azul, payaso y globo). Noa toca el agua para llamarlos, el bote para darles de comer, un pez para ver su gracia y el interruptor para apagar la luz y que duerman. De noche se apaga sola. Un gatito sentado delante la mira y los peces se juntan a mirarlo.

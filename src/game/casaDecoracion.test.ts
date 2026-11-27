@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { existsSync } from "node:fs";
 import { casaVacia, decoracionDe, normalizeCasa } from "./casa.ts";
-import { cajasDe, cambiarMueble, cambiarTonoPared, DECORACION_DE_SIEMPRE, JUEGOS_TUBOS, MADERA_DESDE, muebleEn, MUEBLES, MUEBLES_CASA, normalizeDecoracion, PARED_HASTA, recolorear, SIN_ARTE, TONOS_PARED, VERSIONES } from "./casaDecoracion.ts";
+import { cajasDe, cambiarMueble, cambiarTonoPared, DECORACION_DE_SIEMPRE, JUEGOS_TUBOS, MADERA_DESDE, muebleEn, MUEBLES, MUEBLES_CASA, normalizeDecoracion, PARED_HASTA, recolorear, TONOS_PARED, VERSIONES } from "./casaDecoracion.ts";
 import { crearJaula, estrenar } from "./casaHamsters.ts";
+import { casitaDe } from "./casaHamstersArte.ts";
+import { PECERA } from "./casaPecera.ts";
 import { dentroDelSuelo, HABITACION_CASA as H } from "./casaHabitacion.ts";
 import { parseProgress, serializeProgress, emptyProgress } from "./progress.ts";
 
@@ -99,14 +101,18 @@ test("las partes de color no mueven el sitio de los gatitos ante la pecera", () 
   assert.deepEqual(MUEBLES_CASA.mueblePecera.oler, { x: H.sitios.pecera.x, y: H.sitios.pecera.y });
 });
 
-test("las partes de la pecera y la jaula se tocan por su sitio; las que esperan su arte, todavía no", () => {
+test("las partes de la pecera y la jaula se tocan por su sitio", () => {
   const centro = (caja: { x: number; y: number; ancho: number; alto: number }) => [caja.x + caja.ancho / 2, caja.y + caja.alto / 2] as const;
-  for (const id of ["mueblePecera", "baseJaula"] as const) for (const caja of cajasDe(id)) assert.equal(muebleEn(...centro(caja)), id);
+  for (const id of ["mueblePecera", "adornoPecera", "casita", "baseJaula"] as const) for (const caja of cajasDe(id)) assert.equal(muebleEn(...centro(caja)), id);
   assert.equal(cajasDe("baseJaula").length, 2, "bandeja y tejado");
   assert.equal(muebleEn(-1000, 300), "tubos");
-  assert.deepEqual([...SIN_ARTE], ["adornoPecera", "casita"]);
-  assert.equal(muebleEn(...centro(cajasDe("casita")[0])), "tubos");
-  assert.notEqual(muebleEn(...centro(cajasDe("adornoPecera")[0])), "adornoPecera");
+});
+
+test("hay un adorno y una casita por versión, y sus láminas existen", () => {
+  const existe = (ruta: string) => existsSync(new URL(`../../public/${ruta.replace("./", "")}`, import.meta.url));
+  assert.equal(PECERA.adornos.length, VERSIONES.length);
+  for (const ruta of [PECERA.fondo, ...PECERA.adornos, ...VERSIONES.map((v) => casitaDe(v).hoja)]) assert.ok(existe(ruta), ruta);
+  assert.deepEqual(VERSIONES.map((v) => casitaDe(v).colocado.celda), [4, 0, 1, 2, 3]);
 });
 
 test("el recoloreado cambia la madera y la base, y respeta contornos, barrotes y la versión de siempre", () => {

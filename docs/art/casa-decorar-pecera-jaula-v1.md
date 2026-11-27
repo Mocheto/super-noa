@@ -8,7 +8,7 @@ La primera versión de cada parte es la de ahora y no se genera.
 
 - **Generadas** en [Generar las láminas](https://github.com/Mocheto/super-noa/issues/432). Las originales están en `../super-noa-arte-original/casa-decorar-pecera-v1/` (`dinosaurios`, `hielo`, `barcos`, `celeste` y `casitas`, en WebP).
 - Con `quitar_verde` y `grupos(hueco=12)` de `casa-pecera-recorte.py` salen limpias: cinco piezas por adorno y cuatro casitas.
-- El barco tiene su hueco algo por encima de la base: al colocarlo, comprobar que cae sobre el punto del payaso.
+- **Montadas** (ver [Montaje](#montaje)).
 
 ## Qué se genera
 
@@ -63,35 +63,12 @@ Chunky, readable pixel art in the style of a charming 16-bit game for young chil
 
 ## Montaje
 
-Para [Montar el adorno de la pecera y las casitas](https://github.com/Mocheto/super-noa/issues/434). Las medidas van en px del dibujo de la pecera (412 × 354, `PECERA`).
+Hecho en [Montar el adorno de la pecera y las casitas](https://github.com/Mocheto/super-noa/issues/434) con:
 
-### Separar el adorno de ahora
+```bash
+uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-decorar-pecera-recorte.py --origen ../super-noa-arte-original/casa-decorar-pecera-v1
+```
 
-Hoy castillo, algas, coral, piedras, concha y estrella van pintados dentro de `casa-pecera-fondo-v1.webp`. Quedan así: un fondo limpio (`casa-pecera-fondo-v2.webp`, solo mueble, agua y arena) y cada adorno en una capa transparente de 412 × 354 entre el fondo y el cofre, también la de siempre (`casa-pecera-adorno-castillo-v1.webp`).
-
-- **Si aparecen las láminas originales** del mueble y la decoración (prefijos `ca710624` y `8656a874` en `casa-pecera-recorte.py`; no están en este equipo), `monta_fondo` las separa exactas: guarda el mueble antes de los `pon(...)` y la decoración en otra capa.
-- **Si no, se saca del publicado** (probado en un boceto sin commit). Se rellena cada fila interpolando entre el píxel 2 px a la izquierda y el de 2 px a la derecha de estas cajas `(x0, y0, x1, y1)`: `(26, 114, 104, 193)`, `(110, 136, 188, 193)`, `(202, 156, 264, 193)` y `(286, 98, 372, 193)`. El adorno son los píxeles que difieren del relleno en más de 28 en algún canal. Sale casi limpio; falta quedarse solo con las piezas conectadas grandes (quedan restos de brillos y del borde de la arena), rellenar solo bajo ellas y rehacer el borde de la arena copiando un tramo sin adorno. Revisar a ×4.
-
-La versión 1 debe verse igual que ahora.
-
-### Dónde va cada pieza
-
-Misma colocación en los cinco adornos (centro x, alto; apoyadas en y ≈ 188), como en `monta_fondo`:
-
-| Pieza | Centro x | Tamaño máximo |
-|---|---|---|
-| 1 | 48 | alto 70 |
-| 2 | 83 | alto 50 |
-| 3 | 162 | alto 48 |
-| 4 | 233 | ancho 56 |
-| 5 (escondite) | 328 | alto 87, ancho 86 |
-
-El cofre (x 52 a 108, y 126 a 182) sigue por delante de las piezas 1 y 2 y no cambia.
-
-### El escondite del payaso
-
-El pez payaso nada a `PECERA.castillo` (`x: 328, y: 178`) y allí desaparece. Cada pieza 5 va centrada en x = 328 con su hueco oscuro sobre ese punto. Si al montarla el hueco queda en otro sitio, el punto pasa a ser un dato de cada adorno, con x entre 300 y 354.
-
-### Las casitas
-
-Cada una en una celda de 96 × 96, centrada y con la base en la fila 94, como la de ahora. La puerta de la de ahora mide unos 31 × 38 px de celda, con centro en x = 45 y suelo en la fila 92. `PUERTA_CASITA` pasa a depender de la versión: se miden el centro y el suelo de la puerta de cada una, y se comprueba que el hámster asomado (unos 40 × 29 px de celda) queda bien. La foto (`casaHamstersFoto.ts`) usa la misma celda.
+- **El adorno de siempre** se saca de `casa-pecera-fondo-v1.webp` (las láminas originales del mueble no están en el equipo): sale `casa-pecera-fondo-v2.webp`, con agua y arena, y `casa-pecera-adorno-castillo-v1.webp`. Juntos son iguales al `-v1` píxel a píxel. El `-v1` sigue publicado porque es la entrada del script; si `casa-pecera-recorte.py` lo regenera, hay que volver a ejecutar este.
+- **Los temas:** cinco capas de 412 × 354. La pieza 2 va en x = 126 y no en 83, porque ahí la tapa el cofre. La 5 se centra por su hueco en x = 328; el script falla si el hueco no cubre el punto del payaso (328, 178), así que el punto es el mismo en todos.
+- **Las casitas:** `casa-jaula-casitas-v1.webp`, cuatro celdas de 96 × 96 con la base en la fila 94. El centro de cada puerta está en `casaHamstersArte.ts` (`casitaDe`); si cambia una lámina, se copia el que imprime el script.

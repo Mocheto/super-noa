@@ -7,11 +7,17 @@
  * componente `PeceraCasa.tsx` pasa el reloj y el azar y pinta lo que sale de aquí.
  *
  * Todas las medidas de dentro de la pecera (`x`, `y`) van en px de su dibujo (412 × 354, de
- * `prototypes/tools/casa-pecera-arte.py`); `PECERA.left`/`top` lo colocan en la escena.
+ * `prototypes/tools/casa-pecera-recorte.py`); `PECERA.left`/`top` lo colocan en la escena.
  */
 
 export const PECERA = {
-  fondo: "./assets/sprites/casa-pecera-fondo-v1.webp",
+  /** El mueble con la pecera, solo con agua y arena. */
+  fondo: "./assets/sprites/casa-pecera-fondo-v2.webp",
+  /**
+   * El adorno del fondo, una capa del tamaño del dibujo por versión (castillo, dinosaurios, hielo, barcos y celeste), de
+   * `prototypes/tools/casa-decorar-pecera-recorte.py`. Todos tienen su hueco sobre `castillo`, donde se esconde el payaso.
+   */
+  adornos: ["castillo", "dinosaurios", "hielo", "barcos", "celeste"].map((tema) => `./assets/sprites/casa-pecera-adorno-${tema}-v1.webp`),
   cristal: "./assets/sprites/casa-pecera-cristal-v1.webp",
   peces: "./assets/sprites/casa-peces-v1.webp",
   objetos: "./assets/sprites/casa-pecera-objetos-v1.webp",

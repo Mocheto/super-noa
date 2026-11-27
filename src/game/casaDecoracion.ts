@@ -3,7 +3,7 @@
  * tiene cinco versiones (la 0 es la de siempre) y un sitio fijo en la habitación: se cambia de versión, nunca de
  * sitio, y los sitios de interés de los gatitos no se mueven. La pared cambia el tono de sus rayas por código.
  * La pecera y la jaula de hámsters también se decoran, por partes (mapa «Decorar la pecera y la jaula de hámsters»):
- * tres cambian de color por código y dos, el adorno de la pecera y la casita, esperan sus láminas.
+ * tres cambian de color por código y dos, el adorno de la pecera y la casita, tienen sus láminas.
  * Solo lógica: sin dibujo.
  */
 
@@ -28,7 +28,7 @@ export type Mueble = {
   /**
    * Su lámina (cinco celdas en fila, una por versión, de `prototypes/tools/casa-decorar-recorte.py`) y dónde se pone
    * cada celda en la escena: apoyada abajo y centrada en el de siempre. Sin lámina: la pared y las partes de la pecera y
-   * la jaula que cambian de color por código, y las que aún esperan su arte (`SIN_ARTE`).
+   * la jaula: cambian de color por código o llevan su propio arte (`PECERA.adornos`, `casitaDe`).
    */
   dibujo: (Caja & { imagen: string }) | null;
 };
@@ -90,10 +90,6 @@ export const MUEBLES_CASA: Readonly<Record<MuebleId, Mueble>> = {
   },
   tubos: { caja: enLaJaula(DIBUJO.x, DIBUJO.y, DIBUJO.ancho, DIBUJO.alto), oler: null, dibujo: null },
 };
-
-/** Partes que aún no tienen sus láminas (se montan en «Montar el adorno de la pecera y las casitas»): no se ofrecen. */
-export const SIN_ARTE: readonly MuebleId[] = ["adornoPecera", "casita"];
-export const sePuedeDecorar = (mueble: MuebleId) => !SIN_ARTE.includes(mueble);
 
 // --- Colores de la pecera y la jaula (valores del boceto) -------------------------------------------------------------
 
@@ -193,7 +189,7 @@ export function cajasDe(mueble: MuebleId): readonly Caja[] {
 /** El mueble que hay en el punto (x, y) de la escena: el de la caja que lo contiene, o la pared por encima del zócalo. */
 export function muebleEn(x: number, y: number): MuebleId | null {
   // El orden de `MUEBLES` importa en la jaula: la casita y la base van antes que los tubos, que lo ocupan todo.
-  const dentro = MUEBLES.find((id) => sePuedeDecorar(id) && cajasDe(id).some((caja) => x >= caja.x && x <= caja.x + caja.ancho && y >= caja.y && y <= caja.y + caja.alto));
+  const dentro = MUEBLES.find((id) => cajasDe(id).some((caja) => x >= caja.x && x <= caja.x + caja.ancho && y >= caja.y && y <= caja.y + caja.alto));
   return dentro ?? (y >= 0 && y < PARED_HASTA ? "pared" : null);
 }
 

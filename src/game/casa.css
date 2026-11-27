@@ -471,7 +471,7 @@
 .casa-pecera { overflow: visible; pointer-events: none; image-rendering: pixelated; }
 .casa-escena.is-jardin .casa-pecera { display: none; }
 .casa-pecera > * { position: absolute; }
-.casa-pecera-fondo, .casa-pecera-cristal { left: 0; top: 0; width: 412px; height: 354px; image-rendering: pixelated; pointer-events: none; }
+.casa-pecera-fondo, .casa-pecera-adorno, .casa-pecera-cristal { left: 0; top: 0; width: 412px; height: 354px; image-rendering: pixelated; pointer-events: none; }
 .casa-pecera-cofre { background-repeat: no-repeat; image-rendering: pixelated; pointer-events: none; }
 .casa-pecera-cofre.is-abierto { background-position: -56px 0; }
 .casa-pez { background-repeat: no-repeat; image-rendering: pixelated; pointer-events: none; will-change: transform; }

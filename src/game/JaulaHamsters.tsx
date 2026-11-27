@@ -7,10 +7,10 @@ import {
 } from "./casaHamsters";
 import {
   AGUA_EN_BOTELLA, ARTE_JAULA, ASOMADO, CAJA_JAULA, cajaDeHamster, CELDA_OBJETO, COLOCADOS, CUADRO_HAMSTER, EJE_COLUMPIO, EJE_RUEDA, FONDO_JAULA,
-  OBJETOS_JAULA, POSES, PUERTA_CASITA, type Colocado, type Pose,
+  OBJETOS_JAULA, POSES, casitaDe, type Colocado, type Pose,
 } from "./casaHamstersArte";
 import { HABITACION_CASA } from "./casaHabitacion";
-import type { ColoresTubos } from "./casaDecoracion";
+import type { ColoresTubos, Version } from "./casaDecoracion";
 import { tClave } from "../textos/index.ts";
 
 /** Lo que la casa le pide a la jaula; los puntos van en px de escena. */
@@ -41,6 +41,8 @@ type Props = {
   /** El dibujo de la jaula (base y tejado) y el juego de tubos elegidos al decorar. */
   base: string;
   tubos: ColoresTubos;
+  /** La casita elegida. */
+  casita: Version;
 };
 
 const NOMBRE_MS = 1400;
@@ -81,14 +83,14 @@ function Dibujado({ hamster, ahora, quieto }: { hamster: Hamster; ahora: number;
 }
 
 /** Dentro de la casita: la cabeza y las manitas asoman por la puerta, subiendo desde el suelo. */
-function EnLaCasita({ hamster, ahora, quieto }: { hamster: Hamster; ahora: number; quieto: boolean }) {
+function EnLaCasita({ hamster, ahora, quieto, puerta }: { hamster: Hamster; ahora: number; quieto: boolean; puerta: { x: number; suelo: number } }) {
   const asomo = quieto ? 1 : asomoEnCasita(hamster.hasta - ahora);
   const escala = hamster.id === "perla" ? 0.74 : 0.68;
   const ancho = ASOMADO.ancho * escala;
   const alto = ASOMADO.alto * escala;
   const vaiven = quieto ? 0 : Math.sin(ahora / 260) * 1.5;
   // El recorte de este `svg` acaba en el suelo de la puerta: lo que aún no ha subido no se ve.
-  return <svg x={PUERTA_CASITA.x - ancho / 2 + vaiven} y={PUERTA_CASITA.suelo - alto} width={ancho} height={alto} viewBox={`0 0 ${ancho} ${alto}`}>
+  return <svg x={puerta.x - ancho / 2 + vaiven} y={puerta.suelo - alto} width={ancho} height={alto} viewBox={`0 0 ${ancho} ${alto}`}>
     <svg y={alto * (1 - asomo)} width={ancho} height={alto}
       viewBox={`${POSES.indexOf("asomado") * CUADRO_HAMSTER.ancho + ASOMADO.x} ${ASOMADO.y} ${ASOMADO.ancho} ${ASOMADO.alto}`}>
       <image href={ARTE_JAULA.hamsters[hamster.id]} width={CUADRO_HAMSTER.ancho * POSES.length} height={CUADRO_HAMSTER.alto} />
@@ -96,10 +98,10 @@ function EnLaCasita({ hamster, ahora, quieto }: { hamster: Hamster; ahora: numbe
   </svg>;
 }
 
-/** Una pieza de la hoja de objetos. */
-function Objeto({ de }: { de: Colocado }) {
+/** Una pieza de la hoja de objetos (o de otra hoja con celdas iguales). */
+function Objeto({ de, hoja = ARTE_JAULA.objetos, celdas = OBJETOS_JAULA.length }: { de: Colocado; hoja?: string; celdas?: number }) {
   return <svg x={de.x} y={de.y} width={de.lado} height={de.lado} viewBox={`${de.celda * CELDA_OBJETO} 0 ${CELDA_OBJETO} ${CELDA_OBJETO}`}>
-    <image href={ARTE_JAULA.objetos} width={CELDA_OBJETO * OBJETOS_JAULA.length} height={CELDA_OBJETO} />
+    <image href={hoja} width={CELDA_OBJETO * celdas} height={CELDA_OBJETO} />
   </svg>;
 }
 
@@ -167,7 +169,7 @@ function Cosas({ jaula, ahora, quieto }: { jaula: Jaula; ahora: number; quieto: 
  * la casa; las reglas están en `casaHamsters.ts`. Fuera de la jaula, el hámster se dibuja en una capa por encima de la
  * habitación entera.
  */
-export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar, onSonido, onPista, onAviso, base, tubos }: Props) {
+export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar, onSonido, onPista, onAviso, base, tubos, casita }: Props) {
   const [jaula, setJaula] = useState<Jaula>(() => crearJaula(guardado, performance.now(), Math.random));
   const [ahora, setAhora] = useState(() => performance.now());
   const [nombrado, setNombrado] = useState<{ id: HamsterId; hasta: number } | null>(null);
@@ -244,6 +246,7 @@ export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar,
     estrenar: (parte) => meterRef.current(estrenar(jaulaRef.current, parte, performance.now(), Math.random)),
   }), []);
 
+  const laCasita = casitaDe(casita);
   const dentro = jaula.hamsters.filter((h) => !h.fuera);
   const fuera = jaula.hamsters.filter((h) => h.fuera);
   const conNombre = nombrado && nombrado.hasta > ahora ? dentro.find((h) => h.id === nombrado.id) : undefined;
@@ -257,8 +260,8 @@ export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar,
       {dentro.filter((h) => h.hace !== "casita").map((h) => <Dibujado key={h.id} hamster={h} ahora={ahora} quieto={reduceMotion} />)}
       <Delante tubos={tubos} />
       {/* La casita, por delante de los tubos: si no, la boca del tubo rojo tapa la puerta. */}
-      <Objeto de={COLOCADOS.casita} />
-      {dentro.filter((h) => h.hace === "casita").map((h) => <EnLaCasita key={h.id} hamster={h} ahora={ahora} quieto={reduceMotion} />)}
+      <Objeto de={laCasita.colocado} hoja={laCasita.hoja} celdas={laCasita.celdas} />
+      {dentro.filter((h) => h.hace === "casita").map((h) => <EnLaCasita key={h.id} hamster={h} ahora={ahora} quieto={reduceMotion} puerta={laCasita.puerta} />)}
       <g transform={`translate(${PUERTA_JAULA.x},${PUERTA_JAULA.y + (jaula.puertaAbierta ? PUERTA_JAULA.alto : 0)}) scale(1,${jaula.puertaAbierta ? 0.55 : -1}) translate(0,${jaula.puertaAbierta ? 0 : -PUERTA_JAULA.alto})`}>
         <rect width={PUERTA_JAULA.ancho} height={PUERTA_JAULA.alto} rx="8" fill="#fff" fillOpacity="0.25" stroke="#ff8a3d" strokeWidth="6" />
         <circle cx={PUERTA_JAULA.ancho / 2} cy={PUERTA_JAULA.alto - 12} r="7" fill="#ff8a3d" />

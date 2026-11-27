@@ -4,7 +4,7 @@
  */
 import { CAMINOS, CUBOS, DIBUJO, NODOS, PUERTA_JAULA, REPISA, SITIO_JAULA, type HamsterId, type Punto } from "./casaHamsters.ts";
 import {
-  AGUA_EN_BOTELLA, ARTE_JAULA, CAJA_JAULA, cajaDeHamster, CELDA_OBJETO, COLOCADOS, CUADRO_HAMSTER, FONDO_JAULA, POSES, type Colocado,
+  AGUA_EN_BOTELLA, ARTE_JAULA, CAJA_JAULA, cajaDeHamster, casitaDe, CELDA_OBJETO, COLOCADOS, CUADRO_HAMSTER, FONDO_JAULA, POSES, type Colocado,
 } from "./casaHamstersArte.ts";
 import { JUEGOS_TUBOS } from "./casaDecoracion.ts";
 import { dibujoDeColor } from "./casaDecoracionArte.ts";
@@ -19,9 +19,11 @@ export const saleLaJaula = (foto: Pick<FotoCasa, "vista" | "jardin">) => !foto.j
 /** Pinta la jaula en el lienzo de una foto de `escala` px por px de escena. */
 export async function pintarJaulaEnFoto(contexto: CanvasRenderingContext2D, foto: Pick<FotoCasa, "vista" | "decoracion">, escala: number, cargar: (ruta: string) => Promise<HTMLImageElement>): Promise<void> {
   const tubos = JUEGOS_TUBOS[foto.decoracion.tubos];
+  const casita = casitaDe(foto.decoracion.casita);
   const base = await dibujoDeColor(ARTE_JAULA.jaula, "baseJaula", foto.decoracion.baseJaula);
   const [jaula, objetos, perla, bolita] = await Promise.all([base, ARTE_JAULA.objetos, ARTE_JAULA.hamsters.perla, ARTE_JAULA.hamsters.bolita].map(cargar));
   const hojas: Readonly<Record<HamsterId, HTMLImageElement>> = { perla, bolita };
+  const hojaCasita = await cargar(casita.hoja);
   contexto.save();
   contexto.setTransform(escala, 0, 0, escala, -foto.vista.x * escala, 0);
   // De aquí en adelante, en px del dibujo del laberinto.
@@ -99,7 +101,8 @@ export async function pintarJaulaEnFoto(contexto: CanvasRenderingContext2D, foto
       contexto.fillRect(x + dx, y + dy, w, h);
     }
   }
-  objeto(COLOCADOS.casita);
+  const { colocado } = casita;
+  contexto.drawImage(hojaCasita, colocado.celda * CELDA_OBJETO, 0, CELDA_OBJETO, CELDA_OBJETO, colocado.x, colocado.y, colocado.lado, colocado.lado);
   contexto.strokeStyle = "#ff8a3d";
   contexto.lineWidth = 6;
   contexto.strokeRect(PUERTA_JAULA.x, PUERTA_JAULA.y, PUERTA_JAULA.ancho, PUERTA_JAULA.alto);

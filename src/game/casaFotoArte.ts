@@ -106,6 +106,8 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     const entera = (imagen: HTMLImageElement) => ({ x: 0, y: 0, ancho: imagen.naturalWidth, alto: imagen.naturalHeight });
     const fondoPecera = await cargar(await dibujoDeColor(PECERA.fondo, "mueblePecera", foto.decoracion.mueblePecera));
     pintar(fondoPecera, entera(fondoPecera), caja);
+    const adorno = await cargar(PECERA.adornos[foto.decoracion.adornoPecera]);
+    pintar(adorno, entera(adorno), caja);
     const hojaPeces = await cargar(PECERA.peces);
     const { ancho: anchoPez, alto: altoPez } = PECERA.cuadroPez;
     const hojaCaballito = await cargar(PECERA.caballito.hoja);

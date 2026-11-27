@@ -8,6 +8,8 @@ import { COSAS, NODOS, type ColorTubo, type HamsterId } from "./casaHamsters.ts"
 export const ARTE_JAULA = {
   jaula: "./assets/sprites/casa-jaula-v1.webp",
   objetos: "./assets/sprites/casa-jaula-objetos-v1.webp",
+  /** Las casitas que se eligen al decorar (huevo, iglú, barquito y nube), en cuatro celdas como las de los objetos. */
+  casitas: "./assets/sprites/casa-jaula-casitas-v1.webp",
   /** Los botones de la bandeja: saco de comida y jarrita de agua, en dos celdas. */
   bandeja: "./assets/sprites/casa-jaula-bandeja-v1.webp",
   hamsters: { perla: "./assets/sprites/casa-hamster-perla-v1.webp", bolita: "./assets/sprites/casa-hamster-bolita-v1.webp" },
@@ -66,10 +68,22 @@ export function cajaDeHamster(id: HamsterId) {
   return { x: -48 * escala, y: 19 - CUADRO_HAMSTER.pie * escala, ancho: CUADRO_HAMSTER.ancho * escala, alto: CUADRO_HAMSTER.alto * escala };
 }
 
-/** La puerta de la casita, en px del dibujo: su centro y su suelo. */
-export const PUERTA_CASITA = {
-  x: COLOCADOS.casita.x + (45 * COLOCADOS.casita.lado) / CELDA_OBJETO,
-  suelo: COLOCADOS.casita.y + (92 * COLOCADOS.casita.lado) / CELDA_OBJETO,
-} as const;
+/** El centro de la puerta de cada casita en su celda (las nuevas, como las imprime su script de recorte). */
+const CENTRO_PUERTA = [45, 48, 49, 50, 48] as const;
+
+/**
+ * La casita de la versión elegida al decorar (la 0 es la de siempre, de la hoja de objetos): su hoja, cuántas celdas
+ * tiene, dónde va y su puerta, en px del dibujo (centro y suelo), por la que asoma el hámster.
+ */
+export function casitaDe(version: 0 | 1 | 2 | 3 | 4) {
+  const { x, y, lado } = COLOCADOS.casita;
+  const k = lado / CELDA_OBJETO;
+  return {
+    hoja: version ? ARTE_JAULA.casitas : ARTE_JAULA.objetos,
+    celdas: version ? 4 : OBJETOS_JAULA.length,
+    colocado: version ? { ...COLOCADOS.casita, celda: version - 1 } : COLOCADOS.casita,
+    puerta: { x: x + CENTRO_PUERTA[version] * k, suelo: y + 92 * k },
+  };
+}
 /** La cabeza y las manitas dentro del cuadro «asomado», igual en las dos hojas. */
 export const ASOMADO = { x: 27, y: 38, ancho: 42, alto: 32 } as const;

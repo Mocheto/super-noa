@@ -13,7 +13,7 @@ import { aterrizar, escalaEnSuelo, HABITACION_CASA, sobreElArmario, sobreLaBaner
 import { enLaPecera, PECERA, type SonidoPecera } from "./casaPecera";
 import { PeceraCasa, type ToquePecera } from "./PeceraCasa";
 import { JaulaHamsters, type MandosJaula } from "./JaulaHamsters";
-import { ARTE_JAULA } from "./casaHamstersArte";
+import { ARTE_JAULA, casitaDe } from "./casaHamstersArte";
 import { ESCONDITES, SITIO_JAULA, type EsconditeId, type HamstersProgress, type SonidoJaula } from "./casaHamsters";
 import { apuntarVisita, comidaFavoritaDe, OLER_TRAS_ENTRAR_MS, SITIOS_PARA_OLER, COMIDAS_AMIGOS, cuerpoDelVisitante, darDeComerAlVisitante, DESPEDIDA_MS, elegirVisitante, HOJA_COMIDAS_AMIGOS, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, SE_VA_TRAS_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";
 import { DibujoAmigo } from "./DibujoAmigo";
@@ -27,7 +27,7 @@ import { PiezaAccesorio } from "./PiezaAccesorio";
 import { arropadosDe, arropar, puedeDormir, todosArropados } from "./casaDormir";
 import { arropadoDe, CUADROS_ARROPADO, HOJA_MANTITA } from "./casaDormirArte";
 import { guardarFoto, type FotoCasa } from "./casaFoto";
-import { cajasDe, cambiarMueble, esMuebleMagico, JUEGOS_TUBOS, MADERA_DESDE, muebleEn, MUEBLES_CASA, PARED_HASTA, sePuedeDecorar, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
+import { cajasDe, cambiarMueble, esMuebleMagico, JUEGOS_TUBOS, MADERA_DESDE, muebleEn, MUEBLES_CASA, PARED_HASTA, TONOS_PARED, VERSIONES, type MuebleId, type Version } from "./casaDecoracion";
 import { fondoConPared } from "./casaDecoracionArte";
 import { useDibujoDeColor } from "./useDibujoDeColor";
 import { cssAssetUrl } from "./assets";
@@ -1371,10 +1371,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             return <i key={mueble} className={`casa-mueble${esMuebleMagico(mueble, decoracion[mueble]) ? " is-magica" : ""}`} aria-hidden="true"
               style={{ left: dibujo.x, top: dibujo.y, width: dibujo.ancho, height: dibujo.alto, ...celdaDeMueble(mueble, decoracion[mueble]) }} />;
           })}
-          <PeceraCasa toque={toquePecera} noche={noche} reduceMotion={reduceMotion} gatoMirando={mirandoLaPecera ? mirandoLaPecera.x - PECERA.left : null} onSonido={sonarPecera} fondo={dibujoPecera} decorando={decorando} />
+          <PeceraCasa toque={toquePecera} noche={noche} reduceMotion={reduceMotion} gatoMirando={mirandoLaPecera ? mirandoLaPecera.x - PECERA.left : null} onSonido={sonarPecera} fondo={dibujoPecera} adorno={PECERA.adornos[decoracion.adornoPecera]} decorando={decorando} />
           <JaulaHamsters ref={jaulaRef} guardado={inicial.hamsters} visible={!enJardin} reduceMotion={reduceMotion}
             onGuardar={guardarHamsters} onSonido={sonarJaula} onPista={setPistaHamster} onAviso={avisarHamster}
-            base={dibujoJaula} tubos={JUEGOS_TUBOS[decoracion.tubos]} />
+            base={dibujoJaula} tubos={JUEGOS_TUBOS[decoracion.tubos]} casita={decoracion.casita} />
           {decorando && <>
             <button type="button" className={`casa-mueble-zona is-pared${elegido === "pared" ? " is-elegido" : ""}`} style={{ left: -HABITACION.ampliacion, top: 0, width: HABITACION.ancho + HABITACION.ampliacion, height: PARED_HASTA }}
               aria-label={tClave("casa.decorar.mueble.pared.oculto")} onClick={(event) => { if (event.detail === 0) setElegido("pared"); }} />
@@ -1611,10 +1611,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
 /** Los muebles que se dibujan de su lámina, encima de la habitación vacía. */
 const MUEBLES_DE_LAMINA = (Object.keys(MUEBLES_CASA) as MuebleId[]).filter((mueble) => MUEBLES_CASA[mueble].dibujo !== null);
 /** Lo que brilla al decorar; los tubos van primero, por debajo de las partes que quedan dentro de su caja. */
-const ZONAS_DE_DECORAR = (Object.keys(MUEBLES_CASA) as MuebleId[]).filter(sePuedeDecorar)
+const ZONAS_DE_DECORAR = (Object.keys(MUEBLES_CASA) as MuebleId[])
   .sort((a, b) => Number(b === "tubos") - Number(a === "tubos"))
   .flatMap((mueble) => cajasDe(mueble).map((caja, trozo) => ({ mueble, caja, trozo })));
 const LADO_MUESTRA = 48;
+/** El trozo de la capa del adorno donde está el escondite (px del dibujo de la pecera), llevado a la muestra. */
+const TROZO_ESCONDITE = { x: PECERA.castillo.x - 45, y: 99, lado: 92 };
+const ESCONDITE_EN_MUESTRA: CSSProperties = {
+  backgroundSize: `${PECERA.ancho * LADO_MUESTRA / TROZO_ESCONDITE.lado}px ${PECERA.alto * LADO_MUESTRA / TROZO_ESCONDITE.lado}px`,
+  backgroundPosition: `${-TROZO_ESCONDITE.x * LADO_MUESTRA / TROZO_ESCONDITE.lado}px ${-TROZO_ESCONDITE.y * LADO_MUESTRA / TROZO_ESCONDITE.lado}px`,
+};
 
 /** Fondo de la celda de la versión `version` en la lámina del mueble (cinco celdas en fila). */
 function celdaDeMueble(mueble: MuebleId, version: Version): CSSProperties {
@@ -1638,6 +1644,12 @@ function Muestra({ mueble, version }: { mueble: MuebleId; version: Version }) {
   if (mueble === "tubos") {
     const { rojo, azul, amarillo } = JUEGOS_TUBOS[version];
     return <i className="casa-muestra is-pared" style={{ background: `linear-gradient(${rojo} 0 33.4%, ${azul} 0 66.7%, ${amarillo} 0)` }} />;
+  }
+  // Del adorno, su escondite; de la casita, entera.
+  if (mueble === "adornoPecera") return <i className="casa-muestra" style={{ backgroundImage: cssAssetUrl(PECERA.adornos[version]), ...ESCONDITE_EN_MUESTRA }} />;
+  if (mueble === "casita") {
+    const { hoja, celdas, colocado } = casitaDe(version);
+    return <i className="casa-muestra" style={{ backgroundImage: cssAssetUrl(hoja), backgroundSize: `${celdas * LADO_MUESTRA}px ${LADO_MUESTRA}px`, backgroundPosition: `${-colocado.celda * LADO_MUESTRA}px 0` }} />;
   }
   const dibujo = MUEBLES_CASA[mueble].dibujo;
   if (!dibujo) {

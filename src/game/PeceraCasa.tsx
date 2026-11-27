@@ -22,6 +22,8 @@ type Props = {
   onSonido: (sonido: SonidoPecera) => void;
   /** El dibujo del mueble, en el color elegido al decorar. */
   fondo: string;
+  /** La capa del adorno elegido, entre el fondo y el cofre. */
+  adorno: string;
   /** Decorando no se juega con la pecera: tampoco con el teclado. */
   decorando: boolean;
 };
@@ -39,7 +41,7 @@ const objetoEn = (indice: number, lado: number): CSSProperties => ({
  * copos del bote, hacen su gracia al tocarlos y duermen con la luz apagada. Solo dibuja y lleva el reloj; las reglas
  * están en `casaPecera.ts`. Cada pez y cada efecto es un elemento propio para que se muevan con `transform`.
  */
-export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido, fondo, decorando }: Props) {
+export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido, fondo, adorno, decorando }: Props) {
   const [pecera, setPecera] = useState<Pecera>(() => crearPecera(performance.now()));
   const [ahora, setAhora] = useState(() => performance.now());
   const ref = useRef(pecera);
@@ -98,6 +100,7 @@ export function PeceraCasa({ toque, noche, reduceMotion, gatoMirando, onSonido, 
   return (
     <div className={`casa-pecera${claseLuz}`} style={{ left: PECERA.left, top: PECERA.top, width: PECERA.ancho, height: PECERA.alto }}>
       <img className="casa-pecera-fondo" src={fondo} alt="" draggable={false} />
+      <img className="casa-pecera-adorno" src={adorno} alt="" draggable={false} />
       {pecera.copos.filter((copo) => copo.comidoEn === null && ahora >= copo.nace).map((copo) => (
         <i key={copo.id} className="casa-pecera-copo" style={{ left: copo.x, top: copo.y, ...objetoEn(OBJETO.copo, 24) }} />
       ))}

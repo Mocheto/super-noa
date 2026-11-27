@@ -517,13 +517,12 @@
 .casa-mueble-brillo { pointer-events: none; filter: drop-shadow(0 0 6px #ffd76a); animation: casa-mueble-brilla .8s ease-in-out infinite; }
 @keyframes casa-mueble-brilla { 50% { filter: drop-shadow(0 0 16px #ffd76a) drop-shadow(0 0 6px #ffd76a) brightness(1.12); } }
 .casa-mueble-brillo img { display: block; width: 100%; height: 100%; image-rendering: pixelated; clip-path: inset(211px 0 0 0); }
-.casa-escondite { pointer-events: none; }
-.casa-escondite > svg { display: block; }
-.casa-puertecita { position: absolute; top: 0; box-sizing: border-box; border: solid #2f1d33; border-width: 3px 8px; background-origin: border-box; image-rendering: pixelated; filter: brightness(.9); animation: casa-puertecita .25s ease-out; }
-.casa-puertecita.is-izquierda { transform-origin: 0 50%; transform: perspective(500px) rotateY(-112deg); }
-.casa-puertecita.is-derecha { transform-origin: 100% 50%; transform: perspective(500px) rotateY(112deg); }
-@keyframes casa-puertecita { from { transform: perspective(500px) rotateY(0); } }
-.casa-cola { overflow: visible; pointer-events: none; transform-origin: 12px 6px; animation: casa-cola 1.4s ease-in-out infinite alternate; }
+.casa-escondite, .casa-puertecita { image-rendering: pixelated; pointer-events: none; }
+.casa-puertecita { left: 0; top: 0; width: 412px; height: 354px; animation: casa-puertecita .2s ease-out; }
+.casa-puertecita.is-izquierda { clip-path: inset(0 50% 0 0); transform-origin: 46px 282px; }
+.casa-puertecita.is-derecha { clip-path: inset(0 0 0 50%); transform-origin: 366px 282px; }
+@keyframes casa-puertecita { from { transform: scaleX(.2); } }
+.casa-cola { background-repeat: no-repeat; image-rendering: pixelated; pointer-events: none; transform-origin: 17px 0; animation: casa-cola 1.4s ease-in-out infinite alternate; }
 @keyframes casa-cola { from { transform: rotate(-9deg); } to { transform: rotate(11deg); } }
 /* «¡CUCU!», sobre el mueble. */
 .casa-cucu { position: absolute; z-index: 6; margin: 0; padding: 8px 14px; translate: -50% 0; white-space: nowrap; border: 4px solid #2f1d33; border-radius: 16px; background: #ffd76a; color: #2f1d33; font-size: 28px; pointer-events: none; animation: casa-cucu .35s ease-out; }

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { existsSync } from "node:fs";
 import {
   COLARSE_A_LOS_MS, cuandoSeCuela, ENTRADA_ESCONDITE, esconder, esconditeVacio, MAULLA_CADA_MS, pasarRato, PRIMER_MAULLIDO_MS,
   puedeEsconderse, sacar, SALE_SOLO_MS, tocarPuertas,
@@ -77,4 +78,10 @@ test("un gatito soltado en el mueble entra; el sitio no se pisa con la bañera n
   assert.ok(dentroDelSuelo(H, ENTRADA_ESCONDITE.x, ENTRADA_ESCONDITE.y));
   assert.ok(dentroDelSuelo(H, H.salidaEscondite.x, H.salidaEscondite.y));
   assert.ok(H.salidaEscondite.y - H.sitios.pecera.y >= 40, "al salir queda delante, sin tapar las puertas");
+});
+
+test("el arte del escondite existe", () => {
+  for (const ruta of [PECERA.escondite.dentro, PECERA.escondite.puertas, PECERA.escondite.colas]) {
+    assert.ok(existsSync(new URL(`../../public/${ruta.replace("./", "")}`, import.meta.url)), ruta);
+  }
 });

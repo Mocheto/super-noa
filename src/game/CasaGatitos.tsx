@@ -409,6 +409,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   // La pared, con el tono elegido (pintado por código sobre el fondo).
   const decoracion = decoracionDe(casa);
   const dibujoPecera = useDibujoDeColor(PECERA.fondo, "mueblePecera", decoracion.mueblePecera);
+  const dibujoPuertas = useDibujoDeColor(PECERA.escondite.puertas, "mueblePecera", decoracion.mueblePecera);
   const dibujoJaula = useDibujoDeColor(ARTE_JAULA.jaula, "baseJaula", decoracion.baseJaula);
   useEffect(() => {
     let vivo = true;
@@ -1544,7 +1545,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
               style={{ left: dibujo.x, top: dibujo.y, width: dibujo.ancho, height: dibujo.alto, ...celdaDeMueble(mueble, decoracion[mueble]) }} />;
           })}
           <PeceraCasa toque={toquePecera} noche={noche} reduceMotion={reduceMotion} gatoMirando={mirandoLaPecera ? mirandoLaPecera.x - PECERA.left : null} onSonido={sonarPecera} fondo={dibujoPecera} adorno={PECERA.adornos[decoracion.adornoPecera]} decorando={decorando}
-            escondite={{ abierto: escondite.abierto, gatito: escondite.gatito, brilla: cogido !== null && gatitos[cogido.indice] !== undefined && cabeEnElMueble(gatitos[cogido.indice]) }}
+            puertas={dibujoPuertas}
+            escondite={{ abierto: escondite.abierto, gatito: escondite.gatito, sucio: variantes.some((v) => v.mundo === escondite.gatito && v.sucio), brilla: cogido !== null && gatitos[cogido.indice] !== undefined && cabeEnElMueble(gatitos[cogido.indice]) }}
             onPuertas={() => abrirOCerrar(performance.now())} onEsconder={fase === "casa" && !acostando ? esconderConTeclado : null} onFocoMueble={verElMueble} />
           <JaulaHamsters ref={jaulaRef} guardado={inicial.hamsters} visible={!enJardin} reduceMotion={reduceMotion}
             onGuardar={guardarHamsters} onSonido={sonarJaula} onPista={setPistaHamster} onAviso={avisarHamster}

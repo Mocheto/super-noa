@@ -38,6 +38,17 @@ export const PECERA = {
   castillo: { x: 328, y: 178 },
   /** Las dos puertas del mueble, que esconden un gatito (`casaEscondite.ts`): juntas, sobre un único hueco. */
   puertas: { izquierda: 46, derecha: 366, arriba: 240, abajo: 324 },
+  /**
+   * El arte del escondite, de `prototypes/tools/casa-escondite-recorte.py`: el interior (el tamaño del hueco), las dos
+   * puertas abiertas en una capa del tamaño del mueble (se recolorea como él) y las colas, una celda por modelo en el
+   * orden de `MODELOS_GATITO`, en colores clave; `cola` dice dónde asoma.
+   */
+  escondite: {
+    dentro: "./assets/sprites/casa-escondite-dentro-v1.webp",
+    puertas: "./assets/sprites/casa-escondite-puertas-v1.webp",
+    colas: "./assets/sprites/casa-escondite-colas-v1.webp",
+    cola: { ancho: 60, alto: 48, izquierda: 275, arriba: 312 },
+  },
   /** Cuadro de un pez en su hoja (5 cuadros por especie, una fila por especie) y de un objeto (6 cuadros en fila). */
   cuadroPez: { ancho: 96, alto: 72 },
   cuadroObjeto: 48,

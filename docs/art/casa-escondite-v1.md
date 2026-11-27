@@ -4,7 +4,8 @@ Dossier del arte final del escondite ([Arte final del escondite del mueble de la
 
 ## Estado
 
-- **Prompts listos.** Falta generar las láminas, recortarlas e integrarlas.
+- **Generadas, recortadas e integradas** ([issue 437](https://github.com/Mocheto/super-noa/issues/437)). Las originales están en `../super-noa-arte-original/casa-escondite-v1/` (`dentro`, `puerta` y `colas`, en WebP de 2000 × 496).
+- El generador añadió dos puertas oscuras a los lados del interior (se recortan), un trozo de mueble a la derecha de la puerta (se recorta), pintó la puerta más ancha que alta (se lleva a su sitio con una transformación de perspectiva) y la cola de la melena con el pelo claro (pasa a pelo, como en sus hojas).
 
 ## Qué se genera
 
@@ -57,10 +58,12 @@ Orden: atigrado, esmoquin, melena, nube. Van en los **colores clave** del gato b
 Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients. A sprite sheet with exactly four separate cat TAILS and nothing else, in one row, left to right, evenly spaced, all at the same pixel scale. Each tail matches the tail of the kitten in the same position in the attached image, from left to right, with the same drawing style. Every tail has the same pose: it hangs straight DOWN out of a closed cupboard door and curls up at the end towards the right, like the letter J. The top of every tail, where it comes out of the cupboard, is cut perfectly flat and horizontal, with all four flat cuts on the same invisible line. There is no cat, no body, no paws, no head: only the four tails. Paint them ONLY with these exact flat colors. 1. short-haired tabby tail, medium thickness: fur #FF8A00, fur shadow #C2410C, three rings #7C2D12, rounded tip #FFF1D6. 2. short-haired tuxedo tail, a little thinner: fur #FF8A00, fur shadow #C2410C, two rings #7C2D12, a longer tip #FFF1D6. 3. long-haired plumed fluffy tail, much wider, with soft rounded tufts: fur #FF8A00, light fur #FFC266, fur shadow #C2410C, the whole end of the tail #A21CAF. 4. cloud tail made of soft bulging round puffs, the widest of the four, like the fourth kitten: cloud puffs #FFF1D6, with one round puff at the very end in #A21CAF. Each tail also has one small round mud spot #8B5A2B halfway down. Plain flat solid pure green background (#00FF00), generous empty space between the tails, no floor, no door, no cast shadow, no text, no letters, no numbers, no labels, no watermark.
 ```
 
-## Cómo se montará
+## Montaje
 
-Cuando estén las tres originales:
+```bash
+uv run --with pillow --with numpy --with scipy python prototypes/tools/casa-escondite-recorte.py --origen ../super-noa-arte-original/casa-escondite-v1
+```
 
-- `prototypes/tools/casa-escondite-recorte.py` quita el verde, reduce cada pieza a su medida (interior de 320 × 84; puerta de unos 56 × 100; colas en cuatro celdas iguales) y lleva las colas a sus colores clave.
-- En `PeceraCasa.tsx` sustituyen a `DentroDelMueble`, a las hojas hechas por CSS y a la cola en SVG: la puerta pasa por `dibujoDeColor` como el mueble, y las colas se pintan con `hojaPintada` según `modeloDibujado`.
-- La cola se sigue meciendo por código y se queda quieta con movimiento tranquilo.
+- `casa-escondite-dentro-v1.webp`: el interior, 320 × 84. No cambia de color.
+- `casa-escondite-puertas-v1.webp`: capa de 412 × 354 con las dos puertas abiertas en su sitio (la derecha, en espejo). Pasa por `useDibujoDeColor` como el mueble.
+- `casa-escondite-colas-v1.webp`: cuatro celdas de 60 × 48 en colores clave; `PeceraCasa.tsx` pinta con `hojaPintada` la del modelo del gatito y la mece (quieta con movimiento tranquilo). La de nube va sin la manchita de barro: caía sobre una bola de barriga y en un gatito limpio se veía como un lunar.

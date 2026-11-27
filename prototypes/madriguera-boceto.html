@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="/">
+<title>Boceto de la madriguera</title>
+<!--
+  BOCETO DESECHABLE de la issue 440 («Boceto de la madriguera», mapa «La madriguera de los conejos», 439). Tres
+  disposiciones distintas, con ?variante=A|B|C (flechas del teclado o la barra de abajo). Se abre con el servidor `dev`
+  de .claude/launch.json: http://localhost:5199/prototypes/madriguera-boceto.html
+  Dibujos provisionales hechos por código. No es código del juego.
+-->
+<style>
+  :root { --ciruela: #2f1d33; --crema: #fff8e9; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #f3c9a8; font: 14px/1.35 system-ui, sans-serif; color: var(--ciruela); }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 8px 8px 64px; }
+  #marco { border: 8px solid #e8a35b; border-radius: 18px; background: #000; line-height: 0; box-shadow: 0 0 0 3px var(--ciruela); }
+  canvas { display: block; touch-action: none; image-rendering: pixelated; }
+  #bandeja { display: flex; gap: 8px; padding: 6px; border: 3px solid var(--ciruela); border-radius: 18px; background: var(--crema); min-height: 70px; align-items: center; }
+  #bandeja button { width: 52px; height: 52px; font-size: 30px; border: 0; border-radius: 14px; background: transparent; cursor: pointer; }
+  #bandeja button.activo { box-shadow: 0 0 0 4px #ffd76a; background: #fbead2; }
+  #estado { margin: 0; max-width: 720px; text-align: center; font-size: 12px; }
+  nav { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; align-items: center; background: var(--ciruela); color: var(--crema); padding: 6px 10px; border-radius: 999px; white-space: nowrap; z-index: 5; }
+  nav button { font: inherit; border: 2px solid var(--crema); background: transparent; color: var(--crema); border-radius: 999px; min-width: 36px; min-height: 36px; cursor: pointer; }
+  @media (orientation: landscape) and (max-height: 500px) {
+    body { flex-direction: row; padding: 4px 4px 54px; }
+    #bandeja { flex-direction: column; }
+    #estado { display: none; }
+    nav { bottom: 3px; }
+  }
+</style>
+</head>
+<body>
+<div id="marco"><canvas id="lienzo"></canvas></div>
+<div id="bandeja"></div>
+<p id="estado"></p>
+<nav><button id="antes" aria-label="Variante anterior">◀</button><b id="nombre"></b><button id="despues" aria-label="Variante siguiente">▶</button></nav>
+
+<script type="module">
+const carga = (src) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = src; });
+const fondo = await carga("./assets/worlds/casa-jardin-v1.webp");
+const colchoneta = await carga("./assets/sprites/casa-colchoneta-v1.webp");
+
+// Coordenadas de la escena del jardín (1280 × 540). La ampliación son x negativas; bajo tierra son y de 540 a 1080.
+const VARIANTES = {
+  A: {
+    nombre: "A · Pozo central", ampliacion: 480,
+    monticulos: [{ x: -250, y: 480, rx: 170, ry: 120 }],
+    agujeros: [{ x: -250, y: 470 }],
+    flecha: { x: -250, y: 320 },
+    corteX: -480,
+    cuevas: { dormitorio: { x: -320, y: 750 }, despensa: { x: 80, y: 800 }, juegos: { x: -220, y: 970 } },
+    libres: [{ x: 100, y: 970 }, { x: -380, y: 890 }],
+    tubos: [[[-250, 540], [-120, 660], [-120, 800], [-120, 880], [-220, 970]], [[-120, 660], [-320, 750]], [[-120, 800], [80, 800]], [[-120, 880], [100, 970]], [[-120, 880], [-380, 890]]],
+  },
+  B: {
+    nombre: "B · Loma con tres agujeros", ampliacion: 720,
+    monticulos: [{ x: -380, y: 495, rx: 320, ry: 135 }],
+    agujeros: [{ x: -580, y: 470 }, { x: -380, y: 420 }, { x: -170, y: 470 }],
+    flecha: { x: -380, y: 300 },
+    corteX: -720,
+    cuevas: { dormitorio: { x: -580, y: 790 }, despensa: { x: -360, y: 900 }, juegos: { x: -140, y: 790 } },
+    libres: [{ x: -580, y: 990 }, { x: -140, y: 990 }],
+    tubos: [[[-580, 540], [-580, 790], [-360, 700], [-140, 790], [-170, 540]], [[-380, 540], [-360, 700], [-360, 900]], [[-360, 900], [-580, 990]], [[-360, 900], [-140, 990]]],
+  },
+  C: {
+    nombre: "C · Tocón y laberinto", ampliacion: 600,
+    tocon: { x: -420, y: 500 },
+    monticulos: [{ x: -170, y: 505, rx: 120, ry: 65 }],
+    agujeros: [{ x: -420, y: 475 }, { x: -170, y: 485 }],
+    flecha: { x: -420, y: 280 },
+    corteX: -600,
+    cuevas: { dormitorio: { x: -90, y: 680 }, despensa: { x: -470, y: 780 }, juegos: { x: -110, y: 920 } },
+    libres: [{ x: -460, y: 990 }, { x: 40, y: 790 }],
+    tubos: [[[-420, 540], [-420, 640], [-300, 690], [-90, 680]], [[-300, 690], [-300, 780], [-470, 780]], [[-300, 780], [-280, 920], [-110, 920]], [[-170, 540], [-90, 680]], [[-280, 920], [-460, 990]], [[-90, 680], [40, 790]]],
+  },
+};
+const NOMBRES_CUEVA = { dormitorio: "DORMIR", despensa: "COMER", juegos: "JUGAR" };
+
+const lienzo = document.getElementById("lienzo");
+const g = lienzo.getContext("2d");
+let letra = new URLSearchParams(location.search).get("variante");
+if (!VARIANTES[letra]) letra = "A";
+let v, vistaX, vistaY, bajando, conejos, zanahoria, aviso, noche = false, escala = 1, anchoVisible = 720;
+
+// ---- Grafo de los túneles ----
+let nodos, vecinos;
+const clave = (p) => p.join(",");
+function montarGrafo() {
+  nodos = new Map(); vecinos = new Map();
+  for (const tubo of v.tubos) tubo.forEach((p, i) => {
+    nodos.set(clave(p), { x: p[0], y: p[1] });
+    if (!vecinos.has(clave(p))) vecinos.set(clave(p), new Set());
+    if (i) { vecinos.get(clave(p)).add(clave(tubo[i - 1])); vecinos.get(clave(tubo[i - 1])).add(clave(p)); }
+  });
+}
+function camino(desde, hasta) {
+  const cola = [[desde]], visto = new Set([desde]);
+  while (cola.length) {
+    const ruta = cola.shift(), fin = ruta.at(-1);
+    if (fin === hasta) return ruta.slice(1).map((k) => nodos.get(k));
+    for (const sig of vecinos.get(fin)) if (!visto.has(sig)) { visto.add(sig); cola.push([...ruta, sig]); }
+  }
+  return [];
+}
+
+function elegir(nueva) {
+  letra = nueva; v = VARIANTES[letra]; montarGrafo();
+  history.replaceState(null, "", `/prototypes/madriguera-boceto.html?variante=${letra}`);
+  document.getElementById("nombre").textContent = v.nombre;
+  const hueco = v.agujeros[0];
+  conejos = [
+    { nombre: "conejo 1", color: "#fdf6ee", x: hueco.x - 90, y: 515, abajo: { ...v.cuevas.dormitorio }, nodo: clave([v.cuevas.dormitorio.x, v.cuevas.dormitorio.y]), ruta: [], come: 0, amor: 0 },
+    { nombre: "conejo 2", color: "#b98a5e", x: hueco.x + 100, y: 525, abajo: { ...v.cuevas.despensa }, nodo: clave([v.cuevas.despensa.x, v.cuevas.despensa.y]), ruta: [], come: 0, amor: 0 },
+  ];
+  vistaY = 0; bajando = false; vistaX = -v.ampliacion; zanahoria = false; aviso = "Arriba: elige la zanahoria y toca un conejo, o tócalo sin ella para acariciarlo. Desliza para ver el resto del jardín.";
+  ajustar(); bandeja();
+}
+
+function ajustar() {
+  const apaisadoBajo = innerHeight <= 500 && innerWidth > innerHeight;
+  const ancho = innerWidth - (apaisadoBajo ? 110 : 32), alto = innerHeight - (apaisadoBajo ? 78 : 220);
+  const vertical = innerHeight > innerWidth;
+  escala = vertical ? Math.min(alto / 540, ancho / 720) : Math.min(alto / 540, Math.max(ancho / 1280, 0.5));
+  anchoVisible = Math.min(1280, ancho / escala);
+  const dpr = devicePixelRatio || 1;
+  lienzo.style.width = `${anchoVisible * escala}px`; lienzo.style.height = `${540 * escala}px`;
+  lienzo.width = Math.round(anchoVisible * escala * dpr); lienzo.height = Math.round(540 * escala * dpr);
+  limitar();
+}
+const limitar = () => { vistaX = Math.max(-v.ampliacion, Math.min(1280 - anchoVisible, vistaX)); };
+// Bajo tierra la vista se queda centrada en el corte de 720 px.
+const camaraX = () => { const t = vistaY / 540; return vistaX * (1 - t) + (v.corteX + 360 - anchoVisible / 2) * t; };
+
+// ---- Dibujo ----
+const elipse = (x, y, rx, ry, color, borde) => { g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); g.fillStyle = color; g.fill(); if (borde) { g.lineWidth = 6; g.strokeStyle = borde; g.stroke(); } };
+function flecha(x, y, arriba, ms) {
+  y += Math.sin(ms / 250) * 8;
+  elipse(x, y, 42, 42, "#ffd76a", "#2f1d33");
+  g.save(); g.translate(x, y); if (arriba) g.rotate(Math.PI);
+  g.fillStyle = "#2f1d33"; g.beginPath(); g.moveTo(-12, -24); g.lineTo(12, -24); g.lineTo(12, 0); g.lineTo(26, 0); g.lineTo(0, 26); g.lineTo(-26, 0); g.lineTo(-12, 0); g.closePath(); g.fill(); g.restore();
+}
+function conejo(x, y, color, tam = 1, dormido = false) {
+  g.save(); g.translate(x, y); g.scale(tam, tam);
+  const b = "#2f1d33";
+  if (!dormido) { elipse(8, -72, 7, 22, color, b); elipse(28, -70, 7, 22, color, b); } else elipse(8, -40, 20, 7, color, b);
+  elipse(-6, -20, 32, 22, color, b); elipse(18, dormido ? -22 : -38, 21, 19, color, b); elipse(-38, -22, 10, 10, "#fff", b);
+  g.strokeStyle = b; g.lineWidth = 4; const oy = dormido ? -22 : -42;
+  if (dormido) { g.beginPath(); g.moveTo(21, oy); g.lineTo(31, oy); g.stroke(); } else elipse(25, oy, 3.5, 3.5, b);
+  elipse(37, oy + 8, 4, 3, "#e88aa0");
+  g.restore();
+}
+function jardin(ms) {
+  // Ampliación: cielo, pared del fondo, valla y hierba, con los colores del jardín actual.
+  const w = v.ampliacion;
+  g.fillStyle = "#84d8ff"; g.fillRect(-w, 0, w, 140);
+  g.fillStyle = "#9cdcfb"; g.fillRect(-w, 140, w, 125);
+  g.fillStyle = "#f8e6cb"; g.fillRect(-w, 265, w, 163);
+  g.fillStyle = "#8fb072"; g.fillRect(-w, 428, w, 112);
+  for (let x = -w + 20; x < -50; x += 46) { g.fillStyle = "#fdf4e4"; g.fillRect(x, 340, 22, 95); elipse(x + 11, 340, 11, 11, "#fdf4e4"); }
+  g.fillRect(-w, 370, w - 40, 10);
+  elipse(-w + 130, 90, 70, 26, "#fff"); elipse(-w + 170, 70, 40, 30, "#fff");
+  if (fondo) g.drawImage(fondo, 0, 0, 1280, 540); else { g.fillStyle = "#8fb072"; g.fillRect(0, 428, 1280, 112); }
+  g.fillStyle = "#d9bf9d"; g.fillRect(-6, 0, 8, 440); // esquina de la casa
+  if (colchoneta) g.drawImage(colchoneta, 500, 440, 200, 96);
+  if (v.tocon) {
+    const { x, y } = v.tocon;
+    g.fillStyle = "#8a5a3b"; g.strokeStyle = "#2f1d33"; g.lineWidth = 6; g.fillRect(x - 85, y - 140, 170, 140); g.strokeRect(x - 85, y - 140, 170, 140);
+    elipse(x, y - 140, 85, 28, "#d9a56e", "#2f1d33"); elipse(x, y - 140, 45, 13, "#c08a55");
+    elipse(x - 95, y - 5, 35, 18, "#8a5a3b"); elipse(x + 95, y - 5, 35, 18, "#8a5a3b");
+  }
+  for (const m of v.monticulos) {
+    g.save(); g.beginPath(); g.rect(m.x - m.rx - 8, 0, m.rx * 2 + 16, m.y + 20); g.clip();
+    elipse(m.x, m.y + 15, m.rx, m.ry, "#7fa35f", "#2f1d33"); elipse(m.x - m.rx * 0.2, m.y - m.ry * 0.35, m.rx * 0.45, m.ry * 0.3, "#93b66f"); g.restore();
+  }
+  for (const a of v.agujeros) { elipse(a.x, a.y, 40, 30, "#3b2418", "#a9774f"); }
+  for (const c of conejos) conejo(c.x, c.y, c.color, 0.95);
+  for (const c of conejos) {
+    if (c.come > ms) { g.font = "bold 34px system-ui"; g.textAlign = "center"; g.fillStyle = "#2f1d33"; g.fillText("¡ÑAM! 🥕", c.x, c.y - 110); }
+    if (c.amor > ms) { g.font = "40px system-ui"; g.textAlign = "center"; g.fillText("💗", c.x, c.y - 105); }
+  }
+  if (noche) { g.fillStyle = "#14123a99"; g.fillRect(-w, 0, w + 1280, 540); }
+  flecha(v.flecha.x, v.flecha.y, false, ms);
+}
+function tierra(ms) {
+  const izq = -v.ampliacion - 400;
+  g.save(); g.beginPath(); g.rect(izq, 540, 2400, 540); g.clip();
+  g.fillStyle = "#8c5a38"; g.fillRect(izq, 540, 2400, 540);
+  g.fillStyle = "#7fa35f"; g.fillRect(izq, 540, 2400, 22);
+  g.fillStyle = "#7a4c2e"; for (let i = 0; i < 90; i++) elipse(v.corteX - 200 + ((i * 197) % 1150), 580 + ((i * 89) % 480), 5 + (i % 4) * 3, 4 + (i % 3) * 2, i % 5 ? "#7a4c2e" : "#a9774f");
+  for (const [color, grosor] of [["#4a2c1a", 82], ["#c99b6d", 68]]) {
+    g.strokeStyle = color; g.lineWidth = grosor; g.lineCap = "round"; g.lineJoin = "round";
+    for (const tubo of v.tubos) { g.beginPath(); tubo.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); }
+  }
+  for (const [nombre, c] of Object.entries(v.cuevas)) {
+    elipse(c.x, c.y, 100, 72, "#c99b6d", "#4a2c1a");
+    if (nombre === "dormitorio") { for (let i = 0; i < 26; i++) { g.strokeStyle = "#f1cd5c"; g.lineWidth = 5; g.beginPath(); g.moveTo(c.x - 75 + i * 6, c.y + 45); g.lineTo(c.x - 65 + i * 5, c.y + 20 + (i % 3) * 8); g.stroke(); } }
+    g.font = "34px system-ui"; g.textAlign = "center";
+    if (nombre === "despensa") g.fillText("🥕🥕🥕", c.x, c.y - 16);
+    if (nombre === "juegos") g.fillText("⚽ 🪁", c.x, c.y - 16);
+    g.font = "bold 20px system-ui"; g.fillStyle = "#2f1d33"; g.fillText(NOMBRES_CUEVA[nombre], c.x, c.y - 46);
+  }
+  for (const l of v.libres) {
+    g.setLineDash([12, 10]); g.strokeStyle = "#f3d9b8"; g.lineWidth = 5; g.beginPath(); g.ellipse(l.x, l.y, 62, 44, 0, 0, Math.PI * 2); g.stroke(); g.setLineDash([]);
+    g.font = "34px system-ui"; g.textAlign = "center"; g.fillStyle = "#f3d9b8"; g.fillText("?", l.x, l.y + 12);
+  }
+  for (const c of conejos) conejo(c.abajo.x + (c === conejos[1] ? 14 : -14), c.abajo.y + 38, c.color, 0.75, noche && !c.ruta.length);
+  flecha(v.corteX + 360, 612, true, ms);
+  g.restore();
+}
+
+let antes = 0;
+function paso(ms) {
+  const dt = Math.min(50, ms - antes) / 1000; antes = ms;
+  const meta = bajando ? 540 : 0;
+  vistaY += (meta - vistaY) * Math.min(1, dt * 6); if (Math.abs(meta - vistaY) < 0.5) vistaY = meta;
+  for (const c of conejos) {
+    const p = c.ruta[0]; if (!p) continue;
+    const d = Math.hypot(p.x - c.abajo.x, p.y - c.abajo.y), avance = 240 * dt;
+    if (d <= avance) { c.abajo = { ...p }; c.nodo = clave([p.x, p.y]); c.ruta.shift(); }
+    else { c.abajo.x += ((p.x - c.abajo.x) / d) * avance; c.abajo.y += ((p.y - c.abajo.y) / d) * avance; }
+  }
+  const k = lienzo.height / 540;
+  g.setTransform(k, 0, 0, k, -camaraX() * k, -vistaY * k);
+  jardin(ms); tierra(ms);
+  document.getElementById("estado").textContent = `${aviso} · Ampliación de ${v.ampliacion} px · vista ${bajando ? "bajo tierra" : "arriba"}`;
+  requestAnimationFrame(paso);
+}
+
+function bandeja() {
+  const caja = document.getElementById("bandeja");
+  const cosas = bajando
+    ? [["⬆️", "Subir", () => bajar(false)], [noche ? "☀️" : "🌙", "Probar noche", () => { noche = !noche; bandeja(); }]]
+    : [["🥕", "Zanahoria", () => { zanahoria = !zanahoria; bandeja(); }, zanahoria], ["🐇", "Ir a la madriguera y volver", () => { vistaX = vistaX < -v.ampliacion / 2 ? 0 : -v.ampliacion; limitar(); }], [noche ? "☀️" : "🌙", "Probar noche", () => { noche = !noche; bandeja(); }]];
+  caja.replaceChildren(...cosas.map(([icono, nombre, accion, activo]) => { const b = document.createElement("button"); b.textContent = icono; b.title = nombre; b.setAttribute("aria-label", nombre); if (activo) b.className = "activo"; b.onclick = accion; return b; }));
+}
+function bajar(si) {
+  bajando = si; zanahoria = false;
+  aviso = si ? "Bajo tierra: toca una cueva y va un conejo por los túneles." : "Arriba: zanahoria y caricias.";
+  bandeja();
+}
+
+let toque = null;
+const punto = (e) => { const r = lienzo.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * anchoVisible + camaraX(), y: ((e.clientY - r.top) / r.height) * 540 + vistaY }; };
+lienzo.onpointerdown = (e) => { toque = { x: e.clientX, vista: vistaX, movido: false }; lienzo.setPointerCapture(e.pointerId); };
+lienzo.onpointermove = (e) => {
+  if (!toque || bajando) return;
+  const dx = e.clientX - toque.x; if (Math.abs(dx) > 10) toque.movido = true;
+  if (toque.movido) { vistaX = toque.vista - dx / escala; limitar(); }
+};
+lienzo.onpointerup = (e) => {
+  const t = toque; toque = null; if (!t || t.movido) return;
+  const p = punto(e);
+  const cerca = (a, r) => Math.hypot(p.x - a.x, p.y - a.y) < r;
+  if (!bajando) {
+    if (cerca(v.flecha, 70) || v.agujeros.some((a) => cerca(a, 50))) return bajar(true);
+    const c = conejos.find((c) => cerca({ x: c.x, y: c.y - 35 }, 65));
+    if (!c) return;
+    if (zanahoria) { c.come = performance.now() + 1600; zanahoria = false; bandeja(); } else c.amor = performance.now() + 1200;
+  } else {
+    if (cerca({ x: v.corteX + 360, y: 612 }, 70)) return bajar(false);
+    const cueva = Object.values(v.cuevas).find((c) => cerca(c, 100));
+    if (cueva) {
+      const libre = conejos.filter((c) => !c.ruta.length && Math.hypot(c.abajo.x - cueva.x, c.abajo.y - cueva.y) > 20)
+        .sort((a, b) => Math.hypot(a.abajo.x - cueva.x, a.abajo.y - cueva.y) - Math.hypot(b.abajo.x - cueva.x, b.abajo.y - cueva.y))[0];
+      if (libre) libre.ruta = camino(libre.nodo, clave([cueva.x, cueva.y]));
+    } else if (v.libres.some((l) => cerca(l, 62))) aviso = "Sitio sin excavar: aquí irán cosas más adelante.";
+  }
+};
+
+const letras = Object.keys(VARIANTES);
+const rotar = (paso) => elegir(letras[(letras.indexOf(letra) + paso + letras.length) % letras.length]);
+document.getElementById("antes").onclick = () => rotar(-1);
+document.getElementById("despues").onclick = () => rotar(1);
+addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") rotar(-1); if (e.key === "ArrowRight") rotar(1); });
+addEventListener("resize", ajustar);
+window.boceto = { bajar, elegir };
+elegir(letra);
+requestAnimationFrame(paso);
+</script>
+</body>
+</html>

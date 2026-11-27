@@ -10,6 +10,7 @@ import {
   tocarAgujero, tocarCueva, tocarEscondite,
   type Conejo, type ConejoId, type CuevaId, type Madriguera, type Nivel, type Punto, type Salida, type SitioConejo,
 } from "./casaConejos";
+import { PELAJES as COLORES } from "./casaMadrigueraArte";
 import { tClave } from "../textos/index.ts";
 import { Texto } from "../textos/Texto";
 
@@ -48,10 +49,6 @@ const RADIO_SITIO = 55;
 const cerca = (a: Punto, b: Punto) => Math.hypot(a.x - b.x, a.y - b.y) <= RADIO_SITIO;
 const SITIOS = Object.keys(ESCONDITES_CONEJO) as SitioConejo[];
 
-const COLORES: Readonly<Record<ConejoId, { pelo: string; oreja: string }>> = {
-  canela: { pelo: "#c08a58", oreja: "#e8a99a" },
-  algodon: { pelo: "#fdf8f0", oreja: "#f2b8c0" },
-};
 const TINTA = "#2f1d33";
 
 /** Un conejo de 90 × 100 con los pies abajo en el centro, mirando a la derecha. */

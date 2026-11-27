@@ -11,7 +11,7 @@ import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito, modeloDibujado } from "./c
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
 import { crearPecera, PECERA } from "./casaPecera.ts";
-import { pintarPradera } from "./casaMadrigueraArte.ts";
+import { conejosDeFoto, pintarConejo, pintarPradera } from "./casaMadrigueraArte.ts";
 import { pintarJaulaEnFoto, saleLaJaula } from "./casaHamstersFoto.ts";
 import { CAPA_VISIBLE, laminaDePieza, piezasEnCuadro, type PiezaEnCuadro } from "./casaVestidorArte.ts";
 import { conComplemento } from "./casaComplementos.ts";
@@ -188,6 +188,15 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     for (const pieza of piezas) if (pieza.detras) await pintarPieza(pieza);
     pintar(hoja, { x: gatito.cuadro * CUADRO_GATO, y: fila * CUADRO_GATO, ancho: CUADRO_GATO, alto: CUADRO_GATO }, caja, gatito.mira < 0);
     for (const pieza of piezas) if (!pieza.detras) await pintarPieza(pieza);
+  }
+
+  // Canela y Algodón, si la foto coge su ampliación de día.
+  const conejos = conejosDeFoto(foto);
+  if (conejos.length) {
+    contexto.save();
+    contexto.setTransform(escala, 0, 0, escala, -foto.vista.x * escala, 0);
+    for (const conejo of conejos) pintarConejo(contexto, conejo);
+    contexto.restore();
   }
 
   // El visitante del jardín, delante de los gatitos (que se le acercan a olerlo), con su dibujo de amigo (como en la escena: 200 px de ancho, los pies abajo en el centro).

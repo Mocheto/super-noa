@@ -5,6 +5,12 @@
  */
 import { AGUJERO, AMPLIACION_JARDIN, CORTE, CUEVAS, NODOS_TUNEL, SIN_EXCAVAR, TUNELES } from "./casaConejos.ts";
 
+/** El pelo y el interior de las orejas de cada conejo. */
+export const PELAJES = {
+  canela: { pelo: "#c08a58", oreja: "#e8a99a" },
+  algodon: { pelo: "#fdf8f0", oreja: "#f2b8c0" },
+} as const;
+
 /** El trozo de escena de cada lienzo. El de abajo es más ancho que el corte para llenar las pantallas anchas. */
 export const LIENZO_PRADERA = { x: -AMPLIACION_JARDIN, y: 0, ancho: AMPLIACION_JARDIN, alto: 540 } as const;
 export const LIENZO_CORTE = { x: CORTE.x + CORTE.ancho / 2 - 640, y: CORTE.y, ancho: 1280, alto: CORTE.alto } as const;
@@ -76,4 +82,51 @@ export function pintarCorte(c: CanvasRenderingContext2D) {
   c.setLineDash([]);
   // Lo que hay dentro de cada cueva son los escondites, que dibuja `ConejosCasa`.
   for (const cueva of CUEVAS) ovalo(c, NODOS_TUNEL[cueva].x, NODOS_TUNEL[cueva].y + 10, 108, 68, "#4f3327");
+}
+
+// --- Los conejos en las fotos ----------------------------------------------------------------------------------------
+
+/** En las fotos posan siempre en el mismo sitio, mirándose a los lados del montículo (no se guarda dónde estaban). */
+export const CONEJOS_EN_FOTO = [
+  { id: "canela", x: -390, y: 515, mira: 1 },
+  { id: "algodon", x: -110, y: 515, mira: -1 },
+] as const;
+
+/** Si la foto coge la ampliación de día salen los dos; de noche duermen abajo y no salen. */
+export const conejosDeFoto = (foto: { vista: { x: number }; noche: boolean; jardin?: unknown }) =>
+  foto.jardin && foto.vista.x < 0 && !foto.noche ? CONEJOS_EN_FOTO : [];
+
+/** Un conejo sentado de 90 × 100 con los pies en (x, y); el mismo dibujo provisional que en la casa. */
+export function pintarConejo(c: CanvasRenderingContext2D, { id, x, y, mira }: (typeof CONEJOS_EN_FOTO)[number]) {
+  const { pelo, oreja } = PELAJES[id];
+  const parte = (cx: number, cy: number, rx: number, ry: number, color: string, giro = 0, trazo = true) => {
+    c.fillStyle = color;
+    c.beginPath();
+    c.ellipse(cx, cy, rx, ry, giro * Math.PI / 180, 0, Math.PI * 2);
+    c.fill();
+    if (trazo) c.stroke();
+  };
+  c.save();
+  c.translate(x, y - 100);
+  if (mira < 0) c.scale(-1, 1);
+  c.translate(-45, 0);
+  c.strokeStyle = "#2f1d33";
+  c.lineWidth = 3;
+  parte(14, 76, 9, 9, "#fff");
+  parte(40, 77, 28, 21, pelo);
+  parte(54, 22, 7, 21, pelo);
+  parte(54, 23, 3, 14, oreja, 0, false);
+  if (id === "canela") {
+    parte(70, 23, 7, 21, pelo);
+    parte(70, 24, 3, 14, oreja, 0, false);
+  } else {
+    parte(78, 42, 7, 19, pelo, -62);
+    parte(80, 43, 3, 12, oreja, -62, false);
+  }
+  parte(62, 55, 20, 20, pelo);
+  parte(69, 50, 3.5, 3.5, "#2f1d33", 0, false);
+  parte(81, 58, 3.5, 3.5, "#e8849a", 0, false);
+  parte(30, 95, 15, 5, pelo);
+  parte(62, 94, 9, 5, pelo);
+  c.restore();
 }

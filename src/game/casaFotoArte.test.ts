@@ -1,3 +1,5 @@
+import { AMPLIACION_JARDIN } from "./casaConejos.ts";
+import { conejosDeFoto } from "./casaMadrigueraArte.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { aFoto, altoDeFoto, cajaDeGatito } from "./casaFotoArte.ts";
@@ -27,4 +29,11 @@ test("la jaula de hámsters sale en las fotos que llegan a ella y las de antes n
     const { x, y } = aEscena(punto);
     assert.ok(x > -1140 && x < -420 && y > 0 && y < 540, id);
   }
+});
+
+test("los conejos salen en las fotos del jardín que cogen la ampliación, de día", () => {
+  const foto = { vista: { x: -480 }, noche: false, jardin: { maceteros: [0, 0, 0] } };
+  assert.deepEqual(conejosDeFoto(foto).map((c) => c.id), ["canela", "algodon"]);
+  assert.ok(conejosDeFoto(foto).every((c) => c.x >= -AMPLIACION_JARDIN && c.x < 0));
+  for (const otra of [{ ...foto, noche: true }, { ...foto, vista: { x: 0 } }, { ...foto, jardin: undefined }]) assert.deepEqual(conejosDeFoto(otra), []);
 });

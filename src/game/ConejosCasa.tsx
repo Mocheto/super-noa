@@ -8,7 +8,7 @@ import { memo, useCallback, useEffect, useImperativeHandle, useRef, useState, ty
 import {
   abandonar, acariciar, AGUJERO, CONEJOS, CORTE, avanzar, conejoCercano, conejoEn, crearMadriguera, CUEVAS, darZanahoria, ESCONDITES_CONEJO, mirar, NODOS_TUNEL, pista, ponerNoche,
   tocarAgujero, tocarCueva, tocarEscondite,
-  type Conejo, type ConejoId, type CuevaId, type Madriguera, type Nivel, type Punto, type Salida, type SitioConejo,
+  type Conejo, type ConejoId, type CuevaId, type Madriguera, type Nivel, type Punto, type Salida, type SitioConejo, type SonidoConejos,
 } from "./casaConejos";
 import { PELAJES as COLORES } from "./casaMadrigueraArte";
 import { tClave } from "../textos/index.ts";
@@ -34,6 +34,8 @@ type Props = {
   noche: boolean;
   /** Los dos ya se han escondido: la vista baja sola. */
   onBaja: () => void;
+  /** Lo que suena; solo mientras se ve el jardín. */
+  onSonido: (sonido: SonidoConejos) => void;
 };
 
 /** El dedo apunta al cuerpo del conejo y la lógica mide desde sus pies. */
@@ -117,7 +119,7 @@ const DibujoConejo = ({ conejo, enVista, encontrado, celebra, onAcariciar }: { c
   </button>;
 };
 
-export const ConejosCasa = memo(function ConejosCasa({ ref, visible, vista, noche, onBaja }: Props) {
+export const ConejosCasa = memo(function ConejosCasa({ ref, visible, vista, noche, onBaja, onSonido }: Props) {
   const [madriguera, setMadriguera] = useState<Madriguera>(() => crearMadriguera(noche, performance.now(), Math.random));
   const actualRef = useRef(madriguera);
   const poner = useCallback((nueva: Madriguera) => {
@@ -128,23 +130,29 @@ export const ConejosCasa = memo(function ConejosCasa({ ref, visible, vista, noch
   const aplicar = useCallback((salida: Salida) => {
     if (salida.madriguera === actualRef.current) return false;
     poner(salida.madriguera);
+    salida.sonidos.forEach(onSonido);
     return true;
-  }, [poner]);
+  }, [poner, onSonido]);
 
-  useEffect(() => { aplicar(mirar(actualRef.current, vista, performance.now(), Math.random)); }, [vista, aplicar]);
+  useEffect(() => {
+    const salida = mirar(actualRef.current, vista, performance.now(), Math.random);
+    // Al salir del jardín la vista vuelve arriba sola: eso no suena.
+    aplicar(visible ? salida : { ...salida, sonidos: [] });
+  }, [vista, visible, aplicar]);
   useEffect(() => { poner(ponerNoche(actualRef.current, noche, performance.now(), Math.random)); }, [noche, poner]);
   useEffect(() => {
     // Fuera del jardín, el juego se acaba sin más.
     if (!visible) { poner(abandonar(actualRef.current, performance.now(), Math.random)); return; }
     let fotograma = requestAnimationFrame(function paso() {
       const antes = actualRef.current.vista;
-      const { madriguera: nueva } = avanzar(actualRef.current, performance.now(), Math.random);
+      const { madriguera: nueva, sonidos } = avanzar(actualRef.current, performance.now(), Math.random);
       poner(nueva);
+      sonidos.forEach(onSonido);
       if (antes === "arriba" && nueva.vista === "abajo") onBaja();
       fotograma = requestAnimationFrame(paso);
     });
     return () => cancelAnimationFrame(fotograma);
-  }, [visible, poner, onBaja]);
+  }, [visible, poner, onBaja, onSonido]);
 
   const caricia = useCallback((id: ConejoId) => aplicar(acariciar(actualRef.current, id, performance.now())), [aplicar]);
   const llamar = (cueva: CuevaId) => aplicar(tocarCueva(actualRef.current, cueva, Math.random));

@@ -19,7 +19,7 @@ import { ESCONDITES, SITIO_JAULA, type EsconditeId, type HamstersProgress, type 
 import { apuntarVisita, comidaFavoritaDe, OLER_TRAS_ENTRAR_MS, SITIOS_PARA_OLER, COMIDAS_AMIGOS, cuerpoDelVisitante, darDeComerAlVisitante, DESPEDIDA_MS, elegirVisitante, HOJA_COMIDAS_AMIGOS, LLAMA_A_LOS_MS, SE_VA_SIN_COMER_MS, SE_VA_TRAS_COMER_MS, TOC_CADA_MS, tocaVisita, TOQUE_VISITANTE, VISITANTE_ASOMA, VISITANTE_SITIO } from "./casaVisitante";
 import { DibujoAmigo } from "./DibujoAmigo";
 import { friendCatalog, type FriendFood } from "./friends";
-import { AMPLIACION_JARDIN, CORTE, NODOS_TUNEL } from "./casaConejos";
+import { AMPLIACION_JARDIN, CORTE, NODOS_TUNEL, type SonidoConejos } from "./casaConejos";
 import { ConejosCasa, type MandosConejos } from "./ConejosCasa";
 import { FLECHA_BAJAR, FLECHA_SUBIR, LIENZO_CORTE, LIENZO_PRADERA, pintarCorte, pintarPradera, sobreFlecha } from "./casaMadrigueraArte";
 import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, CELDAS_MACETEROS, HOJA_MACETEROS, jardinDe, luciernagasDelJardin, maceteroBajo, maceteroPorRegar, regar, REGADERA, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
@@ -1601,6 +1601,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     if (cantar) sonido.cantar(bano);
   };
   /** Sonidos de la pecera: burbujas, ñam, chapoteo, el globo y la luz. */
+  /** Sonidos de la madriguera: bajar y subir, zanahoria, caricia, juegos y los de «Buscar a los conejos». */
+  const sonarConejos = useCallback((sonido: SonidoConejos) => sonidoRef.current?.conejos(sonido), []);
   const sonarPecera = useCallback((sonido: SonidoPecera) => sonidoRef.current?.pecera(sonido), []);
   /** «¡LISTO!» en el vestidor: se queda con lo que lleva y, de vuelta en la habitación, ronronea (sin corazón). */
   const salirDelVestidor = (ropa: Ropa) => {
@@ -1633,7 +1635,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             {fase === "casa" && !bajoTierra && <FlechaMadriguera sentido="bajar" etiqueta={t("casa.madriguera.bajar.oculto")} onUsar={() => mirarMadriguera(true)} />}
             {bajoTierra && <FlechaMadriguera sentido="subir" etiqueta={t("casa.madriguera.subir.oculto")} onUsar={() => mirarMadriguera(false)} />}
           </>}
-          <ConejosCasa ref={conejosRef} visible={enJardin} vista={bajoTierra ? "abajo" : "arriba"} noche={nocheReloj} onBaja={bajarConEllos} />
+          <ConejosCasa ref={conejosRef} visible={enJardin} vista={bajoTierra ? "abajo" : "arriba"} noche={nocheReloj} onBaja={bajarConEllos} onSonido={sonarConejos} />
           {/* De noche, bajo tierra, una luz cálida y tenue. */}
           {enJardin && noche && <div className="casa-luz-cueva" aria-hidden="true"
             style={{ left: LIENZO_CORTE.x, top: LIENZO_CORTE.y, width: LIENZO_CORTE.ancho, height: LIENZO_CORTE.alto, "--luz": `${NODOS_TUNEL.dormitorio.x - LIENZO_CORTE.x}px ${NODOS_TUNEL.dormitorio.y - LIENZO_CORTE.y}px` } as CSSProperties} />}

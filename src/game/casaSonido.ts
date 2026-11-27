@@ -5,6 +5,7 @@
  */
 import type { SonidoPecera } from "./casaPecera.ts";
 import type { SonidoJaula } from "./casaHamsters.ts";
+import type { SonidoConejos } from "./casaConejos.ts";
 import type { SampleBank } from "./catPartySamples";
 import { busDeZona, contextoAudio, soltarBus } from "./audio.ts";
 
@@ -99,6 +100,25 @@ export const NOTAS_JAULA: Readonly<Record<SonidoJaula, readonly NotaPecera[]>> =
   vuelve: [523, 659, 784].map((hz, i) => nota("triangle", hz, hz, 0.14, 0.09, i * 0.11)),
   // Un hámster: chillidito.
   hamster: [nota("sine", 1700, 2300, 0.07, 0.06), nota("sine", 2100, 1700, 0.08, 0.05, 0.08)],
+};
+
+/** Los sonidos de la madriguera (mapa «La madriguera de los conejos»): uno corto para cada cosa, todo por código. */
+export const NOTAS_CONEJOS: Readonly<Record<SonidoConejos, readonly NotaPecera[]>> = {
+  // Bajar y subir: un tobogán de tierra, hacia abajo o hacia arriba.
+  baja: [nota("sine", 700, 220, 0.35, 0.09), nota("triangle", 520, 160, 0.35, 0.04, 0.05)],
+  sube: [nota("sine", 220, 700, 0.35, 0.09), nota("triangle", 160, 520, 0.35, 0.04, 0.05)],
+  // Zanahoria: cuatro mordiscos que crujen.
+  zanahoria: [0, 0.12, 0.24, 0.36].map((retraso) => nota("square", 620, 240, 0.05, 0.035, retraso)),
+  // Caricia: un «mmm» dulce.
+  caricia: [nota("sine", 780, 980, 0.18, 0.07), nota("sine", 980, 880, 0.22, 0.06, 0.18)],
+  // Juegos: dos brincos de muelle.
+  juega: [nota("triangle", 300, 760, 0.14, 0.09), nota("triangle", 380, 920, 0.14, 0.09, 0.2)],
+  // «¡Cucú!»: dos notas, la segunda más grave.
+  cucu: [nota("sine", 988, 988, 0.16, 0.1), nota("sine", 784, 784, 0.26, 0.1, 0.2)],
+  // Escondite vacío: un «fff» de paja que no dice nada.
+  vacio: [nota("triangle", 260, 190, 0.12, 0.05)],
+  // «¡Bravo!»: cuatro notas hacia arriba. Empieza después del «cucú».
+  bravo: [523, 659, 784, 1047].map((hz, i) => nota("triangle", hz, hz, 0.16, 0.09, 0.45 + i * 0.11)),
 };
 
 /**
@@ -357,6 +377,10 @@ export function crearSonidoCasa(ajustesIniciales: Ajustes) {
     /** Puertas y maullido del escondite; el maullido, con el tono del gatito de dentro. */
     escondite(tipo: SonidoEscondite, mundo?: number) {
       tocarNotas(NOTAS_ESCONDITE[tipo], mundo === undefined ? 1 : tonoDe(mundo));
+    },
+    /** Sonidos de la madriguera de los conejos. */
+    conejos(tipo: SonidoConejos) {
+      tocarNotas(NOTAS_CONEJOS[tipo]);
     },
     /** Sonidos de la jaula de hámsters, por el mismo bus que lo demás. */
     jaula(tipo: SonidoJaula) {

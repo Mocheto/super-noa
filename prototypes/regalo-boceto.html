@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boceto del regalo</title>
+<!--
+  PROTOTIPO DE USAR Y TIRAR (issue 462, mapa «Ganar decoraciones de la casa»). No es código del juego.
+  Servidor `prototypes` de .claude/launch.json:
+  http://127.0.0.1:8765/prototypes/regalo-boceto.html?variante=A&paso=0
+  ELEGIDA (27-11-2026): la A, con la apertura de la B (tarjeta grande con lo ganado).
+  Tres variantes del regalo en la tableta vertical (800 × 1280). La caja y el globo son provisionales (SVG).
+-->
+<style>
+  :root { --ciruela: #2f1d33; --crema: #fff8e9; --miel: #e0a452; --oro: #ffd76a; --rojo: #e5484d; --verde: #5a9e4b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #1b1226; color: var(--crema); font: 15px/1.4 system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; }
+  .pie { position: fixed; z-index: 50; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; padding: 8px; border-radius: 14px; background: #000d; white-space: nowrap; }
+  .pie button { padding: 8px 12px; border: 2px solid var(--crema); border-radius: 9px; background: none; color: var(--crema); font: inherit; cursor: pointer; }
+  .pie button[aria-pressed="true"] { background: var(--crema); color: var(--ciruela); font-weight: 800; }
+  .pie .sep { width: 2px; background: #fff5; }
+  #marco { margin-top: 8px; }
+  .pantalla { position: relative; width: 800px; height: 1280px; overflow: hidden; background: #3c2a52; transform-origin: 0 0; font-family: ui-monospace, Menlo, monospace; }
+  .rotulo { font-weight: 900; letter-spacing: 1px; }
+  .bloque { position: absolute; left: 8px; right: 8px; bottom: 8px; padding: 8px; border: 4px solid var(--ciruela); border-radius: 18px; background: var(--miel); }
+  .vista { position: relative; width: 756px; height: 567px; overflow: hidden; border: 3px solid var(--ciruela); border-radius: 10px; }
+  .escena { position: absolute; width: 720px; height: 540px; transform: scale(1.05); transform-origin: 0 0; }
+  .escena > * { position: absolute; image-rendering: pixelated; }
+  .fondo { left: -1290px; top: 0; width: 2420px; height: 540px; }
+  .mueble { background-repeat: no-repeat; background-size: 500% 100%; }
+  .gato { width: 160px; height: 160px; background: url("../public/assets/sprites/gato-casa-v1.webp") no-repeat; background-size: 400% 1300%; transition: left .9s, top .9s; z-index: 4; }
+  .bandeja { display: flex; align-items: center; justify-content: center; gap: 10px; height: 150px; margin-top: 8px; border: 3px solid var(--ciruela); border-radius: 16px; background: var(--crema); }
+  .modo { width: 52px; height: 52px; border: 3px solid var(--ciruela); border-radius: 50%; background: var(--crema); box-shadow: 0 3px 0 var(--ciruela); }
+  .objeto { width: 100px; height: 100px; background: url("../public/assets/sprites/casa-objetos-v1.webp") no-repeat; background-size: 700% 100%; }
+  .version { position: relative; width: 128px; height: 128px; padding: 0; border: 4px solid var(--ciruela); border-radius: 16px; background: #fff; cursor: pointer; }
+  .version i { position: absolute; inset: 8px; background: url("../public/assets/sprites/casa-mueble-cama-v1.webp") no-repeat; background-size: 500% auto; background-position-y: center; }
+  .version.is-puesta { border-color: var(--verde); box-shadow: 0 0 0 4px var(--verde); }
+  .version.mueve { animation: mueve .5s; }
+  @keyframes mueve { 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
+  /* Lo que falta, según variante: A silueta oscura con lazo; B desvaído con «?»; C envuelto en papel con la forma a la vista. */
+  .A .falta i { filter: brightness(0) opacity(.5); }
+  .B .falta i { filter: grayscale(1) opacity(.3) blur(2px); }
+  .B .falta b { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ciruela); font-size: 54px; }
+  .C .falta { background: repeating-linear-gradient(45deg, #ffb7c5 0 14px, #ffd3dc 14px 28px); }
+  .C .falta i { filter: brightness(0) invert(1) opacity(.85); }
+  .lazo { position: absolute; width: 46px; height: 34px; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 34'><g fill='%23e5484d' stroke='%232f1d33' stroke-width='3' stroke-linejoin='round'><path d='M23 13 5 3v20zM23 13 41 3v20zM20 15l-7 17 9-6zM26 15l7 17-9-6z'/><circle cx='23' cy='13' r='6'/></g></svg>") center / contain no-repeat; pointer-events: none; }
+  .version .lazo { right: -12px; top: -12px; }
+  /* Caja, globo y confeti provisionales. */
+  .caja { width: 110px; height: 110px; border: 0; padding: 0; cursor: pointer; z-index: 5; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g stroke='%232f1d33' stroke-width='4' stroke-linejoin='round'><path fill='%235aa9e6' d='M14 42h72v52H14z'/><path fill='%237cc0f2' d='M8 28h84v18H8z'/><path fill='%23ffd76a' d='M42 28h16v66H42z'/><path fill='%23e5484d' d='M50 28 24 8v22zM50 28 76 8v22z'/><circle fill='%23e5484d' cx='50' cy='26' r='8'/></g></svg>") center / contain no-repeat; animation: salta 1.4s infinite; }
+  @keyframes salta { 0%, 70%, 100% { transform: none; } 78% { transform: translateY(-14px) rotate(-5deg); } 86% { transform: rotate(5deg); } }
+  .globo { width: 120px; height: 230px; border: 0; padding: 0; background: none; cursor: pointer; z-index: 5; animation: flota 2.6s ease-in-out infinite; }
+  .globo::before { content: ""; position: absolute; left: 12px; top: 0; width: 96px; height: 116px; border: 4px solid var(--ciruela); border-radius: 50%; background: radial-gradient(circle at 32% 28%, #fff 0 8px, #ff8fb0 9px); }
+  .globo::after { content: ""; position: absolute; left: 58px; top: 120px; width: 4px; height: 50px; background: var(--ciruela); }
+  .globo .caja { position: absolute; left: 20px; bottom: 0; width: 80px; height: 80px; animation: none; }
+  @keyframes flota { 50% { transform: translateY(18px); } }
+  .confeti { width: 12px; height: 18px; z-index: 6; animation: cae 1.1s ease-out forwards; }
+  @keyframes cae { from { transform: none; opacity: 1; } to { transform: translate(var(--dx), var(--dy)) rotate(520deg); opacity: 0; } }
+  .brillo { width: 220px; height: 200px; z-index: 6; pointer-events: none; background: radial-gradient(circle, #fff9 0 22%, #ffd76a88 40%, transparent 70%); animation: brillo .7s ease-in-out 3; }
+  @keyframes brillo { 50% { transform: scale(1.35); opacity: .3; } }
+  /* Ventanas y mapa. */
+  .velo { position: absolute; inset: 0; z-index: 10; display: grid; place-items: center; background: #1b1226cc; }
+  .ventana { position: relative; width: 600px; padding: 0 0 32px; border: 5px solid var(--ciruela); border-radius: 18px; background: var(--crema); color: var(--ciruela); text-align: center; box-shadow: 0 0 0 5px var(--oro); }
+  .ventana h2 { margin: 0 0 24px; padding: 22px; border-bottom: 5px solid var(--ciruela); border-radius: 13px 13px 0 0; background: var(--oro); font-size: 38px; }
+  .ventana .caja { display: block; margin: 0 auto 18px; width: 190px; height: 190px; }
+  .boton { padding: 16px 30px; border: 4px solid var(--ciruela); border-radius: 10px; background: var(--verde); color: #fff; box-shadow: 0 6px 0 var(--ciruela); font: 900 26px ui-monospace, monospace; cursor: pointer; }
+  .cinta { position: absolute; z-index: 11; left: -20px; right: -20px; top: 150px; padding: 22px; display: flex; gap: 20px; align-items: center; justify-content: center; border-block: 6px solid var(--ciruela); background: var(--rojo); color: #fff; font-size: 40px; transform: rotate(-4deg); }
+  .cinta .caja { width: 100px; height: 100px; }
+  .mapa { position: absolute; inset: 0; background: url("../public/assets/worlds/casa-jardin-v1.webp") center / cover; }
+  .casa-mapa { position: absolute; right: 26px; bottom: 40px; }
+  .casa-mapa .lazo { right: -22px; top: -26px; width: 70px; height: 52px; animation: salta 1.4s infinite; }
+  .casa-mapa .caja { position: absolute; left: -30px; top: -70px; width: 90px; height: 90px; }
+  .etiqueta { position: absolute; z-index: 20; left: 12px; right: 12px; top: 12px; padding: 12px 16px; border-radius: 14px; background: #000b; color: var(--crema); font: 18px/1.4 system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<div id="marco"><div class="pantalla" id="pantalla"></div></div>
+<nav class="pie" id="pie"></nav>
+<script>
+const VARIANTES = {
+  A: { nombre: "A · Caja en la alfombra", falta: "silueta oscura con lazo" },
+  B: { nombre: "B · Globo", falta: "desvaída, con «?»" },
+  C: { nombre: "C · Paquete en la puerta", falta: "silueta blanca en papel de regalo" },
+};
+const PASOS = ["1 Fin de pantalla", "2 Mapa", "3 En la casa", "4 Abrirlo", "5 Decorar"];
+const NOTAS = {
+  A: ["El aviso es una línea más de la ventana de pantalla completada.", "Lacito sobre el botón CASA.", "La caja salta en la alfombra. Tócala.", "Revienta en confeti y la cama nueva aparece en su sitio; el gatito va a olerla.", "Lo que falta: "],
+  B: ["Cruza la ventana una cinta roja con el regalo.", "Una cajita flota junto al botón CASA.", "El regalo cuelga de un globo en medio de la habitación. Tócalo.", "El globo explota, sale una tarjeta grande con lo ganado y después va a su sitio.", "Lo que falta: "],
+  C: ["Ventana propia ¡REGALO! antes de la de pantalla completada.", "Lacito sobre el botón CASA.", "La caja espera junto a la puerta, como un paquete. Tócala.", "Se abre a pantalla grande: tres toques para desenvolver, y luego se pone en su sitio.", "Lo que falta: "],
+};
+const q = new URLSearchParams(location.search);
+let variante = VARIANTES[q.get("variante")] ? q.get("variante") : "A";
+let paso = Math.max(0, Math.min(4, Number(q.get("paso")) || 0));
+let abierto = false, toques = 0, relojes = [];
+const pantalla = document.getElementById("pantalla");
+const luego = (f, ms) => relojes.push(setTimeout(f, ms));
+const el = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; };
+
+const MUEBLES = [["cortinas", 586, 22, 298, 262], ["estanteria", 282, 150, 160, 82], ["alfombra", 512, 396, 442, 123], ["cama", 261, 251, 198, 182], ["cojin", 150, 445, 180, 86]];
+const pos = (v) => `${v * 25}% 0`;
+
+function habitacion(bandeja) {
+  const bloque = el(`<div class="bloque"><div class="vista"><div class="escena"><img class="fondo" src="../public/assets/worlds/casa-habitacion-vacia-v3.webp" alt=""></div></div><div class="bandeja">${bandeja}</div></div>`);
+  const escena = bloque.querySelector(".escena");
+  for (const [id, x, y, w, h] of MUEBLES) {
+    // La vista empieza en x = 150 de la escena del juego.
+    escena.append(el(`<div class="mueble" data-id="${id}" style="left:${x - 150}px;top:${y}px;width:${w}px;height:${h}px;background-image:url('../public/assets/sprites/casa-mueble-${id}-v1.webp');background-position:${pos(id === "cama" && abierto ? 2 : 0)}"></div>`));
+  }
+  escena.append(el(`<div class="gato" style="left:410px;top:340px;background-position:0 -160px"></div>`));
+  return { bloque, escena };
+}
+const BANDEJA = `<span class="modo"></span><span class="modo"></span><span class="modo"></span><span class="objeto"></span><span class="objeto" style="background-position:33.3% 0"></span><span class="objeto" style="background-position:66.6% 0"></span>`;
+
+function confeti(escena, x, y) {
+  for (let i = 0; i < 40; i++) {
+    const color = ["#e5484d", "#ffd76a", "#5aa9e6", "#7fcf6a", "#c79bf2"][i % 5];
+    escena.append(el(`<i class="confeti" style="left:${x}px;top:${y}px;background:${color};--dx:${Math.cos(i) * (80 + i * 5)}px;--dy:${Math.sin(i * 1.7) * 160}px"></i>`));
+  }
+}
+function colocar(escena) {
+  abierto = true;
+  escena.querySelector('[data-id="cama"]').style.backgroundPosition = pos(2);
+  escena.append(el(`<i class="brillo" style="left:100px;top:240px"></i>`));
+  const gato = escena.querySelector(".gato");
+  luego(() => { gato.style.backgroundPosition = "0 0"; gato.style.left = "240px"; gato.style.transform = "scaleX(-1)"; }, 600);
+  luego(() => { gato.style.backgroundPosition = "0 -160px"; }, 1600);
+}
+function abrir(escena, boton) {
+  const x = parseFloat(boton.style.left), y = parseFloat(boton.style.top);
+  boton.remove();
+  confeti(escena, x + 50, y + 50);
+  if (variante === "A") luego(() => colocar(escena), 450);
+  if (variante === "B") {
+    const tarjeta = el(`<div class="velo"><div class="ventana"><h2 class="rotulo">¡CAMA NUEVA!</h2><div style="width:300px;height:276px;margin:0 auto;background:url('../public/assets/sprites/casa-mueble-cama-v1.webp') 50% 0 / 500% 100%"></div></div></div>`);
+    luego(() => pantalla.append(tarjeta), 350);
+    luego(() => { tarjeta.remove(); colocar(escena); }, 2600);
+  }
+}
+function desenvolver(escena) {
+  toques = 0;
+  const velo = el(`<div class="velo"><div class="ventana"><h2 class="rotulo">¡TÓCALO!</h2><button class="caja" aria-label="Desenvolver" style="width:300px;height:300px"></button><div style="font-size:40px" id="puntos">○ ○ ○</div></div></div>`);
+  const caja = velo.querySelector(".caja");
+  caja.onclick = () => {
+    toques++;
+    velo.querySelector("#puntos").textContent = ["● ○ ○", "● ● ○", "● ● ●"][toques - 1];
+    caja.animate([{ transform: "rotate(-12deg) scale(1.15)" }, { transform: "rotate(12deg)" }, { transform: "none" }], 350);
+    if (toques === 3) luego(() => { velo.remove(); confeti(escena, 360, 250); colocar(escena); }, 450);
+  };
+  pantalla.append(velo);
+}
+
+function pinta() {
+  relojes.forEach(clearTimeout); relojes = [];
+  history.replaceState(null, "", `?variante=${variante}&paso=${paso}`);
+  pantalla.className = `pantalla ${variante}`;
+  pantalla.replaceChildren();
+  const nota = NOTAS[variante][paso] + (paso === 4 ? VARIANTES[variante].falta + ". Toca una: solo se mueve." : "");
+  pantalla.append(el(`<div class="etiqueta"><b>${VARIANTES[variante].nombre}</b><br>${nota}</div>`));
+  if (paso === 0) {
+    abierto = false;
+    const regalo = variante === "A" ? `<button class="caja" style="width:120px;height:120px" aria-label="Regalo"></button><div class="rotulo" style="font-size:28px;margin-bottom:18px">¡REGALO!</div>` : variante === "C" ? `<button class="caja" aria-label="Regalo"></button><p style="font:20px system-ui">Te espera en casa.</p>` : "";
+    pantalla.append(el(`<div class="velo"><div class="ventana"><h2 class="rotulo">${variante === "C" ? "¡REGALO!" : "¡MUY BIEN!"}</h2><div style="font-size:60px;margin-bottom:18px">${variante === "C" ? "" : "🍎🍎🍎"}</div>${regalo}<button class="boton">▶ SIGUE</button></div></div>`));
+    if (variante === "B") pantalla.append(el(`<div class="cinta rotulo"><button class="caja" aria-label="Regalo"></button>¡REGALO!</div>`));
+  } else if (paso === 1) {
+    const mapa = el(`<div class="mapa"><div class="casa-mapa"><button class="boton">▶ CASA</button>${variante === "B" ? '<button class="caja" aria-label="Regalo"></button>' : '<i class="lazo"></i>'}</div></div>`);
+    pantalla.prepend(mapa);
+  } else if (paso === 2 || paso === 3) {
+    abierto = false;
+    const { bloque, escena } = habitacion(BANDEJA);
+    pantalla.append(bloque);
+    const sitio = variante === "A" ? [410, 410] : variante === "B" ? [300, 80] : [20, 330];
+    const boton = variante === "B" ? el(`<button class="globo" aria-label="Regalo"><span class="caja"></span></button>`) : el(`<button class="caja" aria-label="Regalo"></button>`);
+    boton.style.left = sitio[0] + "px"; boton.style.top = sitio[1] + "px";
+    boton.onclick = () => variante === "C" ? (boton.remove(), desenvolver(escena)) : abrir(escena, boton);
+    escena.append(boton);
+    if (paso === 3) luego(() => boton.click(), 500);
+  } else {
+    const versiones = [0, 1, 2, 3, 4].map((v) => {
+      const tiene = v === 0 || v === 2;
+      return `<button class="version ${tiene ? "" : "falta"} ${v === 2 ? "is-puesta" : ""}" aria-label="Versión ${v}"><i style="background-position-x:${v * 25}%"></i>${tiene ? "" : variante === "B" ? "<b>?</b>" : '<span class="lazo"></span>'}</button>`;
+    }).join("");
+    abierto = true;
+    const { bloque } = habitacion(versiones);
+    bloque.querySelectorAll(".version.falta").forEach((b) => b.onclick = () => { b.classList.remove("mueve"); void b.offsetWidth; b.classList.add("mueve"); });
+    pantalla.append(bloque);
+  }
+  document.querySelectorAll("#pie button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === variante || Number(b.dataset.p) === paso && "p" in b.dataset));
+  ajusta();
+}
+function ajusta() {
+  const escala = Math.min(1, (innerHeight - 80) / 1280, (innerWidth - 16) / 800);
+  pantalla.style.transform = `scale(${escala})`;
+  const marco = document.getElementById("marco");
+  marco.style.width = 800 * escala + "px"; marco.style.height = 1280 * escala + "px";
+}
+const pie = document.getElementById("pie");
+for (const v of Object.keys(VARIANTES)) pie.append(Object.assign(el(`<button data-v="${v}">${v}</button>`), { onclick: () => { variante = v; pinta(); } }));
+pie.append(el(`<span class="sep"></span>`));
+PASOS.forEach((nombre, i) => pie.append(Object.assign(el(`<button data-p="${i}">${nombre}</button>`), { onclick: () => { paso = i; pinta(); } })));
+addEventListener("resize", ajusta);
+pinta();
+</script>
+</body>
+</html>

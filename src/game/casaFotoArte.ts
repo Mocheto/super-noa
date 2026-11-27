@@ -11,7 +11,7 @@ import { ANIMACIONES_GATO, CUADRO_GATO, hojaDeGatito, modeloDibujado } from "./c
 import { arropadoDe, CUADROS_ARROPADO } from "./casaDormirArte.ts";
 import { escalaEnSuelo, HABITACION_CASA as HABITACION } from "./casaHabitacion.ts";
 import { crearPecera, PECERA } from "./casaPecera.ts";
-import { conejosDeFoto, pintarConejo, pintarPradera } from "./casaMadrigueraArte.ts";
+import { conejosDeFoto, FONDO_PRADERA, HOJAS_CONEJO, pintarConejo } from "./casaMadrigueraArte.ts";
 import { pintarJaulaEnFoto, saleLaJaula } from "./casaHamstersFoto.ts";
 import { CAPA_VISIBLE, laminaDePieza, piezasEnCuadro, type PiezaEnCuadro } from "./casaVestidorArte.ts";
 import { conComplemento } from "./casaComplementos.ts";
@@ -85,10 +85,8 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     const fondo = await cargar(JARDIN.fondo);
     // El jardín dibujado empieza en x = 0; a su izquierda, la ampliación con la madriguera.
     if (foto.vista.x < 0) {
-      contexto.save();
-      contexto.setTransform(escala, 0, 0, escala, -foto.vista.x * escala, 0);
-      pintarPradera(contexto);
-      contexto.restore();
+      const pradera = await cargar(FONDO_PRADERA.imagen);
+      contexto.drawImage(pradera, (FONDO_PRADERA.x - foto.vista.x) * escala, 0, FONDO_PRADERA.ancho * escala, FONDO_PRADERA.alto * escala);
     }
     contexto.drawImage(fondo, 0, 0, JARDIN.ancho, ALTO, -foto.vista.x * escala, 0, JARDIN.ancho * escala, ALTO * escala);
     const colchoneta = await cargar(JARDIN.colchoneta.imagen);
@@ -193,10 +191,12 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
   // Canela y Algodón, si la foto coge su ampliación de día.
   const conejos = conejosDeFoto(foto);
   if (conejos.length) {
+    const hojas = await Promise.all(conejos.map(({ id }) => cargar(HOJAS_CONEJO[id])));
     contexto.save();
     contexto.setTransform(escala, 0, 0, escala, -foto.vista.x * escala, 0);
-    for (const conejo of conejos) pintarConejo(contexto, conejo);
+    conejos.forEach((conejo, i) => pintarConejo(contexto, hojas[i], conejo));
     contexto.restore();
+    contexto.imageSmoothingEnabled = false;
   }
 
   // El visitante del jardín, delante de los gatitos (que se le acercan a olerlo), con su dibujo de amigo (como en la escena: 200 px de ancho, los pies abajo en el centro).

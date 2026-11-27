@@ -10,7 +10,8 @@ import {
   tocarAgujero, tocarCueva, tocarEscondite,
   type Conejo, type ConejoId, type CuevaId, type Madriguera, type Nivel, type Punto, type Salida, type SitioConejo, type SonidoConejos,
 } from "./casaConejos";
-import { PELAJES as COLORES } from "./casaMadrigueraArte";
+import { HOJA_ESCONDITES, HOJAS_CONEJO } from "./casaMadrigueraArte";
+import { cssAssetUrl } from "./assets";
 import { tClave } from "../textos/index.ts";
 import { Texto } from "../textos/Texto";
 
@@ -52,64 +53,15 @@ const cerca = (a: Punto, b: Punto) => Math.hypot(a.x - b.x, a.y - b.y) <= RADIO_
 const SITIOS = Object.keys(ESCONDITES_CONEJO) as SitioConejo[];
 
 const TINTA = "#2f1d33";
-
-/** Un conejo de 90 × 100 con los pies abajo en el centro, mirando a la derecha. */
-function Dibujo({ id, ojosCerrados }: { id: ConejoId; ojosCerrados: boolean }) {
-  const { pelo, oreja } = COLORES[id];
-  const trazo = { stroke: TINTA, strokeWidth: 3 };
-  return <svg viewBox="0 0 90 100" width="90" height="100" aria-hidden="true">
-    <g className="casa-conejo-cuerpo">
-      <circle cx="14" cy="76" r="9" fill="#fff" {...trazo} />
-      <ellipse cx="40" cy="77" rx="28" ry="21" fill={pelo} {...trazo} />
-      <g className="casa-conejo-cabeza">
-        {/* Canela, las dos tiesas; Algodón, una caída. */}
-        <ellipse cx="54" cy="22" rx="7" ry="21" fill={pelo} {...trazo} /><ellipse cx="54" cy="23" rx="3" ry="14" fill={oreja} />
-        {id === "canela"
-          ? <><ellipse cx="70" cy="23" rx="7" ry="21" fill={pelo} {...trazo} /><ellipse cx="70" cy="24" rx="3" ry="14" fill={oreja} /></>
-          : <><ellipse cx="78" cy="42" rx="7" ry="19" transform="rotate(-62 78 42)" fill={pelo} {...trazo} /><ellipse cx="80" cy="43" rx="3" ry="12" transform="rotate(-62 80 43)" fill={oreja} /></>}
-        <circle cx="62" cy="55" r="20" fill={pelo} {...trazo} />
-        {ojosCerrados
-          ? <path d="M64 51q4 4 8 0" fill="none" {...trazo} strokeLinecap="round" />
-          : <circle cx="69" cy="50" r="3.5" fill={TINTA} />}
-        <circle className="casa-conejo-nariz" cx="81" cy="58" r="3.5" fill="#e8849a" />
-      </g>
-      <ellipse cx="30" cy="95" rx="15" ry="5" fill={pelo} {...trazo} />
-      <ellipse className="casa-conejo-patita" cx="62" cy="94" rx="9" ry="5" fill={pelo} {...trazo} />
-    </g>
-  </svg>;
-}
-
-/** Lo que asoma de un conejo escondido: sus orejas (a Algodón, una caída). */
-function Orejas({ id }: { id: ConejoId }) {
-  const { pelo, oreja } = COLORES[id];
-  const trazo = { stroke: TINTA, strokeWidth: 3 };
-  return <svg className="casa-escondite-orejas" viewBox="0 0 50 46" aria-hidden="true">
-    <ellipse cx="16" cy="25" rx="7" ry="22" fill={pelo} {...trazo} /><ellipse cx="16" cy="26" rx="3" ry="15" fill={oreja} />
-    {id === "canela"
-      ? <><ellipse cx="34" cy="25" rx="7" ry="22" fill={pelo} {...trazo} /><ellipse cx="34" cy="26" rx="3" ry="15" fill={oreja} /></>
-      : <><ellipse cx="37" cy="35" rx="7" ry="19" transform="rotate(66 37 35)" fill={pelo} {...trazo} /><ellipse cx="38" cy="35" rx="3" ry="12" transform="rotate(66 38 35)" fill={oreja} /></>}
-  </svg>;
-}
-
-/** Cada escondite, en 100 × 70 con la base abajo (provisional, por código). */
-const DIBUJO_SITIO: Readonly<Record<SitioConejo, React.ReactNode>> = {
-  paja: <><path d="M6 68Q12 24 50 26T94 68z" fill="#e8c15a" /><path d="M22 66l10-28M44 66l6-34M62 66l-4-34M80 66L68 40" fill="none" stroke="#fbe49a" /></>,
-  manta: <><path d="M8 68V40q0-12 14-12h56q14 0 14 12v28z" fill="#7fb4e8" /><path d="M8 46h84M34 28v40M66 28v40" fill="none" stroke="#fff8e9" /></>,
-  zanahorias: <><path d="M10 40l40 28-6-38zM40 32l12 36 16-36zM90 40L52 68l8-38z" fill="#f08a2c" /><path d="M22 36l-8-14M54 32V14M78 36l10-14" fill="none" stroke="#5fa14a" /></>,
-  cesta: <><path d="M14 34h72L76 68H24z" fill="#c68a4a" /><path d="M20 46h60M24 58h52" fill="none" stroke="#8a5a2c" /><path d="M26 34q24-30 48 0" fill="none" stroke="#c68a4a" /></>,
-  caja: <><path d="M14 30h72v38H14z" fill="#d9a066" /><path d="M14 30l-8 14h30l14-14 14 14h30l-8-14" fill="#e8b87e" /></>,
-  pelota: <><circle cx="50" cy="44" r="25" fill="#e8545a" /><path d="M26 40q24 14 48 0" fill="none" stroke="#fff8e9" /></>,
-};
-
 const DibujoConejo = ({ conejo, enVista, encontrado, celebra, onAcariciar }: { conejo: Conejo; enVista: boolean; encontrado: boolean; celebra: boolean; onAcariciar: () => void }) => {
   const { id, x, y, mira, nivel, hace, gesto } = conejo;
   const nombre = tClave(`casa.madriguera.nombre.${id}.rotulo`);
   const pose = gesto?.tipo ?? (celebra ? "juega" : hace);
   return <button type="button" className={`casa-conejo is-${nivel} is-${pose}`} style={{ left: x, top: y }} tabIndex={enVista ? undefined : -1} aria-hidden={enVista ? undefined : true}
     aria-label={tClave("casa.madriguera.conejo.oculto", { nombre })} onClick={(event) => { if (event.detail === 0) onAcariciar(); }}>
-    <span className="casa-conejo-dibujo" style={{ scale: `${mira} 1` }}><Dibujo id={id} ojosCerrados={gesto?.tipo === "caricia" || hace === "duerme"} /></span>
+    <span className="casa-conejo-dibujo" style={{ scale: `${mira} 1`, backgroundImage: cssAssetUrl(HOJAS_CONEJO[id]) }} />
     {/* Arriba mordisquea la hierba; la zanahoria es la de Noa o la de la despensa. */}
-    {(pose === "come" || (pose === "mordisquea" && nivel === "abajo")) && <i className="casa-objeto is-zanahoria casa-conejo-zanahoria" style={{ left: mira > 0 ? 68 : -14 }} />}
+    {(pose === "come" || (pose === "mordisquea" && nivel === "abajo")) && <i className="casa-objeto is-zanahoria casa-conejo-zanahoria" style={{ left: mira > 0 ? 66 : -12 }} />}
     {pose === "duerme" && <svg className="casa-conejo-sueno" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4h12L4 16h12" fill="none" stroke="#fff8e9" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" /></svg>}
     {gesto && <i key={gesto.desde} className="casa-corazon casa-conejo-corazon" />}
     {celebra && <i className="casa-corazon casa-conejo-corazon" />}
@@ -192,8 +144,11 @@ export const ConejosCasa = memo(function ConejosCasa({ ref, visible, vista, noch
     {SITIOS.map((sitio) => {
       const { x, y } = ESCONDITES_CONEJO[sitio];
       const dentro = busqueda && CONEJOS.find((id) => busqueda.sitios[id] === sitio && escondido(id));
-      const clase = `casa-escondite${movido?.sitio === sitio ? " is-movido" : ""}`;
-      const dibujo = <>{dentro && <Orejas id={dentro} />}<svg className="casa-escondite-dibujo" viewBox="0 0 100 70" stroke={TINTA} strokeWidth="3" strokeLinejoin="round" aria-hidden="true">{DIBUJO_SITIO[sitio]}</svg></>;
+      const clase = `casa-guarida${movido?.sitio === sitio ? " is-movido" : ""}`;
+      const dibujo = <>
+        {dentro && <span className="casa-guarida-orejas" aria-hidden="true" style={{ backgroundImage: cssAssetUrl(HOJAS_CONEJO[dentro]) }} />}
+        <span className="casa-guarida-dibujo" aria-hidden="true" style={{ backgroundImage: cssAssetUrl(HOJA_ESCONDITES), backgroundPositionX: `${(SITIOS.indexOf(sitio) / (SITIOS.length - 1)) * 100}%` }} />
+      </>;
       return buscando
         ? <button key={sitio} type="button" className={clase} style={{ left: x, top: y }} aria-label={tClave(`casa.madriguera.escondite.${sitio}.oculto`)}
           onClick={(event) => { if (event.detail === 0) buscarEn(sitio); }}>{dibujo}</button>

@@ -21,7 +21,7 @@ import { DibujoAmigo } from "./DibujoAmigo";
 import { friendCatalog, type FriendFood } from "./friends";
 import { AMPLIACION_JARDIN, CORTE, NODOS_TUNEL, type SonidoConejos } from "./casaConejos";
 import { ConejosCasa, type MandosConejos } from "./ConejosCasa";
-import { FLECHA_BAJAR, FLECHA_SUBIR, LIENZO_CORTE, LIENZO_PRADERA, pintarCorte, pintarPradera, sobreFlecha } from "./casaMadrigueraArte";
+import { FLECHA_BAJAR, FLECHA_SUBIR, FONDO_CORTE, FONDO_PRADERA, HOJA_ZANAHORIA, sobreFlecha } from "./casaMadrigueraArte";
 import { BAJA_EN, BOTA_EN, botar, BOTAR_MS, BOTES, cambiaSolo, celdaDeMacetero, CELDAS_MACETEROS, HOJA_MACETEROS, jardinDe, luciernagasDelJardin, maceteroBajo, maceteroPorRegar, regar, REGADERA, dondeSePosa, estanciaDe, JARDIN, jugarDeUnaVez, llevarA, MARIPOSAS, mariposaBajo, masCercano, POSARSE_MS, posicionPosada, vueloDeMariposa, type Posada, sobreLaColchoneta, puertaDe, sobreLaPuerta, todosALaHabitacion, zonaPuertaDe, type Estancia } from "./casaJardin";
 import { ropaDe, vestir, type Ropa } from "./casaRopa";
 import { VestidorGatito } from "./VestidorGatito";
@@ -120,12 +120,8 @@ const CENTRO_JAULA = (SITIO_JAULA.zona.desde + SITIO_JAULA.zona.hasta) / 2;
 const verJaula = import.meta.env.DEV && new URLSearchParams(window.location.search).has("jaula");
 
 /** Cara de hámster (Perla asomada, la séptima pose de su hoja), para el botón que lleva a la jaula y la pista. */
-/** La cara de un conejo para el botón de la bandeja que lleva a la madriguera (provisional, por código). */
-const CaraConejo = () => <svg className="casa-cara-conejo" viewBox="0 0 32 32" aria-hidden="true">
-  <path d="M11 17C7 8 8 2 11 2s5 7 4 14zM21 17c4-9 3-15 0-15s-5 7-4 14z" fill="#fdf6ee" stroke="#2f1d33" strokeWidth="2" />
-  <ellipse cx="16" cy="22" rx="10" ry="8" fill="#fdf6ee" stroke="#2f1d33" strokeWidth="2" />
-  <path d="M12 20h2v2h-2zM18 20h2v2h-2z" fill="#2f1d33" /><path d="M15 24h2v2h-2z" fill="#e8849a" />
-</svg>;
+/** La cara de un conejo para el botón de la bandeja que lleva a la madriguera. */
+const CaraConejo = () => <i className="casa-cara-conejo" aria-hidden="true" style={{ backgroundImage: cssAssetUrl(HOJA_ZANAHORIA) }} />;
 /** La flecha para bajar a la madriguera o subir; el dedo la toca en la escena y el botón es para el teclado. */
 const FlechaMadriguera = ({ sentido, etiqueta, onUsar }: { sentido: "bajar" | "subir"; etiqueta: string; onUsar: () => void }) => {
   const { x, y } = sentido === "bajar" ? FLECHA_BAJAR : FLECHA_SUBIR;
@@ -251,8 +247,6 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [bajoTierra, setBajoTierra] = useState(false);
   const [paso, ponerPaso] = useEfimero<{ visto: true }>(temporizadores);
   const conejosRef = useRef<MandosConejos | null>(null);
-  const praderaLienzoRef = useRef<HTMLCanvasElement | null>(null);
-  const corteLienzoRef = useRef<HTMLCanvasElement | null>(null);
   /** Gatitos que van solos hacia la puerta para cambiar de estancia. */
   const seVanRef = useRef(new Set<number>());
   /** Gatitos que botan en la colchoneta del jardín ahora mismo. */
@@ -1104,17 +1098,6 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     return () => { window.clearInterval(huellas); window.clearInterval(reloj); };
   }, [fase, gatitos, sitios, guardar, pestanaVisible]);
 
-  // El dibujo provisional de la madriguera, una vez al entrar en el jardín.
-  useEffect(() => {
-    if (!enJardin) return;
-    for (const [lienzo, zona, pintar] of [[praderaLienzoRef.current, LIENZO_PRADERA, pintarPradera], [corteLienzoRef.current, LIENZO_CORTE, pintarCorte]] as const) {
-      const contexto = lienzo?.getContext("2d");
-      if (!contexto) continue;
-      contexto.setTransform(1, 0, 0, 1, -zona.x, -zona.y);
-      pintar(contexto);
-    }
-  }, [enJardin]);
-
   /** Los conejos ya escondidos: la vista baja con ellos. */
   const bajarConEllos = useCallback(() => {
     setBajoTierra(true);
@@ -1585,7 +1568,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     setFlash((veces) => veces + 1);
   };
 
-  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.webp"), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--regadera": cssAssetUrl(REGADERA), "--pluma": cssAssetUrl(HOJA_PLUMA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
+  const estiloMarco = { ...ACENTO_CASA, "--corazon": cssAssetUrl("./assets/sprites/ui-heart-v1.webp"), "--zanahoria": cssAssetUrl(HOJA_ZANAHORIA), "--objetos": cssAssetUrl("./assets/sprites/casa-objetos-v1.webp"), "--comidas": cssAssetUrl(HOJA_COMIDAS), "--regadera": cssAssetUrl(REGADERA), "--pluma": cssAssetUrl(HOJA_PLUMA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--hoja-mantita": cssAssetUrl(HOJA_MANTITA), "--objeto": `${Math.max(56, ajustes.objeto * medidas.escala)}px` } as CSSProperties;
   const estiloEscena = { "--objeto-escena": `${ajustes.objeto}px`, "--maceteros": cssAssetUrl(HOJA_MACETEROS), "--regadera": cssAssetUrl(REGADERA), "--comidas-amigos": cssAssetUrl(HOJA_COMIDAS_AMIGOS), "--mariposa": cssAssetUrl("./assets/sprites/casa-mariposa-v1.webp"), "--lampara": `${HABITACION.lampara.x + HABITACION.ampliacion}px ${HABITACION.lampara.y}px`, width: HABITACION.ancho, height: HABITACION.alto, transform: `translate(${-camara.x * medidas.escala}px, ${-camara.y * medidas.escala}px) scale(${medidas.escala})` } as CSSProperties;
 
   // Pantalla de baño: el gatito que se ha llevado a la bañera, con su hoja pintada. Al terminar, el baño cuenta como cuidado.
@@ -1628,17 +1611,15 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           onPointerDown={empezarDedo} onPointerMove={moverDedo} onPointerUp={acabarDedo} onPointerCancel={acabarDedo}>
           <img className="casa-fondo" src={enJardin ? JARDIN.fondo : fondo} alt="" draggable={false} />
           {enJardin && <>
-            <canvas ref={praderaLienzoRef} className="casa-madriguera" aria-hidden="true" width={LIENZO_PRADERA.ancho} height={LIENZO_PRADERA.alto}
-              style={{ left: LIENZO_PRADERA.x, top: LIENZO_PRADERA.y, width: LIENZO_PRADERA.ancho, height: LIENZO_PRADERA.alto }} />
-            <canvas ref={corteLienzoRef} className="casa-madriguera" aria-hidden="true" width={LIENZO_CORTE.ancho} height={LIENZO_CORTE.alto}
-              style={{ left: LIENZO_CORTE.x, top: LIENZO_CORTE.y, width: LIENZO_CORTE.ancho, height: LIENZO_CORTE.alto }} />
+            {[FONDO_PRADERA, FONDO_CORTE].map((zona) => <img key={zona.imagen} className="casa-madriguera" src={zona.imagen} alt="" draggable={false}
+              style={{ left: zona.x, top: zona.y, width: zona.ancho, height: zona.alto }} />)}
             {fase === "casa" && !bajoTierra && <FlechaMadriguera sentido="bajar" etiqueta={t("casa.madriguera.bajar.oculto")} onUsar={() => mirarMadriguera(true)} />}
             {bajoTierra && <FlechaMadriguera sentido="subir" etiqueta={t("casa.madriguera.subir.oculto")} onUsar={() => mirarMadriguera(false)} />}
           </>}
           <ConejosCasa ref={conejosRef} visible={enJardin} vista={bajoTierra ? "abajo" : "arriba"} noche={nocheReloj} onBaja={bajarConEllos} onSonido={sonarConejos} />
           {/* De noche, bajo tierra, una luz cálida y tenue. */}
           {enJardin && noche && <div className="casa-luz-cueva" aria-hidden="true"
-            style={{ left: LIENZO_CORTE.x, top: LIENZO_CORTE.y, width: LIENZO_CORTE.ancho, height: LIENZO_CORTE.alto, "--luz": `${NODOS_TUNEL.dormitorio.x - LIENZO_CORTE.x}px ${NODOS_TUNEL.dormitorio.y - LIENZO_CORTE.y}px` } as CSSProperties} />}
+            style={{ left: FONDO_CORTE.x, top: FONDO_CORTE.y, width: FONDO_CORTE.ancho, height: FONDO_CORTE.alto, "--luz": `${NODOS_TUNEL.dormitorio.x - FONDO_CORTE.x}px ${NODOS_TUNEL.dormitorio.y - FONDO_CORTE.y}px` } as CSSProperties} />}
           {/* Muebles, cada uno en la versión elegida, sobre la habitación vacía. */}
           {!enJardin && MUEBLES_DE_LAMINA.map((mueble) => {
             const dibujo = MUEBLES_CASA[mueble].dibujo!;

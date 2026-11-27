@@ -2,6 +2,13 @@
 
 Dossier del arte de la madriguera. Tickets: [Prompts del arte](https://github.com/Mocheto/super-noa/issues/450), [Generar el arte](https://github.com/Mocheto/super-noa/issues/451) y [Montar el arte](https://github.com/Mocheto/super-noa/issues/452), del mapa [La madriguera de los conejos](https://github.com/Mocheto/super-noa/issues/439). Especificación: [madriguera.md](../casa/madriguera.md). Mismo estilo que el [jardín](casa-jardin-v1.md).
 
+## Estado
+
+- **Montada** en [Montar el arte](https://github.com/Mocheto/super-noa/issues/452). Las originales están en `../super-noa-arte-original/casa-madriguera-v1/` y `prototypes/tools/casa-madriguera-recorte.py` las recorta.
+- El **corte** generado no respetó la guía: el script toma de él la hierba, las piedras, las raíces y las tres cuevas, las coloca donde andan los conejos y dibuja los túneles.
+- La **pradera** se compone: cielo, tapia, hierba y nubes salen del jardín para que continúen sin salto; del arte, el montículo y la bajante.
+- En **Algodón** la oreja caída solo salió en la pose de asomar y, a medias, en alguna más: se distingue sobre todo por el color.
+
 ## Qué se genera
 
 | # | Lámina | Adjuntar | Se publica como | Medida final |

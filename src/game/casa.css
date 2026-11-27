@@ -529,6 +529,9 @@
 
 /* El clima (issue 346): lienzo de la escena entera sobre el fondo y la ventana de noche. */
 .casa-clima { position: absolute; left: 0; top: 0; width: 1280px; height: 540px; image-rendering: pixelated; pointer-events: none; }
+/* En el jardín cae también sobre la ampliación de la madriguera. */
+.casa-escena.is-jardin .casa-clima { left: -480px; width: 1760px; }
+.casa-luz-cueva { z-index: 1000; pointer-events: none; background: radial-gradient(circle at var(--luz), #ffc66a55 0 80px, transparent 230px), #2a143d73; }
 
 /* La pecera (mapa «Pecera en la casa»): el mueble en la ampliación de la izquierda, con los peces entre el fondo y el cristal.
    Todo va en px de su dibujo (324 × 352); los toques los recoge la escena y los botones son para el teclado. */

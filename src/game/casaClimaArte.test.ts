@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { AMPLIACION_JARDIN } from "./casaConejos.ts";
 import { CAE_LLUVIA, CRISTALES_VENTANA, particula, pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte.ts";
 
 function contextoFalso() {
@@ -30,6 +31,13 @@ test("gotas y copos se quedan en su zona y caen con el tiempo", () => {
   const antes = particula(ZONA_JARDIN, 3, 0, CAE_LLUVIA, 14);
   const despues = particula(ZONA_JARDIN, 3, 0.1, CAE_LLUVIA, 14);
   assert.ok(despues.y > antes.y, "cae");
+});
+
+test("en el jardín llueve también sobre la ampliación de la madriguera, y no bajo tierra", () => {
+  const { caida } = ZONA_JARDIN;
+  assert.equal(caida.x, -AMPLIACION_JARDIN);
+  assert.equal(caida.x + caida.ancho, 1280);
+  assert.equal(caida.y + caida.alto, 540);
 });
 
 test("con sol no se pinta nada; con movimiento tranquilo, gotas y copos quietos", () => {

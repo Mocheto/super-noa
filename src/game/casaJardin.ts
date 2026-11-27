@@ -224,6 +224,22 @@ export function luciernagaEn(indice: number, ms: number): { x: number; y: number
   };
 }
 
+/** Y unas pocas sobre la ampliación de la madriguera. */
+export const LUCIERNAGAS_MADRIGUERA = 3;
+
+export function luciernagaMadriguera(indice: number, ms: number): { x: number; y: number } {
+  const { x, y } = luciernagaEn(indice * 2, ms + 4000);
+  // La misma deriva, en x negativas: de -400 a -80 de centro.
+  const centro = 200 + (indice * 2 * 740) / (LUCIERNAGAS - 1);
+  return { x: -400 + (indice * 320) / (LUCIERNAGAS_MADRIGUERA - 1) + (x - centro) * 0.6, y };
+}
+
+/** Todas las del jardín, para la casa y las fotos. */
+export const luciernagasDelJardin = (ms: (indice: number) => number) => [
+  ...Array.from({ length: LUCIERNAGAS }, (_, i) => luciernagaEn(i, ms(i))),
+  ...Array.from({ length: LUCIERNAGAS_MADRIGUERA }, (_, i) => luciernagaMadriguera(i, ms(LUCIERNAGAS + i))),
+];
+
 // --- Maceteros -------------------------------------------------------------------------------------------------------
 
 /** Lámina de los maceteros: diez celdas de 100 × 128 en fila (semilla, brote y, por color, capullo y flor). */

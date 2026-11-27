@@ -5,6 +5,7 @@
  * el mismo dibujo.
  */
 import type { Clima } from "./casaClima.ts";
+import { AMPLIACION_JARDIN } from "./casaConejos.ts";
 
 export type Caja = { x: number; y: number; ancho: number; alto: number };
 export type Arco = { cx: number; cy: number; radio: number };
@@ -37,14 +38,17 @@ export const ZONA_HABITACION: ZonaClima = {
   copos: 18,
 };
 
-/** En el jardín cae sobre todo el jardín; el arcoíris va en el cielo, a la izquierda del árbol y bajo las nubes. */
+/**
+ * En el jardín cae sobre todo el jardín y la ampliación de la madriguera (x negativas); el arcoíris va en el cielo, a la
+ * izquierda del árbol y bajo las nubes.
+ */
 export const ZONA_JARDIN: ZonaClima = {
-  caida: { x: 0, y: 0, ancho: 1280, alto: 540 },
+  caida: { x: -AMPLIACION_JARDIN, y: 0, ancho: 1280 + AMPLIACION_JARDIN, alto: 540 },
   velo: false,
   arcoiris: { cx: 590, cy: 265, radio: 140 },
   cielo: { x: 437, y: 0, ancho: 843, alto: 265 },
-  gotas: 70,
-  copos: 50,
+  gotas: 96,
+  copos: 69,
 };
 
 /** Bandas del arcoíris, de fuera adentro. */

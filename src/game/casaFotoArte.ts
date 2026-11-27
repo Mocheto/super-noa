@@ -15,7 +15,7 @@ import { pintarPradera } from "./casaMadrigueraArte.ts";
 import { pintarJaulaEnFoto, saleLaJaula } from "./casaHamstersFoto.ts";
 import { CAPA_VISIBLE, laminaDePieza, piezasEnCuadro, type PiezaEnCuadro } from "./casaVestidorArte.ts";
 import { conComplemento } from "./casaComplementos.ts";
-import { CELDAS_MACETEROS, HOJA_MACETEROS, JARDIN, LUCIERNAGAS, luciernagaEn } from "./casaJardin.ts";
+import { CELDAS_MACETEROS, HOJA_MACETEROS, JARDIN, luciernagasDelJardin } from "./casaJardin.ts";
 
 /** Fila de los pies dentro del cuadro del gato (la misma que en la casa). */
 export const PIES_GATITO = 152;
@@ -209,8 +209,7 @@ export async function dibujarFoto(lienzo: HTMLCanvasElement, foto: FotoCasa): Pr
     contexto.fillStyle = "rgba(20, 29, 90, 0.65)";
     contexto.fillRect(0, 0, ancho, lienzo.height);
     const momento = Date.parse(foto.hecha);
-    for (let i = 0; i < LUCIERNAGAS; i += 1) {
-      const { x, y } = luciernagaEn(i, momento);
+    for (const { x, y } of luciernagasDelJardin(() => momento)) {
       const centro = { x: (x - foto.vista.x) * escala, y: y * escala };
       const brillo = contexto.createRadialGradient(centro.x, centro.y, 0, centro.x, centro.y, 16 * escala);
       brillo.addColorStop(0, "rgba(255, 246, 168, 1)");

@@ -136,18 +136,26 @@
 @media (prefers-reduced-motion: reduce) { .casa-gatito.is-favorita, .casa-nam, .casa-abanico-comida { animation: none; } }
 
 /* Dibujos de casa-objetos-v1.webp: siete celdas en fila. */
-.casa-objeto.is-cuenco, .casa-objeto.is-cuenco-vacio, .casa-objeto.is-pelota, .casa-objeto.is-esponja, .casa-objeto.is-escoba, .casa-objeto.is-huella, .casa-objeto.is-huella-2 { background: var(--objetos) no-repeat 0 0 / 700% 100%; image-rendering: pixelated; }
+.casa-objeto.is-cuenco, .casa-objeto.is-cuenco-vacio, .casa-objeto.is-esponja, .casa-objeto.is-escoba, .casa-objeto.is-huella, .casa-objeto.is-huella-2 { background: var(--objetos) no-repeat 0 0 / 700% 100%; image-rendering: pixelated; }
 .casa-objeto.is-cuenco-vacio { background-position-x: calc(100% / 6); }
-.casa-objeto.is-pelota { background-position-x: calc(200% / 6); }
 .casa-objeto.is-esponja { background-position-x: calc(300% / 6); }
 .casa-objeto.is-escoba { background-position-x: calc(400% / 6); }
 .casa-objeto.is-huella { background-position-x: calc(500% / 6); }
 .casa-objeto.is-huella-2 { background-position-x: 100%; }
 .casa-objeto.is-mano::before { content: ""; position: absolute; inset: 20%; border: 3px solid #2f1d33; border-radius: 40% 40% 45% 45%; background: #ffd9c2; }
 
-.casa-arrastrado, .casa-pelota-lanzada { z-index: 2000; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 6px 4px #2f1d3366); }
-.casa-pelota-lanzada { animation: casa-pelota .7s ease-in forwards; }
-@keyframes casa-pelota { to { left: var(--hasta); top: var(--hasta-y, 80%); transform: translate(-50%, -50%) rotate(540deg); } }
+.casa-arrastrado { z-index: 2000; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 6px 4px #2f1d3366); }
+/* La pelota rayada (dibujo provisional hasta su lámina, docs/art/casa-pelota-v1.md): la misma en la bandeja y en juego. */
+.casa-objeto.is-pelota { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><clipPath id='c'><circle cx='32' cy='32' r='29'/></clipPath></defs><g clip-path='url(%23c)'><path fill='%23e5484d' d='M0 0h64v64H0z'/><path fill='%23fff4d6' d='M-2 20Q32 36 66 20v10Q32 46-2 30z'/><path fill='%233d8be0' d='M-2 30Q32 46 66 30v14Q32 62-2 44z'/><path fill='%23ffd76a' stroke='%232f1d33' stroke-width='2' d='m32 4 4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1z'/></g><circle cx='32' cy='32' r='29' fill='none' stroke='%232f1d33' stroke-width='5'/></svg>") center / 90% 90% no-repeat; image-rendering: auto; }
+/* En juego, en sus pies: (0, 0) es el punto del suelo; la bola sube `--alto` y gira `--giro`, y la sombra encoge. */
+.casa-pelota { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; pointer-events: none; }
+.casa-pelota-sombra { position: absolute; left: -29px; top: -7px; width: 58px; height: 14px; border-radius: 50%; background: #2f1d3355; transform: scale(var(--sombra, 1)); }
+.casa-pelota-bola { position: absolute; left: -32px; top: -62px; width: 64px; height: 64px; transform: translateY(var(--alto, 0px)); }
+.casa-pelota-bola::after { content: ""; position: absolute; left: 13px; top: 12px; width: 12px; height: 9px; border-radius: 50%; background: #ffffffcc; transform: rotate(-35deg); }
+.casa-escena .casa-pelota-bola .casa-objeto { display: block; position: static; width: 100%; height: 100%; transform: rotate(var(--giro, 0deg)); }
+.casa-pelota.is-se-va { animation: casa-pelota-se-va .4s ease-in .5s forwards; }
+@keyframes casa-pelota-se-va { to { opacity: 0; } }
+.casa-gatito.is-salta-pelota { animation: casa-salto .35s ease-out 1; }
 
 /* Bordes: queda habitación por ver a ese lado. */
 .casa-borde { position: absolute; top: 0; bottom: 0; z-index: 3; width: 40px; pointer-events: none; }

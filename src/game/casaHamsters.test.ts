@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   abrirPuerta, aDibujo, aEscena, arrastrar, asomoEnCasita, avanzar, CAMINOS, coger, COSAS, crearJaula, DIBUJO, ESCONDITES, guardadoDe,
   fugadoEn, JAULA_EN_ESCENA, NODOS, PUERTA_JAULA, queHayEn, pista, PISTA_MS, RACIONES, RADIO_JAULA, rellenar, ruta, SITIO_JAULA, soltar, tocarCosa, tocarTubo,
+  GRACIA_MS, GRACIAS, tocarHamster,
   type Cosa, type Jaula, type NodoId, type SonidoJaula,
 } from "./casaHamsters.ts";
 import { ARTE_JAULA, CAJA_JAULA, COLOCADOS, OBJETOS_JAULA } from "./casaHamstersArte.ts";
@@ -155,4 +156,44 @@ test("en la casita está un momento escondido y luego se queda asomado", () => {
   assert.ok(asomoEnCasita(3250) > 0 && asomoEnCasita(3250) < 1);
   assert.equal(asomoEnCasita(3000), 1);
   assert.equal(asomoEnCasita(0), 1);
+});
+
+test("tocar a un hámster le hace hacer una gracia por turnos, quieto, y luego sigue con lo suyo", () => {
+  const azar = azarDe(13);
+  let jaula = tocarCosa(crearJaula(undefined, 0, azar), "rueda", 0, azar).jaula;
+  let t = 0;
+  while (!jaula.hamsters.some((h) => h.hace === "rueda")) jaula = avanzar(jaula, (t += 50), azar).jaula;
+  const antes = jaula.hamsters.find((h) => h.hace === "rueda")!;
+  const el = (j: Jaula) => j.hamsters.find((h) => h.id === antes.id)!;
+  for (const [i, gracia] of [...GRACIAS, GRACIAS[0]].entries()) {
+    const tocado = tocarHamster(jaula, antes.id, t);
+    assert.deepEqual(tocado.sonidos, ["hamster"]);
+    assert.equal(el(tocado.jaula).gracia!.tipo, gracia, `toque ${i}`);
+    jaula = tocado.jaula;
+  }
+  assert.equal(el(jaula).hasta, antes.hasta + GRACIA_MS, "tocarlo seguido no acumula espera");
+  const quieto = pasar(jaula, t, GRACIA_MS - 100, azar).jaula;
+  assert.deepEqual([el(quieto).x, el(quieto).y, el(quieto).hace], [antes.x, antes.y, "rueda"]);
+  assert.equal(el(pasar(quieto, t + GRACIA_MS - 100, 200, azar).jaula).gracia, null);
+});
+
+test("andando se para; en un tubo o en la casita solo se lleva el corazón y no pierde el turno", () => {
+  const base = crearJaula(undefined, 0, azarDe(1));
+  const con = (cambios: Partial<Jaula["hamsters"][number]>): Jaula => ({ ...base, hamsters: base.hamsters.map((h) => ({ ...h, ...cambios })) });
+  const tubo = CAMINOS.findIndex((c) => c.tipo === "tubo");
+  const suelo = CAMINOS.findIndex((c) => c.tipo === "suelo");
+  for (const sitio of [{ camino: tubo }, { camino: null, nodo: "c2" as const }, { hace: "casita" as const }]) {
+    const tocado = tocarHamster(con(sitio), "perla", 10).jaula.hamsters[0];
+    assert.equal(tocado.gracia!.tipo, "mimo");
+    assert.equal(tocado.turno, 0);
+    assert.equal(tocado.hasta, base.hamsters[0].hasta);
+  }
+  const andando = tocarHamster(con({ camino: suelo, s: 10 }), "perla", 0).jaula;
+  assert.equal(pasar(andando, 0, 1000).jaula.hamsters[0].s, 10);
+  const enTubo = tocarHamster(con({ camino: tubo, s: 10 }), "perla", 0).jaula;
+  assert.ok(pasar(enTubo, 0, 1000).jaula.hamsters[0].s > 10);
+  const azar = azarDe(2);
+  const fugada = abrirPuerta(base, 0, azar).jaula;
+  const fuera = fugada.hamsters.find((h) => h.fuera)!;
+  assert.deepEqual(tocarHamster(fugada, fuera.id, 10), { jaula: fugada, sonidos: [] });
 });

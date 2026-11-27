@@ -164,6 +164,14 @@ export type Fuera = {
   desde: number;
 };
 
+/**
+ * La gracia que hace al tocarlo dentro de la jaula: las tres de `GRACIAS` se turnan; dentro de un tubo o de la casita
+ * no cabe de pie y solo se lleva un `mimo` (el corazón).
+ */
+export const GRACIAS = ["pie", "salto", "voltereta"] as const;
+export type Gracia = (typeof GRACIAS)[number] | "mimo";
+export const GRACIA_MS = 1500;
+
 export type Hamster = {
   id: HamsterId;
   /** Centro y rumbo (grados): en el dibujo del laberinto o, fuera de la jaula, en la escena. */
@@ -185,6 +193,9 @@ export type Hamster = {
   hambreEn: number;
   sedEn: number;
   fuera: Fuera | null;
+  gracia: { tipo: Gracia; desde: number } | null;
+  /** Cuál de `GRACIAS` toca en el siguiente toque. */
+  turno: number;
 };
 
 export type SonidoJaula = "tubo" | "rueda" | "columpio" | "casita" | "comida" | "agua" | "escapa" | "vuelve" | "hamster";
@@ -215,7 +226,7 @@ export function crearJaula(guardado: HamstersProgress | undefined, ahora: number
     hamsters: NOMBRES_HAMSTER.map((id): Hamster => ({
       id, ...NODOS[inicio[id]], angulo: 0, nodo: inicio[id], camino: null, s: 0, sentido: 1, anterior: null,
       plan: [], meta: null, hace: null, hasta: ahora + (id === "bolita" ? 1500 : 300),
-      hambreEn: ahora + entre(azar, 10000, 40000), sedEn: ahora + entre(azar, 15000, 50000), fuera: null,
+      hambreEn: ahora + entre(azar, 10000, 40000), sedEn: ahora + entre(azar, 15000, 50000), fuera: null, gracia: null, turno: 0,
     })),
   };
 }
@@ -322,14 +333,18 @@ function correrFuera(hamster: Hamster, fuera: Fuera, ahora: number, dt: number) 
 /** Copia para poder cambiarla sin tocar la anterior. */
 const copiar = (jaula: Jaula): Jaula => ({ ...jaula, hamsters: jaula.hamsters.map((h) => ({ ...h, plan: [...h.plan] })) });
 
+/** Haciendo una gracia que lo tiene quieto: no anda ni sigue con lo suyo hasta que acaba. */
+export const parado = ({ gracia }: Hamster) => gracia !== null && gracia.tipo !== "mimo";
+
 export function avanzar(anterior: Jaula, ahora: number, azar: Azar): Salida {
   const jaula = copiar(anterior);
   const sonidos: SonidoJaula[] = [];
   const dt = Math.max(0, Math.min(PASO_MAXIMO_MS, ahora - jaula.ultimo));
   jaula.ultimo = ahora;
   for (const hamster of jaula.hamsters) {
+    if (hamster.gracia && ahora - hamster.gracia.desde >= GRACIA_MS) hamster.gracia = null;
     if (hamster.fuera) correrFuera(hamster, hamster.fuera, ahora, dt);
-    else andarDentro(jaula, hamster, ahora, dt, azar, sonidos);
+    else if (!parado(hamster)) andarDentro(jaula, hamster, ahora, dt, azar, sonidos);
   }
   return { jaula, sonidos };
 }
@@ -356,6 +371,27 @@ function mandar(hamster: Hamster, plan: number[], meta: Cosa | null, ahora: numb
   hamster.meta = meta;
   hamster.hace = null;
   hamster.hasta = ahora;
+  hamster.gracia = null;
+}
+
+/** No cabe de pie: va por un tubo, está en un cubo o metido en la casita. */
+const encogido = (hamster: Hamster) => hamster.hace === "casita"
+  || (hamster.camino === null ? CUBOS.includes(hamster.nodo) : CAMINOS[hamster.camino].tipo === "tubo");
+
+/** Tocar a un hámster que está en la jaula: chilla y hace su gracia; lo que estaba haciendo espera a que acabe. */
+export function tocarHamster(anterior: Jaula, id: HamsterId, ahora: number): Salida {
+  const jaula = copiar(anterior);
+  const hamster = jaula.hamsters.find((h) => h.id === id);
+  if (!hamster || hamster.fuera) return { jaula: anterior, sonidos: [] };
+  if (encogido(hamster)) hamster.gracia = { tipo: "mimo", desde: ahora };
+  else {
+    // Con otra gracia a medias, solo se alarga lo que falta.
+    const yaHasta = parado(hamster) ? Math.max(ahora, hamster.gracia!.desde + GRACIA_MS) : ahora;
+    hamster.hasta += ahora + GRACIA_MS - yaHasta;
+    hamster.gracia = { tipo: GRACIAS[hamster.turno % GRACIAS.length], desde: ahora };
+    hamster.turno += 1;
+  }
+  return { jaula, sonidos: ["hamster"] };
 }
 
 /** Tocar la rueda, el columpio, la casita, el comedero o el bebedero: un hámster va para allá. */
@@ -406,7 +442,7 @@ export function abrirPuerta(anterior: Jaula, ahora: number, azar: Azar): Salida 
   const hamster = elige(azar, jaula.hamsters);
   jaula.puertaAbierta = true;
   Object.assign(hamster, aEscena({ x: PUERTA_JAULA.x + PUERTA_JAULA.ancho / 2, y: PUERTA_JAULA.y + PUERTA_JAULA.alto / 2 }));
-  Object.assign(hamster, { camino: null, plan: [], meta: null, hace: null, angulo: 0 });
+  Object.assign(hamster, { camino: null, plan: [], meta: null, hace: null, angulo: 0, gracia: null });
   hamster.fuera = { fase: "corre", escondite: elige(azar, IDS_ESCONDITE), desde: ahora };
   return { jaula, sonidos: ["escapa"] };
 }

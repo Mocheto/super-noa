@@ -28,6 +28,7 @@ Son mascotas aparte de los gatitos: no cuentan en «cinco en casa» ni tienen ne
 
 - Los hámsters se mueven solos por tubos, rampas y objetos, eligiendo al azar. Con hambre o sed van primero al comedero o al bebedero.
 - Noa toca un tubo, la rueda, el columpio o la casita y un hámster va allí: pasa por el tubo, hace girar la rueda, se balancea o se esconde un momento y asoma. No hace falta arrastrar nada.
+- Noa toca un hámster dentro de la jaula: sale su nombre, chilla y hace una de tres gracias, por turnos: de pie con un corazón, dos saltitos con dos corazones y una voltereta con tres estrellas. Se queda 1,5 s quieto y sigue con lo suyo. Dentro de un tubo o de la casita no cabe de pie y solo le sale el corazón. No se guarda ni cuenta para nada. Escapado, tocarlo es cogerlo.
 - Cada cosa tiene un sonido corto propio, por el bus de `casaSonido.ts`.
 
 ## Comida y agua

@@ -1,8 +1,8 @@
 import "../textos/zonas/casa";
 import { memo, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import {
-  abrirPuerta, arrastrar, asomoEnCasita, avanzar, CAMINOS, coger, COSAS, crearJaula, CUBOS, DIBUJO, ESCONDITES, estrenar, fugadoEn, guardadoDe, NODOS, pista, PUERTA_JAULA,
-  queHayEn, RACIONES, rellenar, REPISA, SITIO_JAULA, soltar, tocarCosa, tocarTubo,
+  abrirPuerta, arrastrar, asomoEnCasita, avanzar, CAMINOS, coger, COSAS, crearJaula, CUBOS, DIBUJO, ESCONDITES, estrenar, fugadoEn, GRACIA_MS, guardadoDe, NODOS, parado, pista, PUERTA_JAULA,
+  queHayEn, RACIONES, rellenar, REPISA, SITIO_JAULA, soltar, tocarCosa, tocarHamster, tocarTubo,
   type Cosa, type EsconditeId, type Hamster, type HamsterId, type HamstersProgress, type Jaula, type Punto, type Salida, type SonidoJaula,
 } from "./casaHamsters";
 import {
@@ -68,6 +68,40 @@ function poseDe({ hace, camino: tramo, fuera }: Hamster, ahora: number, quieto: 
   return !quieto && Math.floor(ahora / (hace === "rueda" ? 90 : 160)) % 2 ? "andarB" : "andarA";
 }
 
+/** El cuadro en el que cada uno está de pie sobre las patas de atrás. */
+const DE_PIE: Readonly<Record<HamsterId, Pose>> = { perla: "cogido", bolita: "comiendo" };
+/** El centro del cuadro «dormido» (hecho una bola), sobre el que da la voltereta, respecto al centro del hámster. */
+const CENTRO_BOLA = -2;
+
+/** Cuánto va de la gracia, de 0 a 1; con movimiento tranquilo, quieto en la mitad. */
+const avance = (desde: number, ahora: number, quieto: boolean) => (quieto ? 0.5 : Math.min(1, Math.max(0, (ahora - desde) / GRACIA_MS)));
+
+/** De pie, dando dos saltitos o una voltereta; mira a la derecha, con el centro del hámster en el origen. */
+function EnGracia({ hamster, ahora, quieto }: { hamster: Hamster; ahora: number; quieto: boolean }) {
+  const { tipo, desde } = hamster.gracia!;
+  const t = avance(desde, ahora, quieto);
+  if (tipo === "voltereta" && !quieto && t < 0.6) {
+    const u = t / 0.6;
+    return <g transform={`translate(0,${-Math.sin(u * Math.PI) * 34}) rotate(${u * 360} 0 ${CENTRO_BOLA})`}><Cuerpo id={hamster.id} pose="dormido" /></g>;
+  }
+  const salto = tipo === "salto" && !quieto && t < 0.6 ? Math.abs(Math.sin(t / 0.6 * 2 * Math.PI)) * 24 : 0;
+  return <g transform={`translate(0,${-salto})`}><Cuerpo id={hamster.id} pose={DE_PIE[hamster.id]} /></g>;
+}
+
+/** Los corazones (o las estrellas de la voltereta) que suben desde el hámster, por delante de todo. */
+function Efectos({ hamster, ahora, quieto }: { hamster: Hamster; ahora: number; quieto: boolean }) {
+  const { tipo, desde } = hamster.gracia!;
+  const t = avance(desde, ahora, quieto);
+  const donde = tipo === "voltereta" ? [-30, 0, 30] : tipo === "salto" ? [-18, 18] : [0];
+  return <g transform={`translate(${hamster.x},${hamster.y - 76 - t * 24})`} opacity={Math.min(1, (1 - t) * 3)} stroke="#2f1d33" strokeWidth="3" strokeLinejoin="round">
+    {donde.map((x) => <g key={x} transform={`translate(${x},${x ? 6 : 0})`}>
+      {tipo === "voltereta"
+        ? <path d="M0,-13 L4,-4 L13,-3 L6,3 L8,12 L0,7 L-8,12 L-6,3 L-13,-3 L-4,-4 Z" fill="#ffd23f" />
+        : <path d="M0,11 C-22,-4 -11,-19 0,-7 C11,-19 22,-4 0,11 Z" fill="#ff5c8a" />}
+    </g>)}
+  </g>;
+}
+
 function Dibujado({ hamster, ahora, quieto }: { hamster: Hamster; ahora: number; quieto: boolean }) {
   const { x, y, angulo, hace, fuera } = hamster;
   const izquierda = Math.cos(angulo * Math.PI / 180) < -0.01;
@@ -77,6 +111,7 @@ function Dibujado({ hamster, ahora, quieto }: { hamster: Hamster; ahora: number;
   if (hace === "comida") [px, giro, espejo] = [x - 28, 0, false];
   if (hace === "agua") [px, giro, espejo] = [x - 14, 0, false];
   if (fuera?.fase === "cogido") [giro, espejo] = [0, false];
+  if (parado(hamster)) return <g transform={`translate(${px},${py}) scale(${espejo ? -1 : 1},1)`}><EnGracia hamster={hamster} ahora={ahora} quieto={quieto} /></g>;
   return <g transform={`translate(${px},${py})`}>
     <g transform={`rotate(${giro}) scale(1,${espejo ? -1 : 1})`}><Cuerpo id={hamster.id} pose={poseDe(hamster, ahora, quieto)} /></g>
   </g>;
@@ -143,7 +178,7 @@ const Delante = memo(function Delante({ tubos }: { tubos: ColoresTubos }) {
 
 /** Lo que hay dentro de la jaula y se mueve o se vacía. */
 function Cosas({ jaula, ahora, quieto }: { jaula: Jaula; ahora: number; quieto: boolean }) {
-  const usa = (cosa: Cosa) => jaula.hamsters.some((h) => !h.fuera && h.hace === cosa);
+  const usa = (cosa: Cosa) => jaula.hamsters.some((h) => !h.fuera && h.hace === cosa && !parado(h));
   const vueltas = usa("rueda") && !quieto ? -ahora / 3 % 360 : 0;
   const vaiven = usa("columpio") && !quieto ? Math.sin(ahora / 380) * 18 : 0;
   const alto = AGUA_EN_BOTELLA.alto * jaula.agua / RACIONES;
@@ -223,7 +258,7 @@ export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar,
       else if (tocado.tipo === "tubo") meterRef.current(tocarTubo(actual, tocado.indice, momento, Math.random));
       else {
         setNombrado({ id: tocado.id, hasta: momento + NOMBRE_MS });
-        avisosRef.current.onSonido("hamster");
+        meterRef.current(tocarHamster(actual, tocado.id, momento));
       }
     },
     coger: (punto) => {
@@ -266,7 +301,8 @@ export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar,
         <rect width={PUERTA_JAULA.ancho} height={PUERTA_JAULA.alto} rx="8" fill="#fff" fillOpacity="0.25" stroke="#ff8a3d" strokeWidth="6" />
         <circle cx={PUERTA_JAULA.ancho / 2} cy={PUERTA_JAULA.alto - 12} r="7" fill="#ff8a3d" />
       </g>
-      {conNombre && <text x={conNombre.x} y={conNombre.y - 32} textAnchor="middle" className="casa-jaula-nombre">{tClave(`casa.hamsters.${conNombre.id}.rotulo`)}</text>}
+      {dentro.filter((h) => h.gracia).map((h) => <Efectos key={h.id} hamster={h} ahora={ahora} quieto={reduceMotion} />)}
+      {conNombre && <text x={conNombre.x} y={conNombre.y - (conNombre.gracia ? 50 : 32)} textAnchor="middle" className="casa-jaula-nombre">{tClave(`casa.hamsters.${conNombre.id}.rotulo`)}</text>}
     </svg>
     {visible && fuera.length > 0 && <svg className="casa-fugados" aria-hidden="true" viewBox={`${-ampliacion} 0 ${ampliacion + ancho} ${alto}`} style={{ left: -ampliacion, top: 0, width: ampliacion + ancho, height: alto }}>
       {fuera.map((h) => h.fuera!.fase === "escondido"

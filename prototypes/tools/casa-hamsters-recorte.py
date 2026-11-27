@@ -1,6 +1,7 @@
 """Recorta el arte generado de la jaula de hámsters (docs/art/casa-hamsters-v1.md) y lo deja como lo usa el juego.
 
-Entrada (`--origen`, sobre verde plano): jaula.webp, objetos.webp, perla.webp y bolita.webp. Salidas en
+Entrada (`--origen`, sobre verde plano): jaula.webp, objetos.webp, perla.webp, bolita.webp y bandeja.webp (con
+`--solo-bandeja` basta la última). Salidas en
 `public/assets/sprites/`:
 
 - casa-jaula-v1.webp (772 × 748, al doble del dibujo del laberinto): la jaula vacía, adaptada a la reja del juego. El
@@ -9,6 +10,7 @@ Entrada (`--origen`, sobre verde plano): jaula.webp, objetos.webp, perla.webp y 
   comedero lleno y vacío; botella), cada pieza apoyada abajo y centrada.
 - casa-hamster-perla-v1.webp y casa-hamster-bolita-v1.webp: ocho celdas de 96 × 72 a la misma escala, con los pies en
   la fila 70.
+- casa-jaula-bandeja-v1.webp: dos celdas de 128 × 128 (saco de comida y jarrita de agua) para los botones de la bandeja.
 
 Imprime la caja de cada objeto en su celda, para `src/game/JaulaHamsters.tsx`.
 
@@ -111,10 +113,27 @@ def jaula(origen):
     guardar(endurecer(lienzo), "casa-jaula-v1.webp")
 
 
+def bandeja(origen):
+    limpia = quitar_verde(Image.open(origen / "bandeja.webp"))
+    medio = limpia.width // 2
+    items = []
+    for x0, x1 in [(0, medio), (medio, limpia.width)]:
+        p = limpia.crop((x0, 0, x1, limpia.height))
+        items.append(p.crop(p.getchannel("A").getbbox()))
+    k = min(124 / max(p.width for p in items), 124 / max(p.height for p in items))
+    hoja, _ = fila([reducir(p, k) for p in items], 128, 128, 126)
+    guardar(hoja, "casa-jaula-bandeja-v1.webp")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--origen", type=Path, required=True)
-    origen = parser.parse_args().origen
+    parser.add_argument("--solo-bandeja", action="store_true")
+    args = parser.parse_args()
+    origen = args.origen
+    bandeja(origen)
+    if args.solo_bandeja:
+        return
     jaula(origen)
 
     objetos = [reducir(p, min(92 / p.width, 92 / p.height)) for p in piezas(origen / "objetos.webp")]

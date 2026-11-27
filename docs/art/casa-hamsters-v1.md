@@ -4,7 +4,7 @@ Dossier del arte de la jaula. Tickets: [Prompts del arte](https://github.com/Moc
 
 ## Estado
 
-- **Montada** en [Montar el arte](https://github.com/Mocheto/super-noa/issues/417). Las originales están en `../super-noa-arte-original/casa-hamsters-v1/` (`jaula`, `objetos`, `perla` y `bolita`, en WebP).
+- **Montada** en [Montar el arte](https://github.com/Mocheto/super-noa/issues/417). Las originales están en `../super-noa-arte-original/casa-hamsters-v1/` (`jaula`, `objetos`, `perla`, `bolita` y `bandeja`, en WebP).
 - `prototypes/tools/casa-hamsters-recorte.py` las recorta. La jaula generada era más ancha que la reja del juego: el tejado se escala sin deformar, los barrotes se estiran a lo alto y la bandeja se encaja abajo (772 × 748, al doble del dibujo).
 - El pitorro que traía la pose de beber de Perla se borra al recortar.
 - Dónde va cada pieza: `src/game/casaHamstersArte.ts`.
@@ -68,7 +68,7 @@ Chunky, readable pixel art in the style of a charming 16-bit game for young chil
 
 ## 5. Botones de la bandeja (comida y agua)
 
-Pendiente de generar: hoy los dos botones son dibujos provisionales en `CasaGatitos.tsx`.
+Montada: se publica como `sprites/casa-jaula-bandeja-v1.webp` (dos celdas de 128 × 128). La original es `bandeja.webp`, junto a las demás, y se recorta sola con `--solo-bandeja`.
 
 - **Adjuntar:** `sprites/casa-objetos-v1.webp` y `sprites/casa-jaula-objetos-v1.webp`.
 - **Formato:** horizontal (2:1).

@@ -8,6 +8,8 @@ import { COSAS, NODOS, type ColorTubo, type HamsterId } from "./casaHamsters.ts"
 export const ARTE_JAULA = {
   jaula: "./assets/sprites/casa-jaula-v1.webp",
   objetos: "./assets/sprites/casa-jaula-objetos-v1.webp",
+  /** Los botones de la bandeja: saco de comida y jarrita de agua, en dos celdas. */
+  bandeja: "./assets/sprites/casa-jaula-bandeja-v1.webp",
   hamsters: { perla: "./assets/sprites/casa-hamster-perla-v1.webp", bolita: "./assets/sprites/casa-hamster-bolita-v1.webp" },
 } as const;
 

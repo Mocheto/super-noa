@@ -1505,10 +1505,10 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
           <BotonControl className="casa-bandeja-modo" pictograma="marco" etiqueta="casa.foto.boton.oculto" onClick={hacerFoto} />
         </span>
         <button type="button" className="casa-bandeja-objeto casa-bandeja-hamster" aria-label={t("casa.hamsters.comida.oculto")} onClick={() => jaulaRef.current?.rellenar("comida")}>
-          <svg viewBox="0 0 48 48" aria-hidden="true" stroke="#2f1d33" strokeWidth="2.5"><path d="M12,12 L36,12 L41,44 L7,44 Z" fill="#d8b27a" /><path d="M15,12 L12,4 L36,4 L33,12 Z" fill="#c49560" /><g fill="#f4c22b"><ellipse cx="19" cy="28" rx="4" ry="6" /><ellipse cx="29" cy="32" rx="4" ry="6" /></g></svg>
+          <i className="casa-boton-jaula is-comida" style={{ backgroundImage: cssAssetUrl(ARTE_JAULA.bandeja) }} />
         </button>
         <button type="button" className="casa-bandeja-objeto casa-bandeja-hamster" aria-label={t("casa.hamsters.agua.oculto")} onClick={() => jaulaRef.current?.rellenar("agua")}>
-          <svg viewBox="0 0 48 48" aria-hidden="true" stroke="#2f1d33" strokeWidth="2.5"><path d="M33,14 C46,14 46,32 33,32" fill="none" /><path d="M10,8 L35,8 L33,44 L12,44 Z" fill="#eaf6fc" /><path d="M11,20 L34,20 L33,44 L12,44 Z" fill="#6cc4ee" /></svg>
+          <i className="casa-boton-jaula is-agua" style={{ backgroundImage: cssAssetUrl(ARTE_JAULA.bandeja) }} />
         </button>
       </div>}
       {fase === "casa" && bano === null && !decorando && !acostando && !mirandoJaula && <div className={`casa-bandeja${brilla ? " is-brilla" : ""}`} aria-label={t("casa.bandeja.oculto")} role="toolbar">

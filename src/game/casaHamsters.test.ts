@@ -139,7 +139,7 @@ test("el progreso guarda solo las raciones y se lee con tolerancia", () => {
 });
 
 test("el arte de la jaula está publicado y cada pieza cae dentro del dibujo", () => {
-  for (const ruta of [ARTE_JAULA.jaula, ARTE_JAULA.objetos, ...Object.values(ARTE_JAULA.hamsters)]) {
+  for (const ruta of [ARTE_JAULA.jaula, ARTE_JAULA.objetos, ARTE_JAULA.bandeja, ...Object.values(ARTE_JAULA.hamsters)]) {
     assert.ok(existsSync(new URL(`../../public/${ruta.replace("./", "")}`, import.meta.url)), ruta);
   }
   assert.equal(Object.keys(COLOCADOS).length, OBJETOS_JAULA.length);

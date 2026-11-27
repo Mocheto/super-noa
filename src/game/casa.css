@@ -505,7 +505,8 @@
 .casa-pista { position: absolute; z-index: 3; translate: -50% 0; font-size: 40px; color: #e8751a; text-shadow: 0 0 6px #fff8e9, 0 0 6px #fff8e9; pointer-events: none; animation: casa-bocadillo 1s ease-in-out infinite alternate; }
 .casa-hamsters-rotulo { position: absolute; left: 50%; top: 10px; z-index: 6; translate: -50% 0; margin: 0; padding: 8px 14px; white-space: nowrap; border: 3px solid #2f1d33; border-radius: 14px; background: #fff8e9; font-family: "Press Start 2P", monospace; font-size: 14px; color: #2f1d33; pointer-events: none; }
 .casa-bandeja-hamster { cursor: pointer; }
-.casa-bandeja-hamster svg { width: var(--objeto, 64px); height: var(--objeto, 64px); }
+.casa-boton-jaula { display: block; width: var(--objeto, 64px); aspect-ratio: 1; background-repeat: no-repeat; background-size: 200% 100%; image-rendering: pixelated; }
+.casa-boton-jaula.is-agua { background-position-x: 100%; }
 .casa-bandeja-hamster:active { transform: translateY(3px); }
 .casa-jaula, .casa-fugados { image-rendering: pixelated; }
 /* Perla asomada: séptimo de los ocho cuadros de su hoja, recortado a la cabeza. */

@@ -65,3 +65,16 @@ Chunky, readable pixel art in the style of a charming 16-bit game for young chil
 ```text
 Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat warm colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients inside shapes. Everything original, simple and friendly, nothing copied from any game. A sprite sheet matching EXACTLY the layout, the eight poses and the drawing style of the attached hamster sheet, but with a different character: a Russian dwarf hamster, a little smaller and rounder than the attached one, soft grey back with a darker stripe, white belly, muzzle and cheeks, SHORT small ears, black shiny eyes, tiny pink nose and paws, very short tail. Side view facing RIGHT, feet on the same baseline. Plain flat solid pure green background (#00FF00), generous empty space between poses, no floor, no cast shadow. No text, no letters, no numbers, no labels, no watermark.
 ```
+
+## 5. Botones de la bandeja (comida y agua)
+
+Pendiente de generar: hoy los dos botones son dibujos provisionales en `CasaGatitos.tsx`.
+
+- **Adjuntar:** `sprites/casa-objetos-v1.webp` y `sprites/casa-jaula-objetos-v1.webp`.
+- **Formato:** horizontal (2:1).
+- **Orden de las celdas:** saco de comida, jarrita de agua.
+
+```text
+Chunky, readable pixel art in the style of a charming 16-bit game for young children: bold dark-plum outlines (#2f1d33), flat warm colors with at most two shading tones, rounded cute shapes, crisp hard pixel edges, no blur, no anti-aliasing, no gradients inside shapes. Everything original, simple and friendly, nothing copied from any game. A sprite sheet with exactly two separate items in one row, evenly spaced, each centered in its own square cell, both at the same size, front view, same drawing style as the attached objects, big and simple enough to read as small buttons: 1. a plump open burlap sack of hamster food, brimming with seeds and a few yellow corn kernels, with a small orange scoop stuck in it; 2. a chubby light-blue water jug with a wide handle and a spout, clear enough to see it is full of water, with one big water drop beside the spout. Plain flat solid pure green background (#00FF00) behind and between the items, generous empty space between them, no floor, no cast shadow, no bright green in the items. No text, no letters, no numbers, no labels, no watermark.
+```
+

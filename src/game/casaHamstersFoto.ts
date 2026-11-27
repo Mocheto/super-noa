@@ -65,7 +65,6 @@ export async function pintarJaulaEnFoto(contexto: CanvasRenderingContext2D, foto
   contexto.globalAlpha = 1;
   posar("perla");
   posar("bolita");
-  objeto(COLOCADOS.casita);
 
   contexto.lineJoin = "round";
   for (const camino of CAMINOS.filter((c) => c.tipo === "tubo")) {
@@ -96,6 +95,7 @@ export async function pintarJaulaEnFoto(contexto: CanvasRenderingContext2D, foto
       contexto.fillRect(x + dx, y + dy, w, h);
     }
   }
+  objeto(COLOCADOS.casita);
   contexto.strokeStyle = "#ff8a3d";
   contexto.lineWidth = 6;
   contexto.strokeRect(PUERTA_JAULA.x, PUERTA_JAULA.y, PUERTA_JAULA.ancho, PUERTA_JAULA.alto);

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import test from "node:test";
 import {
-  abrirPuerta, aDibujo, aEscena, arrastrar, avanzar, CAMINOS, coger, COSAS, crearJaula, DIBUJO, ESCONDITES, guardadoDe,
+  abrirPuerta, aDibujo, aEscena, arrastrar, asomoEnCasita, avanzar, CAMINOS, coger, COSAS, crearJaula, DIBUJO, ESCONDITES, guardadoDe,
   fugadoEn, JAULA_EN_ESCENA, NODOS, PUERTA_JAULA, queHayEn, pista, PISTA_MS, RACIONES, RADIO_JAULA, rellenar, ruta, SITIO_JAULA, soltar, tocarCosa, tocarTubo,
   type Cosa, type Jaula, type NodoId, type SonidoJaula,
 } from "./casaHamsters.ts";
@@ -147,4 +147,12 @@ test("el arte de la jaula está publicado y cada pieza cae dentro del dibujo", (
     assert.ok(c.x >= DIBUJO.x && c.x + c.lado <= DIBUJO.x + DIBUJO.ancho && c.y >= DIBUJO.y && c.y + c.lado <= DIBUJO.y + DIBUJO.alto + 8, nombre);
   }
   assert.ok(CAJA_JAULA.y + CAJA_JAULA.alto <= DIBUJO.y + DIBUJO.alto);
+});
+
+test("en la casita está un momento escondido y luego se queda asomado", () => {
+  assert.equal(asomoEnCasita(4000), 0);
+  assert.equal(asomoEnCasita(3400), 0);
+  assert.ok(asomoEnCasita(3250) > 0 && asomoEnCasita(3250) < 1);
+  assert.equal(asomoEnCasita(3000), 1);
+  assert.equal(asomoEnCasita(0), 1);
 });

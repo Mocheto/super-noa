@@ -224,6 +224,16 @@ const DURA: Readonly<Record<Cosa, readonly [number, number]>> = {
   rueda: [3000, 6000], columpio: [3000, 6000], casita: [4000, 4000], comida: [2500, 3500], agua: [2500, 3500],
 };
 
+/** Al entrar en la casita está un momento escondido y luego sube a asomarse. */
+const CASITA_ESCONDIDO_MS = 600;
+const CASITA_SUBE_MS = 300;
+
+/** Cuánto asoma por la puerta (de 0 a 1) cuando le quedan `queda` ms dentro de la casita. */
+export function asomoEnCasita(queda: number): number {
+  const dentro = DURA.casita[0] - queda;
+  return Math.min(1, Math.max(0, (dentro - CASITA_ESCONDIDO_MS) / CASITA_SUBE_MS));
+}
+
 /** Empieza a usar la cosa en la que está; `false` si está ocupada o vacía. */
 function usar(jaula: Jaula, hamster: Hamster, cosa: Cosa, ahora: number, azar: Azar, sonidos: SonidoJaula[]): boolean {
   if (jaula.hamsters.some((otro) => otro !== hamster && !otro.fuera && otro.hace === cosa)) return false;

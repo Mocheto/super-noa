@@ -63,3 +63,11 @@ export function cajaDeHamster(id: HamsterId) {
   const escala = ESCALA_HAMSTER[id];
   return { x: -48 * escala, y: 19 - CUADRO_HAMSTER.pie * escala, ancho: CUADRO_HAMSTER.ancho * escala, alto: CUADRO_HAMSTER.alto * escala };
 }
+
+/** La puerta de la casita, en px del dibujo: su centro y su suelo. */
+export const PUERTA_CASITA = {
+  x: COLOCADOS.casita.x + (45 * COLOCADOS.casita.lado) / CELDA_OBJETO,
+  suelo: COLOCADOS.casita.y + (92 * COLOCADOS.casita.lado) / CELDA_OBJETO,
+} as const;
+/** La cabeza y las manitas dentro del cuadro «asomado», igual en las dos hojas. */
+export const ASOMADO = { x: 27, y: 38, ancho: 42, alto: 32 } as const;

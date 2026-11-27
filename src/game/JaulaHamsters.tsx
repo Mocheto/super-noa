@@ -1,13 +1,13 @@
 import "../textos/zonas/casa";
 import { memo, useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
 import {
-  abrirPuerta, arrastrar, avanzar, CAMINOS, coger, COSAS, crearJaula, CUBOS, DIBUJO, ESCONDITES, fugadoEn, guardadoDe, NODOS, pista, PUERTA_JAULA,
+  abrirPuerta, arrastrar, asomoEnCasita, avanzar, CAMINOS, coger, COSAS, crearJaula, CUBOS, DIBUJO, ESCONDITES, fugadoEn, guardadoDe, NODOS, pista, PUERTA_JAULA,
   queHayEn, RACIONES, rellenar, REPISA, SITIO_JAULA, soltar, tocarCosa, tocarTubo,
   type Cosa, type EsconditeId, type Hamster, type HamsterId, type HamstersProgress, type Jaula, type Punto, type Salida, type SonidoJaula,
 } from "./casaHamsters";
 import {
-  AGUA_EN_BOTELLA, ARTE_JAULA, CAJA_JAULA, cajaDeHamster, CELDA_OBJETO, COLOCADOS, CUADRO_HAMSTER, EJE_COLUMPIO, EJE_RUEDA, FONDO_JAULA,
-  OBJETOS_JAULA, POSES, TUBO, type Colocado, type Pose,
+  AGUA_EN_BOTELLA, ARTE_JAULA, ASOMADO, CAJA_JAULA, cajaDeHamster, CELDA_OBJETO, COLOCADOS, CUADRO_HAMSTER, EJE_COLUMPIO, EJE_RUEDA, FONDO_JAULA,
+  OBJETOS_JAULA, POSES, PUERTA_CASITA, TUBO, type Colocado, type Pose,
 } from "./casaHamstersArte";
 import { HABITACION_CASA } from "./casaHabitacion";
 import { tClave } from "../textos/index.ts";
@@ -55,7 +55,6 @@ function poseDe({ hace, camino: tramo, fuera }: Hamster, ahora: number, quieto: 
   if (fuera?.fase === "escondido") return "asomado";
   if (hace === "comida") return "comiendo";
   if (hace === "agua") return "bebiendo";
-  if (hace === "casita") return "dormido";
   const anda = tramo !== null || fuera?.fase === "corre" || hace === "rueda";
   if (!anda) return "sentado";
   return !quieto && Math.floor(ahora / (hace === "rueda" ? 90 : 160)) % 2 ? "andarB" : "andarA";
@@ -70,10 +69,25 @@ function Dibujado({ hamster, ahora, quieto }: { hamster: Hamster; ahora: number;
   if (hace === "comida") [px, giro, espejo] = [x - 28, 0, false];
   if (hace === "agua") [px, giro, espejo] = [x - 14, 0, false];
   if (fuera?.fase === "cogido") [giro, espejo] = [0, false];
-  const escondida = hace === "casita" && hamster.hasta - ahora > 1500;
-  return <g transform={`translate(${px},${py})`} opacity={escondida ? 0 : 1}>
+  return <g transform={`translate(${px},${py})`}>
     <g transform={`rotate(${giro}) scale(1,${espejo ? -1 : 1})`}><Cuerpo id={hamster.id} pose={poseDe(hamster, ahora, quieto)} /></g>
   </g>;
+}
+
+/** Dentro de la casita: la cabeza y las manitas asoman por la puerta, subiendo desde el suelo. */
+function EnLaCasita({ hamster, ahora, quieto }: { hamster: Hamster; ahora: number; quieto: boolean }) {
+  const asomo = quieto ? 1 : asomoEnCasita(hamster.hasta - ahora);
+  const escala = hamster.id === "perla" ? 0.74 : 0.68;
+  const ancho = ASOMADO.ancho * escala;
+  const alto = ASOMADO.alto * escala;
+  const vaiven = quieto ? 0 : Math.sin(ahora / 260) * 1.5;
+  // El recorte de este `svg` acaba en el suelo de la puerta: lo que aún no ha subido no se ve.
+  return <svg x={PUERTA_CASITA.x - ancho / 2 + vaiven} y={PUERTA_CASITA.suelo - alto} width={ancho} height={alto} viewBox={`0 0 ${ancho} ${alto}`}>
+    <svg y={alto * (1 - asomo)} width={ancho} height={alto}
+      viewBox={`${POSES.indexOf("asomado") * CUADRO_HAMSTER.ancho + ASOMADO.x} ${ASOMADO.y} ${ASOMADO.ancho} ${ASOMADO.alto}`}>
+      <image href={ARTE_JAULA.hamsters[hamster.id]} width={CUADRO_HAMSTER.ancho * POSES.length} height={CUADRO_HAMSTER.alto} />
+    </svg>
+  </svg>;
 }
 
 /** Una pieza de la hoja de objetos. */
@@ -233,9 +247,11 @@ export function JaulaHamsters({ ref, guardado, visible, reduceMotion, onGuardar,
       style={{ left: SITIO_JAULA.left, top: SITIO_JAULA.top, width: DIBUJO.ancho * SITIO_JAULA.escala, height: DIBUJO.alto * SITIO_JAULA.escala, display: visible ? undefined : "none" }}>
       <Detras />
       <Cosas jaula={jaula} ahora={ahora} quieto={reduceMotion} />
-      {dentro.map((h) => <Dibujado key={h.id} hamster={h} ahora={ahora} quieto={reduceMotion} />)}
-      <Objeto de={COLOCADOS.casita} />
+      {dentro.filter((h) => h.hace !== "casita").map((h) => <Dibujado key={h.id} hamster={h} ahora={ahora} quieto={reduceMotion} />)}
       <Delante />
+      {/* La casita, por delante de los tubos: si no, la boca del tubo rojo tapa la puerta. */}
+      <Objeto de={COLOCADOS.casita} />
+      {dentro.filter((h) => h.hace === "casita").map((h) => <EnLaCasita key={h.id} hamster={h} ahora={ahora} quieto={reduceMotion} />)}
       <g transform={`translate(${PUERTA_JAULA.x},${PUERTA_JAULA.y + (jaula.puertaAbierta ? PUERTA_JAULA.alto : 0)}) scale(1,${jaula.puertaAbierta ? 0.55 : -1}) translate(0,${jaula.puertaAbierta ? 0 : -PUERTA_JAULA.alto})`}>
         <rect width={PUERTA_JAULA.ancho} height={PUERTA_JAULA.alto} rx="8" fill="#fff" fillOpacity="0.25" stroke="#ff8a3d" strokeWidth="6" />
         <circle cx={PUERTA_JAULA.ancho / 2} cy={PUERTA_JAULA.alto - 12} r="7" fill="#ff8a3d" />

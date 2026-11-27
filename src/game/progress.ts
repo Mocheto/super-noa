@@ -8,6 +8,7 @@ import { normalizeFriends, type FriendProgress } from "./friendProgress.ts";
 import { normalizeAvioneta, type AvionetaProgress } from "./avioneta.ts";
 import { normalizeCasa, type CasaProgress } from "./casaProgreso.ts";
 import { normalizeRegalos, type RegalosProgress } from "./regalos.ts";
+import { normalizeTraje, type TrajeId } from "./trajes.ts";
 
 export { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
 
@@ -17,7 +18,7 @@ const campaignLevelCount = campaignLevels.length;
 const knownLevelIds = new Set(levels.map((level) => level.id));
 
 export type LevelStats = Record<string, { completed: boolean; bestApples: number; flawless?: boolean }>;
-export type Progress = { unlocked: number; levelStats: LevelStats; stickers: string[]; secretUnlocked: boolean; waterUnlocked: boolean; bossChallenges: Record<string, boolean>; totalApples?: number; achievedAt?: string | null; secretShops?: SecretShopVisits; detours?: DetourProgress; restStops?: RestStopProgress; friends?: FriendProgress; avioneta?: AvionetaProgress; casa?: CasaProgress; regalos?: RegalosProgress };
+export type Progress = { unlocked: number; levelStats: LevelStats; stickers: string[]; secretUnlocked: boolean; waterUnlocked: boolean; bossChallenges: Record<string, boolean>; totalApples?: number; achievedAt?: string | null; secretShops?: SecretShopVisits; detours?: DetourProgress; restStops?: RestStopProgress; friends?: FriendProgress; avioneta?: AvionetaProgress; casa?: CasaProgress; regalos?: RegalosProgress; traje?: TrajeId };
 
 export const emptyProgress: Progress = { unlocked: 0, levelStats: {}, stickers: [], secretUnlocked: false, waterUnlocked: false, bossChallenges: {}, totalApples: 0, achievedAt: null, secretShops: {}, detours: {}, restStops: {}, friends: {} };
 
@@ -115,13 +116,14 @@ export function parseProgress(raw: string | null): Progress {
       ...(normalizeAvioneta(saved.avioneta) ? { avioneta: normalizeAvioneta(saved.avioneta) } : {}),
       ...(normalizeCasa(saved.casa) ? { casa: normalizeCasa(saved.casa) } : {}),
       ...(normalizeRegalos(saved.regalos) ? { regalos: normalizeRegalos(saved.regalos) } : {}),
+      ...(normalizeTraje(saved.traje) ? { traje: normalizeTraje(saved.traje) } : {}),
     };
   } catch {
     return emptyProgress;
   }
 }
 
-export const serializeProgress = (progress: Progress) => JSON.stringify({ version: SAVE_VERSION, ...progress, totalApples: lifetimeApples(progress), achievedAt: normalizeProgressDate(progress.achievedAt), secretShops: normalizeSecretShops(progress.secretShops), detours: normalizeDetours(progress.detours), restStops: normalizeRestStops(progress.restStops), friends: normalizeFriends(progress.friends), casa: normalizeCasa(progress.casa), regalos: normalizeRegalos(progress.regalos) });
+export const serializeProgress = (progress: Progress) => JSON.stringify({ version: SAVE_VERSION, ...progress, totalApples: lifetimeApples(progress), achievedAt: normalizeProgressDate(progress.achievedAt), secretShops: normalizeSecretShops(progress.secretShops), detours: normalizeDetours(progress.detours), restStops: normalizeRestStops(progress.restStops), friends: normalizeFriends(progress.friends), casa: normalizeCasa(progress.casa), regalos: normalizeRegalos(progress.regalos), traje: normalizeTraje(progress.traje) });
 
 export function readProgress(): Progress {
   return parseProgress(readStorage(STORAGE_KEY));

@@ -12,6 +12,7 @@ import type { NivelResumen } from "./nivelesIndice.ts";
 import { collectLifetimeApples, progressMilestone, resetCampaignProgress, type Progress } from "./progress.ts";
 import { greetFriend, visitRestStop } from "./restStopProgress.ts";
 import { campaignUnlockIndex } from "./routes.ts";
+import type { TrajeId } from "./trajes.ts";
 import type { BossId, DetourId } from "./types.ts";
 
 /** Pegatinas recogidas durante la partida: solo cuenta (y fecha el logro) si alguna es nueva. */
@@ -70,6 +71,9 @@ export const terminarVuelo = (current: Progress, stars: number | null): Progress
 export const conCasa = (current: Progress, casa: CasaProgress): Progress => ({ ...current, casa });
 export const conRegalos = (current: Progress, regalos: RegalosProgress): Progress => ({ ...current, regalos });
 
+/** El traje elegido en el mapa; elegir el que ya lleva no cambia nada. */
+export const ponerTraje = (current: Progress, traje: TrajeId): Progress => current.traje === traje ? current : { ...current, traje };
+
 /** Las acciones con nombre que usa la interfaz; cada una recibe el progreso actual y devuelve el siguiente. */
 export const accionesProgreso = {
   pegatinas: conPegatinas,
@@ -88,6 +92,7 @@ export const accionesProgreso = {
   terminarVuelo,
   guardarCasa: conCasa,
   guardarRegalos: conRegalos,
+  ponerTraje,
   amistad: (current: Progress, kind: string) => addHeart(current, kind),
   borrar: resetCampaignProgress,
 };

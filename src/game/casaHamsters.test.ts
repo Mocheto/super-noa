@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
+import { existsSync } from "node:fs";
 import test from "node:test";
 import {
   abrirPuerta, aDibujo, aEscena, arrastrar, avanzar, CAMINOS, coger, COSAS, crearJaula, DIBUJO, ESCONDITES, guardadoDe,
   fugadoEn, JAULA_EN_ESCENA, NODOS, PUERTA_JAULA, queHayEn, pista, PISTA_MS, RACIONES, RADIO_JAULA, rellenar, ruta, SITIO_JAULA, soltar, tocarCosa, tocarTubo,
   type Cosa, type Jaula, type NodoId, type SonidoJaula,
 } from "./casaHamsters.ts";
+import { ARTE_JAULA, CAJA_JAULA, COLOCADOS, OBJETOS_JAULA } from "./casaHamstersArte.ts";
 import { normalizeCasa, normalizeHamsters } from "./casaProgreso.ts";
 import { HABITACION_CASA } from "./casaHabitacion.ts";
 
@@ -134,4 +136,15 @@ test("el progreso guarda solo las raciones y se lee con tolerancia", () => {
   const casa = { gatitos: {}, huellas: [], calculadoEn: "2026-11-27T10:00:00.000Z", presentados: [] };
   assert.equal(normalizeCasa(casa)!.hamsters, undefined);
   assert.deepEqual(normalizeCasa({ ...casa, hamsters: { comida: 0 } })!.hamsters, { comida: 0, agua: 3 });
+});
+
+test("el arte de la jaula está publicado y cada pieza cae dentro del dibujo", () => {
+  for (const ruta of [ARTE_JAULA.jaula, ARTE_JAULA.objetos, ...Object.values(ARTE_JAULA.hamsters)]) {
+    assert.ok(existsSync(new URL(`../../public/${ruta.replace("./", "")}`, import.meta.url)), ruta);
+  }
+  assert.equal(Object.keys(COLOCADOS).length, OBJETOS_JAULA.length);
+  for (const [nombre, c] of Object.entries(COLOCADOS)) {
+    assert.ok(c.x >= DIBUJO.x && c.x + c.lado <= DIBUJO.x + DIBUJO.ancho && c.y >= DIBUJO.y && c.y + c.lado <= DIBUJO.y + DIBUJO.alto + 8, nombre);
+  }
+  assert.ok(CAJA_JAULA.y + CAJA_JAULA.alto <= DIBUJO.y + DIBUJO.alto);
 });

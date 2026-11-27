@@ -198,6 +198,14 @@ _Avoid_: Ala, habitación nueva, estancia
 El hogar de los dos conejos de la casa, en la ampliación del jardín: un montículo por fuera y, bajo tierra, unos túneles que se ven en corte al bajar con la flecha. No es una estancia: los gatitos no entran.
 _Avoid_: Conejera, jaula, cueva
 
+**Conejos**:
+Las dos mascotas de la madriguera: Canela, marrón claro, de orejas tiesas e inquieto, y Algodón, blanco, con una oreja caída, tranquilo y glotón. Noa les da zanahoria y los acaricia; no tienen necesidades y de noche duermen.
+_Avoid_: Copito (es el gatito de Navidad), visitantes, amigos
+
+**Buscar a los conejos**:
+Juego que empieza Noa tocando el agujero: los dos conejos se meten, cada uno se esconde en un sitio de las cuevas con las orejas asomando y Noa los toca para encontrarlos.
+_Avoid_: Escondite (es el del mueble de la pecera)
+
 **Pecera**:
 Pecera grande sobre un mueble, al fondo de la ampliación, con cuatro peces (naranja, azul, payaso y globo). Noa toca el agua para llamarlos, el bote para darles de comer, un pez para ver su gracia y el interruptor para apagar la luz y que duerman. De noche se apaga sola. Un gatito sentado delante la mira y los peces se juntan a mirarlo.
 _Avoid_: Acuario

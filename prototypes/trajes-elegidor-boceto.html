@@ -9,7 +9,7 @@
   Servidor `prototypes` de .claude/launch.json:
   http://127.0.0.1:8765/prototypes/trajes-elegidor-boceto.html?variante=A
   A: ventana con cuatro tarjetas. B: Noa grande ante el espejo y los cuatro debajo. C: tira sobre el mapa.
-  Los trajes son PROVISIONALES: el peto teñido, a falta del arte. Teclado: flechas, Intro y Escape.
+  Exploradora y pirata son PROVISIONALES (el peto teñido); la caballera es el arte de verdad. Teclado: flechas, Intro y Escape.
 -->
 <style>
   :root { --ciruela: #2f1d33; --crema: #fff8e9; --oro: #ffd76a; --verde: #5a9e4b; }
@@ -23,7 +23,11 @@
   @media (min-width: 600px) and (min-height: 600px) { .boton { min-height: 96px; padding: 0 26px; font-size: 22px; } }
   .barra { position: fixed; right: 12px; bottom: 16px; display: flex; gap: 10px; }
   .noa { display: block; aspect-ratio: 295 / 342; background: var(--hoja, url("../public/assets/sprites/noa-sprite-sheet.webp")) 0 0 / 400% auto no-repeat; image-rendering: pixelated; }
-  .noa.salta { background: url("../public/assets/sprites/noa-jump-v2.webp") center / contain no-repeat; animation: salto .55s; }
+  .noa.salta { background: url("../public/assets/sprites/noa-jump-v2.webp") center / contain no-repeat; }
+  .noa.salta[data-traje="caballera"] { background-image: url("../public/assets/sprites/noa-caballera-jump-v1.webp"); }
+  .noa.salta { animation: salto .55s; }
+  /* Los de mentira no tienen pose de salto: saltan con su dibujo de siempre, para no volver al morado. */
+  .noa.salta[data-traje="exploradora"], .noa.salta[data-traje="pirata"] { background: var(--hoja) 0 0 / 400% auto no-repeat; }
   @keyframes salto { 45% { translate: 0 -12%; } }
   .en-mapa { position: fixed; left: 46%; top: 44%; width: 74px; }
 
@@ -97,8 +101,9 @@
   const mapa = document.querySelector(".en-mapa");
 
   // Trajes de mentira: solo se recolorea lo morado del peto, para no teñir la piel ni el pelo.
-  const COLORES = { exploradora: [192, 152, 90], pirata: [214, 58, 62], caballera: [182, 194, 214] };
-  const hojas = {};
+  const COLORES = { exploradora: [192, 152, 90], pirata: [214, 58, 62] };
+  // La caballera ya tiene su arte; exploradora y pirata siguen siendo de mentira.
+  const hojas = { caballera: 'url("../public/assets/sprites/noa-caballera-sheet-v1.webp")' };
   const hoja = new Image();
   hoja.onload = () => {
     for (const [id, color] of Object.entries(COLORES)) {
@@ -118,6 +123,7 @@
       c.toBlob((blob) => { hojas[id] = `url(${URL.createObjectURL(blob)})`; document.querySelectorAll("[data-traje]").forEach(vestir); });
     }
   };
+  addEventListener("load", () => document.querySelectorAll("[data-traje]").forEach(vestir));
   hoja.src = "../public/assets/sprites/noa-sprite-sheet.webp";
   const vestir = (noa) => hojas[noa.dataset.traje] ? noa.style.setProperty("--hoja", hojas[noa.dataset.traje]) : noa.style.removeProperty("--hoja");
 

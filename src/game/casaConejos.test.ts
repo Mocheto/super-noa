@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  acariciar, AMPLIACION_JARDIN, avanzar, BUSCAR_CELEBRAN_MS, BUSCAR_ENTRAN_MS, conejoCercano, conejoEn, CONEJOS, CORTE, crearMadriguera,
+  abandonar, acariciar, AMPLIACION_JARDIN, avanzar, BUSCAR_CELEBRAN_MS, BUSCAR_ENTRAN_MS, conejoCercano, conejoEn, CONEJOS, CORTE, crearMadriguera,
   CUEVAS, darZanahoria, ESCONDITES_CONEJO, GESTO_MS, mirar, NODOS_TUNEL, pista, PISTA_MS, ponerNoche, puestoEnCueva, rutaTunel, SIN_EXCAVAR,
   tocarAgujero, tocarCueva, tocarEscondite, type Madriguera, type NodoTunel, type SitioConejo, type SonidoConejos,
 } from "./casaConejos.ts";
@@ -171,6 +171,14 @@ test("buscar: la pista sale a los 20 s si no se ha encontrado a ninguno", () => 
   assert.ok(Object.values(madriguera.busqueda!.sitios).includes(pista(madriguera, desde + PISTA_MS)!));
   const uno = tocarEscondite(madriguera, madriguera.busqueda!.sitios.algodon, desde).madriguera;
   assert.equal(pista(uno, desde + PISTA_MS), null);
+});
+
+test("irse del jardín mientras se meten también acaba el juego", () => {
+  const entrando = tocarAgujero(nueva(), 0, azarDe(3)).madriguera;
+  const fuera = abandonar(entrando, 100, azarDe(1));
+  assert.equal(fuera.busqueda, null);
+  assert.ok(fuera.conejos.every((c) => c.nivel === "arriba"));
+  assert.equal(abandonar(fuera, 200, azarDe(1)), fuera);
 });
 
 test("subir a medias o anochecer acaba el juego", () => {

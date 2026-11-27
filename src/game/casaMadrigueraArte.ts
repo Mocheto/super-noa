@@ -3,7 +3,7 @@
  * pradera de la ampliación del jardín con su montículo, y el corte de tierra con el pozo, los ramales y las cuevas. Todo
  * en coordenadas de la escena del jardín; lo usan la casa (en dos lienzos) y las fotos.
  */
-import { AGUJERO, AMPLIACION_JARDIN, CORTE, CUEVAS, NODOS_TUNEL, SIN_EXCAVAR, TUNELES, type CuevaId } from "./casaConejos.ts";
+import { AGUJERO, AMPLIACION_JARDIN, CORTE, CUEVAS, NODOS_TUNEL, SIN_EXCAVAR, TUNELES } from "./casaConejos.ts";
 
 /** El trozo de escena de cada lienzo. El de abajo es más ancho que el corte para llenar las pantallas anchas. */
 export const LIENZO_PRADERA = { x: -AMPLIACION_JARDIN, y: 0, ancho: AMPLIACION_JARDIN, alto: 540 } as const;
@@ -46,37 +46,6 @@ export function pintarPradera(c: CanvasRenderingContext2D) {
   ovalo(c, AGUJERO.x, AGUJERO.y + 3, 30, 21, "#3b2620");
 }
 
-/** Lo que hay en cada cueva, para reconocerla sin leer: paja, zanahorias o una pelota. */
-function pintarCueva(c: CanvasRenderingContext2D, cueva: CuevaId) {
-  const { x, y } = NODOS_TUNEL[cueva];
-  ovalo(c, x, y + 10, 108, 68, "#4f3327");
-  if (cueva === "dormitorio") {
-    ovalo(c, x, y + 46, 70, 18, "#e8c15a");
-    c.strokeStyle = "#f6dc8a";
-    c.lineWidth = 3;
-    for (let i = -60; i <= 60; i += 12) {
-      c.beginPath();
-      c.moveTo(x + i, y + 56);
-      c.lineTo(x + i + 10, y + 34);
-      c.stroke();
-    }
-  } else if (cueva === "despensa") {
-    for (const dx of [-54, -18, 18, 54]) {
-      c.fillStyle = "#f08a2c";
-      c.beginPath();
-      c.moveTo(x + dx - 11, y - 22);
-      c.lineTo(x + dx + 11, y - 22);
-      c.lineTo(x + dx, y + 18);
-      c.fill();
-      caja(c, x + dx - 6, y - 34, 4, 12, "#5fa14a");
-      caja(c, x + dx + 2, y - 34, 4, 12, "#5fa14a");
-    }
-  } else {
-    ovalo(c, x, y - 4, 30, 30, "#e8545a");
-    ovalo(c, x, y - 4, 30, 9, "#fff8e9");
-  }
-}
-
 /** El corte de tierra: pozo, ramales, las tres cuevas y los dos sitios sin excavar. */
 export function pintarCorte(c: CanvasRenderingContext2D) {
   const { x, y, ancho, alto } = LIENZO_CORTE;
@@ -105,5 +74,6 @@ export function pintarCorte(c: CanvasRenderingContext2D) {
     c.stroke();
   }
   c.setLineDash([]);
-  for (const cueva of CUEVAS) pintarCueva(c, cueva);
+  // Lo que hay dentro de cada cueva son los escondites, que dibuja `ConejosCasa`.
+  for (const cueva of CUEVAS) ovalo(c, NODOS_TUNEL[cueva].x, NODOS_TUNEL[cueva].y + 10, 108, 68, "#4f3327");
 }

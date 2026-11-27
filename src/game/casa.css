@@ -512,6 +512,21 @@
 .casa-gatitos.is-quieta .casa-conejo * { animation: none; }
 @media (prefers-reduced-motion: reduce) { .casa-conejo * { animation: none; } }
 
+/* «Buscar a los conejos»: el agujero, los seis escondites (100 × 70 con la base 30 px bajo su punto), las orejas que
+   asoman, la flecha de pista y el «¡BRAVO!». */
+.casa-agujero { width: 90px; height: 64px; margin: -32px 0 0 -45px; padding: 0; border: 0; border-radius: 50%; background: transparent; pointer-events: none; }
+.casa-escondite { z-index: 1; width: 100px; height: 70px; margin: -40px 0 0 -50px; padding: 0; border: 0; background: transparent; overflow: visible; pointer-events: none; }
+.casa-escondite-dibujo, .casa-escondite-orejas { position: absolute; display: block; }
+.casa-escondite-dibujo { inset: 0; width: 100%; height: 100%; }
+.casa-escondite-orejas { left: 25px; top: -12px; width: 50px; height: 46px; }
+.casa-escondite.is-movido { animation: casa-escondite-menea .15s ease-in-out 4 alternate; }
+@keyframes casa-escondite-menea { from { rotate: -7deg; } to { rotate: 7deg; } }
+.casa-agujero:focus-visible, .casa-escondite:focus-visible { outline: 4px solid #ffd76a; }
+.casa-pista-conejo { z-index: 3; width: 48px; height: 48px; margin: 0 0 0 -24px; pointer-events: none; animation: casa-flecha-bota .6s ease-in-out infinite alternate; }
+.casa-conejos-bravo { z-index: 1001; margin: 0; padding: 12px 20px; translate: -50% 0; white-space: nowrap; border: 3px solid #2f1d33; border-radius: 16px; background: #ffd76a; color: #2f1d33; pointer-events: none; }
+.casa-gatitos.is-quieta .casa-escondite, .casa-gatitos.is-quieta .casa-pista-conejo { animation: none; }
+@media (prefers-reduced-motion: reduce) { .casa-escondite, .casa-pista-conejo { animation: none; } }
+
 /* El clima (issue 346): lienzo de la escena entera sobre el fondo y la ventana de noche. */
 .casa-clima { position: absolute; left: 0; top: 0; width: 1280px; height: 540px; image-rendering: pixelated; pointer-events: none; }
 

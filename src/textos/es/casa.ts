@@ -147,6 +147,18 @@ export const casa = {
     },
     conejo: { oculto: "{nombre}: tócalo para acariciarlo" },
     zanahoria: { oculto: "Zanahoria: arrástrala hasta un conejo" },
+    agujero: { oculto: "Agujero de la madriguera: tócalo para buscar a los conejos" },
+    cucu: { rotulo: "¡CUCU!" },
+    bravo: { rotulo: "{pictograma:estrella} ¡BRAVO!" },
+    pista: { oculto: "Aquí hay un conejo escondido" },
+    escondite: {
+      paja: { oculto: "Montón de paja: mira si hay un conejo" },
+      manta: { oculto: "Mantita: mira si hay un conejo" },
+      zanahorias: { oculto: "Montón de zanahorias: mira si hay un conejo" },
+      cesta: { oculto: "Cesta: mira si hay un conejo" },
+      caja: { oculto: "Caja: mira si hay un conejo" },
+      pelota: { oculto: "Pelota grande: mira si hay un conejo" },
+    },
     cueva: {
       dormitorio: { oculto: "Dormitorio de los conejos: tócalo para que vaya uno" },
       despensa: { oculto: "Despensa de zanahorias: tócala para que vaya un conejo" },

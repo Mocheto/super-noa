@@ -348,6 +348,15 @@ export function mirar(anterior: Madriguera, vista: Nivel, ahora: number, azar: A
   return { madriguera: m, sonidos: [vista === "abajo" ? "baja" : "sube"] };
 }
 
+/** Noa se va del jardín a medias de «Buscar a los conejos»: se acaba sin más, también mientras se están metiendo. */
+export function abandonar(anterior: Madriguera, ahora: number, azar: Azar): Madriguera {
+  if (!anterior.busqueda) return anterior;
+  const m = copiar(anterior);
+  Object.assign(m, { vista: "arriba", busqueda: null, movido: null });
+  for (const conejo of m.conejos) arriba(conejo, ahora, azar);
+  return m;
+}
+
 /** Anochece o amanece con la casa abierta. */
 export function ponerNoche(anterior: Madriguera, noche: boolean, ahora: number, azar: Azar): Madriguera {
   if (anterior.noche === noche) return anterior;

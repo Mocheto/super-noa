@@ -1112,9 +1112,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
     }
   }, [enJardin]);
 
+  /** Los conejos ya escondidos: la vista baja con ellos. */
+  const bajarConEllos = useCallback(() => {
+    setBajoTierra(true);
+    setAbanico(false);
+    setAbanicoAmigos(false);
+    ponerPaso({ visto: true }, PASO_MADRIGUERA_MS);
+  }, [ponerPaso]);
   /** La flecha: baja a ver la madriguera en corte o vuelve arriba. */
   const mirarMadriguera = (abajo: boolean) => {
-    if (fase !== "casa" || abajo === bajoTierra || arrastre) return;
+    if (fase !== "casa" || abajo === bajoTierra || arrastre || conejosRef.current?.entrando()) return;
     setBajoTierra(abajo);
     setAbanico(false);
     setAbanicoAmigos(false);
@@ -1623,7 +1630,7 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
             {fase === "casa" && !bajoTierra && <FlechaMadriguera sentido="bajar" etiqueta={t("casa.madriguera.bajar.oculto")} onUsar={() => mirarMadriguera(true)} />}
             {bajoTierra && <FlechaMadriguera sentido="subir" etiqueta={t("casa.madriguera.subir.oculto")} onUsar={() => mirarMadriguera(false)} />}
           </>}
-          <ConejosCasa ref={conejosRef} visible={enJardin} vista={bajoTierra ? "abajo" : "arriba"} noche={nocheReloj} />
+          <ConejosCasa ref={conejosRef} visible={enJardin} vista={bajoTierra ? "abajo" : "arriba"} noche={nocheReloj} onBaja={bajarConEllos} />
           {/* Muebles, cada uno en la versión elegida, sobre la habitación vacía. */}
           {!enJardin && MUEBLES_DE_LAMINA.map((mueble) => {
             const dibujo = MUEBLES_CASA[mueble].dibujo!;

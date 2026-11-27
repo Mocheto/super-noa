@@ -30,6 +30,24 @@ export function regalosDe(regalos: RegalosProgress | undefined, decoracion: Deco
   return regalos ?? { ganados: PREMIOS.filter((premio) => decoracion[premio.mueble] === premio.version).map(clave), recibidos: 0, abiertos: 0 };
 }
 
+/** Un orden fijo y revuelto: el mismo siempre, para que dos pestañas den lo mismo. */
+const revuelto = (texto: string) => [...texto].reduce((suma, letra) => Math.imul(suma ^ letra.charCodeAt(0), 16777619) >>> 0, 2166136261);
+const ATRASADOS: readonly Premio[] = [...PREMIOS].sort((a, b) => revuelto(clave(a)) - revuelto(clave(b)));
+
+/**
+ * Lo que le toca a un guardado de antes de los regalos por lo que ya había jugado: las versiones en proporción a las
+ * pantallas superadas (todas, con todas), además de las que tuviera.
+ */
+export function regalosAtrasados(regalos: RegalosProgress | undefined, decoracion: Decoracion, superadas: number, pantallas: number): RegalosProgress | undefined {
+  if (superadas <= 0) return regalos;
+  const actuales = regalosDe(regalos, decoracion);
+  const tocan = Math.min(PREMIOS.length, Math.ceil((superadas * PREMIOS.length) / pantallas));
+  const nuevas = ATRASADOS.slice(0, tocan).map(clave).filter((ganada) => !actuales.ganados.includes(ganada));
+  const ganados = [...actuales.ganados, ...nuevas];
+  // Si ya no falta nada, no queda caja por abrir.
+  return { ...actuales, ganados, abiertos: ganados.length >= PREMIOS.length ? actuales.recibidos : actuales.abiertos };
+}
+
 export const tieneVersion = (regalos: RegalosProgress, mueble: MuebleId, version: Version) =>
   version === 0 || regalos.ganados.includes(clave({ mueble, version }));
 

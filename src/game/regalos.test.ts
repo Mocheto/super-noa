@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { DECORACION_DE_SIEMPRE } from "./casaProgreso.ts";
 import { emptyProgress, fusionarProgreso, parseProgress, serializeProgress } from "./progress.ts";
-import { abrirRegalo, ganarRegalo, normalizeRegalos, porGanar, PREMIOS, regaloEsperando, regalosDe, tieneVersion, type RegalosProgress } from "./regalos.ts";
+import { abrirRegalo, ganarRegalo, normalizeRegalos, porGanar, PREMIOS, regaloEsperando, regalosAtrasados, regalosDe, tieneVersion, type RegalosProgress } from "./regalos.ts";
 
 const lunes = new Date(2026, 10, 30, 10);
 const martes = new Date(2026, 11, 1, 10);
@@ -52,4 +52,29 @@ test("se guardan en el progreso, se leen con tolerancia y dos pestañas no los r
   const abierto = { ...emptyProgress, regalos: abrirRegalo(esperando.regalos!, 0)!.regalos };
   assert.ok(!regaloEsperando(fusionarProgreso(esperando, abierto).regalos));
   assert.ok(!regaloEsperando(fusionarProgreso(abierto, esperando).regalos));
+});
+
+const guardadoAntes = (pantallas: string[], regalos?: RegalosProgress) => JSON.stringify({ version: 2,
+  levelStats: Object.fromEntries(pantallas.map((id) => [id, { completed: true, bestApples: 0 }])), ...(regalos ? { regalos } : {}) });
+
+test("quien ya había jugado recibe versiones según lo superado, una sola vez", () => {
+  assert.equal(regalosAtrasados(undefined, DECORACION_DE_SIEMPRE, 0, 49), undefined);
+  assert.equal(regalosAtrasados(undefined, DECORACION_DE_SIEMPRE, 49, 49)!.ganados.length, 52);
+  const poco = parseProgress(guardadoAntes(["1-1", "1-2", "1-3"]));
+  assert.equal(poco.regalos!.ganados.length, 4);
+  // Al volver a leerlo, con más pantallas, no recibe más.
+  const despues = { ...poco, levelStats: { ...poco.levelStats, "2-1": { completed: true, bestApples: 0 } } };
+  assert.equal(parseProgress(serializeProgress(despues)).regalos!.ganados.length, 4);
+});
+
+test("también a quien ya tenía la foto de lo puesto, y sin dejar una caja vacía", () => {
+  const todas = Array.from({ length: 17 }, (_, mundo) => [1, 2, 3].map((n) => `${mundo + 1}-${n}`)).flat().concat("A-1", "A-2", "A-3", "S-1");
+  const leido = parseProgress(guardadoAntes(todas, { ganados: ["cama:2"], recibidos: 1, abiertos: 0 }));
+  assert.equal(leido.regalos!.ganados.length, 52);
+  assert.ok(!regaloEsperando(leido.regalos));
+});
+
+test("una partida nueva empieza sin nada de regalo", () => {
+  const nueva = parseProgress(serializeProgress({ ...emptyProgress, levelStats: { "1-1": { completed: true, bestApples: 0 } } }));
+  assert.equal(nueva.regalos, undefined);
 });

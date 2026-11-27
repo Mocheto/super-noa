@@ -6,8 +6,8 @@ import { normalizeDetours, type DetourProgress } from "./detourProgress.ts";
 import { normalizeRestStops, type RestStopProgress } from "./restStopProgress.ts";
 import { normalizeFriends, type FriendProgress } from "./friendProgress.ts";
 import { normalizeAvioneta, type AvionetaProgress } from "./avioneta.ts";
-import { normalizeCasa, type CasaProgress } from "./casaProgreso.ts";
-import { normalizeRegalos, type RegalosProgress } from "./regalos.ts";
+import { DECORACION_DE_SIEMPRE, normalizeCasa, type CasaProgress } from "./casaProgreso.ts";
+import { normalizeRegalos, regalosAtrasados, type RegalosProgress } from "./regalos.ts";
 import { normalizeTraje, type TrajeId } from "./trajes.ts";
 
 export { completeSecretShop, visitSecretShop } from "./secretShopProgress.ts";
@@ -73,6 +73,20 @@ export function collectLifetimeApples(current: Progress, count: number, now = ne
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
 
+/**
+ * Marca de los guardados que ya conocen los regalos. A los de antes se les dan, una sola vez, las versiones que les
+ * tocan por lo que ya habían jugado.
+ */
+const MARCA_REGALOS = 1;
+
+function regalosGuardados(saved: Record<string, unknown>, levelStats: LevelStats): { regalos?: RegalosProgress } {
+  const guardados = normalizeRegalos(saved.regalos);
+  const regalos = saved.regalosDesde === MARCA_REGALOS ? guardados
+    : regalosAtrasados(guardados, normalizeCasa(saved.casa)?.decoracion ?? DECORACION_DE_SIEMPRE,
+      Object.values(levelStats).filter((pantalla) => pantalla.completed).length, knownLevelIds.size);
+  return regalos ? { regalos } : {};
+}
+
 export function parseProgress(raw: string | null): Progress {
   if (!raw) return emptyProgress;
   try {
@@ -115,7 +129,7 @@ export function parseProgress(raw: string | null): Progress {
       friends: normalizeFriends(saved.friends),
       ...(normalizeAvioneta(saved.avioneta) ? { avioneta: normalizeAvioneta(saved.avioneta) } : {}),
       ...(normalizeCasa(saved.casa) ? { casa: normalizeCasa(saved.casa) } : {}),
-      ...(normalizeRegalos(saved.regalos) ? { regalos: normalizeRegalos(saved.regalos) } : {}),
+      ...regalosGuardados(saved, levelStats),
       ...(normalizeTraje(saved.traje) ? { traje: normalizeTraje(saved.traje) } : {}),
     };
   } catch {
@@ -123,7 +137,7 @@ export function parseProgress(raw: string | null): Progress {
   }
 }
 
-export const serializeProgress = (progress: Progress) => JSON.stringify({ version: SAVE_VERSION, ...progress, totalApples: lifetimeApples(progress), achievedAt: normalizeProgressDate(progress.achievedAt), secretShops: normalizeSecretShops(progress.secretShops), detours: normalizeDetours(progress.detours), restStops: normalizeRestStops(progress.restStops), friends: normalizeFriends(progress.friends), casa: normalizeCasa(progress.casa), regalos: normalizeRegalos(progress.regalos), traje: normalizeTraje(progress.traje) });
+export const serializeProgress = (progress: Progress) => JSON.stringify({ version: SAVE_VERSION, regalosDesde: MARCA_REGALOS, ...progress, totalApples: lifetimeApples(progress), achievedAt: normalizeProgressDate(progress.achievedAt), secretShops: normalizeSecretShops(progress.secretShops), detours: normalizeDetours(progress.detours), restStops: normalizeRestStops(progress.restStops), friends: normalizeFriends(progress.friends), casa: normalizeCasa(progress.casa), regalos: normalizeRegalos(progress.regalos), traje: normalizeTraje(progress.traje) });
 
 export function readProgress(): Progress {
   return parseProgress(readStorage(STORAGE_KEY));

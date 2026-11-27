@@ -105,6 +105,7 @@ export const casa = {
     boton: { oculto: "Decorar la casa" },
     cuidar: { oculto: "Volver a cuidar a los gatitos" },
     bandeja: { oculto: "Versiones del mueble que has tocado" },
+    porGanar: { oculto: "{mueble}, versión {numero}: todavía por ganar" },
     version: { oculto: "{mueble}: opción {numero}" },
     mueble: {
       cama: { oculto: "La cama" },

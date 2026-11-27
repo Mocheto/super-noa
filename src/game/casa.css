@@ -629,3 +629,10 @@
 .casa-gatitos.is-quieta .casa-regalo { animation: none; }
 .casa-gatitos.is-quieta .casa-confeti { display: none; }
 @media (prefers-reduced-motion: reduce) { .casa-escena > .casa-regalo { animation: none; } .casa-confeti { display: none; } }
+/* Al decorar, lo que falta por ganar: su silueta con un lazo. */
+.casa-version.is-por-ganar { position: relative; cursor: default; }
+.casa-version.is-por-ganar > .casa-muestra { filter: brightness(0) opacity(.5); }
+.casa-version.is-por-ganar::after { content: ""; position: absolute; right: -4px; top: -6px; width: 28px; height: 21px; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 34'><g fill='%23e5484d' stroke='%232f1d33' stroke-width='3' stroke-linejoin='round'><path d='M23 13 5 3v20zM23 13 41 3v20zM20 15l-7 17 9-6zM26 15l7 17-9-6z'/><circle cx='23' cy='13' r='6'/></g></svg>") center / contain no-repeat; pointer-events: none; }
+.casa-version.is-meneo { animation: casa-meneo .5s; }
+@keyframes casa-meneo { 25% { transform: rotate(-9deg); } 75% { transform: rotate(9deg); } }
+@media (prefers-reduced-motion: reduce) { .casa-version.is-meneo { animation: none; } }

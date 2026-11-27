@@ -6,8 +6,7 @@
  * - `paseos`: paseo de los amigos tras cada guardián (botón PASEO del mundo y de la ventana del guardián).
  * - `casa`: la casa de los gatitos (botón CASA del mapa y A CASA de la ventana de mundo completado). Encendida desde
  *   que la v1 está entera.
- * - `regalos`: las versiones de lo que se decora se ganan con regalos (mapa «Ganar decoraciones de la casa»). Apagado
- *   hasta que también se vean las que faltan al decorar.
+ * - `regalos`: las versiones de lo que se decora se ganan con regalos (mapa «Ganar decoraciones de la casa»).
  * - `trajes`: los trajes de Noa (botón del mapa y su dibujo). Apagados hasta que esté montado el arte.
  *
  * Los amigos y los paseos están apagados mientras se rehace la parte de amigos. Para probarlos, también en la web
@@ -15,7 +14,7 @@
  */
 export type Funcion = "amigos" | "paseos" | "casa" | "regalos" | "trajes";
 
-export const FUNCIONES_POR_DEFECTO: Readonly<Record<Funcion, boolean>> = { amigos: false, paseos: false, casa: true, regalos: false, trajes: false };
+export const FUNCIONES_POR_DEFECTO: Readonly<Record<Funcion, boolean>> = { amigos: false, paseos: false, casa: true, regalos: true, trajes: false };
 
 /** Funciones activas: las de por defecto más las que pide `?funciones=`. */
 export function leerFunciones(busqueda: string | null, base: Readonly<Record<Funcion, boolean>> = FUNCIONES_POR_DEFECTO): Record<Funcion, boolean> {

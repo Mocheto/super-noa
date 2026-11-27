@@ -48,7 +48,7 @@ import { climaDelDia, climaDePrueba, climaQueSeVe, miranPorLaVentana } from "./c
 import { pintarClima, ZONA_HABITACION, ZONA_JARDIN } from "./casaClimaArte";
 import { useEfimero, useRespuestas, useTemporizadores } from "./useTemporizadores";
 import { funciones } from "./funciones";
-import { abrirRegalo, regaloEsperando, regalosDe, type Premio, type RegalosProgress } from "./regalos";
+import { abrirRegalo, regaloEsperando, regalosDe, tieneVersion, type Premio, type RegalosProgress } from "./regalos";
 import { CajaRegalo, ConfetiRegalo, enLaCajaDeRegalo, TarjetaRegalo } from "./RegaloCasa";
 import { ALTO_ABRAZO, mirarPelota, poseDeJuego, quienJuega } from "./casaPelota";
 import { useJuegoPelota } from "./useJuegoPelota";
@@ -149,6 +149,7 @@ const PASO_MADRIGUERA_MS = 600;
 /** El confeti del regalo y lo que tarda en salir su tarjeta. */
 const CONFETI_MS = 1100;
 const TARJETA_REGALO_MS = 500;
+const MENEO_MS = 500;
 const ajustes = leerAjustesCasa(window.location.search);
 /** `?casaClima=lluvia|nieve|arcoiris|sol` fuerza el clima (mapa «Idea: clima en la ventana»). */
 const climaForzado = climaDePrueba(window.location.search);
@@ -323,6 +324,8 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
   const [regalos, setRegalos] = useState(() => funciones.regalos ? conRegaloDePrueba(regalosDe(regalosGuardados, decoracionDe(inicial))) : undefined);
   const [premio, setPremio] = useState<Premio | null>(null);
   const [confeti, ponerConfeti] = useEfimero<{ visto: true }>(temporizadores);
+  /** La versión por ganar que acaba de tocar. */
+  const [meneo, ponerMeneo] = useEfimero<{ mueble: MuebleId; version: Version }>(temporizadores);
   const [elegido, setElegido] = useState<MuebleId | null>(null);
   const [destello, ponerDestello] = useEfimero<{ mueble: MuebleId }>(temporizadores);
   const [fondo, setFondo] = useState(HABITACION.fondo);
@@ -1853,11 +1856,16 @@ export function CasaGatitos({ casa: guardada, levelStats, reduceMotion, muted, e
       </div>
       {fase === "casa" && bano === null && decorando && <div className="casa-bandeja is-decorar" aria-label={t("casa.decorar.bandeja.oculto")} role="toolbar">
         <BotonControl className="casa-bandeja-modo" pictograma="vuelve" etiqueta="casa.decorar.cuidar.oculto" onClick={cambiarDecorar} />
-        {elegido && VERSIONES.map((version) => <button key={version} type="button" className={`casa-bandeja-objeto casa-version${decoracion[elegido] === version ? " is-puesta" : ""}`}
-          aria-label={t("casa.decorar.version.oculto", { mueble: tClave(`casa.decorar.mueble.${elegido}.oculto`), numero: version + 1 })} aria-pressed={decoracion[elegido] === version}
-          onClick={(event) => ponerVersion(elegido, version, event.timeStamp)}>
-          <Muestra mueble={elegido} version={version} />
-        </button>)}
+        {elegido && VERSIONES.map((version) => {
+          // Por ganar: su silueta con un lazo; al tocarla solo se menea.
+          const falta = regalos ? !tieneVersion(regalos, elegido, version) : false;
+          const seMenea = meneo?.mueble === elegido && meneo.version === version;
+          return <button key={seMenea ? `${version}-${meneo.id}` : version} type="button" className={`casa-bandeja-objeto casa-version${decoracion[elegido] === version ? " is-puesta" : ""}${falta ? " is-por-ganar" : ""}${seMenea ? " is-meneo" : ""}`}
+            aria-label={t(falta ? "casa.decorar.porGanar.oculto" : "casa.decorar.version.oculto", { mueble: tClave(`casa.decorar.mueble.${elegido}.oculto`), numero: version + 1 })} aria-pressed={decoracion[elegido] === version}
+            onClick={(event) => { if (falta) ponerMeneo({ mueble: elegido, version }, MENEO_MS); else ponerVersion(elegido, version, event.timeStamp); }}>
+            <Muestra mueble={elegido} version={version} />
+          </button>;
+        })}
       </div>}
       {fase === "casa" && bano === null && !decorando && acostando && <div className="casa-bandeja" aria-label={t("casa.dormir.bandeja.oculto")} role="toolbar">
         <span className="casa-bandeja-modos">

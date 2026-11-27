@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boceto del elegidor de trajes</title>
+<!--
+  PROTOTIPO DE USAR Y TIRAR (issue 474, mapa «Trajes para los viajes de Noa»). No es código del juego.
+  Servidor `prototypes` de .claude/launch.json:
+  http://127.0.0.1:8765/prototypes/trajes-elegidor-boceto.html?variante=A
+  A: ventana con cuatro tarjetas. B: Noa grande ante el espejo y los cuatro debajo. C: tira sobre el mapa.
+  Los trajes son PROVISIONALES: el peto teñido, a falta del arte. Teclado: flechas, Intro y Escape.
+-->
+<style>
+  :root { --ciruela: #2f1d33; --crema: #fff8e9; --oro: #ffd76a; --verde: #5a9e4b; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { background: #3c2a52 url("../public/assets/worlds/noa-adventure-map-v2.webp") center / cover; font: 900 16px/1.3 ui-monospace, Menlo, monospace; color: var(--ciruela); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible { outline: 5px solid #fff; outline-offset: 3px; }
+  .boton { min-height: 64px; padding: 0 18px; border: 4px solid var(--ciruela); border-radius: 14px; background: var(--crema); box-shadow: 0 5px 0 var(--ciruela); letter-spacing: 1px; }
+  .boton.listo { background: var(--verde); color: #fff; }
+  @media (min-width: 600px) and (min-height: 600px) { .boton { min-height: 96px; padding: 0 26px; font-size: 22px; } }
+  .barra { position: fixed; right: 12px; bottom: 16px; display: flex; gap: 10px; }
+  .noa { display: block; aspect-ratio: 295 / 342; background: var(--hoja, url("../public/assets/sprites/noa-sprite-sheet.webp")) 0 0 / 400% auto no-repeat; image-rendering: pixelated; }
+  .noa.salta { background: url("../public/assets/sprites/noa-jump-v2.webp") center / contain no-repeat; animation: salto .55s; }
+  @keyframes salto { 45% { translate: 0 -12%; } }
+  .en-mapa { position: fixed; left: 46%; top: 44%; width: 74px; }
+
+  dialog { margin: auto; padding: 0; border: 5px solid var(--ciruela); border-radius: 22px; background: var(--crema); color: inherit; max-width: calc(100vw - 16px); max-height: calc(100dvh - 16px); overflow: hidden; }
+  dialog::backdrop { background: #1b1226cc; }
+  .ventana { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 0 16px 18px; }
+  .cinta { align-self: stretch; margin: 0 -16px; padding: 12px; border-bottom: 5px solid var(--ciruela); background: var(--oro); text-align: center; font-size: 28px; letter-spacing: 2px; }
+  .frase { font: 600 15px/1.3 system-ui, sans-serif; text-align: center; }
+  .traje { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 4px; border: 4px solid var(--ciruela); border-radius: 16px; background: #fff; font-size: 12px; }
+  .traje[aria-checked="true"] { background: #e6f5df; box-shadow: 0 0 0 5px var(--verde); }
+  .traje[aria-checked="true"]::after { content: "✔ PUESTO"; color: var(--verde); }
+  .traje[aria-checked="false"]::after { content: "\a0"; }
+
+  /* A: cuatro tarjetas grandes, 2 × 2 en vertical y en fila si es apaisado. */
+  .A .trajes { display: grid; grid-template-columns: repeat(2, auto); gap: 14px; }
+  .A .traje .noa { height: min(28dvh, 34vw); }
+  @media (orientation: landscape) { .A .trajes { grid-template-columns: repeat(4, auto); } .A .traje .noa { height: min(40dvh, 17vw); } }
+
+  /* B: Noa grande ante el espejo; los cuatro en fila debajo (a un lado si la pantalla es baja). */
+  .B .cuerpo { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  .B .espejo { display: grid; place-items: end center; padding: 14px 34px; border: 8px solid #c68a3f; border-radius: 50% 50% 18px 18px; background: linear-gradient(160deg, #eaf7ff, #b9d8f2); }
+  .B .espejo .noa { height: min(42dvh, 70vw); }
+  .B .trajes { display: flex; gap: 10px; }
+  .B .traje { width: min(148px, 20vw); font-size: 10px; }
+  .B .traje .noa { width: 82%; }
+  @media (orientation: landscape) and (max-height: 600px) {
+    .B .cuerpo { flex-direction: row; } .B .espejo .noa { height: 44dvh; } .B .trajes { display: grid; grid-template-columns: repeat(2, 92px); } .B .traje .noa { width: auto; height: 18dvh; }
+  }
+
+  /* C: sin ventana; una tira abajo y la Noa del mapa cambia al momento. */
+  .tira { position: fixed; left: 50%; bottom: 10px; translate: -50% 0; width: max-content; max-width: calc(100vw - 12px); display: flex; gap: 8px; padding: 12px; border: 5px solid var(--ciruela); border-radius: 22px; background: var(--crema); }
+  .tira[hidden] { display: none; }
+  .tira .traje { width: min(130px, 17vw); font-size: 10px; }
+  .tira .traje .noa { width: 80%; }
+  .tira .boton { align-self: center; padding: 0 10px; }
+  @media (max-width: 480px) { .tira { display: grid; grid-template-columns: repeat(2, 130px); } .tira .traje { width: auto; } .tira .traje .noa { width: 60%; } .tira .boton { grid-column: 1 / -1; } }
+
+  /* Móvil apaisado: sin frase, cinta fina y ¡LISTO! a un lado, para que todo quepa sin deslizar. */
+  @media (orientation: landscape) and (max-height: 420px) {
+    .pie { left: auto; right: 6px; translate: none; flex-direction: column; }
+    .ventana { display: grid; grid-template-columns: auto auto; justify-content: center; align-items: center; gap: 8px; padding: 0 12px 12px; }
+    .cinta { grid-column: 1 / -1; padding: 6px; font-size: 20px; }
+    .frase { display: none; }
+    .A .traje .noa { height: 44dvh; width: auto; }
+    .A .traje { width: 118px; }
+    .B .espejo { padding: 6px 12px; border-width: 5px; } .B .espejo .noa { height: 52dvh; }
+    .B .trajes { grid-template-columns: repeat(2, 96px); gap: 6px; }
+    .B .traje { width: 96px; }
+    .B .traje .noa { height: 20dvh; }
+    .B .traje[aria-checked]::after { content: none; }
+    .ventana .boton { padding: 0 12px; }
+  }
+
+  .pie { position: fixed; z-index: 9; top: 6px; left: 50%; translate: -50% 0; display: flex; gap: 6px; padding: 6px; border-radius: 12px; background: #000c; }
+  .pie button { padding: 6px 12px; border: 2px solid var(--crema); border-radius: 8px; background: none; color: var(--crema); }
+  .pie button[aria-pressed="true"] { background: var(--crema); color: var(--ciruela); }
+</style>
+</head>
+<body>
+<nav class="pie" aria-label="Variantes"></nav>
+<span class="noa en-mapa" data-traje="peto"></span>
+<div class="barra"><button class="boton" id="abrir">👕 TRAJES</button><button class="boton">NOA</button><button class="boton listo">CASA</button></div>
+<dialog></dialog>
+<div class="tira" role="radiogroup" aria-label="Trajes" hidden></div>
+<script>
+  const TRAJES = [["peto", "PETO"], ["exploradora", "EXPLORADORA"], ["pirata", "PIRATA"], ["caballera", "CABALLERA"]];
+  const variante = ["A", "B", "C"].includes(new URLSearchParams(location.search).get("variante")) ? new URLSearchParams(location.search).get("variante") : "A";
+  let puesto = "peto";
+  const dialog = document.querySelector("dialog");
+  const tira = document.querySelector(".tira");
+  const mapa = document.querySelector(".en-mapa");
+
+  // Trajes de mentira: solo se recolorea lo morado del peto, para no teñir la piel ni el pelo.
+  const COLORES = { exploradora: [192, 152, 90], pirata: [214, 58, 62], caballera: [182, 194, 214] };
+  const hojas = {};
+  const hoja = new Image();
+  hoja.onload = () => {
+    for (const [id, color] of Object.entries(COLORES)) {
+      const c = Object.assign(document.createElement("canvas"), { width: hoja.width, height: hoja.height });
+      const x = c.getContext("2d");
+      x.drawImage(hoja, 0, 0);
+      const d = x.getImageData(0, 0, c.width, c.height);
+      for (let i = 0; i < d.data.length; i += 4) {
+        const [r, g, b] = d.data.slice(i, i + 3);
+        if (b > g + 35 && b > 90 && r > g + 15 && b >= r) {
+          const luz = (r + g + b) / 3 / 160;
+          for (let k = 0; k < 3; k++) d.data[i + k] = color[k] * luz;
+        }
+      }
+      x.putImageData(d, 0, 0);
+      // Blob y no `data:`: una variable CSS no admite una cadena de varios megas.
+      c.toBlob((blob) => { hojas[id] = `url(${URL.createObjectURL(blob)})`; document.querySelectorAll("[data-traje]").forEach(vestir); });
+    }
+  };
+  hoja.src = "../public/assets/sprites/noa-sprite-sheet.webp";
+  const vestir = (noa) => hojas[noa.dataset.traje] ? noa.style.setProperty("--hoja", hojas[noa.dataset.traje]) : noa.style.removeProperty("--hoja");
+
+  for (const v of ["A", "B", "C"]) {
+    const b = Object.assign(document.createElement("button"), { textContent: v, onclick: () => { location.search = "?variante=" + v; } });
+    b.setAttribute("aria-pressed", v === variante);
+    document.querySelector(".pie").append(b);
+  }
+
+  const tarjetas = () => TRAJES.map(([id, nombre]) => `<button class="traje" role="radio" data-id="${id}" aria-checked="${id === puesto}" tabindex="${id === puesto ? 0 : -1}"><span class="noa" data-traje="${id}"></span>${nombre}</button>`).join("");
+  const listo = '<button class="boton listo" data-listo>▶ ¡LISTO!</button>';
+
+  if (variante === "C") tira.innerHTML = tarjetas() + listo;
+  else dialog.innerHTML = `<div class="ventana ${variante}"><h1 class="cinta">TRAJES</h1><p class="frase">Elige la ropa para tus viajes.</p>${variante === "A"
+    ? `<div class="trajes" role="radiogroup" aria-label="Trajes">${tarjetas()}</div>`
+    : `<div class="cuerpo"><div class="espejo"><span class="noa grande" data-traje="${puesto}"></span></div><div class="trajes" role="radiogroup" aria-label="Trajes">${tarjetas()}</div></div>`}${listo}</div>`;
+
+  function poner(id) {
+    puesto = id;
+    for (const b of document.querySelectorAll(".traje")) {
+      const si = b.dataset.id === id;
+      b.setAttribute("aria-checked", si);
+      b.tabIndex = si ? 0 : -1;
+    }
+    const saltan = [document.querySelector(".grande"), mapa, document.querySelector(`.traje[data-id="${id}"] .noa`)].filter(Boolean);
+    for (const noa of saltan) {
+      noa.dataset.traje = id;
+      vestir(noa);
+      noa.classList.remove("salta"); void noa.offsetWidth; noa.classList.add("salta");
+      setTimeout(() => noa.classList.remove("salta"), 550);
+    }
+  }
+  const cerrar = () => { if (variante === "C") tira.hidden = true; else dialog.close(); document.getElementById("abrir").focus(); };
+
+  document.getElementById("abrir").onclick = () => {
+    if (variante === "C") tira.hidden = false; else dialog.showModal();
+    document.querySelector('.traje[aria-checked="true"]').focus();
+  };
+  document.addEventListener("click", (e) => {
+    const traje = e.target.closest(".traje");
+    if (traje) poner(traje.dataset.id);
+    else if (e.target.closest("[data-listo]")) cerrar();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && variante === "C") return cerrar();
+    const paso = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    if (!paso || !e.target.closest(".traje")) return;
+    e.preventDefault();
+    const i = (TRAJES.findIndex(([id]) => id === puesto) + paso + TRAJES.length) % TRAJES.length;
+    poner(TRAJES[i][0]);
+    document.querySelector(`.traje[data-id="${TRAJES[i][0]}"]`).focus();
+  });
+  document.getElementById("abrir").click();
+</script>
+</body>
+</html>

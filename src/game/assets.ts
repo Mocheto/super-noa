@@ -1,5 +1,6 @@
 import type { Level } from "./types";
 import { mechanicSpriteSheets, type MechanicSprite } from "./mechanicSprites.ts";
+import { dibujoDeNoa, TRAJE_DE_SIEMPRE, type TrajeId } from "./trajes.ts";
 
 export type RasterAssets = {
   worldBackground: HTMLImageElement;
@@ -102,8 +103,28 @@ export function dibujarConMapas(context: CanvasRenderingContext2D): () => void {
   };
 }
 
-/** Poses de Noa que se usan nada más empezar a moverse. */
-const POSES_BASICAS = ["./assets/sprites/noa-sprite-sheet.webp", "./assets/sprites/noa-jump-v2.webp"];
+/** Poses de Noa que se usan nada más empezar a moverse, con el traje puesto. */
+const posesBasicas = (traje: TrajeId) => [dibujoDeNoa(traje, "hoja").src, dibujoDeNoa(traje, "salto").src];
+
+const doradas = new WeakMap<HTMLImageElement, HTMLCanvasElement>();
+
+/** La silueta de una imagen teñida de oro: se dibuja encima de un traje sin versión dorada mientras está protegida. */
+export function siluetaDorada(image: HTMLImageElement): HTMLCanvasElement | undefined {
+  let lienzo = doradas.get(image);
+  if (lienzo) return lienzo;
+  if (typeof document === "undefined" || !image.complete || !image.naturalWidth) return undefined;
+  lienzo = document.createElement("canvas");
+  lienzo.width = image.naturalWidth;
+  lienzo.height = image.naturalHeight;
+  const context = lienzo.getContext("2d");
+  if (!context) return undefined;
+  context.drawImage(mapaDe(image) ?? image, 0, 0);
+  context.globalCompositeOperation = "source-in";
+  context.fillStyle = "#ffd54a";
+  context.fillRect(0, 0, lienzo.width, lienzo.height);
+  doradas.set(image, lienzo);
+  return lienzo;
+}
 
 /**
  * Pide ya todo el arte que usará la pantalla (issue 322), para que llegue descodificado antes de entrar en escena: la
@@ -111,7 +132,7 @@ const POSES_BASICAS = ["./assets/sprites/noa-sprite-sheet.webp", "./assets/sprit
  * el arranque. `extra` son rutas que la pantalla dibuja fuera de `RasterAssets` (gatitos de la exploración, ovillo de la
  * persecución…). Libera los mapas de bits de las imágenes que esta pantalla no pide: si luego se piden, se rehacen.
  */
-export function precargarPantalla(assets: RasterAssets, extra: string[] = []) {
+export function precargarPantalla(assets: RasterAssets, extra: string[] = [], traje: TrajeId = TRAJE_DE_SIEMPRE) {
   const usadas = new Set<HTMLImageElement>();
   const tocar = (grupo: object) => {
     for (const clave of Object.keys(grupo)) {
@@ -121,7 +142,7 @@ export function precargarPantalla(assets: RasterAssets, extra: string[] = []) {
     }
   };
   tocar(assets);
-  [...POSES_BASICAS, ...extra].forEach((src) => usadas.add(getImage(src)));
+  [...posesBasicas(traje), ...extra].forEach((src) => usadas.add(getImage(src)));
   for (const [image, mapa] of mapas) {
     if (usadas.has(image) || mapa === "pendiente") continue;
     mapa.close();
@@ -142,7 +163,7 @@ export function fondoDeNivel(level: Pick<Level, "world" | "theme">): string {
   return `./assets/worlds/world-${world}${world <= 5 ? "-hd-v1" : ""}.webp`;
 }
 
-export function getLevelAssets(level: Level): RasterAssets {
+export function getLevelAssets(level: Level, traje: TrajeId = TRAJE_DE_SIEMPRE): RasterAssets {
   const world = level.world;
   const tileImages = {
     1: "world-1-tiles-v1.webp", 2: "world-2-tiles-v1.webp", 3: "world-3-tiles-v1.webp",
@@ -183,7 +204,7 @@ export function getLevelAssets(level: Level): RasterAssets {
     get seaWall() { return when(world === 8, "./assets/sprites/sea-reef-wall-v2.webp"); },
     get seaRock() { return when(world === 8 && level.platforms.some((platform) => platform.asoma), "./assets/sprites/roca-asoma-v1.webp"); },
     get waterEnemies() { return when(world === 8, "./assets/atlases/water-enemies-v1.webp"); },
-    get swim() { return when(world === 8, "./assets/sprites/noa-swim-v1.webp"); },
+    get swim() { return when(world === 8, dibujoDeNoa(traje, "nadar").src); },
     get waterCat() { return when(world === 8, "./assets/sprites/world-cat-8-v1.webp"); },
     get enemies() { return getImage("./assets/atlases/enemies-v1.webp"); },
     get castleEnemies() { return when(world === 6, "./assets/atlases/castle-enemies-v1.webp"); },

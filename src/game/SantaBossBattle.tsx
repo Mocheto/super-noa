@@ -9,6 +9,7 @@ import { actionBossBackgrounds } from "./santaBattleAssets";
 import { cssAssetUrl } from "./assets";
 import { TouchControls, type TouchControl } from "./TouchControls";
 import type { BossId } from "./types";
+import { TRAJE_DE_SIEMPRE, type TrajeId } from "./trajes";
 import { t, tClave, type ClaveTexto } from "../textos/index.ts";
 import { Boton, Texto } from "../textos/Texto";
 import { bossCatalog } from "./bosses";
@@ -18,12 +19,14 @@ type Props = {
   bossId?: Extract<BossId, "santa-claus" | "siroco" | "don-silbato">;
   paused: boolean; apples: number; onSpendApple: () => void; onRestartLevel: () => void;
   onAbandon: () => void; onWin: (challengeCompleted: boolean) => void; playSound: (kind: SoundKind) => void;
+  traje?: TrajeId;
 };
 const emptyInput = () => ({ left: false, right: false, jump: false, queued: false });
 
 
 
-export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpendApple, onRestartLevel, onAbandon, onWin, playSound }: Props) {
+export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpendApple, onRestartLevel, onAbandon, onWin, playSound, traje = TRAJE_DE_SIEMPRE }: Props) {
+  const [trajeBatalla] = useState(traje);
   const clave = (hoja: string) => `duelos.santa.${bossId}.${hoja}`;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const battle = useRef(createSantaBattle());
@@ -42,7 +45,7 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
       // En vertical (y en pantallas estrechas) se ve una ventana 4:3 de la arena que sigue a Noa, como en la partida.
       const vertical = typeof matchMedia === "function" && matchMedia("(orientation: portrait)").matches;
       context.canvas.width = vertical || window.innerWidth <= 600 ? 640 : SANTA_ARENA.width;
-      drawSantaBattle(context, battle.current, bossId);
+      drawSantaBattle(context, battle.current, bossId, trajeBatalla);
     };
     resize(); window.addEventListener("resize", resize);
     let previousPadJump = false;
@@ -65,7 +68,7 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
       const { hits, lives, status } = battle.current;
       setHud((previous) => previous.hits === hits && previous.lives === lives && previous.status === status ? previous : { hits, lives, status });
       if (status !== "playing") loop.setRunning(false);
-    }, () => drawSantaBattle(context, battle.current, bossId), () => {});
+    }, () => drawSantaBattle(context, battle.current, bossId, trajeBatalla), () => {});
     const key = (event: KeyboardEvent) => {
       const control = ["ArrowLeft", "KeyA"].includes(event.code) ? "left" : ["ArrowRight", "KeyD"].includes(event.code) ? "right" : ["Space", "ArrowUp", "KeyW"].includes(event.code) ? "jump" : null;
       if (!control || (control === "jump" && event.target instanceof HTMLButtonElement)) return;
@@ -80,13 +83,13 @@ export function SantaBossBattle({ bossId = "santa-claus", paused, apples, onSpen
     clearInput();
     if (!detenido && battle.current.status === "playing") canvasRef.current?.focus({ preventScroll: true });
     loop.setRunning(!detenido && battle.current.status === "playing" && !document.hidden);
-    if (detenido || battle.current.status !== "playing") drawSantaBattle(context, battle.current, bossId);
+    if (detenido || battle.current.status !== "playing") drawSantaBattle(context, battle.current, bossId, trajeBatalla);
     return () => {
       loop.stop(); clearInput(); window.removeEventListener("resize", resize);
       window.removeEventListener("keydown", key); window.removeEventListener("keyup", key);
       window.removeEventListener("blur", blur); document.removeEventListener("visibilitychange", visibility);
     };
-  }, [bossId, detenido, hud.status]);
+  }, [bossId, detenido, hud.status, trajeBatalla]);
 
   const retry = () => {
     if (apples <= 0) { onRestartLevel(); return; }

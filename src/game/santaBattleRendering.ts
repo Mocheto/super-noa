@@ -4,6 +4,7 @@ import { actionBossBackgrounds, BOSS_POSE_DRAWN, BOSS_POSE_FEET, bossPoseSheets,
 import { SANTA_ARENA, SANTA_PLATFORMS, type SantaBattle } from "./santaBattle";
 import type { BossId } from "./types";
 import { textoLienzo, tClave } from "../textos/index.ts";
+import { dibujoDeNoa, TRAJE_DE_SIEMPRE, type TrajeId } from "./trajes";
 
 type PlatformBossId = Extract<BossId, "santa-claus" | "siroco" | "don-silbato">;
 
@@ -36,7 +37,7 @@ function drawParticles(ctx: CanvasRenderingContext2D, bossId: PlatformBossId, el
   }
 }
 
-export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattle, bossId: PlatformBossId = "santa-claus") {
+export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattle, bossId: PlatformBossId = "santa-claus", traje: TrajeId = TRAJE_DE_SIEMPRE) {
   const { width, height, floor } = SANTA_ARENA;
   const viewWidth = ctx.canvas.width;
   const cameraX = Math.max(0, Math.min(width - viewWidth, state.player.x - viewWidth * .4));
@@ -117,7 +118,7 @@ export function drawSantaBattle(ctx: CanvasRenderingContext2D, state: SantaBattl
   ctx.save();
   if (p.invincible > 0 && Math.floor(p.invincible * 12) % 2 === 0) ctx.globalAlpha = .4;
   if (p.facing === -1) { ctx.translate(p.x + p.width / 2, 0); ctx.scale(-1, 1); ctx.translate(-p.x - p.width / 2, 0); }
-  const image = getImage(p.grounded ? "./assets/sprites/noa-sprite-sheet.webp" : "./assets/sprites/noa-jump-v2.webp");
+  const image = getImage(dibujoDeNoa(traje, p.grounded ? "hoja" : "salto").src);
   if (image.complete && image.naturalWidth) {
     if (p.grounded) {
       const cell = image.naturalWidth / 4;

@@ -30,6 +30,7 @@ import type { DetourId } from "./game/types";
 import { detourLevel, detourLevels } from "./game/detours";
 import { restStopFor, restStopIndex, restStopResumenes as restStopLevels, restStopUnlocked } from "./game/restStops";
 import { funciones } from "./game/funciones";
+import { trajePuesto } from "./game/trajes";
 import { casaAbierta, conMundosCompletos, llegadasPorVer } from "./game/casaRescate";
 import { t } from "./textos";
 import { Boton, BotonControl, Pictograma, Texto } from "./textos/Texto";
@@ -113,6 +114,7 @@ export default function App() {
   const secretTransitionRef = useRef({ target: -1, remaining: 1800 });
   const playScreenRef = useRef<HTMLElement | null>(null);
   const activeLevel = devTestLevel ?? levels[activeIndex] ?? detourLevels[activeIndex - levels.length] ?? restStopLevels[activeIndex - levels.length - detourLevels.length];
+  const traje = trajePuesto(progress.traje, funciones.trajes);
   const forestComplete = Boolean(progress.levelStats[CAT_PARTY_LEVEL_ID]?.completed);
   const displayedLevel = activeDetour ? detourLevel(activeDetour) : activeLevel;
   const playSound = useEfectos({ muted, effectsVolume });
@@ -425,10 +427,10 @@ export default function App() {
       {(screen === "game" || screen === "boss" || screen === "complete" || screen === "gameover" || screen === "finished") && (
         <section className="play-screen" ref={playScreenRef}>
           {!bossReplay && <Suspense fallback={<p className="lazy-loading lazy-loading-game" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
-            <GameCanvas key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} hud={hudEsquinas} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onFriendGreeted={handleFriendGreeted} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
+            <GameCanvas traje={traje} key={`game-${activeLevel.id}-${levelRun}`} level={activeLevel} hud={hudEsquinas} running={screen === "game" && !paused} onLoseLife={handleLoseLife} onComplete={handleCanvasComplete} onBossEncounter={handleBossEncounter} onSecretExit={handleSecretExit} onWaterExit={handleWaterExit} onSnapshot={handleSnapshot} onAppleCollected={handleAppleCollected} onShopVisit={handleShopVisit} onShopWin={handleShopWin} onShopActiveChange={setShopActive} onDetourVisit={handleDetourVisit} onDetourComplete={handleDetourComplete} onDetourActiveChange={setActiveDetour} onFriendGreeted={handleFriendGreeted} onReturn={() => setScreen("map")} reduceMotion={reduceMotion} playSound={playSound} />
           </Suspense>}
 
-          {screen === "boss" && activeLevel.boss && <DueloDelGuardian level={{ id: activeLevel.id, boss: activeLevel.boss }} levelRun={levelRun} paused={paused} muted={muted}
+          {screen === "boss" && activeLevel.boss && <DueloDelGuardian traje={traje} level={{ id: activeLevel.id, boss: activeLevel.boss }} levelRun={levelRun} paused={paused} muted={muted}
             musicVolume={musicVolume} effectsVolume={effectsVolume} reduceMotion={reduceMotion} levelCompleted={Boolean(progress.levelStats[activeLevel.id]?.completed)}
             apples={snapshot.apples} power={snapshot.power} bossReplay={bossReplay} onSpendApple={spendBossApple} onRestartLevel={restartBossLevel}
             onAbandon={abandonBossBattle} onFinishReplay={finishBossReplay} onWin={handleComplete} playSound={playSound} />}

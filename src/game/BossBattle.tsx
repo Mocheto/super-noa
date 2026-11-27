@@ -7,6 +7,7 @@ import { bossCatalog, type BossChallengeId } from "./bosses";
 import { justPressed, readDuelPad, type DuelPadButtons } from "./duelGamepad";
 import { firstConnectedGamepad } from "./gamepad";
 import type { BossId } from "./types";
+import { dibujoDeNoa, TRAJE_DE_SIEMPRE, type TrajeId } from "./trajes";
 import { conTextos, t, tClave } from "../textos/index.ts";
 import { Boton, Texto } from "../textos/Texto";
 import { PantallaPrevia, ResultadoMinijuego } from "./minijuegoComun";
@@ -49,6 +50,7 @@ type BossBattleProps = {
   onWin: (challengeCompleted: boolean) => void;
   playSound: (kind: SoundKind) => void;
   friendlyReplay?: boolean;
+  traje?: TrajeId;
 };
 
 const choices = [
@@ -84,20 +86,21 @@ function BossSprite({ assetPrefix, assetAtlas, frame, name }: { assetPrefix: str
   );
 }
 
-function NoaDuelSprite({ frame, protectedByApple }: { frame: number | null; protectedByApple: boolean }) {
+const POSES_DUELO = ["piedra", "papel", "tijera", "victoria"] as const;
+
+function NoaDuelSprite({ frame, protectedByApple, traje }: { frame: number | null; protectedByApple: boolean; traje: TrajeId }) {
   const gesture = tClave(`duelos.gesto.${frame === 0 ? "piedra" : frame === 1 ? "papel" : frame === 2 ? "tijera" : frame === 3 ? "victoria" : "preparada"}.juntos`);
-  const armorSuffix = protectedByApple ? "-gold-armor-v1" : "";
-  const idleSource = `./assets/sprites/noa-sprite-sheet${armorSuffix}.webp`;
+  const dibujo = dibujoDeNoa(traje, frame === null ? "hoja" : POSES_DUELO[frame], protectedByApple);
   return (
-    <div className="duel-noa-sprite" role="img" aria-label={t("duelos.haceGesto.oculto", { nombre: tClave("duelos.noa.rotulo"), gesto: gesture })}>
+    <div className={`duel-noa-sprite${dibujo.brillo ? " con-brillo" : ""}`} role="img" aria-label={t("duelos.haceGesto.oculto", { nombre: tClave("duelos.noa.rotulo"), gesto: gesture })}>
       {frame === null
-        ? <div className="duel-noa-idle" style={{ backgroundImage: `url("${idleSource}")` }} />
-        : <img src={`./assets/sprites/noa-rps-${frame}${armorSuffix}.webp`} alt="" />}
+        ? <div className="duel-noa-idle" style={{ backgroundImage: `url("${dibujo.src}")` }} />
+        : <img src={dibujo.src} alt="" />}
     </div>
   );
 }
 
-export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendApple, onRestartLevel, onAbandon, onWin, playSound, friendlyReplay = false }: BossBattleProps) {
+export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendApple, onRestartLevel, onAbandon, onWin, playSound, friendlyReplay = false, traje = TRAJE_DE_SIEMPRE }: BossBattleProps) {
   const boss = bossCatalog[bossId];
   const [battle, setBattle] = useState<BattleState>(nuevoDuelo);
   const [countdown, setCountdown] = useState(3);
@@ -249,7 +252,7 @@ export function BossBattle({ bossId, paused, apples, protectedByApple, onSpendAp
           {battle.status === "countdown" && <div className="duel-countdown" aria-live="assertive">{countdown === 0 ? <Texto clave="duelos.cuenta.ya.rotulo" />
             : <span className="duel-countdown-gesto"><RpsIcon choice={countdown === 3 ? "rock" : countdown === 2 ? "paper" : "scissors"} /><b>{choiceById[countdown === 3 ? "rock" : countdown === 2 ? "paper" : "scissors"].label}</b></span>}</div>}
           <div className={`duel-fighter noa-fighter ${visibleWinner === "noa" ? "round-winner" : visibleWinner === "boss" ? "round-loser" : ""}`}>
-            <NoaDuelSprite frame={noaFrame} protectedByApple={protectedByApple} />
+            <NoaDuelSprite frame={noaFrame} protectedByApple={protectedByApple} traje={traje} />
             <strong><Texto clave="duelos.noa.rotulo" /></strong>
             <div className={`gesture-card ${battle.status === "countdown" ? "is-hidden" : ""}`}>
               <span>{choicesRevealed && battle.noaChoice ? <RpsIcon choice={battle.noaChoice} /> : "?"}</span>

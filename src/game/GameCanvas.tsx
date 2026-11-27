@@ -6,7 +6,8 @@ import { Emblema } from "./Emblema";
 import { SecretShop } from "./SecretShop";
 import "./secretDoors.css";
 import { TouchControls } from "./TouchControls";
-import { cssAssetUrl, dibujarConMapas, fondoDeNivel, getImage, getLevelAssets, precargarPantalla } from "./assets";
+import { cssAssetUrl, dibujarConMapas, fondoDeNivel, getImage, getLevelAssets, precargarPantalla, siluetaDorada } from "./assets";
+import { dibujoDeNoa, TRAJE_DE_SIEMPRE, type PoseNoa, type TrajeId } from "./trajes";
 import {
   drawAmbientForeground, drawApple, drawBackground, drawBloomBridge, drawBossGate, drawCannon,
   drawCannonball, drawCastleSprite, drawCatPower, drawCaveEntrance, drawChainGuardian, drawCheckpoint,
@@ -59,6 +60,8 @@ type SoundKind = "apple" | "block" | "cat" | "jump" | "hurt" | "stomp" | "yarn" 
 
 type GameCanvasProps = {
   level: Level;
+  /** Traje de Noa; se toma al montar la partida. */
+  traje?: TrajeId;
   /** HUD de esquinas que se pinta sobre el escenario (también en los caminos secretos). */
   hud?: ReactNode;
   running: boolean;
@@ -150,8 +153,10 @@ const marcoMundo = (level: Level) => {
   return { "--acento": base, "--acento-oscuro": oscuro, "--acento-claro": claro, "--fondo-mundo": cssAssetUrl(fondoDeNivel(level)) } as CSSProperties;
 };
 
-export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourComplete, onDetourActiveChange, onFriendGreeted, onReturn, reduceMotion = false, playSound }: GameCanvasProps) {
+export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBossEncounter, onSecretExit, onWaterExit, onSnapshot, onAppleCollected, onShopVisit, onShopWin, onShopActiveChange, onDetourVisit, onDetourComplete, onDetourActiveChange, onFriendGreeted, onReturn, reduceMotion = false, playSound, traje = TRAJE_DE_SIEMPRE }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Fijo mientras dure la partida: si otra pestaña cambia de traje, no se reinicia la pantalla.
+  const [trajePartida] = useState(traje);
   const statusRef = useRef<HTMLParagraphElement>(null);
   const [shopOpen, setShopOpen] = useState(false);
   const [doorAvailable, setDoorAvailable] = useState(false);
@@ -191,7 +196,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     context.imageSmoothingEnabled = false;
     const soltarMapas = dibujarConMapas(context);
 
-    const raster = getLevelAssets(level);
+    const raster = getLevelAssets(level, trajePartida);
     const player = createInitialPlayer(level);
     let enemies: LiveEnemy[] = level.enemies.map((item, index) => ({ ...item, vx: item.speed, active: true, phase: index }));
     const items: LiveItem[] = level.items.map((item) => ({ ...item, age: 99, rise: 1, fromBlock: false }));
@@ -850,11 +855,22 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       }
     };
 
+    /** El brillo de la protección sobre un traje sin versión dorada: late, salvo con movimiento tranquilo. */
+    const brilloDorado = (image: HTMLImageElement, ...medidas: number[]) => {
+      const silueta = siluetaDorada(image);
+      if (!silueta) return;
+      const alpha = context.globalAlpha;
+      context.globalAlpha = alpha * (motionRef.current ? 0.3 : 0.3 + 0.18 * Math.sin(frame / 9));
+      (context.drawImage as (...args: unknown[]) => void).call(context, silueta, ...medidas);
+      context.globalAlpha = alpha;
+    };
+
     const drawPlayer = () => {
       const x = Math.round(player.x - cameraX);
       const protectedByApple = player.power === "apple" && starRemaining <= 0;
       if (waterAt(player, level.waterZones) && !player.grounded && raster.swim.complete && raster.swim.naturalWidth) {
-        const row = player.power === "cat" ? 2 : protectedByApple ? 1 : 0;
+        const nado = dibujoDeNoa(trajePartida, "nadar", protectedByApple);
+        const row = player.power === "cat" ? 2 : protectedByApple && !nado.brillo ? 1 : 0;
         const column = Math.floor(frame / 14) % 2;
         const cellWidth = raster.swim.naturalWidth / 2;
         const cellHeight = raster.swim.naturalHeight / 3;
@@ -863,6 +879,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         context.translate(x + player.width / 2, player.y + player.height / 2);
         context.scale(player.facing, 1);
         context.drawImage(raster.swim, column * cellWidth, row * cellHeight, cellWidth, cellHeight, -53, -47, 106, 94);
+        if (nado.brillo && protectedByApple) brilloDorado(raster.swim, column * cellWidth, row * cellHeight, cellWidth, cellHeight, -53, -47, 106, 94);
         context.restore();
         return;
       }
@@ -887,12 +904,18 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       const usesCatRunSprite = player.power === "cat" && player.grounded && Math.abs(player.vx) > 25;
       const usesCleanCatJump = player.power === "cat" && !player.grounded;
       const usesCleanJump = player.power !== "cat" && !player.grounded;
-      const activeSprite = getImage(usesCatThrowSprite ? "./assets/sprites/noa-cat-throw-v1.webp"
-        : usesCatYarnSprite ? "./assets/sprites/noa-cat-yarn-v2.webp"
-        : usesCatRunSprite ? "./assets/sprites/noa-cat-run-v2.webp"
-        : usesCleanCatJump ? "./assets/sprites/noa-cat-jump-v2.webp"
-        : usesCleanJump ? (protectedByApple ? "./assets/sprites/noa-jump-gold-armor-v1.webp" : "./assets/sprites/noa-jump-v2.webp")
-        : protectedByApple ? "./assets/sprites/noa-sprite-sheet-gold-armor-v1.webp" : "./assets/sprites/noa-sprite-sheet.webp");
+      const pose: PoseNoa = usesCatThrowSprite ? "gataTirar"
+        : usesCatYarnSprite ? "gataQuieta"
+        : usesCatRunSprite ? "gataCorrer"
+        : usesCleanCatJump ? "gataSalto"
+        : usesCleanJump ? "salto"
+        : "hoja";
+      const dibujo = dibujoDeNoa(trajePartida, pose, protectedByApple);
+      const activeSprite = getImage(dibujo.src);
+      const pintar = (...medidas: [number, number, number, number] | [number, number, number, number, number, number, number, number]) => {
+        (context.drawImage as (...args: unknown[]) => void).call(context, activeSprite, ...medidas);
+        if (dibujo.brillo) brilloDorado(activeSprite, ...medidas);
+      };
       if (activeSprite.complete && activeSprite.naturalWidth) {
         const cellWidth = activeSprite.naturalWidth / 4;
         context.save();
@@ -903,24 +926,24 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
         }
         if (usesCatThrowSprite) {
           // Pose exclusiva de lanzamiento: deja claro que Noa ha disparado la lana.
-          context.drawImage(activeSprite, x - 65, Math.round(player.y - 55), 175, 130);
+          pintar(x - 65, Math.round(player.y - 55), 175, 130);
         } else if (usesCatYarnSprite) {
           // Sprite independiente con transparencia: se conservan las orejas,
           // la bola de lana y la punta de la cola.
-          context.drawImage(activeSprite, x - 64, Math.round(player.y - 61), 165, 130);
+          pintar(x - 64, Math.round(player.y - 61), 165, 130);
         } else if (usesCatRunSprite) {
           // Al correr, Noa gata usa una pose propia y un pequeño balanceo de
           // pasos, sin volver a la hoja de sprites que cortaba las orejas.
           const stepBob = runningFrame % 2 === 0 ? 0 : 2;
-          context.drawImage(activeSprite, x - 65, Math.round(player.y - 54 + stepBob), 170, 125);
+          pintar(x - 65, Math.round(player.y - 54 + stepBob), 170, 125);
         } else if (usesCleanCatJump) {
           // El PNG de salto incluye margen transparente para que no se corten
           // orejas ni cola. Lo ampliamos para conservar el tamaño de Noa.
-          context.drawImage(activeSprite, x - 48, Math.round(player.y - 45), 140, 140);
+          pintar(x - 48, Math.round(player.y - 45), 140, 140);
         } else if (usesCleanJump) {
           // La pose de salto normal también vive fuera de la hoja para que el
           // pelo no quede recortado al cruzar el borde de su celda.
-          context.drawImage(activeSprite, x - 50, Math.round(player.y - 37), 145, 125);
+          pintar(x - 50, Math.round(player.y - 37), 145, 125);
         } else {
           // Estas filas no encajan exactamente en una cuadrícula: el recorte
           // anterior terminaba antes de las suelas. Tomamos la pose completa
@@ -928,8 +951,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
           const sourceTop = row === 0 ? 0 : 360;
           const sourceHeight = row === 0 ? 342 : 300;
           const drawHeight = 110;
-          context.drawImage(
-            activeSprite,
+          pintar(
             column * cellWidth + 14,
             sourceTop,
             cellWidth - 28,
@@ -1256,7 +1278,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
     gameLoopRef.current = gameLoop;
     gameLoop.setRunning(runningRef.current);
     // Tras el primer cuadro, el resto del arte de la pantalla se pide y se descodifica ya (issue 322).
-    const precarga = typeof setTimeout === "function" ? setTimeout(() => precargarPantalla(raster, [...(level.orientation === "explore" ? prepararExploracion(level) : []), ...(level.chase ? ARTE_PERSECUCION : [])]), 400) : undefined;
+    const precarga = typeof setTimeout === "function" ? setTimeout(() => precargarPantalla(raster, [...(level.orientation === "explore" ? prepararExploracion(level) : []), ...(level.chase ? ARTE_PERSECUCION : [])], trajePartida), 400) : undefined;
     return () => {
       if (precarga !== undefined) clearTimeout(precarga);
       soltarMapas();
@@ -1271,7 +1293,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       callbacksRef.current.onShopActiveChange?.(false);
       callbacksRef.current.onDetourActiveChange?.(null);
     };
-  }, [level, inputRef]);
+  }, [level, inputRef, trajePartida]);
 
   return (
     <>
@@ -1297,7 +1319,7 @@ export function GameCanvas({ level, hud, running, onLoseLife, onComplete, onBoss
       }} />}
       <TouchControls onPress={handleTouchStart} onRelease={handleTouchEnd} onCancel={handleTouchCancel} />
     </div>
-    {excursion && <GameCanvas level={detourLevel(excursion)} hud={hud} running={running} reduceMotion={reduceMotion}
+    {excursion && <GameCanvas traje={trajePartida} level={detourLevel(excursion)} hud={hud} running={running} reduceMotion={reduceMotion}
       onLoseLife={onLoseLife} onSnapshot={onSnapshot} onAppleCollected={onAppleCollected} playSound={playSound}
       onBossEncounter={onBossEncounter} onSecretExit={onSecretExit} onWaterExit={onWaterExit}
       onComplete={() => { onDetourComplete?.(excursion); returnFromDetourRef.current?.(); }}

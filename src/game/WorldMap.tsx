@@ -5,6 +5,7 @@ import { PixelIcon } from "./PixelIcon";
 import { nivelesCampana as levels } from "./nivelesIndice";
 import { campaignLevels } from "./routes";
 import type { Progress } from "./progress";
+import { dibujoDeNoa, trajePuesto } from "./trajes";
 import { getWorldSecretShopBadge } from "./secretShopProgress";
 import { findMapJourney, MAP_HEIGHT, MAP_WIDTH, mapLandscape, mapRoutes, mapRouteState, shortcutRoutes, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
 import { Emblema } from "./Emblema";
@@ -229,7 +230,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
             {shortcutRoutes.filter((route) => mapRouteState(route, progress) === "open").map((route) =>
               <path key={route.detour} className={`map-detour-path map-shortcut${route.detour === "mine" ? " is-tunnel" : ""}`} d={route.path} />)}
           </svg>
-          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: `url('${"./assets/sprites/noa-sprite-sheet.webp"}')` }} role="img" aria-label={t("mapa.noaEsta.oculto", { lugar: noaLocation.name })} />
+          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: `url('${dibujoDeNoa(trajePuesto(progress.traje, funciones.trajes), "hoja").src}')` }} role="img" aria-label={t("mapa.noaEsta.oculto", { lugar: noaLocation.name })} />
           {worldCatalog.map((world) => {
             if (world.id === 7 && !progress.secretUnlocked) return null;
             const available = worldAvailable(world.id, progress);

@@ -131,6 +131,10 @@ _Avoid_: Ducha, baño (a secas es la necesidad)
 **Decorar**:
 Modo de la casa en el que la bandeja enseña los muebles y sus versiones, en lugar de los cuidados. La pecera y la jaula de hámsters también se decoran; mientras tanto no se juega con ellas.
 
+**Regalo**:
+Sorpresa que Noa gana al terminar una pantalla, como mucho uno al día, y que abre en la casa: dentro hay una versión que todavía no tenía de algo que se puede decorar.
+_Avoid_: Premio, recompensa, caja
+
 **Comida favorita**:
 La comida que más le gusta a un gatito de la casa: pescado, leche, galletas o pollo. Con hambre, cualquier comida le vale, pero con su favorita se pone más contento. Empieza sin saberse y Noa la descubre al dársela.
 _Avoid_: Comida preferida, plato

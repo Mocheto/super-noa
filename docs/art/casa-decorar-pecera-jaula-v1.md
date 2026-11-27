@@ -4,6 +4,12 @@ Dossier del arte nuevo del mapa [Decorar la pecera y la jaula de hámsters](http
 
 La primera versión de cada parte es la de ahora y no se genera.
 
+## Estado
+
+- **Generadas** en [Generar las láminas](https://github.com/Mocheto/super-noa/issues/432). Las originales están en `../super-noa-arte-original/casa-decorar-pecera-v1/` (`dinosaurios`, `hielo`, `barcos`, `celeste` y `casitas`, en WebP).
+- Con `quitar_verde` y `grupos(hueco=12)` de `casa-pecera-recorte.py` salen limpias: cinco piezas por adorno y cuatro casitas.
+- El barco tiene su hueco algo por encima de la base: al colocarlo, comprobar que cae sobre el punto del payaso.
+
 ## Qué se genera
 
 | # | Lámina | Adjuntar | Original (nombre) | Se publica como |

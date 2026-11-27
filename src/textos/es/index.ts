@@ -16,6 +16,7 @@ import { mapa } from "./mapa.ts";
 import { partida } from "./partida.ts";
 import { ventanas } from "./ventanas.ts";
 import { casa } from "./casa.ts";
+import { trajes } from "./trajes.ts";
 import { revision } from "./revision.ts";
 
 /** Catálogo en español: una zona por archivo, unidas aquí. Es el idioma de referencia del que sale el tipo del catálogo. */
@@ -38,4 +39,5 @@ export const es = {
   temas,
   ventanas,
   casa,
+  trajes,
 } as const;

@@ -4,7 +4,7 @@ import test from "node:test";
 import { leerFunciones } from "./funciones.ts";
 import { accionesProgreso } from "./progressAcciones.ts";
 import { adoptarProgreso, emptyProgress, parseProgress, resetCampaignProgress, serializeProgress } from "./progress.ts";
-import { ARTE_TRAJES, dibujoDeNoa, normalizeTraje, POSES_NOA, TRAJES, trajePuesto, type ArteTrajes } from "./trajes.ts";
+import { ARTE_TRAJES, dibujoDeNoa, normalizeTraje, POSES_NOA, TRAJES, trajePuesto, trajesDisponibles, type ArteTrajes } from "./trajes.ts";
 
 const existe = (src: string) => existsSync(new URL(`../../public/${src.slice(2)}`, import.meta.url));
 
@@ -61,4 +61,9 @@ test("dos pestañas: se queda con el traje que acaba de guardar la otra, tambié
   const conCambios = accionesProgreso.manzanas(pirata, 2);
   assert.equal(adoptarProgreso(conCambios, serializeProgress(peto), conocida).traje, "peto");
   assert.equal(adoptarProgreso(conCambios, serializeProgress(emptyProgress), conocida).traje, "pirata");
+});
+
+test("el elegidor solo ofrece el peto y los trajes con arte", () => {
+  assert.deepEqual(trajesDisponibles({}), ["peto"]);
+  assert.deepEqual(trajesDisponibles({ caballera: { hoja: "x" }, pirata: { hoja: "y" } }), ["peto", "pirata", "caballera"]);
 });

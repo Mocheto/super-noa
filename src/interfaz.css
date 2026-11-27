@@ -766,6 +766,10 @@
   display: flex; gap: 10px; align-items: flex-end;
 }
 .map-noa-botones .boton { min-height: 64px; padding-inline: 18px; font-size: var(--rotulo); }
+.map-noa-botones .map-trajes { display: flex; align-items: center; gap: 8px; }
+.map-trajes-noa { flex: none; width: 38px; aspect-ratio: 295 / 342; background-position: 0 0; background-repeat: no-repeat; background-size: 400% auto; image-rendering: pixelated; }
+/* En móvil vertical, con tres botones, el dibujo cede su sitio. */
+@media (max-width: 480px) { .map-trajes-noa { display: none; } .map-noa-botones { gap: 8px; } .map-noa-botones .boton { padding-inline: 7px; } }
 /* Tableta, en vertical y apaisada (y escritorio): botones de unos 2 cm. */
 @media (min-width: 600px) and (min-height: 600px) { .map-noa-botones .boton { min-height: 96px; padding-inline: 26px; } }
 /* Sobre el mapa nada alarga la pantalla (issue 377): dónde está Noa queda solo para lectores de pantalla y el aviso de

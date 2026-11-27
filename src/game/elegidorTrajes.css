@@ -1,0 +1,41 @@
+/* Elegidor de trajes del mapa (boceto B, issue 474): Noa grande ante el espejo y los trajes debajo; en móvil apaisado,
+   a su lado. */
+.ventana-trajes { width: min(680px, calc(100vw - 32px)); }
+.ventana-trajes .ventana-cuerpo { padding-inline: 12px; }
+.trajes-cuerpo { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.trajes-espejo { display: grid; place-items: end center; padding: 14px 30px; border: 8px solid #c68a3f; border-radius: 50% 50% 18px 18px; background: linear-gradient(160deg, #eaf7ff, #b9d8f2); }
+.trajes-espejo .traje-noa { height: min(36dvh, 58vw); }
+.traje-noa { display: block; aspect-ratio: 295 / 342; background-position: 0 0; background-repeat: no-repeat; background-size: 400% auto; image-rendering: pixelated; }
+.traje-noa.salta { background-position: center; background-size: contain; animation: traje-salto .55s; }
+@keyframes traje-salto { 45% { translate: 0 -10%; } }
+.trajes-opciones { display: flex; justify-content: center; gap: 8px; }
+.traje-opcion {
+  display: grid; justify-items: center; align-content: start; gap: 4px; width: min(142px, calc((100vw - 90px) / 4)); min-height: 44px; padding: 6px 2px;
+  border: 4px solid var(--ciruela); border-radius: 14px; color: var(--ciruela); background: #fff; font-family: var(--letra-noa); cursor: pointer;
+}
+.traje-opcion .traje-noa { width: 80%; }
+.ventana-trajes .traje-opcion .texto-noa { max-width: 100%; margin: 0; font-size: clamp(7px, 1.9vw, 12px); }
+.traje-opcion[aria-checked="true"] { background: #e6f5df; box-shadow: 0 0 0 4px #3f7a34; }
+.traje-puesto { color: #3f7a34; visibility: hidden; }
+.traje-opcion[aria-checked="true"] .traje-puesto { visibility: visible; }
+.traje-opcion:focus-visible { outline: 4px solid var(--ciruela); outline-offset: 6px; }
+@media (orientation: landscape) and (max-height: 540px) {
+  .ventana-trajes .juntos { display: none; }
+  .trajes-cuerpo { flex-direction: row; gap: 14px; }
+  .trajes-espejo { padding: 6px 10px; border-width: 5px; }
+  .trajes-espejo .traje-noa { height: 52dvh; }
+  .trajes-opciones { display: grid; grid-template-columns: repeat(2, 118px); }
+  .traje-opcion { width: auto; }
+  .ventana-trajes .traje-opcion .texto-noa { font-size: 9px; }
+  .traje-opcion .traje-noa { width: auto; height: 19dvh; }
+  .traje-puesto { display: none; }
+}
+/* En móvil vertical, dos filas de dos: los nombres largos no caben de cuatro en fila. */
+@media (max-width: 480px) {
+  .trajes-espejo .traje-noa { height: min(28dvh, 50vw); }
+  .trajes-opciones { display: grid; grid-template-columns: repeat(2, 128px); }
+  .traje-opcion { width: auto; }
+  .traje-opcion .traje-noa { width: auto; height: 9dvh; }
+  .ventana-trajes .traje-opcion .texto-noa { font-size: 9px; }
+}
+@media (prefers-reduced-motion: reduce) { .traje-noa.salta { animation: none; } }

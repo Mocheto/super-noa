@@ -14,14 +14,14 @@ Todo texto visible de Super Noa vive en `src/textos/es/` y se pide por **clave**
 | `src/textos/pictogramas.ts` | Los 51 nombres de pictograma y su emoji provisional. |
 | `src/textos/exportar.ts` | Exportación a JSON con plurales ICU; la usa `npm run textos:json`. |
 
-Zonas actuales: `partida`, `ventanas`, `inicio`, `mapa`, `coleccion`, `duelos`, `minijuegos`, `adultos` (textos de la interfaz) y `pantallas`, `temas`, `mundos`, `caminos`, `paseos`, `pegatinas`, `amigos`, `guardianes`, `juegos` (textos de los datos), además de `casa`.
+Zonas actuales: `partida`, `ventanas`, `inicio`, `mapa`, `coleccion`, `duelos`, `minijuegos`, `adultos` (textos de la interfaz) y `pantallas`, `temas`, `mundos`, `caminos`, `paseos`, `pegatinas`, `amigos`, `guardianes`, `juegos` (textos de los datos), además de `casa` y `trajes`.
 
 ## Zonas base y diferidas
 
 Para que el bloque principal no cargue los textos de pantallas que aún no se han abierto (issue [Cargar los textos por zona sin que Noa vea nunca una clave](https://github.com/Mocheto/super-noa/issues/301)), las zonas se reparten así:
 
 - **Base** (`es/base.ts`, siempre cargadas): `partida`, `ventanas`, `inicio`, `mapa`, `coleccion`, `adultos`, `pantallas`, `temas`, `mundos`, `caminos`, `pegatinas`, `guardianes` (los leen el álbum y el mapa) y `minijuegos.tienda`.
-- **Diferidas** (`src/textos/zonas/`): `duelos`, `juegos`, `amigos`, `paseos`, `casa` y cada minijuego: `minijuegos.comun`, `.abeja`, `.tambor`, `.merienda`, `.vuelo`, `.nido`, `.gatitos` y `.avioneta`.
+- **Diferidas** (`src/textos/zonas/`): `duelos`, `juegos`, `amigos`, `paseos`, `casa`, `trajes` y cada minijuego: `minijuegos.comun`, `.abeja`, `.tambor`, `.merienda`, `.vuelo`, `.nido`, `.gatitos` y `.avioneta`.
 
 Una zona diferida se registra cuando se evalúa el módulo que la usa, porque ese módulo la importa con un `import` estático de efecto, por ejemplo `import "../textos/zonas/duelos";`. En ESM las dependencias se evalúan antes, así que la zona está registrada antes de cualquier `t()` y viaja en el mismo bloque que su pantalla, y `t()` sigue siendo síncrono. Si aun así se pide una clave de una zona sin cargar, en desarrollo y en las pruebas `t()` falla en el acto; en producción devuelve una cadena vacía y lo avisa en la consola. Noa ve un hueco, nunca la clave.
 

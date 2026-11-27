@@ -19,6 +19,7 @@ export const mapa = {
   acercar: { oculto: "Acercar mapa" },
   verTodo: { rotulo: "{pictograma:busca} TODO" },
   volverANoa: { rotulo: "{pictograma:noa} NOA" },
+  trajes: { rotulo: "TRAJES" },
   mapaIlustrado: { oculto: "Mapa ilustrado de los mundos de Noa" },
   senderos: { oculto: "Senderos secretos descubiertos" },
   explorarSendero: { oculto: "Explorar {titulo}" },

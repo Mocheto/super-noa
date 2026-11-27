@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { CAT_PARTY_LEVEL_ID } from "./catPartyNivel";
 import { LevelSelectCard } from "./LevelSelectCard";
 import { PixelIcon } from "./PixelIcon";
 import { nivelesCampana as levels } from "./nivelesIndice";
 import { campaignLevels } from "./routes";
 import type { Progress } from "./progress";
-import { dibujoDeNoa, trajePuesto } from "./trajes";
+import { dibujoDeNoa, trajePuesto, type TrajeId } from "./trajes";
 import { getWorldSecretShopBadge } from "./secretShopProgress";
 import { findMapJourney, MAP_HEIGHT, MAP_WIDTH, mapLandscape, mapRoutes, mapRouteState, shortcutRoutes, worldArtwork, worldAvailable, worldCatalog, type WorldId } from "./worldMapData";
 import { Emblema } from "./Emblema";
@@ -18,6 +18,9 @@ import { useMapCamera } from "./useMapCamera";
 import "./detours.css";
 import { puntos, t } from "../textos";
 import { Boton, BotonControl, Pictograma, Texto } from "../textos/Texto";
+
+// El elegidor va en su propio bloque, con sus textos (zona `trajes`).
+const ElegidorTrajes = lazy(() => import("./ElegidorTrajes").then((module) => ({ default: module.ElegidorTrajes })));
 
 export type WorldSummary = {
   complete: number; total: number; stickers: number; stickerTotal: number;
@@ -36,13 +39,17 @@ type WorldMapProps = {
   onOpenAvioneta?: () => void;
   /** Abre la casa de los gatitos; sin él, no hay botón CASA. */
   onOpenCasa?: () => void;
+  /** Guarda el traje elegido; sin él, no hay botón TRAJES. */
+  onPonerTraje?: (traje: TrajeId) => void;
   /** Hay un regalo sin abrir: el botón CASA lleva un lazo. */
   regaloEnCasa?: boolean;
   /** Menú para adultos abierto (issue 333): vista de lista, zoom, ver todo y la ayuda. Para Noa quedan NOA y CASA. */
   menuAdultos?: boolean;
 };
 
-export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal, onOpenAvioneta, onOpenCasa, regaloEnCasa = false, menuAdultos = false }: WorldMapProps) {
+export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, onBeginLevel, onOpenCatParty, reduceMotion, onDetourReveal, onOpenAvioneta, onOpenCasa, regaloEnCasa = false, menuAdultos = false, onPonerTraje }: WorldMapProps) {
+  const [eligiendoTraje, setEligiendoTraje] = useState(false);
+  const traje = trajePuesto(progress.traje, funciones.trajes);
   const [view, setView] = useState<"map" | "list">("map");
   const [selectedWorld, setSelectedWorld] = useState<WorldId | null>(null);
   const [openObjectives, setOpenObjectives] = useState<{ levelId: string; pinned: boolean } | null>(null);
@@ -203,11 +210,18 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
           <button type="button" aria-pressed={camera.atMin} onClick={camera.showAll}><Texto clave="mapa.verTodo.rotulo" /></button>
         </div>}
       </div>}
-      {/* Para Noa, grandes y flotando sobre el mapa: volver a Noa y la casa. */}
+      {/* Para Noa, grandes y flotando sobre el mapa: los trajes, volver a Noa y la casa. */}
       {view === "map" && <div className="map-noa-botones" inert={selectedWorld !== null}>
+        {onPonerTraje && <button type="button" className="boton map-trajes" onClick={() => setEligiendoTraje(true)}>
+          <span className="map-trajes-noa" style={{ backgroundImage: `url('${dibujoDeNoa(traje, "hoja").src}')` }} aria-hidden="true" />
+          <Texto clave="mapa.trajes.rotulo" />
+        </button>}
         <Boton className="map-volver-noa" clave="mapa.volverANoa.rotulo" onClick={() => camera.showNear(noaPosition)} />
         {onOpenCasa && <Boton tipo="seguir" className={`map-casa${regaloEnCasa ? " con-regalo" : ""}`} clave="mapa.casa.rotulo" onClick={onOpenCasa} />}
       </div>}
+      {eligiendoTraje && onPonerTraje && <Suspense fallback={null}>
+        <ElegidorTrajes puesto={traje} onPoner={onPonerTraje} onClose={() => setEligiendoTraje(false)} reduceMotion={reduceMotion} />
+      </Suspense>}
       <div className="map-scroll" inert={selectedWorld !== null} hidden={view !== "map"} role="region" aria-label={t("mapa.mapaIlustrado.oculto")}
         ref={viewportRef} {...camera.viewportEvents}>
         <div className={`map-board${camera.overview ? " is-overview" : ""}`} style={{ width: camera.frame.width, height: camera.frame.height, left: camera.frame.x, top: camera.frame.y }}>
@@ -232,7 +246,7 @@ export function WorldMap({ progress, startingWorld, summaries, isLevelUnlocked, 
             {shortcutRoutes.filter((route) => mapRouteState(route, progress) === "open").map((route) =>
               <path key={route.detour} className={`map-detour-path map-shortcut${route.detour === "mine" ? " is-tunnel" : ""}`} d={route.path} />)}
           </svg>
-          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: `url('${dibujoDeNoa(trajePuesto(progress.traje, funciones.trajes), "hoja").src}')` }} role="img" aria-label={t("mapa.noaEsta.oculto", { lugar: noaLocation.name })} />
+          <div className={`map-noa ${moving ? "is-moving" : ""}`} style={{ left: `${noaPosition.x}%`, top: `${noaPosition.y}%`, backgroundImage: `url('${dibujoDeNoa(traje, "hoja").src}')` }} role="img" aria-label={t("mapa.noaEsta.oculto", { lugar: noaLocation.name })} />
           {worldCatalog.map((world) => {
             if (world.id === 7 && !progress.secretUnlocked) return null;
             const available = worldAvailable(world.id, progress);

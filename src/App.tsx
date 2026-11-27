@@ -400,7 +400,7 @@ export default function App() {
           </header>
           <Suspense fallback={<p className="lazy-loading" role="status"><Texto clave="partida.hud.cargando.rotulo" /></p>}>
             <WorldMap key={progress.unlocked === 0 ? "new-adventure" : "adventure"} progress={progress} startingWorld={mapReturnWorld ?? (levelRun > 0 ? displayedLevel.world : undefined)} summaries={worldProgress} isLevelUnlocked={isLevelUnlocked} onBeginLevel={beginLevel} onOpenCatParty={openCatParty} onOpenAvioneta={() => { setAvionetaGift(false); setPaused(false); setScreen("avioneta"); }} reduceMotion={reduceMotion} onDetourReveal={handleDetourReveal}
-              onOpenCasa={funciones.casa && casaAbierta(progress.levelStats) ? () => setScreen("casa") : undefined} regaloEnCasa={funciones.regalos && regaloEsperando(progress.regalos)} menuAdultos={menuMapa} />
+              onOpenCasa={funciones.casa && casaAbierta(progress.levelStats) ? () => setScreen("casa") : undefined} regaloEnCasa={funciones.regalos && regaloEsperando(progress.regalos)} onPonerTraje={funciones.trajes ? acciones.ponerTraje : undefined} menuAdultos={menuMapa} />
           </Suspense>
         </section>
       )}

@@ -65,6 +65,9 @@ const montado = (traje: string): Record<PoseNoa, string> => ({
 });
 export const ARTE_TRAJES: ArteTrajes = { caballera: montado("caballera") };
 
+/** Los que se pueden elegir: el peto y los que ya tienen su arte montado. */
+export const trajesDisponibles = (arte: ArteTrajes = ARTE_TRAJES): TrajeId[] => TRAJES.filter((id) => id === TRAJE_DE_SIEMPRE || Boolean(arte[id]));
+
 const ruta = (nombre: string) => `./assets/sprites/${nombre}.webp`;
 
 export type DibujoNoa = {

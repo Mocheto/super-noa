@@ -4,8 +4,7 @@ Dossier del arte de los regalos. Mapa: [Ganar decoraciones de la casa](https://g
 
 ## Estado
 
-- **Pendiente de generar** las dos láminas.
-- Mientras tanto el juego usa una caja y un lazo dibujados en SVG (`.dibujo-regalo` y `.con-regalo` en `src/interfaz.css`, `.is-por-ganar` en `src/game/casa.css`).
+- **Montado** el 27-11-2026. Originales en `../super-noa-arte-original/casa-regalo-v1/`.
 
 ## Qué hace falta
 
@@ -36,4 +35,4 @@ Chunky, readable pixel art in the style of a charming 16-bit game for young chil
 
 ## Montaje
 
-- Recortar cada pieza a WebP (`sprites/casa-regalo-v1.webp` y `sprites/casa-lazo-v1.webp`) y sustituir los SVG.
+- `prototypes/tools/casa-regalo-recorte.py` saca `sprites/casa-regalo-v1.webp` y `sprites/casa-lazo-v1.webp`; `src/game/regaloArte.ts` las pone como `--regalo` y `--lazo`.

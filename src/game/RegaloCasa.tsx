@@ -1,6 +1,6 @@
 /**
  * El regalo en la casa (mapa «Ganar decoraciones de la casa», boceto del regalo): la caja que salta en la alfombra, el
- * confeti al abrirla y la tarjeta grande con lo que ha tocado. El dibujo de la caja es provisional (`interfaz.css`).
+ * confeti al abrirla y la tarjeta grande con lo que ha tocado. Su arte, en `regaloArte.ts`.
  */
 import "../textos/zonas/casa";
 import type { CSSProperties, ReactNode } from "react";

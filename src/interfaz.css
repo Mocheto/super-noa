@@ -825,10 +825,10 @@
 }
 .ventana-cerrar { --control: 48px; }
 
-/* El regalo (mapa «Ganar decoraciones de la casa»): su caja (provisional, SVG), el aviso al terminar una pantalla y el
+/* El regalo (mapa «Ganar decoraciones de la casa»): su caja, el aviso al terminar una pantalla y el
    lazo del botón CASA del mapa. */
-.dibujo-regalo { background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g stroke='%232f1d33' stroke-width='4' stroke-linejoin='round'><path fill='%235aa9e6' d='M14 42h72v52H14z'/><path fill='%237cc0f2' d='M8 28h84v18H8z'/><path fill='%23ffd76a' d='M42 28h16v66H42z'/><path fill='%23e5484d' d='M50 28 24 8v22zM50 28 76 8v22z'/><circle fill='%23e5484d' cx='50' cy='26' r='8'/></g></svg>") center / contain no-repeat; }
+.dibujo-regalo { background: var(--regalo) center bottom / contain no-repeat; }
 .dibujo-regalo:is(i) { display: block; width: 72px; height: 72px; margin: 0 auto; }
 .map-screen .map-casa.con-regalo { position: relative; overflow: visible; }
-.map-screen .map-casa.con-regalo::after { content: ""; position: absolute; right: -14px; top: -20px; width: 46px; height: 34px; background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 46 34'><g fill='%23e5484d' stroke='%232f1d33' stroke-width='3' stroke-linejoin='round'><path d='M23 13 5 3v20zM23 13 41 3v20zM20 15l-7 17 9-6zM26 15l7 17-9-6z'/><circle cx='23' cy='13' r='6'/></g></svg>") center / contain no-repeat; pointer-events: none; }
+.map-screen .map-casa.con-regalo::after { content: ""; position: absolute; right: -14px; top: -20px; width: 46px; height: 34px; background: var(--lazo) center / contain no-repeat; pointer-events: none; }
 @media (max-height: 500px) { .dibujo-regalo:is(i) { width: 40px; height: 40px; } }

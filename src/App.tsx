@@ -34,6 +34,7 @@ import { trajePuesto } from "./game/trajes";
 import { casaAbierta, conMundosCompletos, llegadasPorVer } from "./game/casaRescate";
 import { completarPantalla, ganarRegaloDePantalla } from "./game/progressAcciones";
 import { regaloEsperando } from "./game/regalos";
+import "./game/regaloArte";
 import { t } from "./textos";
 import { Boton, BotonControl, Pictograma, Texto } from "./textos/Texto";
 import { Medalla, Ventana } from "./game/Ventana";
